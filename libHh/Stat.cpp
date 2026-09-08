@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Stat.h"
 
+#include <mutex>
+#include <utility>  // pair
 #include <vector>
 
 namespace hh {
@@ -9,7 +11,19 @@ int Stat::_s_show = -10;
 
 class Stats {
  public:
-  static void add(Stat* stat) { instance()._vec.push_back(stat); }
+  static void add(Stat* stat) {
+    Stats& stats = instance();
+    std::lock_guard<std::mutex> lock(stats._mutex);
+    stats._vec.push_back(stat);
+  }
+  // Returns a new accumulator whose contents get folded into `master` by flush().
+  static Stat& thread_partial(Stat& master) {
+    Stats& stats = instance();
+    std::lock_guard<std::mutex> lock(stats._mutex);
+    // Note that constructing a Stat with no name and is_static == false does not re-enter Stats.
+    stats._partials.emplace_back(&master, make_unique<Stat>());
+    return *stats._partials.back().second;
+  }
   static void flush() { instance().flush_internal(); }
 
  private:
@@ -20,6 +34,8 @@ class Stats {
   Stats() { hh_at_clean_up(Stats::flush); }
   ~Stats() = delete;
   void flush_internal() {
+    for (const auto& [master, partial] : _partials) master->add(*partial);
+    _partials.clear();
     if (_vec.empty()) return;
     int num_to_print = 0;
     for (Stat* stat : _vec)
@@ -31,7 +47,9 @@ class Stats {
     for (Stat* stat : _vec) stat->summary_terminate();
     _vec.clear();
   }
+  std::mutex _mutex;
   std::vector<Stat*> _vec;
+  std::vector<std::pair<Stat*, unique_ptr<Stat>>> _partials;
 };
 
 Stat::Stat(string name_, bool print, bool is_static) : _name(std::move(name_)), _print(print) {
@@ -42,7 +60,12 @@ Stat::Stat(string name_, bool print, bool is_static) : _name(std::move(name_)), 
     string filename = "Stat." + _name;  // The name is assumed ASCII; no need to worry about UTF-8.
     _ofs = make_unique<std::ofstream>(filename);
   }
-  if (_s_show == -10) _s_show = getenv_int("SHOW_STATS");
+  // One-time initialization; because the first static Stat may be constructed from within a parallel loop,
+  // we use a magic static to make it thread-safe.
+  [[maybe_unused]] static const int show_stats_initialized = [] {
+    if (_s_show == -10) _s_show = getenv_int("SHOW_STATS");
+    return _s_show;
+  }();
   if (_s_show <= -2) {
     _print = false;
   } else if (is_static) {
@@ -114,5 +137,21 @@ string Stat::name_string() const {
 }
 
 void Stat::output(float value) const { (*_ofs) << value << '\n'; }
+
+Stat& Stat::thread_partial() {
+  // With STAT_FILES, retain a single accumulator so that all values are written to the same file.
+  if (_ofs) return *this;
+  return Stats::thread_partial(*this);
+}
+
+namespace details {
+
+Stat& new_static_stat(const char* name, bool use_rms) {
+  Stat& stat = *new Stat(name, true, true);
+  if (use_rms) stat.set_rms();
+  return stat;
+}
+
+}  // namespace details
 
 }  // namespace hh

@@ -1119,9 +1119,8 @@ void parse_mesh_wedge_identifiers() {
   gwinfo.init(1 + (nwidfound ? maxwidfound : max_vid));  // Skip gwinfo[0] (wid start at 1).
   std::mutex mutex;
   Array<int> chunk_nccolors(num_threads, 0);
-  parallel_for_chunk(mesh.vertices(), num_threads, [&](const int thread_index, auto subrange) {
+  parallel_for_chunk(mesh.vertices(), [&](auto subrange) {
     string str;
-    int& nccolors = chunk_nccolors[thread_index];
     for (Vertex v : subrange) {
       // Vnors will get normals from vertex and corner strings if present.
       // Remove normals which are explicitly zero.
@@ -1189,9 +1188,14 @@ void parse_mesh_wedge_identifiers() {
           }
         }
       }
+    }
+  });
+  // The reads of gwinfo in c_winfo() must not overlap with the gwinfo.add() calls above, so we use a second loop.
+  parallel_for_chunk(mesh.vertices(), num_threads, [&](const int thread_index, auto subrange) {
+    int& nccolors = chunk_nccolors[thread_index];
+    for (Vertex v : subrange)
       for (Corner c : mesh.corners(v))
         if (c_winfo(c).col[0] != k_undefined) nccolors++;
-    }
   });
   const int nccolors = sum<int>(chunk_nccolors);
   if (nccolors) {

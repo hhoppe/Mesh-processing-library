@@ -142,12 +142,28 @@
 #define HH_NO_DANGLING
 #endif
 
+// Force inlining even when a function has several call sites; used where out-of-lining would change codegen.
+#if defined(_MSC_VER) && !defined(__clang__)
+#define HH_ALWAYS_INLINE __forceinline
+#else
+#define HH_ALWAYS_INLINE inline __attribute__((always_inline))
+#endif
+
 // AddressSanitizer detection: gcc predefines a macro, whereas clang reports a feature instead.
 #if defined(__SANITIZE_ADDRESS__)
 #define HH_HAS_ASAN 1
 #elif defined(__has_feature)
 #if __has_feature(address_sanitizer)
 #define HH_HAS_ASAN 1
+#endif
+#endif
+
+// ThreadSanitizer detection: gcc predefines a macro, whereas older clang reports a feature instead.
+#if defined(__SANITIZE_THREAD__)
+#define HH_HAS_TSAN 1
+#elif defined(__has_feature)
+#if __has_feature(thread_sanitizer)
+#define HH_HAS_TSAN 1
 #endif
 #endif
 

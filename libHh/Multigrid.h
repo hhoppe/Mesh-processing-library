@@ -462,47 +462,59 @@ class Multigrid : noncopyable {
           } else {
             for (const auto& u : range(dims)) func_update(u);
           }
-        } else if (1 && D >= 2 && D <= 4) {  // even-odd parallelism on dim0; hypercolumns on dim > 0; fast
-          assertx(D <= 4);                   // large D would make col_dims too small
-          const int overlap = 0;             // amount to extend each side of column to obtain overlapping Gauss-Seidel
+        } else if (1 && D >= 2 && D <= 4) {  // even-odd parallelism on one axis; hypercolumns on the other dims; fast
+          assertx(D <= 4);                   // large D would make block_dims too small
+          const int overlap = 0;             // amount to extend each side of a slab to obtain overlapping Gauss-Seidel
           const Vec<int, D> voverlap = ntimes<D>(overlap);
-          Vec<int, D> col_dims;
-          {                                                 // hypercolumn dimensions
+          const int nthreads = get_max_threads();
+          // We apply even-odd phasing and parallelism along a single axis, and traverse the remaining dimensions
+          //  sequentially within each slab, as cache blocking.  The innermost dimension is never selected because
+          //  slabs perpendicular to it would interleave in memory and cause false sharing.  We favor the outermost
+          //  axis for its streaming access pattern, and consider a later axis only if the current axis lacks the
+          //  extent for full parallelism and the later axis is substantially larger.
+          const int min_slab_width = 2;  // the niter local Gauss-Seidel sweeps propagate about this far
+          const int desired_extent = nthreads * 2 * min_slab_width;
+          int axis = 0;
+          for_intL(c, 1, D - 1) if (dims[axis] < desired_extent && dims[c] > dims[axis] * 2) axis = c;
+          if (_verbose && dims[axis] < nthreads * 2) showf("Multigrid relaxation has limited parallelism\n");
+          Vec<int, D> block_dims;  // hypercolumn dimensions, for cache blocking within a slab
+          {
             const int L2_cache_size = 4 * 1024 * 1024 / 8;  // conservatively assume 4 MiB shared among 8 threads
             const int num_grids = 3 + 1, fudge = 4;         // 3 rows of grid_result, grid_rhs, plus some extra
             const int col_width =
                 int(pow(std::floor(float(L2_cache_size) / sizeof(T)) / (num_grids + fudge), 1.f / (D - 1.0001f)));
-            col_dims = ntimes<D>(col_width).with(0, std::numeric_limits<int>::max());
+            block_dims = ntimes<D>(col_width);
           }
-          // even-odd in just first dimension
-          const Vec<int, D> even_odd = ntimes<D>(1).with(0, 2);  // { 2, 1, 1, ... }
-          int nthreads = get_max_threads();
-          col_dims[0] = max((dims[0] - 1) / (nthreads * 2) + 1, 1);
-          Vec<int, D> num_col_pairs = (dims - 1) / (col_dims * even_odd) + 1;
-          col_dims =
-              ((dims - 1) / num_col_pairs + 1 - 1) / even_odd + 1;  // adjust col_dims for most uniform partition
-          // SHOW(dims, col_dims, even_odd, num_col_pairs);
-          // The even-odd phases guarantee that concurrently relaxed columns are never adjacent, but only if the last
-          //  non-empty column along dim0 has an odd index; otherwise, it is adjacent to column 0 under periodic
-          //  boundary conditions, causing a data race.  Because col_dims[0] is rounded up, the final odd column is
-          //  usually empty, so we force an even number of columns and let the last one absorb the remaining rows.
-          const int num_cols0 = max(((dims[0] - 1) / col_dims[0] + 1) / 2 * 2, 1);
-          num_col_pairs[0] = (num_cols0 + 1) / 2;
-          // SHOW(dims, col_dims, even_odd, num_col_pairs, num_cols0);
+          // A slab already spans a single extent along axis, so it holds a single block there.
+          const Vec<int, D> num_blocks = ((dims - 1) / block_dims + 1).with(axis, 1);
+          block_dims = (dims - 1) / num_blocks + 1;  // adjust block_dims for most uniform partition
+          int slab_width = max((dims[axis] - 1) / (nthreads * 2) + 1, 1);
+          const int num_slab_pairs = (dims[axis] - 1) / (slab_width * 2) + 1;
+          slab_width = ((dims[axis] - 1) / num_slab_pairs + 1 - 1) / 2 + 1;  // most uniform partition
+          // The even-odd phases guarantee that concurrently relaxed slabs are never adjacent, but only if the last
+          //  non-empty slab has an odd index; otherwise, it is adjacent to slab 0 under periodic boundary conditions,
+          //  causing a data race.  Because slab_width is rounded up, the final odd slab is usually empty, so we force
+          //  an even number of slabs and let the last one absorb the remaining elements.
+          const int num_slabs = max(((dims[axis] - 1) / slab_width + 1) / 2 * 2, 1);
+          // SHOW(dims, axis, block_dims, num_blocks, slab_width, num_slabs);
           const bool local_iter = true;
-          for (const auto& eo : range(even_odd)) {  // { 0|1, 0, 0, ... }
-            // SHOW(eo);
-            const auto func_relax_column = [&](const Vec<int, D>& coli) {
-              const Vec<int, D> col_index = coli * even_odd + eo;
-              Vec<int, D> uL = clamp((col_index + 0) * col_dims - voverlap, ntimes<D>(0), dims);
-              Vec<int, D> uU = clamp((col_index + 1) * col_dims + voverlap, ntimes<D>(0), dims);
-              if (col_index[0] == num_cols0 - 1) uU[0] = dims[0];  // the last column absorbs the remaining rows
-              // { std::lock_guard<std::mutex> lock(s_mutex); SHOW(dims, uL, uU); }
-              for_int(iter2, local_iter ? niter : 1) {  // implement as streaming?
-                for_coordsL_interior(dims, uL, uU, func_update, func_update_interior);
+          for_int(eo, 2) {  // relax the even slabs, then the odd slabs
+            const auto func_relax_slab = [&](const int slab_pair) {
+              const int slab = slab_pair * 2 + eo;
+              if (slab >= num_slabs) return;  // the odd slab is absent if there is a single slab
+              const int slab_uL = min(slab * slab_width, dims[axis]);
+              const int slab_uU = slab == num_slabs - 1 ? dims[axis] : min((slab + 1) * slab_width, dims[axis]);
+              for (const auto& blocki : range(num_blocks)) {
+                Vec<int, D> uL = clamp((blocki + 0) * block_dims - voverlap, ntimes<D>(0), dims);
+                Vec<int, D> uU = clamp((blocki + 1) * block_dims + voverlap, ntimes<D>(0), dims);
+                uL[axis] = slab_uL, uU[axis] = slab_uU;
+                // { std::lock_guard<std::mutex> lock(s_mutex); SHOW(dims, uL, uU); }
+                for_int(iter2, local_iter ? niter : 1) {  // implement as streaming?
+                  for_coordsL_interior(dims, uL, uU, func_update, func_update_interior);
+                }
               }
             };
-            parallel_for_coords(num_col_pairs, func_relax_column);
+            parallel_for(range((num_slabs + 1) / 2), func_relax_slab);
           }
           if (local_iter) break;
         } else {  // parallelism across dim0 blocks; two-stage synchronization to preserve determinism

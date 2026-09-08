@@ -36,13 +36,14 @@ class Stat {
   void set_print(bool print) { _print = print; }
   void set_rms() { _use_rms = true; }  // Show rms instead of sdv.
   void zero();
-  void enter(float value);
-  void enter(double value);
+  void enter(float value) { enter_aux(value, 1); }
+  void enter(double value) {enter_aux(value, 1); }
   void enter(int value) { enter(double(value)); }
   void enter(unsigned value) { enter(double(value)); }
-  void enter_multiple(float value, int factor);  // Factor may be negative.
+  void enter_multiple(float value, int factor) { enter_aux(value, factor); }  // `factor` may be negative.
   void remove(float value) { enter_multiple(value, -1); }
   void add(const Stat& st);
+  Stat& thread_partial();  // Returns a per-thread accumulator that hh_clean_up() folds back into *this.
   [[nodiscard]] const string& name() const { return _name; }
   [[nodiscard]] int64_t num() const { return _n; }
   [[nodiscard]] int inum() const { return narrow_cast<int>(_n); }
@@ -76,6 +77,7 @@ class Stat {
   static int _s_show;
   // If add any member variables, be sure to update member function swap().
   friend class Stats;
+  template <typename T> requires std::is_floating_point_v<T> HH_ALWAYS_INLINE void enter_aux(T v, int factor);
   void output(float value) const;
   void summary_terminate();
 };
@@ -94,22 +96,30 @@ template <ranges::forward_range R> R standardize(R&& range);
 // Note that this modifies the range in-place, so use standardize_rms(clone(range)) to preserve it.
 template <ranges::forward_range R> R standardize_rms(R&& range);
 
+namespace details {
+// Creates a Stat (intentionally never deleted) that is reported at program termination; used by HH_SSTAT.
+Stat& new_static_stat(const char* name, bool use_rms);
+}  // namespace details
+
 #define HH_STAT(S) \
   hh::Stat S { #S, true }
 #define HH_STAT_NP(S) \
   hh::Stat S { #S, false }  // No print.
 
 // Static Stat, which gets reported at program termination (or in hh_clean_up()).
-#define HH_SSTAT(S, v)                                  \
-  do {                                                  \
-    static hh::Stat& S = *new hh::Stat(#S, true, true); \
-    S.enter(v);                                         \
+// Values accumulate into a per-thread Stat, so that HH_SSTAT may be used within a parallel loop; the per-thread
+// accumulators are folded into the reported Stat by hh_clean_up().
+#define HH_SSTAT(S, v)                                                  \
+  do {                                                                  \
+    static hh::Stat& S##_all = hh::details::new_static_stat(#S, false); \
+    static thread_local hh::Stat& S = S##_all.thread_partial();         \
+    S.enter(v);                                                         \
   } while (false)
-#define HH_SSTAT_RMS(S, v)                              \
-  do {                                                  \
-    static hh::Stat& S = *new hh::Stat(#S, true, true); \
-    S.set_rms();                                        \
-    S.enter(v);                                         \
+#define HH_SSTAT_RMS(S, v)                                             \
+  do {                                                                 \
+    static hh::Stat& S##_all = hh::details::new_static_stat(#S, true); \
+    static thread_local hh::Stat& S = S##_all.thread_partial();        \
+    S.enter(v);                                                        \
   } while (false)
 
 // Range Stat.
@@ -138,31 +148,12 @@ inline Stat& Stat::operator=(Stat&& s) noexcept {
   return *this;
 }
 
-inline void Stat::enter(float value) {
-  _n++;
-  const double d = value;
-  _sum += d;
-  _sum2 += square(d);
-  if (value < _min) _min = value;
-  if (value > _max) _max = value;
-  if (_ofs) output(value);
-}
-
-inline void Stat::enter(double d) {
-  _n++;
-  _sum += d;
-  _sum2 += square(d);
-  const float value = float(d);
-  if (value < _min) _min = value;
-  if (value > _max) _max = value;
-  if (_ofs) output(value);
-}
-
-inline void Stat::enter_multiple(float value, int factor) {
+template <typename T> requires std::is_floating_point_v<T> HH_ALWAYS_INLINE void Stat::enter_aux(T v, int factor) {
+  const double d = v;
   _n += factor;
-  const double d = value;
   _sum += d * factor;
   _sum2 += square(d) * factor;
+  const float value = static_cast<float>(v);
   if (value < _min) _min = value;
   if (value > _max) _max = value;
   if (_ofs) for_int(i, factor) output(value);

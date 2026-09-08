@@ -415,4 +415,20 @@ details::HhInit::HhInit() { [[maybe_unused]] static const bool done = (hh_init()
 
 }  // namespace hh
 
+#if defined(HH_HAS_TSAN)
+
+// Suppress thread sanitization reports that are expected and that we do not act upon.  Entries that never match
+// any report are silently ignored, so all programs can share this single list.  See
+// https://github.com/google/sanitizers/wiki/threadsanitizersuppressions .
+extern "C" const char* __tsan_default_suppressions() {
+  return (
+      "signal:my_abort_handler\n"  // Formatting the call stack allocates, but the process is already aborting.
+      "race:libgallium\n"          // Races internal to the Mesa driver thread created by the OpenGL context.
+      "race:libnvwgf2umx\n"        // Races internal to the WSL2 GPU driver.
+      "race:libd3d12\n"            // Races internal to the WSL2 Direct3D12 passthrough.
+  );
+}
+
+#endif  // defined(HH_HAS_TSAN)
+
 #endif  // !defined(HH_NO_INIT)

@@ -1575,7 +1575,7 @@ int main(int argc, const char** argv) {
   }
   hh_clean_up();
   if (!nooutput) pmesh.write(std::cout);
-  if (filename == "-")  // Read entire input stream to avoid broken pipe.
+  if (filename == "-" && pmrs)  // Read entire input stream to avoid broken pipe.
     while (pmrs->next_vsplit());
   pmi.reset();
   pmrs.reset();

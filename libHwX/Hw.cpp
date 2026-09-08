@@ -20,15 +20,6 @@ extern "C" {
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"  // is_pow2()
 
-// AddressSanitizer detection: gcc predefines a macro, whereas clang reports a feature instead.
-#if defined(__SANITIZE_ADDRESS__)
-#define HH_HAS_ASAN 1
-#elif defined(__has_feature)
-#if __has_feature(address_sanitizer)
-#define HH_HAS_ASAN 1
-#endif
-#endif
-
 #if defined(HH_HAS_ASAN)
 #include <sanitizer/lsan_interface.h>
 using LeakDisabler = __lsan::ScopedDisabler;
@@ -158,17 +149,6 @@ void Hw::open() {
   assertx(_state == EState::init);
   _state = EState::open;
   if (_hwdebug) SHOW("hw: open");
-
-  // The graphics driver allocates a 64 KB aligned buffer during initialization and never releases it.
-  // LeakSanitizer reports it, and no suppression can match: the allocating frame lies in an address range
-  // that is not attributed to any module, so it appears as "<unknown module>" and neither a module nor
-  // a function pattern applies.  The only pattern that would match is the interceptor frame
-  // "leak:aligned_alloc", which would also hide leaks of our own Pool chunks and Sac objects,
-  // both of which allocate through hh::aligned_malloc().  Disabling LeakSanitizer for just the initialization
-  // region is narrower: it ignores allocations made here and nowhere else.
-  // The scope must end before the event loop below, since open() does not return until exit.
-  std::optional<LeakDisabler> leak_disabler(std::in_place);
-
   Visual* visual = DefaultVisual(_display, _screen);
   unsigned border_width = 1;
 #if defined(HH_OGLX)
@@ -177,6 +157,15 @@ void Hw::open() {
   if (_oglx) {
     // static const int multisample = getenv_int("GLX_MULTISAMPLE");
     _multisample = getenv_int("MULTISAMPLE", 4, true);
+    // The graphics driver allocates a 64 KB aligned buffer during initialization and never releases it.
+    // LeakSanitizer reports it, and no suppression can match: the allocating frame lies in an address range
+    // that is not attributed to any module, so it appears as "<unknown module>" and neither a module nor
+    // a function pattern applies.  The only pattern that would match is the interceptor frame
+    // "leak:aligned_alloc", which would also hide leaks of our own Pool chunks and Sac objects,
+    // both of which allocate through hh::aligned_malloc().  Disabling LeakSanitizer for just the initialization
+    // region is narrower: it ignores allocations made here and nowhere else.
+    // The scope must end before the event loop below, since open() does not return until exit.
+    std::optional<LeakDisabler> leak_disabler(std::in_place);
     XVisualInfo* visinfo;
     for (;;) {
       Array<int> attributelist = {
@@ -222,6 +211,7 @@ void Hw::open() {
       }
       assertnever("Could not successfully call glXChooseVisual()");
     }
+    leak_disabler.reset();
     _depth = visinfo->depth;  // (number of bits in RGBA; unrelated to GLX_DEPTH_SIZE)
     _screen = visinfo->screen;
     visual = visinfo->visual;
@@ -452,7 +442,6 @@ void Hw::open() {
     //  XIO:  fatal IO error 11 (Resource temporarily unavailable) on X server ":0"
     XSetIOErrorHandler(my_io_error_handler);
   }
-  leak_disabler.reset();  // Resume memory leak tracking before entering the event loop.
   if (_offscreen == "") {
     for (int i = 0;;) {
       if (loop()) break;

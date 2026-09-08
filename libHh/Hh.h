@@ -142,6 +142,15 @@
 #define HH_NO_DANGLING
 #endif
 
+// AddressSanitizer detection: gcc predefines a macro, whereas clang reports a feature instead.
+#if defined(__SANITIZE_ADDRESS__)
+#define HH_HAS_ASAN 1
+#elif defined(__has_feature)
+#if __has_feature(address_sanitizer)
+#define HH_HAS_ASAN 1
+#endif
+#endif
+
 // *** Syntactic sugar.
 
 #define for_int(index, stop) for ([[maybe_unused]] const int index : hh::range<int>(stop))

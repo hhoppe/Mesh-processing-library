@@ -47,6 +47,8 @@ ifneq ($(want_plain_compiler),1)
   cxxdbg += $(commondbg)
 endif
 
+$(if $(sanitize:0=),$(error sanitize is not supported in Windows-based configuration))
+
 cxxall += $(ccommon)
 c-all += $(ccommon) -wd4255#  For "no function prototype given: converting '()' to '(void)'".
 crel += $(commonrel)

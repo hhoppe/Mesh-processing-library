@@ -455,6 +455,23 @@ class Multigrid : noncopyable {
         }
         grid_result.flat(i) = (vnei * wL - grid_rhs.flat(i)) * rwLnum;  // OPT:relax
       };
+      // The two parallel strategies below both partition the grid into blocks along a single axis and 2-color those
+      //  blocks so that no two concurrently relaxed regions are ever adjacent.  A thread therefore never reads an
+      //  element that another thread is writing, and the result is deterministic for a given number of threads.
+      //  They differ in the shape of the 2-coloring and in their memory behavior:
+      //  - Even-odd slabs (2 <= D <= 4) splits the axis into slabs of nearly equal width, and relaxes the even slabs
+      //    and then the odd ones.  Within a slab, the remaining dimensions are traversed as cache-sized hypercolumns,
+      //    and each hypercolumn is relaxed niter times while it is still resident in cache.  Full occupancy requires
+      //    about 4 * nthreads elements along the axis, because it needs 2 * nthreads slabs of nonunit width.  Its
+      //    coloring is valid under periodic boundaries only because the number of slabs is forced to be even below.
+      //  - Body and seam (the fallback) splits dim0 into one chunk per thread, relaxes each chunk except its last
+      //    sync_rows rows, and then relaxes the omitted seams.  Full occupancy requires only 2 * nthreads rows along
+      //    dim0, and its coloring is valid under periodic boundaries for free, because a seam never falls on row 0.
+      //    However, it does no cache blocking and no local iteration, so each of the niter sweeps restreams the
+      //    entire grid from memory.
+      //  We keep both.  The fallback is the only option for D == 1 and for D > 4, where the hypercolumn width (which
+      //  shrinks as pow(cache_size, 1 / (D - 1))) becomes degenerate.  Conversely, the cache blocking and local
+      //  iteration of the even-odd version are a large win for the image and video cases that dominate.
       for_int(iter, niter) {
         if (0 || (grid_rhs.size() * 10 < k_parallel_thresh && 1)) {
           if (1 && b_default_metric) {

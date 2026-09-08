@@ -417,16 +417,28 @@ details::HhInit::HhInit() { [[maybe_unused]] static const bool done = (hh_init()
 
 #if defined(HH_HAS_TSAN)
 
-// Suppress thread sanitization reports that are expected and that we do not act upon.  Entries that never match
-// any report are silently ignored, so all programs can share this single list.  See
-// https://github.com/google/sanitizers/wiki/threadsanitizersuppressions .
-extern "C" const char* __tsan_default_suppressions() {
-  return (
-      "signal:my_abort_handler\n"  // Formatting the call stack allocates, but the process is already aborting.
-      "race:libgallium\n"          // Races internal to the Mesa driver thread created by the OpenGL context.
-      "race:libnvwgf2umx\n"        // Races internal to the WSL2 GPU driver.
-      "race:libd3d12\n"            // Races internal to the WSL2 Direct3D12 passthrough.
-  );
+// ThreadSanitizer options.  Beware: this hook is called from within the sanitizer's own initialization, so its body
+// must contain no function call and no memory access.  Otherwise the function gets instrumented and calls
+// __tsan_func_entry() before the runtime exists, which gives a SIGSEGV.  (Marking it no_sanitize("thread") is not
+// sufficient under clang, which still emits __tsan_func_entry(); clang instead needs the attribute
+// disable_sanitizer_instrumentation, which gcc does not recognize.)  Also, this definition must not be weak: clang
+// links the sanitizer runtime statically, and that runtime defines its own weak __tsan_default_options(), so a
+// second weak definition here is silently ignored.  Consequently there is a single set of options for all
+// programs; TSAN_OPTIONS still overrides them at runtime.
+//
+// report_signal_unsafe=0: our handlers for SIGABRT, SIGSEGV, SIGBUS, SIGILL, and SIGFPE all call show_call_stack(),
+// which allocates.  We disable the report rather than suppress it with "signal:show_call_stack", because a
+// suppression is matched only after the stack has been symbolized, and symbolizing the ~70 stacks reported per
+// aborting process is what made the demos crawl.  The detection has no value for us anyway, as all our handlers
+// run only when the process is already terminating.
+//
+// ignore_noninstrumented_modules=1: drops the many races internal to the Mesa and WSL2 GPU driver threads (in
+// libgallium, libnvwgf2umx, and libd3d12) at interceptor entry, again before any symbolization.  This is much
+// cheaper than "race:libgallium" suppressions, and it removes the need for __tsan_default_suppressions() entirely.
+// The price is that it also silences the mutex-destroy-locked and thread-leak reports, and that cannot be undone by
+// additionally setting report_destroy_locked=1.
+extern "C" const char* __tsan_default_options() {
+  return "report_signal_unsafe=0:ignore_noninstrumented_modules=1";
 }
 
 #endif  // defined(HH_HAS_TSAN)

@@ -62,9 +62,9 @@ Stat::Stat(string name_, bool print, bool is_static) : _name(std::move(name_)), 
   }
   // One-time initialization; because the first static Stat may be constructed from within a parallel loop,
   // we use a magic static to make it thread-safe.
-  [[maybe_unused]] static const int show_stats_initialized = [] {
+  [[maybe_unused]] static const bool show_stats_initialized = [] {
     if (_s_show == -10) _s_show = getenv_int("SHOW_STATS");
-    return _s_show;
+    return true;
   }();
   if (_s_show <= -2) {
     _print = false;

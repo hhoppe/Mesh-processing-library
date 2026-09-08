@@ -50,7 +50,7 @@ extern "C" const char* __lsan_default_suppressions() {
       // "leak:*dlerror*\n"
   );
 }
-#endif
+#endif  // defined(HH_HAS_ASAN)
 
 namespace hh {
 

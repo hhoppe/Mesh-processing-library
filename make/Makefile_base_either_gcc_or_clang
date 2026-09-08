@@ -51,7 +51,7 @@ sanitize ?= 0#  0=none, or a -fsanitize= list such as `address,undefined` or `th
 ifneq ($(sanitize:0=),)
   # -fno-omit-frame-pointer is a no-op at -O0 but yields usable stack traces in release builds;
   #  it helps address, thread, and memory equally, and undefined with print_stacktrace=1.
-  ccommon += -fsanitize=$(sanitize) -fno-omit-frame-pointer
+  ccommon += -fsanitize=$(sanitize) -fno-omit-frame-pointer -DHH_SANITIZE='"$(sanitize)"'
   LDFLAGS += -fsanitize=$(sanitize)
   # Extend build_variant so that the built_ob sentinel forces a rebuild when this axis changes.
   build_variant_extra := -san_$(subst $(comma),_,$(sanitize))

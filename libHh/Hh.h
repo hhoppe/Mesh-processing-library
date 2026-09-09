@@ -175,11 +175,11 @@
 #endif
 
 #if defined(HH_SANITIZE)
-constexpr bool k_sanitize_at_exit = true;
+constexpr bool k_sanitize = true;
 #else
-constexpr bool k_sanitize_at_exit = false;
+constexpr bool k_sanitize = false;
 #endif
-static_assert(k_sanitize_at_exit == (HH_HAS_ASAN || HH_HAS_LSAN || HH_HAS_TSAN));
+static_assert(k_sanitize || !(HH_HAS_ASAN || HH_HAS_TSAN), "Sanitizer active but HH_SANITIZE undefined.");
 
 // *** Syntactic sugar.
 
@@ -343,7 +343,7 @@ constexpr bool k_debug = false;  // Convenience variable to avoid introducing "#
 #endif
 
 // Whether it is safe to skip destruction and process-termination handlers for a fast exit.
-constexpr bool k_fast_exit = !k_debug && !k_sanitize_at_exit;
+constexpr bool k_fast_exit = !k_debug && !k_sanitize;
 
 // Value used to prevent compiler optimizations; it is always zero but unknown to the compiler.
 extern int g_unoptimized_zero;

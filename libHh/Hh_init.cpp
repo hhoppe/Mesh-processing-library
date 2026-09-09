@@ -113,7 +113,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
     show_call_stack();
     exit_immediately(1);
   }
-  if (k_fast_exit) exit_immediately(1);
+  if (!k_debug) exit_immediately(1);
   return EXCEPTION_CONTINUE_SEARCH;  // Or EXCEPTION_EXECUTE_HANDLER, EXCEPTION_CONTINUE_EXECUTION.
 }
 

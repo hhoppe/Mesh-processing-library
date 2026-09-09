@@ -388,7 +388,7 @@ void ParseArgs::problem(const string& s) {
   std::cerr << mes;
   if (_argv0 != "") {
     std::cerr << "(Use '" << get_path_tail(_argv0) << " -?' to view options.)\n";
-    exit_immediately(1);
+    k_fast_exit ? exit_immediately(1) : exit(1);
   } else {
     assertnever("ParseArgs parsing error");
   }
@@ -452,7 +452,7 @@ void ParseArgs::fstring(Args& args) {
 void ParseArgs::fquestion(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   pargs.print_help();
-  if (!pargs._other_options_ok) exit_immediately(0);
+  if (!pargs._other_options_ok) k_fast_exit ? exit_immediately(0) : exit(0);
 }
 
 void ParseArgs::fversion(Args& args) {
@@ -478,7 +478,7 @@ void ParseArgs::fversion(Args& args) {
   str += sform(" clr=%d", __CLR_VER);
 #endif
   showf("%s\n", str.c_str());
-  exit_immediately(0);
+  k_fast_exit ? exit_immediately(0) : exit(0);
 }
 
 string ParseArgs::header() {

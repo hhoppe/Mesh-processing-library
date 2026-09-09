@@ -14,7 +14,7 @@ endif
 
 ifneq ($(sanitize),)
   cxxwarnings += -Wno-maybe-uninitialized#  Silence two stray warnings in <bits/std_function.h>
-  ccommon += --param max-gcse-memory=1000000#  For long main() in Hh_test, SphereSample, VideoViewer, HTest.
+  ccommon += --param max-gcse-memory=1000000#  For complex functions in Hh_test, SphereSample, VideoViewer, HTest.
 endif
 
 # Note that -g does not affect generated code; it only annotates it.

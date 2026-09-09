@@ -1540,7 +1540,7 @@ void do_write_texture(Args& args) {
   image.write_file(image_name);
   nooutput = true;
 
-  if (!k_debug && !args.num()) hh_clean_up(), exit_immediately(0);  // Skip ~Mesh() and ~MeshSearch().
+  if (k_fast_exit && !args.num()) hh_clean_up(), exit_immediately(0);  // Skip ~Mesh() and ~MeshSearch().
   // (Immediate exit loses running timers though.)
 
   // Reinitialize to allow more subsequent do_write_texture():
@@ -1888,6 +1888,6 @@ int main(int argc, const char** argv) {
     g_mesh.write(std::cout);
     std::cout.flush();
   }
-  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
+  if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

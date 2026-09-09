@@ -334,7 +334,7 @@ void WriteOutput() {
     // No SIGPIPE to terminate process in Win32.
     showf("Write failed, maybe due to broken pipe.\n");
     hh_clean_up();
-    k_debug ? exit(0) : exit_immediately(0);  // Skip destruction of Pool data, etc.
+    k_fast_exit ? exit_immediately(0) : exit(0);  // Skip destruction of Pool data, etc.
   }
   std::cout.flush();
 }

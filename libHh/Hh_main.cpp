@@ -280,8 +280,6 @@ string get_header_info() {
 #endif
 #if defined(HH_SANITIZE)
   config += "-sanitize=" HH_SANITIZE;
-#elif defined(HH_HAS_ASAN) || defined(HH_HAS_TSAN)
-#error "Sanitization enabled without HH_SANITIZE?"
 #endif
   return datetime + " on " + host + " (" + config + ")";
 }

@@ -149,28 +149,37 @@
 #define HH_ALWAYS_INLINE inline __attribute__((always_inline))
 #endif
 
-// AddressSanitizer detection: gcc predefines a macro, whereas clang reports a feature instead.
-#if defined(__SANITIZE_ADDRESS__)
-#define HH_HAS_ASAN 1
-#elif defined(__has_feature)
-#if __has_feature(address_sanitizer)
-#define HH_HAS_ASAN 1
+#if !defined(__has_feature)
+#define __has_feature(x) 0  // Shim for MSVC and GCC < 14.
 #endif
+
+// AddressSanitizer detection: gcc predefines a macro, whereas clang reports a feature instead.
+#if defined(__SANITIZE_ADDRESS__) || __has_feature(address_sanitizer)
+#define HH_HAS_ASAN 1
+#else
+#define HH_HAS_ASAN 0
 #endif
 
 // MSVC has ASAN but not LSAN.
-#if defined(HH_HAS_ASAN) && __has_include(<sanitizer/lsan_interface.h>)
+#if HH_HAS_ASAN && __has_include(<sanitizer/lsan_interface.h>)
 #define HH_HAS_LSAN 1
+#else
+#define HH_HAS_LSAN 0
 #endif
 
 // ThreadSanitizer detection: gcc predefines a macro, whereas older clang reports a feature instead.
-#if defined(__SANITIZE_THREAD__)
+#if defined(__SANITIZE_THREAD__) || __has_feature(thread_sanitizer)
 #define HH_HAS_TSAN 1
-#elif defined(__has_feature)
-#if __has_feature(thread_sanitizer)
-#define HH_HAS_TSAN 1
+#else
+#define HH_HAS_TSAN 0
 #endif
+
+#if defined(HH_SANITIZE)
+constexpr bool k_sanitize_at_exit = true;
+#else
+constexpr bool k_sanitize_at_exit = false;
 #endif
+static_assert(k_sanitize_at_exit == (HH_HAS_ASAN || HH_HAS_LSAN || HH_HAS_TSAN));
 
 // *** Syntactic sugar.
 
@@ -332,6 +341,9 @@ constexpr bool k_debug = true;  // Convenience variable to avoid introducing "#i
 #else
 constexpr bool k_debug = false;  // Convenience variable to avoid introducing "#if defined(HH_DEBUG)".
 #endif
+
+// Whether it is safe to skip destruction and process-termination handlers for a fast exit.
+constexpr bool k_fast_exit = !k_debug && !k_sanitize_at_exit;
 
 // Value used to prevent compiler optimizations; it is always zero but unknown to the compiler.
 extern int g_unoptimized_zero;

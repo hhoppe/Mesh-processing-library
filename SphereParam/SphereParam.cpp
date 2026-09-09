@@ -381,7 +381,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   });
   hh_clean_up();
   gmesh.write(std::cout);
-  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
+  if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().
 }
 
 // Extract a GMesh from the progressive mesh iterator, add "sph" and "uv" strings, and write it to std::cout.

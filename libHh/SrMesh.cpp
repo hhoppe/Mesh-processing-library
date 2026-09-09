@@ -377,8 +377,7 @@ void SrMesh::display_hierarchy_height() const {
     const SrVertex* vp = vs->parent;
     int height = !vp ? 1 : ar_height[narrow_cast<int>(vp - _vertices.data())] + 1;
     ar_height[vi] = height;
-    if (k_debug)
-      if (vp) assertx(vp < vs);
+    if (k_debug && vp) assertx(vp < vs);
     if (height > max_height) max_height = height;
   }
   showdf("vertex hierarchy height=%d\n", max_height);

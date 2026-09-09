@@ -4554,6 +4554,6 @@ int main(int argc, const char** argv) {
   }
   mesh.record_changes(nullptr);  // do not record mesh destruction
   oa3d.flush();
-  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
+  if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

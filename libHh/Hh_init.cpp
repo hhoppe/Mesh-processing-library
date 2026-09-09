@@ -113,7 +113,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
     show_call_stack();
     exit_immediately(1);
   }
-  if (!k_debug) exit_immediately(1);
+  if (k_fast_exit) exit_immediately(1);
   return EXCEPTION_CONTINUE_SEARCH;  // Or EXCEPTION_EXECUTE_HANDLER, EXCEPTION_CONTINUE_EXECUTION.
 }
 
@@ -415,7 +415,7 @@ details::HhInit::HhInit() { [[maybe_unused]] static const bool done = (hh_init()
 
 }  // namespace hh
 
-#if defined(HH_HAS_TSAN)
+#if HH_HAS_TSAN
 
 // ThreadSanitizer options.  Beware: this hook is called from within the sanitizer's own initialization, so its body
 // must contain no function call and no memory access.  Otherwise the function gets instrumented and calls
@@ -439,6 +439,6 @@ details::HhInit::HhInit() { [[maybe_unused]] static const bool done = (hh_init()
 // additionally setting report_destroy_locked=1.
 extern "C" const char* __tsan_default_options() { return "report_signal_unsafe=0:ignore_noninstrumented_modules=1"; }
 
-#endif  // defined(HH_HAS_TSAN)
+#endif  // HH_HAS_TSAN
 
 #endif  // !defined(HH_NO_INIT)

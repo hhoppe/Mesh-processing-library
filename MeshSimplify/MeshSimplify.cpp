@@ -4962,6 +4962,6 @@ int main(int argc, const char** argv) {
   if (original_indices != "") write_original_indices();
   wfile_prog.reset();
   gwinfo.clear();
-  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
+  if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

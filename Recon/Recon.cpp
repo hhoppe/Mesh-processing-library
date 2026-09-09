@@ -758,6 +758,6 @@ int main(int argc, const char** argv) {
     mesh.write(down_cast<WSA3dStream*>(&iom->oa3d())->os());
   }
   close_mk(iom);
-  if (!k_debug) exit_immediately(0);  // Skip ~GMesh().
+  if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

@@ -3171,10 +3171,15 @@ Array<float> compute_window_weights() {
   return fwindow;
 }
 
+// Result of structure transfer: the new image, and the intermediate z-scores (empty unless `save_zscore`).
+struct TransferResult {
+  Matrix<Vector4> mat_out;
+  Matrix<Vector4> mat_zscore;
+};
+
 // Combine detail structure from mat_s and color from mat_c to form new image mat_out.
-// Also save the intermediate z-scores into mat_zscore for visualization.
-void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& mat_c0, Matrix<Vector4>& mat_out,
-                               Matrix<Vector4>& mat_zscore) {
+// If `save_zscore`, also save the intermediate z-scores into mat_zscore for visualization.
+TransferResult structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4> mat_c0, bool save_zscore) {
   assertx(same_size(mat_s0, mat_c0));
   Array<float> fwindow = compute_window_weights();
   const int window_diam = fwindow.num();
@@ -3184,8 +3189,8 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
   Matrix<Vector4> mat_s(use_lab ? LAB_from_RGB(mat_s0) : mat_s0);
   Matrix<Vector4> mat_c(use_lab ? LAB_from_RGB(mat_c0) : mat_c0);
   static const float zscore_scale = getenv_float("ZSCORE_SCALE", 1.f, true);
-  mat_out.init(mat_s.dims());
-  mat_zscore.init(mat_s.dims());
+  Matrix<Vector4> mat_out(mat_s.dims()), mat_zscore;
+  if (save_zscore) mat_zscore.init(mat_s.dims());
   Vector4 minsvar(0.f);  // min structural variance; > 0.f to avoid negative sqrt and division by zero.
   if (1) {               // to remove blocking noise in jpg-compressed image
     if (!use_lab) minsvar = Vector4(square(5.f));
@@ -3255,11 +3260,14 @@ void structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>
       Vector4 csdv = sqrt(max(csum2 - square(csum), Vector4(0.f)));
       Vector4 zscore = (mat_s[y, x] - smean) / ssdv;
       mat_out[y, x] = cmean + zscore * csdv * zscore_scale;
-      if (use_lab) zscore = Vector4(zscore[0]);  // Z score based on luminance only
-      mat_zscore[y, x] = zscore * (255.0f / 6.0f);
+      if (save_zscore) {
+        if (use_lab) zscore = Vector4(zscore[0]);  // Z score based on luminance only.
+        mat_zscore[y, x] = zscore * (255.f / 6.f);
+      }
     }
   });
   if (use_lab) mat_out = RGB_from_LAB(mat_out);
+  return {std::move(mat_out), std::move(mat_zscore)};
 }
 
 struct ValueWeight {
@@ -3268,8 +3276,7 @@ struct ValueWeight {
 bool operator<(const ValueWeight& a, const ValueWeight& b) { return a.v < b.v; }
 
 // Same but use rank rather than z-score.
-void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& mat_c0, Matrix<Vector4>& mat_out,
-                             Matrix<Vector4>& mat_zscore) {
+TransferResult structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4> mat_c0, bool save_zscore) {
   assertx(same_size(mat_s0, mat_c0));
   Array<float> fwindow = compute_window_weights();
   const int window_diam = fwindow.num();
@@ -3277,13 +3284,14 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
   // Convert both the color image and the structure image from RGB space to LAB space.
   Matrix<Vector4> mat_s(use_lab ? LAB_from_RGB(mat_s0) : mat_s0);
   Matrix<Vector4> mat_c(use_lab ? LAB_from_RGB(mat_c0) : mat_c0);
-  mat_out.init(mat_s.dims());
-  mat_zscore.init(mat_s.dims());
+  Matrix<Vector4> mat_out(mat_s.dims()), mat_zscore;
+  if (save_zscore) mat_zscore.init(mat_s.dims());
   assertw(use_lab);
-  parallel_for_chunk(range(mat_s.ysize()), [&](auto subrange) {
+  const int k_num_channels = 3;
+  const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(mat_s.xsize()) * square(window_diam) * 10};
+  parallel_for_chunk(parallel_options, range(mat_s.ysize()), get_max_threads(), [&](int, auto subrange) {
     Array<ValueWeight> ar(square(window_diam));
-    const int NCH = 3;
-    for_int(ch, NCH) {
+    for_int(ch, k_num_channels) {
       for (const int y : subrange) {
         for_int(x, mat_s.xsize()) {
           const auto yx = V(y, x);
@@ -3308,24 +3316,24 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
             }
           }
           mat_out[yx][ch] = val;
-          mat_zscore[yx][ch] = ch == 0 ? scenterrank * 255.f : mat_zscore[yx][0];
+          // The rank is computed on all channels but only that of the first channel is visualized.
+          if (save_zscore && ch == 0) mat_zscore[yx] = Vector4(scenterrank * 255.f);
         }
       }
     }
   });
   if (use_lab) mat_out = RGB_from_LAB(mat_out);
+  return {std::move(mat_out), std::move(mat_zscore)};
 }
 
-void structure_transfer(CMatrixView<Vector4> mat_s, CMatrixView<Vector4>& mat_c, Matrix<Vector4>& mat_out,
-                        Matrix<Vector4>& mat_zscore) {
+TransferResult structure_transfer(CMatrixView<Vector4> mat_s, CMatrixView<Vector4> mat_c, bool save_zscore) {
   HH_TIMER("__structure_transfer");
   if (getenv_bool("USE_RANK_TRANSFER")) {  // results in grain artifacts
-    structure_transfer_rank(mat_s, mat_c, mat_out, mat_zscore);
+    return structure_transfer_rank(mat_s, mat_c, save_zscore);
   } else if (getenv_bool("USE_NO_TRANSFER")) {  // results in ghosting
-    mat_out = mat_c;
-    fill(mat_zscore, Vector4(0.f));
+    return {Matrix<Vector4>(mat_c), save_zscore ? Matrix<Vector4>(mat_c.dims(), Vector4(0.f)) : Matrix<Vector4>()};
   } else {  // z-score transfer is best
-    structure_transfer_zscore(mat_s, mat_c, mat_out, mat_zscore);
+    return structure_transfer_zscore(mat_s, mat_c, save_zscore);
   }
 }
 
@@ -3364,9 +3372,9 @@ void do_pyramid(Args& args) {
   // Convert the coarse-scale image.
   Matrix<Vector4> mat_c = convert_image_mat(imagec);
   // Perform structure transfer, combining detail of the downsampled fine image and color of the coarse image.
-  Matrix<Vector4> mat_xfer, mat_zscore;
-  structure_transfer(mat_gaussianf[lc], mat_c, mat_xfer, mat_zscore);
-  if (getenv_bool("OUTPUT_ZSCORE")) output_image(mat_zscore, root_name + ".Z.png");
+  const bool save_zscore = getenv_bool("OUTPUT_ZSCORE");
+  auto [mat_xfer, mat_zscore] = structure_transfer(mat_gaussianf[lc], mat_c, save_zscore);
+  if (save_zscore) output_image(mat_zscore, root_name + ".Z.png");
   // Downsample the structure-transferred image and output.
   if (ld > 0) {
     Matrix<Vector4> mat_tmp1 = downsample_image(mat_xfer);
@@ -3419,9 +3427,9 @@ void do_structuretransfer(Args& args) {
   Image structure_image(structure_filename);
   Matrix<Vector4> mat_c = convert_image_mat(color_image);
   Matrix<Vector4> mat_s = convert_image_mat(structure_image);
-  Matrix<Vector4> mat_xfer, mat_zscore;
-  structure_transfer(mat_s, mat_c, mat_xfer, mat_zscore);
-  if (getenv_bool("OUTPUT_ZSCORE")) output_image(mat_zscore, "zscore.png");
+  const bool save_zscore = getenv_bool("OUTPUT_ZSCORE");
+  const auto [mat_xfer, mat_zscore] = structure_transfer(mat_s, mat_c, save_zscore);
+  if (save_zscore) output_image(mat_zscore, "zscore.png");
   image = convert_mat_image(mat_xfer);
 }
 

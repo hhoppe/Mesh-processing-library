@@ -3,8 +3,6 @@ include $(MeshRoot)/make/Makefile_lib
 
 Video.$(extobj): includes += $(if $(VisionToolsRoot),-I$(VisionToolsRoot)/inc)
 
-# MathOp.$(extobj): cxxall += $(cxx_list_assembly_code)
-
 ifeq ($(use_pch),1)
   pch_root = precompiled_libHh
   ifeq ($(is_win_base),1)  # CONFIG=win

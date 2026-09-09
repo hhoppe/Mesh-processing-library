@@ -31,17 +31,17 @@ ifneq ($(want_plain_compiler),1)
   ccommon += -Wno-pragma-pack#  For Filterterrain.
 endif
 
-# http://stackoverflow.com/questions/10990018/how-to-generate-assembly-code-with-clang-in-intel-syntax
-# cxx_list_assembly_code = -S -mllvm --x86-asm-syntax=intel
-# Unfortunately, clang cannot emit *.s assembler output while also creating the *.o object file,
-#  so for now I do this manually by directly calling make on *.s using rule below.
-cxx_list_assembly_code =
-
-# Enable creation of assembly file if desired (as alternative to cxx_list_assembly_code):
-%.s : %.cpp
-# I see no way to interleave source code in assembly listing; -g -fverbose-asm do not help, -Wa,-achln is unrecognized.
-	$(filter-out ,$(COMPILE.cpp)) -S -mllvm --x86-asm-syntax=intel $(@:$(extasm)=cpp)
-#	rm -f v.$(@:$(extasm)=$(extobj))
+# Note that -g does not affect generated code; it only annotates it.
+ifeq ($(is_mswin),1)
+  %.$(extasm) : %.cpp
+	$(COMPILE.cpp) -gdwarf $< -o tmp_$*.$(extobj)
+	llvm-objdump -d -S --x86-asm-syntax=intel tmp_$*.$(extobj) >$@
+	@rm -f tmp_$*.$(extobj)
+else
+  %.$(extasm) : %.cpp
+	$(COMPILE.cpp) -g -masm=intel -fno-integrated-as -Wa,-acdhln $< -o tmp_$*.$(extobj) >$@
+	@rm -f tmp_$*.$(extobj)
+endif
 
 %.h.pch : %.h
 	@echo Making $(@) from $<

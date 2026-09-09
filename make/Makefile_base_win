@@ -8,7 +8,7 @@ include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_vc
 extobj = obj
 extlib = lib
 extasm = asm
-CRUMBS ?= *.ilk *.pdb *.asm *[A-Za-z_0-9]?.pch#  Wildcard *.pch would also incorrectly include clang "*.h.pch".
+CRUMBS ?= *.$(extasm) tmp_*.$(extobj) *.ilk *.pdb *[A-Za-z_0-9]?.pch#  *.pch would incorrectly include clang "*.h.pch".
 LDOUTPUT ?= -Fe$@
 no_warnings = -W0
 
@@ -70,16 +70,14 @@ cxx_disable_all_warnings = -w
 #	@echo $(CXX) $<
 	$(if $(want_plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.c) -Fo$@ $<
 
-%.asm : %.cpp
-	$(filter-out ,$(COMPILE.cpp)) -FAs -Fa$@ -Fov.$(@:$(extasm)=$(extobj)) $(@:$(extasm)=cpp)
-	rm -f v.$(@:$(extasm)=$(extobj))
+%.$(extasm) : %.cpp
+	$(COMPILE.cpp) -FAcs -Fa$@ -Fotmp_$*.$(extobj) $<
+	@rm -f tmp_$*.$(extobj)
 
 # Cancel the built-in rules.
 % : %.o
 %.o : %.cpp
 %.o : %.c
-
-cxx_list_assembly_code ?= -FAs
 
 # Avoid filenames beginning with '/', replace by 'c:/'.
 # % : %.o

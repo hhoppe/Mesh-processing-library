@@ -13,19 +13,10 @@ ifneq ($(want_plain_compiler),1)
     -fsized-deallocation -Wsized-deallocation
 endif
 
-# By itself, '-Wa,-a' defaults to '-ahls'. -h (high-level source requires "-g" debug compilation).
-# See options in http://tigcc.ticalc.org/doc/gnuasm.html
-# and http://stackoverflow.com/questions/1289881/using-gcc-to-produce-readable-assembly.
-cxx_list_assembly_code ?= -Wa,-achlns=$(<:%.cpp=%.s) -fverbose-asm -masm=intel
-
-# Enable creation of assembly file if desired (as alternative to cxx_list_assembly_code):
-%.s : %.cpp
-# -S omits object file, but does not allow interleaving source code.
-#	$(filter-out -c,$(COMPILE.cpp)) -S -Wa,-achln -fverbose-asm -masm=intel -g $(@:$(extasm)=cpp)
-# -g is required to interleave source code; hopefully does not modify generated code too much.
-	$(filter-out ,$(COMPILE.cpp)) -g -Wa,-acdhln -fverbose-asm -masm=intel $(@:$(extasm)=cpp) \
-	  -o v.$(@:$(extasm)=$(extobj)) >$(@:$(extasm)=$(extasm))
-	rm -f v.$(@:$(extasm)=$(extobj))
+# Note that -g does not affect generated code; it only annotates it.
+%.$(extasm) : %.cpp
+	$(COMPILE.cpp) -g -masm=intel -fverbose-asm -Wa,-acdhln $< -o tmp_$*.$(extobj) >$@
+	@rm -f tmp_$*.$(extobj)
 
 %.h.gch : %.h
 	@echo Making $(@) from $<

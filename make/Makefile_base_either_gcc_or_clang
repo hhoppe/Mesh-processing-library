@@ -6,7 +6,7 @@ use_pch ?= 1#  (Usually 1; use precompiled headers.)
 extobj = o
 extlib = a
 extasm = s
-CRUMBS ?= *.s *.stackdump *.h.gch *.h.pch
+CRUMBS ?= *.$(extasm) tmp_*.$(extobj) *.stackdump *.h.gch *.h.pch
 LDOUTPUT ?= -o $@
 no_warnings = -w
 

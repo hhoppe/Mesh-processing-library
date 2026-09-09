@@ -347,15 +347,4 @@ endef
 # Note: .NOTPARALLEL target will suppress parallel execution if release target is mentioned in the command line.
 #  The release target itself will rerun Make after cleaning and build test1 in parallel.
 
-# Assembly code listing: several ways to generate this:
-# (1) Create the assembly file during normal compilation by adding one of the two following rules to the Makefile.
-#   (Note: this approach does not work with clang.)
-#  file.$(extobj): cxxall += $(cxx_list_assembly_code)  # For a "%.(extobj) : %.cpp" compilation.
-#  file: cxxall += $(cxx_list_assembly_code)            # For a "% : %.cpp" compilation.
-# (2) Add a rule to separately create the assembly file:
-#   (This adds an expensive additional step.)
-#  file.$(extobj) : file.$(extasm)  # Only works for a "%.(extobj) : %.cpp" compilation.
-# (3) Directly call make on file.$(extasm).
-#   (This does not require any change to the Makefile.)
-
 endif  # ifneq ($(CONFIG),all)

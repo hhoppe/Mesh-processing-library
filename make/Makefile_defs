@@ -256,6 +256,16 @@ build_variant = $(call concat, \
   $(if $(PEDANTIC:0=),-pedantic) \
   $(build_variant_extra))#  Compiler-specific axes, e.g. $(sanitize) in Makefile_base_either_gcc_or_clang.
 
+# Assembly listings are created only on demand, so they get their own sentinel; it is never built unless
+# some *.$(extasm) file is requested as a goal.
+asm ?= $(strip $(src_cpp:%.cpp=%.$(extasm)) $(src_c:%.c=%.$(extasm)))
+prev_goal := $(.DEFAULT_GOAL)
+$(asm): built_as.$(extasm).$(build_variant)
+built_as.$(extasm).$(build_variant):
+	@rm -f $(asm) built_as.$(extasm).*
+	@touch built_as.$(extasm).$(build_variant)
+.DEFAULT_GOAL := $(prev_goal)#  The rule above must not become the default goal.
+
 ifeq ($(use_pch)$(is_win_base),11)
   # Objects compiled with -Yu reference the type information in the PCH object.  If that object is newer,
   # the linker reports LNK4206 and discards their debug info.  We let all obj files (except precompiled_libHh.obj)

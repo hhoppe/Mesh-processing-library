@@ -26,7 +26,7 @@ built_ob.$(extobj).$(build_variant):
 	@touch built_ob.$(extobj).$(build_variant)
 
 clean:
-	rm -f $(obj) $(tlib) built_ob.$(extobj).* $(CRUMBS)
+	rm -f $(obj) $(tlib) built_ob.$(extobj).* built_as.$(extasm).* $(CRUMBS)
 deepclean: clean
 	rm -f $(make_dep)
 

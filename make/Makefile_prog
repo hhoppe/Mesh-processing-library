@@ -53,7 +53,7 @@ built_ou.$(build_variant):
 	@touch built_ou.$(build_variant)
 
 clean:
-	rm -f $(obj) built_ob.$(extobj).* built_ou.* $(outputs) $(outputs:%.ou=%.diff) $(CRUMBS)
+	rm -f $(obj) built_ob.$(extobj).* built_ou.* $(outputs) $(outputs:%.ou=%.diff) built_as.$(extasm).* $(CRUMBS)
 deepclean: clean
 	rm -f $(exe) $(exe:%=%.ilk) $(exe:%=%.pdb) $(make_dep)
 

@@ -175,7 +175,7 @@ struct Object {
 };
 
 Array<unique_ptr<Object>>& g_obs = *new Array<unique_ptr<Object>>;  // never deleted so background thread is safe
-std::mutex g_mutex_obs;
+std::mutex& g_mutex_obs = *new std::mutex;
 std::atomic<int> g_cob{-1};  // currently selected object (0 .. g_obs.num() - 1), or -1 if g_obs.num() == 0
 Object& getob(int cob) {
   assertx(g_obs.ok(cob));  // (bounds-check even in Release)
@@ -188,8 +188,8 @@ std::atomic<bool> g_request_loop{false};   // request to generate seamless loop
 bool g_request_loop_synchronously{false};  // if set, wait until seamless loop is ready
 bool g_high_quality_loop{false};           // solve for all period + start labels rather than dominant ones
 bool g_working_on_loop_creation{false};    // set by background thread
-unique_ptr<Object> g_videoloop_ready_obj;  // created by background thread
-unique_ptr<Object> g_vlp_ready_obj;        // created by background thread
+unique_ptr<Object>& g_videoloop_ready_obj = *new unique_ptr<Object>;  // created by background thread
+unique_ptr<Object>& g_vlp_ready_obj = *new unique_ptr<Object>;        // created by background thread
 double g_initial_time = 0.;                // requested initial time in video (in seconds)
 double g_frametime = k_before_start;       // continuous time in units of frame; < 0. means show first frame next
 std::atomic<int> g_framenum{-1};           // clamp(int(floor(g_frametime)), 0, getob()._nframes_loaded - 1) or -1
@@ -278,7 +278,8 @@ struct S_LoopingParameters {
   Matrix<int> mat_period;  // period (1 or a multiple of K == 4)
   Matrix<float> mat_activation;
   std::atomic<bool> is_loaded{false};
-} g_lp;  // looping data structures
+};
+S_LoopingParameters& g_lp = *new S_LoopingParameters;  // looping data structures
 
 struct S_Timeline {
   const float hpad = .03f;             // horizontal padding on left and right sides
@@ -302,8 +303,9 @@ struct PrefetchImage {
   uint64_t file_modification_time{0};  // 0 == load_never_attempted
   unique_ptr<Image> pimage;            // nullptr could indicate a load error; bgra format iff k_use_bgra
 };
-Vec2<PrefetchImage> g_prefetch_image;  // {0 == next, 1 == prev}
-std::mutex g_mutex_prefetch;
+// These are never destroyed; used by the detached background thread past static destruction.
+Vec2<PrefetchImage>& g_prefetch_image = *new Vec2<PrefetchImage>;  // {0 == next, 1 == prev}
+std::mutex& g_mutex_prefetch = *new std::mutex;
 
 bool filename_is_media(const string& s) { return filename_is_image(s) || filename_is_video(s); }
 

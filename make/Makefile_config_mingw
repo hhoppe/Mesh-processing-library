@@ -33,6 +33,10 @@ ccommon += -mno-avx
 # Static linking removes the need to have the compiler directory in PATH at runtime.
 LDFLAGS += -static
 
+ifneq ($(sanitize),)
+  $(error CONFIG=mingw ships no sanitizer runtime; use CONFIG=unix for sanitize=$(sanitize))
+endif
+
 # Stack trace on error:
 # (export PATH=/cygdrive/c/mingw-w64/*/mingw64/bin:"$PATH"; gdb --batch -ex run -ex where --args ~/git/hh_src/bin/mingw/HTest -dividebyzero)
 

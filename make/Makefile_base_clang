@@ -54,6 +54,7 @@ ifeq ($(use_pch),1)
     $(info Disabling precompiled header with non-relative MeshRoot=$(MeshRoot))
   else
     cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h
+    # `-Winvalid-pch` is accepted but ignored by clang; clang nicely dies if the pch file is stale.
   endif
 endif
 

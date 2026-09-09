@@ -158,6 +158,11 @@
 #endif
 #endif
 
+// MSVC has ASAN but not LSAN.
+#if defined(HH_HAS_ASAN) && __has_include(<sanitizer/lsan_interface.h>)
+#define HH_HAS_LSAN 1
+#endif
+
 // ThreadSanitizer detection: gcc predefines a macro, whereas older clang reports a feature instead.
 #if defined(__SANITIZE_THREAD__)
 #define HH_HAS_TSAN 1

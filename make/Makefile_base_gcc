@@ -9,8 +9,12 @@ ifneq ($(want_plain_compiler),1)
   cpedantic += -Wtrampolines -Wlogical-op -Wvector-operation-performance -Wno-double-promotion
   # libstdc++ implements partial_ordering::equivalent as a nullptr and gives false-positive warnings,
   # so we omit -Wzero-as-null-pointer-constant in the next line.
-  cxxwarnings += -Wold-style-cast -Wuseless-cast \
-    -fsized-deallocation -Wsized-deallocation
+  cxxwarnings += -Wold-style-cast -Wuseless-cast -fsized-deallocation -Wsized-deallocation
+endif
+
+ifneq ($(sanitize),)
+  cxxwarnings += -Wno-maybe-uninitialized#  Silence two stray warnings in <bits/std_function.h>
+  ccommon += --param max-gcse-memory=1000000#  For long main() in Hh_test, SphereSample, VideoViewer, HTest.
 endif
 
 # Note that -g does not affect generated code; it only annotates it.
@@ -24,7 +28,7 @@ endif
 
 ifeq ($(use_pch),1)
   # Force-include the precompiled header into every *.cpp file.
-  cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h
+  cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h -Winvalid-pch
 endif
 
 ## Precompiled headers:

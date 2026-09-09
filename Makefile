@@ -93,6 +93,7 @@ debug:
 	@echo 'PATH=$(PATH)'
 	@which $(CXX)
 	$(CXX) --version
+	env | grep -i -E 'gcc|cpath|include_path'
 
 # Location of executable used for timing test.
 rel_exe_dir = $(if $(CONFIG:win=),bin/$(CONFIG),bin)#  CONFIG=win instead uses the release exe created by msbuild.

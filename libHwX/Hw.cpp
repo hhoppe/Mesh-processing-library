@@ -20,14 +20,14 @@ extern "C" {
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"  // is_pow2()
 
-#if defined(HH_HAS_ASAN)
+#if defined(HH_HAS_LSAN)
 #include <sanitizer/lsan_interface.h>
 using LeakDisabler = __lsan::ScopedDisabler;
 #else
 struct LeakDisabler {};  // No-op unless AddressSanitizer is enabled.
 #endif
 
-#if defined(HH_HAS_ASAN)
+#if defined(HH_HAS_LSAN)
 // Symbolizing the graphics-driver modules (libgallium, libnvwgf2umx, libnvidia-gpucomp; together
 //  a few hundred MB) costs about 90 seconds during the exit-time leak scan, which dwarfs the run
 //  itself.  symbolize is a flag shared by all the sanitizers, so this also strips source locations
@@ -50,7 +50,7 @@ extern "C" const char* __lsan_default_suppressions() {
       // "leak:*dlerror*\n"
   );
 }
-#endif  // defined(HH_HAS_ASAN)
+#endif  // defined(HH_HAS_LSAN)
 
 namespace hh {
 

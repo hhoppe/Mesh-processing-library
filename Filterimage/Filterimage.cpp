@@ -3277,38 +3277,42 @@ void structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<Vector4>& 
   // Convert both the color image and the structure image from RGB space to LAB space.
   Matrix<Vector4> mat_s(use_lab ? LAB_from_RGB(mat_s0) : mat_s0);
   Matrix<Vector4> mat_c(use_lab ? LAB_from_RGB(mat_c0) : mat_c0);
-  Array<ValueWeight> ar(square(window_diam));
   mat_out.init(mat_s.dims());
   mat_zscore.init(mat_s.dims());
   assertw(use_lab);
-  const int NCH = 3;
-  for_int(ch, NCH) {
-    // Parallelism would require parallel_for_chunk() due to shared `ar`.
-    for_coords(mat_s.dims(), [&](const Vec2<int>& yx) {
-      ar.init(0);                      // (initially unsorted) pdf of color image window
-      float scenterv = mat_s[yx][ch];  // value of center pixel in structure image
-      float scenterrank = 0.f;         // center pixel rank in structure image
-      for (const auto& iyx : range(twice(window_diam))) {
-        float w = fwindow[iyx[0]] * fwindow[iyx[1]];
-        float sv = mat_s.inside(yx - window_radius + iyx, k_reflected2)[ch];
-        float cv = mat_c.inside(yx - window_radius + iyx, k_reflected2)[ch];
-        if (sv < scenterv) scenterrank += w;
-        ar.push(ValueWeight{cv, w});
-      }
-      sort(ar);
-      float f = scenterrank;
-      float val = ar[square(window_diam) - 1].v;
-      for_int(idx, square(window_diam)) {
-        f -= ar[idx].w;
-        if (f <= 0.f) {
-          val = ar[idx].v;
-          break;
+  parallel_for_chunk(range(mat_s.ysize()), [&](auto subrange) {
+    Array<ValueWeight> ar(square(window_diam));
+    const int NCH = 3;
+    for_int(ch, NCH) {
+      for (const int y : subrange) {
+        for_int(x, mat_s.xsize()) {
+          const auto yx = V(y, x);
+          ar.init(0);                      // (initially unsorted) pdf of color image window
+          float scenterv = mat_s[yx][ch];  // value of center pixel in structure image
+          float scenterrank = 0.f;         // center pixel rank in structure image
+          for (const auto& iyx : range(twice(window_diam))) {
+            float w = fwindow[iyx[0]] * fwindow[iyx[1]];
+            float sv = mat_s.inside(yx - window_radius + iyx, k_reflected2)[ch];
+            float cv = mat_c.inside(yx - window_radius + iyx, k_reflected2)[ch];
+            if (sv < scenterv) scenterrank += w;
+            ar.push(ValueWeight{cv, w});
+          }
+          sort(ar);
+          float f = scenterrank;
+          float val = ar[square(window_diam) - 1].v;
+          for_int(idx, square(window_diam)) {
+            f -= ar[idx].w;
+            if (f <= 0.f) {
+              val = ar[idx].v;
+              break;
+            }
+          }
+          mat_out[yx][ch] = val;
+          mat_zscore[yx][ch] = ch == 0 ? scenterrank * 255.f : mat_zscore[yx][0];
         }
       }
-      mat_out[yx][ch] = val;
-      mat_zscore[yx][ch] = ch == 0 ? scenterrank * 255.f : mat_zscore[yx][0];
-    });
-  }
+    }
+  });
   if (use_lab) mat_out = RGB_from_LAB(mat_out);
 }
 

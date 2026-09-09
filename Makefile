@@ -17,9 +17,9 @@
 #  make CC=gcc CXX_STD=c++26 PEDANTIC=1 -j12
 #  make CONFIG=all debug  # Show the compiler paths and versions.
 #  make SHELL='bash -x -v'  # Show all executed commands.
-#  make CONFIG=unix rel=0 PEDANTIC=1 sanitize=address,undefined -C ~/git/mesh_processing -j12 test
-#  make CONFIG=unix rel=0 PEDANTIC=1 sanitize=thread -C ~/git/mesh_processing -j12 test
-#  make CONFIG=unix rel=0 PEDANTIC=1 sanitize=address,undefined -C ~/git/mesh_processing -j12 demos
+#  make CONFIG=unix release=0 PEDANTIC=1 sanitize=address,undefined -C ~/git/mesh_processing -j12 test
+#  make CONFIG=unix release=0 PEDANTIC=1 sanitize=thread -C ~/git/mesh_processing -j12 test
+#  make CONFIG=unix release=0 PEDANTIC=1 sanitize=address,undefined -C ~/git/mesh_processing -j12 demos
 #  make -C SphereParam SphereParam.s
 
 

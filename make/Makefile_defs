@@ -35,6 +35,8 @@ endif
 $(if $(call file_exists,$(MeshRoot)/mesh_processing.sln),, \
   $(warning MeshRoot='$(MeshRoot)' does not point to the mesh_processing repo root))
 
+$(if $(rel),$(error Variable 'rel' was renamed to 'release'))
+
 # Define the set of possible CONFIG configurations.
 ifeq ($(is_mswin),1)
   # We place "win" last so that the last-built libraries are for the default config.
@@ -249,7 +251,7 @@ build_variant = $(call concat, \
   $(CONFIG)- \
   $(notdir $(CC))- \
   $(subst +,p,$(CXX_STD))- \
-  $(if $(rel:0=),release,debug) \
+  $(if $(release:0=),release,debug) \
   $(if $(wholeopt:0=),-wholeopt) \
   $(if $(PEDANTIC:0=),-pedantic) \
   $(build_variant_extra))#  Compiler-specific axes, e.g. $(sanitize) in Makefile_base_either_gcc_or_clang.
@@ -269,8 +271,8 @@ endif
 # Solution: avoid "c:" paths in makefiles; add "c:" in compiler rules for CONFIG=win.
 
 CPPFLAGS = $(strip $(cppinc) $(includes))
-CXXFLAGS = $(strip $(cxxall) $(if $(rel:0=),$(cxxrel),$(cxxdbg)))
-CFLAGS = $(strip $(c-all) $(if $(rel:0=),$(crel),$(cdbg)))
+CXXFLAGS = $(strip $(cxxall) $(if $(release:0=),$(cxxrel),$(cxxdbg)))
+CFLAGS = $(strip $(c-all) $(if $(release:0=),$(crel),$(cdbg)))
 
 # Note: lib$(Hw) must be added as prefix to LDLIBS because lib$(Hw)/Hw.cpp references Image and Buffer in libHh.
 ifeq ($(is_win32:0=),1)
@@ -281,7 +283,7 @@ endif
 
 my_libs ?= Hh#  This can be replaced by an empty value to omit inclusion of libHh.
 # Subdirectory (with trailing "/") holding the Visual Studio import libraries, else empty.
-vs_lib_subdir = $(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,x64/$(if $(rel:0=),ReleaseMD,DebugMD)/)
+vs_lib_subdir = $(if $(or $(extlib:lib=),$(if $(use_vs_libs:0=),,1)),,x64/$(if $(release:0=),ReleaseMD,DebugMD)/)
 LDLIBS += $(foreach n,$(my_libs),$(MeshRoot)/lib$(n)/$(vs_lib_subdir)lib$(n).$(extlib))
 
 ifeq ($(is_unix_like),1)

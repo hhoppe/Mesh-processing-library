@@ -46,7 +46,7 @@ endif
 # Runtime instrumentation; only gcc and clang support this, so it is defined here rather than in
 #  Makefile_defs.  Some sanitizers are mutually exclusive: at most one of address, thread, or memory,
 #  each optionally combined with undefined.  gcc lacks memory; it is available only in clang.
-# e.g. make CONFIG=unix rel=0 sanitize=address,undefined
+# e.g. make CONFIG=unix release=0 sanitize=address,undefined
 sanitize ?= 0#  0=none, or a -fsanitize= list such as `address,undefined` or `thread`.
 ifneq ($(sanitize:0=),)
   # -fno-omit-frame-pointer is a no-op at -O0 but yields usable stack traces in release builds;

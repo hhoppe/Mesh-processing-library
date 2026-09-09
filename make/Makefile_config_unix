@@ -1,4 +1,4 @@
-rel ?= 1#  0=debug or 1=release (usually 1).
+release ?= 1#  0=debug or 1=release (usually 1).
 
 ifeq ($(is_mac),1)
   cppinc += -DHH_NO_IMAGE_LIBS#  To avoid installing libjpeg and libpng; instead just use ffmpeg.

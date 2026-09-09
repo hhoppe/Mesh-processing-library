@@ -1,4 +1,4 @@
-wholeopt ?= 0#  0 or 1          (Almost always 0; only applies to rel=1).
+wholeopt ?= 0#  0 or 1          (Almost always 0; only applies to release=1).
 use_dll ?= 1#                   (Usually 1: DLL_runtime (-MD or -MDd), versus 0: static_linking (-MT or -MTd)).
 use_vs_libs ?= 0#  0 or 1       (Usually 0; else use libraries generated from Visual Studio using msbuild).
 use_pch ?= 1#                   (Usually 1; use precompiled headers).
@@ -88,8 +88,8 @@ cxx_disable_all_warnings = -w
 %.cso : %.cs
 	fxc -nologo -T cs_5_0 -E $(subst -,_,$(notdir $(basename $<))) -Fo$@ $<
 
-ltcg = $(if $(wholeopt:0=),$(if $(rel:0=),/ltcg))#  Link-time code generation.
-LDFLAGS += -link -nologo -debug -incremental:no $(if $(rel:0=),-opt:ref -opt:icf) -dynamicbase:no $(ltcg)
+ltcg = $(if $(wholeopt:0=),$(if $(release:0=),/ltcg))#  Link-time code generation.
+LDFLAGS += -link -nologo -debug -incremental:no $(if $(release:0=),-opt:ref -opt:icf) -dynamicbase:no $(ltcg)
 
 graphics_libs ?= user32.lib gdi32.lib
 # graphics_libs += kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib shcore.lib advapi32.lib \
@@ -135,7 +135,7 @@ endif
 
 ## PDB files:
 # When we compile a C++ project, Visual Studio generates two PDB files.
-# They are also used by the incremental link, this is why the PDB files are also generated in release mode.
+# They are also used by the incremental link, this is why the PDB files are also generated in a release build.
 #
 # VC140.PDB (or similar) is generated at compile time, when the compiler doesn't know the EXE file name.
 # It is located in the directory where the OBJ files reside.

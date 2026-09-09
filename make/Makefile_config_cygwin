@@ -2,7 +2,7 @@
 # Cygwin pthreads, Cygwin POSIX packages, and graphics using X11.
 # It defines __GNUC__, __GLIBCXX__, __unix__, and __CYGWIN__, but no _WIN32!
 
-rel ?= 1#  0=debug or 1=release  (usually 1)
+release ?= 1#  0=debug or 1=release  (usually 1)
 
 # Strict -std=c++NN defines __STRICT_ANSI__, which hides POSIX/BSD declarations in Cygwin's headers
 # (popen, pclose, usleep, gethostname, setenv, putenv); gnu++NN keeps them visible.

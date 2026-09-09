@@ -1,6 +1,6 @@
 # For Microsoft cl.exe compiler, using MSVC STL as C++ library, vcruntime + Microsoft's Universal CRT (ucrt),
 # Win32 threads, and Win32 API.
 
-rel ?= 0#  0=debug or 1=release (usually 0).
+release ?= 0#  0=debug or 1=release (usually 0).
 
 include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_win

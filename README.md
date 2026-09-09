@@ -92,7 +92,7 @@ Note that additional options such as debug/release and
 compiler tool paths/parameters are set in the various `make/Makefile_*` files.
 These need to be adjusted depending on the versions and installation paths of the tools.
 For instance, the line
-`"rel ?= 0"` in `make/Makefile_config_win` specifies a debug (non-release) build, and
+`"release ?= 0"` in `make/Makefile_config_win` specifies a debug (non-release) build, and
 `"$(call prepend_PATH,...)"` in `make/Makefile_base_vc` sets the compiler directory.
 
 

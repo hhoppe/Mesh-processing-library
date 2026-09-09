@@ -2,7 +2,7 @@
 # Win32 threads, and Win32 API.
 # It defines __clang__, _MSC_VER, _MSVC_STL_VERSION, _WIN32, but not __GNUC__!
 
-rel ?= 1#  0=debug or 1=release (usually 1).
+release ?= 1#  0=debug or 1=release (usually 1).
 
 include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_clang
 

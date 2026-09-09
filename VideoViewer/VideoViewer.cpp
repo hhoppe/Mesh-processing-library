@@ -7,6 +7,7 @@
 #endif
 
 #include <cmath>
+#include <condition_variable>
 #include <functional>  // function<>
 #include <mutex>
 #include <thread>
@@ -176,6 +177,9 @@ struct Object {
 
 Array<unique_ptr<Object>>& g_obs = *new Array<unique_ptr<Object>>;  // never deleted so background thread is safe
 std::mutex& g_mutex_obs = *new std::mutex;
+// Signaled by the background thread after it publishes g_videoloop_ready_obj or clears
+//  g_working_on_loop_creation; guarded by g_mutex_obs.  Never destroyed, like g_mutex_obs.
+std::condition_variable& g_cond_obs = *new std::condition_variable;
 std::atomic<int> g_cob{-1};  // currently selected object (0 .. g_obs.num() - 1), or -1 if g_obs.num() == 0
 Object& getob(int cob) {
   assertx(g_obs.ok(cob));  // (bounds-check even in Release)
@@ -190,12 +194,12 @@ bool g_high_quality_loop{false};           // solve for all period + start label
 bool g_working_on_loop_creation{false};    // set by background thread
 unique_ptr<Object>& g_videoloop_ready_obj = *new unique_ptr<Object>;  // created by background thread
 unique_ptr<Object>& g_vlp_ready_obj = *new unique_ptr<Object>;        // created by background thread
-double g_initial_time = 0.;                // requested initial time in video (in seconds)
-double g_frametime = k_before_start;       // continuous time in units of frame; < 0. means show first frame next
-std::atomic<int> g_framenum{-1};           // clamp(int(floor(g_frametime)), 0, getob()._nframes_loaded - 1) or -1
-Vec2<int> g_frame_dims;                    // spatial dimensions in pixels of current video or image object
-bool g_frame_has_transparency;             // true if png image with some partially transparent pixel(s)
-bool g_refresh_texture = false;            // image has changed since uploaded as texture
+double g_initial_time = 0.;                                           // requested initial time in video (in seconds)
+double g_frametime = k_before_start;  // continuous time in units of frame; < 0. means show first frame next
+std::atomic<int> g_framenum{-1};      // clamp(int(floor(g_frametime)), 0, getob()._nframes_loaded - 1) or -1
+Vec2<int> g_frame_dims;               // spatial dimensions in pixels of current video or image object
+bool g_frame_has_transparency;        // true if png image with some partially transparent pixel(s)
+bool g_refresh_texture = false;       // image has changed since uploaded as texture
 struct Message {
   string s;
   double time;
@@ -3409,14 +3413,18 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
     process_keystring(g_keystring);
   }
   if (!product(g_win_dims)) return;
-  if (g_request_loop && g_request_loop_synchronously && g_working_on_loop_creation)
-    while (!g_videoloop_ready_obj) my_sleep(0.001);
-  if (g_videoloop_ready_obj) {  // background thread done creating seamless loop
-    std::lock_guard<std::mutex> lock(g_mutex_obs);
-    if (g_vlp_ready_obj) add_object(std::move(g_vlp_ready_obj));  // insert right after current video
-    {
-      add_object(std::move(g_videoloop_ready_obj));  // insert right after current video (or as first video)
-      set_video_frame(g_cob, k_before_start);        // set to first frame
+  {
+    std::unique_lock<std::mutex> lock(g_mutex_obs);
+    // The second disjunct lets us give up if loop creation completes without producing an object.
+    if (g_request_loop && g_request_loop_synchronously && g_working_on_loop_creation)
+      g_cond_obs.wait(lock, [] { return bool(g_videoloop_ready_obj) || !g_working_on_loop_creation; });
+    // Background thread done creating seamless loop.
+    if (g_videoloop_ready_obj) {
+      if (g_vlp_ready_obj) add_object(std::move(g_vlp_ready_obj));  // insert right after current video
+      {
+        add_object(std::move(g_videoloop_ready_obj));  // insert right after current video (or as first video)
+        set_video_frame(g_cob, k_before_start);        // set to first frame
+      }
     }
   }
   if (g_selected.button_active && g_cob >= 0) {  // drag operation using one of the three mouse buttons.
@@ -4070,6 +4078,7 @@ void background_work(bool asynchronous) {
         }
         //----------------------------------------------------------------------
         message("Here is the resulting seamless video loop (press <p><p> to select original video)", 5.);
+        unique_ptr<Object> vlp_obj, loop_obj;  // Built here, then published together under g_mutex_obs.
         if (1) {
           string filename = get_path_root(getob()._filename) + "_vlp.png";
           Image image_vlp(g_lp.mat_start.dims());
@@ -4089,16 +4098,22 @@ void background_work(bool asynchronous) {
             image_vlp[yx] = pixel;
           });
           const bool bgra = false;
-          g_vlp_ready_obj = make_unique<Object>(std::move(image_vlp), std::move(filename), bgra);
+          vlp_obj = make_unique<Object>(std::move(image_vlp), std::move(filename), bgra);
         }
         {
           string filename = append_to_filename(getob()._filename, "_loop");
-          g_videoloop_ready_obj = make_unique<Object>(ob, std::move(videoloop), std::move(videoloop_nv12), filename);
-          g_videoloop_ready_obj->_video.attrib().audio.clear();  // open research problem
+          loop_obj = make_unique<Object>(ob, std::move(videoloop), std::move(videoloop_nv12), filename);
+          loop_obj->_video.attrib().audio.clear();  // open research problem
         }
         g_lp.is_loaded = false;  // reset
         ob._locked_by_background_thread = false;
-        g_working_on_loop_creation = false;
+        {  // Publish the results, and wake the foreground thread if it is waiting for them.
+          std::lock_guard<std::mutex> lock(g_mutex_obs);
+          if (vlp_obj) g_vlp_ready_obj = std::move(vlp_obj);
+          g_videoloop_ready_obj = std::move(loop_obj);
+          g_working_on_loop_creation = false;
+        }
+        g_cond_obs.notify_all();
         g_request_loop = false;
         if (1) hw.redraw_later();
         hw.wake_up();

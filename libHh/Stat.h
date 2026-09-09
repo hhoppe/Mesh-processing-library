@@ -37,7 +37,7 @@ class Stat {
   void set_rms() { _use_rms = true; }  // Show rms instead of sdv.
   void zero();
   void enter(float value) { enter_aux(value, 1); }
-  void enter(double value) {enter_aux(value, 1); }
+  void enter(double value) { enter_aux(value, 1); }
   void enter(int value) { enter(double(value)); }
   void enter(unsigned value) { enter(double(value)); }
   void enter_multiple(float value, int factor) { enter_aux(value, factor); }  // `factor` may be negative.

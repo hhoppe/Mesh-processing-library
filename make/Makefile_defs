@@ -134,6 +134,12 @@ have_lapack = $(if $(filter -DHH_HAVE_LAPACK,$(cppinc)),1)
 have_recipes = $(if $(filter -DHH_HAVE_SIMPLEX,$(cppinc)),1)
 have_image_libs = $(if $(filter -DHH_NO_IMAGE_LIBS,$(cppinc)),,1)
 
+# A goal that names no target but does name an existing file makes gmake print "Nothing to be done" rather
+# than fail; on a case-insensitive filesystem this silently hides typos like "Htest" rather than "HTest".
+# Each makefile lists its valid goals in phony_targets, and any file-like goals in goal_patterns.
+unknown_goals = $(filter-out $(phony_targets) $(goal_patterns),$(MAKECMDGOALS))
+check_goals = $(if $(unknown_goals),$(error No rule to make target(s): $(unknown_goals)))
+
 # Use CONFIG=all as a way to run gmake successively on all $(build_configs).
 # Note two possible issues:
 # (1) If the default goal is already defined before this file, a recipe redefinition warning is issued (but it is OK).

@@ -50,6 +50,9 @@ debug:
 	@echo $(filter %.$(extlib),$(LDLIBS))
 	@echo PATH="$(PATH)"
 
-.PHONY: all depend libs progs test clean deepclean debug
+phony_targets += all depend libs progs test clean deepclean debug
+goal_patterns += $(make_dep) $(exes) %.$(extobj) %.ou %.diff
+.PHONY: $(phony_targets)
+$(check_goals)
 
 endif  # ifneq ($(CONFIG),all)

@@ -30,7 +30,10 @@ clean:
 deepclean: clean
 	rm -f $(make_dep)
 
-.PHONY: all depend clean deepclean
+phony_targets += all depend clean deepclean
+goal_patterns += $(make_dep) $(tlib) %.$(extobj)
+.PHONY: $(phony_targets)
+$(check_goals)
 
 ifeq ($(CXX),cl)  # (Was: ifeq ($(extobj),obj))
 

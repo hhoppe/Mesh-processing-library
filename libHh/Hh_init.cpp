@@ -437,9 +437,7 @@ details::HhInit::HhInit() { [[maybe_unused]] static const bool done = (hh_init()
 // cheaper than "race:libgallium" suppressions, and it removes the need for __tsan_default_suppressions() entirely.
 // The price is that it also silences the mutex-destroy-locked and thread-leak reports, and that cannot be undone by
 // additionally setting report_destroy_locked=1.
-extern "C" const char* __tsan_default_options() {
-  return "report_signal_unsafe=0:ignore_noninstrumented_modules=1";
-}
+extern "C" const char* __tsan_default_options() { return "report_signal_unsafe=0:ignore_noninstrumented_modules=1"; }
 
 #endif  // defined(HH_HAS_TSAN)
 

@@ -51,7 +51,7 @@ debug:
 	@echo PATH="$(PATH)"
 
 phony_targets += all depend libs progs test clean deepclean debug
-goal_patterns += $(make_dep) $(exes) %.$(extobj) %.ou %.diff
+goal_patterns += $(make_dep) $(exes) %.$(extobj) %.$(extasm) %.ou %.diff
 .PHONY: $(phony_targets)
 $(check_goals)
 

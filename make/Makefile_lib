@@ -31,7 +31,7 @@ deepclean: clean
 	rm -f $(make_dep)
 
 phony_targets += all depend clean deepclean
-goal_patterns += $(make_dep) $(tlib) %.$(extobj)
+goal_patterns += $(make_dep) $(tlib) %.$(extobj) %.$(extasm)
 .PHONY: $(phony_targets)
 $(check_goals)
 

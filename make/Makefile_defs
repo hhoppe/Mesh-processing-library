@@ -138,7 +138,8 @@ have_image_libs = $(if $(filter -DHH_NO_IMAGE_LIBS,$(cppinc)),,1)
 # than fail; on a case-insensitive filesystem this silently hides typos like "Htest" rather than "HTest".
 # Each makefile lists its valid goals in phony_targets, and any file-like goals in goal_patterns.
 unknown_goals = $(filter-out $(phony_targets) $(goal_patterns),$(MAKECMDGOALS))
-check_goals = $(if $(unknown_goals),$(error No rule to make target(s): $(unknown_goals)))
+check_goals = $(if $(unknown_goals), \
+  $(error No rule to make target(s): $(unknown_goals) [$(phony_targets) $(goal_patterns)]))
 
 # Use CONFIG=all as a way to run gmake successively on all $(build_configs).
 # Note two possible issues:

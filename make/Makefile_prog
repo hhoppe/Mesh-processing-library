@@ -66,7 +66,7 @@ debug:
 	echo 'exe=$(exe) obj=$(obj) LDLIBS=$(LDLIBS) filter=$(foreach n,$(LDLIBS),$(if $(findstring /,$(n)),$(n)))'
 
 phony_targets += all depend libs progs test clean deepclean debug
-goal_patterns += $(make_dep) $(exe) %.$(extobj) %.ou %.diff  # Literal names are allowed alongside patterns.
+goal_patterns += $(make_dep) $(exe) %.$(extobj) %.$(extasm) %.ou %.diff
 .PHONY: $(phony_targets)
 $(check_goals)
 

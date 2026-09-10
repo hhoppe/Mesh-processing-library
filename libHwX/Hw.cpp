@@ -400,7 +400,7 @@ void Hw::open() {
         GLenum v = glGetError();
         if (v) {
           assertx(v == GL_OUT_OF_MEMORY);  // Unexpected behavior under WSL after glXUseXFont().
-          Warning("Got GL_OUT_OF_MEMORY after glXUseXFont(); ignoring.");
+          Warning("Got GL_OUT_OF_MEMORY after glXUseXFont(); ignoring");
           assertx(!glGetError());
         }
       }

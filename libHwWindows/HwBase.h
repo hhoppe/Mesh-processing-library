@@ -588,17 +588,19 @@ inline void HwBase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
     glWindowPos2i(x, y);  // reverse y; not clip-tested, so raster position valid
     glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
   } else {
+#if !defined(_WIN32)  // On Windows, this fallback is expected under Remote Desktop.
     // Observed often after `make CONFIG=unix CC=gcc sanitize=address,undefined -j12 demos`: in the first G3dOGL
     // window of the view phase (view_recon_cactus.sh), `glWindowPos2i` is unexpectedly absent and `glCallLists`
     // faults below.  The GL stack is already degraded at that point; the cause is not understood.
     if (Warning("glWindowPos2i is unavailable; using glRasterPos2i")) {
-      // Record the GL implementation to indentify a degraded or fallback driver after the fact.
+      // Record the GL implementation to identify a degraded or fallback driver after the fact.
       const auto get = [](GLenum name) {
         const char* s2 = reinterpret_cast<const char*>(glGetString(name));
         return s2 ? s2 : "<null>";
       };
       showf("OpenGL: %s | %s\n", get(GL_RENDERER), get(GL_VERSION));
     }
+#endif
     const int x = yx[1], y = yx[0] + _font_dims[0];
     glRasterPos2i(x, y);  // clipped, so raster position may be invalid
     glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));

@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "SphereMapper.h"
 
+#include <csignal>  // std::signal(), SIGPIPE.
+
 #include "boost_minima.h"
 
 #include "libHh/ConsoleProgress.h"
@@ -713,6 +715,10 @@ class SphereMapper::Implementation {
     string filename = "| G3dOGL -geom 1500x1500 -terse -hither 0.1 -st none -key CDe---";
     if (0) filename = "debug_output.txt";
     _visualizer = new WFile(filename);
+#if defined(SIGPIPE)
+    // Make writes to a closed pipe fail (setting the stream state) instead of killing the process.
+    std::signal(SIGPIPE, SIG_IGN);
+#endif
   }
 
   void initialize_visualizer() {

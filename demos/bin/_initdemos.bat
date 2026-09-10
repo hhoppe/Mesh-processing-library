@@ -9,7 +9,7 @@
 :: set path=c:/windows/system32
 
 :: Add all possible build directories as fallback if not specified below.
-set path=../bin;../bin/debug;../bin/win;../bin/mingw;../bin/clang../bin/cygwin;../bin/unix;%path%
+set path=../bin;../bin/debug;../bin/win;../bin/mingw;../bin/clang;../bin/cygwin;../bin/unix;%path%
 
 :: Explicitly set desired build directory here.
 :: set path=%path%

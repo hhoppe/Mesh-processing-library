@@ -3738,9 +3738,9 @@ struct NormalRecord {
 };
 
 // (Not Array<Array<T>> because the nullptr distinguishes "non-computed" vs "empty array".)
-Array<unique_ptr<Array<NormalRecord>>> psc_unify_normal_list;
-Array<unique_ptr<Array<NormalRecord>>> psc_split_normal_list;
-Array<unique_ptr<Array<AreaData>>> psc_unify_area_list;
+Array<std::optional<Array<NormalRecord>>> psc_unify_normal_list;
+Array<std::optional<Array<NormalRecord>>> psc_split_normal_list;
+Array<std::optional<Array<AreaData>>> psc_unify_area_list;
 Array<SplitRecord> psc_lod_list;  // HH: last entry is null!
 int psc_lod_num = 0;
 float psc_lod_level = getenv_float("PSC_LOD_LEVEL", 0.f);
@@ -3911,17 +3911,17 @@ void read_psc(const string& filename) {
     s_norgroup[attrid] = to_int(assertx(GMesh::string_key(str, s, "norgroup")));
   }
   int last = psc_lod_list.add(1);
-  psc_unify_normal_list.push(nullptr);
-  psc_split_normal_list.push(nullptr);
-  psc_unify_area_list.push(nullptr);
+  psc_unify_normal_list.push(std::nullopt);
+  psc_split_normal_list.push(std::nullopt);
+  psc_unify_area_list.push(std::nullopt);
   while (!psc_lod_list[last].read(fin())) {
     last = psc_lod_list.add(1);
-    psc_unify_normal_list.push(nullptr);
-    psc_split_normal_list.push(nullptr);
-    psc_unify_area_list.push(nullptr);
+    psc_unify_normal_list.push(std::nullopt);
+    psc_split_normal_list.push(std::nullopt);
+    psc_unify_area_list.push(std::nullopt);
   }
   // initialize area of the base vertex
-  psc_unify_area_list[0] = make_unique<Array<AreaData>>();
+  psc_unify_area_list[0].emplace();
   Array<AreaData>& aar = *psc_unify_area_list[0];
   AreaData ar;
   ar.dim = 0;
@@ -4005,7 +4005,7 @@ void psc_update_lod() {
           dummy_use(f);
           cnt++;
         }
-        psc_unify_normal_list[i] = make_unique<Array<NormalRecord>>();
+        psc_unify_normal_list[i].emplace();
         Array<NormalRecord>& anr = *psc_unify_normal_list[i];
         anr.reserve(cnt);
         Vec3<Simplex> verts;
@@ -4094,7 +4094,7 @@ void psc_update_lod() {
           dummy_use(f);
           cnt++;
         }
-        psc_split_normal_list[i] = make_unique<Array<NormalRecord>>();
+        psc_split_normal_list[i].emplace();
         Array<NormalRecord>& anr = *psc_split_normal_list[i];
         anr.reserve(cnt);
         NormalRecord nr;
@@ -4142,7 +4142,7 @@ void psc_update_lod() {
         }
       }
       if (!psc_unify_area_list[i + 1]) {
-        psc_unify_area_list[i + 1] = make_unique<Array<AreaData>>();
+        psc_unify_area_list[i + 1].emplace();
         Array<AreaData>& aar = *psc_unify_area_list[i + 1];
         CArrayView<AreaData> tmp = vsplit.getAreas();
         aar.reserve(tmp.num());

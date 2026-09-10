@@ -1,6 +1,13 @@
 # This file is sourced from the other demos.
 # There is no need to run it directly.
 
+# Fail the script as soon as any command fails, so that sanitizer errors and crashes reach make.
+# `pipefail` is needed because several demos pipe one tool into another.
+set -e -o pipefail
+
+# Report the failing command's line and status, since errexit otherwise exits silently.
+trap 'echo "${BASH_SOURCE[0]}: line $LINENO: exit status $?" >&2' ERR
+
 # Test that the demos package is self-contained by overriding PATH to just the bare system directories.
 # PATH=c:/cygwin/bin:c:/windows/system32
 # PATH=c:/windows/system32

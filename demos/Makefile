@@ -62,9 +62,11 @@ view_scripts = \
 
 all:
 	Filterimage --version   # Show build information.
-	$(MAKE) create
-	ls -alt data
-	$(MAKE) view
+	@status=0; \
+	$(MAKE) -k create || status=$$?; \
+	ls -alt data; \
+	$(MAKE) view || status=$$?; \
+	exit $$status
 
 # Similar to all_demos_create_results.sh but with parallel execution.
 create: $(create_scripts)
@@ -82,8 +84,13 @@ depend $(make_dep):
 determine_approximation_error.sh: create_pm_club.sh
 
 # Similar to all_demos_view_results.sh (still sequential).
+# Run every demo even if some fail, and report the last failing status.
 view:
-	for i in $(view_scripts); do $$i; done
+	@status=0; \
+	for i in $(view_scripts); do \
+	  $$i || { s=$$?; echo "*** $$i exited with status $$s." >&2; status=$$s; }; \
+	done; \
+	exit $$status
 
 clean deepclean:
 # (Use a relative pathname because prepend_PATH does not update PATH when make goal is clean.)

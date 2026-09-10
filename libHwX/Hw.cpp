@@ -2,6 +2,7 @@
 #include "Hw.h"
 
 #include <sys/select.h>  // fd_set, select()
+#include <sys/time.h>    // setitimer(), struct itimerval, struct timeval.
 
 extern "C" {
 #include <X11/Xatom.h>  // XA_STRING
@@ -13,7 +14,6 @@ extern "C" {
 #include <cerrno>
 #include <csignal>  // signal()
 #include <cstring>  // strlen(), strerror()
-#include <ctime>    // setitimer(), struct itimerval, struct timeval
 
 #include "Hw.xbm"
 #include "libHh/Args.h"

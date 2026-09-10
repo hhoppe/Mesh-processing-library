@@ -191,26 +191,76 @@ static_assert(k_sanitize || !(HH_HAS_ASAN || HH_HAS_TSAN), "Sanitizer active but
 // make cppinc='-DTEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE=1 -D_HAS_STD_BYTE=0' -C ~/git/hh_src -j12 both
 // (We use "_HAS_STD_BYTE=0" to overcome WIN32 name collision on "byte" between <urlmon.h> and std.)
 #if defined(TEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE)
+#include <any>
 #include <array>
+#include <atomic>
+#include <bit>
 #include <bitset>
+#include <charconv>
+#include <chrono>
 #include <complex>
+#include <condition_variable>
+#include <coroutine>
 #include <deque>
+#include <expected>
+#include <filesystem>
+#include <format>
 #include <forward_list>
+#include <fstream>
 #include <functional>
+#include <future>
+#include <iomanip>
+#include <iterator>
+#include <latch>
 #include <list>
 #include <map>
-#include <mdspan>
+#include <memory_resource>
+#include <mutex>
+#include <numbers>
+#include <numeric>
 #include <optional>
+#include <print>
 #include <queue>
+#include <random>
 #include <regex>
+#include <semaphore>
 #include <set>
+#include <shared_mutex>
+#include <source_location>
 #include <span>
 #include <stack>
+#include <stop_token>
+#include <string_view>
+#include <system_error>
+#include <thread>
+#include <typeindex>
 #include <unordered_map>
 #include <unordered_set>
 #include <valarray>
 #include <variant>
 #include <vector>
+// Headers that are absent from some of the supported standard libraries (e.g., libstdc++ 14 or libc++ 18).
+#if __has_include(<flat_map>)
+#include <flat_map>
+#endif
+#if __has_include(<flat_set>)
+#include <flat_set>
+#endif
+#if __has_include(<generator>)
+#include <generator>
+#endif
+#if __has_include(<mdspan>)
+#include <mdspan>
+#endif
+#if __has_include(<spanstream>)
+#include <spanstream>
+#endif
+#if __has_include(<stacktrace>)
+#include <stacktrace>
+#endif
+#if __has_include(<syncstream>)
+#include <syncstream>
+#endif
 #if defined(__clang__)
 #pragma clang diagnostic ignored "-Wheader-hygiene"
 #endif

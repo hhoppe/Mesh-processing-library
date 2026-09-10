@@ -41,13 +41,12 @@ double get_precise_time() {
 
 #if 0 && _MSC_VER >= 1900
 // Standard C++.  However, it is less efficient and less precise than QueryPerformanceCounter() or clock_gettime().
-#define USE_HIGH_RESOLUTION_CLOCK
+#define USE_STEADY_CLOCK
 #endif
 
 int64_t get_precise_counter() {
-#if defined(USE_HIGH_RESOLUTION_CLOCK)
-  using Clock = std::chrono::high_resolution_clock;
-  static_assert(Clock::is_steady);  // Should be monotonic, else we might get negative durations.
+#if defined(USE_STEADY_CLOCK)
+  using Clock = std::chrono::steady_clock;
   Clock::time_point t = Clock::now();
   Clock::duration duration = t.time_since_epoch();  // Number of ticks, of type Clock::rep.
   // SHOW(type_name(duration));
@@ -72,8 +71,8 @@ int64_t get_precise_counter() {
 }
 
 double get_seconds_per_counter() {
-#if defined(USE_HIGH_RESOLUTION_CLOCK)
-  using Clock = std::chrono::high_resolution_clock;
+#if defined(USE_STEADY_CLOCK)
+  using Clock = std::chrono::steady_clock;
   constexpr std::chrono::duration<Clock::rep, std::ratio<1>> k_one_sec{1};  // 1 second.
   using Duration = Clock::duration;
   constexpr Duration::rep nticks_per_sec = std::chrono::duration_cast<Duration>(k_one_sec).count();

@@ -55,10 +55,10 @@ class SimpleTimer {
 
 #if 0 && _MSC_VER >= 1900
 // Standard C++.  However, it is less efficient and less precise than QueryPerformanceCounter() or clock_gettime().
-#define HH_USE_HIGH_RESOLUTION_CLOCK
+#define HH_USE_STEADY_CLOCK
 #endif
 
-#if defined(HH_USE_HIGH_RESOLUTION_CLOCK)
+#if defined(HH_USE_STEADY_CLOCK)
 #include <chrono>
 #elif defined(_WIN32)
 #define WIN32_LEAN_AND_MEAN
@@ -71,8 +71,8 @@ class SimpleTimer {
 namespace hh {
 
 inline int64_t SimpleTimer::get_precise_counter() {
-#if defined(HH_USE_HIGH_RESOLUTION_CLOCK)
-  return possible_cast<int64_t>(std::chrono::high_resolution_clock::now().time_since_epoch().count());
+#if defined(HH_USE_STEADY_CLOCK)
+  return std::chrono::steady_clock::now().time_since_epoch().count();
 #elif defined(_WIN32)
   LARGE_INTEGER l;
   QueryPerformanceCounter(&l);
@@ -85,8 +85,8 @@ inline int64_t SimpleTimer::get_precise_counter() {
 }
 
 inline double SimpleTimer::get_seconds_per_counter() {
-#if defined(HH_USE_HIGH_RESOLUTION_CLOCK)
-  using Clock = std::chrono::high_resolution_clock;
+#if defined(HH_USE_STEADY_CLOCK)
+  using Clock = std::chrono::steady_clock;
   constexpr double v = 1. / std::chrono::duration_cast<Clock::duration>(std::chrono::duration<Clock::rep>{1}).count();
   return v;
 #elif defined(_WIN32)

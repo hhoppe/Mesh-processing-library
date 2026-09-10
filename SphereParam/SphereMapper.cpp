@@ -226,7 +226,7 @@ class SphereMapper::Implementation {
     float tmin;
     {
       const Precision x0n = Precision(dot<double>(x0, nhs)), dnhsl = Precision(dot<double>(nhs, l));
-      if (!x0n && !dnhsl) return;
+      if (square(x0n) + square(dnhsl) < square(1e-6f)) return;
       tmin = possible_cast<float>(std::atan2(-x0n, dnhsl));
     }
     if (itmin == -TAU && itmax == TAU) {
@@ -334,6 +334,7 @@ class SphereMapper::Implementation {
 
   // Return the point on the great-circle arc between _sphmap[v1] and _sphmap[v2] that is nearest the arc midpoint
   // yet lies within the kernel of the spherical polygon formed by the 1-ring neighbors of the vertex v.
+  // If the kernel does not intersect the arc, return the arc midpoint as a fallback.
   [[nodiscard]] Point arc_midpoint_within_kernel(int v, int someface, int v1, int v2) const {
     const Vector x0 = normalized(_sphmap[v1] + _sphmap[v2]);  // Midpoint of the arc; possibly outside the kernel.
     const Vector dir = normalized(project_orthogonally(_sphmap[v2] - _sphmap[v1], x0));

@@ -7,6 +7,8 @@
 #include <unistd.h>  // close(), dup2()
 #endif
 
+#include <csignal>  // std::signal(), SIGPIPE.
+
 #include "libHh/Args.h"
 #include "libHh/FileIO.h"
 #include "libHh/FrameIO.h"
@@ -252,6 +254,10 @@ using namespace g3d;
 int main(int argc, const char** argv) {
   ensure_utf8_encoding(argc, argv);
   Array<string> aargs(ArrayView(argv, argc));
+#if defined(SIGPIPE)
+  // Let writes to a closed pipe fail (handled in WriteOutput()) instead of killing the process.
+  std::signal(SIGPIPE, SIG_IGN);
+#endif
   lod_level = getenv_float("LOD_LEVEL", lod_level);
   override_frametime = getenv_float("G3D_FRAMETIME", override_frametime);
   selected.frel = Frame::identity();

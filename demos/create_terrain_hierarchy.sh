@@ -40,10 +40,10 @@ echo Constructing 2x2 progressive meshes at level 1
 for x in {0..1}; do
   for y in {0..1}; do
     rl=$r.l1.x$x.y$y
-    (( xo0 = $x * 2 + 0 ))
-    (( xo1 = $x * 2 + 1 ))
-    (( yo0 = $y * 2 + 0 ))
-    (( yo1 = $y * 2 + 1 ))
+    xo0=$((x * 2))
+    xo1=$((x * 2 + 1))
+    yo0=$((y * 2))
+    yo1=$((y * 2 + 1))
     cp -p $r.l0.x$xo0.y$yo0.pm $rl.x0.y0.pm
     cp -p $r.l0.x$xo0.y$yo1.pm $rl.x0.y1.pm
     cp -p $r.l0.x$xo1.y$yo0.pm $rl.x1.y0.pm

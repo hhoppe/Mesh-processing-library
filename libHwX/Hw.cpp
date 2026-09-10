@@ -396,16 +396,17 @@ void Hw::open() {
       _listbase_font = assertx(glGenLists(last + 1));
       assertx(!gl_report_errors());
       glXUseXFont(id, first, last - first + 1, _listbase_font + first);
-      // glXUseXFont() copies the glyph bitmaps into the display lists, so the font is no longer needed.
-      XFreeFont(_display, font_info2);
       {
         GLenum v = glGetError();
         if (v) {
           assertx(v == GL_OUT_OF_MEMORY);  // Unexpected behavior under WSL after glXUseXFont().
+          Warning("Got GL_OUT_OF_MEMORY after glXUseXFont(); ignoring.");
           assertx(!glGetError());
         }
       }
       assertx(!gl_report_errors());
+      // glXUseXFont() copies the glyph bitmaps into the display lists, so the font is no longer needed.
+      XFreeFont(_display, font_info2);
       if (font_name == "fixed") {
         _font_dims = V(13 + 2, 6);
       } else if (!_bigfont) {

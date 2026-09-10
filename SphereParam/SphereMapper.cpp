@@ -330,6 +330,21 @@ class SphereMapper::Implementation {
     return edge_normals;
   }
 
+  // Return the point on the great-circle arc between _sphmap[v1] and _sphmap[v2] that is nearest the arc midpoint
+  // yet lies within the kernel of the spherical polygon formed by the 1-ring neighbors of the vertex v.
+  [[nodiscard]] Point arc_midpoint_within_kernel(int v, int someface, int v1, int v2) const {
+    const Vector x0 = normalized(_sphmap[v1] + _sphmap[v2]);  // Midpoint of the arc; possibly outside the kernel.
+    const Vector dir = normalized(project_orthogonally(_sphmap[v2] - _sphmap[v1], x0));
+    float tmin = -TAU, tmax = TAU;
+    for (const Vector& enormal : gather_1ring_external_edges(v, someface))
+      intersect_param_circle_halfspace(x0, dir, enormal, tmin, tmax);
+    if (!assertw(tmin <= tmax)) return x0;  // The kernel does not meet the arc, so just retain the midpoint.
+    const float k_pad_fraction = .01f;  // Keep some distance away from the kernel boundary, as in optimize_vertex().
+    const float pad = (tmax - tmin) * k_pad_fraction;
+    const float t = clamp(0.f, tmin + pad, tmax - pad);
+    return !t ? x0 : normalized(interp_on_arc(x0, dir, t));  // The test on t keeps the common case bit-exact.
+  }
+
   struct OptimizerFace {
     Vec3<Vec3<Precision>> pd;  // On spherical domain; [0] == sph_value_being_optimized.
     Vec3<Vec3<Precision>> ps;  // On mesh surface;     [0] == center_vertex.
@@ -422,7 +437,7 @@ class SphereMapper::Implementation {
         if (0) Warning("Objective function increased");  // Due to k_pad_fraction or !(tmin <= 0.f && tmax >= 0.f).
       } else {
         x0 = normalized(interp_on_arc(x0, dir, tbest));
-        ASSERTX(!any_adjacent_face_flipped(v, someface));
+        if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
       }
       dir = normalized(cross(x0, dir));  // Now try the perpendicular direction.
     }
@@ -437,22 +452,21 @@ class SphereMapper::Implementation {
   void optimize_vertex_split(int v, int someface) {
     HH_STIMER("_optimize_vertex_split");
     if (int vl, vr; _options.respect_sharp_edges && vertex_is_on_sharp_edge(_pmi, v, someface, vl, vr)) {
-      Vector sp = normalized(_sphmap[vl] + _sphmap[vr]);
-      if (0) SHOW(_sphmap[vl], _sphmap[vr], sp);
-      _sphmap[v] = sp;
+      _sphmap[v] = arc_midpoint_within_kernel(v, someface, vl, vr);
+      if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
     } else if (_pmi.is_boundary(v, someface)) {
-      // Find neighboring boundary vertices and average them.
+      // Find the neighboring boundary vertices and take the midpoint of their arc.
       const int fclw = _pmi.most_clw_face(v, someface), fccw = _pmi.most_ccw_face(v, someface);
       const int vclw = _pmi._wedges[_pmi._faces[fclw].wedges[mod3(_pmi.get_jvf(v, fclw) + 1)]].vertex;
       const int vccw = _pmi._wedges[_pmi._faces[fccw].wedges[mod3(_pmi.get_jvf(v, fccw) + 2)]].vertex;
-      const Vector sp = normalized(_sphmap[vclw] + _sphmap[vccw]);
-      _sphmap[v] = sp;
+      _sphmap[v] = arc_midpoint_within_kernel(v, someface, vclw, vccw);
+      if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
     } else {
       const auto edge_normals = gather_1ring_external_edges(v, someface);
       _sphmap[v] = kernel_centroid_of_spherical_polygon(edge_normals);
       if (1) assertx(is_unit(_sphmap[v]));
+      if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
     }
-    ASSERTX(!any_adjacent_face_flipped(v, someface));
 
     set_stretch_scaling();
     for_int(i, _optim_vsplit_vt_iter) _sphmap[v] = optimize_vertex(v, someface);

@@ -26,8 +26,8 @@ for x in {0..3}; do
     bin/meshtopm.sh $rl.orig.m -vsgeom -terrain -no_simp_bnd >$rl.pm 2>>$log
     rm -f $rl.orig.m
     FilterPM $rl.pm -maxresid .30e-3 -truncate_prior >$r.l-1.x$x.y$y.pm 2>>$log
-    FilterPM $rl.pm -maxresid .40e-3 -truncate_prior -maxresidd .30e-3 -truncate_beyond >v.pm 2>>$log &&
-      mv v.pm $rl.pm
+    FilterPM $rl.pm -maxresid .40e-3 -truncate_prior -maxresidd .30e-3 -truncate_beyond >v.pm 2>>$log
+    mv v.pm $rl.pm
   done
 done
 echo Stitching progressive meshes to form >$r.l-1.stitched.pm

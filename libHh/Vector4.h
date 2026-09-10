@@ -19,9 +19,7 @@
 #endif
 
 #if defined(HH_VECTOR4_SSE)
-#include <emmintrin.h>  // __m128i
-#include <smmintrin.h>  // _mm_dp_ps(), _mm_cvtepu8_epi32(), etc
-#include <xmmintrin.h>  // __m128, _mm_add_ps(), etc
+#include <smmintrin.h>  // SSE4.1 and transitively SSE2 and SSE: __m128, __m128i, _mm_dp_ps(), etc.
 #elif defined(HH_VECTOR4_NEON)
 #include <arm_neon.h>
 #endif

@@ -3737,7 +3737,7 @@ struct NormalRecord {
   Vec3<Vector> corner_nor;
 };
 
-// (Not Array<Array<T>> because the nullptr distinguishes "non-computed" vs "empty array".)
+// (Not Array<Array<T>> because empty optional distinguishes "non-computed" vs "empty array".)
 Array<std::optional<Array<NormalRecord>>> psc_unify_normal_list;
 Array<std::optional<Array<NormalRecord>>> psc_split_normal_list;
 Array<std::optional<Array<AreaData>>> psc_unify_area_list;
@@ -3921,8 +3921,7 @@ void read_psc(const string& filename) {
     psc_unify_area_list.push(std::nullopt);
   }
   // initialize area of the base vertex
-  psc_unify_area_list[0].emplace();
-  Array<AreaData>& aar = *psc_unify_area_list[0];
+  Array<AreaData>& aar = psc_unify_area_list[0].emplace();
   AreaData ar;
   ar.dim = 0;
   ar.id = 1;
@@ -4005,8 +4004,7 @@ void psc_update_lod() {
           dummy_use(f);
           cnt++;
         }
-        psc_unify_normal_list[i].emplace();
-        Array<NormalRecord>& anr = *psc_unify_normal_list[i];
+        Array<NormalRecord>& anr = psc_unify_normal_list[i].emplace();
         anr.reserve(cnt);
         Vec3<Simplex> verts;
         NormalRecord nr;
@@ -4094,8 +4092,7 @@ void psc_update_lod() {
           dummy_use(f);
           cnt++;
         }
-        psc_split_normal_list[i].emplace();
-        Array<NormalRecord>& anr = *psc_split_normal_list[i];
+        Array<NormalRecord>& anr = psc_split_normal_list[i].emplace();
         anr.reserve(cnt);
         NormalRecord nr;
         Vec3<Simplex> verts;
@@ -4142,8 +4139,7 @@ void psc_update_lod() {
         }
       }
       if (!psc_unify_area_list[i + 1]) {
-        psc_unify_area_list[i + 1].emplace();
-        Array<AreaData>& aar = *psc_unify_area_list[i + 1];
+        Array<AreaData>& aar = psc_unify_area_list[i + 1].emplace();
         CArrayView<AreaData> tmp = vsplit.getAreas();
         aar.reserve(tmp.num());
         AreaData ar;

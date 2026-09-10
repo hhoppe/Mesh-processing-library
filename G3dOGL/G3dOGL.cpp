@@ -3737,6 +3737,7 @@ struct NormalRecord {
   Vec3<Vector> corner_nor;
 };
 
+// (Not Array<Array<T>> because the nullptr distinguishes "non-computed" vs "empty array".)
 Array<unique_ptr<Array<NormalRecord>>> psc_unify_normal_list;
 Array<unique_ptr<Array<NormalRecord>>> psc_split_normal_list;
 Array<unique_ptr<Array<AreaData>>> psc_unify_area_list;

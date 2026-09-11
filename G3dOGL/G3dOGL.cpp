@@ -3737,7 +3737,7 @@ struct NormalRecord {
   Vec3<Vector> corner_nor;
 };
 
-// (Not Array<Array<T>> because empty optional distinguishes "non-computed" vs "empty array".)
+// (Not Array<Array<T>> because std::nullopt distinguishes "non-computed" from "empty array".)
 Array<std::optional<Array<NormalRecord>>> psc_unify_normal_list;
 Array<std::optional<Array<NormalRecord>>> psc_split_normal_list;
 Array<std::optional<Array<AreaData>>> psc_unify_area_list;

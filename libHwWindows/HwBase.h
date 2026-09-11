@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHWWINDOWS_HWBASE_H_
 #define MESH_PROCESSING_LIBHWWINDOWS_HWBASE_H_
 
+#include <atomic>
+
 #if defined(GL_VERSION)  // OpenGL
 #if defined(_WIN32)
 #include "GL/glext.h"  // possibly use local file because Windows does not come with it.
@@ -115,7 +117,8 @@ class HwBase : noncopyable {
   string _window_title{"noname"};
   bool _watch_fd0{false};
   enum class EState { uninit, init, open } _state{EState::uninit};
-  enum class EUpdate { nothing, quit, redrawlater, redrawnow } _update{EUpdate::nothing};
+  enum class EUpdate { nothing, quit, redrawlater, redrawnow };
+  std::atomic<EUpdate> _update{EUpdate::nothing};
   bool _async{false};
   bool _gotevent{false};
   Array<Vec2<Vec2<float>>> _ar_seg;  // {{y1, x1}, {y2, x2}}
@@ -174,7 +177,9 @@ Pixel parse_color(const string& scolor);
 
 inline void HwBase::redraw_later() {
   if (0) assertx(_state != EState::uninit);  // could occur in a background thread after quit()
-  if (_update == EUpdate::nothing) _update = EUpdate::redrawlater;
+  // Atomic check-then-set; may run on a background thread.
+  EUpdate expected = EUpdate::nothing;
+  _update.compare_exchange_strong(expected, EUpdate::redrawlater);
 }
 
 inline void HwBase::redraw_now() {
@@ -583,24 +588,11 @@ inline void HwBase::clear_window_ogl() {
 inline void HwBase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
   glListBase(_listbase_font);
   USE_GL_EXT_MAYBE(glWindowPos2i, PFNGLWINDOWPOS2IPROC);  // not supported on Remote Desktop
-  if (glWindowPos2i) {
+  if (assertw(glWindowPos2i)) {
     const int x = yx[1], y = _win_dims[0] - yx[0] - _font_dims[0];
     glWindowPos2i(x, y);  // reverse y; not clip-tested, so raster position valid
     glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
   } else {
-#if !defined(_WIN32)  // On Windows, this fallback is expected under Remote Desktop.
-    // Observed often after `make CONFIG=unix CC=gcc sanitize=address,undefined -j12 demos`: in the first G3dOGL
-    // window of the view phase (view_recon_cactus.sh), `glWindowPos2i` is unexpectedly absent and `glCallLists`
-    // faults below.  The GL stack is already degraded at that point; the cause is not understood.
-    if (Warning("glWindowPos2i is unavailable; using glRasterPos2i")) {
-      // Record the GL implementation to identify a degraded or fallback driver after the fact.
-      const auto get = [](GLenum name) {
-        const char* s2 = reinterpret_cast<const char*>(glGetString(name));
-        return s2 ? s2 : "<null>";
-      };
-      showf("OpenGL: %s | %s\n", get(GL_RENDERER), get(GL_VERSION));
-    }
-#endif
     const int x = yx[1], y = yx[0] + _font_dims[0];
     glRasterPos2i(x, y);  // clipped, so raster position may be invalid
     glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));

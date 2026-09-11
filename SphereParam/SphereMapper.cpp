@@ -221,6 +221,7 @@ class SphereMapper::Implementation {
   // It assumes all the given vectors are unit length.
   // The interval must be either the whole circle (given as (-TAU, TAU)), or smaller than a halfcircle.
   // Value itmin must be between -TAU/2 and TAU/2, so that the intersection can be expressed as a single interval.
+  // If the circle lies in the halfspace plane (to within roundoff), the interval is left unchanged.
   static void intersect_param_circle_halfspace(const Vector& x0, const Vector& l, const Vector& nhs, float& itmin,
                                                float& itmax) {
     float tmin;
@@ -797,7 +798,7 @@ class SphereMapper::Implementation {
   void check_ostream() {
     std::ostream& os = (*_visualizer)();
     if (!os) {
-      showdf("Failed pipe write to visualizer; its window is likely closed.  Continuing non-interactively.\n");
+      showf("Failed pipe write to visualizer; its window is likely closed.  Continuing non-interactively.\n");
       delete _visualizer;
       _visualizer = nullptr;
     }

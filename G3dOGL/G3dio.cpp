@@ -331,7 +331,7 @@ void WriteOutput() {
     frame = FrameIO::get_not_a_frame();
   }
   if (!FrameIO::write(std::cout, ObjectFrame{frame, obn, z, obinary})) {
-    // No SIGPIPE to terminate process in Win32.
+    // SIGPIPE is ignored (see main()), so a closed pipe is detected here on all platforms.
     showf("Write failed, maybe due to broken pipe.\n");
     hh_clean_up();
     k_fast_exit ? exit_immediately(0) : exit(0);  // Skip destruction of Pool data, etc.

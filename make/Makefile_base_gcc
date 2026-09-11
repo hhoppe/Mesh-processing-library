@@ -12,7 +12,7 @@ ifneq ($(want_plain_compiler),1)
   cxxwarnings += -Wold-style-cast -Wuseless-cast -fsized-deallocation -Wsized-deallocation
 endif
 
-ifneq ($(sanitize),)
+ifneq ($(sanitize:0=),)
   cxxwarnings += -Wno-maybe-uninitialized#  Silence two stray warnings in <bits/std_function.h>
   ccommon += --param max-gcse-memory=1000000#  For complex functions in Hh_test, SphereSample, VideoViewer, HTest.
 endif

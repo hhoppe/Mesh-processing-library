@@ -5,6 +5,10 @@
 # `pipefail` is needed because several demos pipe one tool into another.
 set -e -o pipefail
 
+# A viewer closed by the user kills upstream writers with SIGPIPE (exit status 141); accept that as success.
+# Usage: `writer | viewer || allow_sigpipe`.  Any other failure status is preserved.
+allow_sigpipe() { local status=$?; ((status == 141)) || return $status; }
+
 # Report the failing command's line and status, since errexit otherwise exits silently.
 trap 'echo "${BASH_SOURCE[0]}: line $LINENO: exit status $?" >&2' ERR
 

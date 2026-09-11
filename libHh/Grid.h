@@ -104,7 +104,6 @@ template <int D, typename T> class CGridView {
     }
     return true;
   }
-  [[nodiscard]] bool ok(std::integral auto... dd) const { return ok(V(dd...)); }
   bool map_inside(Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {  // Return false outside Border.
     for_int(c, D) {
       if (!map_boundaryrule_1D(u[c], _dims[c], bndrules[c])) return false;

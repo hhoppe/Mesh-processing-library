@@ -12,8 +12,8 @@ Meshfit -mfile data/distcap.recon.m -file data/distcap.pts -crep 1e-5 -reconstru
 
 if .==. (
   echo Skipping phase 3 because it takes several minutes to compute.
-  del data\distcap.sub0.m
-  del data\distcap.sub2limit.m
+  del data\distcap.sub0.m 2>nul
+  del data\distcap.sub2limit.m 2>nul
 ) else (
   echo Running phase 3 - Subdivfit. 
   :: Initially tagging edges sharp if dihedral angle exceeds 52 degrees.

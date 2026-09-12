@@ -13,7 +13,7 @@ SphereParam data/v_sharp.pm -base coord -flatten_to_x0 -fix_base -optimize_inver
 
 FilterPM data/v_sharp.pm -finest -truncate_prior | SphereParam -mesh_for_base data/v.m -fix_base -optimize_inverse -keep_uv 1 | Filtermesh -genus -removekey normal -removekey wid -cornermerge >data/octaflat_eg128.uv.sphparam.m
 
-del data\v_sharp.pm data\v.m
+del data\v_sharp.pm data\v.m 2>nul
 
 
 echo From the original mesh data/bunny.orig.m, compute a progressive mesh, then the spherical parameterization data/bunny.sphparam.m.

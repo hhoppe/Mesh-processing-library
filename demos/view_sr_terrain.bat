@@ -16,6 +16,6 @@ echo .
 
 set G3D_REV_AUTO=1
 
-set COMMON= -eyeob data/unit_frustum.a3d -sr_mode data/gcanyon_sq200.pm -st data/gcanyon_fly_v98.s3d -texturemap data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 -lightambient .5
+set COMMON=-eyeob data/unit_frustum.a3d -sr_mode data/gcanyon_sq200.pm -st data/gcanyon_fly_v98.s3d -texturemap data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 -lightambient .5
 
 G3dOGL %COMMON% -geom 800x820+100+10 -key "&O" -key ,o----J | G3dOGL %COMMON% -geom 800x820+920+10 -async -killeof -input -key Dg

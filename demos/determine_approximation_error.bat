@@ -18,4 +18,4 @@ echo .
 
 MeshDistance -mfile data/club.orig.m -mfile data/club.nf1000.m -bothdir 1 -maxerror 1 -verb 2 -distance
 
-del data\club.nf1000.m
+del data\club.nf1000.m 2>nul

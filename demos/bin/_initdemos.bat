@@ -8,8 +8,11 @@
 :: set path=c:/cygwin/bin:c:/windows/system32
 :: set path=c:/windows/system32
 
-:: Add all possible build directories as fallback if not specified below.
-set path=../bin;../bin/debug;../bin/win;../bin/mingw;../bin/clang;../bin/cygwin;../bin/unix;%path%
+:: If running from a Makefile, prefer the selected CONFIG.
+if defined CONFIG set path=../bin/%CONFIG%;%path%
+
+:: Otherwise, add all possible build directories as fallback if not specified below.
+if not defined CONFIG set path=../bin;../bin/debug;../bin/win;../bin/mingw;../bin/clang;../bin/cygwin;../bin/unix;%path%
 
 :: Explicitly set desired build directory here.
 :: set path=%path%

@@ -1,6 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include <charconv>  // to_chars(), chars_format
 
+#if defined(HH_HAVE_SIMPLEX)
+#include "recipes.h"
+#endif
+
 #include "MeshSimplify/BQem.h"
 #include "libHh/A3dStream.h"  // A3dColor
 #include "libHh/Args.h"
@@ -28,10 +32,6 @@
 #include "libHh/Timer.h"
 #include "libHh/Vec.h"
 using namespace hh;
-
-#if defined(HH_HAVE_SIMPLEX)
-#include "recipes.h"
-#endif
 
 namespace {
 

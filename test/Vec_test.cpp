@@ -10,6 +10,8 @@
 #include "libHh/Set.h"
 using namespace hh;
 
+namespace {
+
 template <typename T, int N, size_t... Is>
 constexpr Vec<T, (N - 1)> V_rest_aux(const Vec<T, N>& u, std::index_sequence<Is...> /*unused*/) {
   return Vec<T, N - 1>(u[Is + 1]...);
@@ -59,11 +61,13 @@ template <int N, size_t... Is> constexpr Vec<int, N> V_rev_iota_aux(std::index_s
 
 }  // namespace details
 
-template <int N> constexpr Vec<int, N> V_iota() { return ::details::V_iota_aux<N>(std::make_index_sequence<N>()); }
+template <int N> constexpr Vec<int, N> V_iota() { return details::V_iota_aux<N>(std::make_index_sequence<N>()); }
 
 template <int N> constexpr Vec<int, N> V_rev_iota() {
-  return ::details::V_rev_iota_aux<N>(std::make_index_sequence<N>());
+  return details::V_rev_iota_aux<N>(std::make_index_sequence<N>());
 }
+
+}  // namespace
 
 int main() {
   {

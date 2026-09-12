@@ -10,6 +10,8 @@
 #include "libHh/Vec.h"
 using namespace hh;
 
+namespace {
+
 template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
   Array<const Filter*> filters;  // not: "gaussian", "preprocess", "justspline", "justomoms"
   for (string s : {"impulse", "box", "triangle", "quadratic", "mitchell", "keys", "spline", "omoms"})
@@ -89,6 +91,8 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
     }
   }
 }
+
+}  // namespace
 
 int main() {
   Timer::set_show_times(-1);

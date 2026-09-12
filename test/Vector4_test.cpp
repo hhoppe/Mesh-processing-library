@@ -13,12 +13,16 @@ using namespace hh;
 // make CONFIG=clang -C ~/git/mesh_processing/test Vector4_test.o
 //  (It checks C++ syntax, then crashes with "ARM does not support Windows COFF format".)
 
-static void to_norm(const Vector4& v) {
+namespace {
+
+void to_norm(const Vector4& v) {
   SHOW(v);
   Pixel pixel = v.pixel();
   Vec4<int> ar = convert<int>(pixel);
   SHOW(ar);
 }
+
+}  // namespace
 
 int main() {
   if (0) {

@@ -4,6 +4,8 @@
 #include "libHh/RangeOp.h"  // round_elements()
 using namespace hh;
 
+namespace {
+
 static Frame round(Frame frame) {
   const int nrows = 3;  // or 4
   for_int(row, nrows) round_elements(frame[row], 1e4f);
@@ -14,6 +16,8 @@ static Quaternion round(Quaternion q) {
   round_elements(q.access_private());
   return q;
 }
+
+}  // namespace
 
 int main() {
   {

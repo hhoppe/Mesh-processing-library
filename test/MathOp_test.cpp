@@ -16,6 +16,8 @@ using namespace hh;
 // (float)-1.#IND      0xffc00000  (0.f/0.f)  (C++11: NAN, std::numeric_limits<float>::quiet_NaN(), std::nanf(""))
 //                     0x00400000  always forced on by hardware for any nanf (x86)
 
+namespace {
+
 // Create an infinite float value.
 inline float create_infinityf() {
   if (0) {
@@ -41,6 +43,8 @@ inline unsigned nanf_value(float f) {
   return v & 0x003fffff;
 }
 
+}  // namespace
+
 int main() {
   {
     assertx(INFINITY == HUGE_VALF);
@@ -62,7 +66,7 @@ int main() {
     // In x86 and _MSVC_STL_VERSION, the invalid-operation default is the "real indefinite" QNaN 0xffc00000,
     // which is why printf shows -nan(ind).
     // In contrast, in ARM and glibc, the default NaN is 0x7fc00000 with the sign clear (positive).
-    const bool clear_nan_bit31 = true;  // Set to true for cross-platform consistency.
+    const bool clear_nan_bit31 = true;  // True for cross-platform consistency; false to inspect native sign bit.
 
     const auto func_show_float = [](float a) {
       uint32_t v = std::bit_cast<uint32_t>(a);
@@ -71,7 +75,7 @@ int main() {
       string s = sform("(float)%-15.9g 0x%08x  F%d I%d N%d%s\n",  //
                        a2, v, std::isfinite(a), std::isinf(a), std::isnan(a),
                        std::isnan(a) ? sform(" nanfv%08x", nanf_value(a)).c_str() : "");
-      std::cout << s;
+      std::cerr << s;
     };
     float float_zero = g_unoptimized_zero ? 1.f : 0.f;
     float a;

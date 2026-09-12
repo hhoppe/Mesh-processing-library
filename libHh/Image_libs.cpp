@@ -16,6 +16,10 @@ extern "C" {
 #include "png.h"
 }
 
+HH_REFERENCE_LIB("libjpeg.lib");
+HH_REFERENCE_LIB("libpng.lib");
+HH_REFERENCE_LIB("libz.lib");
+
 #include "libHh/Array.h"
 #include "libHh/BinaryIO.h"  // read_raw(), write_raw()
 #include "libHh/ConsoleProgress.h"
@@ -24,10 +28,6 @@ extern "C" {
 #include "libHh/Parallel.h"
 #include "libHh/StringOp.h"  // to_lower()
 using namespace hh;
-
-HH_REFERENCE_LIB("libjpeg.lib");
-HH_REFERENCE_LIB("libpng.lib");
-HH_REFERENCE_LIB("libz.lib");
 
 namespace hh {
 

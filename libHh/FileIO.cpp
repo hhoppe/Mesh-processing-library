@@ -732,15 +732,15 @@ static string spawn_quote(const string& s, bool b_client_uses_cygwin) {
   return b_client_uses_cygwin ? cygwin_spawn_quote(s) : windows_spawn_quote(s);
 }
 
-// Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
-intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
+// Return: -1 if spawn error, else exit_code (for wait_ == true) or pid (for wait_ == false).
+intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
   dummy_use(spawn_quote);
   assertx(sargv.num());
   assertx(sargv[0] != "");
   assertw(!contains(getenv_string("CYGWIN"), "noglob"));
 #if defined(_WIN32)
   {
-    const int mode = wait ? P_WAIT : P_NOWAIT;
+    const int mode = wait_ ? P_WAIT : P_NOWAIT;
     Array<std::wstring> nargv(sargv.num());
     const bool b_client_uses_cygwin = sargv[0] == "sh";  // Special processing for cygwin crt parsing.
     const bool b_client_cmd = sargv[0] == "cmd";
@@ -781,7 +781,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
     Array<const char*> argv(sargv.num() + 1);
     argv.last() = nullptr;
     for_int(i, sargv.num()) argv[i] = sargv[i].c_str();
-    if (wait) {
+    if (wait_) {
       pid_t pid = fork();
       assertx(pid >= 0);                      // Assert that fork() succeeded.
       if (!pid) {                             // If child process.
@@ -820,7 +820,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait) {
         assertx(write(fd[1], &t, sizeof(t)) == sizeof(t));
         exit(1);  // This exit code is not accessed by parent.
       }
-      ::wait(nullptr);                   // The reason/need for this is unclear.
+      wait(nullptr);                     // The reason/need for this is unclear.
       assertx(!HH_POSIX(close)(fd[1]));  // No need to write to child process.
       pid = -1;                          // Expect to read back a process id from child.
       for (;;) {                         // Outputs from child or grandchild may come in any order.

@@ -3,6 +3,10 @@
 
 #include "mikktspace.h"  // Canonical computation of tangent vectors at mesh corners.
 
+#if defined(HH_HAVE_SIMPLEX)
+#include "recipes.h"
+#endif
+
 #include "libHh/A3dStream.h"
 #include "libHh/Args.h"
 #include "libHh/Array.h"
@@ -38,10 +42,6 @@
 #include "libHh/Timer.h"
 #include "libHh/TriangleFaceSpatial.h"
 using namespace hh;
-
-#if defined(HH_HAVE_SIMPLEX)
-#include "recipes.h"
-#endif
 
 namespace {
 

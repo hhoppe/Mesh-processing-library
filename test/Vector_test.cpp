@@ -5,7 +5,6 @@
 
 #include "libHh/RangeOp.h"  // contains()
 #include "libHh/Stack.h"    // vec_pop()
-
 using namespace hh;
 
 namespace {

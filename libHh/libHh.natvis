@@ -1,105 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
 
- <!-- Install: add as file to libHh.vcxproj so that it is recognized automatically by Visual Studio -->
- <!-- However, for it to be recognized by ImageWatch it must additionally be copied to -->
- <!--   Documents/Visual Studio 2015/Visualizers/libHh.natvis (VC14) -->
- <!--   Documents/Visual Studio 2013/Visualizers/libHh.natvis (VC12) -->
- <!-- using ../install_libHh_natvis.bat -->
- 
- <!-- see C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\Packages\Debugger\Visualizers -->
- <!-- see C:\Program Files (x86)\Microsoft Visual Studio 12.0\Common7\Packages\Debugger\Visualizers -->
- <!-- see http://msdn.microsoft.com/en-us/library/jj620914.aspx -->
- <!-- see format specifier ",sb" in http://msdn.microsoft.com/en-us/library/vstudio/75w45ekt.aspx -->
- <!--  (was ,sub in VS2013) -->
- <!-- http://research.microsoft.com/en-us/um/redmond/groups/ivm/imagewatchhelp/imagewatchhelp.htm -->
- <!-- https://visualstudiogallery.msdn.microsoft.com/e682d542-7ef3-402c-b857-bbfba714f78d -->
-
- <UIVisualizer ServiceId="{A452AFEA-3DF6-46BB-9177-C0B08F318025}" Id="1"
-               MenuName="Add to Image Watch"/>
-
- <Type Name="hh::CGridView&lt;2,*&gt;">
-  <AlternativeType Name="hh::GridView&lt;2,*&gt;"/>
-  <AlternativeType Name="hh::Grid&lt;2,*&gt;"/>
-  <UIVisualizer ServiceId="{A452AFEA-3DF6-46BB-9177-C0B08F318025}" Id="1"/>
- </Type>
-
- <Type Name="hh::CGridView&lt;2,*&gt;">
-  <AlternativeType Name="hh::GridView&lt;2,*&gt;"/>
-  <AlternativeType Name="hh::Grid&lt;2,*&gt;"/>
-  <DisplayString>Matrix&lt;{"$T1",sb}&gt;(dims={_dims})</DisplayString>
-  <Expand>
-   <Item Name="[height]">_dims._a[0]</Item>
-   <Item Name="[width]">_dims._a[1]</Item>
-   <Item Name="[size]">size_t(_dims._a[1])*_dims._a[0]</Item>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","unsigned char" )==0'><DisplayString>UINT8</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","char"          )==0'><DisplayString>INT8</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","unsigned short")==0'><DisplayString>UINT16</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","short"         )==0'><DisplayString>INT16</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","int"           )==0'><DisplayString>INT32</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","hh::half"      )==0'><DisplayString>FLOAT16</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","float"         )==0'><DisplayString>FLOAT32</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","double"        )==0'><DisplayString>FLOAT64</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","hh::Pixel"     )==0'><DisplayString>UINT8</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","hh::Vector4"   )==0'><DisplayString>FLOAT32</DisplayString></Synthetic>
-   <Synthetic Name="[type]" Condition='strcmp("$T1","hh::Vec&lt;unsigned char,2&gt;")==0'><DisplayString>UINT8</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","unsigned char" )==0'><DisplayString>1</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","unsigned short")==0'><DisplayString>1</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","char"          )==0'><DisplayString>1</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","short"         )==0'><DisplayString>1</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","int"           )==0'><DisplayString>1</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","hh::half"      )==0'><DisplayString>1</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","float"         )==0'><DisplayString>1</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","double"        )==0'><DisplayString>1</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","hh::Pixel"     )==0'><DisplayString>RGBA</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","hh::Vector4"   )==0'><DisplayString>4</DisplayString></Synthetic>
-   <Synthetic Name="[channels]" Condition='strcmp("$T1","hh::Vec&lt;unsigned char,2&gt;")==0'><DisplayString>UV</DisplayString></Synthetic>
-   <Item Name="[stride]">(_dims._a[1])*sizeof($T1)</Item>
-   <Item Name="[data]">_a</Item>
-  </Expand>
- </Type>
+ <!-- Visual Studio loads this file automatically because it is listed in libHh.vcxproj. -->
+ <!-- In VS Code, set "visualizerFile" to this file in the launch configuration. -->
+ <!-- See https://learn.microsoft.com/en-us/visualstudio/debugger/create-custom-views-of-native-objects -->
+ <!-- See the format specifier ",sb" in https://learn.microsoft.com/en-us/visualstudio/debugger/format-specifiers-in-cpp -->
 
  <Type Name="hh::Image">
-  <UIVisualizer ServiceId="{A452AFEA-3DF6-46BB-9177-C0B08F318025}" Id="1"/>
- </Type>
-
- <Type Name="hh::Image">
-  <DisplayString>Image(dims={_dims} nz={_attrib.zsize})</DisplayString>
-  <Expand>
-   <Item Name="[height]">_dims._a[0]</Item>
-   <Item Name="[width]">_dims._a[1]</Item>
-   <Item Name="[bands]">_attrib.zsize</Item>
-   <Item Name="[size]">size_t(_dims._a[1])*_dims._a[0]</Item>
-   <Synthetic Name="[channels]"><DisplayString>RGBA</DisplayString></Synthetic>
-   <Synthetic Name="[type]"><DisplayString>UINT8</DisplayString></Synthetic>
-   <Item Name="[stride]">(_dims._a[1])*4</Item>
-   <Item Name="[data]">_a</Item>
-  </Expand>
- </Type>
-
- <Type Name="hh::Nv12">
-  <AlternativeType Name="hh::CNv12View"/>
-  <AlternativeType Name="hh::Nv12View"/>
-  <UIVisualizer ServiceId="{A452AFEA-3DF6-46BB-9177-C0B08F318025}" Id="1"/>
+  <DisplayString>Image(dims={_dims} zsize={_attrib.zsize})</DisplayString>
  </Type>
 
  <Type Name="hh::Nv12">
   <AlternativeType Name="hh::CNv12View"/>
   <AlternativeType Name="hh::Nv12View"/>
   <DisplayString>Nv12(dims={_mat_Y._dims})</DisplayString>
-  <Expand>
-   <Item Name="[height]">_mat_Y._dims._a[0]</Item>
-   <Item Name="[width]">_mat_Y._dims._a[1]</Item>
-   <Item Name="[Y]">_mat_Y</Item>
-   <Item Name="[UV]">_mat_UV</Item>
-   <Synthetic Name="[channels]"><DisplayString>NV12</DisplayString></Synthetic>
-   <Synthetic Name="[type]"><DisplayString>UINT8</DisplayString></Synthetic>
-   <Item Name="[stride]">(_mat_Y._dims._a[1])*1</Item>
-   <Item Name="[planes]">2</Item>
-   <Synthetic Name="[data]"><DisplayString>{(void*)_mat_Y._a}; {(void*)_mat_UV._a}</DisplayString></Synthetic>
-  </Expand>
  </Type>
-
 
  <Type Name="hh::CGridView&lt;*,*&gt;">
   <DisplayString>Grid&lt;{$T1},{"$T2",sb}&gt;(dims={_dims})</DisplayString>
@@ -218,7 +133,7 @@
  </Type>
 
  <Type Name="hh::Stat">
-  <DisplayString>Stat(name={_name} num={_n} [{_min},{_max}] avg={float(_sum/_n)}))</DisplayString>
+  <DisplayString>Stat(name={_name} num={_n} [{_min},{_max}] avg={float(_sum/_n)})</DisplayString>
  </Type>
 
 </AutoVisualizer>

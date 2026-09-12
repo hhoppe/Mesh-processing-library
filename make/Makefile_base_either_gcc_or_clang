@@ -29,7 +29,7 @@ ifneq ($(want_plain_compiler),1)
   #  -Winline -Wconversion
   # (-pedantic-errors == -Werror -Wpedantic)
   # ccommon += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
-  ccommon += $(machine_arch) -ffast-math -mfpmath=sse
+  ccommon += $(machine_arch) -mfpmath=sse#  Had: -ffast-math
   ccommon += $(if $(PEDANTIC:0=),$(cpedantic))
   cxxall += -fno-rtti
   cxxwarnings += -Wno-strict-overflow#  Even #pragma in Grid.h does not disable this.
@@ -65,12 +65,6 @@ crel += $(commonrel)
 cdbg += $(commondbg)
 
 cxx_disable_all_warnings = -w
-
-# Useful for testing across platforms; (note that some are a reversal of -funsafe-math-optimizations).
-gcc_safe_precise_math = -fno-unsafe-math-optimizations -ffp-contract=off \
-  -fsigned-zeros -ftrapping-math -fno-associative-math -fno-reciprocal-math
-# Note: cannot selectively set -fno-fast-math because it changes errno support in precompiled headers.
-# Note: -fexcess-precision=standard is undefined for C++.
 
 # Force use of C++ (rather than C) standard library by explicitly specifying CXX.
 # % : %.o

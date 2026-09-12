@@ -35,9 +35,6 @@ create_scripts = \
   create_rendered_mechpart_video.sh \
   create_voronoi_fillin.sh \
 
-create_scripts_other = \
-  create_gallery.sh \
-
 view_scripts = \
   view_recon_cactus.sh \
   view_recon_distcap.sh \

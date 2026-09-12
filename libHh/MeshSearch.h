@@ -27,6 +27,7 @@ class MeshSearch {
     float gridn_factor{1.f};
     float max_dis{1e15f};
     std::optional<Bbox<float, 3>> bbox{};
+    bool gnomonic_search_warn_no_opp_face{true};
   };
   explicit MeshSearch(const GMesh& mesh, Options options);
 

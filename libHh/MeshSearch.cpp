@@ -39,10 +39,16 @@ float gnomonic_dist2(const Point& p, const Vec3<Point>& triangle) {
   return project_point_triangle(pint, triangle).d2;
 }
 
+struct GnomonicSearchOptions {
+  float tolerance = 0.f;
+  bool avoid_crossing_axial_planes = false;
+  bool gnomonic_search_warn_no_opp_face = true;
+};
+
 // Given point `p` on the unit sphere, and some "nearby" spherical triangle `f` in `mesh`, find the actual spherical
 // triangle f containing p, and the barycentric coordinates of the spherical projection of p onto f.
-void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary, float tolerance = 0.f,
-                          bool avoid_crossing_axial_planes = false) {
+void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary,
+                          const GnomonicSearchOptions& options) {
   Vec3<Point> triangle;
   {
     // Find the spherical triangle f (with vertex points `triangle`) containing p.
@@ -54,8 +60,8 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
       for_int(i, 3) {
         const Point& p1 = triangle[mod3(i + 1)];
         const Point& p2 = triangle[mod3(i + 2)];
-        outside[i] = spherical_triangle_is_flipped(V(p, p1, p2), tolerance);
-        if (avoid_crossing_axial_planes && outside[i]) {
+        outside[i] = spherical_triangle_is_flipped(V(p, p1, p2), options.tolerance);
+        if (options.avoid_crossing_axial_planes && outside[i]) {
           const bool edge_is_along_an_axial_plane = (!p1[0] && !p2[0]) || (!p1[1] && !p2[1]) || (!p1[2] && !p2[2]);
           if (edge_is_along_an_axial_plane) outside[i] = false;
         }
@@ -67,7 +73,10 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
       if (num_outside == 1) {  // Jump across the edge.
         const int side = index(outside, true);
         Face f2 = mesh.opp_face(va[side], f);
-        if (!assertw(f2)) break;
+        if (!f2) {
+          if (options.gnomonic_search_warn_no_opp_face) Warning("gnomonic_search_bary: no opp_face");
+          break;
+        }
         f = f2;
 
       } else if (num_outside == 2) {  // Jump across the vertex.
@@ -209,12 +218,14 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
 MeshSearch::ResultOnSphere MeshSearch::search_on_sphere(const Point& p, Face hint_f, const Point* final_p) const {
   auto [f, bary, unused_clp, unused_d2] = search(p, hint_f);
   assertx(f);
-  gnomonic_search_bary(p, _mesh, f, bary);  // Modifies f and bary.
+  // Modifies f and bary.
+  gnomonic_search_bary(p, _mesh, f, bary,
+                       {.gnomonic_search_warn_no_opp_face = _options.gnomonic_search_warn_no_opp_face});
   if (final_p) {
     // Starting from the obtained face f, repeat the search but (1) search instead for final_p and (2) avoid
     // crossing the octaflat axial planes (because these may contain parametric uv discontinuities).
-    const float tolerance = 1e-7f;
-    gnomonic_search_bary(*final_p, _mesh, f, bary, tolerance, true);  // Modifies f and bary.
+    // Modifies f and bary.
+    gnomonic_search_bary(*final_p, _mesh, f, bary, {.tolerance = 1e-7f, .avoid_crossing_axial_planes = true});
   }
   return {f, bary};
 }

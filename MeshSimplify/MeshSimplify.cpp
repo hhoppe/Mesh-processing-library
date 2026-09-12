@@ -4525,12 +4525,9 @@ void parallel_optimize() {
         assertx(ecol_result.min_ii == 2);
         assertx(minii2 && no_fit_geom);
       }
-      assertw(ecol_result.vs == vs);  // Rare numerical precision issues?
-#if !defined(__FAST_MATH__)
-      assertw(ecol_result.cost == cost); // Exact only without -funsafe-math-optimizations.
-#else
-      assertw(abs(ecol_result.cost - cost) <= 1e-4f * cost);  // Relative, since cost scales as length^2.
-#endif
+      assertw(ecol_result.vs == vs);
+      assertw(ecol_result.cost == cost);  // Exact only without -ffast-math; see also -funsafe-math-optimizations.
+      // assertw(abs(ecol_result.cost - cost) <= 1e-4f * cost);  // Else: relative, since cost scales as length^2.
     }
     if (verb >= 2)
       showdf("Sweep: %8d edges, %8d considered, %8d collapsed\n",  //

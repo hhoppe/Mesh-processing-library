@@ -18,6 +18,26 @@ x= 0.8421   v=86.395
 x= 0.8947   v=82.348
 x= 0.9474   v=77.332
 x= 1.0000   v=71.000
+(float)0               0x00000000  F1 I0 N0
+(float)1               0x3f800000  F1 I0 N0
+(float)3               0x40400000  F1 I0 N0
+(float)-0              0x80000000  F1 I0 N0
+(float)-0              0x80000000  F1 I0 N0
+(float)-1              0xbf800000  F1 I0 N0
+(float)-3              0xc0400000  F1 I0 N0
+(float)inf             0x7f800000  F0 I1 N0
+(float)-inf            0xff800000  F0 I1 N0
+(float)nan             0x7fc00000  F0 I0 N1 nanfv00000000
+(float)nan             0x7fc00000  F0 I0 N1 nanfv00000000
+(float)nan             0x7fc00000  F0 I0 N1 nanfv00000000
+(float)inf             0x7f800000  F0 I1 N0
+(float)-inf            0xff800000  F0 I1 N0
+(float)nan             0x7fc00000  F0 I0 N1 nanfv00000000
+(float)nan             0x7fc00000  F0 I0 N1 nanfv00000000
+(float)nan             0x7fc00001  F0 I0 N1 nanfv00000001
+(float)nan             0x7fc00002  F0 I0 N1 nanfv00000002
+(float)nan             0x7fffffff  F0 I0 N1 nanfv003fffff
+std::isfinite(0.f / float_zero) = 0
 vm4mod7 = 3
 vmid = 0.5
 vfurther = 0.740741

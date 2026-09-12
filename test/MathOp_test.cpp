@@ -1,8 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/MathOp.h"
-using namespace hh;
 
 #include <bit>  // bit_cast().
+
+using namespace hh;
 
 // (float)0., -0.      0x00000000
 // (float)1            0x3f800000
@@ -27,7 +28,7 @@ inline float create_infinityf() {
 // Create a not-a-number float value which encodes integer i (0..4194303 or 22 bits).
 inline float create_nanf(unsigned i = 0) {
   if (0 && i == 0) return NAN;  // Equivalent to std::numeric_limits<float>::quiet_NaN().
-  ASSERTXX((i & 0xffc00000) == 0);
+  assertx((i & 0xffc00000) == 0);
   // Could in principle retrieve 0x80000000 (sign) bit from i and use it, but forget it.
   const uint32_t v = 0x7fc00000 | (i & 0x003fffff);
   return std::bit_cast<float>(v);
@@ -35,7 +36,7 @@ inline float create_nanf(unsigned i = 0) {
 
 // Retrieve the integer value encoded in the not-a-number value f.
 inline unsigned nanf_value(float f) {
-  ASSERTXX(std::isnan(f));
+  assertx(std::isnan(f));
   const uint32_t v = std::bit_cast<uint32_t>(f);
   return v & 0x003fffff;
 }
@@ -56,14 +57,23 @@ int main() {
       showf("x=%7.4f   v=%6.3f\n", x, v);
     }
   }
-  if (0) {
-    float g_float_zero = g_unoptimized_zero ? 1.f : 0.f;
+  if (1) {
+    // IEEE 754 explicitly says the sign of a NaN carries no meaning and no operation interprets it. isnan ignores it.
+    // In x86 and _MSVC_STL_VERSION, the invalid-operation default is the "real indefinite" QNaN 0xffc00000,
+    // which is why printf shows -nan(ind).
+    // In contrast, in ARM and glibc, the default NaN is 0x7fc00000 with the sign clear (positive).
+    const bool clear_nan_bit31 = true;  // Set to true for cross-platform consistency.
+
     const auto func_show_float = [](float a) {
-      const uint32_t v = std::bit_cast<uint32_t>(a);
-      showf("(float)%-15.9g 0x%08x  F%d I%d N%d%s\n",  //
-            a, v, std::isfinite(a), std::isinf(a), std::isnan(a),
-            std::isnan(a) ? sform(" nanfv%08x", nanf_value(a)).c_str() : "");
+      uint32_t v = std::bit_cast<uint32_t>(a);
+      if (std::isnan(a) && clear_nan_bit31) v &= 0x7fffffff;
+      const float a2 = std::bit_cast<float>(v);
+      string s = sform("(float)%-15.9g 0x%08x  F%d I%d N%d%s\n",  //
+                       a2, v, std::isfinite(a), std::isinf(a), std::isnan(a),
+                       std::isnan(a) ? sform(" nanfv%08x", nanf_value(a)).c_str() : "");
+      std::cout << s;
     };
+    float float_zero = g_unoptimized_zero ? 1.f : 0.f;
     float a;
     a = +0.f;
     func_show_float(a);
@@ -74,21 +84,21 @@ int main() {
     a = -0.f;
     func_show_float(a);
     a = -1.f / 1e30f / 1e30f;
-    func_show_float(a);  // -0 in win; 0 in mingw and cygwin
+    func_show_float(a);
     a = -1.f;
     func_show_float(a);
     a = -3.f;
     func_show_float(a);
-    a = +1.f / g_float_zero;
+    a = +1.f / float_zero;
     func_show_float(a);
-    a = -1.f / g_float_zero;
+    a = -1.f / float_zero;
     func_show_float(a);
     a = std::acos(2.f);
     func_show_float(a);
     a = std::acos(-2.f);
     func_show_float(a);
-    a = 0.f / g_float_zero;
-    func_show_float(a);  // IND in win; 0 in mingw and cygwin
+    a = 0.f / float_zero;
+    func_show_float(a);
     a = create_infinityf();
     func_show_float(a);
     a = -create_infinityf();
@@ -103,71 +113,7 @@ int main() {
     func_show_float(a);
     a = create_nanf(0x003fffff);
     func_show_float(a);
-    SHOW(std::isfinite(0.f / g_float_zero));
-    // Note: with gcc (mingw, cygwin), isinf() and isnan() always report false, and
-    //  isfinite() always reports true,
-    //  This is due to the compilation flag "-ffast-math".
-    //  It might work with "-fno-finite-math-only" but then some optimizations might be disabled.
-    // win:
-    //   (float)0               0x00000000  F1 I0 N0
-    //   (float)1               0x3f800000  F1 I0 N0
-    //   (float)3               0x40400000  F1 I0 N0
-    //   (float)-0              0x80000000  F1 I0 N0
-    //   (float)-0              0x80000000  F1 I0 N0
-    //   (float)-1              0xbf800000  F1 I0 N0
-    //   (float)-3              0xc0400000  F1 I0 N0
-    //   (float)inf             0x7f800000  F0 I1 N0
-    //   (float)-inf            0xff800000  F0 I1 N0
-    //   (float)-nan(ind)       0xffc00000  F0 I0 N1 nanfv00000000
-    //   (float)-nan(ind)       0xffc00000  F0 I0 N1 nanfv00000000
-    //   (float)-nan(ind)       0xffc00000  F0 I0 N1 nanfv00000000
-    //   (float)inf             0x7f800000  F0 I1 N0
-    //   (float)-inf            0xff800000  F0 I1 N0
-    //   (float)nan             0x7fc00000  F0 I0 N1 nanfv00000000
-    //   (float)nan             0x7fc00000  F0 I0 N1 nanfv00000000
-    //   (float)nan             0x7fc00001  F0 I0 N1 nanfv00000001
-    //   (float)nan             0x7fc00002  F0 I0 N1 nanfv00000002
-    //   (float)nan             0x7fffffff  F0 I0 N1 nanfv003fffff
-    // clang:
-    //   (float)0               0x00000000  F1 I0 N0
-    //   (float)1               0x3f800000  F1 I0 N0
-    //   (float)3               0x40400000  F1 I0 N0
-    //   (float)-0              0x80000000  F1 I0 N0
-    //   (float)-0              0x80000000  F1 I0 N0
-    //   (float)-1              0xbf800000  F1 I0 N0
-    //   (float)-3              0xc0400000  F1 I0 N0
-    //   (float)inf             0x7f800000  F0 I1 N0
-    //   (float)-inf            0xff800000  F0 I1 N0
-    //   (float)nan             0xffc00000  F0 I0 N1 nanfv00000000
-    //   (float)nan             0xffc00000  F0 I0 N1 nanfv00000000
-    //   (float)nan             0xffc00000  F0 I0 N1 nanfv00000000
-    //   (float)inf             0x7f800000  F0 I1 N0
-    //   (float)-inf            0xff800000  F0 I1 N0
-    //   (float)nan             0x7fc00000  F0 I0 N1 nanfv00000000
-    //   (float)nan             0x7fc00000  F0 I0 N1 nanfv00000000
-    //   (float)nan             0x7fc00001  F0 I0 N1 nanfv00000001
-    //   (float)nan             0x7fc00002  F0 I0 N1 nanfv00000002
-    //   (float)nan             0x7fffffff  F0 I0 N1 nanfv003fffff
-    // mingw and cygwin (with -ffast-math):
-    //   (float)0               0x00000000  F1 I0 N0
-    //   (float)1               0x3f800000  F1 I0 N0
-    //   (float)3               0x40400000  F1 I0 N0
-    //   (float)-0              0x80000000  F1 I0 N0
-    //   (float)-0              0x80000000  F1 I0 N0
-    //   (float)-1              0xbf800000  F1 I0 N0
-    //   (float)-3              0xc0400000  F1 I0 N0
-    //   (float)inf             0x7f800000  F1 I0 N0
-    //   (float)-inf            0xff800000  F1 I0 N0
-    //   (float)nan             0xffc00000  F1 I0 N0 // 0x7fc00000 in cygwin
-    //   (float)nan             0xffc00000  F1 I0 N0 // 0x7fc00000 in cygwin
-    //   (float)nan             0xffc00000  F1 I0 N0
-    //   (float)inf             0x7f800000  F1 I0 N0
-    //   (float)-inf            0xff800000  F1 I0 N0
-    //   (float)nan             0x7fc00000  F1 I0 N0
-    //   (float)nan             0x7fc00000  F1 I0 N0
-    //   (float)nan             0x7fc00001  F1 I0 N0
-    //   (float)nan             0x7fc00002  F1 I0 N0
-    //   (float)nan             0x7fffffff  F1 I0 N0
+    SHOW(std::isfinite(0.f / float_zero));
   }
   {
     const int vm4mod7 = my_mod(-4, 7);
@@ -186,5 +132,8 @@ int main() {
     SHOW(is_pow2_16);
     constexpr bool is_pow2_17 = is_pow2(17);
     SHOW(is_pow2_17);
+  }
+  {
+    assertx(std::isnan(std::acos(-1.0001)));
   }
 }

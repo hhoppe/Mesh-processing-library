@@ -42,7 +42,7 @@ float gnomonic_dist2(const Point& p, const Vec3<Point>& triangle) {
 struct GnomonicSearchOptions {
   float tolerance = 0.f;
   bool avoid_crossing_axial_planes = false;
-  bool gnomonic_search_warn_no_opp_face = true;
+  bool warn_no_opp_face = true;
 };
 
 // Given point `p` on the unit sphere, and some "nearby" spherical triangle `f` in `mesh`, find the actual spherical
@@ -74,7 +74,7 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
         const int side = index(outside, true);
         Face f2 = mesh.opp_face(va[side], f);
         if (!f2) {
-          if (options.gnomonic_search_warn_no_opp_face) Warning("gnomonic_search_bary: no opp_face");
+          if (options.warn_no_opp_face) Warning("gnomonic_search_bary: no opp_face");
           break;
         }
         f = f2;
@@ -220,7 +220,7 @@ MeshSearch::ResultOnSphere MeshSearch::search_on_sphere(const Point& p, Face hin
   assertx(f);
   // Modifies f and bary.
   gnomonic_search_bary(p, _mesh, f, bary,
-                       {.gnomonic_search_warn_no_opp_face = _options.gnomonic_search_warn_no_opp_face});
+                       {.warn_no_opp_face = _options.gnomonic_search_warn_no_opp_face});
   if (final_p) {
     // Starting from the obtained face f, repeat the search but (1) search instead for final_p and (2) avoid
     // crossing the octaflat axial planes (because these may contain parametric uv discontinuities).

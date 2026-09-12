@@ -1074,24 +1074,13 @@ void do_replace(Args& args) {
 }
 
 void do_gamma(Args& args) {
-  float gamma = args.get_float();
-  Vec<uint8_t, 256> transf;
-  for_int(i, 256) transf[i] = uint8_t(255.f * pow(i / 255.f, gamma) + 0.5f);
-  if (1) {
-    parallel_for({.cycles_per_elem = 10}, range(video.size()), [&](const size_t i) {
-      for_int(z, nz) video.flat(i)[z] = transf[video.flat(i)[z]];  // fastest
-    });
-  } else if (0) {
-    parallel_for_coords({.cycles_per_elem = 10}, video.dims(), [&](const Vec3<int>& fyx) {  //
-      for_int(z, nz) video[fyx][z] = transf[video[fyx][z]];
-    });
-  } else {
-    parallel_for(range(video.nframes()), [&](const int f) {
-      for_int(y, video.ysize()) for_int(x, video.xsize()) {
-        for_int(z, nz) video[f, y, x][z] = transf[video[f, y, x][z]];
-      }
-    });
-  }
+  const float gamma = args.get_float();
+  const auto transf =
+      Vec<uint8_t, 256>::create([gamma](int i) { return uint8_t(255.f * pow(i / 255.f, gamma) + 0.5f); });
+  parallel_for({.cycles_per_elem = 10}, range(video.size()), [&](const size_t i) {
+    Pixel& pixel = video.flat(i);
+    for_int(z, nz) pixel[z] = transf[pixel[z]];
+  });
 }
 
 // *** looping videos

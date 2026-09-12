@@ -509,12 +509,10 @@ template <int D, typename T> Grid(CGridView<D, T>) -> Grid<D, T>;
 // Set of functions common to Array.h, Grid.h, Vec.h.
 // Note that RangeOp.h functions are valid here: mag2(), mag(), dist2(), dist(), dot(), is_zero(), compare().
 #define TT template <int D, typename T>
-#define TTN TT [[nodiscard]]
 #define G Grid<D, T>
 #define CG CGridView<D, T>
 #define GV GridView<D, T>
 #define SS ASSERTXX(same_size(g1, g2))
-#define F(g) for (const size_t i : range(g.size()))
 #define PF(g, code) parallel_for({.cycles_per_elem = 1}, range(g.size()), [&](const size_t i) { code; })
 // clang-format off
 
@@ -527,51 +525,27 @@ template <int D, typename T> Grid(CGridView<D, T>) -> Grid<D, T>;
 #define MOD_GG(code) { SS; T* a = g1.data(); const T* b = g2.data(); PF(g1, code); return g1; }
 #define MOD_G(code) { T* a = g1.data(); PF(g1, code); return g1; }
 
-#define HH_OPERATIONS(OP)                                        \
-  TTN G operator OP(CG g1, CG g2) NEW_GG(a[i] = b[i] OP c[i])    \
-  TTN G operator OP(CG g1, const T& e) NEW_G(a[i] = b[i] OP e)   \
-  TTN G operator OP(const T& e, CG g1) NEW_G(a[i] = e OP b[i])   \
-  TT GV operator OP##=(GV g1, CG g2) MOD_GG(a[i] OP##= b[i])     \
-  TT GV operator OP##=(GV g1, const T& e) MOD_G(a[i] OP##= e)    \
+#define HH_OPERATIONS(OP)                                                    \
+  TT [[nodiscard]] G operator OP(CG g1, CG g2) NEW_GG(a[i] = b[i] OP c[i])   \
+  TT [[nodiscard]] G operator OP(CG g1, const T& e) NEW_G(a[i] = b[i] OP e)  \
+  TT [[nodiscard]] G operator OP(const T& e, CG g1) NEW_G(a[i] = e OP b[i])  \
+  TT GV operator OP##=(GV g1, CG g2) MOD_GG(a[i] OP##= b[i])                 \
+  TT GV operator OP##=(GV g1, const T& e) MOD_G(a[i] OP##= e)                \
   HH_EAT_SEMICOLON
 
 HH_OPERATIONS(+); HH_OPERATIONS(-); HH_OPERATIONS(*); HH_OPERATIONS(/); HH_OPERATIONS(%);
 
-TTN G operator-(CG g1) NEW_G(a[i] = -b[i])
-
-TTN G min(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = min(g1.flat(i), g2.flat(i)); } return g; }
-TTN G max(CG g1, CG g2) { SS; G g(g1.dims()); F(g) { g.flat(i) = max(g1.flat(i), g2.flat(i)); } return g; }
-
-TTN G interp(CG g1, CG g2, float f1 = 0.5f) {
-  SS; G g(g1.dims()); F(g) { g.flat(i) = static_cast<T>(f1 * g1.flat(i) + (1.f - f1) * g2.flat(i)); } return g;
-}
-TTN G interp(CG g1, CG g2, CG g3, float f1, float f2) {
-  ASSERTXX(same_size(g1, g2) && same_size(g1, g3));
-  G g(g1.dims());
-  F(g) { g.flat(i) = static_cast<T>(f1 * g1.flat(i) + f2 * g2.flat(i) + (1.f - f1 - f2) * g3.flat(i)); } return g;
-}
-TTN G interp(CG g1, CG g2, CG g3) { return interp(g1, g2, g3, 1.f / 3.f, 1.f / 3.f); }
-TTN G interp(CG g1, CG g2, CG g3, const Vec3<float>& bary) {
-  // Vec3<float> == Bary;   May have bary[0] + bary[1] + bary[2] != 1.f.
-  ASSERTXX(same_size(g1, g2) && same_size(g1, g3));
-  G g(g1.dims());
-  F(g) { g.flat(i) = static_cast<T>(bary[0] * g1.flat(i) + bary[1] * g2.flat(i) + bary[2] * g3.flat(i)); }
-  return g;
-}
-
 // clang-format on
-#undef PF
-#undef F
-#undef SS
 #undef HH_OPERATIONS
 #undef MOD_G
 #undef MOD_GG
 #undef NEW_G
 #undef NEW_GG
+#undef PF
+#undef SS
 #undef GV
 #undef CG
 #undef G
-#undef TTN
 #undef TT
 
 }  // namespace hh

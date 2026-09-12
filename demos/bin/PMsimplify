@@ -4,10 +4,10 @@
 # Examples:
 #  PMsimplify v.pm       # v.pm -> v.new.pm
 
-function tname { echo "${1##*/}"; }
-function hname { echo "${1%$(tname "$1")}"; }  # or could use $(basename "$1")
-function ename { local t="$(tname "$1")"; [[ $t = *.* ]] && echo "${t##*.}" || echo ''; }
-function rname { echo "${1%.$(ename "$1")}"; }
+tname() { echo "${1##*/}"; }
+hname() { echo "${1%$(tname "$1")}"; }  # or could use $(basename "$1")
+ename() { local t="$(tname "$1")"; [[ $t = *.* ]] && echo "${t##*.}" || echo ''; }
+rname() { echo "${1%.$(ename "$1")}"; }
 
 inroot="$1"; shift
 if [[ $(ename "$inroot") == gz ]]; then inroot="$(rname "$inroot")"; fi

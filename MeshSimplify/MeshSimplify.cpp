@@ -890,7 +890,7 @@ WedgeInfo interp_wi(const WedgeInfo& wi1, const WedgeInfo& wi2, int ii) {
   WedgeInfo wio{interp_floats(wi1.col, wi2.col, ii), interp_floats(wi1.nor, wi2.nor, ii),
                 interp_floats(wi1.uv, wi2.uv, ii)};
   // Interpolated normal may be zero.  Will test for this later.
-  if (wio.nor[0] != k_undefined) wio.nor.normalize();
+  if (wio.nor[0] != k_undefined && ii == 1) wio.nor.normalize();  // Endpoint copies are already unit length.
   return wio;
 }
 
@@ -1611,7 +1611,7 @@ void perhaps_initialize() {
       norfac = 0.f;
       gnorc = 0.f;
     }
-    offset_cost = square(gdiam * 1e-5f);  // was square(gdiam*1e-2f)
+    offset_cost = square(gdiam * 1e-5f);  // was square(gdiam * 1e-2f)
     // For DEBUG, offset_cost could cause rssa/cost to lose precision.
     if (0) offset_cost = 0.f;
   }
@@ -1801,9 +1801,9 @@ float compute_spring(const NewMeshNei& nn) {
     np = nn.ar_fpts.num();
   }
   // Spring as a function of #points and #faces?
-  // From looking at many examples of Meshfit, had roughly #f / #p == 7--40 before spring was set below 1e-2 .
+  // From looking at many examples of Meshfit, had roughly #f / #p == 7--40 before spring was set below 1e-2f .
   // Let frac = np / nf
-  //  spring = frac < 4 ? 1e-2 : frac<8 ? 1e-4 : 1e-8;
+  //  spring = frac < 4 ? 1e-2f : frac < 8 ? 1e-4f : 1e-8f;
   float spring = np < nf * 4 ? 1e-2f : np < nf * 8 ? 1e-4f : 1e-8f;
   // Variable spring constants tends to produce patches of large faces, which gives poor behavior for selective
   // refinement.  So now 1997-08-27 we use constant springs.
@@ -3925,7 +3925,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         }
         {
           float sum2 = mag2(lfvol.v);
-          if (sum2 < square(gdiam * 1e-6f)) {  // Was 1e-4f.
+          if (sum2 < square(square(gdiam * 1e-6f))) {  // Sum of area-weighted normals is O(scale^4) when squared.
             lfvol_ok = false;
           } else {
             float fac = 1.f / sqrt(sum2);
@@ -3942,7 +3942,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         // If colfac && !fit_colors, or if norfac && !fit_normals, should compute minimum subject to those constraints.
         const float small_constr_cweight = 1e-3f;
         float cweight = small_constr_cweight;
-        // if (qemweight) cweight *= square(gdiam*.05f);
+        // if (qemweight) cweight *= square(gdiam * .05f);
         auto up_qbu0 = make_qem();
         BQemT& qbu0 = *up_qbu0;
         qbu0.copy(*nn.ar_wq[0]);
@@ -4526,9 +4526,8 @@ void parallel_optimize() {
         assertx(minii2 && no_fit_geom);
       }
       assertw(ecol_result.vs == vs);  // Rare numerical precision issues?
-      // assertx(abs(ecol_result.cost - cost) < 1e-4f);  // reexamine??
-      // if (float err = abs(ecol_result.cost - cost); err > 1e-6f && err / cost > 1e-4f && 0)
-      //   assertnever(SSHOW(err, cost));
+      // assertw(abs(ecol_result.cost - cost) < square(1e-2f * gdiam));  // should now be obsolete
+      assertw(ecol_result.cost == cost);
     }
     if (verb >= 2)
       showdf("Sweep: %8d edges, %8d considered, %8d collapsed\n",  //

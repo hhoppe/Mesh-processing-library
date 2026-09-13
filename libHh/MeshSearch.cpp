@@ -41,9 +41,11 @@ Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
   return convert<float>(weights / sum_weights);
 }
 
-// Return the angular distance (in radians) from the point p on the unit sphere to the spherical triangle, or zero
-// if p lies within the triangle.  (Where p lies beyond a triangle vertex, the result is a lower bound.)
-float spherical_dist(const Point& p, const Vec3<Point>& triangle) {
+// Return the sine of the angular distance from the point p on the unit sphere to the spherical triangle, or zero if
+// p lies within the triangle.  (Where p lies beyond a triangle vertex, the result is a lower bound.)  The distance
+// from a point to a great circle never exceeds TAU / 4, so the sine is monotonic in that distance and suffices for
+// ranking; a caller wanting radians applies std::asin() to the result.
+float sin_spherical_dist(const Point& p, const Vec3<Point>& triangle) {
   using Precision = double;
   const auto q = convert<Precision>(p);
   const auto tri = transformed(triangle, [](const Point& p2) { return convert<Precision>(p2); });
@@ -55,7 +57,7 @@ float spherical_dist(const Point& p, const Vec3<Point>& triangle) {
     const Precision normal_mag = mag(normal);
     if (normal_mag) max_sin_outside = max(max_sin_outside, -dot(q, normal) / normal_mag);
   }
-  return float(std::asin(min(max_sin_outside, Precision{1})));
+  return float(max_sin_outside);
 }
 
 struct GnomonicSearchOptions {
@@ -102,12 +104,13 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
         const int side = index(outside, false);
         Vertex v = va[side];
         // We find the face with smallest distance from p.
-        float min_dist = BIGFLOAT;
+        float min_sin_dist = BIGFLOAT;
         Face min_f{};
         for (Face f2 : mesh.faces(v)) {
           if (f2 == f) continue;
           const Vec3<Point> triangle2 = mesh.triangle_points(f2);
-          if (const float dist = spherical_dist(p, triangle2); dist < min_dist) min_dist = dist, min_f = f2;
+          const float sin_dist = sin_spherical_dist(p, triangle2);
+          if (sin_dist < min_sin_dist) min_sin_dist = sin_dist, min_f = f2;
         }
         f = min_f;
 

@@ -102,13 +102,22 @@ timingtest: Filterimage Filtervideo
 # hhoppeg mingw: expect 0.42 sec, 7.2 sec
 # hhoppeg clang: expect 0.42 sec, 7.1 sec
 # hhoppeg  unix: expect 0.39 sec, 7.0 sec
-	@for i in {1..5}; do $(rel_exe_dir)/Filterimage -create 8192 8192 -scaletox 3000 -noo; done
-	@for i in {1..2}; do \
-	  VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 \
-	    -end 7sec -start -6sec -trimend -1 \
-	    -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp \
-	    -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'; \
-	done
+	@{ for i in {1..5}; do $(rel_exe_dir)/Filterimage -create 8192 8192 -scaletox 3000 -noo; done \
+	     |& grep '(_scale:'; \
+	   for i in {1..2}; do \
+	     VIDEOLOOP_PRECISE=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 \
+	       -end 7sec -start -6sec -trimend -1 \
+	       -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.downscaled.vlp \
+	       -gdloop 5sec -noo |& grep '(_gdloop:'; \
+	   done; } \
+	  | awk '{ name = $$2; gsub(/[(_:]/, "", name); t = $$NF + 0; \
+	           if (!(name in count)) names[++k] = name; \
+	           count[name]++; sum[name] += t; \
+	           if (!(name in min) || t < min[name]) min[name] = t; } \
+	         END { line = "#"; \
+	           for (i = 1; i <= k; i++) { name = names[i]; \
+	             line = line sprintf("  [%s] avg=%.2f min=%.2f", name, sum[name] / count[name], min[name]); } \
+	           print line; }'
 #	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
 
 phony_targets = all progs libs $(dirs+test) clean $(clean_dirs) \

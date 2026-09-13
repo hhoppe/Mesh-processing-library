@@ -239,66 +239,78 @@ template <int D, typename T> CGridView<D + 1, T> raise_grid_rank(CGridView<D, T>
 }
 
 inline bool env_image_linear_filter() {
-  static const bool value = getenv_bool("IMAGE_LINEAR_FILTER");  // expand gamma
+  static const bool value = getenv_bool("IMAGE_LINEAR_FILTER");  // Expand gamma.  Assumes gamma = 2.0 (not 2.2).
   return value;
 }
 
 template <int D> void convert(CGridView<D, Pixel> gridu, GridView<D, Vector4> gridf) {
   HH_GRIDOP_TIMER("__convert1");
   assertx(same_size(gridu, gridf));
-  parallel_for({.cycles_per_elem = 4}, range(gridu.size()), [&](const size_t i) {
-    Vector4 v(gridu.flat(i));
-    if (env_image_linear_filter()) v = square(v);  // assumes gamma = 2.0 rather than SRGB 2.2
-    gridf.flat(i) = v;
-  });
+  if (env_image_linear_filter())
+    parallel_for({.cycles_per_elem = 4}, range(gridu.size()),
+                 [&](const size_t i) { gridf.flat(i) = square(Vector4(gridu.flat(i))); });
+  else
+    parallel_for({.cycles_per_elem = 4}, range(gridu.size()),
+                 [&](const size_t i) { gridf.flat(i) = Vector4(gridu.flat(i)); });
 }
 
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Pixel> gridu) {
   HH_GRIDOP_TIMER("__convert2");
   assertx(same_size(gridf, gridu));
-  parallel_for({.cycles_per_elem = 4}, range(gridf.size()), [&](const size_t i) {
-    Vector4 v = gridf.flat(i);
-    if (env_image_linear_filter()) v = sqrt(v);  // assumes gamma = 2.0 rather than SRGB 2.2
-    gridu.flat(i) = v.pixel();
-  });
+  if (env_image_linear_filter())
+    parallel_for({.cycles_per_elem = 4}, range(gridf.size()),
+                 [&](const size_t i) { gridu.flat(i) = sqrt(gridf.flat(i)).pixel(); });
+  else
+    parallel_for({.cycles_per_elem = 4}, range(gridf.size()),
+                 [&](const size_t i) { gridu.flat(i) = gridf.flat(i).pixel(); });
 }
 
 template <int D> void convert(CGridView<D, uint8_t> gridu, GridView<D, float> gridf) {
   assertx(same_size(gridu, gridf));
-  parallel_for({.cycles_per_elem = 1}, range(gridu.size()), [&](const size_t i) {
-    float v = float(gridu.flat(i));
-    if (env_image_linear_filter()) v = square(v);
-    gridf.flat(i) = v;
-  });
+  if (env_image_linear_filter())
+    parallel_for({.cycles_per_elem = 1}, range(gridu.size()),
+                 [&](const size_t i) { gridf.flat(i) = square(float(gridu.flat(i))); });
+  else
+    parallel_for({.cycles_per_elem = 1}, range(gridu.size()),
+                 [&](const size_t i) { gridf.flat(i) = float(gridu.flat(i)); });
 }
 
 template <int D> void convert(CGridView<D, float> gridf, GridView<D, uint8_t> gridu) {
   assertx(same_size(gridf, gridu));
-  parallel_for({.cycles_per_elem = 1}, range(gridf.size()), [&](const size_t i) {
-    float v = gridf.flat(i);
-    if (env_image_linear_filter()) v = sqrt(v);
-    gridu.flat(i) = clamp_to_uint8(int(v));
-  });
+  if (env_image_linear_filter())
+    parallel_for({.cycles_per_elem = 1}, range(gridf.size()),
+                 [&](const size_t i) { gridu.flat(i) = clamp_to_uint8(int(sqrt(gridf.flat(i)))); });
+  else
+    parallel_for({.cycles_per_elem = 1}, range(gridf.size()),
+                 [&](const size_t i) { gridu.flat(i) = clamp_to_uint8(int(gridf.flat(i))); });
 }
 
 template <int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D, Vector4> gridf) {
   assertx(same_size(gridu, gridf));
-  parallel_for({.cycles_per_elem = 4}, range(gridu.size()), [&](const size_t i) {
-    const auto& uv = gridu.flat(i);
-    Vector4 v(Pixel(uv[0], uv[1], 0, 0));
-    if (env_image_linear_filter()) v = square(v);
-    gridf.flat(i) = v;
-  });
+  if (env_image_linear_filter())
+    parallel_for({.cycles_per_elem = 4}, range(gridu.size()), [&](const size_t i) {
+      const auto& uv = gridu.flat(i);
+      gridf.flat(i) = square(Vector4(Pixel(uv[0], uv[1], 0, 0)));
+    });
+  else
+    parallel_for({.cycles_per_elem = 4}, range(gridu.size()), [&](const size_t i) {
+      const auto& uv = gridu.flat(i);
+      gridf.flat(i) = Vector4(Pixel(uv[0], uv[1], 0, 0));
+    });
 }
 
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Vec2<uint8_t>> gridu) {
   assertx(same_size(gridf, gridu));
-  parallel_for({.cycles_per_elem = 4}, range(gridf.size()), [&](const size_t i) {
-    Vector4 v = gridf.flat(i);
-    if (env_image_linear_filter()) v = sqrt(v);
-    Pixel p = v.pixel();
-    gridu.flat(i) = V(p[0], p[1]);
-  });
+  if (env_image_linear_filter())
+    parallel_for({.cycles_per_elem = 4}, range(gridf.size()), [&](const size_t i) {
+      const Pixel p = sqrt(gridf.flat(i)).pixel();
+      gridu.flat(i) = V(p[0], p[1]);
+    });
+  else
+    parallel_for({.cycles_per_elem = 4}, range(gridf.size()), [&](const size_t i) {
+      const Pixel p = gridf.flat(i).pixel();
+      gridu.flat(i) = V(p[0], p[1]);
+    });
 }
 
 //----------------------------------------------------------------------------

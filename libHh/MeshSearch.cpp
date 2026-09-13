@@ -22,13 +22,18 @@ bool in_spherical_triangle(const Point& p, const Vec3<Point>& triangle) {
 // coordinates of the spherical projection of `p` onto the planar triangle.
 Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
   assertw(in_spherical_triangle(p, triangle));
-  const Line line{Point(0.f, 0.f, 0.f), p};
-  const Plane plane = plane_of_triangle(triangle);
-  const Point pint = intersect_line_with_plane(line, plane).value();
-  const auto [d2, bary, clp] = project_point_triangle(pint, triangle);
-  const float tolerance2 = 1e-9f;
-  if (!assertw(d2 < tolerance2) && 0) SHOW(p), SHOW(triangle), SHOW(pint), SHOW(clp), SHOW(bary), SHOW(d2);
-  return bary;
+  // The barycentric coordinates are proportional to the signed volumes of the tetrahedra (origin, p, triangle[i + 1],
+  // triangle[i + 2]); these same signed volumes determine the enclosing face in `gnomonic_search_bary()`.
+  // This closed form avoids explicitly forming the triangle plane, whose normal is ill-conditioned for slivers.
+  using Precision = double;
+  const auto q = convert<Precision>(p);
+  const auto tri = transformed(triangle, [](const Point& p2) { return convert<Precision>(p2); });
+  Vec3<Precision> weights;
+  // Clamp because p may lie just outside the spherical triangle (the search tests allow a small tolerance).
+  for_int(i, 3) weights[i] = max(dot(q, cross(tri[mod3(i + 1)], tri[mod3(i + 2)])), Precision{0});
+  const Precision sum_weights = sum(weights);
+  if (!assertw(sum_weights > Precision{0})) return Bary(1.f / 3.f, 1.f / 3.f, 1.f / 3.f);
+  return convert<float>(weights / sum_weights);
 }
 
 // Return the squared distance from p to its "closest" gnonomic projection onto the spherical triangle.

@@ -166,24 +166,21 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     //  (  v2   1 )   (     )       ( s2 )
     //  (  n    0 )   ( d_s )       ( 0  )
     //
-    // The system is solved in a local frame (origin p0, scaled by an exact power of two) so that its matrix
-    // entries have magnitudes in [0, 1]; in world coordinates its conditioning would depend on the position and
-    // scale of the mesh.
-    T fac;
-    {
-      T maxabs = T{0};
-      for_int(c, 3) maxabs = std::max({maxabs, abs(T{p1[c]} - p0[c]), abs(T{p2[c]} - p0[c])});
-      int exponent;
-      (void)std::frexp(maxabs, &exponent);
-      fac = maxabs ? std::ldexp(T{1}, -exponent) : T{1};  // Exact, so the local frame introduces no roundoff.
-    }
+    // The rows are entered in world coordinates, so the conditioning of the system depends on the position and
+    // scale of the mesh.  It is tempting to instead solve in a local frame (origin p0, scaled by an exact power of
+    // two) so that the matrix entries lie in [0, 1], but that does not help: recovering the world-space offset
+    // requires d_s = d_local - dot(g_s, p0), which reintroduces the very cancellation that the local frame
+    // avoided, and the accumulated quadric is itself expressed in world coordinates (_b = d_s * g_s and
+    // _c = square(d_s) are O(|p0|) and O(|p0|^2)).  Measured on demos/data/blob5.orig.m with -minqem, the local
+    // frame perturbs the sequence of edge collapses but leaves both the L2 geometric error and its sensitivity to
+    // a large translation of the mesh unchanged.
     // static LudLls lls(4, 4, nattrib);
     // lls.clear();
     LudLls lls(4, 4, nattrib);  // Threadsafe.
     for_int(c, 3) {
-      lls.enter_a_rc(0, c, 0.f);
-      lls.enter_a_rc(1, c, float((T{p1[c]} - p0[c]) * fac));
-      lls.enter_a_rc(2, c, float((T{p2[c]} - p0[c]) * fac));
+      lls.enter_a_rc(0, c, p0[c]);
+      lls.enter_a_rc(1, c, p1[c]);
+      lls.enter_a_rc(2, c, p2[c]);
       lls.enter_a_rc(3, c, float(nor[c]));
     }
     lls.enter_a_rc(0, 3, 1.f);
@@ -214,10 +211,8 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     for_int(si, nattrib) {
       Vec4<float> sol;
       lls.get_x_c(si, sol);
-      // Map the gradient and offset from the local frame back to world coordinates.  Because the local coordinates
-      // are u = (p - p0) * fac, the chain rule gives ds/dp = (ds/du) * fac, so the gradient scales like u itself.
-      const Vec3<T> g_s = {T{sol[0]} * fac, T{sol[1]} * fac, T{sol[2]} * fac};
-      const T d_s = T{sol[3]} - (g_s[0] * p0[0] + g_s[1] * p0[1] + g_s[2] * p0[2]);
+      const Vec3<T> g_s = {sol[0], sol[1], sol[2]};
+      const T d_s = sol[3];
       {
         T* pa = _a.data();
         for_int(i, n) {

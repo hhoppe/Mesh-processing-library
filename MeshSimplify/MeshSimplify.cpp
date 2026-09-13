@@ -465,6 +465,7 @@ Bbox<float, 3> gbbox;             // Bbox of original mesh.
 float gdiam;                      // Diameter of original mesh.
 float gcolc;                      // Constant in front of color error term.
 float gnorc;                      // Constant in front of normal error term.
+double gcostnorm;                 // Factor converting costs to dimensionless (see perhaps_initialize()).
 int g_necols;                     // Number of edge collapses.
 std::optional<WFile> wfile_prog;  // Pm stream output (may be nullptr).
 bool have_ccolors = false;        // Have color scalar attributes.
@@ -1611,7 +1612,11 @@ void perhaps_initialize() {
       norfac = 0.f;
       gnorc = 0.f;
     }
-    offset_cost = square(gdiam * 1e-5f);  // was square(gdiam * 1e-2f)
+    // Costs are squared distances, except under -minvolume where they are volumes.  Multiplying them by gcostnorm
+    // makes them dimensionless, so that every constant in the cost domain (offset_cost, smallcost, the tvcfac and
+    // dihedral-penalty scales, and the tolerance on recomputed costs) is independent of the scale of the model.
+    gcostnorm = 1. / (minvolume ? pow(double(gdiam), 3.) : square(double(gdiam)));
+    offset_cost = 1e-10f;  // Dimensionless; was square(gdiam * 1e-5f), and earlier square(gdiam * 1e-2f).
     // For DEBUG, offset_cost could cause rssa/cost to lose precision.
     if (0) offset_cost = 0.f;
   }
@@ -3706,6 +3711,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     if (desnfac) rssfpenalty += square(gdiam * desnfac) * (v_desn(v1) + v_desn(v2));
     rssf -= rssfpenalty;
   }
+  rssf *= gcostnorm;  // Make the cost dimensionless.
   if (minqem) gather_nn_qem(e, nn);
   // Consider 3 optimizations with different starting locations.
   double min_rssa = BIGFLOAT;
@@ -3925,7 +3931,10 @@ EcolResult try_ecol(Edge e, bool commit) {
         }
         {
           float sum2 = mag2(lfvol.v);
-          if (sum2 < square(square(gdiam * 1e-6f))) {  // Sum of area-weighted normals is O(scale^4) when squared.
+          // The squared magnitude of area-weighted (i.e., unnormalized) normals is O(scale^4), so the constant is
+          // the fourth root of the original relative threshold 1e-12.
+          // (It was previously `square(gdiam * 1e-6f)`, which is incorrectly O(scale^2)).
+          if (sum2 < square(square(gdiam * 1e-3f))) {
             lfvol_ok = false;
           } else {
             float fac = 1.f / sqrt(sum2);
@@ -4103,6 +4112,7 @@ EcolResult try_ecol(Edge e, bool commit) {
           rssa /= bndfac;
       }
     }
+    rssa *= gcostnorm;  // Make the cost dimensionless; the dihedral penalty below is already scale-invariant.
     assertx(rssa < k_bad_dih * .1f);
     rssa += dihpenalty;
     assertx(std::isfinite(float(rssa)));
@@ -4123,7 +4133,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   float raw_cost = float(min_rssa - rssf);
   ecol_result.cost = raw_cost + offset_cost;
   if (raw_cost < 0.f) SSTATV2(Snegcost, raw_cost);
-  const float smallcost = 1e-20f;
+  const float smallcost = 1e-20f;  // Dimensionless, like the cost itself.
   if (ecol_result.cost < smallcost) ecol_result.cost = smallcost;
   if (invertexorder == 2) {
     // Of the legal edge collapses, select the one whose opposite vertex has smallest id.
@@ -4383,8 +4393,7 @@ float get_tvc_cost(Edge e, bool edir) {
     float avg_cost = !pqecost.total_num() ? 0.f : float(pqecost.total_priority() / pqecost.total_num());
     cost = -nincache * avg_cost * tvcfac;
   } else {
-    // Scale by squared object size to achieve scale invariance.
-    cost = -nincache * square(gdiam * tvcfac);
+    cost = -nincache * square(tvcfac);  // Costs are dimensionless, so this is already scale-invariant.
   }
   return cost;
 }
@@ -4436,7 +4445,7 @@ void consider_tvc(Edge& edefault, float costdefault) {
     float max_improvement =
         (tvc_max_improvement *
          (tvcpqa ? (!pqecost.total_num() ? 0.f : float(pqecost.total_priority() / pqecost.total_num()))
-                 : square(gdiam * tvcfac)));
+                 : square(tvcfac)));
     if (cost - max_improvement > costbest) continue;
     float tvc_cost;
     bool edir;

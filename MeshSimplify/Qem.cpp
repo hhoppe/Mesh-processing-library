@@ -166,13 +166,24 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     //  (  v2   1 )   (     )       ( s2 )
     //  (  n    0 )   ( d_s )       ( 0  )
     //
+    // The system is solved in a local frame (origin p0, scaled by an exact power of two) so that its matrix
+    // entries have magnitudes in [0, 1]; in world coordinates its conditioning would depend on the position and
+    // scale of the mesh.
+    T fac;
+    {
+      T maxabs = T{0};
+      for_int(c, 3) maxabs = std::max({maxabs, abs(T{p1[c]} - p0[c]), abs(T{p2[c]} - p0[c])});
+      int exponent;
+      (void)std::frexp(maxabs, &exponent);
+      fac = maxabs ? std::ldexp(T{1}, -exponent) : T{1};  // Exact, so the local frame introduces no roundoff.
+    }
     // static LudLls lls(4, 4, nattrib);
     // lls.clear();
     LudLls lls(4, 4, nattrib);  // Threadsafe.
     for_int(c, 3) {
-      lls.enter_a_rc(0, c, p0[c]);
-      lls.enter_a_rc(1, c, p1[c]);
-      lls.enter_a_rc(2, c, p2[c]);
+      lls.enter_a_rc(0, c, 0.f);
+      lls.enter_a_rc(1, c, float((T{p1[c]} - p0[c]) * fac));
+      lls.enter_a_rc(2, c, float((T{p2[c]} - p0[c]) * fac));
       lls.enter_a_rc(3, c, float(nor[c]));
     }
     lls.enter_a_rc(0, 3, 1.f);
@@ -203,8 +214,10 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     for_int(si, nattrib) {
       Vec4<float> sol;
       lls.get_x_c(si, sol);
-      const Vec3<T> g_s = {sol[0], sol[1], sol[2]};
-      T d_s = sol[3];
+      // Map the gradient and offset from the local frame back to world coordinates.  Because the local coordinates
+      // are u = (p - p0) * fac, the chain rule gives ds/dp = (ds/du) * fac, so the gradient scales like u itself.
+      const Vec3<T> g_s = {T{sol[0]} * fac, T{sol[1]} * fac, T{sol[2]} * fac};
+      const T d_s = T{sol[3]} - (g_s[0] * p0[0] + g_s[1] * p0[1] + g_s[2] * p0[2]);
       {
         T* pa = _a.data();
         for_int(i, n) {

@@ -1076,7 +1076,7 @@ void do_replace(Args& args) {
 void do_gamma(Args& args) {
   const float gamma = args.get_float();
   const auto transf =
-      Vec<uint8_t, 256>::create([gamma](int i) { return uint8_t(255.f * pow(i / 255.f, gamma) + 0.5f); });
+      Vec<uint8_t, 256>::create([gamma](int uc) { return uint8_t(255.f * pow(uc / 255.f, gamma) + 0.5f); });
   parallel_for({.cycles_per_elem = 10}, range(video.size()), [&](const size_t i) {
     Pixel& pixel = video.flat(i);
     for_int(z, nz) pixel[z] = transf[pixel[z]];

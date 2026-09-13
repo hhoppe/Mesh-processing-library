@@ -219,8 +219,7 @@ MeshSearch::ResultOnSphere MeshSearch::search_on_sphere(const Point& p, Face hin
   auto [f, bary, unused_clp, unused_d2] = search(p, hint_f);
   assertx(f);
   // Modifies f and bary.
-  gnomonic_search_bary(p, _mesh, f, bary,
-                       {.warn_no_opp_face = _options.gnomonic_search_warn_no_opp_face});
+  gnomonic_search_bary(p, _mesh, f, bary, {.warn_no_opp_face = _options.gnomonic_search_warn_no_opp_face});
   if (final_p) {
     // Starting from the obtained face f, repeat the search but (1) search instead for final_p and (2) avoid
     // crossing the octaflat axial planes (because these may contain parametric uv discontinuities).

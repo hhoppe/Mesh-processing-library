@@ -10,18 +10,22 @@ namespace hh {
 
 namespace {
 
+// Tolerance on the signed volumes dot(p, cross(p, triangle[i], triangle[i + 1])) when testing if the point p on the
+// unit sphere lies within a spherical triangle.
+constexpr float k_dotcross_eps = 5e-7f;  // Was 2e-7f.
+
 bool in_spherical_triangle(const Point& p, const Vec3<Point>& triangle) {
   ASSERTX(is_unit(p));
   for_int(i, 3) ASSERTX(is_unit(triangle[i]));
-  const float dotcross_eps = 5e-7f;  // Was 2e-7f.
-  for_int(i, 3) if (dot(Vector(p), cross(p, triangle[i], triangle[mod3(i + 1)])) < -dotcross_eps) return false;
+  for_int(i, 3) if (dot(Vector(p), cross(p, triangle[i], triangle[mod3(i + 1)])) < -k_dotcross_eps) return false;
   return true;
 }
 
 // Given the point `p` on the unit sphere and a spherical triangle assumed to enclose it, return the barycentric
 // coordinates of the spherical projection of `p` onto the planar triangle.
 Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
-  assertw(in_spherical_triangle(p, triangle));
+  ASSERTX(is_unit(p));
+  for_int(i, 3) ASSERTX(is_unit(triangle[i]));
   // The barycentric coordinates are proportional to the signed volumes of the tetrahedra (origin, p, triangle[i + 1],
   // triangle[i + 2]); these same signed volumes determine the enclosing face in `gnomonic_search_bary()`.
   // This closed form avoids explicitly forming the triangle plane, whose normal is ill-conditioned for slivers.
@@ -29,19 +33,29 @@ Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
   const auto q = convert<Precision>(p);
   const auto tri = transformed(triangle, [](const Point& p2) { return convert<Precision>(p2); });
   Vec3<Precision> weights;
-  // Clamp because p may lie just outside the spherical triangle (the search tests allow a small tolerance).
-  for_int(i, 3) weights[i] = max(dot(q, cross(tri[mod3(i + 1)], tri[mod3(i + 2)])), Precision{0});
+  for_int(i, 3) weights[i] = dot(q, cross(tri[mod3(i + 1)], tri[mod3(i + 2)]));
+  assertw(min(weights) >= -Precision{k_dotcross_eps});  // The point p should lie within the spherical triangle.
+  for_int(i, 3) weights[i] = max(weights[i], Precision{0});  // Tolerate p lying just outside the triangle.
   const Precision sum_weights = sum(weights);
   if (!assertw(sum_weights > Precision{0})) return Bary(1.f / 3.f, 1.f / 3.f, 1.f / 3.f);
   return convert<float>(weights / sum_weights);
 }
 
-// Return the squared distance from p to its "closest" gnonomic projection onto the spherical triangle.
-float gnomonic_dist2(const Point& p, const Vec3<Point>& triangle) {
-  const Line line{Point(0.f, 0.f, 0.f), p};
-  const Plane plane = plane_of_triangle(triangle);
-  const Point pint = intersect_line_with_plane(line, plane).value();
-  return project_point_triangle(pint, triangle).d2;
+// Return the angular distance (in radians) from the point p on the unit sphere to the spherical triangle, or zero
+// if p lies within the triangle.  (Where p lies beyond a triangle vertex, the result is a lower bound.)
+float spherical_dist(const Point& p, const Vec3<Point>& triangle) {
+  using Precision = double;
+  const auto q = convert<Precision>(p);
+  const auto tri = transformed(triangle, [](const Point& p2) { return convert<Precision>(p2); });
+  Precision max_sin_outside = 0.;
+  for_int(i, 3) {
+    // The great circle containing the triangle edge (i + 1, i + 2) has unit normal `normal / normal_mag`, and the
+    // signed distance of p from that great circle is asin(dot(q, normal) / normal_mag), positive on the inside.
+    const auto normal = cross(tri[mod3(i + 1)], tri[mod3(i + 2)]);
+    const Precision normal_mag = mag(normal);
+    if (normal_mag) max_sin_outside = max(max_sin_outside, -dot(q, normal) / normal_mag);
+  }
+  return float(std::asin(min(max_sin_outside, Precision{1})));
 }
 
 struct GnomonicSearchOptions {
@@ -88,12 +102,12 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
         const int side = index(outside, false);
         Vertex v = va[side];
         // We find the face with smallest distance from p.
-        float min_d2 = BIGFLOAT;
+        float min_dist = BIGFLOAT;
         Face min_f{};
         for (Face f2 : mesh.faces(v)) {
           if (f2 == f) continue;
           const Vec3<Point> triangle2 = mesh.triangle_points(f2);
-          if (const float d2 = gnomonic_dist2(p, triangle2); d2 < min_d2) min_d2 = d2, min_f = f2;
+          if (const float dist = spherical_dist(p, triangle2); dist < min_dist) min_dist = dist, min_f = f2;
         }
         f = min_f;
 

@@ -61,6 +61,7 @@ all:
 	Filterimage --version   # Show build information.
 	@status=0; \
 	$(MAKE) -k create || status=$$?; \
+	$(MAKE) check || status=$$?; \
 	ls -alt data; \
 	$(MAKE) view || status=$$?; \
 	exit $$status
@@ -70,6 +71,10 @@ create: $(create_scripts)
 
 $(create_scripts):
 	$(@)
+
+# Check that the created outputs look reasonable (see generated_files.txt).
+check:
+	./check_created_outputs.sh
 
 # Just in case these are specified individually.
 $(view_scripts):
@@ -96,6 +101,6 @@ clean deepclean:
 debug:
 	which Recon
 
-.PHONY: all create view clean deepclean $(create_scripts) $(view_scripts) debug depend $(make_dep)
+.PHONY: all create check view clean deepclean $(create_scripts) $(view_scripts) debug depend $(make_dep)
 
 endif  # ifneq ($(CONFIG),all)

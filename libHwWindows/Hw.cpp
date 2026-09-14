@@ -83,6 +83,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   args.f("-maximize", _maximize, ": set initial window state");
   args.f("-fullscreen", _fullscreen, ": set initial window state");
   args.p("-offscreen", _offscreen, "imagefilename : save image");
+  args.f("-hidden", _hidden, ": render without any visible window (e.g. to save images or videos)");
   args.f("-nosetforeground", _nosetforeground, ": do not ask that window receive focus");
   args.other_args_ok();
   args.other_options_ok();
@@ -92,6 +93,7 @@ bool Hw::init_aux(Array<string>& aargs) {
     return false;
   }
   assertx(aargs.num());
+  if (_hidden && _offscreen != "") assertnever("Hw options -hidden and -offscreen cannot be combined");
   _argv0 = aargs[0];
   if (minimize) _iconic = true;
   g_hw = this;
@@ -190,6 +192,12 @@ void Hw::open() {
     }
   }
   ogl_create_window(yxpos);
+  if (_hidden) {
+    // A window that is never shown receives no WM_PAINT messages, so begin drawing without them.
+    _exposed = true;
+    if (_hwkey != "") start_hwkey();
+    redraw_later();
+  }
   if (_offscreen == "") {
     for (;;)
       if (loop()) break;
@@ -660,7 +668,7 @@ void Hw::draw_it() {
   if (_update == EUpdate::quit) return;
   if (_update == EUpdate::nothing || _update == EUpdate::redrawlater) {
     soft_flush();
-    if (_is_glx_dbuf) {
+    if (_is_glx_dbuf && !_hidden) {
       // glFlush();
       // assertx(SwapBuffers(_hDC));
       assertx(SwapBuffers(_hRenderDC));
@@ -836,6 +844,7 @@ void Hw::flush_point() { flush_point_ogl(); }
 void Hw::hard_flush() {
   assertx(_state == EState::open);
   soft_flush();
+  if (_hidden) hidden_resolve_framebuffer();
   glFinish();
 }
 
@@ -918,13 +927,13 @@ string Hw::query_save_filename(const string& hint_filename, bool force) {
 void Hw::begin_draw_visible() {
   assertx(_state == EState::open);
   soft_flush();
-  glDrawBuffer(GL_FRONT);
+  if (!_hidden) glDrawBuffer(GL_FRONT);
 }
 
 void Hw::end_draw_visible() {
   assertx(_state == EState::open);
   soft_flush();
-  if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
+  if (_is_glx_dbuf && !_hidden) glDrawBuffer(GL_BACK);
 }
 
 void Hw::wake_up() {
@@ -1113,7 +1122,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     // Get a DC for the window (for convenience; let's only do it once)
     _hDC = assertx(GetDC(_hwnd));
     _hRenderDC = _hDC;
-    if (_offscreen == "") {
+    if (_offscreen == "" && !_hidden) {
       // Display the window
       ShowWindow(_hwnd, (_iconic ? SW_SHOWMINIMIZED : _maximize ? SW_MAXIMIZE : SW_SHOWDEFAULT));
       assertx(UpdateWindow(_hwnd));
@@ -1253,6 +1262,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   // Create the *main* rendering context
   _hRC = assertx(wglCreateContext(_hRenderDC));
   assertx(wglMakeCurrent(_hRenderDC, _hRC));
+  _hidden_samples = _multisample == 3 ? 2 : _multisample == 5 ? 4 : _multisample;  // As for WGL_SAMPLES_ARB above.
   if (_multisample) {
     glEnable(GL_MULTISAMPLE);
     assertx(!gl_report_errors());

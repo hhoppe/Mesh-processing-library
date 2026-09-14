@@ -91,6 +91,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   args.f("-maximize", _maximize, ": set initial window state");
   args.f("-fullscreen", _fullscreen, ": set initial window state");
   args.p("-offscreen", _offscreen, "imagefilename : save image");
+  args.f("-hidden", _hidden, ": render without any visible window (e.g. to save images or videos)");
   args.f("-nosetforeground", _nosetforeground, ": do not ask that window receive focus");
   args.other_args_ok();
   args.other_options_ok();
@@ -100,6 +101,7 @@ bool Hw::init_aux(Array<string>& aargs) {
     return false;
   }
   assertx(aargs.num());
+  if (_hidden && _offscreen != "") assertnever("Hw options -hidden and -offscreen cannot be combined");
   _argv0 = aargs[0];
   if (minimize) iconic = true;
   if (_offscreen != "") iconic = true;  // less distracting; ideally window would be invisible
@@ -339,7 +341,7 @@ void Hw::open() {
     XSetWMProtocols(_display, _win, &_wmDeleteMessage, 1);
   }
   // if (_offscreen == "")
-  XMapWindow(_display, _win);  // window must be mapped to obtain an image
+  if (!_hidden) XMapWindow(_display, _win);  // window must be mapped to obtain an image
   if (_maximize) {
     _maximize = false;
     // (Note that make_fullscreen(true) is different from maximize.)
@@ -361,6 +363,7 @@ void Hw::open() {
   if (_oglx) {
 #if defined(HH_OGLX)
     glXMakeCurrent(_display, _win, glcx);
+    _hidden_samples = _multisample > 1 ? _multisample : 0;
     // 2026-08-03: On WSL, I attempted to cap the framerate to the max display refresh, but it was not possible.
     // Under WSLg / XWayland, glXQueryExtensionsString() reports no swap_control, video_sync, or OML_sync_control,
     // and glXSwapIntervalMESA() returns GLX_BAD_CONTEXT even with a current direct context, so vsync is unavailable.
@@ -441,6 +444,12 @@ void Hw::open() {
     // Avoid error message upon pressing close window button, e.g.:
     //  XIO:  fatal IO error 11 (Resource temporarily unavailable) on X server ":0"
     XSetIOErrorHandler(my_io_error_handler);
+  }
+  if (_hidden) {
+    // An unmapped window receives no MapNotify or Expose events, so begin drawing without them.
+    _exposed = true;
+    if (_hwkey != "") start_hwkey();
+    redraw_later();
   }
   if (_offscreen == "") {
     for (int i = 0;;) {
@@ -566,9 +575,9 @@ void Hw::handle_event() {
           const Vector4 v(_color_background.with(3, 255));
           glClearColor(v[0], v[1], v[2], v[3]);
         }
-        glDrawBuffer(GL_FRONT_AND_BACK);
+        if (!_hidden) glDrawBuffer(GL_FRONT_AND_BACK);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
+        if (_is_glx_dbuf && !_hidden) glDrawBuffer(GL_BACK);
         set_color_to_foreground();
 #endif
       } else if (_is_pixbuf) {
@@ -750,7 +759,7 @@ void Hw::draw_it() {
     if (_update == EUpdate::nothing || _update == EUpdate::redrawlater) {
       const bool vista = true;
       if (!vista) glDrawBuffer(GL_FRONT);
-      if (_is_glx_dbuf) {
+      if (_is_glx_dbuf && !_hidden) {
         if (_hwdebug) SHOW("glxSwapBuffers1");
         if (0) {
           if (_hwdebug) SHOW("glxSwapBuffers1b");
@@ -1069,6 +1078,7 @@ void Hw::hard_flush() {
   soft_flush();
   if (_oglx) {
 #if defined(HH_OGLX)
+    if (_hidden) hidden_resolve_framebuffer();
     glXWaitGL();
 #endif
   }
@@ -1080,7 +1090,7 @@ void Hw::begin_draw_visible() {
   soft_flush();
   if (_oglx) {
 #if defined(HH_OGLX)
-    glDrawBuffer(GL_FRONT);
+    if (!_hidden) glDrawBuffer(GL_FRONT);
 #endif
   } else if (_is_pixbuf) {
     _draw = _win;
@@ -1092,7 +1102,7 @@ void Hw::end_draw_visible() {
   soft_flush();
   if (_oglx) {
 #if defined(HH_OGLX)
-    if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
+    if (_is_glx_dbuf && !_hidden) glDrawBuffer(GL_BACK);
 #endif
   } else if (_is_pixbuf) {
     _draw = _bbuf;

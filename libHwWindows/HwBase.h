@@ -142,6 +142,13 @@ class HwBase : noncopyable {
   string _backcolor;
   string _forecolor;
   string _offscreen;  // name of output file to render to, without any visible window
+
+  bool _hidden{false};                               // render into framebuffer objects instead of a visible window
+  int _hidden_samples{0};                            // multisamples in the hidden framebuffer (0 for none)
+  Vec2<int> _hidden_dims{0, 0};                      // size of the allocated hidden framebuffers
+  Vec2<unsigned> _hidden_framebuffers{0u, 0u};       // names of the drawn and resolved framebuffers
+  Vec3<unsigned> _hidden_renderbuffers{0u, 0u, 0u};  // names of the drawn color, drawn depth, and resolved color
+
   bool _nosetforeground{false};
   Pixel _color_foreground{0, 0, 0, 0};  // 24-bit foreground/drawing color
   Pixel _color_background{0, 0, 0, 0};  // 24-bit background/clear color
@@ -167,6 +174,8 @@ class HwBase : noncopyable {
   void fill_polygon_ogl(CArrayView<Vec2<float>> points);
   void flush_seg_ogl();
   void flush_point_ogl();
+  void hidden_bind_framebuffer();
+  void hidden_resolve_framebuffer();
 #endif
 };
 
@@ -568,21 +577,78 @@ inline const string& gl_extensions_string() {
 
 inline void HwBase::clear_window_ogl() {
   glViewport(0, 0, _win_dims[1], _win_dims[0]);
-  if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
-  if (_first_draw) {
-    _first_draw = false;
-    glDrawBuffer(GL_FRONT_AND_BACK);
+  if (_hidden) {
+    hidden_bind_framebuffer();  // A framebuffer object has no front or back buffer to select.
+  } else {
+    if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
+    if (_first_draw) {
+      _first_draw = false;
+      glDrawBuffer(GL_FRONT_AND_BACK);
+    }
   }
   {
     const Vector4 v(_color_background.with(3, 255));
     glClearColor(v[0], v[1], v[2], v[3]);
   }
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  if (_is_glx_dbuf)
-    glDrawBuffer(GL_BACK);
-  else
-    glDrawBuffer(GL_FRONT);
+  if (!_hidden) {
+    if (_is_glx_dbuf)
+      glDrawBuffer(GL_BACK);
+    else
+      glDrawBuffer(GL_FRONT);
+  }
   set_color_to_foreground();
+}
+
+// Bind the framebuffer object that replaces the window when _hidden, first (re)allocating it to match _win_dims.
+inline void HwBase::hidden_bind_framebuffer() {
+  USE_GL_EXT(glBindFramebuffer, PFNGLBINDFRAMEBUFFERPROC);
+  if (_win_dims != _hidden_dims) {
+    USE_GL_EXT(glGenFramebuffers, PFNGLGENFRAMEBUFFERSPROC);
+    USE_GL_EXT(glDeleteFramebuffers, PFNGLDELETEFRAMEBUFFERSPROC);
+    USE_GL_EXT(glGenRenderbuffers, PFNGLGENRENDERBUFFERSPROC);
+    USE_GL_EXT(glDeleteRenderbuffers, PFNGLDELETERENDERBUFFERSPROC);
+    USE_GL_EXT(glBindRenderbuffer, PFNGLBINDRENDERBUFFERPROC);
+    USE_GL_EXT(glRenderbufferStorageMultisample, PFNGLRENDERBUFFERSTORAGEMULTISAMPLEPROC);
+    USE_GL_EXT(glFramebufferRenderbuffer, PFNGLFRAMEBUFFERRENDERBUFFERPROC);
+    USE_GL_EXT(glCheckFramebufferStatus, PFNGLCHECKFRAMEBUFFERSTATUSPROC);
+    if (_hidden_dims != twice(0)) {
+      glDeleteFramebuffers(2, _hidden_framebuffers.data());
+      glDeleteRenderbuffers(3, _hidden_renderbuffers.data());
+    }
+    _hidden_dims = _win_dims;
+    glGenFramebuffers(2, _hidden_framebuffers.data());
+    glGenRenderbuffers(3, _hidden_renderbuffers.data());
+    const auto storage = [&](unsigned renderbuffer, int samples, GLenum format) {
+      glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer);
+      glRenderbufferStorageMultisample(GL_RENDERBUFFER, samples, format, _win_dims[1], _win_dims[0]);
+    };
+    // The drawn framebuffer is multisampled like the window would be; the resolved one is for reading pixels.
+    storage(_hidden_renderbuffers[0], _hidden_samples, GL_RGBA8);
+    storage(_hidden_renderbuffers[1], _hidden_samples, GL_DEPTH_COMPONENT24);
+    storage(_hidden_renderbuffers[2], 0, GL_RGBA8);
+    glBindFramebuffer(GL_FRAMEBUFFER, _hidden_framebuffers[1]);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _hidden_renderbuffers[2]);
+    assertx(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+    glBindFramebuffer(GL_FRAMEBUFFER, _hidden_framebuffers[0]);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, _hidden_renderbuffers[0]);
+    glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, _hidden_renderbuffers[1]);
+    assertx(glCheckFramebufferStatus(GL_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+  }
+  glBindFramebuffer(GL_FRAMEBUFFER, _hidden_framebuffers[0]);
+}
+
+// Resolve the drawn hidden framebuffer so that subsequent pixel reads (e.g. glReadPixels()) see the rendering.
+inline void HwBase::hidden_resolve_framebuffer() {
+  if (_hidden_dims == twice(0)) return;  // Nothing has been drawn yet.
+  USE_GL_EXT(glBindFramebuffer, PFNGLBINDFRAMEBUFFERPROC);
+  USE_GL_EXT(glBlitFramebuffer, PFNGLBLITFRAMEBUFFERPROC);
+  const int w = _hidden_dims[1], h = _hidden_dims[0];
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, _hidden_framebuffers[0]);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _hidden_framebuffers[1]);
+  glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+  glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _hidden_framebuffers[0]);
+  glBindFramebuffer(GL_READ_FRAMEBUFFER, _hidden_framebuffers[1]);
 }
 
 inline void HwBase::draw_text_ogl(const Vec2<int>& yx, const string& s) {

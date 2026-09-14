@@ -537,6 +537,10 @@ template <typename T> constexpr bool has_ostream_eol_v = has_ostream_eol_aux_v<s
 
 // Avoid warnings of unused variables.
 template <typename... A> constexpr void dummy_use(const A&...) {}
+
+// Pretend to modify variables, e.g. to keep a by-value parameter that must match a required signature from being
+//  reported by clang-tidy as copied but used only as a const reference.
+template <typename... A> constexpr void dummy_mutate(A&...) {}
 // Note: any compilation errors about redefinition of dummy_use(), etc. on win _MSC_VER may be due to the current
 // directory being different from that in precompiled header due to symbol links,
 // or to an explicit MeshRoot environment variable that does not match the current tree.
@@ -794,7 +798,7 @@ namespace details {
 
 bool assertw_aux2(const char* s);
 
-[[nodiscard]] inline string add_fl(string s, const char* file_line) { return s + file_line; }
+[[nodiscard]] inline string add_fl(const string& s, const char* file_line) { return s + file_line; }
 
 // The message string is formed inside this noexcept function so that the caller has no exception edge.
 template <typename T> [[noreturn]] void assertnever_aux(T&& s, const char* file_line) noexcept {

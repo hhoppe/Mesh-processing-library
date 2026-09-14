@@ -27,8 +27,10 @@ Checks:
   - '-bugprone-unchecked-optional-access'
   - '-bugprone-incorrect-roundings'
   - '-bugprone-inc-dec-in-conditions'
-  # - 'performance-*'
-  # - '-performance-enum-size'
+  - 'performance-*'
+  - '-performance-enum-size'
+  - '-performance-inefficient-string-concatenation'
+  - '-performance-no-int-to-ptr'
   # - 'modernize-*'
   # - '-modernize-use-trailing-return-type'
   # - '-modernize-avoid-c-arrays'
@@ -49,6 +51,9 @@ CheckOptions:
   bugprone-sizeof-expression.WarnOnSizeOfPointerToAggregate: false
   bugprone-empty-catch.IgnoreCatchWithKeywords: '@TODO;@FIXME;@INTENTIONAL'
   bugprone-implicit-widening-of-multiplication-result.IgnoreConstantIntExpr: true
+  performance-move-const-arg.CheckTriviallyCopyableMove: false
+  # Loop elements of range adaptors (e.g. the tuple from views::enumerate) are cheap to copy.
+  performance-for-range-copy.AllowedTypes: '^std::ranges::'
 HeaderFilterRegex: '.*'
 SystemHeaders: false
 ExcludeHeaderFilterRegex: '.*(glext|wglext|glxext)\.h$'

@@ -16,7 +16,9 @@ class Polygon : public PArray<Point, 4> {
  public:
   Polygon() = default;
   Polygon(const Polygon& p) = default;
+  Polygon(Polygon&& p) noexcept = default;
   Polygon& operator=(const Polygon& p) = default;
+  Polygon& operator=(Polygon&& p) noexcept = default;
   using base::base;                             // Inherit constructors.
   [[nodiscard]] Vector get_normal_dir() const;  // non-normalized normal
   [[nodiscard]] Vector get_normal() const;      // user should check !is_zero()

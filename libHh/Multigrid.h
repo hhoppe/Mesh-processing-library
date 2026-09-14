@@ -714,7 +714,7 @@ class Multigrid : noncopyable {
     relax(grid_rhs, grid_result, 100, false);
   }
   // Print statistics at each V-cycle iteration, including error if the exact original solution is known.
-  void analyze_error(string s) {
+  void analyze_error(const string& s) {
     HH_MULTIGRID_TIMER("_analyze");
     // Stat stat(s, true); stat.set_rms(); for (auto e : grid_result - _grid_orig) stat.enter(mag_e(e));
     Precise mean_result = mean(_grid_result);

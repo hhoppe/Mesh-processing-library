@@ -470,7 +470,7 @@ line2)";
     SHOW("3");
     {
       A a;
-      A a2(a);
+      A a2(a);  // NOLINT(performance-unnecessary-copy-initialization)
     }
     SHOW("4");
     {

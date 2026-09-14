@@ -86,7 +86,7 @@ template <int D, typename T> class CGridView {
   explicit CGridView(CArrayView<T> ar) requires(D == 1) : CGridView(ar.data(), V(ar.num())) {}
   // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
   // `gridview = grid` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
-  type& operator=(type&& g) & { return _a = g._a, _dims = g._dims, *this; }
+  type& operator=(type&& g) & noexcept { return _a = g._a, _dims = g._dims, *this; }
   void reinit(type g) { *this = g; }
   template <typename T2> [[nodiscard]] friend bool same_size(type g1, CGridView<D, T2> g2) {
     return g1.dims() == g2.dims();
@@ -186,7 +186,7 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   explicit GridView(ArrayView<T> ar) requires(D == 1) : GridView(ar.data(), V(ar.num())) {}
   // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
   // `gridview = grid` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
-  type& operator=(type&& g) & { return base::operator=(std::move(g)), *this; }
+  type& operator=(type&& g) & noexcept { return base::operator=(std::move(g)), *this; }
   void reinit(type g) { *this = g; }
   void assign(CGridView<D, T> g) requires Copyable<T>;
   using value_type = T;

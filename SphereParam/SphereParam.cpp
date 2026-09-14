@@ -386,6 +386,7 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
 
 // Extract a GMesh from the progressive mesh iterator, add "sph" and "uv" strings, and write it to std::cout.
 void write_parameterized_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
+  dummy_mutate(pmi);  // This function's signature must match output_formatters.
   GMesh gmesh = pmi.extract_gmesh();
   for (Vertex v : gmesh.vertices()) {
     gmesh.update_string(v, "wid", nullptr);
@@ -396,6 +397,7 @@ void write_parameterized_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool spli
 
 // Read the PM's original mesh and original_vertex_indices.txt, add "sph" and "uv" strings, and write it to std::cout.
 void write_original_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
+  dummy_mutate(pmi);  // This function's signature must match output_formatters.
   assertx(original_mesh != "");
   assertx(original_indices != "");
   Array<int> original_vertex_indices;

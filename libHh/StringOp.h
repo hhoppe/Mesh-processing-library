@@ -86,13 +86,13 @@ inline bool remove_at_end(string& s, const string& se) {
 
 // Return the root name of file path, like csh $file:r .
 [[nodiscard]] inline string get_path_root(const string& s) {
-  auto i = s.rfind(".");
+  auto i = s.rfind('.');
   return i == string::npos ? s : s.substr(0, i);
 }
 
 // Return the file extension of file path, like csh $file:e .
 [[nodiscard]] inline string get_path_extension(const string& s) {
-  auto i = s.rfind(".");
+  auto i = s.rfind('.');
   return i == string::npos ? "" : s.substr(i + 1);
 }
 

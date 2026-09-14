@@ -17,7 +17,7 @@ sort(map.values() | ranges::to<Array<int>>()) = Array<int>(2) {
   1
   2
 }
-sort(Array(map.keys() | views::transform([](string s) { return "<" + s + ">"; }))) = Array<std::string>(2) {
+sort(Array(map.keys() | views::transform([](const string& s) { return "<" + s + ">"; }))) = Array<std::string>(2) {
   <first>
   <second>
 }

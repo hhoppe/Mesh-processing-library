@@ -99,10 +99,10 @@ class ParseArgs : public Args {
   void p(string str, float* argp, int narg, string doc = "");
   void p(string str, double* argp, int narg, string doc = "");
   template <typename T, int narg> void p(string str, Vec<T, narg>& arg, string doc = "") {
-    p(str, arg.data(), narrow_cast<int>(narg), doc);
+    p(std::move(str), arg.data(), narrow_cast<int>(narg), std::move(doc));
   }
   template <typename T, size_t narg> void p(string str, T (&arg)[narg], string doc = "") {
-    p(str, arg, narrow_cast<int>(narg), doc);
+    p(std::move(str), arg, narrow_cast<int>(narg), std::move(doc));
   }
   void c(string str, string doc = "");                           // Add a comment in the options list.
   void p(string str, PARSE_FUNC parse_func, string doc = "");    // Parsing function taking args.

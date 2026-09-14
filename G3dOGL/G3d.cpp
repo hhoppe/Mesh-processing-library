@@ -309,7 +309,7 @@ int main(int argc, const char** argv) {
     // Close stdin, but do not leave fd0 empty in case we open another file.
     if (1) assertx(HH_POSIX(dup2)(1, 0) >= 0);
   }
-  const auto func_try_set_gfilename = [](string str) {
+  const auto func_try_set_gfilename = [](const string& str) {
     if (g_filename != "") return;
     if (starts_with(str, "bboxtomesh ") || is_pipe(str) || is_url(str)) return;
     g_filename = str;

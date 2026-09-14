@@ -27,7 +27,7 @@ template <typename T> class CStridedArrayView {
     ASSERTX(_stride > 0);  // Else <=>() uses "_stride > 0 ? _p <=> rhs._p : rhs._p <=> _p".
   }
   CStridedArrayView(const type& a) = default;
-  type& operator=(type&& a) & { return _a = a._a, _n = a._n, _stride = a._stride, *this; }  // For view<T>.
+  type& operator=(type&& a) & noexcept { return _a = a._a, _n = a._n, _stride = a._stride, *this; }  // For view<T>.
   [[nodiscard]] int num() const { return _n; }
   [[nodiscard]] size_t size() const noexcept { return _n; }
   [[nodiscard]] ptrdiff_t stride() const { return _stride; }
@@ -111,7 +111,7 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
  public:
   explicit StridedArrayView(T* a, int n, ptrdiff_t stride) : base(a, n, stride) {}
   StridedArrayView(const type& a) = default;
-  type& operator=(type&& a) & { return base::operator=(std::move(a)), *this; }  // For view<T>.
+  type& operator=(type&& a) & noexcept { return base::operator=(std::move(a)), *this; }  // For view<T>.
   using value_type = T;
   using iterator = typename base::template Iterator<T>;
   using const_iterator = typename base::const_iterator;

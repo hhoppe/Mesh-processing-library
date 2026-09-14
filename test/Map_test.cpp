@@ -156,7 +156,7 @@ int main() {
   }
   {
     Map<string, int> map = {{"first", 1}, {"second", 2}};
-    SHOW(sort(Array(map.keys() | views::transform([](string s) { return "<" + s + ">"; }))));
+    SHOW(sort(Array(map.keys() | views::transform([](const string& s) { return "<" + s + ">"; }))));
     SHOW(sort(PArray<int, 1>(map.values() | views::transform([](int i) { return 100 + i; }))));
   }
   {

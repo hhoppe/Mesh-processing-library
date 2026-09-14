@@ -15,9 +15,8 @@
 # tmpbase=$(mktemp --suffix=.base.m)
 # tmprprog=$(mktemp --suffix=.rprog)
 
-tmpd=/tmp
-if [[ -d $TMPDIR ]]; then tmpd="${TMPDIR%/}"; fi  # remove any trailing /
-if [[ -d $TEMP ]]; then tmpd="$TEMP"; fi
+tmpd=${TEMP:-${TMPDIR:-/tmp}}
+[[ $OSTYPE == cygwin ]] && tmpd=$(cygpath -m "$tmpd")  # Native Windows programs cannot open /tmp.
 tmproot="$tmpd"/v.$$
 tmpprog="$tmproot".prog
 tmpbase="$tmproot".base.m

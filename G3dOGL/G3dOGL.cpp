@@ -2216,7 +2216,6 @@ void wrap_draw(bool show) {
 
 void process_print() {
   hw.hard_flush();
-  if (!movie_nframes) SHOW("starting image print...");
   Image image(win_dims);
   const int nypix = win_dims[0], nxpix = win_dims[1];
   // IMAGE* image = iopen(imagefilename.c_str(), "w", RLE(1), 3, nxpix, nypix, 3);
@@ -2250,10 +2249,8 @@ void process_print() {
     string name = imagefilename;
     if (movie_nframes) name = sform("%s.%03d.bmp", movie_root_name.c_str(), movie_frame);
     if (name[0] == '|') image.set_suffix("bmp");
-    if (!movie_nframes) SHOW(name);
     if (movie_nframes) image.set_silent_io_progress(true);
     image.write_file(name);
-    if (!movie_nframes) SHOW("...image printed");
   }
 }
 

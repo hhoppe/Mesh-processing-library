@@ -18,7 +18,7 @@ class ScGeomorph : noncopyable {
 
  private:
   void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm, bool skip_degenerate = false);
-  int degenerate(Simplex verts[3]);
+  int degenerate(const Vec3<Simplex>& verts);
 
   SimplicialComplex K;
 

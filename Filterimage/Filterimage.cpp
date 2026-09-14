@@ -3071,7 +3071,7 @@ auto RGB_from_LAB(CMatrixView<Vector4> mat_LAB) {
 auto convert_image_mat(CMatrixView<Pixel> im) {
   Matrix<Vector4> mat(im.dims());
   parallel_for_coords({.cycles_per_elem = 5}, im.dims(), [&](const Vec2<int>& yx) {
-    mat[yx] = to_Vector4_raw(im[yx].data());  // range [0.f, 255.f]
+    mat[yx] = to_Vector4_raw(im[yx]);  // range [0.f, 255.f]
   });
   return mat;
 }

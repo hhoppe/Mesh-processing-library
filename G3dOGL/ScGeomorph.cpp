@@ -6,7 +6,7 @@
 namespace hh {
 
 // Determine whether triangle defined by verts is degenerate.
-int ScGeomorph::degenerate(Simplex v[3]) {
+int ScGeomorph::degenerate(const Vec3<Simplex>& v) {
   int i, j;
   int cnt = 0;
   for (i = 0; i < 2; i++)
@@ -18,10 +18,8 @@ int ScGeomorph::degenerate(Simplex v[3]) {
 
 // Determine vertex normal by averaging normals of adjacent faces belonging to the same normal group.
 void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm, bool skip_degenerate) {
-  Simplex verts[3];
-
   int ngroup = s_norgroup[corner_fct->getVAttribute()];
-  corner_fct->vertices(verts);
+  Vec3<Simplex> verts = corner_fct->vertices();
 
   int i_vs = index(verts, vs);
 
@@ -66,7 +64,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
     }
 
     // Simplex verts[3];
-    fct->vertices(verts);
+    verts = fct->vertices();
 
     // skip degenerate facets
     if (skip_degenerate && degenerate(verts)) {
@@ -158,7 +156,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
       assertx(fct != corner_fct);
 
       // Simplex verts[3];
-      fct->vertices(verts);
+      verts = fct->vertices();
 
       // skip degenerate facets
       if (skip_degenerate && degenerate(verts)) {
@@ -298,8 +296,7 @@ void ScGeomorph::read(std::istream& is) {
 
   // facets for corner normals
   for (Simplex f : K.simplices_dim(2)) {
-    Simplex v[3];
-    f->vertices(v);
+    const Vec3<Simplex> v = f->vertices();
 
     for_int(i, 3) {
       Vector& on = nold[3 * f->getId() + i];
@@ -310,14 +307,12 @@ void ScGeomorph::read(std::istream& is) {
   // corner normals
   // new normals
   for (Simplex f : K.simplices_dim(2)) {
-    Simplex v[3];
-    f->vertices(v);
+    const Vec3<Simplex> v = f->vertices();
     fct_pnor[f->getId()] = ok_normalized(cross(v[0]->getPosition(), v[1]->getPosition(), v[2]->getPosition()));
   }
 
   for (Simplex f : K.simplices_dim(2)) {
-    Simplex verts[3];
-    f->vertices(verts);
+    const Vec3<Simplex> verts = f->vertices();
     for_int(i, 3) vertSmoothNormal(verts[i], f, nnew[3 * f->getId() + i]);
   }
 }

@@ -67,7 +67,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
   Simplex vs = assertx(K.getSimplex(0, _vsid));
   Simplex vt = nullptr;
 
-  Pqueue<Simplex> pq[ISimplex::MAX_DIM + 1];
+  Vec<Pqueue<Simplex>, ISimplex::MAX_DIM + 1> pq;
   for (Simplex spx : vs->get_star()) pq[spx->getDim()].enter_unsorted(spx, float(spx->getId()));
 
   if (0) {
@@ -178,8 +178,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
       }
     } else if (outcome == SplitRecord::F_VSVT) {
       Simplex splitf = K.createSimplex(2);
-      Simplex verts[3];
-      f->vertices(verts);
+      const Vec3<Simplex> verts = f->vertices();
 
       for_int(i, 3) {
         Simplex v1 = verts[i] == vs ? vt : verts[i];
@@ -211,7 +210,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
   Simplex vs = assertx(K.getSimplex(0, _vsid));
   Simplex vt = nullptr;
 
-  Pqueue<Simplex> pq[ISimplex::MAX_DIM + 1];
+  Vec<Pqueue<Simplex>, ISimplex::MAX_DIM + 1> pq;
   for (Simplex spx : vs->get_star()) pq[spx->getDim()].enter_unsorted(spx, float(spx->getId()));
 
   if (0) {
@@ -325,8 +324,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
     } else if (outcome == SplitRecord::F_VSVT) {
       Simplex splitf = K.createSimplex(2);
       new_facets.push_back(splitf);
-      Simplex verts[3];
-      f->vertices(verts);
+      const Vec3<Simplex> verts = f->vertices();
 
       for_int(i, 3) {
         Simplex v1 = verts[i] == vs ? vt : verts[i];
@@ -358,7 +356,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
   Simplex vs = assertx(K.getSimplex(0, _vsid));
   Simplex vt = nullptr;
 
-  Pqueue<Simplex> pq[ISimplex::MAX_DIM + 1];
+  Vec<Pqueue<Simplex>, ISimplex::MAX_DIM + 1> pq;
   for (Simplex spx : vs->get_star()) pq[spx->getDim()].enter_unsorted(spx, float(spx->getId()));
 
   if (0) {
@@ -476,8 +474,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
     } else if (outcome == SplitRecord::F_VSVT) {
       Simplex splitf = K.createSimplex(2);
       new_simplices.push_back(splitf);
-      Simplex verts[3];
-      f->vertices(verts);
+      const Vec3<Simplex> verts = f->vertices();
 
       for_int(i, 3) {
         Simplex v1 = verts[i] == vs ? vt : verts[i];

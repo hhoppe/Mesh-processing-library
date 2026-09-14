@@ -77,7 +77,7 @@ PArray<Simplex, 20> ISimplex::faces_of_vertex() const {
 
 void ISimplex::polygon(Polygon& poly) const {
   assertx(_dim == 2);
-  Simplex s0[2];
+  Vec2<Simplex> s0;
   Simplex s1;
   poly.init(0);
   s0[0] = getChild(0)->getChild(0);
@@ -314,10 +314,8 @@ bool SimplicialComplex::eq2simp(Simplex s1, Simplex s2) const {
   assertx(s1->getDim() == 2);
   assertx(s2->getDim() == 2);
 
-  Simplex s1verts[3];
-  Simplex s2verts[3];
-  s1->vertices(s1verts);
-  s2->vertices(s2verts);
+  const Vec3<Simplex> s1verts = s1->vertices();
+  const Vec3<Simplex> s2verts = s2->vertices();
 
   return ((s1verts[0] == s2verts[0] && ((s1verts[1] == s2verts[1] && s1verts[2] == s2verts[2]) ||
                                         (s1verts[1] == s2verts[2] && s1verts[2] == s2verts[1]))) ||
@@ -451,11 +449,11 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
   // both = nullptr;  // now undefined
 
   // remap all references of vt to vs in simplices adjacent to vt.
-  std::vector<Simplex> worklist[MAX_DIM + 1];
+  Vec<std::vector<Simplex>, MAX_DIM + 1> worklist;
   for (Simplex s : vs->get_star())
     if (s != vs) worklist[s->getDim()].push_back(s);
 
-  Stack<Simplex> affected_spx[MAX_DIM + 2];
+  Vec<Stack<Simplex>, MAX_DIM + 2> affected_spx;
   replace(vt, vs, affected_spx[1]);
 
   // remove vt

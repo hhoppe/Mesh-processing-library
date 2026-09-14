@@ -29,8 +29,8 @@
 namespace hh {
 
 class Vector4;
-[[nodiscard]] Vector4 to_Vector4_norm(const uint8_t p[4]);  // Converts each uint8_t [0, 255] to [0.f, 1.f].
-[[nodiscard]] Vector4 to_Vector4_raw(const uint8_t p[4]);   // Converts each uint8_t [0, 255] to [0.f, 255.f].
+[[nodiscard]] Vector4 to_Vector4_norm(const Vec4<uint8_t>& p);  // Converts each uint8_t [0, 255] to [0.f, 1.f].
+[[nodiscard]] Vector4 to_Vector4_raw(const Vec4<uint8_t>& p);   // Converts each uint8_t [0, 255] to [0.f, 255.f].
 
 // Abstraction of a 4-float vector, hopefully accelerated by vectorized CPU instructions.
 // See also class F32vec4 in <fvec.h> in Microsoft Visual Studio, provided by Intel.
@@ -44,7 +44,7 @@ class Vector4 {
  public:
   Vector4() = default;
   explicit Vector4(float v) { fill(v); }
-  explicit Vector4(const Pixel& pixel) { *this = to_Vector4_norm(pixel.data()); }
+  explicit Vector4(const Pixel& pixel) { *this = to_Vector4_norm(pixel); }
   explicit Vector4(const Vec4<float>& a) { load_unaligned(a.data()); }
   [[nodiscard]] size_t size() const noexcept { return 4; }
   [[HH_GNU_PURE]] [[nodiscard]] auto& operator[](this auto&& self, int i) { return HH_CHECK_BOUNDS(i, 4), self._c[i]; }
@@ -54,16 +54,16 @@ class Vector4 {
     v[i] = f;
     return v;
   }
-  void raw_to_byte4(uint8_t p[4]) const;   // Maps from [0.f, 255.999f] to uint8 using truncation, without clamping.
-  void norm_to_byte4(uint8_t p[4]) const;  // Maps from [0.f, 1.f]      to uint8 using rounding and clamping.
+  void raw_to_byte4(Vec4<uint8_t>& p) const;  // Maps from [0.f, 255.999f] to uint8 using truncation, without clamping.
+  void norm_to_byte4(Vec4<uint8_t>& p) const;  // Maps from [0.f, 1.f]      to uint8 using rounding and clamping.
   [[nodiscard]] Pixel raw_pixel() const {
     Pixel pixel;
-    raw_to_byte4(pixel.data());
+    raw_to_byte4(pixel);
     return pixel;
   }
   [[nodiscard]] Pixel pixel() const {
     Pixel pixel;
-    norm_to_byte4(pixel.data());
+    norm_to_byte4(pixel);
     return pixel;
   }
   [[nodiscard]] friend float mag2(const Vector4& v) { return dot(v, v); }
@@ -80,7 +80,7 @@ class Vector4 {
     return os << "Vector4(" << v[0] << ", " << v[1] << ", " << v[2] << ", " << v[3] << ")";
   }
   [[nodiscard]] static bool ok(int i) { return i >= 0 && i < 4; }
-  friend Vector4 to_Vector4_raw(const uint8_t p[4]);
+  friend Vector4 to_Vector4_raw(const Vec4<uint8_t>& p);
 
 #if defined(HH_VECTOR4_SSE)  // MMX + SSE + AVX + AVX-512 + 3DNow + XOP + FMA4 : Intel / AMD / x86-based.
   Vector4(float x, float y, float z, float w) { _r = _mm_set_ps(w, z, y, x); }  // Note reverse ordering.
@@ -248,8 +248,7 @@ class Vector4 {
 
 //----------------------------------------------------------------------------
 
-[[nodiscard]] inline Vector4 to_Vector4_norm(const uint8_t p[4]) { return to_Vector4_raw(p) * (1.f / 255.f); }
-[[nodiscard]] inline Vector4 to_Vector4_raw(const Pixel& pixel) { return to_Vector4_raw(pixel.data()); }
+[[nodiscard]] inline Vector4 to_Vector4_norm(const Vec4<uint8_t>& p) { return to_Vector4_raw(p) * (1.f / 255.f); }
 
 float mag2(const Vector4& v);
 float dist2(const Vector4& l, const Vector4& r);
@@ -286,32 +285,32 @@ inline Vector4 interp(const Vector4& v1, const Vector4& v2, float f1 = .5f) { re
 // _mm_packs_epi16   : pack the 16 signed 16-bit integers from a and b into 8-bit integers and saturate.
 // _mm_cvtepu8_epi32 : expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1)
 
-inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
+inline Vector4 to_Vector4_raw(const Vec4<uint8_t>& p) {
   // avoids a shuffle, unlike _mm_set1_epi32(*reinterpret_cast<const int*>(p))
-  __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(p)));
+  __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(p.data())));
   __m128i t1 = _mm_cvtepu8_epi32(in);  // Expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1).
   __m128 t2 = _mm_cvtepi32_ps(t1);     // Convert four signed 32-bit to floats.
   return t2;
 }
-inline void Vector4::raw_to_byte4(uint8_t p[4]) const {
+inline void Vector4::raw_to_byte4(Vec4<uint8_t>& p) const {
   for_int(c, 4) ASSERTX(_c[c] >= 0.f && _c[c] < 255.999f);
   __m128i t1 = _mm_cvttps_epi32(_r);      // 4 float -> 4 signed 32-bit int (truncation)  (or cvtps for rounding).
   __m128i t2 = _mm_packs_epi32(t1, t1);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
   __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
-  _mm_store_ss(reinterpret_cast<float*>(p), _mm_castsi128_ps(t3));
+  _mm_store_ss(reinterpret_cast<float*>(p.data()), _mm_castsi128_ps(t3));
 }
-inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
+inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
   Vector4 t = *this * 255.f;
   for_int(c, 4) ASSERTX(t[c] <= 2'147'480'000.f);  // See Vector4_test.h
   __m128i t1 = _mm_cvtps_epi32(t._r);     // 4 float -> 4 signed 32-bit int (rounding)  (or cvttps for truncation).
   __m128i t2 = _mm_packs_epi32(t1, t1);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
   __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
-  _mm_store_ss(reinterpret_cast<float*>(p), _mm_castsi128_ps(t3));
+  _mm_store_ss(reinterpret_cast<float*>(p.data()), _mm_castsi128_ps(t3));
 }
 
 #elif defined(HH_VECTOR4_NEON)
 
-inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
+inline Vector4 to_Vector4_raw(const Vec4<uint8_t>& p) {
   // See https://stackoverflow.com/a/14506159
   //  vmovl.u8       q3, d2    // Expand to 16-bit.
   //  vmovl.u16      q10, d6   // Expand to 32-bit.
@@ -323,7 +322,7 @@ inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
   // This initialization of variable "a" may be optional.
   uint32x2_t a = vcreate_u32(0);  // uint32x2_t vcreate_u32(uint64_t a);  // VMOV d0, r0, r0
   // uint32x2_t vld1_lane_u32(const uint32_t* ptr, uint32x2_t vec, __constrange(0, 1) int lane);  // VLD1.32
-  a = vld1_lane_u32(reinterpret_cast<const uint32_t*>(p), a, 0);
+  a = vld1_lane_u32(reinterpret_cast<const uint32_t*>(p.data()), a, 0);
   uint8x8_t a0 = vreinterpret_u8_u32(a);  // uint8x8_t vreinterpret_u8_u32(uint32x2_t);
   uint16x8_t b = vmovl_u8(a0);            // uint16x8_t vmovl_u8(uint8x8_t a);  // VMOVL.U8 q0, d0
   uint16x4_t c = vget_low_u16(b);         // uint16x4_t vget_low_u16(uint16x8_t a);  // VMOV d0, d0
@@ -331,16 +330,16 @@ inline Vector4 to_Vector4_raw(const uint8_t p[4]) {
   float32x4_t f = vcvtq_f32_u32(d);       // float32x4_t vcvtq_f32_u32(uint32x4_t a);  // VCVT.F32.U32 q0, q0
   return f;
 }
-inline void Vector4::raw_to_byte4(uint8_t p[4]) const {
+inline void Vector4::raw_to_byte4(Vec4<uint8_t>& p) const {
   for_int(c, 4) ASSERTX(_c[c] >= 0.f && _c[c] < 255.999f);
   uint32x4_t a = vcvtq_u32_f32(_r);   // uint32x4_t vcvt_u32_f32(float32x4_t a);  // VCVT.U32.F32 q0, q0 // Truncate.
   uint16x4_t b = vqmovn_u32(a);       // uint16x4_t vqmovn_u32(uint32x4_t a);  // VQMOVN.I32 d0, q0 // Saturation.
   uint16x8_t c = vcombine_u16(b, b);  // uint16x8_t vcombine_u16(uint16x4_t low, uint16x4_t high);
   uint8x8_t d = vqmovn_u16(c);        // uint8x8_t vqmovn_u16(uint16x8_t a);  // VQMOVN.I16 d0, q0
-  uint32x2_t e = vreinterpret_u32_u8(d);                // uint32x2_t vreinterpret_u32_u8 (uint8x8_t)
-  vst1_lane_u32(reinterpret_cast<uint32_t*>(p), e, 0);  // vst1_lane_u32 (uint32_t*, uint32x2_t, int lane)
+  uint32x2_t e = vreinterpret_u32_u8(d);                       // uint32x2_t vreinterpret_u32_u8 (uint8x8_t)
+  vst1_lane_u32(reinterpret_cast<uint32_t*>(p.data()), e, 0);  // vst1_lane_u32 (uint32_t*, uint32x2_t, int lane)
 }
-inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
+inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
   Vector4 t = *this * 255.f;
   for_int(c, 4) ASSERTX(t[c] <= 2'147'480'000.f);  // see Vector4_test.h
   uint32x4_t a = vcvtq_u32_f32(t._r);     // uint32x4_t vcvtq_u32_f32(float32x4_t a);  // VCVT.U32.F32 q0, q0 // Round.
@@ -348,19 +347,19 @@ inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
   uint16x8_t c = vcombine_u16(b, b);      // uint16x8_t vcombine_u16(uint16x4_t low, uint16x4_t high);
   uint8x8_t d = vqmovn_u16(c);            // uint8x8_t vqmovn_u16(uint16x8_t a);  // VQMOVN.I16 d0, q0 // Saturation.
   uint32x2_t e = vreinterpret_u32_u8(d);  // uint32x2_t vreinterpret_u32_u8 (uint8x8_t)
-  vst1_lane_u32(reinterpret_cast<uint32_t*>(p), e, 0);  // vst1_lane_u32 (uint32_t*, uint32x2_t, int lane)
+  vst1_lane_u32(reinterpret_cast<uint32_t*>(p.data()), e, 0);  // vst1_lane_u32 (uint32_t*, uint32x2_t, int lane)
 }
 
 #else  // Neither SSE nor NEON.
 
-inline Vector4 to_Vector4_raw(const uint8_t p[4]) { return Vector4(p[0], p[1], p[2], p[3]); }
-inline void Vector4::raw_to_byte4(uint8_t p[4]) const {
+inline Vector4 to_Vector4_raw(const Vec4<uint8_t>& p) { return Vector4(p[0], p[1], p[2], p[3]); }
+inline void Vector4::raw_to_byte4(Vec4<uint8_t>& p) const {
   for_int(c, 4) {
     ASSERTX(_c[c] >= 0.f && _c[c] < 255.999f);
     p[c] = uint8_t(_c[c]);
   }
 }
-inline void Vector4::norm_to_byte4(uint8_t p[4]) const {
+inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
   for_int(c, 4) p[c] = uint8_t(clamp(_c[c], 0.f, 1.f) * 255.f + .5f);
 }
 

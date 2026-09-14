@@ -17,10 +17,10 @@ v4 = Vector4(1, 2, 3, 4)
 v4 = Vector4(9, 9, 9, 9)
 sizeof(v1) = 16
 reinterpret_cast<uint8_t*>(&va[1]) - reinterpret_cast<uint8_t*>(&va[0]) = 16
-to_Vector4_raw(ar.data()) = Vector4(23, 37, 45, 255)
-to_Vector4_raw(&ar[4]) = Vector4(12, 31, 37, 0)
-to_Vector4_norm(ar.data()) = Vector4(0.0901961, 0.145098, 0.176471, 1)
-to_Vector4_norm(&ar[4]) = Vector4(0.0470588, 0.121569, 0.145098, 0)
+to_Vector4_raw(ar0) = Vector4(23, 37, 45, 255)
+to_Vector4_raw(ar1) = Vector4(12, 31, 37, 0)
+to_Vector4_norm(ar0) = Vector4(0.0901961, 0.145098, 0.176471, 1)
+to_Vector4_norm(ar1) = Vector4(0.0470588, 0.121569, 0.145098, 0)
 int(ar2[0])=23 int(ar2[1])=37 int(ar2[2])=45 int(ar2[3])=255
 int(ar2[0])=23 int(ar2[1])=37 int(ar2[2])=45 int(ar2[3])=255
 v = Vector4(0, 0.00192157, 0.002, 0.00592157)

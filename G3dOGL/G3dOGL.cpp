@@ -3763,9 +3763,8 @@ void psc_update_lod();
 
 // Determine vertex normal by averaging normals of adjacent faces belonging to the same normal group.
 void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
-  Vec3<Simplex> verts;
   int ngroup = s_norgroup[corner_fct->getVAttribute()];
-  corner_fct->vertices(verts.data());
+  Vec3<Simplex> verts = corner_fct->vertices();
   const int i_vs = index(verts, vs);
   avg_norm = fct_pnor[corner_fct->getId()];
   // go around in one direction averaging normals
@@ -3793,8 +3792,7 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
     }
     // if new facet does not have same smoothing group
     if (s_norgroup[fct->getVAttribute()] != ngroup) break;
-    Vec3<Simplex> verts2;
-    fct->vertices(verts2.data());
+    const Vec3<Simplex> verts2 = fct->vertices();
     const int i_va = index(verts2, va);
     if (verts2[mod3(i_va + 1)] == vb) {
       // va still before vb
@@ -3833,7 +3831,7 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
       // if new facet does not have same smoothing group
       if (s_norgroup[fct->getVAttribute()] != ngroup) break;
       // Vec3<Simplex> verts;
-      fct->vertices(verts.data());
+      verts = fct->vertices();
       const int i_va = index(verts, va);
       if (verts[mod3(i_va + 1)] == vb) {
         // va still before vb
@@ -3872,13 +3870,11 @@ void read_sc(const string& filename) {
     s_norgroup[attrid] = to_int(assertx(GMesh::string_key(str, s, "norgroup")));
   }
   for (Simplex s2 : Kmesh.simplices_dim(2)) {
-    Vec3<Simplex> v;
-    s2->vertices(v.data());
+    const Vec3<Simplex> v = s2->vertices();
     fct_pnor[s2->getId()] = ok_normalized(cross(v[0]->getPosition(), v[1]->getPosition(), v[2]->getPosition()));
   }
   for (Simplex s2 : Kmesh.simplices_dim(2)) {
-    Vec3<Simplex> verts;
-    s2->vertices(verts.data());
+    const Vec3<Simplex> verts = s2->vertices();
     for_int(i, 3) vertSmoothNormal(verts[i], s2, corner_pnor[3 * s2->getId() + i]);
   }
   // initialize principal verts and edges set
@@ -4012,7 +4008,7 @@ void psc_update_lod() {
         for (Simplex s2 : vs->faces_of_vertex()) {
           assertx(s2->getDim() == 2);
           nr.fid = s2->getId();
-          s2->vertices(verts.data());
+          verts = s2->vertices();
           nr.fct_nor = ok_normalized(cross(verts[0]->getPosition(), verts[1]->getPosition(), verts[2]->getPosition()));
           fct_pnor.access(nr.fid);
           fct_pnor[nr.fid] = nr.fct_nor;
@@ -4023,8 +4019,7 @@ void psc_update_lod() {
         // Revisit facets in same order and calculate corner normals.
         int ii = 0;
         for (Simplex s2 : vs->faces_of_vertex()) {
-          Vec3<Simplex> verts2;
-          s2->vertices(verts2.data());
+          const Vec3<Simplex> verts2 = s2->vertices();
           corner_pnor.access(3 * anr[ii].fid + 2);
           for_int(v, 3) {
             vertSmoothNormal(verts2[v], s2, anr[ii].corner_nor[v]);
@@ -4099,7 +4094,7 @@ void psc_update_lod() {
         // calculate facet normals
         for (Simplex s2 : vs->faces_of_vertex()) {
           assertx(s2->getDim() == 2);
-          s2->vertices(verts.data());
+          verts = s2->vertices();
           nr.fid = s2->getId();
           nr.fct_nor = ok_normalized(cross(verts[0]->getPosition(), verts[1]->getPosition(), verts[2]->getPosition()));
           fct_pnor.access(nr.fid);
@@ -4108,7 +4103,7 @@ void psc_update_lod() {
         }
         for (Simplex s2 : vt->faces_of_vertex()) {
           assertx(s2->getDim() == 2);
-          s2->vertices(verts.data());
+          verts = s2->vertices();
           nr.fid = s2->getId();
           nr.fct_nor = ok_normalized(cross(verts[0]->getPosition(), verts[1]->getPosition(), verts[2]->getPosition()));
           fct_pnor.access(nr.fid);
@@ -4118,8 +4113,7 @@ void psc_update_lod() {
         // revisit facets in same order and calculate corner normals
         int ii = 0;
         for (Simplex s2 : vs->faces_of_vertex()) {
-          Vec3<Simplex> verts2;
-          s2->vertices(verts2.data());
+          const Vec3<Simplex> verts2 = s2->vertices();
           corner_pnor.access(3 * anr[ii].fid + 2);
           for_int(v, 3) {
             vertSmoothNormal(verts2[v], s2, anr[ii].corner_nor[v]);
@@ -4128,8 +4122,7 @@ void psc_update_lod() {
           ii++;
         }
         for (Simplex s2 : vt->faces_of_vertex()) {
-          Vec3<Simplex> verts2;
-          s2->vertices(verts2.data());
+          const Vec3<Simplex> verts2 = s2->vertices();
           corner_pnor.access(3 * anr[ii].fid + 2);
           for_int(v, 3) {
             vertSmoothNormal(verts2[v], s2, anr[ii].corner_nor[v]);
@@ -4301,8 +4294,7 @@ void draw_sc() {
       }
       maybe_update_mat_diffuse(s_color[s2->getVAttribute()]);
       Simplex v0, v1, v2;
-      Vec3<Simplex> verts;
-      s2->vertices(verts.data());
+      const Vec3<Simplex> verts = s2->vertices();
       v0 = verts[0];
       v1 = verts[1];
       v2 = verts[2];
@@ -4541,8 +4533,7 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
       }
       maybe_update_mat_diffuse(s_color[s2->getVAttribute()]);
       Simplex v0, v1, v2;
-      Vec3<Simplex> verts;
-      s2->vertices(verts.data());
+      const Vec3<Simplex> verts = s2->vertices();
       v0 = verts[0];
       v1 = verts[1];
       v2 = verts[2];

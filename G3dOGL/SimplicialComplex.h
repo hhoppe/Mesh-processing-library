@@ -49,7 +49,7 @@ class ISimplex : noncopyable {
   void polygon(Polygon& p) const;
 
   // 2-simplices
-  void vertices(Simplex va[3]);
+  [[nodiscard]] Vec3<Simplex> vertices() const;
   Simplex opp_edge(Simplex v);
   // Simplex opp_vertex(Simplex e);
 
@@ -236,7 +236,7 @@ inline Simplex ISimplex::edgeTo(Simplex opp_v) {
   return nullptr;
 }
 
-inline void ISimplex::vertices(Simplex va[3]) {
+inline Vec3<Simplex> ISimplex::vertices() const {
   assertx(_dim == 2);
   Simplex va0 = getChild(0)->getChild(0);
   Simplex va1 = getChild(0)->getChild(1);
@@ -245,9 +245,7 @@ inline void ISimplex::vertices(Simplex va[3]) {
     va2 = getChild(1)->getChild(1);
     assertx(va2 != va0 && va2 != va1);
   }
-  va[0] = va0;
-  va[1] = va1;
-  va[2] = va2;
+  return V(va0, va1, va2);
 }
 
 HH_INITIALIZE_POOL(ISimplex);

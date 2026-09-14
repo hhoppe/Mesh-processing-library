@@ -67,19 +67,19 @@ int main() {
     SHOW(reinterpret_cast<uint8_t*>(&va[1]) - reinterpret_cast<uint8_t*>(&va[0]));
   }
   {
-    Vec<uint8_t, 8> ar{uint8_t{23}, uint8_t{37}, uint8_t{45}, uint8_t{255},
-                       uint8_t{12}, uint8_t{31}, uint8_t{37}, uint8_t{0}};
-    SHOW(to_Vector4_raw(ar.data()));
-    SHOW(to_Vector4_raw(&ar[4]));
-    SHOW(to_Vector4_norm(ar.data()));
-    SHOW(to_Vector4_norm(&ar[4]));
+    const Vec4<uint8_t> ar0{uint8_t{23}, uint8_t{37}, uint8_t{45}, uint8_t{255}};
+    const Vec4<uint8_t> ar1{uint8_t{12}, uint8_t{31}, uint8_t{37}, uint8_t{0}};
+    SHOW(to_Vector4_raw(ar0));
+    SHOW(to_Vector4_raw(ar1));
+    SHOW(to_Vector4_norm(ar0));
+    SHOW(to_Vector4_norm(ar1));
     Vec4<uint8_t> ar2;
-    Vector4 v1 = to_Vector4_raw(ar.data());
-    // v1.raw_to_byte4(ar2.data());
+    Vector4 v1 = to_Vector4_raw(ar0);
+    // v1.raw_to_byte4(ar2);
     ar2 = v1.raw_pixel();
     SHOW(int(ar2[0]), int(ar2[1]), int(ar2[2]), int(ar2[3]));
-    v1 = to_Vector4_norm(ar.data());
-    // v1.norm_to_byte4(ar2.data());
+    v1 = to_Vector4_norm(ar0);
+    // v1.norm_to_byte4(ar2);
     ar2 = v1.pixel();
     SHOW(int(ar2[0]), int(ar2[1]), int(ar2[2]), int(ar2[3]));
   }

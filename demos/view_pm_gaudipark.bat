@@ -12,4 +12,4 @@ echo .
 
 set PM_LOD_LEVEL=0.03
 
-G3dOGL -pm_mode data/gaudipark.pm -st data/imageup.s3d -key ,De -lightambient 1 -lightsource 0 %G3DARGS%
+G3dOGL -pm_mode results/gaudipark.pm -st data/imageup.s3d -key ,De -lightambient 1 -lightsource 0 %G3DARGS%

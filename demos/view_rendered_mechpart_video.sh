@@ -3,4 +3,4 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 source bin/_initdemos.sh
 
-VideoViewer data/mechpart.video.mp4 -key i
+VideoViewer results/mechpart.video.mp4 -key i

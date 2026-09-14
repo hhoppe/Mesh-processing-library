@@ -52,7 +52,8 @@ the recursive make invocations make shell subprocesses expensive. Keep it that w
   links against these libraries. `G3dVec` compiles sources from `G3dOGL`, and `Filtervideo`
   compiles `VideoViewer/GradientDomainLoop.cpp`, hence their ordering in the top-level
   `Makefile`.
-- `test/` holds the unit tests. `make demos` builds all programs and runs `demos/`.
+- `test/` holds the unit tests. `make demos` builds all programs and runs `demos/`, which reads
+  its inputs from `demos/data/` and writes all generated files into `demos/results/`.
 
 ## Test
 

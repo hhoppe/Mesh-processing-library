@@ -4,4 +4,4 @@ setlocal
 cd "%~p0"
 call bin/_initdemos.bat
 
-VideoViewer data/texture.output.png
+VideoViewer results/texture.output.png

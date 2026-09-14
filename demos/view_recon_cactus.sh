@@ -11,6 +11,6 @@ echo '.'
 
 G3dOGL --version
 
-# G3dOGL data/cactus.pts data/cactus.recon.m data/cactus.opt.m data/cactus.sub0.m data/cactus.sub2limit.m -st data/cactus.s3d -key NNDmDeNDmDeNDmDePPP--oJ -hwdelay 1.5 -hwkey NNNNN -backcolor hhblue $G3DARGS
+# G3dOGL data/cactus.pts results/cactus.recon.m results/cactus.opt.m results/cactus.sub0.m results/cactus.sub2limit.m -st data/cactus.s3d -key NNDmDeNDmDeNDmDePPP--oJ -hwdelay 1.5 -hwkey NNNNN -backcolor hhblue $G3DARGS
 
-G3dOGL data/cactus.pts data/cactus.recon.m data/cactus.opt.m data/cactus.sub0.m data/cactus.sub2limit.m -st data/cactus.s3d -key DbNNDmDeNDmDeNDmDePPP--oJ -key NNNNN -backcolor hhblue $G3DARGS
+G3dOGL data/cactus.pts results/cactus.recon.m results/cactus.opt.m results/cactus.sub0.m results/cactus.sub2limit.m -st data/cactus.s3d -key DbNNDmDeNDmDeNDmDePPP--oJ -key NNNNN -backcolor hhblue $G3DARGS

@@ -62,7 +62,7 @@ all:
 	@status=0; \
 	$(MAKE) -k create || status=$$?; \
 	$(MAKE) check || status=$$?; \
-	ls -alt data; \
+	ls -alt results; \
 	$(MAKE) view || status=$$?; \
 	exit $$status
 
@@ -72,7 +72,7 @@ create: $(create_scripts)
 $(create_scripts):
 	$(@)
 
-# Check that the created outputs look reasonable (see generated_files.txt).
+# Check that the created outputs look reasonable (see results_reference.txt).
 check:
 	./check_created_outputs.sh
 

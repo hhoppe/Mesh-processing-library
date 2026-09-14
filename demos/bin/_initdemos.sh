@@ -12,6 +12,9 @@ allow_sigpipe() { local status=$?; ((status == 141)) || return $status; }
 # Report the failing command's line and status, since errexit otherwise exits silently.
 trap 'echo "${BASH_SOURCE[0]}: line $LINENO: exit status $?" >&2' ERR
 
+# The demos read their inputs from data/ and write all generated files into results/.
+mkdir -p results
+
 # Test that the demos package is self-contained by overriding PATH to just the bare system directories.
 # PATH=c:/cygwin/bin:c:/windows/system32
 # PATH=c:/windows/system32

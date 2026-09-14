@@ -4,4 +4,4 @@ setlocal
 cd "%~p0"
 call bin/_initdemos.bat
 
-VideoViewer data/mechpart.image.bmp
+VideoViewer results/mechpart.image.bmp

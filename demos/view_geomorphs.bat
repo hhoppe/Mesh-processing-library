@@ -18,4 +18,4 @@ echo .
 set LOD_LEVEL=0.3
 set G3D_DOLLY_LOD=1
 
-G3dOGL data/standingblob.geomorphs -st data/standingblob.s3d -key ,PDeS -lightambient .5 -thickboundary 1 -sharpedgecolor #FF000000 %G3DARGS%
+G3dOGL results/standingblob.geomorphs -st data/standingblob.s3d -key ,PDeS -lightambient .5 -thickboundary 1 -sharpedgecolor #FF000000 %G3DARGS%

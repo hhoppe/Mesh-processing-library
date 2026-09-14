@@ -12,4 +12,4 @@ echo '.'
 
 export PM_LOD_LEVEL="0.1"
 
-G3dOGL -pm_mode data/club.pm -st data/club.s3d -key , -lightambient .4 $G3DARGS
+G3dOGL -pm_mode results/club.pm -st data/club.s3d -key , -lightambient .4 $G3DARGS

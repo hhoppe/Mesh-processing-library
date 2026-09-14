@@ -265,7 +265,7 @@ In Windows, create, view, and clean up all the results using the `batch` scripts
 ```shell
 demos/all_demos_create_results.bat
 demos/all_demos_view_results.bat
-all_demos_clean.bat
+demos/all_demos_clean.bat
 ```
 
 On Unix-based systems (e.g. Linux, Mac OS, Cygwin), either run the `bash` scripts:
@@ -571,7 +571,7 @@ Filterimage demos/data/gaudipark.png -scaletox 200 -tomesh | \
 
 Within `demos/create_sr_office`, the script call
 ```shell
-meshtopm.{sh,bat} demos/data/office.nf80000.orig.m -vsgeom >office.sr.pm
+meshtopm.{sh,bat} demos/results/office.nf80000.orig.m -vsgeom >office.sr.pm
 ```
 creates a progressive mesh in which the simplified vertices are constrained to lie
 at their original positions (`-vsgeom`).

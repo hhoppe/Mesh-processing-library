@@ -4,4 +4,4 @@ setlocal
 cd "%~p0"
 call bin/_initdemos.bat
 
-VideoViewer data/mechpart.video.mp4 -key i
+VideoViewer results/mechpart.video.mp4 -key i

@@ -10,4 +10,4 @@ echo '.'
 echo 'To visualize these, press "Ds" to toggle surface rendering off/on.'
 echo '.'
 
-G3dOGL data/office.nf200000.mincycles.m -st data/office.s3d -key DeDEJ---- -thickboundary 0 -lightambient .9 -lightsource .4
+G3dOGL results/office.nf200000.mincycles.m -st data/office.s3d -key DeDEJ---- -thickboundary 0 -lightambient .9 -lightsource .4

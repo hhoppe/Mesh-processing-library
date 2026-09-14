@@ -16,7 +16,7 @@
 #include "libHh/Timer.h"
 using namespace hh;
 
-// (cd ~/git/mesh_processing/demos/data; FilterPM club.pm -nfaces 1000 -outmesh | MeshDistance -mfile club.orig.m -mfile - -bothdir 1 -maxerror 1 -verb 2 -distance)
+// (cd ~/git/mesh_processing/demos; FilterPM results/club.pm -nfaces 1000 -outmesh | MeshDistance -mfile data/club.orig.m -mfile - -bothdir 1 -maxerror 1 -verb 2 -distance)
 // #  B(  38272)  dL2=%0.0315      cL2=inf         nL2=0.05242
 // # PSNR=70.0  nPSNR=31.6
 // #  B(  38272)  dLi=%0.2407      cLi=inf         nLi=1.544

@@ -4,6 +4,9 @@
 :: No setlocal because we want to set variables in the parent script.
 :: setlocal
 
+:: The demos read their inputs from data/ and write all generated files into results/.
+if not exist results mkdir results
+
 :: Test that the demos package is self-contained by overriding PATH to just the bare system directories.
 :: set path=c:/cygwin/bin:c:/windows/system32
 :: set path=c:/windows/system32

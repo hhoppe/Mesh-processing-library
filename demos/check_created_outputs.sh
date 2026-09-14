@@ -2,7 +2,8 @@
 
 # Check that the files written into results/ by the create scripts look reasonable, using the reference values
 # in results_reference.txt.  For an image or video, each per-channel mean and standard deviation must be within 2%
-# (so a blank rendering fails); for any other file, the size must be within 20%.
+# (so a blank rendering fails); for the MeshDistance output *.approximation_error.txt, each of the geometric and
+# normal errors (dL2 nL2 dLi nLi) must be within 20%; for any other file, the size must be within 20%.
 # Usage: check_created_outputs.sh [--update]
 #  --update: rewrite the reference values from the current files instead of checking them.
 
@@ -12,9 +13,16 @@ source bin/_initdemos.sh
 update=0
 if [[ ${1-} == --update ]]; then update=1; fi
 
-# Print the values measured for the file results/$1: per-channel "mean sd" for an image or video, else the size.
+# Print the values measured for the file results/$1: per-channel "mean sd" for an image or video, the errors
+# "dL2 nL2 dLi nLi" from the both-directions ("B") rows of MeshDistance output, else the size.
 measure() {
   case $1 in
+    # In each "#  B(" row, print the value of each dL2=, nL2=, dLi=, and nLi= field (without "%" or a trailing CR).
+    *.approximation_error.txt) awk '/^#  B\(/ {
+        for (i = 1; i <= NF; i++) if ($i ~ /^[dn]L[2i]=/) {
+          v = $i; sub(/^[dn]L[2i]=%?/, "", v); sub(/\r$/, "", v); printf "%s%s", sep, v; sep = " " } }' "results/$1" ;;
+    # The -stat statistics go to stderr, so pipe only stderr (discarding stdout); for each "ComponentN: ... av=X sd=Y"
+    #  line, print X and Y (the last two fields without their "av=" and "sd=" prefixes).
     *.png | *.bmp) Filterimage "results/$1" -stat 2>&1 >/dev/null | awk '/^Component/ {
         printf "%s%.2f %.2f", sep, substr($(NF - 1), 4), substr($NF, 4); sep = " " }' ;;
     *.mp4) Filtervideo "results/$1" -stat 2>&1 >/dev/null | awk '/^Component/ {

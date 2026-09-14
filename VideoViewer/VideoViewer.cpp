@@ -3058,9 +3058,12 @@ const string fragment_shader = glsl_shader_version + (
 void render_image() {
   // HH_TIMER("_render_image");
 #if defined(__CYGWIN__)
+  // With CONFIG=cygwin, we disable shaders, so the pixel grid ('g') and the reconstruction kernels ('k', 'K') are
+  //  unavailable.  Originally, the hardware OpenGL path crashed in glXSwapBuffers().  With the software rendering
+  //  that libHwX now requests (see Hw::init_aux()), Mesa's default llvmpipe renderer crashes in one of its threads
+  //  when running the fragment shader (Mesa 23.3.6, 2026-09), whereas GALLIUM_DRIVER=softpipe runs it correctly but
+  //  much more slowly.
   const bool use_modern_opengl = false;
-  // Otherwise we get a segmentation fault in glxSwapBuffers(); it is unclear why.
-  // make CONFIG=cygwin -C ~/git/mesh_processing -j12 VideoViewer && ~/git/mesh_processing/bin/cygwin/VideoViewer -hwdebug 1 ~/data/image/lake.png
 #else
   // "//third_party/mesa:GL" is currently "2.1 Mesa 10.1.1", which only supports GLSL 1.10 and 1.20.
   // Mac OS is currently "2.1" which is insufficient.

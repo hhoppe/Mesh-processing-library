@@ -215,7 +215,7 @@ void main() {
         // ivec2 coord2 = ivec2(floor(coord.xy+checker_offset))/checker_size;
         // int evenodd = (coord2.x+coord2.y)%2;
         // Correct mod even for negative numbers:
-        vec2 coord2 = floor((coord.xy+checker_offset)/checker_size);
+        vec2 coord2 = floor((coord.xy+checker_offset)/float(checker_size));
         float evenodd = mod(coord2.x+coord2.y, 2.f);
         backcolor = vec4(backcolor.rgb*evenodd, 1.f);
     }

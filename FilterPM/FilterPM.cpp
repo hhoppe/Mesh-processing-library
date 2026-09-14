@@ -1185,7 +1185,7 @@ void do_exp_reorder(Args& args) {
   ensure_pm_loaded();
   int base_nv = pmesh._base_mesh._vertices.num();
   int full_nv = pmesh._info._full_nvertices;
-  int nsteps = int(std::log(float(full_nv) / base_nv) / log(fac) + .5f);
+  int nsteps = int(std::log(float(full_nv) / base_nv) / std::log(fac) + .5f);
   fac = pow(float(full_nv) / base_nv, 1.f / nsteps);
   showdf("Reordering: %d segments between %d and %d vertices, fac=%g\n", nsteps, base_nv, full_nv, fac);
   float nvf = float(base_nv);

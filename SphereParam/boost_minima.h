@@ -48,7 +48,7 @@ BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& ma
   static_assert(std::is_floating_point_v<T>);
   // bits = (std::min)(policies::digits<T, policies::policy<> >() / 2, bits);  // 12 for T == float.
   // 2**(1 - bits); equals 4.8828125e-4 for bits=12.
-  T tolerance = static_cast<T>(ldexp(1.0, 1 - bits));
+  T tolerance = static_cast<T>(std::ldexp(1.0, 1 - bits));
   T x;               // minima so far
   T w;               // second best point
   T v;               // previous value of w
@@ -70,22 +70,22 @@ BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& ma
     // get midpoint
     mid = (min + max) / 2;
     // work out if we're done already:
-    fract1 = tolerance * fabs(x) + tolerance / 4;
+    fract1 = tolerance * std::fabs(x) + tolerance / 4;
     fract2 = 2 * fract1;
-    if (fabs(x - mid) <= (fract2 - (max - min) / 2)) break;
+    if (std::fabs(x - mid) <= (fract2 - (max - min) / 2)) break;
 
-    if (fabs(delta2) > fract1) {
+    if (std::fabs(delta2) > fract1) {
       // try and construct a parabolic fit:
       T r = (x - w) * (fx - fv);
       T q = (x - v) * (fx - fw);
       T p = (x - v) * q - (x - w) * r;
       q = 2 * (q - r);
       if (q > 0) p = -p;
-      q = fabs(q);
+      q = std::fabs(q);
       T td = delta2;
       delta2 = delta;
       // determine whether a parabolic step is acceptable or not:
-      if ((fabs(p) >= fabs(q * td / 2)) || (p <= q * (min - x)) || (p >= q * (max - x))) {
+      if ((std::fabs(p) >= std::fabs(q * td / 2)) || (p <= q * (min - x)) || (p >= q * (max - x))) {
         // nope, try golden section instead
         delta2 = (x >= mid) ? min - x : max - x;
         delta = golden * delta2;
@@ -93,7 +93,8 @@ BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& ma
         // whew, parabolic fit:
         delta = p / q;
         u = x + delta;
-        if (((u - min) < fract2) || ((max - u) < fract2)) delta = (mid - x) < 0 ? T(-fabs(fract1)) : T(fabs(fract1));
+        if (((u - min) < fract2) || ((max - u) < fract2))
+          delta = (mid - x) < 0 ? T(-std::fabs(fract1)) : T(std::fabs(fract1));
       }
     } else {
       // golden section:
@@ -101,7 +102,8 @@ BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& ma
       delta = golden * delta2;
     }
     // update current position:
-    u = (fabs(delta) >= fract1) ? T(x + delta) : (delta > 0 ? T(x + fabs(fract1)) : T(x - fabs(fract1)));
+    u = (std::fabs(delta) >= fract1) ? T(x + delta)
+                                     : (delta > 0 ? T(x + std::fabs(fract1)) : T(x - std::fabs(fract1)));
     fu = f(u);
     if (fu <= fx) {
       // good new point is an improvement!

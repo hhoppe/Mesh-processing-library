@@ -1681,10 +1681,10 @@ void render_sphere(const Point& center, float radius, int slices, int stacks) {
   glBegin(GL_TRIANGLES);
   for_intL(i, 1, nlat + 1) {
     const float angle1 = float(i) / nlat * (TAU / 2);
-    const float c1 = cos(angle1), s1 = sin(angle1);
+    const float c1 = std::cos(angle1), s1 = std::sin(angle1);
     for_int(j, nlon) {
       const float angle2 = float(j) / nlon * TAU;
-      normals2[j] = Vector(cos(angle2) * s1, sin(angle2) * s1, c1);
+      normals2[j] = Vector(std::cos(angle2) * s1, std::sin(angle2) * s1, c1);
       points2[j] = center + radius * normals2[j];
     }
     for_int(j, nlon) {

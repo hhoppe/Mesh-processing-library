@@ -298,6 +298,25 @@ using std::min;  // Avoid fmin().
 using std::pow;
 using std::sqrt;
 
+// Disallow unqualified calls to the remaining C math functions; write `std::cos(x)` instead of `cos(x)`.  With
+// libstdc++, an unqualified `cos(x)` resolves to the C function `double ::cos(double)` even for a `float` argument,
+// whereas with the MSVC STL it resolves to `float cos(float)`, so results can differ across configurations.  These
+// deleted declarations make such a call fail to compile, either as a call to a deleted function (within namespace hh)
+// or as an ambiguous call (after `using namespace hh`).
+#define HH_DELETE_MATH1(f) void f(double) = delete
+#define HH_DELETE_MATH2(f) void f(double, double) = delete
+HH_MAP_REDUCE((HH_DELETE_MATH1, ;, acos, asin, atan, cos, sin, tan, acosh, asinh, atanh, cosh, sinh, tanh));
+HH_MAP_REDUCE((HH_DELETE_MATH1, ;, exp, exp2, expm1, log, log10, log1p, log2, logb, ilogb, cbrt, fabs));
+HH_MAP_REDUCE((HH_DELETE_MATH1, ;, erf, erfc, lgamma, tgamma, round, lround, llround, trunc, nearbyint, rint));
+HH_MAP_REDUCE((HH_DELETE_MATH1, ;, lrint, llrint, isnan, isinf, isfinite, isnormal, signbit, fpclassify));
+HH_MAP_REDUCE((HH_DELETE_MATH2, ;, atan2, hypot, fmod, remainder, copysign, nextafter, fdim, fmax, fmin));
+#undef HH_DELETE_MATH1
+#undef HH_DELETE_MATH2
+void ldexp(double, int) = delete;
+void frexp(double, int*) = delete;
+void modf(double, double*) = delete;
+void fma(double, double, double) = delete;
+
 namespace ranges = std::ranges;
 template <typename R> using range_value_t = ranges::range_value_t<R>;
 namespace views = std::views;

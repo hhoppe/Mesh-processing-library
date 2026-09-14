@@ -410,7 +410,7 @@ Point spheremap_area_ratio(const Point& pa, const Point& pb, const Point& pc, co
     pu = (pb + pc) / -sqrt(4.f - mag2_bc);
     pv = cross(pu, Vector(pb)) * (2.f / mag_bc);
     ASSERTX(is_unit(pu) && is_unit(pv));
-    tgalpha = tan((float(D_TAU / 2) - b[0] * area) * .5f);
+    tgalpha = std::tan((float(D_TAU / 2) - b[0] * area) * .5f);
     denom = sqrt(4.f + mag2_bc * square(tgalpha));
     normal_locusE = pv * (mag_bc * tgalpha / denom) + pu * (2.f / denom);
 
@@ -419,7 +419,7 @@ Point spheremap_area_ratio(const Point& pa, const Point& pb, const Point& pc, co
     pu = (pa + pb) / -sqrt(4.f - mag2_ab);
     pv = cross(pu, Vector(pa)) * (2.f / mag_ab);
     ASSERTX(is_unit(pu) && is_unit(pv));
-    tgalpha = tan((float(D_TAU / 2) - b[2] * area) * .5f);
+    tgalpha = std::tan((float(D_TAU / 2) - b[2] * area) * .5f);
     denom = sqrt(4.f + mag2_ab * square(tgalpha));
     normal_locusD = pv * (mag_ab * tgalpha / denom) + pu * (2.f / denom);
   }

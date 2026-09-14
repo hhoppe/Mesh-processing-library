@@ -81,7 +81,7 @@ inline Vector get_random_unit_vector(float rand1, float rand2) {
   const float theta = rand1 * TAU;  // Longitude (angle in x-y plane).
   const float z = rand2 * 2.f - 1.f;
   const float r = sqrt(1.f - square(z));  // Radius in x-y plane.
-  return Vector(r * std::cos(theta), r * sin(theta), z);
+  return Vector(r * std::cos(theta), r * std::sin(theta), z);
 }
 
 }  // namespace

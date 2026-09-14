@@ -104,6 +104,25 @@ bool Hw::init_aux(Array<string>& aargs) {
   _argv0 = aargs[0];
   if (minimize) iconic = true;
   g_hw = this;
+#if defined(__CYGWIN__)
+  // Under Cygwin's X server (XWin), request software OpenGL rendering unless LIBGL_ALWAYS_SOFTWARE is already set
+  //  (e.g., LIBGL_ALWAYS_SOFTWARE=0 restores the default hardware path).  Mesa reads this variable when it loads its
+  //  driver during the first GLX call, so it must be set before glXChooseVisual() in open().
+  // Findings (2026-09, XWin -multiwindow, Mesa 23.3.6, libX11 1.8.13, NVIDIA driver 610.74):
+  //  - By default, Mesa renders directly through the native Windows OpenGL driver (glXIsDirect() == 1 and
+  //    GL_VERSION == "4.6.0 NVIDIA ...").  Within the same GLX context, this path intermittently loses the OpenGL
+  //    objects created before a glXSwapBuffers(): a display list compiled without error (glIsList() == 1) no
+  //    longer exists on the next frame (glIsList() == 0), with no X event in between.  An extra swap before
+  //    creating any objects only postpones the loss to a later frame.  The failure is timing-dependent; e.g.,
+  //    running with -hwdebug 1 often hides it.
+  //  - As a result, G3dOGL windows turn all white (only the background is drawn once its display lists are gone;
+  //    G3D_NO_DL=1 mostly avoids that), and VideoViewer windows turn all black (presumably lost textures).
+  //    A build from before 2026-09-13 behaves the same, so the cause lies in Cygwin, Mesa, or the driver.
+  //  - Indirect rendering through the X server (LIBGL_ALWAYS_INDIRECT=1) fails in glXCreateContext() unless XWin
+  //    is started with +iglx, and with +iglx VideoViewer fails with GL_INVALID_VALUE.
+  //  - Software rendering (LIBGL_ALWAYS_SOFTWARE=1) renders correctly, although more slowly for large scenes.
+  if (getenv_string("LIBGL_ALWAYS_SOFTWARE") == "") my_setenv("LIBGL_ALWAYS_SOFTWARE", "1");
+#endif
 
   _pwmhints = assertx(XAllocWMHints());
   // _pwmhints->flags = 0;  // unnecessary
@@ -771,7 +790,7 @@ void Hw::draw_it() {
 #if 1 || defined(__CYGWIN__)
   // This synchronization was necessary with cygwin to avoid having GLX build a buffer of many frames of rendering.
   // 2016-03-17 this also became necessary with iglx over ssh under Unix,
-  //   e.g. ~/distrib/bin/unix/G3dOGL ~/distrib/demos/data/fandisk.orig.m -key J
+  //   e.g.: ./bin/cygwin/G3dOGL ./demos/data/cessna.orig.m -key J
   if (1) XSync(_display, 0);
 #endif
 }

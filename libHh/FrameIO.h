@@ -67,10 +67,10 @@ enum class ERecognize { parse_error, no, partial, yes };
 //   F 0  1 0 0  0 1 0  0 0 1  0 0 0  0
 //   where the object_id == 0 and zoom == 0 values are often unused.
 //
-//   For example, the eye-to-world frame that forms a good viewpoint for the demos/data/dragon.pm model is stored
-//   in demos/data/dragon.s3d :
-//   F 0  0.43794 -0.0692833 -0.896331  -0.893573 0.0759494 -0.442457  0.0987296 0.994707 -0.0286471  -0.207925 0.15072 0.389383  0.224572
-//   Note that all 3 direction vectors have unit norm, and that for a square window the zoom == 0.224572 corresponds
-//   to a horizontal field-of-view of 25.31 degrees.
+//   For example, the eye-to-world frame that forms a good viewpoint for the demos/data/cessna.orig.m model is stored
+//   in demos/data/cessna.s3d :
+//   F 0  0.911070287 -0.312283725 -0.269127905  -0.277157873 0.0192846023 -0.960630834  0.305179417 0.9497931 -0.0689822659  -60.0293007 17.3952999 15.5586004  0.200000003
+//   Note that all 3 direction vectors have unit norm, and that for a square window the zoom == 0.20 corresponds
+//   to a horizontal field-of-view of 22.62 degrees.
 
 #endif  // MESH_PROCESSING_LIBHH_FRAMEIO_H_

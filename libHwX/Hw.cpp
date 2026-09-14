@@ -166,6 +166,7 @@ void Hw::open() {
     // just the region below.
     std::optional<LeakDisabler> leak_disabler(std::in_place);
     XVisualInfo* visinfo;
+    const int orig_multisample = _multisample;
     for (;;) {
       Array<int> attributelist = {
           GLX_RGBA,  // (for TrueColor and DirectColor instead of PseudoColor; there is no "RGB")
@@ -182,7 +183,7 @@ void Hw::open() {
       if (_is_glx_dbuf) attributelist.push(GLX_DOUBLEBUFFER);
       if (_multisample > 1) {
         // Warning("Turning on GLX_SAMPLES_SGIS");
-        assertw(_multisample == 4 || _multisample == 8 || _multisample == 16);
+        assertw(_multisample == 2 || _multisample == 4 || _multisample == 8 || _multisample == 16);
         attributelist.push_array(V(GLX_SAMPLES_SGIS, _multisample));
         // then becomes enabled by default.
         // Note: inf_reality balrog has _multisample <= 8.
@@ -204,12 +205,12 @@ void Hw::open() {
       visinfo = glXChooseVisual(_display, _screen, attributelist.data());
       if (visinfo) break;
       if (_multisample > 1) {
-        if (_hwdebug) Warning("Downgrading to MULTISAMPLE=1");
-        _multisample = 1;
+        _multisample /= 2;  // Try the next lower number of samples.
         continue;
       }
       assertnever("Could not successfully call glXChooseVisual()");
     }
+    if (_multisample != orig_multisample) showf("Hw: had to downgrade to multisample=%d\n", _multisample);
     leak_disabler.reset();
     _depth = visinfo->depth;  // (number of bits in RGBA; unrelated to GLX_DEPTH_SIZE)
     _screen = visinfo->screen;

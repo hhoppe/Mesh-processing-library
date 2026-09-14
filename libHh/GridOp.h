@@ -38,10 +38,10 @@ template <int D, typename T>
 template <int D, typename T>
 [[nodiscard]] StridedArrayView<T> grid_column(GridView<D, T> grid, int col_d, const Vec<int, D>& u0);
 
-// Crop the sides of a D-dimensional grid (uL/uU for lower/upper extents); any negative crop grows the grid
+// Crop the sides of a D-dimensional grid (dL/dU for lower/upper extents); any negative crop grows the grid
 //  and requires the definition of boundary rules (and border value if Bndrule::border).
 template <int D, typename T>
-[[nodiscard]] Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& uL, const Vec<int, D>& uU,
+[[nodiscard]] Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& dU,
                               Vec<Bndrule, D> bndrules = ntimes<D>(Bndrule::undefined),
                               const T* bordervalue = nullptr);
 

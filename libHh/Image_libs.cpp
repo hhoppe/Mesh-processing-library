@@ -70,7 +70,7 @@ static const ImageFiletype* recognize_filetype(const string& pfilename) {
   if (filename[0] == '|') return nullptr;  // pipe can take any image type
   size_t imax = 0;
   const ImageFiletype* filetype = nullptr;
-  for (auto& imagefiletype : k_image_filetypes) {
+  for (const auto& imagefiletype : k_image_filetypes) {
     auto i = filename.rfind(string(".") + imagefiletype.suffix);  // supports root_name.bmp.gz
     if (i != string::npos && i > imax) {
       imax = i;
@@ -1179,7 +1179,7 @@ void Image::read_file_libs(const string& filename, bool bgra) {
   assertt(c >= 0 && c <= 255);
   ungetc(c, file);
   const ImageFiletype* filetype = nullptr;
-  for (auto& imagefiletype : k_image_filetypes) {
+  for (const auto& imagefiletype : k_image_filetypes) {
     if (c == imagefiletype.magic) {
       filetype = &imagefiletype;
       break;
@@ -1203,7 +1203,7 @@ void Image::write_file_libs(const string& filename, bool bgra) const {
   WFile fi(filename);
   FILE* file = fi.cfile();
   const ImageFiletype* filetype = nullptr;
-  for (auto& imagefiletype : k_image_filetypes) {
+  for (const auto& imagefiletype : k_image_filetypes) {
     if (suffix() == imagefiletype.suffix) {
       filetype = &imagefiletype;
       break;

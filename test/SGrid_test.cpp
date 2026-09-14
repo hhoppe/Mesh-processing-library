@@ -12,7 +12,7 @@ int main() {
     SHOW(grid.grid_dims<3>());
     SHOW(grid.grid_dims<3>()[2]);
     {
-      constexpr auto grid_dims = grid.grid_dims<3>();
+      constexpr auto grid_dims = grid.grid_dims<3>();  // NOLINT(readability-static-accessed-through-instance)
       SHOW(grid_dims);
       constexpr auto dim2 = grid_dims[2];
       SHOW(dim2);
@@ -233,9 +233,9 @@ int main() {
   {
     // The grid interface is opt-in, with the number of dimensions stated at the use site.
     SGrid<float, 2, 3, 4> g;
-    static_assert(g.grid_dims<3>() == V(2, 3, 4));
-    static_assert(g.grid_dims<2>() == V(2, 3));
-    static_assert(g.grid_dims<1>() == V(2));
+    static_assert(g.grid_dims<3>() == V(2, 3, 4));  // NOLINT(readability-static-accessed-through-instance)
+    static_assert(g.grid_dims<2>() == V(2, 3));     // NOLINT(readability-static-accessed-through-instance)
+    static_assert(g.grid_dims<1>() == V(2));        // NOLINT(readability-static-accessed-through-instance)
     fill(g.grid_view<3>(), 1.f);
     g[1, 2, 3] = 7.f;
     SHOW(g.grid_view<3>().size(), sum(g.grid_view<3>()));

@@ -87,7 +87,6 @@ void ISimplex::polygon(Polygon& poly) const {
   s1 = getChild(1);
   const int child_index = s1->getChild(0) != s0[0] && s1->getChild(0) != s0[1] ? 0 : 1;
   poly.push(s1->getChild(child_index)->getPosition());
-  return;
 }
 
 // *** SimplicialComplex

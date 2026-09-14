@@ -74,7 +74,7 @@ class MapWedgeInfo {
 
 void MapWedgeInfo::copy_from(const MapWedgeInfo& mwi) {
   assertx(!_map.num());
-  for (auto& [wid, wi] : mwi._map) set(wid, wi);
+  for (const auto& [wid, wi] : mwi._map) set(wid, wi);
 }
 
 MapWedgeInfo gcwinfo;  // Current wedge information.
@@ -256,7 +256,7 @@ bool should_perform_vsplit(Vertex vs) {
 }
 
 // Get the string within the braces.  Note the side-effect on `s`!  This function is copied elsewhere too.
-static const char* get_sinfo(const char* s_const) {
+const char* get_sinfo(const char* s_const) {
   char* s = const_cast<char*>(s_const);
   while (std::isspace(*s)) s++;
   if (!*s) return nullptr;

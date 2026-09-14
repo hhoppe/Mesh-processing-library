@@ -28,7 +28,7 @@ using namespace hh;
 namespace {
 
 string domain = "octa";  // {tetra, octa, cube, octaflat}.
-string scheme = "";      // {best, Qdomain, Qsphere, ... , Tdomain, Tsphere, Tslerps, ...}.
+string scheme;           // {best, Qdomain, Qsphere, ... , Tdomain, Tsphere, Tslerps, ...}.
 int gridn = 0;
 int checkern = 0;
 bool octa8colors = false;

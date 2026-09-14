@@ -216,9 +216,9 @@ inline Vector Quaternion::axis() const {
   return q;
 }
 
-[[nodiscard]] inline Frame pow(const Frame& frame, float v) {
-  Frame frame2 = to_Frame(pow(Quaternion(frame), v));
-  frame2.p() = frame.p() * v;
+[[nodiscard]] inline Frame pow(const Frame& frame, float e) {
+  Frame frame2 = to_Frame(pow(Quaternion(frame), e));
+  frame2.p() = frame.p() * e;
   return frame2;
 }
 

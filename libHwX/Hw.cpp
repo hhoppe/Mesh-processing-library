@@ -73,7 +73,7 @@ Hw::Hw() {
 bool Hw::init_aux(Array<string>& aargs) {
   assertx(_state == EState::uninit);
   _state = EState::init;
-  string display_name = "";
+  string display_name;
   bool iconic = false;
   bool minimize = false;
   ParseArgs args(aargs, "Hw");

@@ -23,7 +23,7 @@ constexpr float k_small_val = 1e-30f;
 
 inline float compute_factor(int n) { return 1.f + pow(.5f, 23.f - n) * .49999f; }
 
-inline constexpr uint32_t float_bits_to_unsigned(float f) { return std::bit_cast<uint32_t>(f); }
+constexpr uint32_t float_bits_to_unsigned(float f) { return std::bit_cast<uint32_t>(f); }
 
 }  // namespace
 

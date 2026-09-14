@@ -724,6 +724,7 @@ inline bool MeshStatus::sim_face_visited(Face f) const {
   return f_sim_num(f) >= _sim_num;
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const): it modifies the face state.
 inline void MeshStatus::sim_visit_face(Face f) {
   ASSERTX(!sim_face_visited(f));
   f_sim_num(f) = _sim_num;

@@ -570,7 +570,7 @@ struct TruncateClosure : ranges::range_adaptor_closure<TruncateClosure> {
 // Return a view of the first count elements of range, leaving the range advanced to just past those elements.
 // Unlike views::take(), the underlying iterator is never incremented past the last element that is yielded, so a
 // single-pass source (e.g. SpatialSearch) remains positioned on its next unconsumed element and does no extra work.
-[[nodiscard]] inline constexpr auto truncate(std::ptrdiff_t count) { return details::TruncateClosure{{}, count}; }
+[[nodiscard]] constexpr auto truncate(std::ptrdiff_t count) { return details::TruncateClosure{{}, count}; }
 
 }  // namespace hh
 

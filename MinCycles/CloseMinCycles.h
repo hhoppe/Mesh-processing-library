@@ -36,7 +36,7 @@ class CloseMinCycles {
   float _offset_magnitude{0.f};
   Flag e_joined(Edge e);
   void flood_reinitialize(Vertex vseed);
-  Array<Vertex> close_cycle(const CArrayView<Vertex> vertex_loop);
+  Array<Vertex> close_cycle(CArrayView<Vertex> vertex_loop);
   bool would_be_nonseparating_cycle(Edge e12, bool exact);
   std::optional<int> look_for_cycle(Vertex v1, Vertex v2, bool process, float verify_dist);  // Ret: num_edges.
   struct MinCycleResult {

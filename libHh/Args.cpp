@@ -133,7 +133,7 @@ void Args::problem(const string& s) {
 
 //----------------------------------------------------------------------------
 
-ParseArgs::ParseArgs(int& argc, const char**& argv) : _name("") {
+ParseArgs::ParseArgs(int& argc, const char**& argv) {
   assertx(argc > 0);
   ensure_utf8_encoding(argc, argv);
   _argv0 = assertx(argv[0]);

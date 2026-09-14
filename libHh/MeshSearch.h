@@ -26,7 +26,7 @@ class MeshSearch {
     bool allow_off_surface{false};
     float gridn_factor{1.f};
     float max_dis{1e15f};
-    std::optional<Bbox<float, 3>> bbox{};
+    std::optional<Bbox<float, 3>> bbox{};  // NOLINT(readability-redundant-member-init): for designated initializers.
     bool gnomonic_search_warn_no_opp_face{true};
   };
   explicit MeshSearch(const GMesh& mesh, Options options);

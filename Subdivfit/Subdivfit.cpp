@@ -416,7 +416,7 @@ void do_fgfit(Args& args) {
         gmesh.set_point(_iv[j], p);
       }
     }
-    static inline Point proj_line(const Point& p, const Point& p0, const Point& p1) {
+    static Point proj_line(const Point& p, const Point& p0, const Point& p1) {
       Vector v01 = p1 - p0;
       if (!v01.normalize()) {
         Warning("proj_line fails");

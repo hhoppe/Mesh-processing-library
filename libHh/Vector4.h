@@ -253,7 +253,7 @@ class Vector4 {
 float mag2(const Vector4& v);
 float dist2(const Vector4& l, const Vector4& r);
 float sum(const Vector4& v);
-float dot(const Vector4& l, const Vector4& r);
+float dot(const Vector4& v1, const Vector4& v2);
 
 Vector4 operator+(const Vector4& l, const Vector4& r);
 Vector4 operator-(const Vector4& l, const Vector4& r);

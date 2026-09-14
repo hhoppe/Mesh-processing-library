@@ -963,11 +963,11 @@ void Mesh::face_renumber_id_private(Face f, int newid) {
 
 void Mesh::ok() const {
   // Check consistency of id2x (one way)
-  for (auto& [id, v] : _id2vertex) {
+  for (const auto& [id, v] : _id2vertex) {
     valid(v);
     assertx(v->_id == id);
   }
-  for (auto& [id, f] : _id2face) {
+  for (const auto& [id, f] : _id2face) {
     valid(f);
     assertx(f->_id == id);
   }

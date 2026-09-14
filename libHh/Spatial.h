@@ -99,7 +99,7 @@ template <typename T> class PointSpatial : public details::BPointSpatial {
 // Spatial data structure for point elements indexed by an integer.
 class IPointSpatial : public Spatial {
  public:
-  explicit IPointSpatial(int gn, CArrayView<Point> arp);
+  explicit IPointSpatial(int gridn, CArrayView<Point> arp);
   ~IPointSpatial() override { clear(); }
   void clear() override;
 
@@ -242,7 +242,7 @@ void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, Pqueue<Univ>& pq, c
                                               Set<Univ>& set) const {
   int en = encode(ci);
   bool present;
-  auto& cell = _map.retrieve(en, present);
+  const auto& cell = _map.retrieve(en, present);
   if (!present) return;
   Approx2 approx2;
   for (Univ e : cell) {
@@ -323,7 +323,7 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
       int en = encode(cit);
       if (en == pen) continue;
       bool present;
-      auto& cell = _map.retrieve(en, present);
+      const auto& cell = _map.retrieve(en, present);
       if (!present) continue;
       for (Univ e : cell)
         if (set.add(e) && ftest(e)) should_stop = true;

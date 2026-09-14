@@ -11,7 +11,7 @@ class Mklib : noncopyable {
  public:
   explicit Mklib(Mk3d& mk3d) : mk(mk3d) {}
   ~Mklib() { assertw(_stack_smooth.empty()); }
-  bool smooth() { return _smooth; }
+  [[nodiscard]] bool smooth() const { return _smooth; }
   void begin_smooth(bool b) { _stack_smooth.push(_smooth), _smooth = b; }
   void end_smooth() { assertx(!_stack_smooth.empty()), _smooth = _stack_smooth.pop(); }
   void squareO();        // unit square centered at origin, facing +x axis

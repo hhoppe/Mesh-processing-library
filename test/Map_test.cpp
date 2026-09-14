@@ -40,9 +40,9 @@ int main() {
     assertw(m.remove(998) == 999);
     assertw(!m.contains(998));
     assertw(m.retrieve(2) == 2 * 8);
-    for (auto& [k, v] : m) assertw(k * 8 == v);
+    for (const auto& [k, v] : m) assertw(k * 8 == v);
     int sk = 0, sv = 0;
-    for (auto& [k, v] : m) {
+    for (const auto& [k, v] : m) {
       sk += k;
       sv += v;
     }
@@ -54,7 +54,7 @@ int main() {
     assertw(m.num() == 50);
     sk = 0;
     sv = 0;
-    for (auto& [k, v] : m) {
+    for (const auto& [k, v] : m) {
       sk += k;
       sv += v;
     }

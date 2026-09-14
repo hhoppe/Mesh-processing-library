@@ -2389,6 +2389,7 @@ void GxObject::close() {
   }
 }
 
+// NOLINTNEXTLINE(readability-make-member-function-const): it modifies the mesh.
 void GxObject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.f is old
   use_dl = false;
   GMesh& mesh = *_pmesh;

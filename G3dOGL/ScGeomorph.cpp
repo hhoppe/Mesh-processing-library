@@ -323,14 +323,14 @@ void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // alpha 
   for (Simplex v : K.simplices_dim(0)) v->setPosition(interp(vnew[v->getId()], vold[v->getId()], alpha));
 
   // area
-  for (auto& [s, narea] : anew) {
+  for (const auto& [s, narea] : anew) {
     assertx(s->isPrincipal());
     float oarea = 0.f;
     if (aold.contains(s)) oarea = aold.get(s);
     s->setArea(alpha * narea + (1.f - alpha) * oarea);
   }
 
-  for (auto& [s, oarea] : aold) {
+  for (const auto& [s, oarea] : aold) {
     // handled by anew
     if (!s->isPrincipal()) {
       s->setArea((1.f - alpha) * oarea);

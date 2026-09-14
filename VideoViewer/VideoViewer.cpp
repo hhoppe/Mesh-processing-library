@@ -133,7 +133,6 @@ struct Object {
   Object(Image&& image, string filename, bool bgra, bool unsaved = true)
       : _dims(concat(V(1), image.dims())),
         _is_image(true),
-        _video(),
         _nframes_loaded(1),
         _filename(std::move(filename)),
         _orig_filename(_filename),

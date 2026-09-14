@@ -50,7 +50,7 @@ class ISimplex : noncopyable {
 
   // 2-simplices
   [[nodiscard]] Vec3<Simplex> vertices() const;
-  Simplex opp_edge(Simplex v);
+  [[nodiscard]] Simplex opp_edge(Simplex v) const;
   // Simplex opp_vertex(Simplex e);
 
   // 1-simplices
@@ -136,9 +136,7 @@ class SimplicialComplex : noncopyable {
   [[nodiscard]] Simplex getSimplex(int dim, int id) const;
   [[nodiscard]] int materialNum() const { return _material_strings.num(); }
   [[nodiscard]] const char* getMaterial(int matid) const { return _material_strings[matid].c_str(); }
-  [[nodiscard]] const Map<int, Simplex>::cvalues_range simplices_dim(int dim) const {
-    return _simplices[dim].values();
-  }
+  [[nodiscard]] Map<int, Simplex>::cvalues_range simplices_dim(int dim) const { return _simplices[dim].values(); }
   [[nodiscard]] OrderedSimplices_range ordered_simplices_dim(int dim) const {
     return OrderedSimplices_range(*this, dim);
   }
@@ -193,7 +191,7 @@ inline Simplex ISimplex::opp_vertex(Simplex v1) {
   return nullptr;
 }
 
-inline Simplex ISimplex::opp_edge(Simplex v1) {
+inline Simplex ISimplex::opp_edge(Simplex v1) const {
   assertx(getDim() == 2);
   for (Simplex edge : children())
     if (edge->_child[0] != v1 && edge->_child[1] != v1) return edge;

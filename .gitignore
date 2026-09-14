@@ -97,6 +97,9 @@ RCS/
 #  Optional per-machine overrides.
 /Makefile_local_defs
 
+#  Personal Claude Code settings.
+/.claude/settings.local.json
+
 /bin/unix/*
 !/bin/unix/.gitignore
 

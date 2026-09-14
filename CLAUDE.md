@@ -1,0 +1,113 @@
+# Mesh-processing-library
+
+A C++23 computational geometry and mesh processing library
+(github.com/hhoppe/Mesh-processing-library).
+
+## Build
+
+Two parallel build systems cover the same sources:
+
+- GNU make, with the machinery under `make/`.
+- MSBuild, with roughly 24 `.vcxproj` files in a `.sln`, sharing `hhmain.props`
+  and `hhmain_first.props`.
+
+The make build has five configurations, selected with `CONFIG=`:
+
+| CONFIG   | Compiler and standard library                |
+| -------- | -------------------------------------------- |
+| `unix`   | WSL/Linux Clang + libstdc++                  |
+| `win`    | MSVC                                         |
+| `clang`  | Windows Clang + MSVC STL                     |
+| `mingw`  | Windows GCC + libstdc++                      |
+| `cygwin` | Cygwin GCC + libstdc++ (`CC=clang` optional) |
+
+`make -j12` builds all programs into `bin/<CONFIG>/` and runs the unit tests. Name a target
+to build less, e.g. `make -j12 Filtermesh` or `make CONFIG=mingw -j12 libHh`.
+
+- The default `CONFIG` is `win` on Windows and `unix` elsewhere.
+- `CONFIG=win` defaults to a debug build (`release=0`); the others default to release.
+- Under `unix`, the compiler is Clang by default; `CC=gcc` switches to GCC.
+- `make CONFIG=all` (or `make makeall`) runs every configuration in turn.
+- `PEDANTIC=1` enables the full warning set and adds `-Werror`.
+- Sanitizers work under `CONFIG=unix` only (mingw ships no sanitizer runtime):
+  `make CONFIG=unix release=0 PEDANTIC=1 sanitize=address,undefined -j12 test`, or
+  `sanitize=thread`.
+- Toolchain paths can be overridden in `Makefile_local_defs` at the repository root.
+- The `.exe` files directly in `bin/` come from the MSBuild `ReleaseMD - x64` build.
+
+Warnings are signal, not noise. Treat every new warning as a defect to fix, in every
+configuration, not just the one you happened to build.
+
+Toolchain discovery in the makefiles uses `$(wildcard)` rather than `$(shell)`, because
+the recursive make invocations make shell subprocesses expensive. Keep it that way.
+
+## Layout
+
+- `libHh` is the core library (containers, geometry, meshes, images, video, audio);
+  `libHh/README.txt` gives an overview of its core classes.
+- `libHwWindows` (Win32) and `libHwX` (X11) implement windowing; a build links one of them.
+- Each program (`Filtermesh`, `MeshSimplify`, `G3dOGL`, ...) lives in its own directory and
+  links against these libraries. `G3dVec` compiles sources from `G3dOGL`, and `Filtervideo`
+  compiles `VideoViewer/GradientDomainLoop.cpp`, hence their ordering in the top-level
+  `Makefile`.
+- `test/` holds the unit tests. `make demos` builds all programs and runs `demos/`.
+
+## Test
+
+- Run all unit tests with `make -j12 test`, or a single one with
+  `make -C test Array_test.ou`.
+- For each test, `bin/hcheck` runs `X_test` (or `X_test.script` when present), filters the
+  output through `bin/hcheck_aux` (which masks dates, paths, and `.exe`) into `X_test.ou`,
+  and diffs it against `X_test.ref`, leaving `X_test.diff` on a mismatch.
+- `.ref` files are ground truth. Each test has a single `.ref`, which must match across
+  `-O0` through `-O3` and every configuration.
+- Floating-point discrepancies from vectorization or sanitizer differences are expected
+  and are handled with `round()` wrappers rather than by loosening the comparison.
+- Test files use `SHOW()` and `assertx()`, with explicit template instantiations at the
+  bottom of the file.
+
+A change is not done until the tests pass and the affected configurations build.
+
+## Code conventions
+
+- The `k_` prefix is reserved for constants, never for functions. Use the static
+  accessor pattern instead: `Pixel::white()`, not `k_Pixel_white`.
+- Prefer one-liner operation blocks where the body macros (`NEW_GG`, `NEW_G`, and
+  similar) make that readable.
+- End macro definitions with `HH_EAT_SEMICOLON` so that MSVC `/W4` stays quiet at
+  call sites.
+- Prefer a loud compile-time or runtime failure over a silent wrong answer.
+
+## Correctness standards
+
+These are strict, and they are the point of the project.
+
+- **Never claim a change is codegen-neutral without measuring it.** Produce per-function
+  assembly diffs at both `-O2` and `-O2 -DNDEBUG`. Use `g++ -S`, or
+  `llvm-objdump -d -S --x86-asm-syntax=intel` for interleaved source and assembly.
+- Never report static instruction counts as a performance result. If the question is
+  speed, benchmark and report measured time or cycles.
+- When adding `noexcept`, measure the codegen impact rather than annotating broadly on
+  the assumption that it helps.
+- Validate across configurations before considering a change complete. A change that
+  builds cleanly under `CONFIG=unix` may fail under MSVC or mingw.
+
+## Static analysis
+
+- `clang-tidy`, configured by the repository `.clang-tidy`. Its header comment has the
+  command lines for running it on one file or across the whole tree.
+- Clang Static Analyzer, with `ipa-always-inline-size=5` in `ExtraArgs`.
+- Do not suppress `-Wdangling-reference` or `-Wnrvo` broadly. Silence a confirmed false
+  positive locally, as `[[HH_NO_DANGLING]]` (`libHh/Hh.h`) and the pragma in
+  `MeshSimplify/MeshSimplify.cpp` do.
+
+## Working in this codebase
+
+- Discuss the approach before writing code. For anything touching the core headers
+  (`Mesh.h`, `RangeOp.h`, `Array.h`, `Grid.h`, `Vec.h`, `Spatial.h`), use plan mode and
+  get agreement on the design first.
+- Keep changes small enough to verify. A large refactor that builds is less valuable
+  than a small one whose assembly you can diff.
+- For history questions, `git log --oneline -S '<term>' --all` finds when a code string
+  appeared or vanished, and `git grep -nE '<pattern>' <commit> -- <path>` inspects a
+  specific revision.

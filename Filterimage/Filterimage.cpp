@@ -704,13 +704,13 @@ void apply_frame(const Frame& frame) {
   convert(nmatv, image);
 }
 
-// Compare 2X scaling using transform and built-in scaling
+// Compare 2x scaling using transform and built-in scaling
 // Filterimage ~/data/image/lake.png -filter o -boundaryrule r -cropall -50% -gtransf "F 0  0.5 0 0  0 0.5 0  0 0 1  0 0 0  0" >v1.png
 // Filterimage ~/data/image/lake.png -filter o -scaleu 2.0 >v2.png
 // Filterimage v1.png -compare v2.png
 //
 // e.g. 10 degree rotation (on anisometric rectangle!):  Filterimage ~/data/image/lake.png -filter o -gtransf "F 0  0.9848 -0.1736 0  0.1736 0.9848 0  0 0 1  0 0 0  0" | imgv
-// e.g. add 3X scale:  Filterimage ~/data/image/lake.png -boundaryrule r -cropall -100% -filter o -gtransf "F 0  0.32827 -0.05788 0  0.05788 0.32827 0  0 0 1  0 0 0  0" | imgv
+// e.g. add 3x scale:  Filterimage ~/data/image/lake.png -boundaryrule r -cropall -100% -filter o -gtransf "F 0  0.32827 -0.05788 0  0.05788 0.32827 0  0 0 1  0 0 0  0" | imgv
 //  ca cos(10/45*atan2(1, 1)), sin(10/45*atan2(1, 1))
 void do_gtransf(Args& args) {
   Frame frame = FrameIO::parse_frame(args.get_string());

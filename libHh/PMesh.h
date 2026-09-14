@@ -502,7 +502,7 @@ class Geomorph : public WMesh {
   // Same up to nvertices
   // Ret: success
   bool construct_goto_nvertices(PMeshIter& pmi, int nvertices);
-  // Same up to nfaces (or nfaces-1)
+  // Same up to nfaces (or nfaces - 1)
   // Ret: success
   bool construct_goto_nfaces(PMeshIter& pmi, int nfaces);
 

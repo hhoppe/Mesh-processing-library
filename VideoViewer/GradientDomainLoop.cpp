@@ -325,7 +325,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
             apix0[x] = MG::get(video[fi, 0, x], z);
           }
           for_intL(x, xl, xu) { asy0[x] = EType{0}; }
-          for_int(y, ny) {  // update [y, x]; apix0 has [y]; asy0 has [y] - [y-1]
+          for_int(y, ny) {  // update [y, x]; apix0 has [y]; asy0 has [y] - [y - 1]
             int y1 = y + 1;
             if (y1 < ny) {
               const int fi = grid_frameif[y1, xl];

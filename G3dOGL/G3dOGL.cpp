@@ -2562,8 +2562,8 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   HH_ARGSP(cullbackedges, "b : cull backfacing 'De' edges");
   HH_ARGSF(outside_frustum, ": view larger than frustum");
   HH_ARGSP(frustum_frac, "f : set fraction larger if outside");
-  args.p("-lighta[mbient]", ambient, "f : set ambient intensity (0-1)");
-  args.p("-lights[ource]", lightsource, "f : set light intensity (0-1)");
+  args.p("-lighta[mbient]", ambient, "f : set ambient intensity [0., 1.]");
+  args.p("-lights[ource]", lightsource, "f : set light intensity [0., 1.]");
   args.p("-bfacec[olor]", backfacec, "r g b : set backfacing color");
   args.p("-imagen[ame]", imagefilename, "image_filename : set 'DP' name");
   HH_ARGSP(dbuffer, "val : set double buffering");

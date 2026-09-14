@@ -1290,7 +1290,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     lf.lfPitchAndFamily = FIXED_PITCH | FF_SCRIPT;
     // const char* face_name = "Courier New";
     // assertx(strlen(face_name) < LF_FACESIZE);
-    // strncpy(lf.lfFaceName, face_name, LF_FACESIZE-1)); lf.lfFaceName[LF_FACESIZE-1] = '\0';
+    // strncpy(lf.lfFaceName, face_name, LF_FACESIZE - 1)); lf.lfFaceName[LF_FACESIZE - 1] = '\0';
     const wchar_t* face_name = L"Courier New";
     assertx(wcslen(face_name) < LF_FACESIZE);
     wcsncpy(lf.lfFaceName, face_name, LF_FACESIZE - 1);

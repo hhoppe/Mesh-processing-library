@@ -43,7 +43,7 @@ inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
   return os << "Bndrule{" << boundaryrule_name(bndrule) << "}";
 }
 
-// Modify index i to be within domain [0, n-1] using boundary rule; return false if bndrule == Border and i is outside.
+// Modify index i to be in domain [0, n - 1] using boundary rule; return false if bndrule == Border and i is outside.
 [[nodiscard]] constexpr bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule);
 
 template <typename T> class CArrayView;

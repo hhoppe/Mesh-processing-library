@@ -267,7 +267,7 @@ class Multigrid : noncopyable {
     }
     return ngrid;
   }
-  // Box filter on dual grid; each dimension becomes 2X, unless specified by destsize (which can be 2X-1).
+  // Box filter on dual grid; each dimension becomes 2x, unless specified by destsize (which can be 2x -1).
   Grid<D, T> dual_upsample(CGridView<D, T> grid, const Vec<int, D>* destdims = nullptr) {
     const Vec<int, D> dims = grid.dims();
     const Vec<int, D> ndims = destdims ? *destdims : dims * 2;

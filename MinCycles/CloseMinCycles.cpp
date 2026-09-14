@@ -234,7 +234,7 @@ bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
           // Consider the two opposite edges of the face.
           for (Corner c : {_mesh.clw_corner(cc), _mesh.clw_corner(_mesh.ccw_face_corner(cc))}) {
             Edge e = _mesh.clw_face_edge(c);
-            if (1) {  // About 3X faster.
+            if (1) {  // About 3x faster.
               if (e_joined(e)) {
                 ASSERTX(e_bfsnum(e) != bfsnum + 0 && e_bfsnum(e) != bfsnum + 1);
                 continue;

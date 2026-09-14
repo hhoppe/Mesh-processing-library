@@ -70,6 +70,23 @@ the recursive make invocations make shell subprocesses expensive. Keep it that w
 
 A change is not done until the tests pass and the affected configurations build.
 
+## Validation tiers
+
+Choose the configurations by what a change touches, always with `PEDANTIC=1`:
+
+| Change touches | Validate with |
+| -------------- | ------------- |
+| Programs, `libHwX`, `libHwWindows`, demo scripts | `unix` and `win`, building only the affected directories; plus the MSBuild build and `make -C demos create check` when rendering or demo outputs may change |
+| `libHh` (including the core headers) | also `unix CC=gcc`, and all unit tests under `unix` and `win` |
+| `make/`, portability code, or before a checkpoint tag | every configuration, all tests, and the demos |
+
+- `unix` (`.o`) and `win` (`.obj`) keep separate object files, so alternating between them
+  stays incremental. `unix`, `mingw`, and `cygwin` share `.o` files (and `win` and `clang`
+  share `.obj` files), so switching among those rebuilds everything.
+- Treat any line containing "error" or "warning" in a build log as a failure, and confirm
+  that the executables were relinked (or are newer than the changed sources). A running
+  program locks its `.exe` on Windows, which makes the link fail.
+
 ## Code conventions
 
 - The `k_` prefix is reserved for constants, never for functions. Use the static
@@ -91,8 +108,8 @@ These are strict, and they are the point of the project.
   speed, benchmark and report measured time or cycles.
 - When adding `noexcept`, measure the codegen impact rather than annotating broadly on
   the assumption that it helps.
-- Validate across configurations before considering a change complete. A change that
-  builds cleanly under `CONFIG=unix` may fail under MSVC or mingw.
+- Validate across configurations (see "Validation tiers") before considering a change
+  complete. A change that builds cleanly under `CONFIG=unix` may fail under MSVC or mingw.
 
 ## Static analysis
 

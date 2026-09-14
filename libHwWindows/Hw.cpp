@@ -1000,6 +1000,9 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   USE_GL_EXT_MAYBE(wglChoosePixelFormatARB,
                    BOOL(WINAPI*)(HDC hdc, const int* piAttribIList, const FLOAT* pfAttribFList, UINT nMaxFormats,
                                  int* piFormats, UINT* nNumFormats));
+  USE_GL_EXT_MAYBE(wglGetPixelFormatAttribivARB,
+                   BOOL(WINAPI*)(HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, const int* piAttributes,
+                                 int* piValues));
   USE_GL_EXT_MAYBE(wglSwapIntervalEXT, BOOL(WINAPI*)(int interval));
   {
     if (wglGetExtensionsStringARB) {
@@ -1127,6 +1130,19 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
         iPixelFormat = iFormats[0];
         // if (numFormats == 16) iPixelFormat = iFormats[9];
         if (_hwdebug) SHOW(iPixelFormat);
+        if (_hwdebug && wglGetPixelFormatAttribivARB) {
+          // Report the samples of the first matching formats; a coverage-sampling (NVIDIA CSAA) format has fewer
+          //  color samples than samples.  A query fails (value -1) if the driver does not know the attribute.
+          const int WGL_COLOR_SAMPLES_NV = 0x20B9;
+          for_int(i, min(int(numFormats), 8)) {
+            Vec2<int> values = twice(-1);
+            for (const int c : {0, 1}) {
+              const int attribute = c == 0 ? int(WGL_SAMPLES_ARB) : WGL_COLOR_SAMPLES_NV;
+              if (!wglGetPixelFormatAttribivARB(_hRenderDC, iFormats[i], 0, 1, &attribute, &values[c])) values[c] = -1;
+            }
+            showf("  format[%d]=%d: samples=%d color_samples=%d\n", i, iFormats[i], values[0], values[1]);
+          }
+        }
         break;
       } else if (_multisample > 4) {
         _multisample = 4;

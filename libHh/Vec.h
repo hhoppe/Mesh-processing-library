@@ -86,7 +86,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const noexcept { return n; }
   [[nodiscard]] constexpr size_t size() const noexcept { return static_cast<size_t>(n); }
   [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) noexcept {
-    return HH_CHECK_BOUNDS(i, n), as_vec(self).data()[i];
+    return HH_CHECK_BOUNDS(i, n), as_vec(self).data()[i];  // NOLINT(misc-redundant-expression): n may be 0.
   }
   // Subscript by a coordinate, e.g. grid[V(i, j, k)]; recurses into the nested Vec.
   template <int D>

@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #ifndef MESH_PROCESSING_LIBHH_HH_INIT_H_
 #define MESH_PROCESSING_LIBHH_HH_INIT_H_
-#include "libHh/Hh.h"
+#include "libHh/Hh.h"  // NOLINT(misc-header-include-cycle): Hh.h includes this file.
 
 #include <iostream>  // Ensure std::ios_base::Init precedes dummy_hh_init in every translation unit.
 

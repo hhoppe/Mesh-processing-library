@@ -179,6 +179,7 @@ constexpr bool k_sanitize = true;
 #else
 constexpr bool k_sanitize = false;
 #endif
+// NOLINTNEXTLINE(misc-redundant-expression): both macros may be zero.
 static_assert(k_sanitize || !(HH_HAS_ASAN || HH_HAS_TSAN), "Sanitizer active but HH_SANITIZE undefined.");
 
 // *** Syntactic sugar.
@@ -272,7 +273,7 @@ using namespace hh;
 // *** Ensure hh::details::hh_init() is called.
 
 #if !defined(HH_NO_HH_INIT)
-#include "libHh/Hh_init.h"
+#include "libHh/Hh_init.h"  // NOLINT(misc-header-include-cycle): it includes Hh.h to be self-contained.
 #endif
 
 // *** Begin namespace.

@@ -1192,8 +1192,6 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
   SHOW(rms_spatial, rms_temporal, rms_total);
 }
 
-}  // namespace
-
 template <int dyh, int dxh> void integrally_downscale_Nv12_to_Image_aux(CNv12View nv12, MatrixView<Pixel> nmatrixp) {
   const int Dyx2 = dyh * 2 * dxh * 2, Dyxh2 = dyh * dxh;
   parallel_for(range(nmatrixp.ysize()), [&](const int y) {
@@ -1217,6 +1215,8 @@ template <int dyh, int dxh> void integrally_downscale_Nv12_to_Image_aux(CNv12Vie
     }
   });
 }
+
+}  // namespace
 
 void integrally_downscale_Nv12_to_Image(CNv12View nv12, MatrixView<Pixel> nmatrixp) {
   assertx(nmatrixp.size());

@@ -89,9 +89,13 @@ static void discard_bytes(FILE* file, int nbytes) {
   assertt(read_raw(file, buf));
 }
 
+namespace {
+
 inline float frac_zy(int z, int y, const Image& image) {
   return (z * image.ysize() + y) / float(image.zsize() * image.ysize());
 }
+
+}  // namespace
 
 // *** RGB (SGI) image
 

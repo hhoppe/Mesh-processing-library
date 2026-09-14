@@ -244,7 +244,11 @@ void WMesh::write(std::ostream& os, const PMeshInfo& pminfo) const {
   assertx(os);
 }
 
+namespace {
+
 inline Pixel pack_color(const A3dColor& col) { return Vector4(col[0], col[1], col[2], 1.f).pixel(); }
+
+}  // namespace
 
 void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) const {
   const bool uv_in_vertex = true;  // Else in face, which is less compact.

@@ -66,7 +66,7 @@ DWORD WINAPI buf_thread_func(void* param) {
       // Cygwin bash has implemented a pipe using a non-blocking read mode, and there is no data.
       // We modify the wait mode on the pipe handle from PIPE_NOWAIT to PIPE_WAIT.
       assertx(!have_set_pipe_wait);
-      DWORD mode = PIPE_READMODE_BYTE | PIPE_WAIT;
+      DWORD mode = PIPE_READMODE_BYTE | PIPE_WAIT;  // NOLINT(misc-redundant-expression): both are zero.
       assertx(SetNamedPipeHandleState(HANDLE(_get_osfhandle(buf_fd)), &mode, NULL, NULL));
       have_set_pipe_wait = true;
       continue;

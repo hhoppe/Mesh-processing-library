@@ -1637,7 +1637,7 @@ bool DerivedHw::key_press(string skey) {
             set_video_frame(first_cob_loaded, k_before_start);
             reset_window(determine_default_window_dims(g_frame_dims));
           }
-          if (s_message != "") throw s_message;
+          if (s_message != "") throw string(s_message);
           break;
         }
         case 'S' - 64: {  // C-s: save video/image to file;  C-S-s: overwrite original file

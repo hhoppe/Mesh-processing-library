@@ -31,7 +31,8 @@ template <typename T> void my_swap_bytes(T* p) {
   } else if constexpr (sizeof(T) == 2) {
     *p = std::bit_cast<T>(std::byteswap(std::bit_cast<uint16_t>(*p)));
   } else {
-    static_assert(sizeof(T) != sizeof(T), "Unsupported type size");  // (Delay evaluation until instantiation.)
+    // NOLINTNEXTLINE(misc-redundant-expression): the dependent condition delays evaluation until instantiation.
+    static_assert(sizeof(T) != sizeof(T), "Unsupported type size");
   }
 }
 

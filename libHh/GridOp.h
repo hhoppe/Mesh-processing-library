@@ -332,7 +332,7 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
     // Preprocess (inverse convolution L U x = z)
     StridedArrayView<T> rowv(&grid[urow], cx, stride);
     // Forward pass: L y = z
-    if (0) rowv[0] = rowv[0];                               // just copy first element
+    if (0) rowv[0] = rowv[0];  // NOLINT(misc-redundant-expression): just copy first element
     for_intL(x, 1, min(cx - lastspecial, lu.Llower.num()))  // special initial elements
         rowv[x] = rowv[x] - lu.Llower[x] * rowv[x - 1];
     const float cfast = lu.Llower.last();

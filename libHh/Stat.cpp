@@ -13,13 +13,13 @@ class Stats {
  public:
   static void add(Stat* stat) {
     Stats& stats = instance();
-    std::lock_guard<std::mutex> lock(stats._mutex);
+    std::scoped_lock lock(stats._mutex);
     stats._vec.push_back(stat);
   }
   // Returns a new accumulator whose contents get folded into `master` by flush().
   static Stat& thread_partial(Stat& master) {
     Stats& stats = instance();
-    std::lock_guard<std::mutex> lock(stats._mutex);
+    std::scoped_lock lock(stats._mutex);
     // Note that constructing a Stat with no name and is_static == false does not re-enter Stats.
     stats._partials.emplace_back(&master, make_unique<Stat>());
     return *stats._partials.back().second;

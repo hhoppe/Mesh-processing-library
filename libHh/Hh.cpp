@@ -23,7 +23,7 @@
 #include <cstdarg>  // va_list
 #include <cstring>  // memcpy(), strlen(), strerror()
 #include <map>
-#include <mutex>  // once_flag, call_once(), lock_guard
+#include <mutex>  // once_flag, call_once(), scoped_lock
 #include <regex>
 #include <unordered_map>
 #include <vector>
@@ -244,7 +244,7 @@ class Warnings {
   Warnings() { hh_at_clean_up(Warnings::flush); }
   ~Warnings() = delete;
   int increment_count_(const char* s) {
-    std::lock_guard<std::mutex> lock(_mutex);
+    std::scoped_lock lock(_mutex);
     return ++_map[s];
   }
   void flush_internal() {

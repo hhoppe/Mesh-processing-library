@@ -81,7 +81,7 @@ inline void ConsoleProgress::update_i(float f) {
   int val = clamp(int(f * 100.f), 0, 99);
   if (val <= _last_val) return;
   {  // synchronize in case multiple threads are updating the object or using ConsoleProgress
-    std::lock_guard<std::mutex> lock(global_mutex_instance());
+    std::scoped_lock lock(global_mutex_instance());
     if (!(val <= _last_val)) {
       int old_val = _last_val.exchange(val);
       string str;
@@ -111,7 +111,7 @@ inline void ConsoleProgress::clear() {
   if (_silent) return;
   if (_last_val < 0) return;
   {  // synchronize in case multiple threads are using ConsoleProgress
-    std::lock_guard<std::mutex> lock(global_mutex_instance());
+    std::scoped_lock lock(global_mutex_instance());
     if (!(_last_val < 0)) {
       _last_val = -1;
       string str;

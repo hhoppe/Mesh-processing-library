@@ -51,7 +51,7 @@ HH_REFERENCE_LIB("ole32.lib");  // IFileOperation.
 #include <cctype>   // isalnum()
 #include <cstring>  // memmove()
 #include <fstream>  // ifstream, ofstream
-#include <mutex>    // mutex, lock_guard
+#include <mutex>    // mutex, scoped_lock
 
 #include "libHh/RangeOp.h"  // contains()
 #include "libHh/StringOp.h"
@@ -296,7 +296,7 @@ class WFile::Implementation {
 // *** RFile.
 
 RFile::RFile(string filename) {
-  std::lock_guard<std::mutex> lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
+  std::scoped_lock lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
 
   if (starts_with(filename, "https://") || starts_with(filename, "http://")) {
 #if defined(_WIN32) && !defined(__MINGW32__)
@@ -348,7 +348,7 @@ RFile::RFile(string filename) {
 }
 
 RFile::~RFile() {
-  std::lock_guard<std::mutex> lock(s_mutex);  // For pclose(), and just to be safe, for fclose() as well.
+  std::scoped_lock lock(s_mutex);  // For pclose(), and just to be safe, for fclose() as well.
   if (_file_ispipe) {
 #if defined(_WIN32)
     // Avoids the "Broken pipe" error message, but takes too long for huge streams!
@@ -371,7 +371,7 @@ RFile::~RFile() {
 // *** WFile.
 
 WFile::WFile(string filename) {
-  std::lock_guard<std::mutex> lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
+  std::scoped_lock lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
   assertx(filename != "");
   const string original_filename = filename;
   filename = get_canonical_path(filename);
@@ -404,7 +404,7 @@ WFile::WFile(string filename) {
 }
 
 WFile::~WFile() {
-  std::lock_guard<std::mutex> lock(s_mutex);  // For pclose(), and just to be safe, for fclose() as well.
+  std::scoped_lock lock(s_mutex);  // For pclose(), and just to be safe, for fclose() as well.
   if (_os) _os->flush();
   _impl = nullptr;
   if (_file) {

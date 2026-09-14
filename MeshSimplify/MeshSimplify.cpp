@@ -1151,7 +1151,7 @@ void parse_mesh_wedge_identifiers() {
           wid = assertx(to_int(mesh.corner_key(str, crep, "wid")));
           gwinfo[wid] = wi;
         } else {
-          std::lock_guard<std::mutex> lock(mutex);
+          std::scoped_lock lock(mutex);
           if (setcvis.num() == 1) {
             wid = mesh.vertex_id(v);
           } else {

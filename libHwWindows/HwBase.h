@@ -88,6 +88,8 @@ class HwBase : noncopyable {
   [[nodiscard]] virtual Array<string> query_open_filenames(const string& hint_filename);
   [[nodiscard]] virtual string query_save_filename(const string& hint_filename, bool force = false);  // "" if canceled
   [[nodiscard]] bool within_query() const { return _within_query; }
+  [[nodiscard]] bool is_hidden() const { return _hidden; }              // -hidden (also implied by -offscreen)
+  [[nodiscard]] bool is_offscreen() const { return _offscreen != ""; }  // -offscreen
 
   // buffering:
   virtual void hard_flush() = 0;          // synchronize screen

@@ -2612,6 +2612,9 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   int mesha = int(meshcola[0] * 255.f + .5f);
   assertx(mesha >= 0 && mesha <= 255);
   mesh_color.d[3] = uint8_t(mesha);
+  // Without a visible window, nothing could end the program except the completion of a picture, movie, or video.
+  if (hw.is_hidden() && !hw.is_offscreen() && !picture)
+    assertnever("Option -hidden requires -picture, -movie, or -video (or use -offscreen)");
   if (picture) nice_rendering = true;
   if (pm_filename != "") {
 #if defined(DEF_PM)

@@ -568,9 +568,7 @@ int vertex_num_sharpe(Vertex v) {
 
 // Return: vertex v has more than one wedge.
 bool vertex_has_hedge_scalar_bnd(Vertex v) {
-  for (Edge e : mesh.edges(v))
-    if (mesh.is_boundary(e) || hedge_scalar_bnd(v, e)) return true;
-  return false;
+  return ranges::any_of(mesh.edges(v), [&](Edge e) { return mesh.is_boundary(e) || hedge_scalar_bnd(v, e); });
 }
 
 inline void get_grid_point(const Point& p, Vec2<int>& pyx, float& pz) {

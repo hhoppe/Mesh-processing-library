@@ -305,9 +305,7 @@ class SphereMapper::Implementation {
   }
 
   [[nodiscard]] bool any_adjacent_face_flipped(int v, int someface) const {
-    for (const int f : _pmi.ccw_faces(v, someface))
-      if (face_flipped(f)) return true;
-    return false;
+    return ranges::any_of(_pmi.ccw_faces(v, someface), [&](int f) { return face_flipped(f); });
   }
 
   [[nodiscard]] auto gather_1ring_external_edges(int v, int someface) const {

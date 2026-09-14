@@ -16,6 +16,7 @@
 #include <cstring>  // memcpy(), memmove()
 
 #include "libHh/NetworkOrder.h"
+#include "libHh/RangeOp.h"  // contains()
 #include "libHh/StringOp.h"
 #include "libHh/Vec.h"
 
@@ -181,12 +182,7 @@ void RBuffer::extract(int n) {
   if (0 && _beg & 0x3) shift();  // safest but inefficient
 }
 
-bool RBuffer::has_line() const {
-  for_int(i, num()) {
-    if ((*this)[i] == '\n') return true;
-  }
-  return false;
-}
+bool RBuffer::has_line() const { return contains(_ar.slice(_beg, _beg + _n), '\n'); }
 
 bool RBuffer::extract_line(string& str) {
   const char* par = _ar.data() + _beg;  // optimization

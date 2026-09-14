@@ -63,9 +63,7 @@ Point Combvh::evaluate(const GMesh& mesh) const {
 // *** Mvcvh
 
 bool Mvcvh::is_convolution() const {
-  for (const Combvh& comb : values())
-    if (!is_zero(comb.h)) return false;
-  return true;
+  return ranges::all_of(values(), [](const Combvh& comb) { return is_zero(comb.h); });
 }
 
 // co=ci*this

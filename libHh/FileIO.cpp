@@ -80,12 +80,7 @@ inline bool character_requires_quoting(char ch) {
   return !std::isalnum(ch) && !contains(":/-@_.", ch);  // Removed "+" and ",".
 }
 
-bool string_requires_quoting(const string& s) {
-  for_int(i, narrow_cast<int>(s.size())) {
-    if (character_requires_quoting(s[i])) return true;
-  }
-  return false;
-}
+bool string_requires_quoting(const string& s) { return ranges::any_of(s, character_requires_quoting); }
 
 string portable_simple_quote(const string& s) { return string_requires_quoting(s) ? '"' + s + '"' : s; }
 

@@ -510,9 +510,7 @@ bool GMesh::recognize_line(const char* s) {
       "Vertex ",  "Face ",  "Corner ", "Edge ", "MVertex ", "CVertex ",
       "DVertex ", "DFace ", "Ecol ",   "Eswa ", "Espl ",    "Vspl",
   };
-  for (const char* prefix : prefixes)
-    if (strprefix(s, prefix)) return true;
-  return false;
+  return ranges::any_of(prefixes, [&](const char* prefix) { return strprefix(s, prefix); });
 }
 
 void GMesh::write(std::ostream& os) const {

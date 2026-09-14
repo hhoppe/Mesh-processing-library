@@ -34,7 +34,7 @@ Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
   const auto tri = transformed(triangle, [](const Point& p2) { return convert<Precision>(p2); });
   Vec3<Precision> weights;
   for_int(i, 3) weights[i] = dot(q, cross(tri[mod3(i + 1)], tri[mod3(i + 2)]));
-  assertw(min(weights) >= -Precision{k_dotcross_eps});  // The point p should lie within the spherical triangle.
+  assertw(min(weights) >= -Precision{k_dotcross_eps});       // The point p should lie within the spherical triangle.
   for_int(i, 3) weights[i] = max(weights[i], Precision{0});  // Tolerate p lying just outside the triangle.
   const Precision sum_weights = sum(weights);
   if (!assertw(sum_weights > Precision{0})) return Bary(1.f / 3.f, 1.f / 3.f, 1.f / 3.f);

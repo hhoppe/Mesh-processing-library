@@ -93,7 +93,7 @@ bool Hw::init_aux(Array<string>& aargs) {
     return false;
   }
   assertx(aargs.num());
-  if (_hidden && _offscreen != "") assertnever("Hw options -hidden and -offscreen cannot be combined");
+  if (_offscreen != "") _hidden = true;  // It renders a single frame without any visible window.
   _argv0 = aargs[0];
   if (minimize) _iconic = true;
   g_hw = this;
@@ -202,42 +202,10 @@ void Hw::open() {
     for (;;)
       if (loop()) break;
   } else {
-    _exposed = true;
-    // Due to interaction with window events or double-buffering, first draw_it() produces only background color.
+    // The first frame can contain just the background (e.g., G3dOGL reads its input during that frame).
     draw_it();
     draw_it();
-    draw_it();  // necessary 2021-03-21
-    // glFlush();
-    glFinish();
-    // my_sleep(0.2);
-    Image image(_win_dims);
-    if (!_pbuffer) {
-      assertx(!_is_glx_dbuf);
-      uint8_t* p = static_cast<uint8_t*>(_bitmap_data);
-      for_int(y, image.ysize()) {
-        for_int(x, image.xsize()) {
-          for_int(z, 3) image[y, x][2 - z] = *p++;  // BGR to RGB
-        }
-        while ((reinterpret_cast<uintptr_t>(p) & 3) != 0) p++;
-      }
-    } else {
-      Vec2<int> tdims = image.dims();
-      for_int(c, 2) {
-        while (!is_pow2(tdims[c])) tdims[c]++;
-      }
-      Image timage(tdims);
-      GLenum internal_format = GL_RGBA8;
-      glTexImage2D(GL_TEXTURE_2D, 0, internal_format, tdims[1], tdims[0], 0, GL_RGBA, GL_UNSIGNED_BYTE, timage.data());
-      int get_w;
-      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &get_w);
-      assertx(get_w == tdims[1]);
-      glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, _win_dims[1], _win_dims[0]);
-      glFinish();
-      glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, timage.data());
-      image = crop(timage, twice(0), tdims - _win_dims);
-    }
-    image.reverse_y();  // because OpenGL has image origin at lower-left
-    image.write_file(_offscreen);
+    hidden_write_image(_offscreen);
   }
   _state = EState::uninit;
   // Cleanup/un-initialization
@@ -245,12 +213,6 @@ void Hw::open() {
   assertw(!gl_report_errors());
   assertx(wglMakeCurrent(_hRenderDC, nullptr));
   assertx(wglDeleteContext(_hRC));
-  if (_offscreen != "" && _pbuffer) {
-    // Possibly:
-    // wglReleasePbufferDCARB(hbuf, _hRenderDC);
-    // wglDestroyPbufferARB(hbuf);
-  }
-  if (_hRenderDC != _hDC) assertx(DeleteDC(_hRenderDC));
   if (_hDC) assertx(ReleaseDC(_hwnd, _hDC));
   assertx(DestroyWindow(_hwnd));
 }
@@ -691,7 +653,6 @@ void Hw::beep() {
 }
 
 void Hw::set_double_buffering(bool newstate) {
-  if (_offscreen != "") newstate = true;  // else multisampling is not supported (bizarre)
   if (!assertw(_state == EState::init)) return;
   _is_glx_dbuf = newstate;
   // if !_is_glx_dbuf, do not call glXSwapBuffers(), glDrawBuffer(GL_BACK)
@@ -951,17 +912,8 @@ void Hw::set_pixel_format(bool fake_first) {
   PIXELFORMATDESCRIPTOR pfd;
   pfd.nSize = sizeof(pfd);
   pfd.nVersion = 1;
-  pfd.dwFlags = PFD_SUPPORT_OPENGL;
-  if (fake_first || _offscreen == "") {
-    pfd.dwFlags |= PFD_DRAW_TO_WINDOW;
-    if (_is_glx_dbuf) pfd.dwFlags |= PFD_DOUBLEBUFFER;
-    pfd.dwFlags |= PFD_SUPPORT_COMPOSITION;
-  } else if (!_pbuffer) {
-    pfd.dwFlags |= PFD_DRAW_TO_BITMAP;
-  } else {
-    // WGL_DRAW_TO_PBUFFER not recognized by ChoosePixelFormat.
-    // We will use wglChoosePixelFormatARB() instead later.
-  }
+  pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_COMPOSITION;
+  if (_is_glx_dbuf) pfd.dwFlags |= PFD_DOUBLEBUFFER;
   pfd.iPixelType = PFD_TYPE_RGBA;             // COLORINDEX or RGBA
   pfd.cColorBits = BYTE(_scr_bpp);            // Bits per pixel used for color
   pfd.cAlphaBits = 0;                         // >= 0
@@ -1048,10 +1000,6 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   USE_GL_EXT_MAYBE(wglChoosePixelFormatARB,
                    BOOL(WINAPI*)(HDC hdc, const int* piAttribIList, const FLOAT* pfAttribFList, UINT nMaxFormats,
                                  int* piFormats, UINT* nNumFormats));
-  DECLARE_HANDLE(HPBUFFERARB);
-  USE_GL_EXT_MAYBE(wglCreatePbufferARB,
-                   HPBUFFERARB(WINAPI*)(HDC hDC, int iPixelFormat, int iWidth, int iHeight, const int* piAttribList));
-  USE_GL_EXT_MAYBE(wglGetPbufferDCARB, HDC(WINAPI*)(HPBUFFERARB hPbuffer));
   USE_GL_EXT_MAYBE(wglSwapIntervalEXT, BOOL(WINAPI*)(int interval));
   {
     if (wglGetExtensionsStringARB) {
@@ -1068,17 +1016,6 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     _hwnd = nullptr;
   }
   if (_hwdebug) SHOW(wgl_extensions);
-  if (_offscreen != "") {
-    if (wglCreatePbufferARB) {
-      _pbuffer = true;
-      if (getenv_bool("NO_PBUFFER")) _pbuffer = false;
-    }
-    if (!_pbuffer) {
-      Warning("Using DRAW_TO_BITMAP instead of pbuffer");
-      _is_glx_dbuf = false;  // is it too late to do this?
-    }
-    if (_hwdebug) SHOW(_pbuffer);
-  }
   // _multisample == 5 is a bit nicer, but blurs out the text fonts, as does _multisample == 3.
   // So _multisample == 4 is my preferred default.
   _multisample = getenv_int("MULTISAMPLE", 4, true);
@@ -1122,7 +1059,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     // Get a DC for the window (for convenience; let's only do it once)
     _hDC = assertx(GetDC(_hwnd));
     _hRenderDC = _hDC;
-    if (_offscreen == "" && !_hidden) {
+    if (!_hidden) {
       // Display the window
       ShowWindow(_hwnd, (_iconic ? SW_SHOWMINIMIZED : _maximize ? SW_MAXIMIZE : SW_SHOWDEFAULT));
       assertx(UpdateWindow(_hwnd));
@@ -1141,22 +1078,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     _fullscreen = false;
     make_fullscreen(true);
   }
-  if (_offscreen != "" && !_pbuffer) {
-    assertx(!_is_glx_dbuf);
-    BITMAPINFOHEADER bmih = {};
-    bmih.biSize = sizeof(bmih);
-    bmih.biWidth = _win_dims[1];
-    bmih.biHeight = _win_dims[0];
-    bmih.biPlanes = 1;
-    bmih.biBitCount = WORD(_scr_bpp);
-    bmih.biCompression = BI_RGB;  // no compression
-    _bitmap = assertx(
-        CreateDIBSection(_hDC, reinterpret_cast<BITMAPINFO*>(&bmih), DIB_RGB_COLORS, &_bitmap_data, nullptr, 0));
-    // Create a window-compatible memory DC and select DIBSection into it.
-    _hRenderDC = assertx(CreateCompatibleDC(_hDC));  // was called hMemDC
-    assertx(SelectObject(_hRenderDC, _bitmap));
-  }
-  if (_pbuffer || _multisample) {
+  if (_multisample) {
     // _hRC = assertx(wglCreateContext(_hRenderDC));
     // assertx(wglMakeCurrent(_hRenderDC, _hRC));
 
@@ -1170,7 +1092,6 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
       const unsigned WGL_COLOR_BITS_ARB = 0x2014;
       const unsigned WGL_DEPTH_BITS_ARB = 0x2022;
       const unsigned WGL_STENCIL_BITS_ARB = 0x2023;
-      const unsigned WGL_DRAW_TO_PBUFFER_ARB = 0x202D;
       const unsigned WGL_SAMPLE_BUFFERS_ARB = 0x2041;  // 0 or 1
       const unsigned WGL_SAMPLES_ARB = 0x2042;         // number of samples
       const unsigned WGL_FULL_ACCELERATION_ARB = 0x2027;
@@ -1179,14 +1100,17 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
       const unsigned WGL_BLUE_BITS_ARB = 0x2019;
       const unsigned WGL_ALPHA_BITS_ARB = 0x201B;
 
-      Array<int> iattribl = {int(WGL_DRAW_TO_WINDOW_ARB), 1, int(WGL_ACCELERATION_ARB), int(WGL_FULL_ACCELERATION_ARB),
+      Array<int> iattribl = {int(WGL_DRAW_TO_WINDOW_ARB), 1,
+                             int(WGL_ACCELERATION_ARB),   int(WGL_FULL_ACCELERATION_ARB),
                              int(WGL_SUPPORT_OPENGL_ARB), 1,
-                             // for unknown reason, disabling double-buffering for _offscreen prevents _multisample > 0
-                             int(WGL_DOUBLE_BUFFER_ARB), (_is_glx_dbuf || _offscreen != "" ? 1 : 0),
-                             int(WGL_COLOR_BITS_ARB), _scr_bpp, int(WGL_DEPTH_BITS_ARB), _scr_zbufbits,
-                             int(WGL_STENCIL_BITS_ARB), _scr_stencilbits, int(WGL_RED_BITS_ARB), 8,
-                             int(WGL_GREEN_BITS_ARB), 8, int(WGL_BLUE_BITS_ARB), 8, int(WGL_ALPHA_BITS_ARB), 8};
-      if (_pbuffer) iattribl.push_array(V(int(WGL_DRAW_TO_PBUFFER_ARB), 1));
+                             int(WGL_DOUBLE_BUFFER_ARB),  (_is_glx_dbuf ? 1 : 0),
+                             int(WGL_COLOR_BITS_ARB),     _scr_bpp,
+                             int(WGL_DEPTH_BITS_ARB),     _scr_zbufbits,
+                             int(WGL_STENCIL_BITS_ARB),   _scr_stencilbits,
+                             int(WGL_RED_BITS_ARB),       8,
+                             int(WGL_GREEN_BITS_ARB),     8,
+                             int(WGL_BLUE_BITS_ARB),      8,
+                             int(WGL_ALPHA_BITS_ARB),     8};
       if (_multisample) {
         int nsamples = _multisample == 3 ? 2 : _multisample == 5 ? 4 : _multisample;
         iattribl.push_array(V(int(WGL_SAMPLE_BUFFERS_ARB), 1, int(WGL_SAMPLES_ARB), nsamples));
@@ -1228,21 +1152,12 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     // assertx(wglMakeCurrent(_hRenderDC, 0));  // release
     // assertx(wglDeleteContext(_hRC)); _hRC = 0;
 
-    if (_pbuffer) {
-      const Array<int> attr = {0};
-      assertx(wglCreatePbufferARB);
-      HPBUFFERARB hbuf = wglCreatePbufferARB(_hRenderDC, iPixelFormat, _win_dims[1], _win_dims[0], attr.data());
-      assertx(hbuf);
-      assertx(wglGetPbufferDCARB);
-      _hRenderDC = assertx(wglGetPbufferDCARB(hbuf));
-    } else {
-      // Set the pixelFormat
-      PIXELFORMATDESCRIPTOR pfd = {};
-      pfd.nSize = sizeof(pfd);
-      pfd.nVersion = 1;
-      assertx(SetPixelFormat(_hRenderDC, iPixelFormat, &pfd));
-      if (_hwdebug) SHOWL;
-    }
+    // Set the pixelFormat
+    PIXELFORMATDESCRIPTOR pfd = {};
+    pfd.nSize = sizeof(pfd);
+    pfd.nVersion = 1;
+    assertx(SetPixelFormat(_hRenderDC, iPixelFormat, &pfd));
+    if (_hwdebug) SHOWL;
   } else {
     set_pixel_format(false);
   }

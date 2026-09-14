@@ -71,13 +71,10 @@ class Hw : public HwBase {
   int _scr_stencilbits{0};
   int _multisample{0};
   bool _extra_console_visible{false};
-  bool _pbuffer;  // using an OpenGL PBuffer
   HINSTANCE _hInstance;
   HWND _hwnd;
   HDC _hDC;
   HDC _hRenderDC;
-  HBITMAP _bitmap;
-  void* _bitmap_data;
   HGLRC _hRC;
   MSG _msg;  // the current window-message
 

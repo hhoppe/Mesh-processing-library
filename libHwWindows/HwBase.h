@@ -176,6 +176,7 @@ class HwBase : noncopyable {
   void flush_point_ogl();
   void hidden_bind_framebuffer();
   void hidden_resolve_framebuffer();
+  void hidden_write_image(const string& filename);
 #endif
 };
 
@@ -649,6 +650,18 @@ inline void HwBase::hidden_resolve_framebuffer() {
   glBlitFramebuffer(0, 0, w, h, 0, 0, w, h, GL_COLOR_BUFFER_BIT, GL_NEAREST);
   glBindFramebuffer(GL_DRAW_FRAMEBUFFER, _hidden_framebuffers[0]);
   glBindFramebuffer(GL_READ_FRAMEBUFFER, _hidden_framebuffers[1]);
+}
+
+// Save the rendering in the hidden framebuffer to an image file (as done for the -offscreen option).
+inline void HwBase::hidden_write_image(const string& filename) {
+  assertx(_hidden_dims == _win_dims);
+  hidden_resolve_framebuffer();
+  Image image(_win_dims);
+  glPixelStorei(GL_PACK_ALIGNMENT, 1);
+  glReadPixels(0, 0, _win_dims[1], _win_dims[0], GL_RGBA, GL_UNSIGNED_BYTE, image.data());
+  assertx(!gl_report_errors());
+  image.reverse_y();  // because OpenGL has image origin at lower-left
+  image.write_file(filename);
 }
 
 inline void HwBase::draw_text_ogl(const Vec2<int>& yx, const string& s) {

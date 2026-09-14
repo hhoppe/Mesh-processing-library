@@ -18,7 +18,6 @@ extern "C" {
 #include "Hw.xbm"
 #include "libHh/Args.h"
 #include "libHh/Image.h"
-#include "libHh/MathOp.h"  // is_pow2()
 
 #if HH_HAS_LSAN
 #include <sanitizer/lsan_interface.h>
@@ -101,10 +100,9 @@ bool Hw::init_aux(Array<string>& aargs) {
     return false;
   }
   assertx(aargs.num());
-  if (_hidden && _offscreen != "") assertnever("Hw options -hidden and -offscreen cannot be combined");
+  if (_offscreen != "") _hidden = true;  // It renders a single frame without any visible window.
   _argv0 = aargs[0];
   if (minimize) iconic = true;
-  if (_offscreen != "") iconic = true;  // less distracting; ideally window would be invisible
   g_hw = this;
 
   _pwmhints = assertx(XAllocWMHints());
@@ -340,8 +338,7 @@ void Hw::open() {
     _wmDeleteMessage = XInternAtom(_display, "WM_DELETE_WINDOW", False);
     XSetWMProtocols(_display, _win, &_wmDeleteMessage, 1);
   }
-  // if (_offscreen == "")
-  if (!_hidden) XMapWindow(_display, _win);  // window must be mapped to obtain an image
+  if (!_hidden) XMapWindow(_display, _win);
   if (_maximize) {
     _maximize = false;
     // (Note that make_fullscreen(true) is different from maximize.)
@@ -457,33 +454,12 @@ void Hw::open() {
       if (++i <= force_first_draws) redraw_later();
     }
   } else {
-    assertw(_oglx);
+    assertx(_oglx);
 #if defined(HH_OGLX)
-    _exposed = true;
-    // Due to interaction with window events or double-buffering, first draw_it() produces only background color.
+    // The first frame can contain just the background (e.g., G3dOGL reads its input during that frame).
     draw_it();
     draw_it();
-    // glFlush();
-    glFinish();
-    Image image(_win_dims);
-    if (1) {
-      Vec2<int> tdims = image.dims();
-      for_int(c, 2) {
-        while (!is_pow2(tdims[c])) tdims[c]++;
-      }
-      Image timage(tdims);
-      GLenum internal_format = GL_RGBA8;
-      glTexImage2D(GL_TEXTURE_2D, 0, internal_format, tdims[1], tdims[0], 0, GL_RGBA, GL_UNSIGNED_BYTE, timage.data());
-      int get_w;
-      glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &get_w);
-      assertx(get_w == tdims[1]);
-      glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, _win_dims[1], _win_dims[0]);
-      glFinish();
-      glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, timage.data());
-      image = crop(timage, twice(0), tdims - _win_dims);
-    }
-    image.reverse_y();  // because OpenGL has image origin at lower-left
-    image.write_file(_offscreen);
+    hidden_write_image(_offscreen);
 #endif
   }
 #if defined(HH_OGLX)
@@ -843,7 +819,6 @@ void Hw::beep() {
 }
 
 void Hw::set_double_buffering(bool newstate) {
-  if (_offscreen != "") newstate = false;
   if (_oglx) {
     if (!assertw(_state == EState::init)) return;
     _is_glx_dbuf = newstate;

@@ -927,9 +927,10 @@ template <typename Target, typename Source> constexpr Target assert_narrow_cast(
 }
 
 struct noncopyable {
- protected:
   noncopyable(const noncopyable&) = delete;
   noncopyable& operator=(const noncopyable&) = delete;
+
+ protected:
   noncopyable() = default;
 };
 

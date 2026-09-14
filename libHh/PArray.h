@@ -194,7 +194,8 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       }
     }
   }
-  using owns_elements = void;  // Marker for hh::clone().
+  using owns_elements = void;           // Marker for hh::clone().
+  type& operator+=(const T&) = delete;  // Dangerous because ambiguous (push() or add to all elements).
 
  private:
   using base::_a;
@@ -237,7 +238,6 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     }
     ASSERTX(_n <= _cap);
   }
-  type& operator+=(const T&) = delete;  // Dangerous because ambiguous (push() or add to all elements).
 };
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.

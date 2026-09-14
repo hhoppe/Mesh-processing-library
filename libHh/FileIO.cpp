@@ -303,7 +303,7 @@ RFile::RFile(string filename) {
     // Note: opening a FILE on an in-memory buffer using fmemopen() is unavailable on Windows.
     WCHAR cache_filename[MAX_PATH];
     if (!SUCCEEDED(
-            URLDownloadToCacheFileW(NULL, utf16_from_utf8(filename).c_str(), cache_filename, MAX_PATH, 0, nullptr)))
+            URLDownloadToCacheFileW(nullptr, utf16_from_utf8(filename).c_str(), cache_filename, MAX_PATH, 0, nullptr)))
       assertnever("Failed to download '" + filename + "'");
     filename = utf8_from_utf16(cache_filename);
 #else

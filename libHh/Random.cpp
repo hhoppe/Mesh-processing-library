@@ -37,9 +37,7 @@ int Random::_g_init = Random::g_init();
 
 Random::Random(uint32_t seedv) { seed(seedv); }
 
-Random::~Random() {
-  // must be defined after "class Implementation"
-}
+Random::~Random() = default;  // Must be defined after "class Implementation".
 
 void Random::seed(uint32_t seedv) {
   if (!_impl) _impl = make_unique<Implementation>();

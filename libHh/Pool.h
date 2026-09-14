@@ -83,12 +83,8 @@ namespace hh {
 // Custom memory allocation pool for a class of objects.
 class Pool : noncopyable {
  public:
-  Pool() {
-    // this constructor must be a no-op as it may be called after construct() has been called!
-  }
-  ~Pool() {
-    // do nothing here, wait for other destruction means
-  }
+  Pool() = default;   // This constructor must be a no-op as it may be called after construct() has been called!
+  ~Pool() = default;  // Do nothing here; wait for other destruction means.
   HH_ATTRIBUTE_NO_SANITIZE_ADDRESS void construct(const char* name, unsigned esize, int ealign) {
     if (1) {
       // initialized to zero by static initialization

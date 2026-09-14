@@ -25,6 +25,7 @@ class Stats {
     return *stats._partials.back().second;
   }
   static void flush() { instance().flush_internal(); }
+  ~Stats() = delete;
 
  private:
   static Stats& instance() {
@@ -32,7 +33,6 @@ class Stats {
     return stats;
   }
   Stats() { hh_at_clean_up(Stats::flush); }
-  ~Stats() = delete;
   void flush_internal() {
     for (const auto& [master, partial] : _partials) master->add(*partial);
     _partials.clear();

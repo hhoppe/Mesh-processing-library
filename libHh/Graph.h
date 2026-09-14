@@ -28,7 +28,7 @@ template <typename T> class Graph : noncopyable {
   using vertex_iterator = typename base::keys_iterator;
   using edges_range = const atype&;
   using edge_iterator = const typename atype::const_iterator;
-  Graph() {}
+  Graph() = default;
   Graph(type&& g) noexcept { swap(*this, g); }
   type& operator=(type&& g) noexcept { return clear(), swap(*this, g), *this; }
   void clear() { _m.clear(); }

@@ -28,7 +28,7 @@ namespace hh {
 // Window coordinates have origin at upper left.  Floating-point coordinates have pixels at half integers.
 class HwBase : noncopyable {
  public:
-  HwBase() {}
+  HwBase() = default;
   bool init(Array<string>& aargs) { return init_aux(aargs); }  // ret: success
 
   // Callbacks:

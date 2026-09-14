@@ -82,6 +82,7 @@ template <typename T> class CStridedArrayView {
   [[nodiscard]] auto begin(this auto&& self) noexcept { return self.iterator_at(0); }
   [[nodiscard]] auto end(this auto&& self) noexcept { return self.iterator_at(self.num()); }
   [[nodiscard]] const T* data() const noexcept { return _a; }
+  type& operator=(const type&) = delete;
 
  protected:
   // The pointer is declared non-const even though CStridedArrayView's elements are logically const.  This lets the
@@ -93,7 +94,6 @@ template <typename T> class CStridedArrayView {
   int _n{0};
   ptrdiff_t _stride;
   CStridedArrayView() = default;
-  type& operator=(const type&) = delete;
 
  private:
   // The iterator at element index i.  Its element type follows the constness of self.data(), so this single
@@ -117,11 +117,11 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
   using const_iterator = typename base::const_iterator;
   [[nodiscard]] T* data() noexcept { return _a; }
   [[nodiscard]] const T* data() const noexcept { return _a; }
+  type& operator=(const type&) = delete;
 
  protected:
   using base::_a;
   StridedArrayView() = default;
-  type& operator=(const type&) = delete;
 };
 
 template <typename T> std::ostream& operator<<(std::ostream& os, CStridedArrayView<T> a) {

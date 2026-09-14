@@ -64,6 +64,7 @@ class Args {
   [[nodiscard]] static float parse_float(const string& s);    // Or die.
   [[nodiscard]] static double parse_double(const string& s);  // Or die.
   virtual void problem(const string& s);
+  Args(const Args&) = delete;  // Not noncopyable because the private operator=() is defined below.
 
  private:
   friend class ParseArgs;
@@ -72,7 +73,6 @@ class Args {
   const string& shift_args() { return assertx(num() > 0), _args[_iarg++]; }
   Args& operator=(const Args&) = default;  // Used in friend ParseArgs: copy_parse().
   Args() = default;                        // Used in friend ParseArgs.
-  Args(const Args&) = delete;              // Not noncopyable because operator=() is defined above.
 };
 
 // ParseArgs adds functionality for parsing the stream of string arguments using a set of options.
@@ -121,6 +121,7 @@ class ParseArgs : public Args {
   void copy_parse(const ParseArgs& pa);
   [[nodiscard]] string header();
   void problem(const string& s) override;
+  ParseArgs(const ParseArgs&) = delete;  // Not noncopyable because the private operator=() is defined below.
 
  private:
   struct option {
@@ -155,7 +156,6 @@ class ParseArgs : public Args {
   static void fversion(Args& args);
   static void fparse_func0(Args& args);
   ParseArgs& operator=(const ParseArgs&) = default;  // Used in copy_parse().
-  ParseArgs(const ParseArgs&) = delete;              // Not noncopyable because operator=() is defined above.
 };
 
 #define HH_ARGSF(var, comment) args.f("-" #var, var, comment)

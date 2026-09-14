@@ -1656,9 +1656,8 @@ PMeshRStream::PMeshRStream(std::istream& is, PMesh* ppm_construct) : _is(&is), _
   if (_pm) _pm->_info = _info;
 }
 
-PMeshRStream::~PMeshRStream() {
-  // Should not check for PMesh trailer here since not all records may have been read.
-}
+// Should not check for PMesh trailer here since not all records may have been read.
+PMeshRStream::~PMeshRStream() = default;
 
 void PMeshRStream::read_base_mesh(AWMesh* bmesh) {
   assertx(_vspliti == -1);

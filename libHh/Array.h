@@ -277,7 +277,8 @@ template <typename T> class Array : public ArrayView<T> {
   friend void swap(Array& l, Array& r) noexcept {
     std::swap(l._a, r._a), std::swap(l._n, r._n), std::swap(l._cap, r._cap);
   }
-  using owns_elements = void;  // Marker for hh::clone().
+  using owns_elements = void;           // Marker for hh::clone().
+  type& operator+=(const T&) = delete;  // Dangerous because meaning is ambiguous (either push() or add to elements).
 
  private:
   using base::_a;
@@ -293,8 +294,7 @@ template <typename T> class Array : public ArrayView<T> {
     for_intL(j, i, _n - n) _a[j] = std::move(_a[j + n]);
     sub(n);
   }
-  using base::reinit;                   // Hide it.
-  type& operator+=(const T&) = delete;  // Dangerous because meaning is ambiguous (either push() or add to elements).
+  using base::reinit;  // Hide it.
 };
 
 // See also Vec.h, PArray.h, and Matrix.h.

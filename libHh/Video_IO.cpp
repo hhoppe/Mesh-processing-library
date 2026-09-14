@@ -515,9 +515,8 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
       if (0) SHOW(dims, _stride);
     }
   }
-  ~Mf_RVideo_Implementation() override {
-    // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
-  }
+  // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor.
+  ~Mf_RVideo_Implementation() override = default;
   [[nodiscard]] string name() const override { return "mf"; }
   bool read(MatrixView<Pixel> frame) override {
     const Vec2<int> sdims = _rvideo.spatial_dims();

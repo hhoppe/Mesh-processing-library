@@ -220,6 +220,7 @@ class CleanUp {
   static void flush() {
     for (auto function : instance()._functions) function();
   }
+  ~CleanUp() = delete;
 
  private:
   static CleanUp& instance() {
@@ -227,7 +228,6 @@ class CleanUp {
     return object;
   }
   CleanUp() { std::atexit(flush); }
-  ~CleanUp() = delete;
   std::vector<Function> _functions;
 };
 
@@ -235,6 +235,7 @@ class Warnings {
  public:
   static int increment_count(const char* s) { return instance().increment_count_(s); }
   static void flush() { instance().flush_internal(); }
+  ~Warnings() = delete;
 
  private:
   static Warnings& instance() {
@@ -242,7 +243,6 @@ class Warnings {
     return warnings;
   }
   Warnings() { hh_at_clean_up(Warnings::flush); }
-  ~Warnings() = delete;
   int increment_count_(const char* s) {
     std::scoped_lock lock(_mutex);
     return ++_map[s];

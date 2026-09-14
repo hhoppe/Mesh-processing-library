@@ -143,7 +143,7 @@ class Timers {
     const auto& [it, is_new] =
         instance()._map.emplace(timer._name, narrow_cast<int>(instance()._vec_timer_info.size()));
     const auto& [_, i] = *it;
-    if (is_new) instance()._vec_timer_info.emplace_back(Timers::TimerInfo(timer._name));
+    if (is_new) instance()._vec_timer_info.emplace_back(timer._name);
     Timers::TimerInfo& timer_info = instance()._vec_timer_info[i];
     timer_info.stat_cpu_times.enter(timer.cpu());
     timer_info.sum_process_times += timer._process_cpu_time;
@@ -158,6 +158,7 @@ class Timers {
     return false;
   }
   static void flush() { instance().flush_internal(); }
+  ~Timers() = delete;
 
  private:
   static Timers& instance() {
@@ -165,7 +166,6 @@ class Timers {
     return stats;
   }
   Timers() { hh_at_clean_up(Timers::flush); }
-  ~Timers() = delete;
   void flush_internal() {
     if (_vec_timer_info.empty()) return;
     for (const auto& timer_info : _vec_timer_info)

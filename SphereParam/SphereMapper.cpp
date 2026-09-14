@@ -810,7 +810,7 @@ class SphereMapper::Implementation {
 SphereMapper::SphereMapper(PMeshIter& pmi, Options options)
     : _impl(make_unique<SphereMapper::Implementation>(pmi, options)) {}
 
-SphereMapper::~SphereMapper() {}
+SphereMapper::~SphereMapper() = default;
 
 void SphereMapper::SphereMapper::show_parameters() const { _impl->show_parameters(); }
 

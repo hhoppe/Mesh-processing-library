@@ -29,9 +29,9 @@ if not defined CONFIG set path=../bin;../bin/debug;../bin/win;../bin/mingw;../bi
 :: Here one can adjust the default window size and position for most demos.
 set G3DARGS=-geom 750x600
 set G3DARGS=-geom 900x700 -bigfont
-set G3DARGS=-geom 1100x850+50+50 -bigfont
 set G3DARGS=-geom 1100x850+100+50 -bigfont
+set G3DARGS=-geom 1100x850+150+50 -bigfont
 
 :: For models with texture, use smaller window, depending on graphics memory.
-set TEXGEOMETRY=-geom 1000x800+50+50
 set TEXGEOMETRY=-geom 1000x800+100+50
+set TEXGEOMETRY=-geom 1000x800+150+50

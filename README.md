@@ -603,8 +603,8 @@ Then, within `demos/view_sr_terrain.sh`,
    -texturemap demos/data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 \
    -lightambient .5"; \
  export G3D_REV_AUTO=1; \
- G3dOGL $common -geom 800x820+100+10 -key "&O" -key ,o----J | \
-   G3dOGL $common -geom 800x820+920+10 -async -killeof -input -key Dg)
+ G3dOGL $common -geom 800x820+150+10 -key "&O" -key ,o----J | \
+   G3dOGL $common -geom 800x820+970+10 -async -killeof -input -key Dg)
 ```
 
 - opens two synchronized side-by-side windows of the same texture mapped terrain,

@@ -56,7 +56,11 @@ is_unix_like ?= $(if $(filter cygwin unix,$(CONFIG)),1)#  Configs where libjpeg/
 
 SHELL = bash#   sh is standard ("for i in $var; do; done"); bash is necessary for "shopt nullglob", [[ ]], etc.
 
-add_drive = $(patsubst /%,$(absdrive)/%,$(1))#  Use $(call add_drive,...) to invoke this macro.
+# Convert "/cygdrive/c/dir" to "c:/dir".
+cygdrive_path = $(call cygdrive_path_aux,$(firstword $(subst /, ,$(1:/cygdrive/%=%))),$(1:/cygdrive/%=%))
+cygdrive_path_aux = $1:$(patsubst $1%,%,$2)
+# Prefix each absolute path with $(absdrive), except convert a Cygwin "/cygdrive/c/dir" path to "c:/dir".
+add_drive = $(foreach f,$(1),$(if $(filter /cygdrive/%,$(f)),$(call cygdrive_path,$(f)),$(patsubst /%,$(absdrive)/%,$(f))))#  Use $(call add_drive,...) to invoke this macro.
 
 drive_abspath = $(call add_drive,$(abspath $(1)))#  Use $(call drive_abspath,...) to invoke this macro.
 

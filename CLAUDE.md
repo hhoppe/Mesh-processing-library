@@ -32,6 +32,8 @@ to build less, e.g. `make -j12 Filtermesh` or `make CONFIG=mingw -j12 libHh`.
 - Sanitizers work under `CONFIG=unix` only (mingw ships no sanitizer runtime):
   `make CONFIG=unix release=0 PEDANTIC=1 sanitize=address,undefined -j12 test`, or
   `sanitize=thread`.
+- The Windows configurations run make under Cygwin. From WSL, launch them with
+  `/mnt/c/cygwin64/bin/bash.exe -lc 'cd /hh/git/mesh_processing && make CONFIG=win -j12' </dev/null`.
 - Toolchain paths can be overridden in `Makefile_local_defs` at the repository root.
 - The `.exe` files directly in `bin/` come from the MSBuild `ReleaseMD - x64` build.
 

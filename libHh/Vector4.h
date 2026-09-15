@@ -105,7 +105,7 @@ class Vector4 {
     Vector4 v = v1 * v2;
     return v[0] + v[1] + v[2] + v[3];
 #else
-    __m128 r = _mm_dp_ps(v1._r, v2._r, 0xFF);  // SSE4.1 DPPS instruction (dot product).
+    const __m128 r = _mm_dp_ps(v1._r, v2._r, 0xFF);  // SSE4.1 DPPS instruction (dot product).
     // Extracts the lower order floating point value from the parameter.
     return _mm_cvtss_f32(r);
     // return r.m128_f32[0];  // Less portable.
@@ -287,24 +287,24 @@ inline Vector4 interp(const Vector4& v1, const Vector4& v2, float f1 = .5f) { re
 
 inline Vector4 to_Vector4_raw(const Vec4<uint8_t>& p) {
   // avoids a shuffle, unlike _mm_set1_epi32(*reinterpret_cast<const int*>(p))
-  __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(p.data())));
-  __m128i t1 = _mm_cvtepu8_epi32(in);  // Expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1).
-  __m128 t2 = _mm_cvtepi32_ps(t1);     // Convert four signed 32-bit to floats.
+  const __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(p.data())));
+  const __m128i t1 = _mm_cvtepu8_epi32(in);  // Expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1).
+  const __m128 t2 = _mm_cvtepi32_ps(t1);     // Convert four signed 32-bit to floats.
   return t2;
 }
 inline void Vector4::raw_to_byte4(Vec4<uint8_t>& p) const {
   for_int(c, 4) ASSERTX(_c[c] >= 0.f && _c[c] < 255.999f);
-  __m128i t1 = _mm_cvttps_epi32(_r);      // 4 float -> 4 signed 32-bit int (truncation)  (or cvtps for rounding).
-  __m128i t2 = _mm_packs_epi32(t1, t1);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
-  __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
+  const __m128i t1 = _mm_cvttps_epi32(_r);     // 4 float -> 4 signed 32-bit int (truncation)  (or cvtps for rounding).
+  const __m128i t2 = _mm_packs_epi32(t1, t1);  // 8 signed 32-bit -> 8 signed 16-bit (saturation).
+  const __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
   _mm_store_ss(reinterpret_cast<float*>(p.data()), _mm_castsi128_ps(t3));
 }
 inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
   Vector4 t = *this * 255.f;
   for_int(c, 4) ASSERTX(t[c] <= 2'147'480'000.f);  // See Vector4_test.h
-  __m128i t1 = _mm_cvtps_epi32(t._r);     // 4 float -> 4 signed 32-bit int (rounding)  (or cvttps for truncation).
-  __m128i t2 = _mm_packs_epi32(t1, t1);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
-  __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
+  const __m128i t1 = _mm_cvtps_epi32(t._r);  // 4 float -> 4 signed 32-bit int (rounding)  (or cvttps for truncation).
+  const __m128i t2 = _mm_packs_epi32(t1, t1);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
+  const __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
   _mm_store_ss(reinterpret_cast<float*>(p.data()), _mm_castsi128_ps(t3));
 }
 

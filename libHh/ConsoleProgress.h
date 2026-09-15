@@ -78,12 +78,12 @@ inline void ConsoleProgress::update_i(float f) {
   // - "\b" (8) erases the last character; my emacs shell is modified to do the same.
   // - "\r" (13) moves cursor to beginning of line, but does *not* clear the line contents;
   //    my emacs shell is modified to have "\r" delete backwards to the line beginning.
-  int val = clamp(int(f * 100.f), 0, 99);
+  const int val = clamp(int(f * 100.f), 0, 99);
   if (val <= _last_val) return;
   {  // synchronize in case multiple threads are updating the object or using ConsoleProgress
     std::scoped_lock lock(global_mutex_instance());
     if (!(val <= _last_val)) {
-      int old_val = _last_val.exchange(val);
+      const int old_val = _last_val.exchange(val);
       string str;
       if (_task_name != "") {
         if (old_val >= 0) {

@@ -80,7 +80,7 @@ void Mklib::cubeU() {
 
 void Mklib::polygonO(int n) {
   for_int(i, n) {
-    float a = i * TAU / n;
+    const float a = i * TAU / n;
     mk.point(0, std::cos(a), std::sin(a));
   }
   mk.end_polygon();
@@ -127,14 +127,14 @@ void Mklib::ringU(int n, float h, float r0, float r1, float a0, float a1) {
 
 void Mklib::flat_ringU(int n, float h, float r0, float r1) {
   assertx(r0 * h > 0 || r0 * r0 - r1 > 0);
-  float a0 = std::atan2(r0 * h, r0 * r0 - r1);
+  const float a0 = std::atan2(r0 * h, r0 * r0 - r1);
   ringU(n, h, r0, r1, a0, a0);
 }
 
 void Mklib::poly_hole(int n, float r1) {
   const auto func_poly0 = [&](int i) {
     dummy_use(i);
-    float s = std::sin((TAU / 2) / n), h = std::cos((TAU / 2) / n);
+    const float s = std::sin((TAU / 2) / n), h = std::cos((TAU / 2) / n);
     mk.point(0, s, 0);
     mk.point(-h * (1 - r1), +s * r1, 0);
     mk.point(-h * (1 - r1), -s * r1, 0);
@@ -208,7 +208,7 @@ void Mklib::gsphere(int nlat, int nlong, bool hemi) {
     float a1 = (-.5f + float(i) / nlat) * (TAU / 2);
     float a2 = (-.5f + float(i + 1) / nlat) * (TAU / 2);
     float c1 = abs(std::cos(a1)), c2 = abs(std::cos(a2));
-    float s1 = std::sin(a1), s2 = std::sin(a2);
+    const float s1 = std::sin(a1), s2 = std::sin(a2);
     if (i == 0) {
       a1 = -.249999f * TAU;
       c1 = 0.f;
@@ -225,7 +225,7 @@ void Mklib::gsphere(int nlat, int nlong, bool hemi) {
 }
 
 void Mklib::tetra() {
-  float xp = 1.f / sqrt(3.f), xn = xp / -2.f, yp = .5f, yn = -.5f, zp = 1.5f / sqrt(6.f), zn = zp / -3.f;
+  const float xp = 1.f / sqrt(3.f), xn = xp / -2.f, yp = .5f, yn = -.5f, zp = 1.5f / sqrt(6.f), zn = zp / -3.f;
   mk.point(xp, 0, zn);
   mk.point(xn, yn, zn);
   mk.point(xn, yp, zn);

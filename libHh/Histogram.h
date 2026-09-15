@@ -17,13 +17,13 @@ class Histogram : noncopyable {
   void add(float val) { _ar_val.push(val); }
   ~Histogram() {
     if (_filename == "") return;
-    Stat stat(_ar_val);
+    const Stat stat(_ar_val);
     assertx(_nbuckets > 0);
     float min = stat.min(), max = stat.max(), avg = stat.avg(), sdv = stat.sdv();
     assertw(sdv > 0.f);
     const float max_sdv = 3.f;
     {
-      float range1 = max - min;
+      const float range1 = max - min;
       // Go slightly beyond min and max.
       min -= range1 / _nbuckets * 1.5f;
       max += range1 / _nbuckets * 1.5f;
@@ -32,10 +32,10 @@ class Histogram : noncopyable {
     if (!assertw(max < avg + sdv * max_sdv)) max = avg + sdv * max_sdv;
     float bucket_size = (max - min) / _nbuckets;
     if (!assertw(bucket_size > 0.f)) bucket_size = 1.f;
-    float recip_bucket_size = 1.f / bucket_size;
+    const float recip_bucket_size = 1.f / bucket_size;
     Array<int> buckets(_nbuckets, 0);
-    for (float f : _ar_val) {
-      int bi = clamp(int((f - min) * recip_bucket_size), 0, _nbuckets - 1);
+    for (const float f : _ar_val) {
+      const int bi = clamp(int((f - min) * recip_bucket_size), 0, _nbuckets - 1);
       buckets[bi]++;
     }
     showdf("Hist(%s): %s\n", _filename.c_str(), stat.short_string().c_str());

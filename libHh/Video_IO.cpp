@@ -125,7 +125,7 @@ void Video::write_file(const string& filename) const {
   HH_TIMER("_write_video");
   assertx(size());
   verify_attrib(const_cast<Video&>(*this).attrib());  // mutable
-  string suffix = to_lower(get_path_extension(filename));
+  const string suffix = to_lower(get_path_extension(filename));
   if (suffix != "") const_cast<Video&>(*this).attrib().suffix = suffix;  // mutable
   const bool use_nv12 = false;
   WVideo wvideo(filename, spatial_dims(), attrib(), use_nv12);
@@ -172,7 +172,7 @@ void VideoNv12::write_file(const string& filename, const Video::Attrib& pattrib)
   assertx(size());
   Video::Attrib attrib = pattrib;
   verify_attrib(attrib);
-  string suffix = to_lower(get_path_extension(filename));
+  const string suffix = to_lower(get_path_extension(filename));
   if (suffix != "") attrib.suffix = suffix;
   const bool use_nv12 = true;
   WVideo wvideo(filename, _grid_Y.dims().tail<2>(), attrib, use_nv12);
@@ -262,7 +262,7 @@ class Unsupported_WVideo_Implementation : public WVideo::Implementation {
 RVideo::RVideo(string filename, bool use_nv12) : _filename(std::move(filename)), _use_nv12(use_nv12) {
   if (file_requires_pipe(_filename)) {
     RFile fi(_filename);
-    int c = fi().peek();
+    const int c = fi().peek();
     if (c < 0) throw std::runtime_error("Error reading video from empty pipe '" + _filename + "'");
     _attrib.suffix = video_suffix_for_magic_byte(uchar(c));
     if (_attrib.suffix == "")
@@ -353,10 +353,10 @@ class Initialize_COM_MF {
     // default may be COINIT_MULTITHREADED, but VT code assumes COINIT_APARTMENTTHREADED
     if (0) {
       // The following could work if we could guarantee that VT initialization occurred before this call.
-      HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
+      const HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
       assertx(SUCCEEDED(hr) || hr == RPC_E_CHANGED_MODE);
     } else {
-      HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+      const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
       assertx(SUCCEEDED(hr) || hr == S_FALSE);  // may equal S_FALSE if COM was previously initialized
     }
     AS(MFStartup(MF_VERSION, MFSTARTUP_FULL));  // initialize Media Foundation
@@ -438,7 +438,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
     {
       com_ptr<IMFSourceResolver> pSourceResolver;
       AS(MFCreateSourceResolver(&pSourceResolver));
-      DWORD createObjFlags =
+      const DWORD createObjFlags =
           MF_RESOLUTION_BYTESTREAM | MF_RESOLUTION_CONTENT_DOES_NOT_HAVE_TO_MATCH_EXTENSION_OR_MIME_TYPE;
       MF_OBJECT_TYPE objectType = MF_OBJECT_INVALID;
       com_ptr<IUnknown> pSource;
@@ -462,8 +462,8 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
       PropVariantInit(&var);
       AS(_pReader->GetPresentationAttribute(DWORD(MF_SOURCE_READER_MEDIASOURCE), MF_PD_DURATION, &var));
       assertx(var.vt == VT_UI8);
-      ULONGLONG durationInHundredsOfNanoseconds = var.uhVal.QuadPart;
-      double TIME_HNS_TO_S_FACTOR = 10'000'000.;
+      const ULONGLONG durationInHundredsOfNanoseconds = var.uhVal.QuadPart;
+      const double TIME_HNS_TO_S_FACTOR = 10'000'000.;
       duration = double(durationInHundredsOfNanoseconds) / TIME_HNS_TO_S_FACTOR;
       PropVariantClear(&var);
     }
@@ -535,7 +535,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
       if (!_impl_nv12) {
         retrieve_strided_BGRA(pData, stride, frame);
       } else {
-        int offset = _mf_ny * stride;
+        const int offset = _mf_ny * stride;
         if (stride == sdims[1] * 1) {
           CMatrixView<uint8_t> matY(pData, sdims);
           CMatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<const Vec2<uint8_t>*>(pData + offset), sdims / 2);
@@ -636,7 +636,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       Warning("Disabling _impl_nv12");
       _impl_nv12 = false;
     }
-    int iFramesPerSecond = int(attrib.framerate + .5);
+    const int iFramesPerSecond = int(attrib.framerate + .5);
     AS(MFFrameRateToAverageTimePerFrame(iFramesPerSecond, 1, &_rtDuration));
     GUID videoOutputFormat;
     if (0)
@@ -701,11 +701,11 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       if (0) {  // untested
         AS(MFCreateAttributes(&pAttributes, 10));
         if (0) {
-          unsigned force_keyframe_every_nframes = 20;
+          const unsigned force_keyframe_every_nframes = 20;
           AS(pAttributes->SetUINT32(CODECAPI_AVEncMPVGOPSize, force_keyframe_every_nframes));
         }
         if (0) {
-          unsigned quality = 78;
+          const unsigned quality = 78;
           AS(pAttributes->SetUINT32(CODECAPI_AVEncCommonRateControlMode, eAVEncCommonRateControlMode_Quality));
           AS(pAttributes->SetUINT32(CODECAPI_AVEncCommonQuality, quality));
         }
@@ -723,7 +723,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
     const Vec2<int> sdims = _wvideo.spatial_dims();
     assertx(product(_wvideo.spatial_dims()));
     assertx(frame.dims() == _wvideo.spatial_dims());
-    DWORD cbBuffer = DWORD(product(_wvideo.spatial_dims()) * (_impl_nv12 ? 1.5f : 4.f));
+    const DWORD cbBuffer = DWORD(product(_wvideo.spatial_dims()) * (_impl_nv12 ? 1.5f : 4.f));
     com_ptr<IMFMediaBuffer> pBuffer;
     AS(MFCreateAlignedMemoryBuffer(cbBuffer, MF_16_BYTE_ALIGNMENT, &pBuffer));
     {
@@ -762,7 +762,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
     const Vec2<int> sdims = _wvideo.spatial_dims();
     assertx(product(_wvideo.spatial_dims()));
     assertx(nv12v.get_Y().dims() == _wvideo.spatial_dims());
-    DWORD cbBuffer = DWORD(product(_wvideo.spatial_dims()) * (_impl_nv12 ? 1.5f : 4.f));
+    const DWORD cbBuffer = DWORD(product(_wvideo.spatial_dims()) * (_impl_nv12 ? 1.5f : 4.f));
     com_ptr<IMFMediaBuffer> pBuffer;
     AS(MFCreateAlignedMemoryBuffer(cbBuffer, MF_16_BYTE_ALIGNMENT, &pBuffer));
     {
@@ -831,7 +831,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
     const string& filename = _rvideo._filename;
     bool expect_audio = false;
     // This prefix is necessary to get a correct frame count in the case of *.gif generated from ffmpeg.
-    string prefix = ends_with(filename, ".gif") ? " -r 60 -vsync vfr" : "";
+    const string prefix = ends_with(filename, ".gif") ? " -r 60 -vsync vfr" : "";
 
     {  // read header for dimensions and attributes (ignore video and audio data)
       // 2>&1 works on both Unix bash shell and Windows cmd shell: https://stackoverflow.com/questions/1420965/
@@ -925,7 +925,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
           if (contains(line, ": Audio:") && contains(line, "kb/s")) expect_audio = true;
         }
         {
-          string::size_type i = line.rfind("frame=");
+          const string::size_type i = line.rfind("frame=");
           if (i != string::npos) assertx(sscanf(line.c_str() + i, "frame=%d%c", &dims[0], &vch) == 2 && vch == ' ');
         }
       }
@@ -953,7 +953,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
         SHOW("Failed to read audio within video", filename, ex.what());
       }
     }
-    string pixfmt = _rvideo._use_nv12 ? "nv12" : "rgba";  // was rgb24
+    const string pixfmt = _rvideo._use_nv12 ? "nv12" : "rgba";  // Was rgb24.
     string command = ("ffmpeg -v panic -nostdin" + prefix + " -i " + quote_arg_for_shell(filename) +
                       " -f image2pipe -pix_fmt " + pixfmt + " -vcodec rawvideo - |");
     if (ldebug) SHOW(command);
@@ -1015,7 +1015,7 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
     const string& filename = _wvideo._filename;
     Video::Attrib& attrib = _wvideo._attrib;
     const Vec2<int> sdims = _wvideo.spatial_dims();
-    string sfilecontainer;  // default is to infer container format based on filename extension
+    const string sfilecontainer;  // Default is to infer container format based on filename extension.
     // ffmpeg -hide_banner -formats
     {
       assertx(filename != "-");  // WVideo::WVideo() should have created TmpFile if writing to stdout.
@@ -1026,8 +1026,8 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
       // if (attrib.suffix == "mp4") sfilecontainer = " -f avi";
       // Setting container should be unnecessary because it is derived automatically based on file suffix.
     }
-    string ipixfmt = _wvideo._use_nv12 ? "nv12" : "rgba";  // was rgb24
-    string str_audio = " -an";                             // default no audio
+    const string ipixfmt = _wvideo._use_nv12 ? "nv12" : "rgba";  // Was rgb24.
+    string str_audio = " -an";                                   // Default is no audio.
     string ocodec;
     string opixfmt = "yuv420p";
     // ffmpeg -hide_banner -codecs | grep '^..E'

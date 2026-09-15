@@ -151,9 +151,9 @@ class Map {
     if (0) {
       return std::next(begin(), random.get_size_t() % _map.size());  // Likely slow; no improvement.
     } else {
-      size_t nbuckets = _map.bucket_count();
+      const size_t nbuckets = _map.bucket_count();
       size_t bn = random.get_size_t() % nbuckets;
-      size_t ne = _map.bucket_size(bn);
+      const size_t ne = _map.bucket_size(bn);
       size_t nskip = random.get_size_t() % (20 + ne);
       while (nskip >= _map.bucket_size(bn)) {
         nskip -= _map.bucket_size(bn);

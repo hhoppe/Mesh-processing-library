@@ -35,7 +35,7 @@ namespace hh {
   constexpr int k_uninitialized = -99;
   static int s_value = k_uninitialized;
   if (s_value == k_uninitialized) {
-    int default_value = max(int(std::thread::hardware_concurrency()), 1);
+    const int default_value = max(int(std::thread::hardware_concurrency()), 1);
     s_value = getenv_int("OMP_NUM_THREADS", default_value);
   }
   return s_value;
@@ -115,7 +115,7 @@ class ThreadPoolIndexedTask : noncopyable {
       _condition_variable_worker.wait(lock, [this] { return _task_index < _num_tasks; });
       if (!_running) break;
       while (_task_index < _num_tasks) {
-        int i = _task_index++;
+        const int i = _task_index++;
         lock.unlock();
         _task_function(i);
         lock.lock();

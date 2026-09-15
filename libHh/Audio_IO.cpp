@@ -59,7 +59,7 @@ void Audio::read_file(const string& pfilename) {
     //  *.wav: "RIFF^\301\021\000WAVEfmt "
     //  *.mp3: "ID3\004"
     //  *.pcm: binary data in a multitude of formats; ouch.
-    int c = fi().peek();
+    const int c = fi().peek();
     if (c < 0) throw std::runtime_error("Error reading audio from empty pipe '" + filename + "'");
     attrib().suffix = audio_suffix_for_magic_byte(uchar(c));
     if (attrib().suffix == "")
@@ -90,7 +90,7 @@ void Audio::read_file(const string& pfilename) {
     assertx(h.Subcheck1ID == Vec4<char>{'f', 'm', 't', ' '});
     assertx(h.Subchunk1Size == 16);
     assertx(h.AudioFormat == 3);
-    int t_nchannels = h.NumChannels;
+    const int t_nchannels = h.NumChannels;
     int t_nsamples = (h.ChunkSize - 36) / t_nchannels / sizeof(float);
     init(V(t_nchannels, t_nsamples));
     assertx(h.ChunkSize == 36 + size_t(nsamples()) * nchannels() * sizeof(float));
@@ -102,7 +102,7 @@ void Audio::read_file(const string& pfilename) {
     assertx(h.Subchunk2Size == size_t(nsamples()) * nchannels() * sizeof(float));
     Array<float> ar(nsamples() * nchannels());
     assertx(read_binary_raw(fi(), ar));
-    float* p = ar.data();
+    const float* p = ar.data();
     for_int(i, nsamples()) for_int(ch, nchannels()) {
       from_dos(&p);
       (*this)[ch, i] = *p++;
@@ -140,7 +140,7 @@ void Audio::read_file(const string& pfilename) {
             assertx(sscanf(line.c_str(), " Duration: %d:%d:%d.%d%c", &vh, &vm, &vs, &vcs, &vch) == 5 && vch == ',');
             duration = vh * 3600. + vm * 60. + vs + vcs * .01;
             if (ldebug) SHOW(vh, vm, vs, vcs, duration);
-            string::size_type i = line.find(" start: ");
+            const string::size_type i = line.find(" start: ");
             if (i != string::npos) {
               double start;
               if (sscanf(line.c_str() + i, " start: %d:%d:%d.%d%c", &vh, &vm, &vs, &vcs, &vch) == 5 && vch == ',') {

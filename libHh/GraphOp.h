@@ -130,14 +130,14 @@ template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(in
   }
   for_intL(i, 1, num) {
     const int offset = 1;
-    int minj = arg_min(lowcost.slice(offset, num)) + offset;
-    float minf = lowcost[minj];
+    const int minj = arg_min(lowcost.slice(offset, num)) + offset;
+    const float minf = lowcost[minj];
     assertx(minf < k_inf);
     gnew.enter_undirected(minj, closest[minj]);
     lowcost[minj] = k_inf;
     for_intL(j, 1, num) {
       if (lowcost[j] == k_inf) continue;
-      float pnd = fdist(minj, j);
+      const float pnd = fdist(minj, j);
       if (pnd < lowcost[j]) {
         lowcost[j] = pnd;
         closest[j] = minj;
@@ -161,7 +161,7 @@ template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(in
   HPqueue<int> pq;
   pq.enter(0, 0.f);
   while (!pq.empty()) {
-    int i = pq.remove_min();
+    const int i = pq.remove_min();
     ASSERTXX(pa.ok(i) && !inset[i]);
     if (i) gnew.enter_undirected(i, closest[i]);
     inset[i] = true;

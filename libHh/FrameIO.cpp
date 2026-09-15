@@ -46,7 +46,7 @@ ERecognize recognize(RBuffer& b) {
 }
 
 std::optional<ObjectFrame> read(std::istream& is) {
-  int c = is.peek();
+  const int c = is.peek();
   if (c < 0) return {};
   ObjectFrame object_frame;
   object_frame.binary = c == k_binary_code;
@@ -124,7 +124,7 @@ bool write(WBuffer& b, const ObjectFrame& object_frame) {
     for_int(i, 4) for_int(j, 3) b.put(object_frame.frame[i, j]);
     b.put(object_frame.zoom);
   } else {
-    string s = create_string(object_frame);
+    const string s = create_string(object_frame);
     b.put(s.c_str(), narrow_cast<int>(s.size()));
   }
   return true;

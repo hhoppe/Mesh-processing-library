@@ -41,15 +41,15 @@ class Vector4i {
 #if defined(HH_NO_SSE41)
     for_int(c, 4) _c[c] = pixel[c];
 #else
-    __m128i in = _mm_cvtsi32_si128(reinterpret_cast<const int&>(pixel));
+    const __m128i in = _mm_cvtsi32_si128(reinterpret_cast<const int&>(pixel));
     // Same: __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(pixel.data())));
     _r = _mm_cvtepu8_epi32(in);  // Expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1).
 #endif
   }
   [[nodiscard]] Pixel pixel() const {
     Pixel pixel;
-    __m128i t2 = _mm_packs_epi32(_r, _r);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
-    __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
+    const __m128i t2 = _mm_packs_epi32(_r, _r);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
+    const __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
     reinterpret_cast<int&>(pixel) = _mm_cvtsi128_si32(t3);
     // Worse: _mm_store_ss(reinterpret_cast<float*>(pixel.data()), _mm_castsi128_ps(t3));
     return pixel;

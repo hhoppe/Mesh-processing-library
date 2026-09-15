@@ -81,13 +81,13 @@ void RA3dStream::read(A3dElem& el) {
     char ctype;
     bool binary;
     Vec3<float> f;
-    bool i = read_line(binary, ctype, f, commentstr);
+    const bool i = read_line(binary, ctype, f, commentstr);
     if (!i) {
       binary = false;
       ctype = char(A3dElem::EType::endfile);
       fill(f, 0.f);
     }
-    A3dElem::EType type = A3dElem::EType(ctype);
+    const A3dElem::EType type = A3dElem::EType(ctype);
     if (ctype == 'n') {
       assertx(is_zero(normal));
       normal = Vector(f);
@@ -121,9 +121,9 @@ void RA3dStream::read(A3dElem& el) {
     char ctype;
     bool binary;
     Vec3<float> f;
-    bool i = read_line(binary, ctype, f, commentstr);
+    const bool i = read_line(binary, ctype, f, commentstr);
     if (!i) assertnever("RA3dStream: EOF within poly");
-    A3dElem::EType type = A3dElem::EType(ctype);
+    const A3dElem::EType type = A3dElem::EType(ctype);
     if (ctype == 'E') {
       break;
     } else if (ctype == 'n') {
@@ -162,7 +162,7 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
   // _is >> std::ws;  // commented 2012-12-11
   char ch;
   if (_is.peek() == '\n') _is.get(ch);  // there may be a blank line between elements
-  int vpeek = _is.peek();
+  const int vpeek = _is.peek();
   if (vpeek < 0) return false;
   assertx(_is);
   ch = char(vpeek);
@@ -206,7 +206,7 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
 
 void WA3dStream::write(const A3dElem& el) {
   bool binary = el.binary();
-  A3dElem::EType type = el.type();
+  const A3dElem::EType type = el.type();
   if (_first) {
     _first = false;
     _curcol.d = _curcol.s = _curcol.g = k_color_undefined;
@@ -288,7 +288,7 @@ void WA3dStream::write_comment(const string& str) {
   string s = str;
   for (;;) {
     auto i = s.find('\n');
-    string s2 = s.substr(0, i);
+    const string s2 = s.substr(0, i);
     el.set_comment(s2);
     write(el);
     if (i == string::npos) break;

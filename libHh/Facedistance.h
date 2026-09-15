@@ -143,7 +143,7 @@ inline TriangleProjectionResult project_aux(const Point& p, const Point& p1, con
 inline TriangleProjectionResult project_point_triangle(const Point& p, const Point& p1, const Point& p2,
                                                        const Point& p3) {
   const Vector v2 = p2 - p1, v3 = p3 - p1;
-  float v2v2 = mag2(v2), v3v3 = mag2(v3);
+  const float v2v2 = mag2(v2), v3v3 = mag2(v3);
   const float v2v3 = dot(v2, v3);
   float denom;
   if (!v2v2 || !v3v3 || !(denom = v3v3 - v2v3 * v2v3 / v2v2)) {

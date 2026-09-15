@@ -48,7 +48,7 @@ void Image::to_bw() {
       const float gamma = 2.2f;
       Vec3<float> af;
       for_int(z, 3) af[z] = pow(pixel[z] + 0.5f, gamma);
-      float gray = af[0] * .30f + af[1] * .59f + af[2] * .11f;
+      const float gray = af[0] * .30f + af[1] * .59f + af[2] * .11f;
       value = clamp_to_uint8(int(pow(gray, 1.f / gamma) + .5f));
     }
     fill(pixel.head<3>(), value);
@@ -137,7 +137,7 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
     }
     assertx(same_size(omatrix, matrix));
     for_int(y, image.ysize()) for_int(x, image.xsize()) for_int(z, nz) {
-      float diff = matrix[y, x][z] - omatrix[y, x][z];
+      const float diff = matrix[y, x][z] - omatrix[y, x][z];
       HH_SSTAT(Serr, diff);
     }
     exit(0);
@@ -171,7 +171,7 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
     for_int(y, frame.ysize()) {
       if (y % 2) buf_UV -= frame.xsize();  // reuse UV row on odd lines
       for_int(x, frame.xsize() / 2) {
-        uint8_t u = buf_UV[0], v = buf_UV[1];
+        const uint8_t u = buf_UV[0], v = buf_UV[1];
         buf_P[0] = RGB_Pixel_from_YUV(buf_Y[0], u, v);  // OPT:YUV1
         buf_P[1] = RGB_Pixel_from_YUV(buf_Y[1], u, v);
         buf_P += 2;
@@ -183,12 +183,12 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
     for_int(y, frame.ysize()) {
       if (y % 2) buf_UV -= frame.xsize();  // reuse UV row on odd lines
       for_int(x, frame.xsize() / 2) {
-        int u = buf_UV[0], v = buf_UV[1];
-        int r0 = -16 * 298 + 409 * v + 128 - 409 * 128;  // OPT:YUV2
-        int g0 = -16 * 298 - 100 * u - 208 * v + 128 + 100 * 128 + 208 * 128;
-        int b0 = -16 * 298 + 516 * u + 128 - 516 * 128;
+        const int u = buf_UV[0], v = buf_UV[1];
+        const int r0 = -16 * 298 + 409 * v + 128 - 409 * 128;  // OPT:YUV2
+        const int g0 = -16 * 298 - 100 * u - 208 * v + 128 + 100 * 128 + 208 * 128;
+        const int b0 = -16 * 298 + 516 * u + 128 - 516 * 128;
         for_int(i, 2) {
-          int yy = buf_Y[i] * 298;
+          const int yy = buf_Y[i] * 298;
           *reinterpret_cast<uint32_t*>(buf_P) = clamp_4((yy + r0) >> 8, (yy + g0) >> 8, (yy + b0) >> 8, 255);
           buf_P += 1;
         }
@@ -201,10 +201,10 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
     uint32_t* pP = reinterpret_cast<uint32_t*>(buf_P);
     for_int(y, frame.ysize() / 2) {
       for_int(x, frame.xsize() / 2) {
-        int u = buf_UV[0], v = buf_UV[1];
-        int r0 = -16 * 298 + 409 * v + 128 - 409 * 128;  // OPT:YUV3
-        int g0 = -16 * 298 - 100 * u - 208 * v + 128 + 100 * 128 + 208 * 128;
-        int b0 = -16 * 298 + 516 * u + 128 - 516 * 128;
+        const int u = buf_UV[0], v = buf_UV[1];
+        const int r0 = -16 * 298 + 409 * v + 128 - 409 * 128;  // OPT:YUV3
+        const int g0 = -16 * 298 - 100 * u - 208 * v + 128 + 100 * 128 + 208 * 128;
+        const int b0 = -16 * 298 + 516 * u + 128 - 516 * 128;
         int yy;
         yy = buf_Y[0 * rowlen + 0] * 298;
         pP[0 * rowlen + 0] = clamp_4((yy + r0) >> 8, (yy + g0) >> 8, (yy + b0) >> 8, 255);
@@ -225,10 +225,10 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
     const int rowlen = frame.xsize();
     for_int(y, frame.ysize() / 2) {
       for_int(x, frame.xsize() / 2) {
-        int u = buf_UV[0], v = buf_UV[1];
-        Vector4i vi0 = (Vector4i(-16 * 298 + 128 - 409 * 128, -16 * 298 + 128 + 100 * 128 + 208 * 128,
-                                 -16 * 298 + 128 - 516 * 128, 255 * 256) +
-                        Vector4i(0, -100, 516, 0) * u + Vector4i(409, -208, 0, 0) * v);
+        const int u = buf_UV[0], v = buf_UV[1];
+        const Vector4i vi0 = (Vector4i(-16 * 298 + 128 - 409 * 128, -16 * 298 + 128 + 100 * 128 + 208 * 128,
+                                       -16 * 298 + 128 - 516 * 128, 255 * 256) +
+                              Vector4i(0, -100, 516, 0) * u + Vector4i(409, -208, 0, 0) * v);
         const Vector4i yscale(298, 298, 298, 0);
         buf_P[0 * rowlen + 0] = ((vi0 + yscale * buf_Y[0 * rowlen + 0]) >> 8).pixel();  // OPT:YUV4
         buf_P[0 * rowlen + 1] = ((vi0 + yscale * buf_Y[0 * rowlen + 1]) >> 8).pixel();
@@ -253,10 +253,10 @@ void convert_Nv12_to_Image_BGRA(CNv12View nv12v, MatrixView<Pixel> frame) {
   const int rowlen = frame.xsize();
   for_int(y, frame.ysize() / 2) {
     for_int(x, frame.xsize() / 2) {
-      int u = buf_UV[0], v = buf_UV[1];
-      Vector4i vi0 = (Vector4i(-16 * 298 + 128 - 516 * 128, -16 * 298 + 128 + 100 * 128 + 208 * 128,
-                               -16 * 298 + 128 - 409 * 128, 255 * 256) +
-                      Vector4i(516, -100, 0, 0) * u + Vector4i(0, -208, 409, 0) * v);
+      const int u = buf_UV[0], v = buf_UV[1];
+      const Vector4i vi0 = (Vector4i(-16 * 298 + 128 - 516 * 128, -16 * 298 + 128 + 100 * 128 + 208 * 128,
+                                     -16 * 298 + 128 - 409 * 128, 255 * 256) +
+                            Vector4i(516, -100, 0, 0) * u + Vector4i(0, -208, 409, 0) * v);
       const Vector4i yscale(298, 298, 298, 0);
       buf_P[0 * rowlen + 0] = ((vi0 + yscale * buf_Y[0 * rowlen + 0]) >> 8).pixel();  // OPT:YUV4
       buf_P[0 * rowlen + 1] = ((vi0 + yscale * buf_Y[0 * rowlen + 1]) >> 8).pixel();
@@ -281,9 +281,9 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
     uint8_t* __restrict buf_Y = nv12v.get_Y().data();
     for_int(y, frame.ysize()) for_int(x, frame.xsize()) { *buf_Y++ = Y_from_RGB(frame[y, x]); }
     for_int(yb, frame.ysize() / 2) {
-      int y = yb * 2;
+      const int y = yb * 2;
       for_int(xb, frame.xsize() / 2) {
-        int x = xb * 2;
+        const int x = xb * 2;
         Pixel avg;
         for_int(z, 3) {
           int sum = 0;
@@ -311,9 +311,9 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
       }
     }
     for_int(yb, frame.ysize() / 2) {
-      int y = yb * 2;
+      const int y = yb * 2;
       for_int(xb, frame.xsize() / 2) {
-        int x = xb * 2;
+        const int x = xb * 2;
         Pixel avg;
         for_int(z, 3) {
           int sum = 0;
@@ -331,23 +331,23 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
       const int hnx = frame.xsize() / 2;
       for_int(x, hnx) {
         int r00 = buf_p0[0], g00 = buf_p0[1], b00 = buf_p0[2];
-        uint8_t y00 = uint8_t((66 * r00 + 129 * g00 + 25 * b00 + 128 + 16 * 256) >> 8);
-        int r01 = buf_p0[4], g01 = buf_p0[5], b01 = buf_p0[6];
+        const uint8_t y00 = uint8_t((66 * r00 + 129 * g00 + 25 * b00 + 128 + 16 * 256) >> 8);
+        const int r01 = buf_p0[4], g01 = buf_p0[5], b01 = buf_p0[6];
         r00 += r01;
         g00 += g01;
         b00 += b01;
-        uint8_t y01 = uint8_t((66 * r01 + 129 * g01 + 25 * b01 + 128 + 16 * 256) >> 8);
+        const uint8_t y01 = uint8_t((66 * r01 + 129 * g01 + 25 * b01 + 128 + 16 * 256) >> 8);
         const uint8_t* __restrict buf_p1 = buf_p0 + size_t(hnx) * 8;
-        int r10 = buf_p1[0], g10 = buf_p1[1], b10 = buf_p1[2];
+        const int r10 = buf_p1[0], g10 = buf_p1[1], b10 = buf_p1[2];
         r00 += r10;
         g00 += g10;
         b00 += b10;
-        uint8_t y10 = uint8_t((66 * r10 + 129 * g10 + 25 * b10 + 128 + 16 * 256) >> 8);
-        int r11 = buf_p1[4], g11 = buf_p1[5], b11 = buf_p1[6];
+        const uint8_t y10 = uint8_t((66 * r10 + 129 * g10 + 25 * b10 + 128 + 16 * 256) >> 8);
+        const int r11 = buf_p1[4], g11 = buf_p1[5], b11 = buf_p1[6];
         r00 += r11;
         g00 += g11;
         b00 += b11;
-        uint8_t y11 = uint8_t((66 * r11 + 129 * g11 + 25 * b11 + 128 + 16 * 256) >> 8);  // OPT:to_YUV
+        const uint8_t y11 = uint8_t((66 * r11 + 129 * g11 + 25 * b11 + 128 + 16 * 256) >> 8);  // OPT:to_YUV
         buf_y0[0] = y00;
         buf_y0[1] = y01;
         buf_y0[2 * hnx + 0] = y10;
@@ -369,10 +369,10 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
       uint8_t* buf_y0 = nv12v.get_Y()[y * 2 + 0].data();
       uint8_t* buf_y1 = nv12v.get_Y()[y * 2 + 1].data();
       for_int(x, frame.xsize() / 2) {
-        uint8_t r00 = buf_p0[0], g00 = buf_p0[1], b00 = buf_p0[2];
-        uint8_t r01 = buf_p0[4], g01 = buf_p0[5], b01 = buf_p0[6];
-        uint8_t r10 = buf_p1[0], g10 = buf_p1[1], b10 = buf_p1[2];
-        uint8_t r11 = buf_p1[4], g11 = buf_p1[5], b11 = buf_p1[6];
+        const uint8_t r00 = buf_p0[0], g00 = buf_p0[1], b00 = buf_p0[2];
+        const uint8_t r01 = buf_p0[4], g01 = buf_p0[5], b01 = buf_p0[6];
+        const uint8_t r10 = buf_p1[0], g10 = buf_p1[1], b10 = buf_p1[2];
+        const uint8_t r11 = buf_p1[4], g11 = buf_p1[5], b11 = buf_p1[6];
         buf_p0 += 8;
         buf_p1 += 8;
         buf_y0[0] = func_enc_Y(r00, g00, b00);
@@ -385,8 +385,8 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
         //           (b00 + b01 + b10 + b11 + 2) / 4);
         // buf_UV[0] = U_from_RGB(avg);
         // buf_UV[1] = V_from_RGB(avg);
-        int ravg = (r00 + r01 + r10 + r11 + 2) / 4, gavg = (g00 + g01 + g10 + g11 + 2) / 4,
-            bavg = (b00 + b01 + b10 + b11 + 2) / 4;
+        const int ravg = (r00 + r01 + r10 + r11 + 2) / 4, gavg = (g00 + g01 + g10 + g11 + 2) / 4,
+                  bavg = (b00 + b01 + b10 + b11 + 2) / 4;
         const auto enc_U = [](int r, int g, int b) {
           return uint8_t(((-38 * r - 74 * g + 112 * b + 128) >> 8) + 128);
         };
@@ -407,21 +407,21 @@ void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* borderv
   float borderY;
   Vector4 borderUV;
   if (bordervalue) {
-    uint8_t borderYt = Y_from_RGB(*bordervalue);
+    const uint8_t borderYt = Y_from_RGB(*bordervalue);
     convert(CGrid1View(borderYt), Grid1View(borderY));
-    Vec2<uint8_t> borderUVt = V(U_from_RGB(*bordervalue), V_from_RGB(*bordervalue));
+    const Vec2<uint8_t> borderUVt = V(U_from_RGB(*bordervalue), V_from_RGB(*bordervalue));
     convert(CGrid1View(borderUVt), Grid1View(borderUV));
   }
   {
     Matrix<float> mat(nv12.get_Y().dims());
     convert(nv12.get_Y(), mat);
-    Matrix<float> mat2 = scale(mat, new_nv12.get_Y().dims(), filterbs, bordervalue ? &borderY : nullptr);
+    const Matrix<float> mat2 = scale(mat, new_nv12.get_Y().dims(), filterbs, bordervalue ? &borderY : nullptr);
     convert(mat2, new_nv12.get_Y());
   }
   {
     Matrix<Vector4> mat(nv12.get_UV().dims());
     convert(nv12.get_UV(), mat);
-    Matrix<Vector4> mat2 = scale(mat, new_nv12.get_UV().dims(), filterbs, bordervalue ? &borderUV : nullptr);
+    const Matrix<Vector4> mat2 = scale(mat, new_nv12.get_UV().dims(), filterbs, bordervalue ? &borderUV : nullptr);
     convert(mat2, new_nv12.get_UV());
   }
 }

@@ -24,7 +24,7 @@ class HashPoint {
     Point pp;
     for_int(c, 3) pp[c] = _hf[c]->enter(p[c]);
     bool is_new;
-    int index = _mpi.enter(pp, _index, is_new);
+    const int index = _mpi.enter(pp, _index, is_new);
     if (is_new) _index++;
     return index;
   }

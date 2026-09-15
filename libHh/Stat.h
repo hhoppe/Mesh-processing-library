@@ -207,7 +207,7 @@ template <ranges::forward_range R> R standardize(R&& range) {
 }
 
 template <ranges::forward_range R> R standardize_rms(R&& range) {
-  Stat stat = range_stat(range);
+  const Stat stat = range_stat(range);
   const float rms = stat.rms();
   if (!rms) {
     Warning("standardize() of range with zero rms");

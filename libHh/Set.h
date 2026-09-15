@@ -128,9 +128,9 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     if (0) {
       return std::next(begin(), r.get_size_t() % _set.size());  // Likely slow; no improvement.
     } else {
-      size_t nbuckets = _set.bucket_count();
+      const size_t nbuckets = _set.bucket_count();
       size_t bn = r.get_size_t() % nbuckets;
-      size_t ne = _set.bucket_size(bn);
+      const size_t ne = _set.bucket_size(bn);
       size_t nskip = r.get_size_t() % (20 + ne);
       while (nskip >= _set.bucket_size(bn)) {
         nskip -= _set.bucket_size(bn);

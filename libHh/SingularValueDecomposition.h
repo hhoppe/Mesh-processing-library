@@ -54,8 +54,8 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
       if (c == TT{0}) continue;  // columns are already orthogonal
       T cs, sn;
       {  // compute Jacobi rotation parameters: cos(theta), sin(theta)
-        TT z = (b - a) / (TT{2} * c);
-        TT t = sign(z) / (abs(z) + std::hypot(TT{1}, z));  // tan(theta); note that sign(z) is never zero
+        const TT z = (b - a) / (TT{2} * c);
+        const TT t = sign(z) / (abs(z) + std::hypot(TT{1}, z));  // tan(theta); note that sign(z) is never zero.
         cs = T{1} / T(std::hypot(TT{1}, t));
         sn = T(TT{cs} * t);
         // SHOW(z, t, cs, sn);
@@ -102,7 +102,7 @@ template <typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S,
   assertx(VT.dims() == V(n, n));
   // Insertion sort
   for_int(i0, n - 1) {
-    int i1 = arg_max(S.slice(i0, n)) + i0;
+    const int i1 = arg_max(S.slice(i0, n)) + i0;
     if (i0 == i1) continue;
     std::swap(S[i0], S[i1]);
     swap_elements(column(U, i0), column(U, i1));

@@ -353,7 +353,7 @@ RFile::~RFile() {
   _impl = nullptr;
   if (_file) {
     if (_file_ispipe) {
-      int ret = my_pclose(_file);
+      const int ret = my_pclose(_file);
       // PIPE signal may cause source process to return signal information, so ignore return value here.
       dummy_use(ret);
       if (0) assertw(!ret);
@@ -405,7 +405,7 @@ WFile::~WFile() {
   if (_file) {
     fflush(_file);
     if (_file_ispipe) {
-      int ret = my_pclose(_file);
+      const int ret = my_pclose(_file);
       assertw(!ret);
     } else {
       if (!_file_isstd) assertw(!fclose(_file));
@@ -508,7 +508,7 @@ Array<string> get_in_directory(const string& directory, EType type) {
   {
     while (struct dirent* ent = readdir(dir)) {
       string file_name = ent->d_name;
-      string path_name = directory + "/" + file_name;
+      const string path_name = directory + "/" + file_name;
       struct stat st;
       if (stat(path_name.c_str(), &st) == -1) continue;
       const bool is_directory = (st.st_mode & S_IFDIR) != 0;
@@ -530,12 +530,12 @@ Array<string> get_directories_in_directory(const string& directory) {
 }
 
 bool command_exists_in_path(const string& name) {
-  string s = getenv_string("PATH");
+  const string s = getenv_string("PATH");
   const char pathsep = contains(s, ';') || contains(s, '\\') ? ';' : ':';
   string::size_type i = 0;
   for (;;) {
     auto j = s.find_first_of(pathsep, i);  // May equal string::npos.
-    string dir = s.substr(i, j - i);
+    const string dir = s.substr(i, j - i);
     if (file_exists(dir + '/' + name) || file_exists(dir + '/' + name + ".bat") ||
         file_exists(dir + '/' + name + ".exe"))
       return true;
@@ -612,7 +612,7 @@ bool recycle_path(const string& pathname) {
   op.pFrom = wfilenames.data();
   op.fFlags = FOF_ALLOWUNDO;
   op.fFlags |= FOF_NO_UI;
-  int ret = SHFileOperationW(&op);  // (May mysteriously hang for a few sec?).
+  const int ret = SHFileOperationW(&op);  // (May mysteriously hang for a few sec?).
   if (1 && ret) SHOW("SHFileOperation failed", pathname, ret);
   if (!ret) assertx(!op.fAnyOperationsAborted);
   return !ret;
@@ -625,7 +625,7 @@ bool recycle_path(const string& pathname) {
 TmpFile::TmpFile(const string& suffix) {
   static std::atomic<int> s_count{0};
   for_int(i, 10'000) {
-    int lcount = ++s_count;
+    const int lcount = ++s_count;
     _filename = sform("TmpFile.%d.%d%s%s", HH_POSIX(getpid)(), lcount, (suffix == "" ? "" : "."), suffix.c_str());
     if (!file_exists(_filename)) return;
   }
@@ -671,7 +671,7 @@ void TmpFile::write_to(std::ostream& os) const {
 string quote_arg_for_sh(const string& s) {
   std::ostringstream oss;
   for_int(i, narrow_cast<int>(s.size())) {
-    char ch = s[i];
+    const char ch = s[i];
     if (character_requires_quoting(s[i])) oss << '\\';
     oss << ch;
   }
@@ -690,7 +690,7 @@ static string windows_spawn_quote(const string& s) {
   std::ostringstream oss;
   oss << '"';
   for_int(i, narrow_cast<int>(s.size())) {
-    char ch = s[i];
+    const char ch = s[i];
     if (ch == '"' || ch == '\\') {  // For both " and \ , move outside double-quotes and backslash it.
       oss << '"' << '\\' << ch << '"';
     } else {
@@ -708,7 +708,7 @@ static string cygwin_spawn_quote(const string& s) {
   std::ostringstream oss;
   oss << '"';
   for_int(i, narrow_cast<int>(s.size())) {
-    char ch = s[i];
+    const char ch = s[i];
     if (ch == '"' || ch == '\\') {  // For both " and \ , backslash it (without moving it outside double-quotes).
       oss << '\\' << ch;
     } else {
@@ -756,7 +756,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
     for_int(i, sargv.num()) {
       const char dq = '"';
       // Special flag "/s" in "cmd /s/c command" always expects outer quotes around command.
-      string str =
+      const string str =
           (b_client_cmd ? (i < 2 ? sargv[i] : (dq + sargv[i] + dq)) : spawn_quote(sargv[i], b_client_uses_cygwin));
       if (0) SHOW(i, str);
       nargv[i] = utf16_from_utf8(str);
@@ -777,7 +777,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
     argv.last() = nullptr;
     for_int(i, sargv.num()) argv[i] = sargv[i].c_str();
     if (wait_) {
-      pid_t pid = fork();
+      const pid_t pid = fork();
       assertx(pid >= 0);                      // Assert that fork() succeeded.
       if (!pid) {                             // If child process.
         if (0) assertx(!HH_POSIX(close)(0));  // No need to read from stdin?
@@ -820,7 +820,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
       pid = -1;                          // Expect to read back a process id from child.
       for (;;) {                         // Outputs from child or grandchild may come in any order.
         int64_t t;
-        int nread = HH_POSIX(read)(fd[0], &t, sizeof(t));
+        const int nread = HH_POSIX(read)(fd[0], &t, sizeof(t));
         assertx(nread >= 0);
         SHOW(t);  // ?
         if (!nread) break;
@@ -958,21 +958,21 @@ intptr_t* popen_pid = nullptr;
 template <typename Tcmd>  // const string& or CArrayView<string>.
 FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
   assertx(mode == "rb" || mode == "wb");
-  bool is_read = mode == "rb";
+  const bool is_read = mode == "rb";
   if (0) SHOW(getenv_string("PATH"));
   fflush(stdout);
   fflush(stderr);
   std::cout.flush();
   std::cerr.flush();
   if (!popen_pid) popen_pid = new intptr_t[tot_fd];  // Never deleted.
-  int stdhdl = is_read ? 1 : 0;
+  const int stdhdl = is_read ? 1 : 0;
   const int bufsize = 1024;  // Tried larger size for faster mp4 read in FF_RVideo_Implementation, but no effect.
   Vec2<int> pipes;
   assertx(!_pipe(pipes.data(), bufsize, O_BINARY | O_NOINHERIT));
   assertx(pipes[0] > 2 && pipes[0] < tot_fd && pipes[1] > 2 && pipes[1] < tot_fd);
-  int new_stdhdl = pipes[is_read ? 1 : 0];
-  int pipehdl = pipes[is_read ? 0 : 1];
-  int bu_stdhdl = HH_POSIX(dup)(stdhdl);
+  const int new_stdhdl = pipes[is_read ? 1 : 0];
+  const int pipehdl = pipes[is_read ? 0 : 1];
+  const int bu_stdhdl = HH_POSIX(dup)(stdhdl);
   assertx(bu_stdhdl > 2);
   if (0) {
     SHOW(stdhdl, pipehdl, new_stdhdl, bu_stdhdl);
@@ -993,7 +993,7 @@ FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
   // Ideally, child should not inherit bu_stdhdl;
   //  No easy way to do that without directly using DuplicateHandle().
   //  (pipehdl is not inherited by child process.)
-  intptr_t pid = my_sh(tcmd, false);
+  const intptr_t pid = my_sh(tcmd, false);
   if (pid < 0) {
     SHOW("Could not launch shell (not in path?)");
     return nullptr;
@@ -1007,23 +1007,23 @@ FILE* my_popen_internal(const Tcmd& tcmd, const string& mode) {
 }
 
 int my_pclose_internal(FILE* file) {
-  int fd = HH_POSIX(fileno)(file);
+  const int fd = HH_POSIX(fileno)(file);
   assertx(!fclose(file));
   assertx(popen_pid);
-  intptr_t proc_handle = popen_pid[fd];
+  const intptr_t proc_handle = popen_pid[fd];
   int termstat;
-  intptr_t handle = HH_POSIX(cwait)(&termstat, proc_handle, WAIT_CHILD);
+  const intptr_t handle = HH_POSIX(cwait)(&termstat, proc_handle, WAIT_CHILD);
   if (handle != proc_handle) return -1;
   return termstat;
 }
 
 FILE* my_popen(const string& command, const string& mode) {
-  string mode2 = mode + "b";  // Always binary format.
+  const string mode2 = mode + "b";  // Always binary format.
   return my_popen_internal(command, mode2);
 }
 
 FILE* my_popen(CArrayView<string> sargv, const string& mode) {
-  string mode2 = mode + "b";  // Always binary format.
+  const string mode2 = mode + "b";  // Always binary format.
   return my_popen_internal(sargv, mode2);
 }
 

@@ -38,7 +38,7 @@ class Stats {
     _partials.clear();
     if (_vec.empty()) return;
     int num_to_print = 0;
-    for (Stat* stat : _vec)
+    for (const Stat* stat : _vec)
       if (stat->_print && stat->num()) num_to_print++;
     if (num_to_print) {
       const auto show_local = Stat::_s_show < 0 || getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
@@ -57,7 +57,7 @@ Stat::Stat(string name_, bool print, bool is_static) : _name(std::move(name_)), 
   static const bool stat_files = getenv_bool("STAT_FILES");
   if (_name != "" && stat_files) {
     Warning("Creating Stat.* files");
-    string filename = "Stat." + _name;  // The name is assumed ASCII; no need to worry about UTF-8.
+    const string filename = "Stat." + _name;  // The name is assumed ASCII; no need to worry about UTF-8.
     _ofs = make_unique<std::ofstream>(filename);
   }
   // One-time initialization; because the first static Stat may be constructed from within a parallel loop,
@@ -126,7 +126,7 @@ string Stat::short_string() const {
   const double d_rms = _n > 0 ? sqrt(_sum2 / _n) : 0.;
   // (On _WIN32, we could also use "(%-7I64d)".)
   // We use %14.8g rather than %12.6g because d_avg and d_sdv are double-precision.
-  long long ln = _n;
+  const long long ln = _n;
   return sform("(%-7lld)%12g:%-12g av=%-14.8g %s=%.8g",  //
                ln, _min, _max, d_avg, (!_use_rms ? "sd" : "rms"), (!_use_rms ? d_sdv : d_rms));
 }

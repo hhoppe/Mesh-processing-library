@@ -124,7 +124,7 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
           if (edge_is_along_an_axial_plane) outside[i] = false;
         }
       }
-      int num_outside = sum<int>(outside);
+      const int num_outside = sum<int>(outside);
       if (num_outside == 0) break;
       const Vec3<Vertex> va = mesh.triangle_vertices(f);
 
@@ -222,7 +222,7 @@ MeshSearch::Result MeshSearch::search(const Point& p, Face hint_f) const {
           // side = mod3(side + 1);
         } else {  // Fastest: jump across vertex.
           Vertex v = va[side];
-          int val = _mesh.degree(v);
+          const int val = _mesh.degree(v);
           // const int nrot = ((val - 1) / 2) + (Random::G.unif() < 0.5f);  // Ideal, but Random is not thread-safe.
           constexpr auto pseudo_randoms = V(0, 1, 1, 0, 1, 0, 0, 0, 1, 1, 0, 1, 1, 0, 1, 0, 0, 0, 1, 0, 1);
           const int nrot = ((val - 1) / 2) + pseudo_randoms[nfchanges];

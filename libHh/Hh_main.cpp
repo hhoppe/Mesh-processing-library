@@ -155,7 +155,7 @@ size_t available_memory() {
   auto physical_avail = memory_status.ullAvailPhys;
   auto virtual_avail = memory_status.ullAvailVirtual;
   if (ldebug) SHOW("win32", physical_avail, virtual_avail);
-  size_t ret = assert_narrow_cast<size_t>(min(physical_avail, virtual_avail));
+  const size_t ret = assert_narrow_cast<size_t>(min(physical_avail, virtual_avail));
   return ret;
 #elif defined(__APPLE__)
   if (ldebug) SHOW("available_memory() not implemented");
@@ -164,11 +164,11 @@ size_t available_memory() {
 #else
   struct sysinfo sysi;
   assertx(!sysinfo(&sysi));  // https://linux.die.net/man/2/sysinfo
-  uint64_t unit = sysi.mem_unit;
-  uint64_t physical_avail = sysi.freeram * unit;
-  uint64_t virtual_avail = size_t(-1);
+  const uint64_t unit = sysi.mem_unit;
+  const uint64_t physical_avail = sysi.freeram * unit;
+  const uint64_t virtual_avail = size_t(-1);
   if (ldebug) SHOW("sysinfo", physical_avail, virtual_avail);
-  size_t ret = min(physical_avail, virtual_avail);
+  const size_t ret = min(physical_avail, virtual_avail);
   return ret;
 #endif
 }
@@ -200,9 +200,9 @@ string get_current_datetime() {
     minute = system_time.wMinute;
     second = system_time.wSecond;
 #else
-    time_t ti = time(implicit_cast<time_t*>(nullptr));
+    const time_t ti = time(implicit_cast<time_t*>(nullptr));
     struct tm tm_result;
-    struct tm& ptm = *assertx(localtime_r(&ti, &tm_result));  // POSIX.
+    const struct tm& ptm = *assertx(localtime_r(&ti, &tm_result));  // POSIX.
     year = ptm.tm_year + 1900;
     month = ptm.tm_mon + 1;
     day = ptm.tm_mday;
@@ -232,8 +232,8 @@ string get_host_name() {
 }
 
 string get_header_info() {
-  string datetime = get_current_datetime();
-  string host = get_host_name();
+  const string datetime = get_current_datetime();
+  const string host = get_host_name();
   // Number of cores: std_thread_hardware_concurrency().
   string config;
 #if defined(__clang__)

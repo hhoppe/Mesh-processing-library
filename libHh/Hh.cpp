@@ -106,7 +106,7 @@ void show_call_stack_internal() { std::cerr << "Call stack is not available in t
 std::string utf8_from_utf16(const std::wstring& wstr) {
   const unsigned flags = WC_ERR_INVALID_CHARS;
   // By specifying cchWideChar == -1, we include the null terminating character in nchars.
-  int nchars = WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
+  const int nchars = WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, nullptr, 0, nullptr, nullptr);
   assertx(nchars > 0);
   string str(nchars - 1, '\0');  // Does allocate space for an extra null-terminating character.
   assertx(WideCharToMultiByte(CP_UTF8, flags, wstr.data(), -1, str.data(), nchars, nullptr, nullptr));
@@ -116,7 +116,7 @@ std::string utf8_from_utf16(const std::wstring& wstr) {
 std::wstring utf16_from_utf8(const std::string& str) {
   const unsigned flags = MB_ERR_INVALID_CHARS;
   // By specifying str.size() + 1, we include the null terminating character in nwchars.
-  int nwchars = MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size() + 1), nullptr, 0);
+  const int nwchars = MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size() + 1), nullptr, 0);
   assertx(nwchars > 0);
   std::wstring wstr(nwchars - 1, wchar_t{0});
   assertx(MultiByteToWideChar(CP_UTF8, flags, str.data(), int(str.size() + 1), wstr.data(), nwchars));
@@ -282,7 +282,7 @@ void details::assertx_aux2(const char* s) noexcept {
 // Ret: true if this is the first time the warning message is printed.
 bool details::assertw_aux2(const char* s) {
   static const bool warn_just_once = !getenv_bool("ASSERTW_VERBOSE");
-  int count = Warnings::increment_count(s);
+  const int count = Warnings::increment_count(s);
   if (count > 1 && warn_just_once) return false;
   showf("assertion warning: %s\n", details::forward_slash(s).c_str());
   static const bool assertw_abort = getenv_bool("ASSERTW_ABORT") || getenv_bool("ASSERT_ABORT");
@@ -431,7 +431,7 @@ HH_PRINTF_ATTRIBUTE(2, 3) const char* csform(string& str, const char* format, ..
 HH_PRINTF_ATTRIBUTE(1, 2) void showf(const char* format, ...) {
   std::va_list ap;
   va_start(ap, format);
-  string s = vsform(format, ap);
+  const string s = vsform(format, ap);
   va_end(ap);
   details::show_cerr_and_debug(s);
 }
@@ -471,7 +471,7 @@ static bool isafile(int fd) {
 
 static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr, bool& pwant_ff) {
   bool need_cout, need_cerr, want_ff;
-  bool isatty1 = !!HH_POSIX(isatty)(1), isatty2 = !!HH_POSIX(isatty)(2);  // _WIN32: isatty() often returns 64.
+  const bool isatty1 = !!HH_POSIX(isatty)(1), isatty2 = !!HH_POSIX(isatty)(2);  // _WIN32: isatty() often returns 64.
   bool same_cout_cerr;
   {
 #if defined(_WIN32)
@@ -516,7 +516,7 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...) {
   std::call_once(flag, determine_stdout_stderr_needs, std::ref(need_cout), std::ref(need_cerr), std::ref(want_ff));
   std::va_list ap;
   va_start(ap, format);
-  string s = g_comment_prefix_string + vsform(format, ap);
+  const string s = g_comment_prefix_string + vsform(format, ap);
   va_end(ap);
   if (need_cout) std::cout << s;
   if (need_cerr) std::cerr << s;
@@ -532,14 +532,14 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...) {
   if (!want_ff) return;
   std::va_list ap;
   va_start(ap, format);
-  string s = g_comment_prefix_string + vsform(format, ap);
+  const string s = g_comment_prefix_string + vsform(format, ap);
   va_end(ap);
   std::cout << s;
 }
 
 unique_ptr<char[]> make_unique_c_string(const char* s) {
   if (!s) return nullptr;
-  size_t size = strlen(s) + 1;
+  const size_t size = strlen(s) + 1;
   auto s2 = std::make_unique_for_overwrite<char[]>(size);
   std::memcpy(s2.get(), s, size);
   return s2;
@@ -601,25 +601,25 @@ static bool check_bool(const char* s) {
 }
 
 int to_int(const char* s) {
-  int value = int_from_chars(s);
+  const int value = int_from_chars(s);
   assert_no_more_chars(s);
   return value;
 }
 
 unsigned to_uint(const char* s) {
-  unsigned value = uint_from_chars(s);
+  const unsigned value = uint_from_chars(s);
   assert_no_more_chars(s);
   return value;
 }
 
 float to_float(const char* s) {
-  float value = float_from_chars(s);
+  const float value = float_from_chars(s);
   assert_no_more_chars(s);
   return value;
 }
 
 double to_double(const char* s) {
-  double value = double_from_chars(s);
+  const double value = double_from_chars(s);
   assert_no_more_chars(s);
   return value;
 }
@@ -669,7 +669,7 @@ int getenv_int(const string& name, int vdefault, bool warn) {
   const char* s = getenv(name.c_str());
   if (!s) return vdefault;
   if (!*s) return 1;
-  int v = to_int(s);
+  const int v = to_int(s);
   if (warn) showf("Environment variable '%s=%d' overrides default value '%d'\n", name.c_str(), v, vdefault);
   return v;
 }
@@ -677,7 +677,7 @@ int getenv_int(const string& name, int vdefault, bool warn) {
 float getenv_float(const string& name, float vdefault, bool warn) {
   const char* s = getenv(name.c_str());
   if (!s) return vdefault;
-  float v = to_float(s);
+  const float v = to_float(s);
   // static std::unordered_map<string, int> map; if (warn && !map[name]++) ..
   if (warn) showf("Environment variable '%s=%g' overrides default value '%g'\n", name.c_str(), v, vdefault);
   return v;

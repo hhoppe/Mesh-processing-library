@@ -11,7 +11,7 @@ namespace hh {
 namespace {
 
 inline void rotate(float& v1, float& v2, float tau, float vsin) {
-  float t1 = v1, t2 = v2;
+  const float t1 = v1, t2 = v2;
   v1 -= vsin * (t2 + t1 * tau);
   v2 += vsin * (t1 - t2 * tau);
 }
@@ -38,23 +38,23 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
     }
     for_int(i, n - 1) {
       for_intL(j, i + 1, n) {
-        float thresh = 1e2f * abs(a[i, j]);
+        const float thresh = 1e2f * abs(a[i, j]);
         if (abs(val[i]) + thresh == abs(val[i]) && abs(val[j]) + thresh == abs(val[j])) {
           a[i, j] = 0.f;
         } else if (abs(a[i, j]) > 0.f) {
           float vtan;
           {
-            float dd = val[j] - val[i];
+            const float dd = val[j] - val[i];
             if (abs(dd) + thresh == abs(dd)) {
               vtan = a[i, j] / dd;
             } else {
-              float theta = 0.5f * dd / a[i, j];
+              const float theta = 0.5f * dd / a[i, j];
               vtan = 1.f / (abs(theta) + sqrt(1.f + square(theta)));
               if (theta < 0.f) vtan = -vtan;
             }
           }
-          float vcos = 1.f / sqrt(1.f + square(vtan)), vsin = vtan * vcos;
-          float tau = vsin / (1.f + vcos);
+          const float vcos = 1.f / sqrt(1.f + square(vtan)), vsin = vtan * vcos;
+          const float tau = vsin / (1.f + vcos);
           val[i] -= vtan * a[i, j];
           val[j] += vtan * a[i, j];
           a[i, j] = 0.f;
@@ -99,7 +99,7 @@ void principal_components(CArrayView<Point> pa, Frame& frame, Vec3<float>& eimag
   assertx(pa.num() > 0);
   Homogeneous hp;
   for_int(i, pa.num()) hp += pa[i];
-  Point avgp = to_Point(hp / float(pa.num()));
+  const Point avgp = to_Point(hp / float(pa.num()));
   principal_components(CArrayView<Vec3<float>>(pa.data(), pa.num()), avgp, frame, eimag);
 }
 
@@ -114,7 +114,7 @@ void subtract_mean(MatrixView<float> mi) {
   for_int(j, n) {
     double sum = 0.;
     for_int(i, m) sum += mi[i, j];  // sum across columns
-    float avg = float(sum / m);
+    const float avg = float(sum / m);
     for_int(i, m) mi[i, j] -= avg;
   }
 }
@@ -136,22 +136,22 @@ static void compute_eigenvectors(MatrixView<float> a, MatrixView<float> mo, Arra
       }
       for_int(i, n - 1) {
         for_intL(j, i + 1, n) {
-          float thresh = 1e2f * abs(a[i, j]);
+          const float thresh = 1e2f * abs(a[i, j]);
           if (abs(eimag[i]) + thresh == abs(eimag[i]) && abs(eimag[j]) + thresh == abs(eimag[j])) {
             a[i, j] = 0.f;
           } else if (abs(a[i, j]) > 0.f) {
             float vtan;
             {
-              float dd = eimag[j] - eimag[i];
+              const float dd = eimag[j] - eimag[i];
               if (abs(dd) + thresh == abs(dd)) {
                 vtan = a[i, j] / dd;
               } else {
-                float theta = 0.5f * dd / a[i, j];
+                const float theta = 0.5f * dd / a[i, j];
                 vtan = 1.f / (abs(theta) + sqrt(1.f + square(theta)));
                 if (theta < 0.f) vtan = -vtan;
               }
             }
-            float vcos = 1.f / sqrt(1.f + square(vtan)), vsin = vtan * vcos, tau = vsin / (1.f + vcos);
+            const float vcos = 1.f / sqrt(1.f + square(vtan)), vsin = vtan * vcos, tau = vsin / (1.f + vcos);
             eimag[i] -= vtan * a[i, j];
             eimag[j] += vtan * a[i, j];
             a[i, j] = 0.f;
@@ -226,7 +226,7 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
     swap_elements(mo[i], mo[imax]);
   }
   // Orient eigenvectors canonically
-  Array<float> all1(n, 1.f);
+  const Array<float> all1(n, 1.f);
   for_int(i, n) {
     if (dot(mo[i], all1) < 0.) mo[i] *= -1.f;
   }
@@ -264,7 +264,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
     Array<float> ar(n);  // "data"
     for_int(i, m) {
       for_int(c, n) ar[c] = mi[i, c];
-      float w1 = amnesia_factor(count);
+      const float w1 = amnesia_factor(count);
       count++;
       for_int(j, ne) {
         float d = (1.f - w1) * float(dot(mo[j], ar)) / vnorm[j];
@@ -293,12 +293,12 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
   for_int(i, ne) {
     for_int(j, i) {
       // vi = vi - dot(vi, vj / mag(vj)) * vj / mag(vj)  or  = vi - dot(vi, vj) / mag2(vj) * vj
-      float d = float(dot(mo[i], mo[j]) / mag2(mo[j]));
+      const float d = float(dot(mo[i], mo[j]) / mag2(mo[j]));
       for_int(c, n) mo[i, c] -= d * mo[j, c];
     }
   }
   // Normalize them.
-  Array<float> all1(n, 1.f);
+  const Array<float> all1(n, 1.f);
   for_int(i, ne) {
     float recipnormj = 1.f / vnorm[i];
     if (dot(mo[i], all1) < 0.) recipnormj *= -1.f;

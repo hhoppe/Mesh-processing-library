@@ -54,7 +54,7 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
       for_int(k, 2 * n) t[j, k] += a * t[i, k];
     });
     if (1) {
-      int j = i;
+      const int j = i;
       T a = T{1} / t[i, i];
       for_int(k, 2 * n) t[j, k] *= a;
     }
@@ -259,15 +259,15 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
       }
       parallel_for({.cycles_per_elem = uint64_t(nm.xsize()) * 10'000}, range(nm.ysize()), [&](const int y) {
         for_int(x, nm.xsize()) {
-          Vec2<float> p = (convert<float>(V(y, x)) + .5f) / convert<float>(nm.dims());  // in [0, 1]^2
-          Vec2<float> tp = transform_about_center(p, frame);
-          Vec2<float> psrc = tp * convert<float>(m.dims()) - .5f;  // in coordinates [0 .. m.dims() - 1]
+          const Vec2<float> p = (convert<float>(V(y, x)) + .5f) / convert<float>(nm.dims());  // In [0, 1]^2.
+          const Vec2<float> tp = transform_about_center(p, frame);
+          const Vec2<float> psrc = tp * convert<float>(m.dims()) - .5f;  // In coordinates [0 .. m.dims() - 1].
           int num = 0;
           T val{};
           double sumw = 0.;
           for (const Vec2<int> yx :
                range(convert<int>(floor(psrc - src_kernel_radii)), convert<int>(ceil(psrc + src_kernel_radii)) + 1)) {
-            Vec2<float> dyx = convert<float>(yx) - psrc;
+            const Vec2<float> dyx = convert<float>(yx) - psrc;
             Vec2<float> dst_dyx = affine_transform(dyx, frame_inv);  // unreasonably slow
             float w = 1.f;
             if (!transform_filter_radial) {  // normal tensor-product of kernels
@@ -313,8 +313,8 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
             } else {  // single kernel based on radial distance
               w = float(kernels[0](mag(sample_offset)));
             }
-            Vec2<float> p = (convert<float>(yx) + .5f + sample_offset) / convert<float>(nm.dims());  // [0, 1]^2
-            Vec2<float> tp = transform_about_center(p, frame);
+            const Vec2<float> p = (convert<float>(yx) + .5f + sample_offset) / convert<float>(nm.dims());  // [0, 1]^2
+            const Vec2<float> tp = transform_about_center(p, frame);
             val += w * sample_domain(m, tp, fb_reconstruction, bordervalue);
             // SHOW(yx, sample_yx, w, p, tp, sample_offset);
             sumw += w;
@@ -339,8 +339,8 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
     mr.reinit(tm);
   }
   parallel_for_coords({.cycles_per_elem = 500}, nm.dims(), [&](const Vec2<int>& yx) {
-    Vec2<float> p = (convert<float>(yx) + .5f) / convert<float>(nm.dims());  // in [0, 1]^2
-    Vec2<float> tp = transform_about_center(p, frame);
+    const Vec2<float> p = (convert<float>(yx) + .5f) / convert<float>(nm.dims());  // In [0, 1]^2.
+    const Vec2<float> tp = transform_about_center(p, frame);
     nm[yx] = sample_domain(mr, tp, tfilterbs, bordervalue);
   });
 }

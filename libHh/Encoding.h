@@ -67,17 +67,17 @@ template <typename T> class Encoding : noncopyable {
   [[nodiscard]] float huffman_cost() const {
     Pqueue<int> pq;
     pq.reserve(_map.num());
-    for (float prob : _map.values()) pq.enter_unsorted(0, prob);
+    for (const float prob : _map.values()) pq.enter_unsorted(0, prob);
     pq.sort();
     assertw(pq.num() >= 2);
     float sum = 0.f;
     for (;;) {
       if (pq.num() < 2) break;
-      float prob1 = pq.min_priority();
+      const float prob1 = pq.min_priority();
       pq.remove_min();
-      float prob2 = pq.min_priority();
+      const float prob2 = pq.min_priority();
       pq.remove_min();
-      float prob = prob1 + prob2;
+      const float prob = prob1 + prob2;
       pq.enter(0, prob);
       sum += prob;
     }
@@ -89,7 +89,7 @@ template <typename T> class Encoding : noncopyable {
     if (!assertw(tot_prob)) tot_prob = 1.;
     if (_map.num() <= 1) return 0.f;
     double sum = 0.;
-    for (float prob : _map.values()) sum += prob * (-std::log2(prob / tot_prob));
+    for (const float prob : _map.values()) sum += prob * (-std::log2(prob / tot_prob));
     return float(sum);
   }
 
@@ -99,7 +99,7 @@ template <typename T> class Encoding : noncopyable {
     if (!assertw(tot_prob)) tot_prob = 1.;
     if (_map.num() <= 1) return 0.f;
     double sum = 0.;
-    for (float prob : _map.values()) sum += prob * (-std::log2(prob / tot_prob));
+    for (const float prob : _map.values()) sum += prob * (-std::log2(prob / tot_prob));
     return float(sum / tot_prob);
   }
 
@@ -123,14 +123,14 @@ template <typename T> class Encoding : noncopyable {
       Pqueue<T> pq;
       pq.reserve(_map.num());
       float max_prob = 0.f;
-      for (float prob : _map.values()) max_prob = max(max_prob, prob);
+      for (const float prob : _map.values()) max_prob = max(max_prob, prob);
       for (auto& [e, prob] : _map) pq.enter_unsorted(e, max_prob - prob);
       pq.sort();
       if (!assertw(tot_prob)) tot_prob = 1.f;
       float cumu_prob = 0.f;
       for_int(i, ntop) {
         if (!pq.num()) break;
-        float prob = max_prob - pq.min_priority();
+        const float prob = max_prob - pq.min_priority();
         cumu_prob += prob;
         T e = pq.remove_min();
         showdf("  %20s  %.5f  cumu %.5f\n", cb_entry_name(e).c_str(), prob / tot_prob, cumu_prob / tot_prob);
@@ -150,7 +150,7 @@ template <typename T> class Encoding : noncopyable {
       float cumu_prob = 0.f;
       for_int(i, min(ntop, ar.num())) {
         const P& p = ar[i];
-        float prob = p.prob;
+        const float prob = p.prob;
         cumu_prob += prob;
         showdf("  %20s  %.5f  cumu %.5f\n", p.str.c_str(), prob / tot_prob, cumu_prob / tot_prob);
       }
@@ -184,8 +184,8 @@ class DeltaEncoding {
   // Return total bits based on arithmetic coding of nbits and sign.
   // NOLINTNEXTLINE(modernize-use-nodiscard)
   int analyze(const string& s) const {
-    int total_bits = int(ceil(total_entropy()));
-    float enc_signs = _enc_sign[0].entropy() + _enc_sign[1].entropy();
+    const int total_bits = int(ceil(total_entropy()));
+    const float enc_signs = _enc_sign[0].entropy() + _enc_sign[1].entropy();
     if (!s.empty())
       showdf("DE %s: n=%d  nbits=%.1f  sign=%.1f  bdelta=%.1f  total=%.1f  (%d)\n",  //
              s.c_str(), _num, _enc_nbits.entropy() / _num, enc_signs / _num, float(_delta_bits) / _num,
@@ -194,10 +194,10 @@ class DeltaEncoding {
   }
 
   [[nodiscard]] static int val_bits(float v) {
-    float a = abs(v);
+    const float a = abs(v);
     if (a < 1.f) return 0;
     // int vbits = int(ceil(std::log2(a)));  // Old method.
-    int vbits = int(floor(std::log2(a + 1.0001f)));  // New method 1997-06-09.
+    const int vbits = int(floor(std::log2(a + 1.0001f)));  // New method 1997-06-09.
     // v : 0  1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20
     // vb: -  1  1  2  2  2  2  3  3  3  3  3  3  3  3  4  4  4  4  4  4
     return vbits;
@@ -207,7 +207,7 @@ class DeltaEncoding {
   // Enter some number of floating-point values.
   void enter_coords(CArrayView<float> ar) {
     for_int(c, ar.num()) {
-      int nbits = val_bits(ar[c]);
+      const int nbits = val_bits(ar[c]);
       enter_bits(nbits);
       if (nbits) enter_sign(val_sign(ar[c]));
     }
@@ -221,7 +221,7 @@ class DeltaEncoding {
       int code = 0;
       assertx(n < narrow_cast<int>(sizeof(int) * 8 / 5));
       for_int(c, n) {
-        int nbits = val_bits(ar[c]);
+        const int nbits = val_bits(ar[c]);
         _delta_bits += nbits;
         if (nbits) enter_sign(val_sign(ar[c]));
         assertx(nbits < 32);
@@ -233,7 +233,7 @@ class DeltaEncoding {
     }
     int max_nbits = 0;
     for_int(c, n) {
-      int nb = val_bits(ar[c]);
+      const int nb = val_bits(ar[c]);
       if (nb > max_nbits) max_nbits = nb;
     }
     enter_bits(max_nbits * n);

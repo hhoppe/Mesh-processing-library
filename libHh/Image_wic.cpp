@@ -54,7 +54,7 @@ IWICImagingFactory* wic_factory = nullptr;
 void wic_init() {
   if (wic_factory) return;
   // default may be COINIT_MULTITHREADED, but VT code assumes COINIT_APARTMENTTHREADED
-  HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
+  const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
   assertx(SUCCEEDED(hr) || hr == S_FALSE);  // may equal S_FALSE if COM was previously initialized
   AS(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wic_factory)));
 }
@@ -145,7 +145,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     std::istream& is = fi();
     std::streamsize nread = 0;
     for (; is;) {
-      int chunk = 1024 * 1024;  // 1 MiB
+      const int chunk = 1024 * 1024;  // 1 MiB
       // Note: size of input stream cannot be >= (1ull << 32).
       buffer.resize(assert_narrow_cast<int>(int64_t{nread} + chunk));
       is.read(reinterpret_cast<char*>(buffer.data()) + nread, chunk);
@@ -261,7 +261,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     //   is that UINT RGB and grayscale formats use the standard RGB color space (sRGB), while fixed-point and
     //   floating-point RGB and grayscale formats use the extended RGB color space (scRGB). The CMYK color
     //   model uses an RWOP color space."
-    WICPixelFormatGUID pixel_format2 = bgra ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppRGBA;
+    const WICPixelFormatGUID pixel_format2 = bgra ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppRGBA;
     AS(converter->Initialize(frame_decode, pixel_format2, WICBitmapDitherTypeNone,
                              nullptr,                    // specify a particular palette
                              0.f,                        // alpha threshold
@@ -275,8 +275,8 @@ void Image::read_file_wic(const string& filename, bool bgra) {
       assertx(pixel_format3 == pixel_format2);
     }
     {  // fast direct decoding into my data structure
-      unsigned stride = xsize() * sizeof(Pixel);
-      unsigned buffer_size = assert_narrow_cast<unsigned>(size() * sizeof(Pixel));
+      const unsigned stride = xsize() * sizeof(Pixel);
+      const unsigned buffer_size = assert_narrow_cast<unsigned>(size() * sizeof(Pixel));
       // For some unknown reason, this next line fails intermittently on CONFIG=w32 for
       //  "Filterimage -assemble 2 2 root_name.{0.0,1.0,0.1,1.1}.png -diff data/lake.png -stat".
       AS(converter->CopyPixels(nullptr, stride, buffer_size, reinterpret_cast<BYTE*>(data())));
@@ -351,7 +351,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   com_ptr<IStream> output_stream;
   if (write_through_memory) {
     // https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/utils/WinUtil.cpp
-    size_t iSize = 0;
+    const size_t iSize = 0;
     hMem = assertx(GlobalAlloc(GMEM_MOVEABLE, iSize));
     AS(CreateStreamOnHGlobal(hMem, FALSE, &output_stream));
   } else {
@@ -386,7 +386,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
       AS(encoder->CreateNewFrame(&frame_encode, &property_bag));
       // Encoder options: https://learn.microsoft.com/en-us/windows/win32/wic/-wic-creating-encoder
       if (container_format == &GUID_ContainerFormatJpeg) {
-        int quality = getenv_int("JPG_QUALITY", 95, true);  // 0--100 (default 75)
+        const int quality = getenv_int("JPG_QUALITY", 95, true);  // 0--100 (default 75)
         assertx(quality > 0 && quality <= 100);
         PROPBAG2 option{};
         option.pstrName = const_cast<wchar_t*>(L"ImageQuality");
@@ -438,7 +438,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
       }
     }
     AS(frame_encode->SetSize(xsize(), ysize()));
-    double dpi_X = 95.986602783203125, dpi_Y = 95.986602783203125;
+    const double dpi_X = 95.986602783203125, dpi_Y = 95.986602783203125;
     AS(frame_encode->SetResolution(dpi_X, dpi_Y));
     WICPixelFormatGUID pixel_format = zsize() == 4 ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat24bppBGR;
     if (zsize() == 4 && suffix() != "png" && suffix() != "tif" && suffix() != "tiff" && suffix() != "wmp") {
@@ -451,10 +451,11 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     {
       // If image lacks alpha channel, use RGBA (with non-premultiplied alpha) so that encoder can ignore
       //  the undefined alpha data, and in any case does not need to perform a division by alpha.
-      WICPixelFormatGUID bitmap_pixel_format = bgra ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppRGBA;
-      unsigned stride = xsize() * sizeof(Pixel);
+      const WICPixelFormatGUID bitmap_pixel_format =
+          bgra ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppRGBA;
+      const unsigned stride = xsize() * sizeof(Pixel);
       // Note: problem for huge images; no workaround using WIC.
-      unsigned buffer_size = assert_narrow_cast<unsigned>(size() * sizeof(Pixel));
+      const unsigned buffer_size = assert_narrow_cast<unsigned>(size() * sizeof(Pixel));
       uchar* buf = const_cast<Image&>(*this).data()->data();  // (not modified)
       AS(wic_factory->CreateBitmapFromMemory(xsize(), ysize(), bitmap_pixel_format, stride, buffer_size, buf,
                                              &bitmap));
@@ -464,13 +465,13 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   }
   AS(encoder->Commit());
   {
-    HRESULT hr = output_stream->Commit(STGC_DEFAULT);
+    const HRESULT hr = output_stream->Commit(STGC_DEFAULT);
     assertx(hr == S_OK || hr == E_NOTIMPL);
   }
   encoder.reset();  // early Release just to be safe
   if (write_through_memory) {
     WFile fi(filename);
-    size_t size = assertx(GlobalSize(assertx(hMem)));
+    const size_t size = assertx(GlobalSize(assertx(hMem)));
     bool success;
     void* pv = assertx(GlobalLock(hMem));
     success = !!fi().write(reinterpret_cast<char*>(pv), size);

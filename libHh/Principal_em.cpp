@@ -12,12 +12,12 @@ static void orthonormalize_columns(MatrixView<float> m) {
     for_int(x2, x) {
       double ddot = 0.;
       for_int(y, m.ysize()) ddot += m[y, x] * m[y, x2];
-      float fdot = float(ddot);
+      const float fdot = float(ddot);
       for_int(y, m.ysize()) m[y, x] -= m[y, x2] * fdot;
     }
     double mag2 = 0.;
     for_int(y, m.ysize()) mag2 += square(m[y, x]);
-    float fac = 1.f / assertx(float(sqrt(mag2)));
+    const float fac = 1.f / assertx(float(sqrt(mag2)));
     for_int(y, m.ysize()) m[y, x] *= fac;
   }
 }
@@ -27,13 +27,13 @@ static void unused_orthonormalize_rows(MatrixView<float> m) {
     for_int(y2, y) {
       double ddot = 0.;
       for_int(x, m.xsize()) ddot += m[y, x] * m[y2, x];  // or: = dot(m[y], m[y2])
-      float fdot = float(ddot);
+      const float fdot = float(ddot);
       for_int(x, m.xsize()) m[y, x] -= m[y2, x] * fdot;
     }
     // or: normalize(m[y])
     double mag2 = 0.;
     for_int(x, m.xsize()) mag2 += square(m[y, x]);
-    float fac = 1.f / assertx(float(sqrt(mag2)));
+    const float fac = 1.f / assertx(float(sqrt(mag2)));
     for_int(x, m.xsize()) m[y, x] *= fac;
   }
 }
@@ -96,7 +96,7 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
     mo[r, c] = float(s);
   }
   // Orient eigenvectors canonically.
-  Array<float> all1(n, 1.f);
+  const Array<float> all1(n, 1.f);
   for_int(i, ne) {
     if (dot(mo[i], all1) < 0.) mo[i] *= -1.f;
   }

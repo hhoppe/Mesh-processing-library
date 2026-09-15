@@ -81,13 +81,13 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   }
   void access(int i) {  // Allocate at least i + 1, RETAIN old values (using move if too small).
     ASSERTX(i >= 0);
-    int n = i + 1;
+    const int n = i + 1;
     if (n > _cap) grow_to_at_least(n);
     if (n > _n) _n = n;
   }
   int add(int n) {
     ASSERTX(n >= 0);
-    int cn = _n;
+    const int cn = _n;
     resize(_n + n);
     return cn;
   }

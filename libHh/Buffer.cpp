@@ -62,7 +62,7 @@ DWORD WINAPI buf_thread_func(void* param) {
   for (;;) {
     if (1) assertx(WaitForSingleObject(g_buf_event_data_available, 0) == WAIT_TIMEOUT);
     assertx(buf_buffern == 0);
-    int nread = HH_POSIX(read)(buf_fd, buf_buffer.data(), buf_buffer.num());
+    const int nread = HH_POSIX(read)(buf_fd, buf_buffer.data(), buf_buffer.num());
     if (nread < 0 && errno == EINVAL && GetLastError() == ERROR_NO_DATA) {
       // Cygwin bash has implemented a pipe using a non-blocking read mode, and there is no data.
       // We modify the wait mode on the pipe handle from PIPE_NOWAIT to PIPE_WAIT.

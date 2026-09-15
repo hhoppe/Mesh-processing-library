@@ -36,7 +36,7 @@ bool Args::check_char(const string& s) { return s.size() == 1; }
 bool Args::check_int(const string& s) {
   if (s.empty()) return false;
   for_int(i, narrow_cast<int>(s.size())) {
-    char ch = s[i];
+    const char ch = s[i];
     if (i == 0 && (ch == '-' || ch == '+')) continue;
     if (std::isdigit(ch)) continue;
     return false;
@@ -216,7 +216,7 @@ void ParseArgs::p(string str, PARSE_FUNC0 parse_func0, string doc) {
 }
 
 void ParseArgs::fparse_func0(Args& args) {
-  ParseArgs& pargs = static_cast<ParseArgs&>(args);
+  const ParseArgs& pargs = static_cast<ParseArgs&>(args);
   pargs._curopt->parse_func0();
 }
 
@@ -233,21 +233,21 @@ void ParseArgs::print_help() {
     if (o.narg > 0) {
       s_default = "[";
       for_int(i, o.narg) {
-        string s0 = (o.parse_func == &ParseArgs::fbool     ? show_bool(static_cast<bool*>(o.argp)[i])
-                     : o.parse_func == &ParseArgs::fchar   ? string(1, static_cast<char*>(o.argp)[i])
-                     : o.parse_func == &ParseArgs::fint    ? sform("%d", static_cast<int*>(o.argp)[i])
-                     : o.parse_func == &ParseArgs::ffloat  ? show_float(static_cast<float*>(o.argp)[i])
-                     : o.parse_func == &ParseArgs::fdouble ? show_double(static_cast<double*>(o.argp)[i])
-                     : o.parse_func == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i]
-                                                           : "?");
+        const string s0 = (o.parse_func == &ParseArgs::fbool     ? show_bool(static_cast<bool*>(o.argp)[i])
+                           : o.parse_func == &ParseArgs::fchar   ? string(1, static_cast<char*>(o.argp)[i])
+                           : o.parse_func == &ParseArgs::fint    ? sform("%d", static_cast<int*>(o.argp)[i])
+                           : o.parse_func == &ParseArgs::ffloat  ? show_float(static_cast<float*>(o.argp)[i])
+                           : o.parse_func == &ParseArgs::fdouble ? show_double(static_cast<double*>(o.argp)[i])
+                           : o.parse_func == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i]
+                                                                 : "?");
         if (i > 0) s_default += " ";
         s_default += s0;
       }
       s_default += "]";
     }
     auto i = o.doc.find(':');
-    int pref = i != string::npos ? int(i) : 0;
-    int prefm1 = pref ? pref - 1 : pref;
+    const int pref = i != string::npos ? int(i) : 0;
+    const int prefm1 = pref ? pref - 1 : pref;
     string s1 = o.str;
     if (contains(o.str, '[') && !contains(o.str, ']')) s1 += "]";
     s1 += sform(" %.*s", prefm1, o.doc.c_str());
@@ -282,9 +282,9 @@ void ParseArgs::iadd(option o) {
 }
 
 auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
-  option* omatch = nullptr;
+  const option* omatch = nullptr;
   int nmatches = 0, minlfound = std::numeric_limits<int>::max();
-  int ls = narrow_cast<int>(s.size());
+  const int ls = narrow_cast<int>(s.size());
   for (option& o : _aroptions) {
     if (!o.parse_func) continue;
     if (starts_with(o.str, "*") && (s[0] != '-' || skip_options)) {
@@ -297,9 +297,11 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
     }
     if (o.str[0] == '-' && skip_options) continue;
     if (o.str == "-" && s != "-") continue;  // Require exact match of "-".
-    int lo = narrow_cast<int>(o.str.size());
+    const int lo = narrow_cast<int>(o.str.size());
     auto i = o.str.find('[');
-    int minfit = i != string::npos ? narrow_cast<int>(i) : _disallow_prefixes ? narrow_cast<int>(o.str.size()) : 0;
+    const int minfit = i != string::npos    ? narrow_cast<int>(i)
+                       : _disallow_prefixes ? narrow_cast<int>(o.str.size())
+                                            : 0;
     int nchar = clamp(ls, 2, max(lo, ls));
     if (minfit) nchar = minfit;
     if (!o.str.compare(0, nchar, s, 0, nchar)) {
@@ -337,7 +339,7 @@ bool ParseArgs::parse_internal() {
     } else {
       _curopt = match(arg, skip);
     }
-    bool is_option = arg[0] == '-' && arg[1] && !skip;
+    const bool is_option = arg[0] == '-' && arg[1] && !skip;
     if (_curopt && !is_option) {
       assertx(_curopt->narg == -1);  // Wildcard option; do not advance; let client parse_func advance it.
     } else {
@@ -372,7 +374,7 @@ bool ParseArgs::parse() {
 }
 
 bool ParseArgs::parse_and_extract(Array<string>& aargs) {
-  bool ret = parse_internal();
+  const bool ret = parse_internal();
   aargs.init(0);
   aargs.push(_argv0);
   aargs.push_array(std::move(_unrecognized_args));
@@ -402,7 +404,7 @@ void ParseArgs::copy_parse(const ParseArgs& pa) {
 void ParseArgs::fbool(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   auto* argp = static_cast<bool*>(pargs._curopt->argp);
-  int n = pargs._curopt->narg;
+  const int n = pargs._curopt->narg;
   if (!n) {  // Set a flag variable.
     if (0 && *argp) {
       SHOW(pargs._curopt->str);
@@ -417,35 +419,35 @@ void ParseArgs::fbool(Args& args) {
 void ParseArgs::fchar(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   auto* argp = static_cast<char*>(pargs._curopt->argp);
-  int n = pargs._curopt->narg;
+  const int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_char();
 }
 
 void ParseArgs::fint(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   auto* argp = static_cast<int*>(pargs._curopt->argp);
-  int n = pargs._curopt->narg;
+  const int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_int();
 }
 
 void ParseArgs::ffloat(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   auto* argp = static_cast<float*>(pargs._curopt->argp);
-  int n = pargs._curopt->narg;
+  const int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_float();
 }
 
 void ParseArgs::fdouble(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   auto* argp = static_cast<double*>(pargs._curopt->argp);
-  int n = pargs._curopt->narg;
+  const int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_double();
 }
 
 void ParseArgs::fstring(Args& args) {
   ParseArgs& pargs = static_cast<ParseArgs&>(args);
   auto* argp = static_cast<string*>(pargs._curopt->argp);
-  int n = pargs._curopt->narg;
+  const int n = pargs._curopt->narg;
   for_int(i, n) argp[i] = pargs.get_string();
 }
 
@@ -482,7 +484,7 @@ void ParseArgs::fversion(Args& args) {
 }
 
 string ParseArgs::header() {
-  string s_main = "Created at " + get_header_info() + " using:\n";
+  const string s_main = "Created at " + get_header_info() + " using:\n";
   const int thresh_line_len = 120 - 5;
   int len = 0;
   string s = g_comment_prefix_string;

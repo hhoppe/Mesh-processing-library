@@ -184,7 +184,7 @@ template <typename T> class Array : public ArrayView<T> {
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
   explicit Array(R&& range) : base(nullptr, 0) {  // (Can use ranges::subrange(b, e) if given a (begin(), end()) pair.)
     if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {
-      size_t size = size_t(ranges::distance(range));
+      const size_t size = size_t(ranges::distance(range));
       _a = new T[size];
       _n = _cap = narrow_cast<int>(size);
       ranges::copy(range, _a);  // Moves elements only if the caller opts in via views::as_rvalue.
@@ -221,7 +221,7 @@ template <typename T> class Array : public ArrayView<T> {
   void access(int i);  // Allocate at least i + 1, RETAIN old values (using move if too small).
   int add(int n) {     // Return: previous num().
     ASSERTX(n >= 0);
-    int t = _n;
+    const int t = _n;
     resize(_n + n);
     return t;
   }
@@ -312,7 +312,7 @@ template <typename T, typename Func> [[nodiscard]] auto transformed(CArrayView<T
 [[nodiscard]] constexpr Bndrule parse_boundaryrule(const std::string_view s) {
   Bndrule bndrule;
   assertx(s.size() >= 1);
-  char ch = s[0];
+  const char ch = s[0];
   switch (ch) {
     case 'r': bndrule = Bndrule::reflected; break;
     case 'p': bndrule = Bndrule::periodic; break;
@@ -433,7 +433,7 @@ template <typename T> void Array<T>::init(int n) {
 
 template <typename T> void Array<T>::access(int i) {
   ASSERTXX(i >= 0);
-  int n = i + 1;
+  const int n = i + 1;
   if (n > _cap) grow_to_at_least(n);
   if (n > _n) _n = n;
 }

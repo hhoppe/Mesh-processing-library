@@ -38,7 +38,7 @@ class Postscript : noncopyable {
   int _opx, _opy;  // old pen position if LINE
 
   void init() {
-    bool landscape = _nxpix > _nypix;
+    const bool landscape = _nxpix > _nypix;
     // this format actually conforms to PS-Adobe-3.0
     _os << "%!PS-Adobe-2.0 EPSF-1.2\n";
     _os << "%%Orientation: " << (landscape ? "Landscape\n" : "Portrait\n");
@@ -69,8 +69,8 @@ class Postscript : noncopyable {
     _os << "% Setup CTM\n";
     constexpr float k_px = 7.8f;
     constexpr float k_py = 10.5f;
-    float rpx = !landscape ? k_px : k_py;
-    float rpy = !landscape ? k_py : k_px;
+    const float rpx = !landscape ? k_px : k_py;
+    const float rpy = !landscape ? k_py : k_px;
     Frame frame =
         (rpy / rpx > float(_nypix) / _nxpix
              ? (Frame::translation(V(0.f, (rpy / rpx * _nxpix / _nypix - 1.f) * k_max, 0.f)) *
@@ -123,14 +123,14 @@ class Postscript : noncopyable {
   void line_i(float x1p, float y1p, float x2p, float y2p) {
     float x1 = x1p * 2.f - 1.f, y1 = y1p * 2.f - 1.f;
     float x2 = x2p * 2.f - 1.f, y2 = y2p * 2.f - 1.f;
-    bool c1x = abs(x1) > 1.f;
-    bool c2x = abs(x2) > 1.f;
+    const bool c1x = abs(x1) > 1.f;
+    const bool c2x = abs(x2) > 1.f;
     if (c1x && c2x && x1 * x2 > 0.f) return;
     bool c1y = abs(y1) > 1.f;
     bool c2y = abs(y2) > 1.f;
     if (c1y && c2y && y1 * y2 > 0.f) return;
     if (c1x || c2x || c1y || c2y) {
-      float m = x1 == x2 ? 1e6f : y1 == y2 ? 1e-6f : (y2 - y1) / (x2 - x1);
+      const float m = x1 == x2 ? 1e6f : y1 == y2 ? 1e-6f : (y2 - y1) / (x2 - x1);
       float a;
       if (c1x) {
         a = sign(x1);
@@ -183,7 +183,7 @@ class Postscript : noncopyable {
     _opy = py2;
   }
   void point_i(float xp, float yp) {
-    float x = xp * 2.f - 1.f, y = yp * 2.f - 1.f;
+    const float x = xp * 2.f - 1.f, y = yp * 2.f - 1.f;
     if (abs(x) > 1.f || abs(y) > 1.f) return;
     int px, py;
     convert(x, y, px, py);
@@ -194,7 +194,7 @@ class Postscript : noncopyable {
     px = k_max + int(k_max * x + .5f);
     py = k_max + int(k_max * y + .5f);
     Point p = Point(float(px), float(py), 0.f) * _ctm;
-    int ix = int(p[0] + .5f), iy = int(p[1] + .5f);
+    const int ix = int(p[0] + .5f), iy = int(p[1] + .5f);
     _bbx0 = min(_bbx0, ix);
     _bbx1 = max(_bbx1, ix);
     _bby0 = min(_bby0, iy);

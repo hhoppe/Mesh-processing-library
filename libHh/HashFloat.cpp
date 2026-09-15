@@ -41,14 +41,14 @@ inline uint32_t HashFloat::encode(float f) const {
   if (abs(f) <= _small) {
     return k_small_key;
   } else {
-    uint32_t u = float_bits_to_unsigned(f);
+    const uint32_t u = float_bits_to_unsigned(f);
     return assertx(u >> _nignorebits);
   }
 }
 
 float HashFloat::enter(float f) {
   bool foundexact = false;
-  uint32_t bucketn = encode(f);
+  const uint32_t bucketn = encode(f);
   float r = _m.retrieve(bucketn);  // retrieve closest float
   if (r) foundexact = true;
   if (0) {
@@ -78,29 +78,29 @@ float HashFloat::enter(float f) {
 }
 
 void HashFloat::pre_consider(float f) {
-  uint32_t bc = encode(f);
-  float r = _m.retrieve(bc);  // retrieve closest float
+  const uint32_t bc = encode(f);
+  const float r = _m.retrieve(bc);  // Retrieve closest float.
   if (r) return;
   uint32_t bp = encode(f * _factor);
   if (bp == bc) bp = encode(f * _factor * _factor);
   uint32_t bm = encode(f * _recip);
   if (bm == bc) bm = encode(f * _recip * _recip);
-  float rp = _m.retrieve(bp);
-  float rm = _m.retrieve(bm);
+  const float rp = _m.retrieve(bp);
+  const float rm = _m.retrieve(bm);
   if (rp && rm) {
     Warning("HashFloat: Performing unification");
     assertx(bc != k_small_key);  // That case has not yet been considered.
     _m.enter(bc, f);
     for (float ff = f;;) {
       ff *= _factor;
-      uint32_t b = encode(ff);
+      const uint32_t b = encode(ff);
       assertx(b != k_small_key);
       if (!_m.retrieve(b)) break;
       _m.replace(b, f);
     }
     for (float ff = f;;) {
       ff *= _recip;
-      uint32_t b = encode(ff);
+      const uint32_t b = encode(ff);
       assertx(b != k_small_key);
       if (!_m.retrieve(b)) break;
       _m.replace(b, f);

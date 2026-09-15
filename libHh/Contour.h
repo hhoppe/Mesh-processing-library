@@ -143,7 +143,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
         b1 = clamp(b1, .05f, .95f);  // guarantee quick convergence
         fm = f0 * (1.f - b1) + f1 * b1;
         pm = interp(p1, p0, b1);
-        float vm = eval(pm);
+        const float vm = eval(pm);
         neval++;
         if (neval > 20) break;
         if (vm < 0.f) {
@@ -264,9 +264,9 @@ class Contour3DBase : public ContourBase<3, VertexData> {
     return ret;
   }
   int march_from_aux(const IPoint& cc) {
-    int oncvisited = _ncvisited;
+    const int oncvisited = _ncvisited;
     {
-      unsigned en = encode(cc);
+      const unsigned en = encode(cc);
       bool is_new;
       Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));  // un-const OK if not modify n->_en
       if (n->_cubestate == Node::ECubestate::visited) return 0;
@@ -275,22 +275,22 @@ class Contour3DBase : public ContourBase<3, VertexData> {
       n->_cubestate = Node::ECubestate::queued;
     }
     while (!_queue.empty()) {
-      unsigned en = _queue.dequeue();
+      const unsigned en = _queue.dequeue();
       consider_cube(en);
     }
-    int cncvisited = _ncvisited - oncvisited;
+    const int cncvisited = _ncvisited - oncvisited;
     if (cncvisited == 1) _ncnothing++;
     return cncvisited;
   }
   void consider_cube(unsigned encube) {
     _ncvisited++;
-    IPoint cc = decode(encube);
+    const IPoint cc = decode(encube);
     Node222 na;
     bool cundef = false;
     for_int(i, 2) for_int(j, 2) for_int(k, 2) {
-      IPoint cd(i, j, k);
-      IPoint ci = cc + cd;
-      unsigned en = encode(ci);
+      const IPoint cd(i, j, k);
+      const IPoint ci = cc + cd;
+      const unsigned en = encode(ci);
       bool is_new;
       Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
       na[i, j, k] = n;
@@ -312,13 +312,13 @@ class Contour3DBase : public ContourBase<3, VertexData> {
       derived().contour_cube(cc, na);
     }
     for_int(d, D) for_int(i, 2) {  // push neighbors
-      int d1 = (d + 1) % D, d2 = (d + 2) % D;
+      const int d1 = (d + 1) % D, d2 = (d + 2) % D;
       IPoint cd;
       cd[d] = i;
       float vmin = BIGFLOAT, vmax = -BIGFLOAT;
       for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
         for (cd[d2] = 0; cd[d2] < 2; cd[d2]++) {
-          float v = na[cd]->_val;
+          const float v = na[cd]->_val;
           ASSERTX(v != k_not_yet_evaled);
           if (v < vmin) vmin = v;
           if (v > vmax) vmax = v;
@@ -326,10 +326,10 @@ class Contour3DBase : public ContourBase<3, VertexData> {
       }
       cd[d] = i ? 1 : -1;
       cd[d1] = cd[d2] = 0;
-      IPoint ci = cc + cd;  // indices of node for neighboring cube;
+      const IPoint ci = cc + cd;  // Indices of node for neighboring cube.
       // note: vmin < 0.f since 0.f is arbitrarily taken to be positive
       if (vmax != k_Contour_undefined && vmin < 0.f && vmax >= 0.f && cube_inbounds(ci)) {
-        unsigned en = encode(ci);
+        const unsigned en = encode(ci);
         bool is_new;
         Node* n2 = const_cast<Node*>(&_m.enter(Node(en), is_new));
         if (n2->_cubestate == Node::ECubestate::nothing) {
@@ -341,7 +341,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
         auto& poly = _tmp_poly;
         poly.init(0);
         for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
-          int sw = cd[d] ^ cd[d1];  // 0 or 1
+          const int sw = cd[d] ^ cd[d1];  // 0 or 1
           for (cd[d2] = sw; cd[d2] == 0 || cd[d2] == 1; cd[d2] += (sw ? -1 : 1)) poly.push(get_point(cc + cd));
         }
         _border(poly);
@@ -381,25 +381,25 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
     for_int(d, D) for_int(v, 2) {  // examine each of 6 cube faces
       Vec4<Node*> naf;
       {
-        int d1 = (d + 1) % D, d2 = (d + 2) % D;
+        const int d1 = (d + 1) % D, d2 = (d + 2) % D;
         IPoint cd;
         cd[d] = v;
         int i = 0;
         // Gather 4 cube vertices in a consistent order
         for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
-          int sw = cd[d] ^ cd[d1];  // 0 or 1
+          const int sw = cd[d] ^ cd[d1];  // 0 or 1
           for (cd[d2] = sw; cd[d2] == 0 || cd[d2] == 1; cd[d2] += (sw ? -1 : 1)) naf[i++] = na[cd];
         }
       }
       int nneg = 0;
       double sumval = 0.;
       for_int(i, 4) {
-        float val = naf[i]->_val;
+        const float val = naf[i]->_val;
         if (val < 0.f) nneg++;
         sumval += val;  // If pedantic, could sort the vals before summing.
       }
       for_int(i, 4) {
-        int i1 = mod4(i + 1), i2 = mod4(i + 2), i3 = mod4(i + 3);
+        const int i1 = mod4(i + 1), i2 = mod4(i + 2), i3 = mod4(i + 3);
         if (!(naf[i]->_val < 0.f && naf[i1]->_val >= 0.f)) continue;
         // have start of edge
         ASSERTX(nneg >= 1 && nneg <= 3);
@@ -425,7 +425,7 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
       Vertex vf = nullptr;
       int minvi = std::numeric_limits<int>::max();  // find min to be portable
       for (Vertex v : mapsucc.keys()) {
-        int vi = _pmesh->vertex_id(v);
+        const int vi = _pmesh->vertex_id(v);
         if (vi < minvi) {
           minvi = vi;
           vf = v;
@@ -538,11 +538,11 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
     auto& poly = _tmp_poly;
     poly.init(3);
     for_int(i, 3) {
-      Node* np = n3[i, 0];
-      Node* nn = n3[i, 1];
+      const Node* np = n3[i, 0];
+      const Node* nn = n3[i, 1];
       poly[i] = this->template compute_point<true>(np->_p, nn->_p, np->_val, nn->_val, _eval);
     }
-    Vector normal = cross(poly[0], poly[1], poly[2]);
+    const Vector normal = cross(poly[0], poly[1], poly[2]);
     // swap might be unnecessary if we carefully swapped above?
     if (dot(normal, n3[0, 0]->_p - n3[0, 1]->_p) < 0.f) ranges::swap(poly[0], poly[1]);
     _contour(poly);
@@ -612,9 +612,9 @@ class Contour2D : public ContourBase<2> {
     return ret;
   }
   int march_from_aux(const IPoint& cc) {
-    int oncvisited = _ncvisited;
+    const int oncvisited = _ncvisited;
     {
-      unsigned en = encode(cc);
+      const unsigned en = encode(cc);
       bool is_new;
       Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
       if (n->_cubestate == Node::ECubestate::visited) return 0;
@@ -623,24 +623,24 @@ class Contour2D : public ContourBase<2> {
       n->_cubestate = Node::ECubestate::queued;
     }
     while (!_queue.empty()) {
-      unsigned en = _queue.dequeue();
+      const unsigned en = _queue.dequeue();
       consider_square(en);
     }
-    int cncvisited = _ncvisited - oncvisited;
+    const int cncvisited = _ncvisited - oncvisited;
     if (cncvisited == 1) _ncnothing++;
     return cncvisited;
   }
   void consider_square(unsigned encube) {
     _ncvisited++;
-    IPoint cc = decode(encube);
+    const IPoint cc = decode(encube);
     Node22 na;
     {
       bool cundef = false;
       IPoint cd;
       for (cd[0] = 0; cd[0] < 2; cd[0]++) {
         for (cd[1] = 0; cd[1] < 2; cd[1]++) {
-          IPoint ci = cc + cd;
-          unsigned en = encode(ci);
+          const IPoint ci = cc + cd;
+          const unsigned en = encode(ci);
           bool is_new;
           Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
           na[cd] = n;
@@ -664,22 +664,22 @@ class Contour2D : public ContourBase<2> {
       }
     }
     for_int(d, D) for_int(i, 2) {  // push neighbors
-      int d1 = (d + 1) % D;
+      const int d1 = (d + 1) % D;
       IPoint cd;
       cd[d] = i;
       float vmin = BIGFLOAT, vmax = -BIGFLOAT;
       for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
-        float v = na[cd]->_val;
+        const float v = na[cd]->_val;
         ASSERTX(v != k_not_yet_evaled);
         if (v < vmin) vmin = v;
         if (v > vmax) vmax = v;
       }
       cd[d] = i ? 1 : -1;
       cd[d1] = 0;
-      IPoint ci = cc + cd;  // indices of node for neighboring cube;
+      const IPoint ci = cc + cd;  // Indices of node for neighboring cube.
       // note: vmin < 0.f since 0.f is arbitrarily taken to be positive
       if (vmax != k_Contour_undefined && vmin < 0.f && vmax >= 0.f && cube_inbounds(ci)) {
-        unsigned en = encode(ci);
+        const unsigned en = encode(ci);
         bool is_new;
         Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));
         if (n->_cubestate == Node::ECubestate::nothing) {
@@ -728,12 +728,12 @@ class Contour2D : public ContourBase<2> {
     auto& poly = _tmp_poly;
     poly.init(2);
     for_int(i, 2) {
-      Node* np = n2[i, 0];
-      Node* nn = n2[i, 1];
+      const Node* np = n2[i, 0];
+      const Node* nn = n2[i, 1];
       poly[i] = compute_point<true>(np->_p, nn->_p, np->_val, nn->_val, _eval);
     }
     Vec2<float> v = poly[1] - poly[0];
-    Vec2<float> normal(-v[1], v[0]);  // 90 degree rotation
+    const Vec2<float> normal(-v[1], v[0]);  // 90-degree rotation.
     if (dot(normal, n2[0, 0]->_p - n2[0, 1]->_p) < 0.f) ranges::swap(poly[0], poly[1]);
     _contour(poly);
   }

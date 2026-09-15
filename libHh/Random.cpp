@@ -47,8 +47,8 @@ void Random::seed(uint32_t seedv) {
 template <> uint32_t Random::get_int<4>() { return (*_impl)(); }
 
 template <> uint64_t Random::get_int<8>() {
-  uint64_t v1 = get_int<4>();
-  uint64_t v2 = get_int<4>();
+  const uint64_t v1 = get_int<4>();
+  const uint64_t v2 = get_int<4>();
   return v1 | (v2 << 32);
 }
 
@@ -71,7 +71,7 @@ unsigned Random::get_unsigned(unsigned ub) {
     const unsigned nspans = std::numeric_limits<unsigned>::max() / ub;  // number of whole spans of length ub
     const unsigned maxv = nspans * ub;
     for (;;) {
-      unsigned v = get_unsigned();
+      const unsigned v = get_unsigned();
       if (v >= maxv) continue;
       return v % ub;
     }

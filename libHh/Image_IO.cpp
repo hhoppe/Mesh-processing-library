@@ -19,7 +19,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
   std::optional<TmpFile> tmpfile;
   if (file_requires_pipe(filename)) {
     RFile fi(filename);
-    int c = fi().peek();
+    const int c = fi().peek();
     if (c < 0) throw std::runtime_error("Error reading image from empty pipe '" + filename + "'");
     attrib().suffix = image_suffix_for_magic_byte(uchar(c));
     if (attrib().suffix == "")
@@ -61,8 +61,8 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
         string::size_type i = line.find(": Video: ");
         assertt(i != string::npos);
         i += strlen(": Video: ");
-        string::size_type j1 = line.find(',', i), j2 = line.find(' ', i);
-        string::size_type j = j1 == string::npos ? j2 : j2 == string::npos ? j1 : min(j1, j2);
+        const string::size_type j1 = line.find(',', i), j2 = line.find(' ', i);
+        const string::size_type j = j1 == string::npos ? j2 : j2 == string::npos ? j1 : min(j1, j2);
         assertt(j != string::npos);
         container = line.substr(i, j - i);
         i = j;
@@ -83,7 +83,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     if (container == "mjpeg (Baseline)") container = "jpg";
     if (container == "sgi") container = "rgb";
     if (container == "av1") container = "avif";
-    string suffix = to_lower(get_path_extension(filename));
+    const string suffix = to_lower(get_path_extension(filename));
     if (suffix != "" && suffix != container) {
       SHOW(suffix, container);
       Warning("Image read: encoded content does not match filename suffix");
@@ -95,7 +95,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     // Another option is the separate tool "exifutil".
   }
   {
-    string pix_fmt = bgra ? "bgra" : "rgba";
+    const string pix_fmt = bgra ? "bgra" : "rgba";
     string command = ("ffmpeg -v panic -nostdin -i " + quote_arg_for_shell(filename) + " -f image2pipe -pix_fmt " +
                       pix_fmt + " -vcodec rawvideo - |");
     if (ldebug) SHOW(command);
@@ -122,25 +122,25 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
     Warning("Image format likely does not support alpha channel");
   string s_compression;
   if (suffix() == "jpg") {
-    int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
+    const int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
     assertt(quality > 0 && quality <= 100);
     // Nonlinear mapping; see
     // https://web.archive.org/web/20170405194543/http://www.ffmpeg-archive.org/How-to-get-JPEG-Quality-factor-td4672891.html
-    int qscale = quality >= 95   ? 0
-                 : quality >= 90 ? 1
-                 : quality >= 80 ? 2
-                 : quality >= 75 ? 3
-                 : quality >= 65 ? 4
-                 : quality >= 60 ? 5
-                 : quality >= 50 ? 6
-                 : quality >= 45 ? 7
-                 : quality >= 40 ? 8
-                 : quality >= 35 ? 9
-                 : quality >= 30 ? 11
-                 : quality >= 25 ? 13
-                 : quality >= 20 ? 16
-                 : quality >= 15 ? 21
-                                 : 32;
+    const int qscale = quality >= 95   ? 0
+                       : quality >= 90 ? 1
+                       : quality >= 80 ? 2
+                       : quality >= 75 ? 3
+                       : quality >= 65 ? 4
+                       : quality >= 60 ? 5
+                       : quality >= 50 ? 6
+                       : quality >= 45 ? 7
+                       : quality >= 40 ? 8
+                       : quality >= 35 ? 9
+                       : quality >= 30 ? 11
+                       : quality >= 25 ? 13
+                       : quality >= 20 ? 16
+                       : quality >= 15 ? 21
+                                       : 32;
     // Note: it appears that we cannot approach jpeg_set_quality() with quality > 93 or quality < 13.
     s_compression = sform(" -qscale:v %d", qscale);
   }
@@ -159,8 +159,8 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
     s_compression = sform(" -crf %d", crf);
   }
   {
-    string pix_fmt = bgra ? "bgra" : "rgba";
-    string output_pix_fmt = zsize() == 4 ? "rgba" : "rgb24";
+    const string pix_fmt = bgra ? "bgra" : "rgba";
+    const string output_pix_fmt = zsize() == 4 ? "rgba" : "rgb24";
     string command =
         ("| ffmpeg -v panic -f rawvideo -vcodec rawvideo -pix_fmt " + pix_fmt + sform(" -s %dx%d", xsize(), ysize()) +
          " -i - -pix_fmt " + output_pix_fmt + s_compression + " -y " + quote_arg_for_shell(filename));

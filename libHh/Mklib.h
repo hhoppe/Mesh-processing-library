@@ -37,7 +37,7 @@ class Mklib : noncopyable {
   // transformation on object: (-.5, -.5, -.5)..(.5, .5, .5) with primary axis +x, secondary axis +y ("O")
   //                        -->  (-.5, -.5, 0)..(.5, .5, 1)  with primary axis +z, secondary axis +x ("U")
   template <typename Func = void(int)> void OtoU(Func func, int n) {
-    MkSave mk_save(mk);
+    const MkSave mk_save(mk);
     mk.rotate(Mk3d::Axis::y, TAU / 4);
     mk.rotate(Mk3d::Axis::x, -TAU / 4);
     mk.translate(.5f, 0, 0);
@@ -46,14 +46,14 @@ class Mklib : noncopyable {
   // radius 1 along +x axis, calls func with +x axis normal to circle;  s = sin(TAU / 2 / n) h = cos(TAU / 2 / n);
   //  scaled to touch at (0, -s, 0) & (0, +s, 0) and center of circle at (-h, 0, 0).
   template <typename Func = void(int)> void circle_of(Func func, int n) {
-    float a = TAU / n, h = std::cos(a * .5f);
-    MkSave mk_save(mk);
+    const float a = TAU / n, h = std::cos(a * .5f);
+    const MkSave mk_save(mk);
     mk.rotate(Mk3d::Axis::y, TAU / 4);
     mk.rotate(Mk3d::Axis::z, TAU / 4);
     mk.rotate(Mk3d::Axis::z, a * .5f);
     for_int(i, n) {
       {
-        MkSave mk_save2(mk);
+        const MkSave mk_save2(mk);
         mk.translate(h, 0, 0);
         func(i);
       }
@@ -61,12 +61,12 @@ class Mklib : noncopyable {
     }
   }
   template <typename Func = void(int)> void circle_ofU(Func func, int n) {
-    float a = TAU / n, h = std::cos(a * .5f);
-    MkSave mk_save(mk);
+    const float a = TAU / n, h = std::cos(a * .5f);
+    const MkSave mk_save(mk);
     mk.rotate(Mk3d::Axis::z, a * .5f);
     for_int(i, n) {
       {
-        MkSave mk_save2(mk);
+        const MkSave mk_save2(mk);
         mk.translate(h, 0, 0);
         func(i);
       }
@@ -76,11 +76,11 @@ class Mklib : noncopyable {
   // radius 1 along +z axis, calls func with +x axis normal to circle;
   //  not scaled -> center of circle @(-1, 0, 0).
   template <typename Func = void(int)> void radius_ofU(Func func, int n) {
-    float a = TAU / n;
-    MkSave mk_save(mk);
+    const float a = TAU / n;
+    const MkSave mk_save(mk);
     for_int(i, n) {
       {
-        MkSave mk_save2(mk);
+        const MkSave mk_save2(mk);
         mk.translate(1, 0, 0);
         func(i);
       }

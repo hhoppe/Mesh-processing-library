@@ -56,7 +56,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
   HH_REFERENCE_LIB("user32.lib");  // MessageBoxA()
 #endif
   const unsigned int MSFT_CPP_EXCEPT = 0xE06d7363;  // C++ exception.
-  unsigned ExceptionCode = ExceptionInfo->ExceptionRecord->ExceptionCode;
+  const unsigned ExceptionCode = ExceptionInfo->ExceptionRecord->ExceptionCode;
   if (0) SHOW("have", ExceptionCode);
   switch (ExceptionCode) {
 #define E(x) \
@@ -88,7 +88,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
       // No need to show a message since an assertion error was likely already reported.
       break;
     case MSFT_CPP_EXCEPT: {  // Uncaught C++ exception.
-      EXCEPTION_RECORD& er = *ExceptionInfo->ExceptionRecord;
+      const EXCEPTION_RECORD& er = *ExceptionInfo->ExceptionRecord;
       // If this crashes, it may be best to delay until after show_call_stack() below.
       const std::runtime_error& ex = *reinterpret_cast<std::runtime_error*>(er.ExceptionInformation[1]);
       std::cerr << "Fatal uncaught C++ exception: " << ex.what() << "\n";
@@ -153,7 +153,7 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
   if (IsDebuggerPresent()) DebugBreak();
   possibly_sleep();
 #else
-  bool want_abort = getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT");
+  const bool want_abort = getenv_bool("ASSERT_ABORT") || getenv_bool("ASSERTX_ABORT");
   if (want_abort) {
     std::cerr << "Signaling true abort\n";
     signal(SIGABRT, SIG_DFL);
@@ -194,7 +194,7 @@ void assign_my_signal_handler() {
   action.sa_sigaction = my_signal_handler;
   action.sa_flags = SA_ONSTACK | SA_SIGINFO | SA_RESETHAND;
   assertx(sigemptyset(&action.sa_mask) == 0);
-  for (int signal_num : {SIGSEGV, SIGBUS, SIGILL, SIGFPE}) assertx(sigaction(signal_num, &action, nullptr) == 0);
+  for (const int signal_num : {SIGSEGV, SIGBUS, SIGILL, SIGFPE}) assertx(sigaction(signal_num, &action, nullptr) == 0);
 }
 
 #endif
@@ -375,7 +375,7 @@ void exercise_errors() {
     assertx(g_unoptimized_zero == 1);
   }
   if (0) {
-    int* p = reinterpret_cast<int*>(size_t(g_unoptimized_zero));
+    const int* p = reinterpret_cast<int*>(size_t(g_unoptimized_zero));
     g_unoptimized_zero = *p;
   }
   if (0) {

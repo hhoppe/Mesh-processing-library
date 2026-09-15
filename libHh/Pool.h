@@ -103,7 +103,7 @@ class Pool : noncopyable {
   void destroy() {
     assertx(_name);
     int n = 0;
-    for (Link* p = _h; p; p = p->next) n++;
+    for (const Link* p = _h; p; p = p->next) n++;
     if (sdebug >= 2 || (sdebug && _nalloc) || n != _nalloc)
       showf("Pool %-20s: (size %2u) %6d/%-6d elements outstanding%s\n",  //
             _name, _esize, _nalloc - n, _nalloc, (n != _nalloc ? " **" : ""));
@@ -137,7 +137,7 @@ class Pool : noncopyable {
   }
   // allocate based on size of first alloc_size() call
   [[nodiscard]] void* alloc_size(int align, size_t s64) {
-    int s = narrow_cast<int>(s64);
+    const int s = narrow_cast<int>(s64);
     if (!_h) grow_size(s, align);
     Link* p = _h;
     _h = p->next;
@@ -196,7 +196,7 @@ class Pool : noncopyable {
     _chunkh = chunk;
     _h = reinterpret_cast<Link*>(p);
     assertx((reinterpret_cast<uintptr_t>(p) % _ealign) == 0);
-    char* l = p + size_t(nelem - 1) * _esize;
+    const char* l = p + size_t(nelem - 1) * _esize;
     for (; p < l; p += _esize) reinterpret_cast<Link*>(p)->next = reinterpret_cast<Link*>(p + _esize);
     reinterpret_cast<Link*>(p)->next = nullptr;
     _nalloc += nelem;

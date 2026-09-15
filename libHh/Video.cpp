@@ -27,7 +27,7 @@ void swap(VideoNv12& l, VideoNv12& r) noexcept {
 string Video::diagnostic_string(const Vec3<int>& dims, const Attrib& attrib) {
   string s = sform("nframes~%d %dx%d (%gfps)", dims[0], dims[2], dims[1], attrib.framerate);
   if (attrib.suffix != "") s += " (" + attrib.suffix + ")";
-  int brate = attrib.bitrate;
+  const int brate = attrib.bitrate;
   if (brate)
     s += (brate > 1'000'000 ? sform(" (%.2fMi bps)", brate / 1'000'000.f)
           : brate > 1000    ? sform(" (%.2fKi bps)", brate / 1000.f)

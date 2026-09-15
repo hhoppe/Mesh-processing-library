@@ -136,7 +136,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
   }
   if (!product(image.dims())) return;
   if (rle) {
-    int nrows = image.zsize() * image.ysize();
+    const int nrows = image.zsize() * image.ysize();
     Array<int32_t> rowstart(nrows);
     Array<int32_t> rowsize(nrows);
     assertt(read_raw(file, rowstart));
@@ -145,7 +145,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
     for_int(i, nrows) from_std(&rowsize[i]);
     if (0) for_int(i, nrows) SHOW(i, rowstart[i], rowsize[i]);
     // Test y-z or z-y order (ideally, sort on rowstart for all y and z).
-    bool yzorder =
+    const bool yzorder =
         image.ysize() && image.zsize() > 1 && rowstart[1 * image.ysize() + 0] < rowstart[0 * image.ysize() + 1];
     int offset = k_rgb_header_length + 2 * size_t(nrows) * sizeof(rowstart[0]);
     Array<uchar> row;
@@ -155,7 +155,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
     for (;;) {
       if (!image.ysize()) break;  // exception
       cprogress.update(float(nlines++) / (image.zsize() * image.ysize()));
-      int nskip = rowstart[z * image.ysize() + y] - offset;
+      const int nskip = rowstart[z * image.ysize() + y] - offset;
       assertw(!nskip);
       assertt(nskip >= 0);
       if (nskip) discard_bytes(file, nskip);
@@ -234,7 +234,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
       cprogress.update(float(y) / image.ysize() * .333f + 0.f);
       for_int(x, image.xsize()) {
         for_int(z, image.zsize()) {
-          unsigned v = image[y, x][z];
+          const unsigned v = image[y, x][z];
           rgbi.vmin = min(rgbi.vmin, v);
           rgbi.vmax = max(rgbi.vmax, v);
         }
@@ -245,13 +245,13 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
     assertt(write_raw(file, V(rgbi)));
   }
   {
-    Array<char> buftmp(k_rgb_header_length - sizeof(rgb_IMAGE), 0);
+    const Array<char> buftmp(k_rgb_header_length - sizeof(rgb_IMAGE), 0);
     assertt(write_raw(file, buftmp));
   }
   if (!product(image.dims())) return;
   Array<uchar> row(image.xsize());
   if (rle) {
-    int nrows = image.zsize() * image.ysize();
+    const int nrows = image.zsize() * image.ysize();
     Array<int32_t> rowstart;
     rowstart.reserve(nrows);
     Array<int32_t> rowsize;
@@ -262,7 +262,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
       for_int(y, image.ysize()) {
         cprogress.update(frac_zy(z, y, image) * .333f + .333f);
         rowstart.push(buf.num());
-        int yy = image.ysize() - 1 - y;  // because *.rgb format has image origin at lower-left
+        const int yy = image.ysize() - 1 - y;  // Because *.rgb format has image origin at lower-left.
         for_int(x, image.xsize()) row[x] = image[yy, x][z];
         for (int x = 0; x < row.num();) {
           int xs = x;
@@ -277,7 +277,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
             while (n--) buf.push(row[xs++]);
           }
           xs = x;
-          uchar cc = row[x++];
+          const uchar cc = row[x++];
           while (x < row.num() && row[x] == cc) x++;
           count = x - xs;
           while (count) {
@@ -304,7 +304,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
       int i = 0;
       while (i < buf.num()) {
         cprogress.update(float(i) / buf.num() * .333f + .667f);
-        int ndesired = min(8192, buf.num() - i);
+        const int ndesired = min(8192, buf.num() - i);
         assertt(write_raw(file, buf.segment(i, ndesired)));
         i += ndesired;
       }
@@ -313,7 +313,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
     for_int(z, image.zsize()) {
       for_int(y, image.ysize()) {
         cprogress.update(frac_zy(z, y, image) * .667f + .333f);
-        int yy = image.ysize() - 1 - y;  // because *.rgb format has image origin at lower-left
+        const int yy = image.ysize() - 1 - y;  // Because *.rgb format has image origin at lower-left.
         for_int(x, image.xsize()) row[x] = image[yy, x][z];
         assertt(write_raw(file, row));
       }
@@ -390,14 +390,14 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
   ConsoleProgress cprogress("Iread", image._silent_io_progress);
   while (cinfo.output_scanline < cinfo.output_height) {
     cprogress.update(float(cinfo.output_scanline) / cinfo.output_height);
-    int y = cinfo.output_scanline;
+    const int y = cinfo.output_scanline;
     // jpeg_read_scanlines expects an array of pointers to scanlines.
     // Here the array is only one element long, but you could ask for
     // more than one scanline at a time if that is more convenient.
     JSAMPROW row_pointer[1];  // pointer to JSAMPLE row[s]
     row_pointer[0] = row.data();
     assertt(jpeg_read_scanlines(&cinfo, row_pointer, 1) == 1);
-    uchar* p = row.data();
+    const uchar* p = row.data();
     for_int(x, image.xsize()) {
       Pixel& pixel = image[y, x];
       for_int(z, image.zsize()) pixel[z] = *p++;
@@ -533,7 +533,7 @@ void ImageLibs::write_jpg(const Image& image, FILE* file) {
   // Now you can set any non-default parameters you wish to.
   // Here we just illustrate the use of quality (quantization table) scaling:
   if (1) {
-    int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
+    const int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
     assertt(quality > 0 && quality <= 100);
     jpeg_set_quality(&cinfo, quality, TRUE);
   }
@@ -561,7 +561,7 @@ void ImageLibs::write_jpg(const Image& image, FILE* file) {
   ConsoleProgress cprogress("Iwrite", image._silent_io_progress);
   while (cinfo.next_scanline < cinfo.image_height) {
     cprogress.update(float(cinfo.next_scanline) / cinfo.image_height);
-    int y = cinfo.next_scanline;
+    const int y = cinfo.next_scanline;
     uchar* p = row.data();
     for_int(x, image.xsize()) for_int(z, image.zsize()) { *p++ = image[y, x][z]; }
     // jpeg_write_scanlines expects an array of pointers to scanlines.
@@ -683,11 +683,11 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
   image.init(V(bmih.biHeight, bmih.biWidth));
   image.set_zsize(ncomp);
   if (!bmih.biCompression) {
-    int rowsize = 4 * ((image.xsize() * bmih.biBitCount + 31) / 32);
+    const int rowsize = 4 * ((image.xsize() * bmih.biBitCount + 31) / 32);
     // while ((rowsize & 3) != 0) rowsize++;
     if (bmih.biSizeImage) {
-      int expected = rowsize * image.ysize();
-      int extra = int(bmih.biSizeImage) - expected;
+      const int expected = rowsize * image.ysize();
+      const int extra = int(bmih.biSizeImage) - expected;
       if (extra)
         showf("Warning: bmih.biSizeImage=%d expected=%d*%d=%d (%d extra bytes)\n",  //
               int(bmih.biSizeImage), rowsize, image.ysize(), expected, extra);
@@ -697,9 +697,10 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
     ConsoleProgress cprogress("Iread", image._silent_io_progress);
     for_int(yi, image.ysize()) {
       cprogress.update(float(yi) / image.ysize());
-      int y = !flip_vertical ? image.ysize() - 1 - yi : yi;  // because *.bmp format has image origin at lower-left
+      // Because *.bmp format has image origin at lower-left.
+      const int y = !flip_vertical ? image.ysize() - 1 - yi : yi;
       assertt(read_raw(file, row));
-      uchar* p = row.data();
+      const uchar* p = row.data();
       switch (bmih.biBitCount) {
         case 32:
           for_int(x, image.xsize()) {
@@ -722,7 +723,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
           dummy_init(bits8);
           for_int(x, image.xsize()) {
             if ((x & 0x7) == 0) bits8 = *p++;
-            bool is_on = (bits8 >> 7) & 1;
+            const bool is_on = (bits8 >> 7) & 1;
             bits8 <<= 1;
             image[y, x] = colormap[is_on];
           }
@@ -730,7 +731,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
         }
         case 8:
           for_int(x, image.xsize()) {
-            int index = *p++;
+            const int index = *p++;
             assertt(index < colormap.num());
             image[y, x] = colormap[index];
           }
@@ -739,13 +740,13 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
       }
     }
     if (bmfh.bfSize) {
-      unsigned size = bmfh.bfOffBits + rowsize * image.ysize();
+      const unsigned size = bmfh.bfOffBits + rowsize * image.ysize();
       assertw(bmfh.bfSize == size || bmfh.bfSize == ((size + 3) / 4) * 4);
     }
   } else {
     assertt(!flip_vertical);
     assertt(bmih.biSizeImage > 0);
-    int bufsize = bmih.biSizeImage;
+    const int bufsize = bmih.biSizeImage;
     Array<uchar> buf(bufsize);
     assertt(read_raw(file, buf));
     int i = 0, y = 0, x = 0;
@@ -770,12 +771,12 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
         } else if (c == 2) {  // move to (+dx, +dy)
           assertt(false);     // not implemented
         } else {              // use next c pixels literally
-          int count = int(c);
+          const int count = int(c);
           for_int(j, count) {
             assertt(i < bufsize);
             c = buf[i++];
             // showf("literal %d\n", c);
-            int index = int(c);
+            const int index = int(c);
             assertt(index < colormap.num());
             assertt(x < image.xsize() && y < image.ysize());
             image[y, x] = colormap[index];
@@ -790,11 +791,11 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
           }
         }
       } else {  // repeat pixel c times
-        int count = int(c);
+        const int count = int(c);
         assertt(i < bufsize);
         c = buf[i++];
         // showf("repeat %d of pixel %d\n", count, c);
-        int index = int(c);
+        const int index = int(c);
         assertt(index < colormap.num());
         for_int(j, count) {
           if (0 && !assertw(x < image.xsize())) {
@@ -814,10 +815,10 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
 void ImageLibs::write_bmp(const Image& image, FILE* file) {
   const Vec2<char> magic{'B', 'M'};
   assertt(write_raw(file, magic));
-  int ncomp = image.zsize();
+  const int ncomp = image.zsize();
   bmp_BITMAPFILEHEADER_HH bmfh;
   static_assert(sizeof(bmfh) == k_size_BITMAPFILEHEADER - magic.num());
-  int headers2size = k_size_BITMAPFILEHEADER + sizeof(bmp_BITMAPINFOHEADER);
+  const int headers2size = k_size_BITMAPFILEHEADER + sizeof(bmp_BITMAPINFOHEADER);
   bmfh.bfReserved1 = 0;
   to_dos(&bmfh.bfReserved1);
   bmfh.bfReserved2 = 0;
@@ -846,7 +847,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     for_int(y, image.ysize()) {
       cprogress.update(float(y) / image.ysize());
       // Invert vertical coordinate because *.bmp format has image origin at lower-left.
-      int yy = image.ysize() - 1 - y;
+      const int yy = image.ysize() - 1 - y;
       for (int x = 0; x < image.xsize(); x++) {  // Index x gets modified within loop.
         int count = 1;
         for_intL(xx, x + 1, image.xsize()) {
@@ -905,7 +906,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     assertt(ncomp == 3 || ncomp == 4);
     for_int(y, image.ysize()) {
       cprogress.update(float(y) / image.ysize());
-      int yy = image.ysize() - 1 - y;  // because *.bmp format has image origin at lower-left
+      const int yy = image.ysize() - 1 - y;  // Because *.bmp format has image origin at lower-left.
       int i = 0;
       for_int(x, image.xsize()) {
         const Pixel& pixel = image[yy, x];
@@ -925,7 +926,7 @@ void ImageLibs::read_ppm(Image& image, FILE* file) {
   if (!fgets(buf.data(), buf.num() - 1, file)) throw std::runtime_error("Error reading ppm image header");
   assertt(buf[0] == 'P');
   assertt(buf[1] == '6' || buf[1] == '5');
-  bool is_gray = buf[1] == '5';
+  const bool is_gray = buf[1] == '5';
   // 2 == PGM text-format
   // 3 == PPM text-format
   // 5 == PGM raw-format  (8 bits/pixel)
@@ -951,7 +952,7 @@ void ImageLibs::read_ppm(Image& image, FILE* file) {
   for_int(y, image.ysize()) {
     cprogress.update(float(y) / image.ysize());
     assertt(read_raw(file, row));
-    uchar* p = row.data();
+    const uchar* p = row.data();
     for_int(x, image.xsize()) {
       Pixel& pixel = image[y, x];
       for_int(z, image.zsize()) pixel[z] = *p++;
@@ -1005,16 +1006,16 @@ void ImageLibs::read_png(Image& image, FILE* file) {
   // callback used to control a progress meter
   // png_set_read_status_fn(png_ptr, read_row_callback);
 
-  if (0) {                                          // high-level read
-    int png_transforms = (PNG_TRANSFORM_STRIP_16 |  // 16-bit to 8-bit
-                          PNG_TRANSFORM_PACKING |   // expand 1, 2, and 4-bit
-                          0);
+  if (0) {                                                // High-level read.
+    const int png_transforms = (PNG_TRANSFORM_STRIP_16 |  // 16-bit to 8-bit.
+                                PNG_TRANSFORM_PACKING |   // Expand 1, 2, and 4-bit.
+                                0);
     png_read_png(png_ptr, info_ptr, png_transforms, nullptr);
     int width = png_get_image_width(png_ptr, info_ptr);
-    int height = png_get_image_height(png_ptr, info_ptr);
+    const int height = png_get_image_height(png_ptr, info_ptr);
     int ncomp = png_get_channels(png_ptr, info_ptr);
-    int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
-    int color_type = png_get_color_type(png_ptr, info_ptr);
+    const int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
+    const int color_type = png_get_color_type(png_ptr, info_ptr);
     assertt(width > 0 && height > 0);
     assertt(ncomp >= 1 && ncomp <= 4);
     assertt(bit_depth == 8);
@@ -1024,7 +1025,7 @@ void ImageLibs::read_png(Image& image, FILE* file) {
     png_bytep* row_pointers;  // [height]
     row_pointers = png_get_rows(png_ptr, info_ptr);
     parallel_for(range(image.ysize()), [&](const int y) {
-      uchar* buf = row_pointers[y];
+      const uchar* buf = row_pointers[y];
       for_int(x, image.xsize()) {
         Pixel& pixel = image[y, x];
         for_int(z, ncomp) pixel[z] = *buf++;
@@ -1059,10 +1060,10 @@ void ImageLibs::read_png(Image& image, FILE* file) {
       // NOTE: Word appears to read JPG as default 96dpi.
     }
     int width = png_get_image_width(png_ptr, info_ptr);
-    int height = png_get_image_height(png_ptr, info_ptr);
+    const int height = png_get_image_height(png_ptr, info_ptr);
     int ncomp = png_get_channels(png_ptr, info_ptr);
     int bit_depth = png_get_bit_depth(png_ptr, info_ptr);
-    int color_type = png_get_color_type(png_ptr, info_ptr);
+    const int color_type = png_get_color_type(png_ptr, info_ptr);
     assertt(width > 0 && height > 0);
     assertt(ncomp >= 1 && ncomp <= 4);
     if (bit_depth != 1 && bit_depth != 8 && bit_depth != 16) SHOW(bit_depth);
@@ -1089,9 +1090,9 @@ void ImageLibs::read_png(Image& image, FILE* file) {
     if (bit_depth == 1) {
       Warning("correcting for bit_depth == 1");
       // apparently the "filler" expansion above expands it to 2 bytes rather than 4 bytes RGBA
-      int nx = image.xsize();
+      const int nx = image.xsize();
       for_int(y, image.ysize()) for_int(x, nx) {
-        int xx = nx - x;
+        const int xx = nx - x;
         image[y, xx][0] = image[y, xx / 2][(xx % 2) * 2] ? 255 : 0;
         // image[y, x][0] = image[y, x][z] ? 255 : 0;
       }
@@ -1119,11 +1120,11 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
   if (getenv_bool("PNG_SRGB")) {  // 2008-05-07
     // It looks unchanged both on the screen and on the printer --> we give up on this.
     // (The intent was to make the images look less dark on the printer.)
-    int srgb_intent = PNG_sRGB_INTENT_PERCEPTUAL;
+    const int srgb_intent = PNG_sRGB_INTENT_PERCEPTUAL;
     png_set_sRGB_gAMA_and_cHRM(png_ptr, info_ptr, srgb_intent);
   }
   if (1) {
-    int level = getenv_int("PNG_COMPRESSION_LEVEL", 6);  //  0-9; 0=none
+    const int level = getenv_int("PNG_COMPRESSION_LEVEL", 6);  //  0-9; 0=none
     assertt(level >= 0 && level <= 9);
     png_set_compression_level(png_ptr, level);
   }
@@ -1147,7 +1148,7 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
       for_int(x, image.xsize()) for_int(z, image.zsize()) { *buf++ = image[y, x][z]; }
     });
     png_set_rows(png_ptr, info_ptr, row_pointers.data());
-    int png_transforms = 0;
+    const int png_transforms = 0;
     png_write_png(png_ptr, info_ptr, png_transforms, nullptr);
   } else {  // low-level write
     png_write_info(png_ptr, info_ptr);
@@ -1174,7 +1175,7 @@ using namespace details;
 void Image::read_file_libs(const string& filename, bool bgra) {
   RFile fi(filename);
   FILE* file = fi.cfile();
-  int c = getc(file);
+  const int c = getc(file);
   if (c < 0) throw std::runtime_error("empty image file '" + filename + "'");
   assertt(c >= 0 && c <= 255);
   ungetc(c, file);

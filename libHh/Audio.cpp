@@ -14,7 +14,7 @@ void swap(Audio& l, Audio& r) noexcept {
 string Audio::diagnostic_string() const {
   string s = sform("nsamples=%d nchannels=%d (%g Hz)", nsamples(), nchannels(), attrib().samplerate);
   if (attrib().suffix != "") s += " (" + attrib().suffix + ")";
-  int brate = attrib().bitrate;
+  const int brate = attrib().bitrate;
   if (brate)
     s += (brate > 1'000'000 ? sform(" (%.2fMi bps)", brate / 1'000'000.f)
           : brate > 1000    ? sform(" (%.2fKi bps)", brate / 1000.f)

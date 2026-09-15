@@ -122,7 +122,7 @@ SubMesh::SubMesh(GMesh& pmesh) : _omesh(pmesh) {
   {
     bool have_quads = false, have_tris = false;
     for (Face f : _m.faces()) {
-      int nv = _m.num_vertices(f);
+      const int nv = _m.num_vertices(f);
       assertx(nv <= 4);
       if (nv == 3) {
         have_tris = true;
@@ -248,8 +248,8 @@ void SubMesh::subdivide_aux(float cosang, Mvcvh* pmconv) {
 void SubMesh::refine(Mvcvh& mconv) {
   // Save current mesh objects for later iteration
   // Array<Vertex> arv; for (Vertex v : _m.vertices()) arv += v;
-  Array<Face> arf(_m.ordered_faces());
-  Array<Edge> are(_m.edges());
+  const Array<Face> arf(_m.ordered_faces());
+  const Array<Edge> are(_m.edges());
   Map<Edge, Vertex> menewv;
   // Create new vertices and make them midpoints of old edges
   for (Edge e : are) {  // was ForStack which went in reverse order
@@ -301,7 +301,7 @@ void SubMesh::refine(Mvcvh& mconv) {
       }
       if (has_uv) {
         Vec4<Uv> uva;
-        Face* fna = &ar[unsigned(ar.num()) - 4];  // unsigned to avoid -Werror=strict-overflow
+        const Face* fna = &ar[unsigned(ar.num()) - 4];  // Unsigned to avoid -Werror=strict-overflow.
         for_int(i, 4) {
           Corner c = _m.corner(va[i], f);
           Uv& uv = uva[i];
@@ -310,22 +310,22 @@ void SubMesh::refine(Mvcvh& mconv) {
           _m.update_string(c, "uv", csform_vec(str, uv));
         }
         for_int(i, 4) {
-          Uv uv = interp(uva[i], uva[(i + 1) % 4]);
+          const Uv uv = interp(uva[i], uva[(i + 1) % 4]);
           for_int(j, 2) {
             Corner cc = _m.corner(vs[i], fna[(i + j) % 4]);
             _m.update_string(cc, "uv", csform_vec(str, uv));
           }
         }
-        Uv uv = mean(uva);
+        const Uv uv = mean(uva);
         _m.update_string(vc, "uv", csform_vec(str, uv));
       }
       if (has_imagen) {
         Vec4<int> ina, ins;
-        Face* fna = &ar[unsigned(ar.num()) - 4];  // unsigned to avoid -Werror=strict-overflow
+        const Face* fna = &ar[unsigned(ar.num()) - 4];  // Unsigned to avoid -Werror=strict-overflow.
         for_int(i, 4) {
           Corner c = _m.corner(va[i], f);
-          int inv = assertx(to_int(assertx(_m.corner_key(str, c, "imagen")))) - 1;
-          int x = inv / (nn + 1), y = inv % (nn + 1);
+          const int inv = assertx(to_int(assertx(_m.corner_key(str, c, "imagen")))) - 1;
+          const int x = inv / (nn + 1), y = inv % (nn + 1);
           assertx(x <= nn);
           ina[i] = (x * 2) * (nn * 2 + 1) + (y * 2) + 1;
           c = _m.corner(va[i], fna[i]);
@@ -335,7 +335,7 @@ void SubMesh::refine(Mvcvh& mconv) {
           ins[i] = (ina[i] + ina[(i + 1) % 4]) / 2;
           for_int(j, 2) _m.update_string(_m.corner(vs[i], fna[(i + j) % 4]), "imagen", csform(str, "%d", ins[i]));
         }
-        int inc = (ins[0] + ins[2]) / 2;
+        const int inc = (ins[0] + ins[2]) / 2;
         for (Corner c : _m.corners(vc)) _m.update_string(c, "imagen", csform(str, "%d", inc));
       }
     }
@@ -383,7 +383,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
   // See also Filtermesh.cpp:do_silsubdiv()
   assertx(!_isquad);
   // _mforigf, _mfindex, and _mofif are not supported with this scheme!
-  Array<Face> arf(_m.faces());
+  const Array<Face> arf(_m.faces());
   // Determine which edges will be subdivided
   Set<Edge> subde;  // edges to subdivide
   for (Edge e : _m.edges())
@@ -421,7 +421,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
   struct equal_Svv {  // : std::equal_to<Svv>
     bool operator()(const Svv& s1, const Svv& s2) const { return s1._v1 == s2._v1 && s1._v2 == s2._v2; }
   };
-  hash_Svv hashf(&_m);
+  const hash_Svv hashf(&_m);
   Map<Svv, Snvf, hash_Svv, equal_Svv> mvvnewv(hashf);
   for (Edge e : subde) {
     Vertex v = _m.create_vertex();
@@ -452,7 +452,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
     assertx(nnew == 1 || nnew == 3);
     _m.destroy_face(f);
     if (nnew == 1) {
-      int i1 = mod3(i0 + 1), i2 = mod3(i0 + 2);
+      const int i1 = mod3(i0 + 1), i2 = mod3(i0 + 2);
       _m.create_face(va[i0], vs[i0], va[i2]);
       _m.create_face(vs[i0], va[i1], va[i2]);
     } else {
@@ -503,7 +503,7 @@ constexpr auto k_table_cone_limit = V(0.f, 0.f, 0.f, .5f, .6f, .684624f, .75f, .
 }  // namespace
 
 void SubMesh::averaging_mask(Vertex v, Combvh& comb) const {
-  int ne = nume(v), nesharp = num_sharp_edges(v);
+  const int ne = nume(v), nesharp = num_sharp_edges(v);
   if (_isquad) {
     assertx(!nesharp);
     assertx(ne == 2 || ne == 4);
@@ -540,7 +540,7 @@ void SubMesh::averaging_mask(Vertex v, Combvh& comb) const {
   } else {
     assertnever("");
   }
-  float wc = (1 - wa) / ne;
+  const float wc = (1 - wa) / ne;
   if (wa == 1) return;
   if (wa) comb.c[v] = wa;
   if (wc)
@@ -560,7 +560,7 @@ void SubMesh::crease_averaging_mask(Vertex v, Combvh& comb) const {
     if (!sharp(e)) continue;
     Vertex vo = _m.opp_vertex(v, e);
     va.push(vo);
-    int nesharp = num_sharp_edges(vo);
+    const int nesharp = num_sharp_edges(vo);
     if (nesharp == 0) {
       assertnever("");  // even if _selrefine, should not occur.
     } else if (nesharp == 1) {
@@ -573,13 +573,13 @@ void SubMesh::crease_averaging_mask(Vertex v, Combvh& comb) const {
       svi = va.num() - 1;
     }
   }
-  int adj_special = adj_dart_vertices + adj_corner_vertices + adj_ec_vertices;
+  const int adj_special = adj_dart_vertices + adj_corner_vertices + adj_ec_vertices;
   assertx(adj_special <= 2);
   if (adj_dart_vertices >= 1) {
     // adjacent to single dart vertex, do smooth mask
-    int ne = nume(v);
-    float a = _s222 ? .25f : subdiv_a(ne) * 2.f - 1.f;
-    float wa = a, wc = (1.f - wa) / ne;
+    const int ne = nume(v);
+    const float a = _s222 ? .25f : subdiv_a(ne) * 2.f - 1.f;
+    const float wa = a, wc = (1.f - wa) / ne;
     comb.c[v] = wa;
     for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
     ASSERTX(comb.is_combination());
@@ -617,7 +617,7 @@ bool SubMesh::extraordinary_crease_vertex(Vertex v) const {
 }
 
 void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
-  int ne = nume(v), nesharp = num_sharp_edges(v);
+  const int ne = nume(v), nesharp = num_sharp_edges(v);
   if (_isquad) {
     assertx(!nesharp);
     assertx(ne == 2 || ne == 4);
@@ -637,9 +637,9 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
     if (nesharp >= 2) return;                 // becomes corner vertex, held constant
     int nuse = ne;
     if (!assertw(nuse < k_table_cone_limit.num())) nuse = k_table_cone_limit.num() - 1;
-    float wa = k_table_cone_limit[nuse];
+    const float wa = k_table_cone_limit[nuse];
     assertw(!_weighta);
-    float wc = (1 - wa) / ne;
+    const float wc = (1 - wa) / ne;
     comb.c[v] = wa;
     for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
     return;
@@ -653,8 +653,8 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
     // was wa = 3 / (3 + 8 * a1); wc = 8 * a1 / (3 + 8 * a1) / ne; wb = wc;
     // since there is no refinement here, should be the same
     // _s222 : mask is n --- 1 (n times)
-    float a = _s222 ? .5f : subdiv_a(ne);
-    float wa = 3 / (11 - 8 * a), wc = (1 - wa) / ne;
+    const float a = _s222 ? .5f : subdiv_a(ne);
+    const float wa = 3 / (11 - 8 * a), wc = (1 - wa) / ne;
     if (wa) comb.c[v] = wa;
     if (wc)
       for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
@@ -667,7 +667,7 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
     }
     comb.c[v] = wa;
     for (Edge e : _m.edges(v)) {
-      float w = sharp(e) ? wb : wc;
+      const float w = sharp(e) ? wb : wc;
       if (w) comb.c[_m.opp_vertex(v, e)] = w;
     }
   } else {
@@ -716,7 +716,7 @@ const Combvh& SubMesh::combination(Vertex v) const { return _cmvcvh.get(v); }
 Combvh SubMesh::compose_c_mvcvh(const Combvh& ci) const { return _cmvcvh.compose_c(ci); }
 
 void SubMesh::update_vertex_position(Vertex v) {
-  Combvh& comb = _cmvcvh.get(v);
+  const Combvh& comb = _cmvcvh.get(v);
   _m.set_point(v, comb.evaluate(_omesh));
 }
 

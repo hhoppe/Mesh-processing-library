@@ -32,7 +32,7 @@ float Polygon::get_tolerance(const Vector& pnor, float d) const {
   assertx(num() >= 3);
   float tol = 0.f;
   for_int(i, num()) {
-    float od = abs(dot((*this)[i], pnor) - d);
+    const float od = abs(dot((*this)[i], pnor) - d);
     if (od > tol) tol = od;
   }
   return tol;
@@ -62,9 +62,9 @@ bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
   }
   Polygon new_poly;
   for_int(vc, num()) {
-    int vp = vc ? vc - 1 : num() - 1;
-    bool inc = sa[vc] >= 0.f;
-    bool inp = sa[vp] >= 0.f;
+    const int vp = vc ? vc - 1 : num() - 1;
+    const bool inc = sa[vc] >= 0.f;
+    const bool inp = sa[vp] >= 0.f;
     if (inp ^ inc) new_poly.push(interp(self[vp], self[vc], sa[vc] / (sa[vc] - sa[vp])));
     if (inc) new_poly.push(self[vc]);
   }
@@ -92,7 +92,7 @@ bool Polygon::intersect_bbox(const Bbox<float, 3>& bbox) {
 
 std::optional<Point> Polygon::intersect_segment(const Point& p1, const Point& p2) const {
   assertx(num() >= 3);
-  Vector nor = get_normal();
+  const Vector nor = get_normal();
   assertx(!is_zero(nor));
   auto pint = intersect_plane_segment(nor, get_planec(nor), p1, p2);
   if (pint && !point_inside(nor, *pint)) pint = {};
@@ -116,8 +116,8 @@ std::optional<Point> Polygon::intersect_line(const Point& p, const Vector& v) co
 namespace {
 
 int cmp_inter(const Point& p1, const Point& p2, const Vector& vint) {
-  float a1 = dot(p1, vint);
-  float a2 = dot(p2, vint);
+  const float a1 = dot(p1, vint);
+  const float a2 = dot(p2, vint);
   return a1 < a2 ? -1 : a1 > a2 ? 1 : 0;
 }
 
@@ -158,8 +158,8 @@ void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_nor
   if (!sp) return;  // polygon lies in plane
   for_int(i, num()) {
     assertx(sa[i]);
-    int i0 = i;
-    int i1 = i + 1 < num() ? i + 1 : 0;
+    const int i0 = i;
+    const int i1 = i + 1 < num() ? i + 1 : 0;
     if (sa[i0] * sa[i1] > 0.f) continue;
     pa.push(interp(self[i0], self[i1], sa[i1] / (sa[i1] - sa[i0])));
   }
@@ -180,12 +180,12 @@ static inline float adjust_tolerance(float tol) {
 
 Array<Point> intersect_poly_poly(const Polygon& p1, const Polygon& p2) {
   assertx(p1.num() >= 3 && p2.num() >= 3);
-  Vector n1 = p1.get_normal();
-  Vector n2 = p2.get_normal();
-  float d1 = p1.get_planec(n1);
-  float d2 = p2.get_planec(n2);
-  float t1 = adjust_tolerance(p1.get_tolerance(n1, d1));
-  float t2 = adjust_tolerance(p2.get_tolerance(n2, d2));
+  const Vector n1 = p1.get_normal();
+  const Vector n2 = p2.get_normal();
+  const float d1 = p1.get_planec(n1);
+  const float d2 = p2.get_planec(n2);
+  const float t1 = adjust_tolerance(p1.get_tolerance(n1, d1));
+  const float t2 = adjust_tolerance(p2.get_tolerance(n2, d2));
   Array<Point> pa1, pa2;
   p1.intersect_plane(n1, n2, d2, t2, pa1);
   p2.intersect_plane(n2, n1, d1, t1, pa2);
@@ -193,7 +193,7 @@ Array<Point> intersect_poly_poly(const Polygon& p1, const Polygon& p2) {
   int i1 = 0, i2 = 0;
   Array<Point> pa;
   Point* cp;
-  Vector vint = get_vint(n2, n1);
+  const Vector vint = get_vint(n2, n1);
   for (;;) {
     if (i1 == pa1.num() && i2 == pa2.num()) break;
     if (i2 == pa2.num() || (i1 < pa1.num() && cmp_inter(pa1[i1], pa2[i2], vint) <= 0)) {
@@ -205,10 +205,10 @@ Array<Point> intersect_poly_poly(const Polygon& p1, const Polygon& p2) {
       in2 = !in2;
       i2++;
     }
-    bool in = in1 && in2;
+    const bool in = in1 && in2;
     if (in != wasin) {
       pa.push(*cp);
-      unsigned pn = pa.num();  // unsigned to avoid -Werror=strict-overflow
+      const unsigned pn = pa.num();  // Unsigned to avoid -Werror=strict-overflow.
       if (!in && std::is_eq(compare(pa[pn - 2], pa[pn - 1], 1e-6f))) pa.sub(2);  // remove zero-length segment
     }
     wasin = in;
@@ -223,17 +223,17 @@ bool Polygon::point_inside(const Vector& pnor, const Point& point) const {
   int axis = -1;
   float maxd = 0.f;
   for_int(c, 3) {
-    float d = abs(pnor[c]);
+    const float d = abs(pnor[c]);
     if (d > maxd) {
       maxd = d;
       axis = c;
     }
   }
   assertx(maxd);
-  int ax0 = mod3(axis + 1);
-  int ax1 = mod3(axis + 2);
-  float py = point[ax0];
-  float pz = point[ax1];
+  const int ax0 = mod3(axis + 1);
+  const int ax1 = mod3(axis + 2);
+  const float py = point[ax0];
+  const float pz = point[ax1];
   float y0 = last()[ax0] - py;
   float z0 = last()[ax1] - pz;
   float y1, z1;
@@ -258,8 +258,8 @@ bool Polygon::is_convex() const {
   assertx(num() >= 3);
   const auto& self = *this;
   if (num() == 3) return true;
-  unsigned n = num();  // unsigned to avoid -Werror=strict-overflow
-  Vector dir = get_normal_dir();
+  const unsigned n = num();  // Unsigned to avoid -Werror=strict-overflow.
+  const Vector dir = get_normal_dir();
   for_int(i, int(n - 2)) {
     if (dot(cross(self[i], self[i + 1], self[i + 2]), dir) < 0.f) return false;
   }
@@ -288,7 +288,7 @@ Vector orthogonal_vector(const Vector& v) {
   int minc = 0;
   float mina = abs(v[0]);
   for_intL(c, 1, 3) {
-    float a = abs(v[c]);
+    const float a = abs(v[c]);
     if (a < mina) {
       mina = a;
       minc = c;
@@ -304,7 +304,7 @@ void vector_standard_direction(Vector& v) {
   int maxc = 0;
   float maxa = abs(v[0]);
   for_intL(c, 1, 3) {
-    float a = abs(v[c]);
+    const float a = abs(v[c]);
     if (a > maxa) {
       maxa = a;
       maxc = c;

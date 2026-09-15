@@ -44,7 +44,7 @@ class Flag {
   Flag(const Flag&) = default;
   [[nodiscard]] operator bool() const { return (_flags._flags & _fmask) != 0; }
   bool set(bool bset) {  // return previous
-    bool t = *this;
+    const bool t = *this;
     *this = bset;
     return t;
   }

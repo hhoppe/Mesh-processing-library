@@ -89,7 +89,7 @@ template <typename T, int D> class Kdtree : noncopyable {
     enter_aux(bb0, bb1);
   }
   void enter_aux(const Vec<float, D>& bb0, const Vec<float, D>& bb1) {
-    int ei = _arentry.num() - 1;
+    const int ei = _arentry.num() - 1;
     Entry& e = _arentry[ei];
     e._bb[0] = bb0;
     e._bb[1] = bb1;
@@ -112,8 +112,8 @@ template <typename T, int D> class Kdtree : noncopyable {
         if (++level == _maxlevel) break;
         inc *= .5f;
       }
-      bool want_l = e._bb[0][axis] <= val;
-      bool want_h = e._bb[1][axis] >= val;
+      const bool want_l = e._bb[0][axis] <= val;
+      const bool want_h = e._bb[1][axis] >= val;
       if (want_l && want_h) {                         // single recursion
         if (!_fsize || avgel >= inc * _fsize) break;  // small enough
         {
@@ -143,7 +143,7 @@ template <typename T, int D> class Kdtree : noncopyable {
   template <typename Func> bool search_i(Vec<float, D>& bb0, Vec<float, D>& bb1, Func cbfunc, int ni) const {
     if (!_arnode.num()) return false;
     int nelemvis = 0;
-    bool ret = rec_search(ni, ni, bb0, bb1, cbfunc, nelemvis);
+    const bool ret = rec_search(ni, ni, bb0, bb1, cbfunc, nelemvis);
     if (0) {  // not threadsafe
       static const bool b_stats = getenv_bool("KD_STATS");
       static Stat SKDsearchnel("SKDsearchnel", b_stats);
@@ -156,7 +156,7 @@ template <typename T, int D> class Kdtree : noncopyable {
   bool rec_search(int ni, int nlca, Vec<float, D>& bb0, Vec<float, D>& bb1, Func cbfunc, int& nelemvis) const {
     for (;;) {
       const Node& n = _arnode[ni];
-      for (int ei : n._stackei) {
+      for (const int ei : n._stackei) {
         const Entry& e = _arentry[ei];
         nelemvis++;
         bool overlaps = true;
@@ -173,8 +173,8 @@ template <typename T, int D> class Kdtree : noncopyable {
       const int axis = n._axis;
       ASSERTX(axis >= 0 && axis < D);
       const float val = n._val;
-      bool want_l = n._l >= 0 && bb0[axis] < val;
-      bool want_h = n._h >= 0 && bb1[axis] > val;
+      const bool want_l = n._l >= 0 && bb0[axis] < val;
+      const bool want_h = n._h >= 0 && bb1[axis] > val;
       if (want_l && want_h) {  // single recursion
         if (rec_search(n._h, nlca, bb0, bb1, cbfunc, nelemvis)) return true;
         if (!(bb0[axis] < val)) return false;  // test again because bb may have changed
@@ -198,7 +198,7 @@ template <typename T, int D> class Kdtree : noncopyable {
     }
     const Node& n = _arnode[ni];
     std::cerr << sform("partition of axis %d along %g <<\n", n._axis, n._val);
-    for (int ei : n._stackei) {
+    for (const int ei : n._stackei) {
       const Entry& e = _arentry[ei];
       for_int(i, l) std::cerr << " ";
       std::cerr << e._id << "\n";

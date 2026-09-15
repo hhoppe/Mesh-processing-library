@@ -53,7 +53,7 @@ template <typename T> void shuffle(ArrayView<T> ar, Random& r) {
   // std::mt19937_64 e;            ranges::shuffle(ar, e);  // Implementation-dependent.
   const int n = ar.num();
   for_int(i, n - 1) {
-    int j = i + r.get_unsigned(n - i);
+    const int j = i + r.get_unsigned(n - i);
     if (j != i) ranges::swap(ar[i], ar[j]);
   }
 }

@@ -14,18 +14,18 @@ class Trig {
   [[nodiscard]] static float cos(int i, int j) {
     Table& table = cos_table_instance();
     if (!table[1, 0]) init();
-    int ia = abs(i);
+    const int ia = abs(i);
     ASSERTX(ia < j);
-    float v = j < k_size ? table[j, ia] : std::cos(ia * TAU / j);
+    const float v = j < k_size ? table[j, ia] : std::cos(ia * TAU / j);
     return v;
   }
   // compute sin(i * TAU / j)
   [[nodiscard]] static float sin(int i, int j) {
     Table& table = sin_table_instance();
     if (!table[1, 0]) init();
-    int ia = abs(i);
+    const int ia = abs(i);
     ASSERTX(ia < j);
-    float v = j < k_size ? table[j, ia] : std::sin(ia * TAU / j);
+    const float v = j < k_size ? table[j, ia] : std::sin(ia * TAU / j);
     return i < 0 ? -v : v;
   }
 
@@ -55,7 +55,7 @@ class Trig {
   // https://stackoverflow.com/questions/4003232/
   // Note: given int a >= 0, my_mod(a - 1, n) is still not as fast as (a - 1 + n) % n.
   ASSERTX(b > 0);
-  int ret = a % b;
+  const int ret = a % b;
   return ret < 0 ? ret + b : ret;
   // return ret + b * (ret < 0);
   // b &= -(ret < 0); return ret + b;
@@ -151,9 +151,9 @@ inline float funct(int i, int gk, int n) {
 inline float funcn(int i, int k, float u, int n, int gk) {
   if (k == 1) return funct(i, gk, n) <= u && u < funct(i + 1, gk, n) ? 1.f : 0.f;
   float a = 0.f;
-  float d1 = funct(i + k - 1, gk, n) - funct(i, gk, n);
-  float n1a = u - funct(i, gk, n);
-  float n1b = funcn(i, k - 1, u, n, gk);
+  const float d1 = funct(i + k - 1, gk, n) - funct(i, gk, n);
+  const float n1a = u - funct(i, gk, n);
+  const float n1b = funcn(i, k - 1, u, n, gk);
   if (n1b) {
     if (!d1) {
       assertw(!n1a);
@@ -162,9 +162,9 @@ inline float funcn(int i, int k, float u, int n, int gk) {
       a += n1a / d1 * n1b;
     }
   }
-  float d2 = funct(i + k, gk, n) - funct(i + 1, gk, n);
-  float n2a = funct(i + k, gk, n) - u;
-  float n2b = funcn(i + 1, k - 1, u, n, gk);
+  const float d2 = funct(i + k, gk, n) - funct(i + 1, gk, n);
+  const float n2a = funct(i + k, gk, n) - u;
+  const float n2b = funcn(i + 1, k - 1, u, n, gk);
   if (n2b) {
     if (!d2) {
       assertw(!n2a);
@@ -180,10 +180,10 @@ inline float funcn(int i, int k, float u, int n, int gk) {
 // Adapted from Micheal Mortenson, Geometric Modeling; very inefficient.
 inline float eval_uniform_bspline(CArrayView<float> ar, int deg, float t) {
   assertw(t >= 0.f && t <= 1.f);
-  int n = ar.num() - 1;
-  int k = deg + 1;
+  const int n = ar.num() - 1;
+  const int k = deg + 1;
   if (t == 1.f) t = 1.f - 1e-7f;
-  float u = t * (n - k + 2.f);
+  const float u = t * (n - k + 2.f);
   float sum = 0.f;
   for_int(i, n + 1) sum += ar[i] * details::funcn(i, k, u, n, k);
   return sum;

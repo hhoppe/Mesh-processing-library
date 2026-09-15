@@ -362,7 +362,7 @@ template <typename DesiredType = void, ranges::input_range R>
 // Modify the range to have unit norm (or die if input has zero norm); return the range for chaining.
 template <ranges::forward_range R> R normalize(R&& range) {
   using Value = range_value_t<R>;
-  Value v = static_cast<Value>(Value{1.f} / assertx(mag(range)));
+  const Value v = static_cast<Value>(Value{1.f} / assertx(mag(range)));
   for (auto& e : range) e = static_cast<Value>(e * v);
   return std::forward<R>(range);
 }

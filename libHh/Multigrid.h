@@ -54,13 +54,13 @@ template <int D, Numeric T> [[nodiscard]] mean_type_t<T> mean(CGridView<D, T> g)
   static_assert(std::is_trivially_default_constructible_v<T>);
   using MeanType = mean_type_t<T>;
   MeanType v{};
-  intptr_t size = g.size();
+  const intptr_t size = g.size();
   if (!size) {
     Warning("Zero-size grid");
     return v;
   }
   if (g.size() * 1 < k_parallel_thresh) {
-    for (intptr_t i : range(size)) v += g.flat(i);
+    for (const intptr_t i : range(size)) v += g.flat(i);
   } else {
     const int num_threads = get_max_threads();
     Array<MeanType> sums(num_threads);
@@ -182,7 +182,7 @@ class Multigrid : noncopyable {
   static Vec<int, D> generate_interior_offsets(const Vec<int, D>& dims) {
     Vec<int, D> ar_interior_offsets;
     for_int(c, D) {
-      int o = c == D - 1 ? 1 : assert_narrow_cast<int>(product(dims.slice(c + 1, D)));
+      const int o = c == D - 1 ? 1 : assert_narrow_cast<int>(product(dims.slice(c + 1, D)));
       ar_interior_offsets[c] = o;
     }
     return ar_interior_offsets;
@@ -215,17 +215,17 @@ class Multigrid : noncopyable {
           }
         });
         if (dims[0] % 2 == 1) {
-          int y = ndims[0] - 1;
-          float fac = dims[0] >= dims[1] ? .25f : .5f;  // border-zero or reflected
+          const int y = ndims[0] - 1;
+          const float fac = dims[0] >= dims[1] ? .25f : .5f;  // Border-zero or reflected.
           for_int(x, dims[1] / 2) ngrid[y, x] = (grid[y * 2, x * 2 + 0] + grid[y * 2, x * 2 + 1]) * fac;
         }
         if (dims[1] % 2 == 1) {
-          int x = ndims[1] - 1;
-          float fac = dims[1] >= dims[0] ? .25f : .5f;  // border-zero or reflected
+          const int x = ndims[1] - 1;
+          const float fac = dims[1] >= dims[0] ? .25f : .5f;  // Border-zero or reflected.
           for_int(y, dims[0] / 2) ngrid[y, x] = (grid[y * 2 + 0, x * 2] + grid[y * 2 + 1, x * 2]) * fac;
         }
         if (dims[0] % 2 == 1 && dims[1] % 2 == 1) {
-          int y = ndims[0] - 1, x = ndims[1] - 1;
+          const int y = ndims[0] - 1, x = ndims[1] - 1;
           ngrid[y, x] = grid[y * 2, x * 2] * .25f;  // .25f or 1.f; don't care
         }
       }
@@ -300,7 +300,7 @@ class Multigrid : noncopyable {
       dims = ndims;
     }
     // 1/h^2 due to discretization of second derivative, as in Multigrid Tutorial
-    float wL = square(1.f / h);
+    const float wL = square(1.f / h);
     return wL;
   }
   // Perform niter iterations of Gauss-Seidel relaxation, possibly with extra iterations near
@@ -365,7 +365,7 @@ class Multigrid : noncopyable {
         } else {  // two-stage row-based synchronization to preserve determinism
           int nthreads = get_max_threads();
           const int sync_rows = 1;  // rows per chunk to omit in first pass to avoid synchronization issues
-          int ychunk = max((ny - 1) / nthreads + 1, sync_rows * 2);
+          const int ychunk = max((ny - 1) / nthreads + 1, sync_rows * 2);
           nthreads = (ny + ychunk - 1) / ychunk;
           parallel_for(range(nthreads), [&](const int thread) {
             const int y0 = thread * ychunk, yn = min((thread + 1) * ychunk, ny) - sync_rows;
@@ -381,7 +381,7 @@ class Multigrid : noncopyable {
           const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(nx * size_t{sync_rows} * 10 / nthreads)};
           parallel_for(parallel_options, range(nthreads), [&](const int thread) {
             const int overlap = 0;  // = {1, 2} does not seem to help much over = 0.
-            int y0 = min((thread + 1) * ychunk, ny) - sync_rows, yn = min((thread + 1) * ychunk + overlap, ny);
+            const int y0 = min((thread + 1) * ychunk, ny) - sync_rows, yn = min((thread + 1) * ychunk + overlap, ny);
             for_2DL(y0, yn, 0, nx, func_update);
           });
         }
@@ -405,8 +405,8 @@ class Multigrid : noncopyable {
         float vnum = _screening_weight;  // or 0.f
         const Vec<int, D> dims2 = dims;
         for_int(c, D) {
-          float w = _metric(wL, c);
-          bool b = _periodic(c);
+          const float w = _metric(wL, c);
+          const bool b = _periodic(c);
           if (u[c] > 0) {
             vnei += w * grid_result[u.with(c, u[c] - 1)];
             vnum += w;
@@ -432,19 +432,19 @@ class Multigrid : noncopyable {
         // ++g_nfast;
         T vnei{};
         if (0) {
-          for (int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
+          for (const int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
         } else if constexpr (D <= 3) {
           // get rid of &vnei lambda capture which forces stack allocation on VS2013
           if constexpr (D > 0) {
-            int o = ar_interior_offsets[0];
+            const int o = ar_interior_offsets[0];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
           if constexpr (D > 1) {
-            int o = ar_interior_offsets[1];
+            const int o = ar_interior_offsets[1];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
           if constexpr (D > 2) {
-            int o = ar_interior_offsets[2];
+            const int o = ar_interior_offsets[2];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
         } else {
@@ -654,8 +654,8 @@ class Multigrid : noncopyable {
         T vnei{};
         float vnum = _screening_weight;  // or 0.f
         for_int(c, D) {
-          float w = _metric(wL, c);
-          bool b = _periodic(c);
+          const float w = _metric(wL, c);
+          const bool b = _periodic(c);
           if (u[c] > 0) {
             vnei += w * grid_result[u.with(c, u[c] - 1)];
             vnum += w;
@@ -678,23 +678,23 @@ class Multigrid : noncopyable {
         if (1) ASSERTX(true && b_default_metric);
         T vnei{};
         if (0) {
-          for (int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
+          for (const int o : ar_interior_offsets) vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
         } else {
           if constexpr (D > 0) {
-            int o = ar_interior_offsets[0];
+            const int o = ar_interior_offsets[0];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
           if constexpr (D > 1) {
-            int o = ar_interior_offsets[1];
+            const int o = ar_interior_offsets[1];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
           if constexpr (D > 2) {
-            int o = ar_interior_offsets[2];
+            const int o = ar_interior_offsets[2];
             vnei += grid_result.flat(i + o) + grid_result.flat(i - o);
           }
           static_assert(D <= 3);
         }
-        float vnum = _screening_weight + wL * (2.f * D);
+        const float vnum = _screening_weight + wL * (2.f * D);
         grid_residual.flat(i) = grid_rhs.flat(i) - (wL * vnei - vnum * grid_result.flat(i));  // OPT:resid
       };
       if (0)
@@ -717,14 +717,14 @@ class Multigrid : noncopyable {
   void analyze_error(const string& s) {
     HH_MULTIGRID_TIMER("_analyze");
     // Stat stat(s, true); stat.set_rms(); for (auto e : grid_result - _grid_orig) stat.enter(mag_e(e));
-    Precise mean_result = mean(_grid_result);
-    double rms_resid = mag_e(rms(compute_residual(_grid_rhs, _grid_result)));
-    double rms_err =
+    const Precise mean_result = mean(_grid_result);
+    const double rms_resid = mag_e(rms(compute_residual(_grid_rhs, _grid_result)));
+    const double rms_err =
         !have_orig() ? 0. : mag_e(rms(_grid_result - _grid_orig + static_cast<T>(_mean_orig - mean_result)));
-    double max_abs_err =
+    const double max_abs_err =
         (!have_orig() ? 0.
                       : max_e(max_abs_element(_grid_result - _grid_orig + static_cast<T>(_mean_orig - mean_result))));
-    string smean_off = !_have_mean_desired ? "" : sform(" smean_off=%-12g", mag_e(mean_result - _mean_desired));
+    const string smean_off = !_have_mean_desired ? "" : sform(" smean_off=%-12g", mag_e(mean_result - _mean_desired));
     showf("%9s: mean=%-12g%s rms_resid=%-12g rms_e=%-12g max_e=%g\n",  //
           s.c_str(), mag_e(mean_result), smean_off.c_str(), rms_resid, rms_err, max_abs_err);
   }
@@ -739,12 +739,12 @@ class Multigrid : noncopyable {
       run_direct_solver(grid_rhs, grid_result);
       return;
     }
-    double rms0 = vverbose ? mag_e(rms(compute_residual(grid_rhs, grid_result))) : 0.;
+    const double rms0 = vverbose ? mag_e(rms(compute_residual(grid_rhs, grid_result))) : 0.;
     relax(grid_rhs, grid_result, k_num_iter_gauss_seidel, false);
     Grid<D, T> grid_newrhs;
     double rms1;
     {
-      Grid<D, T> grid_residual = compute_residual(grid_rhs, grid_result);
+      const Grid<D, T> grid_residual = compute_residual(grid_rhs, grid_result);
       rms1 = vverbose ? mag_e(rms(grid_residual)) : 0.;
       grid_newrhs = dual_downsample(grid_residual);
       if (0) SHOW(rms(grid_newrhs) / rms(grid_residual));
@@ -752,14 +752,14 @@ class Multigrid : noncopyable {
     Grid<D, T> grid_newresult(grid_newrhs.dims(), T{0});
     const int num_recursions = 1;  // 1 == V-cycle, 2 == W-cycle
     for_int(k, num_recursions) rec_vcycle(grid_newrhs, grid_newresult);
-    Grid<D, T> grid_correction = dual_upsample(grid_newresult, &grid_result.dims());
+    const Grid<D, T> grid_correction = dual_upsample(grid_newresult, &grid_result.dims());
     {
       HH_MULTIGRID_TIMER("_add_correction");
       grid_result += grid_correction;
     }
-    double rms2 = vverbose ? mag_e(rms(compute_residual(grid_rhs, grid_result))) : 0.;
+    const double rms2 = vverbose ? mag_e(rms(compute_residual(grid_rhs, grid_result))) : 0.;
     relax(grid_rhs, grid_result, k_num_iter_gauss_seidel, true);
-    double rms3 = vverbose ? mag_e(rms(compute_residual(grid_rhs, grid_result))) : 0.;
+    const double rms3 = vverbose ? mag_e(rms(compute_residual(grid_rhs, grid_result))) : 0.;
     if (vverbose)
       showf(" resy=%-7d  rms0=%-12.7e rms1=%-12.7e   rms2=%-12.7e rms3=%-12.7e\n",  //
             grid_rhs.dim(0), rms0, rms1, rms2, rms3);

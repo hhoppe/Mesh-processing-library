@@ -160,7 +160,7 @@ Face Mesh::create_face_private(int id, CArrayView<Vertex> va) {
   // f->herep defined below
   _id2face.enter(id, f);
   HEdge he_prev = nullptr;
-  int nv = va.num();
+  const int nv = va.num();
   for_int(i, nv) {
     Vertex v2 = va[i + 1 == nv ? 0 : i + 1];
     HEdge he = new MHEdge;
@@ -242,7 +242,7 @@ int Mesh::num_boundaries(Vertex v) const {
 bool Mesh::is_boundary(Vertex v) const {
   if (!herep(v))
     assertnever("Did not expect isolated vertex -- perhaps clean the input using \"Filtermesh -rmcomp 0\"");
-  int nb = num_boundaries(v);
+  const int nb = num_boundaries(v);
   if (nb >= 2)  // !is_nice(v)
     assertnever("Did not expect non-nice vertex -- perhaps clean the input using \"Filtermesh -fixvertices\"");
   return nb > 0;
@@ -698,7 +698,7 @@ Array<Vertex> Mesh::gather_edge_coalesce_vertices(Edge e) const {
     get_vertices(f1, va1);  // slow but threadsafe
     Array<Vertex> va2;
     get_vertices(f2, va2);
-    int nv1 = va1.num(), nv2 = va2.num();
+    const int nv1 = va1.num(), nv2 = va2.num();
     int i1 = 0;
     // Find one vertex common to both faces (v1)
     for (; i1 < nv1; i1++)
@@ -740,7 +740,7 @@ bool Mesh::legal_coalesce_faces(Edge e) {
     Warning("Boundary edge ignored");
     return false;
   }
-  Array<Vertex> va = gather_edge_coalesce_vertices(e);
+  const Array<Vertex> va = gather_edge_coalesce_vertices(e);
   {  // check for duplicate vertices
     Set<Vertex> setv;
     for (Vertex v : va)
@@ -777,7 +777,7 @@ bool Mesh::legal_coalesce_faces(Edge e) {
 Face Mesh::coalesce_faces(Edge e) {
   if (debug() >= 1) assertx(legal_coalesce_faces(e));
   Face f1 = face1(e), f2 = face2(e);
-  Array<Vertex> va = gather_edge_coalesce_vertices(e);
+  const Array<Vertex> va = gather_edge_coalesce_vertices(e);
   // See if any vertices can be deleted
   Set<Vertex> vbefore;
   for (Vertex v : vertices(f1)) vbefore.enter(v);

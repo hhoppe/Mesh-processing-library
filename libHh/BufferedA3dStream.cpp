@@ -44,9 +44,9 @@ RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
     if (_buf[i] != '\n') break;
   if (i == _buf.num()) return ERecognize::no;
   {
-    char ch = _buf[i];
-    bool have_space = i + 1 < _buf.num() && _buf[i + 1] == ' ';
-    A3dElem::EType ct = A3dElem::EType(ch);
+    const char ch = _buf[i];
+    const bool have_space = i + 1 < _buf.num() && _buf[i + 1] == ' ';
+    const A3dElem::EType ct = A3dElem::EType(ch);
     if (!(ct == A3dElem::EType::comment || ch == k_a3d_binary_code ||
           (have_space && (A3dElem::command_type(ct) || ct == A3dElem::EType::point || ct == A3dElem::EType::polygon ||
                           ct == A3dElem::EType::polyline || A3dElem::status_type(ct) || ch == 'n'))))
@@ -69,7 +69,7 @@ RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
         if (_buf[i++] == '\n') break;
       }
     }
-    A3dElem::EType ct = A3dElem::EType(ch);
+    const A3dElem::EType ct = A3dElem::EType(ch);
     if (ct == A3dElem::EType::comment || A3dElem::command_type(ct) || ct == A3dElem::EType::point || ch == 'E')
       return ERecognize::yes;
     if (!(ct == A3dElem::EType::polygon || ct == A3dElem::EType::polyline || A3dElem::status_type(ct) || ch == 'n' ||

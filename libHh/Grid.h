@@ -263,7 +263,7 @@ template <int D, typename T> class Grid : public GridView<D, T> {
   void init(const Vec<int, D>& dims) {
     if (dims == _dims) return;
     assertx(min(dims) >= 0);
-    size_t vol = product_dims<D>(dims.data());
+    const size_t vol = product_dims<D>(dims.data());
     if (vol != size()) {
       delete[] _a;
       _a = vol ? new T[vol] : nullptr;

@@ -127,7 +127,7 @@ Stat mesh_stat_boundaries(const Mesh& mesh) {
   for (Edge e : mesh.edges()) {
     if (!mesh.is_boundary(e)) continue;
     if (setevis.contains(e)) continue;
-    Queue<Edge> queuee = gather_boundary(mesh, e);
+    const Queue<Edge> queuee = gather_boundary(mesh, e);
     for (Edge ee : queuee) setevis.enter(ee);
     Sbound.enter(queuee.length());
   }
@@ -140,7 +140,7 @@ Stat mesh_stat_components(const Mesh& mesh) {
     Set<Face> setfvis;  // faces already considered
     for (Face f : mesh.faces()) {
       if (setfvis.contains(f)) continue;
-      Set<Face> setf = gather_component(mesh, f);
+      const Set<Face> setf = gather_component(mesh, f);
       for (Face ff : setf) setfvis.enter(ff);
       Scompf.enter(setf.num());
     }
@@ -166,34 +166,34 @@ Stat mesh_stat_components(const Mesh& mesh) {
 }
 
 float mesh_genus(const Mesh& mesh) {
-  int nv = mesh.num_vertices();
-  int nf = mesh.num_faces();
-  int ne = mesh.num_edges();
+  const int nv = mesh.num_vertices();
+  const int nf = mesh.num_faces();
+  const int ne = mesh.num_edges();
   // Notes:
   //  For mesh without boundary, nf = nv * 2 + (genus - 1) * 4
   //  For mesh without boundary, ec = 2 - 2 * genus
-  Stat Sbound = mesh_stat_boundaries(mesh);
-  int nb = Sbound.inum();
-  Stat Scompf = mesh_stat_components(mesh);
-  int nc = Scompf.inum();
-  int ec = nv - ne + nf;  // euler characteristic
-  float genus = (nc * 2 - ec - nb) / 2.f;
+  const Stat Sbound = mesh_stat_boundaries(mesh);
+  const int nb = Sbound.inum();
+  const Stat Scompf = mesh_stat_components(mesh);
+  const int nc = Scompf.inum();
+  const int ec = nv - ne + nf;  // Euler characteristic.
+  const float genus = (nc * 2 - ec - nb) / 2.f;
   return genus;
 }
 
 string mesh_genus_string(const Mesh& mesh) {
-  int nv = mesh.num_vertices();
-  int nf = mesh.num_faces();
-  int ne = mesh.num_edges();
+  const int nv = mesh.num_vertices();
+  const int nf = mesh.num_faces();
+  const int ne = mesh.num_edges();
   // Notes:
   //  For mesh without boundary, nf = nv * 2 + (genus - 1) * 4
   //  For mesh without boundary, ec = 2 - 2 * genus
-  Stat Sbound = mesh_stat_boundaries(mesh);
-  int nb = Sbound.inum();
-  Stat Scompf = mesh_stat_components(mesh);
-  int nc = Scompf.inum();
-  int ec = nv - ne + nf;  // euler characteristic
-  float genus = (nc * 2 - ec - nb) / 2.f;
+  const Stat Sbound = mesh_stat_boundaries(mesh);
+  const int nb = Sbound.inum();
+  const Stat Scompf = mesh_stat_components(mesh);
+  const int nc = Scompf.inum();
+  const int ec = nv - ne + nf;  // Euler characteristic.
+  const float genus = (nc * 2 - ec - nb) / 2.f;
   int nse = 0, ncv = 0;
   for (Edge e : mesh.edges())
     if (mesh.flags(e).flag(GMesh::eflag_sharp)) nse++;
@@ -206,7 +206,7 @@ string mesh_genus_string(const Mesh& mesh) {
 bool triangulate_face(GMesh& mesh, Face f) {
   Array<Vertex> va;
   mesh.get_vertices(f, va);
-  int nv = va.num();
+  const int nv = va.num();
   if (!assertw(nv > 3)) return true;
   for_intL(i, 2, nv - 1) {
     if (!assertw(!mesh.query_edge(va[0], va[i]))) return false;
@@ -215,7 +215,7 @@ bool triangulate_face(GMesh& mesh, Face f) {
   for_int(i, nv - 2) mesh.create_face(va[0], va[i + 1], va[i + 2]);
   Set<Vertex> setvr;  // vertices on ring of original face
   for_int(i, nv) setvr.enter(va[i]);
-  hash_edge he{mesh};
+  const hash_edge he{mesh};
   SetEdge sete(he);  // initially, inner edges
   for_intL(i, 2, nv - 1) sete.enter(mesh.edge(va[0], va[i]));
   retriangulate(mesh, sete, true, &setvr, -2, circum_radius_swap_criterion, nullptr, nullptr);
@@ -254,7 +254,8 @@ float edge_signed_dihedral_angle(const GMesh& mesh, Edge e) {
 
 float vertex_solid_angle(const GMesh& mesh, Vertex v) {
   assertx(!mesh.num_boundaries(v));
-  int np = mesh.degree(v), i = np;
+  const int np = mesh.degree(v);
+  int i = np;
   Array<Point> pa(np);
   // Really want clockwise order so that solid angle points toward inside of mesh.
   for (Vertex vv : mesh.ccw_vertices(v)) pa[--i] = mesh.point(vv);
@@ -281,7 +282,7 @@ float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e, int ii) {
       ar_normals.push(get_normal_dir(triangle));
     }
   }
-  Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
+  const Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
   int nnor = 0;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
@@ -312,7 +313,7 @@ float collapse_edge_volume_criterion(const GMesh& mesh, Edge e) {
       ar_normals.push(get_normal_dir(triangle));
     }
   }
-  Point newp = interp(mesh.point(v1), mesh.point(v2));
+  const Point newp = interp(mesh.point(v1), mesh.point(v2));
   int nnor = 0;
   float vol_a = 0.f;
   for (Vertex v : mesh.vertices(e)) {
@@ -333,17 +334,17 @@ float collapse_edge_volume_criterion(const GMesh& mesh, Edge e) {
 float collapse_edge_qem_criterion(const GMesh& mesh, Edge e) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);
-  bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
-  int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;
-  Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
+  const bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
+  const int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;
+  const Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
   double qem = 0.;
   PArray<Vector, 12> ar_normals;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (v == v2 && (f == f1 || f == f2)) continue;
       const Vec3<Point> triangle = mesh.triangle_points(f);
-      Vector normal = ok_normalized(cross(triangle[0], triangle[1], triangle[2]));
-      float d = -dot(triangle[0], normal);
+      const Vector normal = ok_normalized(cross(triangle[0], triangle[1], triangle[2]));
+      const float d = -dot(triangle[0], normal);
       qem += square(dot(newp, normal) + d);
       if (f == f1 || f == f2) continue;
       ar_normals.push(normal);
@@ -508,7 +509,7 @@ void split_valence(GMesh& mesh, int max_valence) {
 // *** Retriangulate
 
 int retriangulate_all(GMesh& mesh, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
-  hash_edge he{mesh};
+  const hash_edge he{mesh};
   SetEdge sete(he);
   for (Edge e : mesh.edges())
     if (!mesh.is_boundary(e)) sete.enter(e);
@@ -516,14 +517,14 @@ int retriangulate_all(GMesh& mesh, float mincos, EDGEF fdoswap, EDGEF fdel, EDGE
 }
 
 int retriangulate_from_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
-  hash_edge he{mesh};
+  const hash_edge he{mesh};
   SetEdge sete(he);
   sete.enter(e);
   return retriangulate(mesh, sete, true, nullptr, mincos, fdoswap, fdel, fadd);
 }
 
 int retriangulate_one_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
-  hash_edge he{mesh};
+  const hash_edge he{mesh};
   SetEdge sete(he);
   sete.enter(e);
   return retriangulate(mesh, sete, true, nullptr, mincos, fdoswap, fdel, fadd);
@@ -535,10 +536,10 @@ bool circum_radius_swap_criterion(const GMesh& mesh, Edge e) {
   const Point& p2 = mesh.point(mesh.vertex2(e));
   const Point& po1 = mesh.point(mesh.side_vertex1(e));
   const Point& po2 = mesh.point(mesh.side_vertex2(e));
-  float rc1 = circum_radius(p1, p2, po1);
-  float rc2 = circum_radius(p1, po2, p2);
-  float rs1 = circum_radius(p1, po2, po1);
-  float rs2 = circum_radius(p2, po1, po2);
+  const float rc1 = circum_radius(p1, p2, po1);
+  const float rc2 = circum_radius(p1, po2, p2);
+  const float rs1 = circum_radius(p1, po2, po1);
+  const float rs2 = circum_radius(p2, po1, po2);
   return max(rs1, rs2) < max(rc1, rc2);
 }
 
@@ -570,7 +571,7 @@ inline bool sharp(const GMesh& mesh, Vertex v, Edge e) {
 }
 
 bool extraordinary_crease_vertex(const GMesh& mesh, Vertex v) {
-  int ne = mesh.degree(v);
+  const int ne = mesh.degree(v);
   if (mesh.is_boundary(v)) return ne != 4;
   if (ne != 6) return true;
   int nside = 0, sharpef = 0;
@@ -807,10 +808,10 @@ float project_point_neighborhood(const GMesh& mesh, const Point& p, Face& pf, Ba
   const Vec3<Point> triangle1 = mesh.triangle_points(pf);
   auto [mind2, minbary, clp1] = project_point_triangle(p, triangle1);
   ret_clp = clp1;
-  float nearest_edge = min(minbary);
+  const float nearest_edge = min(minbary);
   ASSERTX(nearest_edge >= 0.f && nearest_edge < .34f);  // optional
-  bool nearedge = nearest_edge < bnearedge;
-  bool projquick = pfsmooth && !nearedge;
+  const bool nearedge = nearest_edge < bnearedge;
+  const bool projquick = pfsmooth && !nearedge;
   HH_SSTAT(Sprojquick, projquick);
   if (projquick) {
     ret_bary = minbary;

@@ -132,7 +132,7 @@ inline const char* str_last_non_space(const char* s) {
 // This may be identical to strchr().  Possibly faster when inlined.
 inline const char* str_chr(const char* s, char ch) {
   for (const char* p = s;;) {
-    char chp = *p;
+    const char chp = *p;
     if (chp == ch) return p;
     if (!chp) return nullptr;
     p++;
@@ -165,7 +165,7 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
     if (_s[0] == ' ') _s++;
     return true;
   }
-  char ch = _s[nch + 1];
+  const char ch = _s[nch + 1];
   const char* send;
   if (ch == '(') {
     send = str_chr(_s + nch + 2, ')');
@@ -234,8 +234,8 @@ bool GMesh::parse_corner_key_vec(Corner c, const char* key, ArrayView<float> ar)
 }
 
 const char* GMesh::corner_key(string& str, Corner c, const char* key) const {
-  bool b1 = string_has_key(get_string(c), key);
-  bool b2 = string_has_key(get_string(corner_vertex(c)), key);
+  const bool b1 = string_has_key(get_string(c), key);
+  const bool b2 = string_has_key(get_string(corner_vertex(c)), key);
   if (!b1 && !b2) return nullptr;
   if (b1 && b2) Warning("Have both vertex and corner info");
   if (!b1) return string_key(str, get_string(corner_vertex(c)), key);
@@ -268,7 +268,7 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
       frb = kb;
       if (!k_debug) return true;
     }
-    bool found = size_t(kl) == keyl && !strncmp(kb, key, kl);
+    const bool found = size_t(kl) == keyl && !strncmp(kb, key, kl);
     if (found) {
       if (fkb) assertnever("dup key: " + SSHOW(sso, kb, kl, vb, vl, key, val));
       fkb = kb;
@@ -326,7 +326,7 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
   }
   if (frb) {
     if (s > s0) *s++ = ' ';
-    size_t frbl = strlen(frb);  // frb may be partially overwritten by next std::memmove()
+    const size_t frbl = strlen(frb);  // frb may be partially overwritten by next std::memmove()
     if (s != frb) std::memmove(s, frb, frbl);
     s += frbl;
   }
@@ -542,7 +542,7 @@ void GMesh::write(std::ostream& os) const {
     assertx(os << buffer);
   }
 
-  Array ar_faces(ordered_faces());
+  const Array ar_faces(ordered_faces());
   strcpy(buffer, "Face ");
   beg = buffer + strlen(buffer);
   for (Face f : ar_faces) {
@@ -667,10 +667,10 @@ void GMesh::collapse_edge_vertex(Edge e, Vertex vs) {
   std::ostream* tos = _os;
   _os = nullptr;
   Vertex vt = opp_vertex(vs, e);
-  int ids = vertex_id(vs), idt = vertex_id(vt);
+  const int ids = vertex_id(vs), idt = vertex_id(vt);
   // Compute geometry for unified vertex (vs)
-  int isbs = is_boundary(vs), isbt = is_boundary(vt), sumb = isbs + isbt;
-  Point p = sumb == 0 || sumb == 2 ? Point(interp(point(vs), point(vt))) : isbs ? point(vs) : point(vt);
+  const int isbs = is_boundary(vs), isbt = is_boundary(vt), sumb = isbs + isbt;
+  const Point p = sumb == 0 || sumb == 2 ? Point(interp(point(vs), point(vt))) : isbs ? point(vs) : point(vt);
   Set<Vertex> vsharp;
   for (Edge ee : edges(vt))
     if (ee != e && flags(ee).flag(eflag_sharp)) vsharp.enter(opp_vertex(vt, ee));
@@ -732,7 +732,7 @@ Vertex GMesh::split_edge(Edge e, int id) {
   Vertex v1 = vertex1(e), v2 = vertex2(e);
   Face f1 = face1(e), f2 = face2(e);
   Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e);
-  bool flag_e = flags(e).flag(eflag_sharp);
+  const bool flag_e = flags(e).flag(eflag_sharp);
   auto fstring1 = make_unique_c_string(get_string(f1));  // often nullptr
   auto fstring2 = f2 ? make_unique_c_string(get_string(f2)) : nullptr;
   Vertex vn = Mesh::split_edge(e, id);

@@ -126,7 +126,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     const auto& self = *this;
     type bbox;
     for_int(i0, 2) for_int(i1, 2) for_int(i2, 2) {
-      Point corner(i0 ? self[1][0] : self[0][0], i1 ? self[1][1] : self[0][1], i2 ? self[1][2] : self[0][2]);
+      const Point corner(i0 ? self[1][0] : self[0][0], i1 ? self[1][1] : self[0][1], i2 ? self[1][2] : self[0][2]);
       bbox.union_with(corner * frame);
     }
     return bbox;

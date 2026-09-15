@@ -51,7 +51,7 @@ template <typename T> class Pqueue : noncopyable {
   int adjust_up(int n, const float cp) {
     for (;;) {
       if (!n) break;
-      int pn = (n - 1) / 2;  // Parent node.
+      const int pn = (n - 1) / 2;  // Parent node.
       if (cp < _ar[pn]._pri) {
         nmove(n, pn);
         n = pn;
@@ -63,11 +63,11 @@ template <typename T> class Pqueue : noncopyable {
   }
   int adjust_down(int n, const float cp) {
     for (;;) {
-      int ln = n * 2 + 1;      // Left child node.
-      if (ln >= num()) break;  // No children.
-      float lp = _ar[ln]._pri;
-      int rn = n * 2 + 2;  // Right child node.
-      if (rn >= num()) {   // No right child.
+      const int ln = n * 2 + 1;  // Left child node.
+      if (ln >= num()) break;    // No children.
+      const float lp = _ar[ln]._pri;
+      const int rn = n * 2 + 2;  // Right child node.
+      if (rn >= num()) {         // No right child.
         if (cp > lp) {
           nmove(n, ln);
           n = ln;
@@ -75,7 +75,7 @@ template <typename T> class Pqueue : noncopyable {
         }
         break;
       }
-      float rp = _ar[rn]._pri;
+      const float rp = _ar[rn]._pri;
       if (cp > lp) {
         if (lp < rp) {
           nmove(n, ln);
@@ -98,13 +98,13 @@ template <typename T> class Pqueue : noncopyable {
   }
   void enter_i(const T& e, float pri) requires Copyable<T> {
     _ar.add(1);  // Leave this new node uninitialized.
-    int j = adjust_up(num() - 1, pri);
+    const int j = adjust_up(num() - 1, pri);
     _ar[j]._e = e;
     _ar[j]._pri = pri;
   }
   void enter_i(T&& e, float pri) {
     _ar.add(1);  // Leave this new node uninitialized.
-    int j = adjust_up(num() - 1, pri);
+    const int j = adjust_up(num() - 1, pri);
     _ar[j]._e = std::move(e);
     _ar[j]._pri = pri;
   }
@@ -115,9 +115,9 @@ template <typename T> class Pqueue : noncopyable {
       return e;
     }
     T e0 = std::move(_ar.last()._e);
-    float pri = _ar.last()._pri;
+    const float pri = _ar.last()._pri;
     _ar.sub(1);
-    int j = adjust_down(0, pri);
+    const int j = adjust_down(0, pri);
     _ar[j]._e = std::move(e0);
     _ar[j]._pri = pri;
     return e;
@@ -125,8 +125,8 @@ template <typename T> class Pqueue : noncopyable {
   void sort_i() {
     for (int i = (num() - 2) / 2; i >= 0; --i) {
       T e = std::move(_ar[i]._e);
-      float pri = _ar[i]._pri;
-      int j = adjust_down(i, pri);
+      const float pri = _ar[i]._pri;
+      const int j = adjust_down(i, pri);
       // It would be nice to have faster case for j == i.
       _ar[j]._e = std::move(e);
       _ar[j]._pri = pri;
@@ -166,18 +166,18 @@ class HPqueue : noncopyable {
   }
   void nmove(int n1, int n2) {
     _ar[n1] = std::move(_ar[n2]);
-    int on2 = _m.replace(_ar[n1]._e, n1);
+    const int on2 = _m.replace(_ar[n1]._e, n1);
     ASSERTX(on2 == n2);
   }
   // (cp is the priority of the current node n, which may not be up-to-date in _ar[n])
   // After this call returns index j, if j != n, elements have been shifted,
   // and the old element at n should be moved into its new location at j.
   int adjust(int n, const float cp, bool up, bool down) {
-    int orig_n = n;
+    const int orig_n = n;
     if (up) {
       for (;;) {
         if (!n) break;
-        int pn = (n - 1) / 2;
+        const int pn = (n - 1) / 2;
         if (cp < _ar[pn]._pri) {
           nmove(n, pn);
           n = pn;
@@ -189,11 +189,11 @@ class HPqueue : noncopyable {
     }
     if (down) {
       for (;;) {
-        int ln = n * 2 + 1;      // Left child.
-        if (ln >= num()) break;  // No children.
-        float lp = _ar[ln]._pri;
-        int rn = n * 2 + 2;  // Right child.
-        if (rn >= num()) {   // No right child.
+        const int ln = n * 2 + 1;  // Left child.
+        if (ln >= num()) break;    // No children.
+        const float lp = _ar[ln]._pri;
+        const int rn = n * 2 + 2;  // Right child.
+        if (rn >= num()) {         // No right child.
           if (cp > lp) {
             nmove(n, ln);
             n = ln;
@@ -201,7 +201,7 @@ class HPqueue : noncopyable {
           }
           break;
         }
-        float rp = _ar[rn]._pri;
+        const float rp = _ar[rn]._pri;
         if (cp > lp) {
           if (lp < rp) {
             nmove(n, ln);
@@ -225,7 +225,7 @@ class HPqueue : noncopyable {
   }
   void enter_i(const T& e, float pri) {
     _ar.add(1);  // Leave this new node uninitialized.
-    int j = adjust(num() - 1, pri, true, false);
+    const int j = adjust(num() - 1, pri, true, false);
     _ar[j]._e = e;
     _ar[j]._pri = pri;
     _m.enter(e, j);
@@ -233,12 +233,12 @@ class HPqueue : noncopyable {
   void sort_i() {
     for (int i = (num() - 2) / 2; i >= 0; --i) {
       T e = _ar[i]._e;
-      float pri = _ar[i]._pri;
-      int j = adjust(i, pri, false, true);
+      const float pri = _ar[i]._pri;
+      const int j = adjust(i, pri, false, true);
       if (j != i) {
         _ar[j]._e = e;
         _ar[j]._pri = pri;
-        int oi = _m.replace(e, j);
+        const int oi = _m.replace(e, j);
         ASSERTX(oi == i);
       }
     }
@@ -247,47 +247,47 @@ class HPqueue : noncopyable {
     T e = _ar[0]._e;
     if (num() == 1) {
       _ar.sub(1);
-      int j = _m.remove(e);
+      const int j = _m.remove(e);
       ASSERTX(j == 0);
       return e;
     }
     T e0 = _ar.last()._e;
-    float pri = _ar.last()._pri;
+    const float pri = _ar.last()._pri;
     _ar.sub(1);
     {
-      int j = _m.remove(e);
+      const int j = _m.remove(e);
       ASSERTX(j == 0);
     }
-    int j = adjust(0, pri, false, true);
+    const int j = adjust(0, pri, false, true);
     _ar[j]._e = e0;
     _ar[j]._pri = pri;
-    int oi = _m.replace(e0, j);
+    const int oi = _m.replace(e0, j);
     ASSERTX(oi == num());
     consider_shrink();
     return e;
   }
   [[nodiscard]] float retrieve_i(const T& e) const {
     bool b;
-    int i = _m.retrieve(e, b);
+    const int i = _m.retrieve(e, b);
     return b ? _ar[i]._pri : -1.f;
   }
   float remove_i(const T& e) {
     bool present;
-    int i = _m.retrieve(e, present);
+    const int i = _m.retrieve(e, present);
     if (!present) return -1.f;
-    float ppri = _ar[i]._pri;
+    const float ppri = _ar[i]._pri;
     T e0 = _ar.last()._e;
-    float pri = _ar.last()._pri;
+    const float pri = _ar.last()._pri;
     _ar.sub(1);
     {
-      int j = _m.remove(e);
+      const int j = _m.remove(e);
       ASSERTX(j == i);
     }
     if (i < num()) {  // If num() was 1, we have i == 0, num() == 0.
-      int j = adjust(i, pri, true, true);
+      const int j = adjust(i, pri, true, true);
       _ar[j]._e = e0;
       _ar[j]._pri = pri;
-      int oi = _m.replace(e0, j);
+      const int oi = _m.replace(e0, j);
       ASSERTX(oi == num());
     }
     consider_shrink();
@@ -295,14 +295,14 @@ class HPqueue : noncopyable {
   }
   float update_i(const T& e, float pri) {
     bool present;
-    int i = _m.retrieve(e, present);
+    const int i = _m.retrieve(e, present);
     if (!present) return -1.f;
-    float oldpri = _ar[i]._pri;
-    int j = adjust(i, pri, true, true);
+    const float oldpri = _ar[i]._pri;
+    const int j = adjust(i, pri, true, true);
     _ar[j]._pri = pri;
     if (j != i) {
       _ar[j]._e = e;
-      int oi = _m.replace(e, j);
+      const int oi = _m.replace(e, j);
       ASSERTX(oi == i);
     }
     return oldpri;
@@ -310,17 +310,17 @@ class HPqueue : noncopyable {
   float enter_update_i(const T& e, float pri) {
     ASSERTX(pri >= 0.f);
     bool present;
-    int i = _m.retrieve(e, present);
+    const int i = _m.retrieve(e, present);
     if (!present) {
       enter(e, pri);
       return -1.f;
     } else {
-      float oldpri = _ar[i]._pri;
-      int j = adjust(i, pri, true, true);
+      const float oldpri = _ar[i]._pri;
+      const int j = adjust(i, pri, true, true);
       _ar[j]._pri = pri;
       if (j != i) {
         _ar[j]._e = e;
-        int oi = _m.replace(e, j);
+        const int oi = _m.replace(e, j);
         ASSERTX(oi == i);
       }
       return oldpri;
@@ -329,16 +329,16 @@ class HPqueue : noncopyable {
   bool enter_update_if_smaller_i(const T& e, float pri) {
     ASSERTX(pri >= 0.f);
     bool present;
-    int i = _m.retrieve(e, present);
+    const int i = _m.retrieve(e, present);
     if (!present) {
       enter(e, pri);
       return true;
     } else if (pri < _ar[i]._pri) {
-      int j = adjust(i, pri, true, false);
+      const int j = adjust(i, pri, true, false);
       _ar[j]._pri = pri;
       if (j != i) {
         _ar[j]._e = e;
-        int oi = _m.replace(e, j);
+        const int oi = _m.replace(e, j);
         ASSERTX(oi == i);
       }
       return true;
@@ -348,16 +348,16 @@ class HPqueue : noncopyable {
   bool enter_update_if_greater_i(const T& e, float pri) {
     ASSERTX(pri >= 0.f);
     bool present;
-    int i = _m.retrieve(e, present);
+    const int i = _m.retrieve(e, present);
     if (!present) {
       enter(e, pri);
       return true;
     } else if (pri > _ar[i]._pri) {
-      int j = adjust(i, pri, false, true);
+      const int j = adjust(i, pri, false, true);
       _ar[j]._pri = pri;
       if (j != i) {
         _ar[j]._e = e;
-        int oi = _m.replace(e, j);
+        const int oi = _m.replace(e, j);
         ASSERTX(oi == i);
       }
       return true;

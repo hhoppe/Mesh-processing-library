@@ -56,7 +56,7 @@ class HiddenLineRemoval {
     Vector nor = poly.get_normal();
     if (is_zero(nor)) return;
     if (nor[0] < 0.f) nor = -nor;
-    int pn = _polygons.add(1);
+    const int pn = _polygons.add(1);
     HlrPolygon& hp = _polygons[pn];
     hp.poly = std::move(poly);
     hp.nor = nor;
@@ -74,7 +74,7 @@ class HiddenLineRemoval {
       const HlrPolygon& hp = _polygons[pn];
       if (p[0] < hp.bbox[0][0]) return KD::ECallbackReturn::nothing;  // point in front of bbox of polygon
       const Polygon& poly = hp.poly;
-      float d = dot(p, hp.nor) - hp.d;
+      const float d = dot(p, hp.nor) - hp.d;
       if (d <= hp.tol) return KD::ECallbackReturn::nothing;  // point in front of plane of polygon
       return point_in_polygon(p, poly) ? KD::ECallbackReturn::stop : KD::ECallbackReturn::nothing;
     };
@@ -85,8 +85,8 @@ class HiddenLineRemoval {
     render_seg_kd(s, 0);
   }
   static bool point_in_polygon(const Point& p, const Polygon& poly) {
-    float py = p[1], pz = p[2];
-    int n = poly.num();
+    const float py = p[1], pz = p[2];
+    const int n = poly.num();
     const Point& pt0 = poly[n - 1];
     float y0 = pt0[1] - py, z0 = pt0[2] - pz;
     int nint = 0;
@@ -222,7 +222,7 @@ class HiddenLineRemoval {
   }
   static void orient_segment(HlrSegment& s) {
     for_int(c, 3) {
-      float d = s.p[0][c] - s.p[1][c];
+      const float d = s.p[0][c] - s.p[1][c];
       if (d < 0.f) std::swap(s.p[0], s.p[1]);
       if (d) break;
     }
@@ -251,7 +251,7 @@ class HiddenLineRemoval {
     const HlrPolygon& hp = _polygons[pn];
     float d0 = dot(s.p[0], hp.nor) - hp.d;
     float d1 = dot(s.p[1], hp.nor) - hp.d;
-    float tol = hp.tol;
+    const float tol = hp.tol;
     if (d0 <= tol && d1 <= tol) return KD::ECallbackReturn::nothing;
     if (d0 > 0.f && d1 < 0.f) {
       std::swap(s.p[0], s.p[1]);
@@ -259,7 +259,7 @@ class HiddenLineRemoval {
     }
     int ns;                       // number of segments resulting
     if (d1 > tol && d0 < -tol) {  // point 1 is back
-      Point midp = interp(s.p[0], s.p[1], d1 / (d1 - d0));
+      const Point midp = interp(s.p[0], s.p[1], d1 / (d1 - d0));
       HlrSegment front_s(s.p[0], midp), back_s(midp, s.p[1]);
       ns = intersect_seg_poly(back_s, hp);
       // try to reunite set _gsret and segment front_s

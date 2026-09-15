@@ -240,7 +240,7 @@ inline Spatial::Ind Spatial::decode(int en) const {
 template <typename Approx2, typename Exact2>
 void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter,
                                               Set<Univ>& set) const {
-  int en = encode(ci);
+  const int en = encode(ci);
   bool present;
   const auto& cell = _map.retrieve(en, present);
   if (!present) return;
@@ -254,9 +254,9 @@ void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, Pqueue<Univ>& pq, c
 template <typename Approx2, typename Exact2>
 void ObjectSpatial<Approx2, Exact2>::pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const {
   Univ id = pq.min();
-  float oldv = pq.min_priority();
+  const float oldv = pq.min_priority();
   Exact2 exact2;
-  float newv = exact2(pcenter, id);
+  const float newv = exact2(pcenter, id);
   if (newv == oldv) return;
   if (newv < oldv - 1e-12f && Warning("newv < oldv")) SHOW(oldv, newv);
   assertx(pq.remove_min() == id);
@@ -271,13 +271,13 @@ void ObjectSpatial<Approx2, Exact2>::enter(Univ id, const Point& startp, Func fc
   int ncubes = 0;
   Ind ci = indices_from_point(startp);
   assertx(indices_inbounds(ci));
-  int enf = encode(ci);
+  const int enf = encode(ci);
   set.enter(enf);
   queue.enqueue(enf);
   while (!queue.empty()) {
-    int en = queue.dequeue();
+    const int en = queue.dequeue();
     ci = decode(en);
-    Bbox bbox = bbox_of_indices(ci);
+    const Bbox bbox = bbox_of_indices(ci);
     const bool in_cell = fcontains(bbox);
     if (en == enf) assertx(in_cell);
     if (!in_cell) continue;
@@ -289,7 +289,7 @@ void ObjectSpatial<Approx2, Exact2>::enter(Univ id, const Point& startp, Func fc
       bi[1][c] = min(ci[c] + 1, _gn - 1);
     }
     for (const Ind& cit : range(bi[0], bi[1] + 1)) {
-      int enc = encode(cit);
+      const int enc = encode(cit);
       if (set.add(enc)) queue.enqueue(enc);
     }
   }
@@ -305,9 +305,9 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
     assertx(p1[c] >= 0.f && p1[c] <= 1.f);
     assertx(p2[c] >= 0.f && p2[c] <= 1.f);
   }
-  float maxe = max_abs_element(p2 - p1);
-  int ni = index_from_float(maxe) + 2;  // Add 2 there just to be safe.
-  Vector v = (p2 - p1) * ((1.f + 1e-7f) / float(ni));
+  const float maxe = max_abs_element(p2 - p1);
+  const int ni = index_from_float(maxe) + 2;  // Add 2 there just to be safe.
+  const Vector v = (p2 - p1) * ((1.f + 1e-7f) / float(ni));
   Point p = p1;
   Ind pci = indices_from_point(p);
   int pen = -1;
@@ -320,7 +320,7 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
       bi[1][c] = max(cci[c], pci[c]);
     }
     for (const Ind& cit : range(bi[0], bi[1] + 1)) {
-      int en = encode(cit);
+      const int en = encode(cit);
       if (en == pen) continue;
       bool present;
       const auto& cell = _map.retrieve(en, present);

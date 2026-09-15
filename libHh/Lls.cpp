@@ -114,7 +114,7 @@ bool SparseLls::do_cg(ArrayView<float> x, CArrayView<float> h, double* prssb, do
   Array<float> rc, gc, gp, dc, tc;
   rc = mult_m_v(x);
   for_int(i, _m) rc[i] -= h[i];
-  double rssb = mag2(rc);
+  const double rssb = mag2(rc);
   gc = mult_mt_v(rc);
   for_int(i, _n) gc[i] = -gc[i];
   const int fudge_for_small_systems = 20;
@@ -128,20 +128,20 @@ bool SparseLls::do_cg(ArrayView<float> x, CArrayView<float> h, double* prssb, do
     if (k == _max_iter) break;
     if (k == kmax) break;
     if (k > 0) {
-      float bi = gm2 / float(mag2(gp));
+      const float bi = gm2 / float(mag2(gp));
       for_int(i, _n) dc[i] = gc[i] + bi * dc[i];
     } else {
       dc = gc;
     }
     tc = mult_m_v(dc);
-    float ai = gm2 / float(mag2(tc));
+    const float ai = gm2 / float(mag2(tc));
     for_int(i, _n) x[i] += ai * dc[i];
     for_int(i, _m) rc[i] += ai * tc[i];
     gp = gc;
     gc = mult_mt_v(rc);
     for_int(i, _n) gc[i] = -gc[i];
   }
-  double rssa = mag2(rc);
+  const double rssa = mag2(rc);
   // Print final gradient norm squared and final residual norm squared.
   if (sdebug || _verb) showf("CG: %d iter (gm2=%.10g, rssb=%.10g, rssa=%.10g)\n", k, gm2, rssb, rssa);
   if (prssb) *prssb += rssb;
@@ -188,7 +188,7 @@ bool FullLls::solve(double* prssb, double* prssa) {
   assertx(!_solved);
   _solved = true;
   if (prssb) *prssb = get_rss();
-  bool success = solve_aux();
+  const bool success = solve_aux();
   if (prssa) *prssa = get_rss();
   return success;
 }
@@ -218,7 +218,7 @@ bool LudLls::solve_aux() {
   for_int(i, _n) {
     float vmax = 0.f;
     for_int(j, _n) {
-      float v = abs(a[i, j]);
+      const float v = abs(a[i, j]);
       if (v > vmax) vmax = v;
     }
     if (!vmax) return false;
@@ -236,7 +236,7 @@ bool LudLls::solve_aux() {
       double s = a[i, j];
       for_int(k, j) s -= double(a[i, k]) * a[k, j];
       a[i, j] = float(s);
-      float v = t[i] * abs(a[i, j]);
+      const float v = t[i] * abs(a[i, j]);
       if (v >= vmax) {
         vmax = v;
         imax = i;
@@ -249,7 +249,7 @@ bool LudLls::solve_aux() {
     rindx[j] = imax;
     if (!a[j, j]) return false;
     if (j < _n - 1) {
-      float v = 1.f / a[j, j];
+      const float v = 1.f / a[j, j];
       for_intL(i, j + 1, _n) a[i, j] *= v;
     }
   }
@@ -265,7 +265,7 @@ bool LudLls::solve_aux() {
     }
     int ii = -1;
     for_int(i, _n) {
-      int ip = rindx[i];
+      const int ip = rindx[i];
       double s = t[ip];
       t[ip] = t[i];
       if (ii >= 0) {
@@ -294,25 +294,25 @@ bool GivensLls::solve_aux() {
       nposs++;
       if (!_a[k, i]) continue;
       ngivens++;
-      float xi = _a[i, i];
-      float xk = _a[k, i];
+      const float xi = _a[i, i];
+      const float xk = _a[k, i];
       float c, s;
       if (abs(xk) > abs(xi)) {
-        float t = xi / xk;
+        const float t = xi / xk;
         s = 1.f / sqrt(1.f + square(t));
         c = s * t;
       } else {
-        float t = xk / xi;
+        const float t = xk / xi;
         c = 1.f / sqrt(1.f + square(t));
         s = c * t;
       }
       for_intL(j, i, _n) {
-        float xij = _a[i, j], xkj = _a[k, j];
+        const float xij = _a[i, j], xkj = _a[k, j];
         _a[i, j] = c * xij + s * xkj;
         _a[k, j] = -s * xij + c * xkj;
       }
       for_int(di, _nd) {
-        float xij = _b[di, i], xkj = _b[di, k];
+        const float xij = _b[di, i], xkj = _b[di, k];
         _b[di, i] = c * xij + s * xkj;
         _b[di, k] = -s * xij + c * xkj;
       }
@@ -480,7 +480,7 @@ bool SvdLls::solve_aux() {
   if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
   sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
-  float cond = _mS[0] / _mS.last();
+  const float cond = _mS[0] / _mS.last();
   if (cond > k_float_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   // SHOW(_a, _b, _mU, _mS, _mVT);
   // SHOW(mat_mul(mat_mul(_mU, diag_mat(_mS)), transpose(_mVT)));
@@ -498,11 +498,11 @@ SvdDoubleLls::SvdDoubleLls(int m, int n, int nd) : FullLls(m, n, nd), _mU(m, n),
 
 bool SvdDoubleLls::solve_aux() {
   dummy_use(k_double_cond_max);
-  Matrix<double> A = convert<double>(_a);
+  const Matrix<double> A = convert<double>(_a);
   if (!singular_value_decomposition(A, _mU, _mS, _mVT)) return false;
   sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
-  double cond = _mS[0] / _mS.last();
+  const double cond = _mS[0] / _mS.last();
   if (cond > k_double_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   for (double& s : _mS) s = 1. / s;
   for_int(d, _nd) {
@@ -518,7 +518,7 @@ bool QrdLls::solve_aux() {
   if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
   sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
-  float cond = _mS[0] / _mS.last();
+  const float cond = _mS[0] / _mS.last();
   if (cond > k_float_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   for (float& s : _mS) s = 1.f / s;
   for_int(d, _nd) {

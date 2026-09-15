@@ -146,8 +146,8 @@ inline Vector Quaternion::axis() const {
   ASSERTXX(is_unit());
   // float a = my_sqrt(1.f - _c[3] * _c[3]);  // == std::sin(angle() * .5)
   // a = a ? 1.f / a : 1.f;
-  float xyz = mag(_c.head<3>());
-  float a = xyz ? 1.f / xyz : 1.f;
+  const float xyz = mag(_c.head<3>());
+  const float a = xyz ? 1.f / xyz : 1.f;
   return _c.head<3>() * a;
 }
 
@@ -192,24 +192,24 @@ inline Vector Quaternion::axis() const {
   Quaternion q;
   ASSERTXX(qi.is_unit());
   if (0) {
-    float wo = qi[3];
-    float ango = my_acos(wo) * 2.f;
-    float angn = ango * e;
-    float wn = std::cos(angn * .5f);
-    float xyzo = my_sqrt(1.f - wo * wo);
-    float xyzn = my_sqrt(1.f - wn * wn);
+    const float wo = qi[3];
+    const float ango = my_acos(wo) * 2.f;
+    const float angn = ango * e;
+    const float wn = std::cos(angn * .5f);
+    const float xyzo = my_sqrt(1.f - wo * wo);
+    const float xyzn = my_sqrt(1.f - wn * wn);
     q[3] = wn;
-    float a = xyzo ? xyzn / xyzo : 1.f;
+    const float a = xyzo ? xyzn / xyzo : 1.f;
     for_int(i, 3) q[i] = qi[i] * a;
     q.normalize();
   } else {
     // 2007-06-15 much more numerically stable
     // The important case is small angles, for which all the precision is in qi[0..2].
-    float xyzo = mag(qi._c.head<3>());
-    float ango = my_asin(xyzo) * 2.f;
-    float angn = ango * e;
-    float xyzn = std::sin(angn * .5f);
-    float a = xyzo ? xyzn / xyzo : 1.f;
+    const float xyzo = mag(qi._c.head<3>());
+    const float ango = my_asin(xyzo) * 2.f;
+    const float angn = ango * e;
+    const float xyzn = std::sin(angn * .5f);
+    const float a = xyzo ? xyzn / xyzo : 1.f;
     for_int(i, 3) q[i] = qi[i] * a;
     q[3] = my_sqrt(1.f - mag2(q._c.head<3>()));
   }

@@ -200,7 +200,7 @@ struct Filter_spline final : Filter {  // cubic B-spline
     if (x >= 2.) {
       return 0.;
     } else if (x >= 1.) {
-      double t = x - 2.;
+      const double t = x - 2.;
       return (-1. / 6.) * t * t * t;
     } else {
       return ((0.5 * x - 1.) * x) * x + 2. / 3.;
@@ -326,7 +326,7 @@ const LUfactorization& FilterBnd::lu_factorization() const {
   //  boundary condition and (2) interpolate the original data.
   // These constraints can only be approximated in a least-squares sense, so it is hopeless.
   assertx(filter().has_inv_convolution());
-  bool is_bspline = !filter().is_omoms() || filter().is_preprocess();
+  const bool is_bspline = !filter().is_omoms() || filter().is_preprocess();
   switch (bndrule()) {
     case Bndrule::reflected:
       return is_bspline ? g_reflected_spline_lu_factorization : g_reflected_omoms_lu_factorization;
@@ -345,30 +345,33 @@ const LUfactorization& FilterBnd::lu_factorization() const {
 void FilterBnd::setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar_pixelindex0,
                                      Matrix<float>& mat_weights) const {
   assertx(cx >= (!primal ? 1 : 2) && nx >= (!primal ? 1 : 2));
-  double scaling = !primal ? double(nx) / cx : double(nx - 1) / (cx - 1);
+  const double scaling = !primal ? double(nx) / cx : double(nx - 1) / (cx - 1);
   const bool is_magnify = nx > cx;
-  bool is_impulse = filter().is_impulse();
+  const bool is_impulse = filter().is_impulse();
   KernelFunc kernel_func = is_impulse ? nullptr : filter().func();
-  double kernel_radius = filter().radius();
-  int nk = is_impulse ? 1 : is_magnify ? int(kernel_radius * 2.) : int(kernel_radius * 2. / scaling + .999999);
-  bool nkodd = (nk % 2) > 0;
+  const double kernel_radius = filter().radius();
+  const int nk = is_impulse ? 1 : is_magnify ? int(kernel_radius * 2.) : int(kernel_radius * 2. / scaling + .999999);
+  const bool nkodd = (nk % 2) > 0;
   ar_pixelindex0.init(nx);
   mat_weights.init(nx, nk);
   for_int(x, nx) {
-    double dx = (!primal ? (x + 0.5) / nx :  // range [0, 1]: ngrid[0] at (0.5) / nx, ngrid[nx - 1] at (nx - 0.5) / nx
-                     x / (nx - 1.));         // range [0, 1]: ngrid[0] at 0.,         ngrid[nx - 1] at 1.
-    double wcx = (!primal ? dx * cx - 0.5 :  // back to pixel coordinates of current grid
-                      dx * (cx - 1));
-    double wf = floor(wcx + (nkodd ? 0.5 : 0.));
-    int pixelindex0 = int(wf) - ((nk - 1) / 2);
+    // Range [0, 1].  If !primal: ngrid[0] at (0.5) / nx, ngrid[nx - 1] at (nx - 0.5) / nx.
+    //  If primal: ngrid[0] at 0., ngrid[nx - 1] at 1.
+    const double dx = !primal ? (x + 0.5) / nx : x / (nx - 1.);
+    const double wcx = (!primal ? dx * cx - 0.5 :  // Back to pixel coordinates of current grid.
+                            dx * (cx - 1));
+    const double wf = floor(wcx + (nkodd ? 0.5 : 0.));
+    const int pixelindex0 = int(wf) - ((nk - 1) / 2);
     ar_pixelindex0[x] = pixelindex0;
     double sum = 0.;
     // Here we cannot fold the boundary rule because Bndrule::periodic requires non-contiguous access.
     // Instead we use map_boundaryrule_1D() within evaluate_kernel_d().
     for_int(k, nk) {
-      int i = pixelindex0 + k;
-      double w0 = double(i);
-      double v = is_impulse ? 1. : is_magnify ? kernel_func(wcx - w0) : kernel_func((wcx - w0) * scaling) * scaling;
+      const int i = pixelindex0 + k;
+      const double w0 = double(i);
+      const double v = is_impulse   ? 1.
+                       : is_magnify ? kernel_func(wcx - w0)
+                                    : kernel_func((wcx - w0) * scaling) * scaling;
       if (0) SHOW(x, k, wcx, wf, pixelindex0, i, v);
       mat_weights[x, k] = float(v);
       sum += v;
@@ -376,8 +379,8 @@ void FilterBnd::setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar
     // HH_SSTAT(Ssum, sum);
     if (0) SHOW(ar_pixelindex0[x], mat_weights[x]);
     if (0 && k_debug) {
-      bool discontinuous = filter().is_discontinuous();
-      double thresh = is_magnify ? (filter().name() == "gaussian" ? .1 : 1e-5) : (discontinuous ? 1. : .2);
+      const bool discontinuous = filter().is_discontinuous();
+      const double thresh = is_magnify ? (filter().name() == "gaussian" ? .1 : 1e-5) : (discontinuous ? 1. : .2);
       if (abs(sum - 1.) > thresh)  // e.g. fails for "quadratic" cx=2 nx=3 x=1
         assertnever(SSHOW(cx, nx, filter().name(), nk, x, sum, mat_weights));
     }

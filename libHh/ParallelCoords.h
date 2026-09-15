@@ -42,22 +42,22 @@ template <typename Func = void(int, int)> void parallel_for_2DL(int y0, int yn, 
 template <typename Func = void(int, int), typename FuncInterior = void(int, int)>
 void for_2DL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior func_interior) {
   {
-    int y = y0;
+    const int y = y0;
     if (y < yn) for_intL(x, x0, xn) func(y, x);
   }
   for_intL(y, y0 + 1, yn - 1) {
     {
-      int x = x0;
+      const int x = x0;
       if (x0 < xn) func(y, x);
     }
     for_intL(x, x0 + 1, xn - 1) func_interior(y, x);
     {
-      int x = max(x0 + 1, xn - 1);
+      const int x = max(x0 + 1, xn - 1);
       if (x < xn) func(y, x);
     }
   }
   {
-    int y = max(y0 + 1, yn - 1);
+    const int y = max(y0 + 1, yn - 1);
     if (y < yn) for_intL(x, x0, xn) func(y, x);
   }
 }
@@ -65,22 +65,22 @@ void for_2DL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior fu
 template <typename Func = void(int, int), typename FuncInterior = void(int, int)>
 void parallel_for_2DL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior func_interior) {
   {
-    int y = y0;
+    const int y = y0;
     if (y < yn) for_intL(x, x0, xn) func(y, x);
   }
   parallel_for(range(y0 + 1, yn - 1), [&](const int y) {
     {
-      int x = x0;
+      const int x = x0;
       if (x0 < xn) func(y, x);
     }
     for_intL(x, x0 + 1, xn - 1) func_interior(y, x);
     {
-      int x = max(x0 + 1, xn - 1);
+      const int x = max(x0 + 1, xn - 1);
       if (x < xn) func(y, x);
     }
   });
   {
-    int y = max(y0 + 1, yn - 1);
+    const int y = max(y0 + 1, yn - 1);
     if (y < yn) for_intL(x, x0, xn) func(y, x);
   }
 }
@@ -152,7 +152,7 @@ void parallel_for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func) {
 
 template <typename Func = void(const Vec1<int>&)>
 void parallel_for_coordsL(const ParallelOptions& options, Vec1<int> uL, Vec1<int> uU, Func func) {
-  int dim0 = uU[0] - uL[0];
+  const int dim0 = uU[0] - uL[0];
   if (dim0 * options.cycles_per_elem >= k_parallel_thresh) {
     parallel_for(range(uL[0], uU[0]), [&](const int i) { func(V(i)); });
   } else {
@@ -273,7 +273,7 @@ void for_coordsL_raster(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, FuncRa
     for_intL(d0, uL[0], uU[0]) func_raster(d0);
   } else if constexpr (D == 2) {
     for_intL(d0, uL[0], uU[0]) {
-      size_t i0 = d0 * dims[1];
+      const size_t i0 = d0 * dims[1];
       for_intL(d1, uL[1], uU[1]) func_raster(i0 + d1);
     }
   } else if constexpr (D == 3) {  // speed does not increase much
@@ -282,7 +282,7 @@ void for_coordsL_raster(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, FuncRa
       // "size_t ib = ravel_index<D>(dims, {d0, d1, uL[2]});" fails for D != 3
       // size_t ib = ravel_index<D>(dims, V(d0, d1, uL[2]).const_view());  // .const_view() for compilation of D != 3
       // for_int(id, uU[2] - uL[2]) func_raster(ib + id);
-      size_t i0 = (d0 * dims[1] + d1) * dims[2];
+      const size_t i0 = (d0 * dims[1] + d1) * dims[2];
       for_intL(d2, uL[2], uU[2]) func_raster(i0 + d2);
     }
   } else {  // this generic case is already quite fast

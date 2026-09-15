@@ -49,7 +49,7 @@ class FifoVertexCache : public VertexCache {
     } else {
       int* q = _queuev.data();
       for_int(qi, _queuev.num()) {
-        int vif = q[qi];
+        const int vif = q[qi];
         q[qi] = k_no_entry;
         ASSERTX(vif == k_no_entry || _vinqueue[vif] == qi);
         _vinqueue[vif] = -1;  // vif == k_no_entry is OK
@@ -62,12 +62,12 @@ class FifoVertexCache : public VertexCache {
     ASSERTX(vc.type() == type() && vc._vinqueue.num() == _vinqueue.num() && vc._queuev.num() == _queuev.num());
     if (0) {
       for_int(qi, _queuev.num()) {  // copied from init()
-        int vif = _queuev[qi];
+        const int vif = _queuev[qi];
         ASSERTX(vif == k_no_entry || _vinqueue[vif] == qi);
         _vinqueue[vif] = -1;  // vif == k_no_entry is OK
       }
       for_int(qi, _queuev.num()) {
-        int vif = vc._queuev[qi];
+        const int vif = vc._queuev[qi];
         _vinqueue[vif] = qi;  // vif == k_no_entry is OK
         _queuev[qi] = vif;
       }
@@ -77,12 +77,12 @@ class FifoVertexCache : public VertexCache {
       int* vinq = _vinqueue.data();
       const int* vcq = vc._queuev.data();
       for_int(qi, _queuev.num()) {
-        int vif = q[qi];
+        const int vif = q[qi];
         ASSERTX(vif == k_no_entry || _vinqueue[vif] == qi);
         vinq[vif] = -1;
       }
       for_int(qi, _queuev.num()) {
-        int vif = vcq[qi];
+        const int vif = vcq[qi];
         q[qi] = vif;
         vinq[vif] = qi;
       }
@@ -98,7 +98,7 @@ class FifoVertexCache : public VertexCache {
         _iprev = _queuev.num();
       }
       --_iprev;
-      int vj = _queuev[_iprev];  // oldest vertex
+      const int vj = _queuev[_iprev];  // Oldest vertex.
       ASSERTX(vj == k_no_entry || _vinqueue[vj] == _iprev);
       _vinqueue[vj] = -1;  // vj == k_no_entry is OK
       _queuev[_iprev] = vi;
@@ -108,7 +108,7 @@ class FifoVertexCache : public VertexCache {
       int* vinq = _vinqueue.data();
       if (vinq[vi] >= 0) return true;  // if there, do nothing
       _iprev = _iprev - 1 + (_iprev == 0) * _queuev.num();
-      int vj = q[_iprev];  // oldest vertex
+      const int vj = q[_iprev];  // Oldest vertex.
       q[_iprev] = vi;
       ASSERTX(vj == k_no_entry || vinq[vj] == _iprev);
       vinq[vj] = -1;  // vj == k_no_entry is OK
@@ -122,7 +122,7 @@ class FifoVertexCache : public VertexCache {
   }
   [[nodiscard]] int location(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinqueue.num());
-    int qi = _vinqueue[vi];
+    const int qi = _vinqueue[vi];
     if (qi < 0) return -1;
     ASSERTX(_queuev[qi] == vi);
     int loc = qi - _iprev;
@@ -131,7 +131,7 @@ class FifoVertexCache : public VertexCache {
   }
   [[nodiscard]] int location_alt(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinqueue.num());
-    int qi = _vinqueue[vi];
+    const int qi = _vinqueue[vi];
     if (qi < 0) return _queuev.num();
     ASSERTX(_queuev[qi] == vi);
     int loc = qi - _iprev;
@@ -147,7 +147,7 @@ class FifoVertexCache : public VertexCache {
     int next() override {
       if (!_numi) return 0;
       --_numi;
-      int vi = _qv[_qi];
+      const int vi = _qv[_qi];
       _qi++;
       if (_qi == _qv.num()) _qi = 0;
       return vi;  // vi == k_no_entry is OK
@@ -188,7 +188,7 @@ class LruVertexCache : public VertexCache {
     } else {
       for_int(ci, cs) {
         Node* node = &_nodes[ci];
-        int vif = node->vert;
+        const int vif = node->vert;
         ASSERTX(vif == k_no_entry || _vinlist[vif] == node);
         _vinlist[vif] = nullptr;  // vif == k_no_entry is OK
         node->vert = k_no_entry;
@@ -199,13 +199,13 @@ class LruVertexCache : public VertexCache {
     const LruVertexCache& vc = static_cast<const LruVertexCache&>(pvc);
     ASSERTX(vc.type() == type() && vc._vinlist.num() == _vinlist.num() && vc._cs == _cs);
     init(vc._vinlist.num(), vc._cs);
-    EListNode* onodee = vc._list.delim()->next();
-    EListNode* tnodee = _list.delim()->next();
-    EListNode* tdelime = _list.delim();
+    const EListNode* onodee = vc._list.delim()->next();
+    const EListNode* tnodee = _list.delim()->next();
+    const EListNode* tdelime = _list.delim();
     while (tnodee != tdelime) {
-      Node* onode = HH_ELIST_OUTER(Node, elist, onodee);
+      const Node* onode = HH_ELIST_OUTER(Node, elist, onodee);
       Node* tnode = HH_ELIST_OUTER(Node, elist, tnodee);
-      int vif = onode->vert;
+      const int vif = onode->vert;
       tnode->vert = vif;
       _vinlist[vif] = tnode;  // vif == k_no_entry is OK
       tnodee = tnodee->next();
@@ -224,7 +224,7 @@ class LruVertexCache : public VertexCache {
     EListNode* nodee = _list.delim()->prev();  // rear node
     // if (nodee == _list.delim()) return false;  // cs == 0
     node = HH_ELIST_OUTER(Node, elist, nodee);
-    int vj = node->vert;
+    const int vj = node->vert;
     ASSERTX(vj == k_no_entry || _vinlist[vj] == node);
     _vinlist[vj] = nullptr;  // vj == k_no_entry is OK
     nodee->relink_after(_list.delim());
@@ -242,7 +242,7 @@ class LruVertexCache : public VertexCache {
     const EListNode* vinodee = &_vinlist[vi]->elist;
     const EListNode* delime = _list.delim();
     int num = 0;
-    for (EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
+    for (const EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
     ASSERTX(num < _cs);
     return num;
   }
@@ -252,7 +252,7 @@ class LruVertexCache : public VertexCache {
     const EListNode* vinodee = &_vinlist[vi]->elist;
     const EListNode* delime = _list.delim();
     int num = 0;
-    for (EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
+    for (const EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
     ASSERTX(num < _cs);
     return num;
   }
@@ -264,7 +264,7 @@ class LruVertexCache : public VertexCache {
     Iter(const LruVertexCache& vcache) : _delim(vcache._list.delim()), _n(vcache._list.delim()->next()) {}
     int next() override {
       if (_n == _delim) return 0;
-      int vi = HH_ELIST_OUTER(LruVertexCache::Node, elist, _n)->vert;
+      const int vi = HH_ELIST_OUTER(LruVertexCache::Node, elist, _n)->vert;
       _n = _n->next();
       return vi;  // vi == k_no_entry is OK
     }
@@ -309,7 +309,7 @@ inline std::ostream& operator<<(std::ostream& os, const VertexCache& vc) {
   VertexCache::Iter& vci = *up_vci;
   os << "{";
   for (;;) {
-    int vi = vci.next();
+    const int vi = vci.next();
     if (!vi) break;
     os << sform(" %d", vi);
   }

@@ -219,9 +219,9 @@ Grid<D, T> assemble(CGridView<D, U> grids, const T& background, const Vec<Alignm
     CGridView<D, T> agrid = grids[ugrid];
     Vec<int, D> offset;
     for_int(d, D) {
-      int uL = locs[d][ugrid[d]];
-      int uU = locs[d][ugrid[d] + 1];
-      int expected = uU - uL;
+      const int uL = locs[d][ugrid[d]];
+      const int uU = locs[d][ugrid[d] + 1];
+      const int expected = uU - uL;
       switch (align[d]) {
         case Alignment::left: offset[d] = uL; break;
         case Alignment::center: offset[d] = uL + (expected - agrid.dim(d)) / 2; break;
@@ -377,8 +377,8 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
   static_assert(std::is_trivially_default_constructible_v<T>);
   const Vec<int, D>& dims = grid.dims();
   int cx = dims[d];
-  int nx = ar_pixelindex0.num();
-  int nk = mat_weights.xsize();
+  const int nx = ar_pixelindex0.num();
+  const int nk = mat_weights.xsize();
   const Vec<int, D> ndims = dims.with(d, nx);
   Grid<D, T> ngrid(ndims);
   const size_t stride = grid_stride(dims, d);
@@ -391,7 +391,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
   while (ioutmax > ioutmin && ar_pixelindex0[ioutmax - 1] + nk > cx) --ioutmax;
   assertx(0 <= ioutmin && ioutmin <= ioutmax && ioutmax <= nx);
   const auto func = [&](const Vec<int, D>& u) {
-    int x = u[d];
+    const int x = u[d];
     T v{};
     for_int(k, nk) {
       int ii = ar_pixelindex0[x] + k;
@@ -401,9 +401,9 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
     ngrid[u] = v;
   };
   const auto func_interior = [&](const Vec<int, D>& u) {
-    int x = u[d];
+    const int x = u[d];
     const Vec<int, D> u0 = u.with(d, ar_pixelindex0[x]);
-    size_t i0 = ravel_index(dims, u0);
+    const size_t i0 = ravel_index(dims, u0);
     T v{};
     const float* mat_weights_x = mat_weights[x].data();
     const T* grid_i0 = grid.data() + i0;
@@ -431,7 +431,7 @@ template <int D, typename T>
 Grid<D, T> scale_d(CGridView<D, T> grid, int d, int nx, const FilterBnd& filterb, const T* bordervalue, bool primal,
                    Grid<D, T>&& gr = Grid<D, T>()) {
   const Vec<int, D>& dims = grid.dims();
-  int cx = dims[d];
+  const int cx = dims[d];
   if (nx == cx && filterb.filter().is_interpolating()) {
     gr = grid;
     return std::move(gr);
@@ -475,7 +475,7 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
   // Note: IMAGE_EXPAND_VALUE_RANGE would be 2. to get a range [-.5, 1.5].
   // The lower factor of 1.5 was found empirically to yield the best results; see ~/prevproj/2011/vtfilter/Notes.txt.
   static const float k_expand_value_range = getenv_float("IMAGE_EXPAND_VALUE_RANGE", 1.5f, true);
-  float expand_value_range = npreprocess ? 1.f / assertx(k_expand_value_range) : k_expand_value_range;
+  const float expand_value_range = npreprocess ? 1.f / assertx(k_expand_value_range) : k_expand_value_range;
   if (npreprocess) {
     assertx(ndims == dims);
     const bool no_constrained_optimization = getenv_bool("IMAGE_NO_CONSTRAINED_OPTIMIZATION");
@@ -536,7 +536,7 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
   sort(ar, by_quickest_size_reduction);
   CGridView<D, T> gridref(grid);  // (becomes gr after first iteration)
   for (const Tup& tup : ar) {
-    int d = tup.dim;  // SHOW(d);
+    const int d = tup.dim;  // SHOW(d);
     gr = details::scale_d(gridref, d, ndims[d], filterbs[d], bordervalue, primal, std::move(gr));
     gridref.reinit(gr);
   }
@@ -607,19 +607,19 @@ Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, 
   if constexpr (D == 1) {
     ASSERTX(!maps[0].num());
     parallel_for({.cycles_per_elem = 3}, range(ndims[0]), [&](const int i) {
-      int ii = int((i + .5f) / ndims[0] * dims[0] - 1e-4f);
+      const int ii = int((i + .5f) / ndims[0] * dims[0] - 1e-4f);
       ngrid[i] = grid[ii];
     });
   } else if constexpr (D == 2) {
     parallel_for({.cycles_per_elem = uint64_t(ndims[1]) * 3}, range(ndims[0]), [&](const int y) {
-      int yy = maps[0][y];
+      const int yy = maps[0][y];
       for_int(x, ndims[1]) ngrid[y, x] = grid[yy, maps[1][x]];
     });
   } else if constexpr (D == 3) {
     parallel_for({.cycles_per_elem = uint64_t(ndims[1] * ndims[2]) * 3}, range(ndims[0]), [&](const int z) {
-      int zz = maps[0][z];
+      const int zz = maps[0][z];
       for_int(y, ndims[1]) {
-        int yy = maps[1][y];
+        const int yy = maps[1][y];
         for_int(x, ndims[2]) ngrid[z, y, x] = grid[zz, yy, maps[2][x]];
       }
     });
@@ -643,7 +643,7 @@ T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>
     if (filterbs[d].bndrule() == Bndrule::border) assertx(bordervalue);
     assertx(!filterbs[d].filter().has_inv_convolution());
     KernelFunc func = assertx(filterbs[d].filter().func());
-    double kernel_radius = filterbs[d].filter().radius();
+    const double kernel_radius = filterbs[d].filter().radius();
     uL[d] = int(floor(p[d] - kernel_radius));
     uU[d] = int(ceil(p[d] + kernel_radius)) + 1;
     for_intL(i, uL[d], uU[d]) matw[d].push(float(func(float(i) - p[d])));
@@ -684,16 +684,16 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
   Array<int> kerneli;
   {
     kerneli = convert<int>(kernel * float(fac) + .5f);  // (all >= 0.f so no need for floor())
-    int excess = narrow_cast<int>(sum(kerneli) - fac);
+    const int excess = narrow_cast<int>(sum(kerneli) - fac);
     assertx(abs(excess) <= nk);  // sanity check
     kerneli[r] -= excess;        // adjust center weight to make the quantized sum correct
   }
   Grid<D, Pixel> ngrid(dims);
-  int ioutmin = min(r, nx);
-  int ioutmax = max(ioutmin, nx - r);
+  const int ioutmin = min(r, nx);
+  const int ioutmax = max(ioutmin, nx - r);
   assertx(0 <= ioutmin && ioutmin <= ioutmax && ioutmax <= nx);
   const auto func = [&](const Vec<int, D>& u) {
-    int x = u[d];
+    const int x = u[d];
     Vector4i v{0};
     for_int(k, nk) {
       int ii = x - r + k;
@@ -703,9 +703,9 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
     ngrid[u] = ((v + fach) >> ishift).pixel();
   };
   const auto func_interior = [&](const Vec<int, D>& u) {
-    int x = u[d];
+    const int x = u[d];
     const Vec<int, D> u0 = u.with(d, x - r);
-    size_t i0 = ravel_index(dims, u0);
+    const size_t i0 = ravel_index(dims, u0);
     Vector4i v{0};
     for_int(k, nk) v += kerneli[k] * Vector4i(grid.flat(i0 + k * stride));  // OPT:blur
     ngrid[u] = ((v + fach) >> ishift).pixel();

@@ -55,9 +55,9 @@ template <typename T> class Sac : public BSac {
  public:
   // ** static
   template <typename T2> [[nodiscard]] static int allocate() {
-    unsigned s = sizeof(T2);
+    const unsigned s = sizeof(T2);
     int k = size;
-    int align = alignof(T2);
+    const int align = alignof(T2);
     max_align = max(max_align, align);
     k = ((k + align - 1) / align) * align;
     if (0) SHOW(type_name<T>(), type_name<T2>(), s, size, align, max_align, k);
@@ -65,7 +65,7 @@ template <typename T> class Sac : public BSac {
     return k;
   }
   template <typename T2> static int allocate_cd(Func fcons, Func fdest) {
-    int k = allocate<T2>();
+    const int k = allocate<T2>();
     if (fcons) {
       assertx(cnum < k_max);
       HH_ASSUME(cnum < k_max);

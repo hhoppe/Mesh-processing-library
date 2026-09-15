@@ -58,14 +58,14 @@ template <typename T> class Graph : noncopyable {
 
 template <typename T> bool Graph<T>::remove(T v) {
   if (!contains(v)) return false;
-  atype ar = _m.remove(v);
+  const atype ar = _m.remove(v);
   assertx(!ar.num());
   return true;
 }
 
 template <typename T> bool Graph<T>::remove_undirected(T v1, T v2) {
-  bool r1 = remove(v1, v2);
-  bool r2 = remove(v2, v1);
+  const bool r1 = remove(v1, v2);
+  const bool r2 = remove(v2, v1);
   assertx(r1 == r2);
   return r1;
 }

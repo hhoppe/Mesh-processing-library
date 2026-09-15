@@ -37,16 +37,16 @@ void BPointSpatial::clear() {
 }
 
 void BPointSpatial::enter(Univ id, const Point* pp) {
-  Ind ci = indices_from_point(*pp);
+  const Ind ci = indices_from_point(*pp);
   assertx(indices_inbounds(ci));
-  int en = encode(ci);
+  const int en = encode(ci);
   _map[en].push(Node{id, pp});  // First create empty Array<Node> if not present.
 }
 
 void BPointSpatial::remove(Univ id, const Point* pp) {
-  Ind ci = indices_from_point(*pp);
+  const Ind ci = indices_from_point(*pp);
   assertx(indices_inbounds(ci));
-  int en = encode(ci);
+  const int en = encode(ci);
   Array<Node>& ar = _map.get(en);
   int ind = -1;
   for_int(i, ar.num()) {
@@ -66,7 +66,7 @@ void BPointSpatial::shrink_to_fit() {
 
 void BPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& /*set*/) const {
   // SHOW("add_cell", ci);
-  int en = encode(ci);
+  const int en = encode(ci);
   bool present;
   const auto& cell = _map.retrieve(en, present);
   if (!present) return;
@@ -124,7 +124,7 @@ void BSpatialSearch::advance() {
 void BSpatialSearch::consider(const Ind& ci) {
   // SHOW("consider", ci);
   _ncellsv++;
-  int n = _pq.num();
+  const int n = _pq.num();
   _spatial.add_cell(ci, _pq, _pcenter, _setevis);
   _nelemsv += _pq.num() - n;
 }
@@ -172,9 +172,9 @@ void BSpatialSearch::expand_search_space() {
 
 IPointSpatial::IPointSpatial(int gridn, CArrayView<Point> arp) : Spatial(gridn), _pp(arp.data()) {
   for_int(i, arp.num()) {
-    Ind ci = indices_from_point(arp[i]);
+    const Ind ci = indices_from_point(arp[i]);
     assertx(indices_inbounds(ci));
-    int en = encode(ci);
+    const int en = encode(ci);
     _map[en].push(i);  //  First create empty Array<int> if not present.
   }
   if (0)
@@ -187,11 +187,11 @@ void IPointSpatial::clear() {
 }
 
 void IPointSpatial::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& /*set*/) const {
-  int en = encode(ci);
+  const int en = encode(ci);
   bool present;
   const auto& cell = _map.retrieve(en, present);
   if (!present) return;
-  for (int i : cell) pq.enter(Conv<int>::e(i), dist2(pcenter, _pp[i]));
+  for (const int i : cell) pq.enter(Conv<int>::e(i), dist2(pcenter, _pp[i]));
 }
 
 Univ IPointSpatial::pq_id(Univ pqe) const { return pqe; }

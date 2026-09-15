@@ -113,7 +113,7 @@ struct LUfactorization {
   Array<float> UlastcolPen;  // penultimate element of last column of U, as a function of matrix size ([0]=size1)
   float Uupper;              // upper off-diagonal of U, constant along the diagonal
   void validate() const {
-    bool last_special = Llastrow.num() > 0;
+    const bool last_special = Llastrow.num() > 0;
     assertx(last_special == (LlastrowPen.num() > 0));
     assertx(last_special == (Ulastcol.num() > 0));
     assertx(last_special == (UlastcolPen.num() > 0));

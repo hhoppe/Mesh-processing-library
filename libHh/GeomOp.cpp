@@ -10,9 +10,9 @@ namespace hh {
 // Deduced from book: Coxeter "Geometry".
 float circum_radius(const Point& p0, const Point& p1, const Point& p2) {
   using Precision = double;
-  Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
-  Precision s = (a + b + c) * .5;
-  Precision d2 = s * (s - a) * (s - b) * (s - c);
+  const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
+  const Precision s = (a + b + c) * .5;
+  const Precision d2 = s * (s - a) * (s - b) * (s - c);
   if (d2 <= 0.) {
     Warning("circum_radius degenerate");
     return 1e10f;
@@ -26,9 +26,9 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
   // d = sqrt(s * (s - a) * (s - b) * (s -c))
   // s = (a + b + c) / 2
   using Precision = double;
-  Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
-  Precision s = (a + b + c) * .5f;
-  Precision d2 = s * (s - a) * (s - b) * (s - c);
+  const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
+  const Precision s = (a + b + c) * .5f;
+  const Precision d2 = s * (s - a) * (s - b) * (s - c);
   if (d2 <= 0.f) {
     Warning("inscribed_radius degenerate");
     return 0.f;
@@ -39,9 +39,9 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
 // Should normalize to be 1.f for an equilateral triangle?
 float aspect_ratio(const Point& p0, const Point& p1, const Point& p2) {
   using Precision = double;
-  Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
-  Precision s = (a + b + c) * .5;
-  Precision d2 = s * (s - a) * (s - b) * (s - c);
+  const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
+  const Precision s = (a + b + c) * .5;
+  const Precision d2 = s * (s - a) * (s - b) * (s - c);
   if (d2 <= 0.) {
     // Warning("aspect_ratio degenerate");
     return 1e10f;
@@ -59,11 +59,11 @@ float dihedral_angle_cos(const Point& p1, const Point& p2, const Point& po1, con
 }
 
 float signed_dihedral_angle(const Point& p1, const Point& p2, const Point& po1, const Point& po2) {
-  Vector ves1 = cross(p1, p2, po1);
-  Vector ves2 = cross(p1, po2, p2);
+  const Vector ves1 = cross(p1, p2, po1);
+  const Vector ves2 = cross(p1, po2, p2);
   // no need to normalize since we obtain both fcos and fsin
-  float fcos = dot(ves1, ves2);
-  Vector vcross = cross(ves1, ves2);
+  const float fcos = dot(ves1, ves2);
+  const Vector vcross = cross(ves1, ves2);
   float fsin = mag(vcross);
   if (dot(vcross, p2 - p1) < 0.f) fsin = -fsin;
   if (!fsin && !fcos) return -10.f;
@@ -89,7 +89,7 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
   double sum_ang = 0.;
   if (0) {
     for_int(i, np) {
-      int ip = (i - 1 + np) % np, in = (i + 1) % np;
+      const int ip = (i - 1 + np) % np, in = (i + 1) % np;
       Vector top = pa[i] - p;
       if (!assertw(top.normalize())) continue;
       Vector v1 = pa[i] - pa[ip];
@@ -98,9 +98,9 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
       Vector v2 = pa[in] - pa[i];
       v2 -= top * dot(v2, top);
       if (!assertw(v2.normalize())) continue;
-      float vcos = dot(v1, v2);
-      float vsin = dot(cross(v1, v2), top);
-      float ang = std::atan2(vsin, vcos);
+      const float vcos = dot(v1, v2);
+      const float vsin = dot(cross(v1, v2), top);
+      const float ang = std::atan2(vsin, vcos);
       sum_ang += ang;
     }
   } else {
@@ -111,8 +111,8 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
     Vector topp = vp;
     bool have_prior = false;
     for (int i = 1;; i++) {
-      Point pc = pa[i % np];
-      Vector vc = pc - pp;
+      const Point pc = pa[i % np];
+      const Vector vc = pc - pp;
       if (is_zero(vc)) {
         Warning("is_zero(vc)");
         if (0) SHOW(pa);
@@ -131,8 +131,8 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
         if (!assertw(v1.normalize())) return 0.f;
         Vector v2 = project_orthogonally(vc, topp);
         if (!assertw(v2.normalize())) return 0.f;
-        float vcos = dot(v1, v2);
-        float vsin = dot(cross(v1, v2), topp);
+        const float vcos = dot(v1, v2);
+        const float vsin = dot(cross(v1, v2), topp);
         float ang = std::atan2(vsin, vcos);
         // Ambiguity between -TAU / 2 and +TAU / 2 does matter here!
         if (0) SHOW(ang, ang + TAU / 2);

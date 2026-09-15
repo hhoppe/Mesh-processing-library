@@ -196,8 +196,8 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
   if (!buf.extract_line(str)) return ETryInput::nothing;  // partial something
   // 2012-12-11: now trailing '\n' has been removed; all still OK?
   {  // try Mesh
-    char* s = const_cast<char*>(str.c_str());
-    if (GMesh::recognize_line(s)) {
+    if (GMesh::recognize_line(str)) {
+      char* s = const_cast<char*>(str.c_str());
       read_mesh_line(s);
       return ETryInput::success;
     }

@@ -496,21 +496,11 @@ void GMesh::read_line(char* sline) {
   if (Warning("GMesh::read: cannot parse line")) SHOW(sline);
 }
 
-static inline int strprefix(const char* s, const char* p) {
-  for (;;) {
-    if (!*p) return true;
-    if (*s != *p) return false;
-    s++;
-    p++;
-  }
-}
-
-bool GMesh::recognize_line(const char* s) {
-  static const char* prefixes[] = {
-      "Vertex ",  "Face ",  "Corner ", "Edge ", "MVertex ", "CVertex ",
-      "DVertex ", "DFace ", "Ecol ",   "Eswa ", "Espl ",    "Vspl",
-  };
-  return ranges::any_of(prefixes, [&](const char* prefix) { return strprefix(s, prefix); });
+bool GMesh::recognize_line(std::string_view line) {
+  static constexpr auto k_prefixes =
+      to_Vec<std::string_view>({"Vertex ", "Face ", "Corner ", "Edge ", "MVertex ", "CVertex ", "DVertex ", "DFace ",
+                                "Ecol ", "Eswa ", "Espl ", "Vspl ", "Vmerge "});
+  return ranges::any_of(k_prefixes, [&](std::string_view prefix) { return line.starts_with(prefix); });
 }
 
 void GMesh::write(std::ostream& os) const {

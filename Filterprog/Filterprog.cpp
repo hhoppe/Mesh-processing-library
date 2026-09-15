@@ -1482,9 +1482,10 @@ void do_pm_encode() {
     pmesh._info._full_nfaces = pmrs._info._full_nfaces;
     pmesh._info._full_bbox = pmrs._info._full_bbox;
   }
+  hh_clean_up();
   pmesh.write(std::cout);
   std::cout.flush();
-  if (k_fast_exit) hh_clean_up(), exit_immediately(0);  // Skip ~GMesh() and ~PMesh().
+  if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh() and ~PMesh().
 }
 
 }  // namespace

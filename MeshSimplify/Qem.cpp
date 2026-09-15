@@ -345,7 +345,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
     for_int(i, n - 1) for_int(j, n) zt[i, j] = 0.;
     Vec2<Vector> voa;
     {
-      Vector vlf(lf[0], lf[1], lf[2]);
+      const Vector vlf(lf[0], lf[1], lf[2]);
       voa[0] = orthogonal_vector(vlf);
       // instead of normalizing, could just scale max(abs) to 1.
       assertx(voa[0].normalize());
@@ -415,7 +415,7 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
         pa++;
       }
     }
-    double al = *pa;
+    const double al = *pa;
     alinv = 1. / al;
     if (0) {
       for_intL(i, ngeom, n) {

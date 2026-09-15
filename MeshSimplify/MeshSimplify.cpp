@@ -124,13 +124,14 @@ auto gather_vertex_ring(const GMesh& mesh, Vertex v) {
 
 // Return smallest dihedral value in would-be mesh neighborhood around newp.
 float min_local_dihedral(const GMesh& mesh, CArrayView<Vertex> va, const Point& newp) {
-  int nw = va.num();
+  const int nw = va.num();
   assertx(nw > 1);
-  bool open = va[0] != va.last();
+  const bool open = va[0] != va.last();
   float min_dih = 10.f;
   // Remember: !open -> va[0] is repeated at end of va!.
   for_intL(i, 1, nw - open) {
-    int im1 = i - 1, ip1 = i + 1;
+    const int im1 = i - 1;
+    int ip1 = i + 1;
     if (ip1 == nw) ip1 = 1;
     float dih;
     if (0) {
@@ -146,7 +147,7 @@ float min_local_dihedral(const GMesh& mesh, CArrayView<Vertex> va, const Point& 
 
 // Return smallest dihedral value in mesh neighborhood around v.
 float min_dihedral_about_vertex(const GMesh& mesh, Vertex v) {
-  Array<Vertex> va = gather_vertex_ring(mesh, v);
+  const Array<Vertex> va = gather_vertex_ring(mesh, v);
   return min_local_dihedral(mesh, va, mesh.point(v));
 }
 
@@ -341,7 +342,7 @@ class LHPqueue : public HPqueue<Edge> {
     base::enter(e, pri);
   }
   Edge remove_min() {
-    float opri = min_priority();
+    const float opri = min_priority();
     if (opri < k_bad_dih) {
       _tot -= opri;
       --_ntot;
@@ -356,7 +357,7 @@ class LHPqueue : public HPqueue<Edge> {
     base::enter_unsorted(e, pri);
   }
   float remove(Edge e) {
-    float opri = base::remove(e);
+    const float opri = base::remove(e);
     if (opri >= 0.f && opri < k_bad_dih) {
       _tot -= opri;
       --_ntot;
@@ -364,7 +365,7 @@ class LHPqueue : public HPqueue<Edge> {
     return opri;
   }
   float update(Edge e, float pri) {
-    float opri = base::retrieve(e);
+    const float opri = base::retrieve(e);
     if (opri < 0.f) return opri;
     if (opri >= 0.f && opri < k_bad_dih) {
       _tot -= opri;
@@ -605,22 +606,22 @@ Dihedral enter_dihedral(Edge e, const NewMeshNei& nn) {
 float dihedral_penalty(const Dihedral& dih, const NewMeshNei& nn, const Point& newp) {
   bool bad = false;
   if (use_traditional_dih) {
-    float diha = min_local_dihedral(mesh, nn.va, newp);
+    const float diha = min_local_dihedral(mesh, nn.va, newp);
     assertx(std::isfinite(diha));
     bad = bad_dihedral(dih.dihb, diha);
   } else {
     CArrayView<Vector> dirs = dih.ar_dirs;
     assertx(dirs.num() == nn.ar_corners.num());
     for_int(i, nn.ar_corners.num()) {
-      Vector dir = cross(mesh.point(mesh.corner_vertex(nn.ar_corners[i][0])),
-                         mesh.point(mesh.corner_vertex(nn.ar_corners[i][1])), newp);
+      const Vector dir = cross(mesh.point(mesh.corner_vertex(nn.ar_corners[i][0])),
+                               mesh.point(mesh.corner_vertex(nn.ar_corners[i][1])), newp);
       if (dot(dir, dih.ar_dirs[i]) <= 0.f) {
         bad = true;
         break;
       }
     }
   }
-  float penalty = dihallow ? k_bad_dih : BIGFLOAT;
+  const float penalty = dihallow ? k_bad_dih : BIGFLOAT;
   return bad ? penalty : 0.f;
 }
 
@@ -707,13 +708,13 @@ void get_face_qem(Face f, BQemT& qem) {
 void get_sharp_edge_qem(Edge e, BQemT& qem) {
   Vector nor{};  // Average normal of adjacent 1 or 2 faces.
   for (Face f : mesh.faces(e)) {
-    Vec3<Point> triangle = mesh.triangle_points(f);
+    const Vec3<Point> triangle = mesh.triangle_points(f);
     Vector fnor = get_normal_dir(triangle);
     assertw(fnor.normalize());
     nor += fnor;
   }
   {
-    Vector evec = mesh.point(mesh.vertex2(e)) - mesh.point(mesh.vertex1(e));
+    const Vector evec = mesh.point(mesh.vertex2(e)) - mesh.point(mesh.vertex1(e));
     nor = cross(nor, evec);
   }
   assertw(nor.normalize());  // is_zero(nor) is OK below.
@@ -722,7 +723,7 @@ void get_sharp_edge_qem(Edge e, BQemT& qem) {
   if (qemweight) nor *= (mesh.length(e) / (frac_diam * gdiam));
   // Weight qem on sharp edges by a factor of neptfac.
   nor *= sqrt_neptfac;
-  float d = -dot(mesh.point(mesh.vertex1(e)), nor);
+  const float d = -dot(mesh.point(mesh.vertex1(e)), nor);
   Vec<float, k_qemsmax> enor;
   for_int(i, 3) enor[i] = nor[i];
   for_intL(i, 3, qems) enor[i] = 0.f;
@@ -777,7 +778,7 @@ void init_qem() {
         for (Corner c : mesh.corners(v)) {
           Vec<float, k_qemsmax> p;
           corner_qem_vector(c, p);
-          float qv = gwq[c_wedge_id(c)]->evaluate(p.data());
+          const float qv = gwq[c_wedge_id(c)]->evaluate(p.data());
           SSTATV2(Sinitqvc, qv);
         }
       }
@@ -816,19 +817,19 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
         for (Vertex v : mesh.vertices(e)) {
           Corner ci = mesh.corner(v, f);
           assertx(retrieve_nwid(nn, ci) < 0);
-          int wid = c_wedge_id(ci);
+          const int wid = c_wedge_id(ci);
           for (Corner c = ci;;) {  // Try ccw.
             c = mesh.ccw_corner(c);
             assertx(c != ci);
             if (!c || c_wedge_id(c) != wid) break;
-            int nwid2 = retrieve_nwid(nn, c);
+            const int nwid2 = retrieve_nwid(nn, c);
             if (nwid2 >= 0) return nwid2;
           }
           for (Corner c = ci;;) {  // Try clw.
             c = mesh.clw_corner(c);
             assertx(c != ci);
             if (!c || c_wedge_id(c) != wid) break;
-            int nwid2 = retrieve_nwid(nn, c);
+            const int nwid2 = retrieve_nwid(nn, c);
             if (nwid2 >= 0) return nwid2;
           }
         }
@@ -858,8 +859,8 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
     }
   } else {
     for_int(i, nw) {
-      int rwid1 = nn.ar_rwid_v1[i];
-      int rwid2 = nn.ar_rwid_v2[i];
+      const int rwid1 = nn.ar_rwid_v1[i];
+      const int rwid2 = nn.ar_rwid_v2[i];
       nn.ar_wq[i]->copy(*gwq[rwid1]);
       if (rwid2 != rwid1) nn.ar_wq[i]->add(*gwq[rwid2]);
     }
@@ -933,7 +934,7 @@ const char* generate_corner_string(Corner c, string& str) {
 
 // Create vertex and corner strings representing wedge info on vertex v.
 void create_vertex_corner_strings(Vertex v, string& str) {
-  int common_wid = [&]() {
+  const int common_wid = [&]() {
     int g_wid = -1;
     for (Corner c : mesh.corners(v)) {
       const int wid = c_wedge_id(c);
@@ -1065,7 +1066,7 @@ void parse_mesh_material_identifiers() {
   for (const string& face_str : unique_strings) {
     string str;
     if (const char* smat = GMesh::string_key(str, face_str.c_str(), "matid")) {
-      int matid = to_int(smat);
+      const int matid = to_int(smat);
       assertx(matid >= 0);
       material_strings.access(matid);
       assertx(material_strings[matid] == "");  // No duplicate matid.
@@ -1074,7 +1075,7 @@ void parse_mesh_material_identifiers() {
     }
   }
   const int nexistingmatidempty = material_strings.num() - matid_of_string.num();
-  int nfirst = matid_of_string.num();
+  const int nfirst = matid_of_string.num();
   for (const string& face_str : unique_strings) {
     if (GMesh::string_has_key(face_str.c_str(), "matid")) continue;  // Already handled above.
     const int matid = material_strings.add(1);
@@ -1105,7 +1106,7 @@ void parse_mesh_wedge_identifiers() {
         const char* swid = mesh.corner_key(str, c, "wid");
         if (!swid) continue;
         nwidfound++;
-        int wid = to_int(swid);
+        const int wid = to_int(swid);
         assertx(wid > 0);
         if (wid > maxwidfound) maxwidfound = wid;
       }
@@ -1158,17 +1159,17 @@ void parse_mesh_wedge_identifiers() {
           gwinfo[wid] = wi;
         }
         c_wedge_id(crep) = wid;
-        int matid = f_matid(mesh.corner_face(crep));
+        const int matid = f_matid(mesh.corner_face(crep));
         for_int(dir, 2) {  // Two directions (CCW, CLW).
           Corner c = crep;
           for (;;) {
             c = dir ? mesh.clw_corner(c) : mesh.ccw_corner(c);
             if (!c || c == crep) break;
-            WedgeInfo wi2 = construct_wi(c, vnors);
-            bool diff =
+            const WedgeInfo wi2 = construct_wi(c, vnors);
+            const bool diff =
                 ((wedge_materials && f_matid(mesh.corner_face(c)) != matid) || std::is_neq(compare_wi(wi, wi2)));
             if (nwidfound && sdebug) {
-              int wid2 = assertx(to_int(mesh.corner_key(str, c, "wid")));
+              const int wid2 = assertx(to_int(mesh.corner_key(str, c, "wid")));
               assertx(diff == (wid != wid2));
             }
             if (diff) break;
@@ -1243,7 +1244,7 @@ void parse_mesh() {
   if (sdebug) {
     for (Vertex v : mesh.vertices()) {
       for (Corner c : mesh.corners(v)) {
-        int wid = c_wedge_id(c);
+        const int wid = c_wedge_id(c);
         assertx(gwinfo.ok(wid));
       }
     }
@@ -1272,7 +1273,7 @@ void parse_mesh() {
 
 // Begin recording ecol records onto PM stream.
 void do_progressive(Args& args) {
-  string filename = args.get_filename();
+  const string filename = args.get_filename();
   assertw(!wfile_prog);
   if (filename != "") wfile_prog.emplace(filename);
 }
@@ -1344,7 +1345,7 @@ void add_edge_point(Edge e, float bary) {
 
 // Write out the complexity of the current mesh and statistics on fit errors.
 void analyze_mesh(const char* s) {
-  int nv = mesh.num_vertices(), nf = mesh.num_faces(), ne = mesh.num_edges();
+  const int nv = mesh.num_vertices(), nf = mesh.num_faces(), ne = mesh.num_edges();
   std::atomic<int> nshae = 0, nbnde = 0, ndise = 0, nscae = 0;
   parallel_for(mesh.edges(), [&](Edge e) {
     if (edge_sharp(e)) nshae++;
@@ -1361,20 +1362,20 @@ void analyze_mesh(const char* s) {
   {
     float efdis = 0.f;
     for (const fptinfo& fpt : fpts) efdis += fpt.dist2;
-    float fdrms = my_sqrt(efdis / max(fpts.num(), 1));
+    const float fdrms = my_sqrt(efdis / max(fpts.num(), 1));
     float dmax2 = 0.f;
     for (const fptinfo& fpt : fpts) dmax2 = max(dmax2, fpt.dist2);
-    float fdmax = my_sqrt(dmax2);
+    const float fdmax = my_sqrt(dmax2);
     showff(" fdist(%d): rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",  //
            fpts.num(), fdrms, fdrms / gdiam * 100, fdmax, fdmax / gdiam * 100);
   }
   {
     float eedis = 0.f;
     for (const eptinfo& ept : epts) eedis += ept.dist2;
-    float edrms = my_sqrt(eedis / max(epts.num(), 1));
+    const float edrms = my_sqrt(eedis / max(epts.num(), 1));
     float dmax2 = 0.f;
     for (const eptinfo& ept : epts) dmax2 = max(dmax2, ept.dist2);
-    float edmax = my_sqrt(dmax2);
+    const float edmax = my_sqrt(dmax2);
     showff(" edist(%d): rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",  //
            epts.num(), edrms, edrms / gdiam * 100, edmax, edmax / gdiam * 100);
   }
@@ -1388,8 +1389,8 @@ void analyze_mesh(const char* s) {
       efdis += fpt.coldist2();
       dmax2 = max(dmax2, fpt.coldist2());
     }
-    float fdrms = my_sqrt(efdis / max(nptcol, 1));
-    float fdmax = my_sqrt(dmax2);
+    const float fdrms = my_sqrt(efdis / max(nptcol, 1));
+    const float fdmax = my_sqrt(dmax2);
     showff(" fcoldist(%d): rms=%g max=%g\n", nptcol, fdrms, fdmax);
   }
   if (have_cnormals && norfac) {
@@ -1402,8 +1403,8 @@ void analyze_mesh(const char* s) {
       efdis += fpt.nordist2();
       dmax2 = max(dmax2, fpt.nordist2());
     }
-    float fdrms = my_sqrt(efdis / max(nptnor, 1));
-    float fdmax = my_sqrt(dmax2);
+    const float fdrms = my_sqrt(efdis / max(nptnor, 1));
+    const float fdmax = my_sqrt(dmax2);
     showff(" fnordist(%d): rms=%g max=%g\n", nptnor, fdrms, fdmax);
   }
 }
@@ -1442,7 +1443,7 @@ void sample_pts() {
     {
       double sumarea = 0.;  // For accuracy.
       for (Face f : mesh.faces()) {
-        float area = mesh.area(f);
+        const float area = mesh.area(f);
         fface.push(f);
         fcarea.push(float(sumarea));
         sumarea += area;
@@ -1451,14 +1452,14 @@ void sample_pts() {
       fcarea.push(1.00001f);
     }
     for_int(i, numpts) {
-      int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.unif());
+      const int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.unif());
       Face f = fface[fi];
       float a = Random::G.unif(), b = Random::G.unif();
       if (a + b > 1.f) {
         a = 1.f - a;
         b = 1.f - b;
       }
-      Bary bary(a, b, 1.f - a - b);
+      const Bary bary(a, b, 1.f - a - b);
       add_face_point(f, bary, true);
     }
     showff("Created %d random points\n", numpts);
@@ -1468,7 +1469,7 @@ void sample_pts() {
     Array<Vertex> va;
     Array<Face> fa;  // For jittering.
     for (Vertex v : mesh.vertices()) {
-      bool define_scalars = !vertex_has_hedge_scalar_bnd(v);
+      const bool define_scalars = !vertex_has_hedge_scalar_bnd(v);
       Face f;
       if (jittervertices) {
         fa.init(0);
@@ -1519,7 +1520,7 @@ void sample_pts() {
       double sumlen = 0.;
       for (Edge e : mesh.edges()) {
         if (!edge_sharp(e)) continue;
-        float len = mesh.length(e);
+        const float len = mesh.length(e);
         eedge.push(e);
         eclen.push(float(sumlen));
         sumlen += len;
@@ -1529,11 +1530,11 @@ void sample_pts() {
       eclen.push(1.00001f);
     }
     {  // For a square patch, perimeter_ratio is 4.
-      float perimeter_ratio = mesh_elen / (my_sqrt(mesh_area));
+      const float perimeter_ratio = mesh_elen / (my_sqrt(mesh_area));
       showff("perimeter_ratio=%g\n", perimeter_ratio);
     }
-    float sampling_density = (numpts + mesh.num_vertices()) / mesh_area;
-    int np = int(my_sqrt(sampling_density) * mesh_elen * neptfac + .5f);
+    const float sampling_density = (numpts + mesh.num_vertices()) / mesh_area;
+    const int np = int(my_sqrt(sampling_density) * mesh_elen * neptfac + .5f);
     showff("mesh_area=%g mesh_elen=%g enp=%d\n", mesh_area, mesh_elen, np);
     if (!np) {
       Warning("No points sampled on sharp edges");
@@ -1546,15 +1547,15 @@ void sample_pts() {
       const float factor = 1.f / mesh_elen * np * adjustment;
       for (Edge e : mesh.edges()) {
         if (!edge_sharp(e)) continue;
-        int level = int(mesh.length(e) * factor + 1.f);
+        const int level = int(mesh.length(e) * factor + 1.f);
         for_int(i, level + 1) {
-          float a = i / float(level);
+          const float a = i / float(level);
           add_edge_point(e, a);
         }
       }
     } else if (edge_random_sampling) {
       for_int(i, np) {
-        int ei = discrete_binary_search(eclen, 0, eedge.num(), Random::G.unif());
+        const int ei = discrete_binary_search(eclen, 0, eedge.num(), Random::G.unif());
         Edge e = eedge[ei];
         add_edge_point(e, Random::G.unif());
       }
@@ -1745,7 +1746,7 @@ void perhaps_initialize() {
         Vec2<int> npyx;
         float npz;
         get_grid_point(mesh.point(v), npyx, npz);
-        float gv = get_grid_value(npyx);
+        const float gv = get_grid_value(npyx);
         if (square(npz - gv) > square(1e-6f)) {
           if (0) showf("(%d, %d, %f) grid=%f\n", npyx[1], npyx[0], npz, gv);
           HH_SSTAT(Skinkerr, npz - gv);
@@ -1796,7 +1797,8 @@ void wrap_up() {
 // Compute a local spring constant for the would-be neighborhood nn.
 float compute_spring(const NewMeshNei& nn) {
   // #corners == #faces
-  int nf = nn.ar_corners.num(), np;
+  const int nf = nn.ar_corners.num();
+  int np;
   if (0) {
     // Old way: poor: biases simplification at boundary.
     np = nn.ar_fpts.num() + nn.ar_epts.num();
@@ -1851,9 +1853,9 @@ ULls::ULls(float* sol, int nd) : _sol(sol), _nd(nd), _vUtU(nd), _vUtb(nd), _btb(
 
 inline void ULls::enter_fprojection(const Vec3<float>& pdata, const Vec3<float>& p1, const Vec3<float>& p2,
                                     float param1, float param2) {
-  double pa1 = param1, pa2 = param2, u = 1. - pa1 - pa2;
+  const double pa1 = param1, pa2 = param2, u = 1. - pa1 - pa2;
   for_int(c, _nd) {
-    double b = pdata[c] - pa1 * p1[c] - pa2 * p2[c];
+    const double b = pdata[c] - pa1 * p1[c] - pa2 * p2[c];
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
     _btb[c] += b * b;
@@ -1861,9 +1863,9 @@ inline void ULls::enter_fprojection(const Vec3<float>& pdata, const Vec3<float>&
 }
 
 inline void ULls::enter_eprojection(const Point& pdata, const Point& p1, float param1) {
-  double pa1 = param1, u = 1. - pa1;
+  const double pa1 = param1, u = 1. - pa1;
   for_int(c, _nd) {
-    double b = pdata[c] - pa1 * p1[c];
+    const double b = pdata[c] - pa1 * p1[c];
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
     _btb[c] += b * b;
@@ -1872,8 +1874,8 @@ inline void ULls::enter_eprojection(const Point& pdata, const Point& p1, float p
 
 inline void ULls::enter_spring(const Point& pother, float sqrt_spring) {
   for_int(c, _nd) {
-    double u = sqrt_spring;
-    double b = double(pother[c]) * sqrt_spring;
+    const double u = sqrt_spring;
+    const double b = double(pother[c]) * sqrt_spring;
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
     _btb[c] += b * b;
@@ -1883,9 +1885,9 @@ inline void ULls::enter_spring(const Point& pother, float sqrt_spring) {
 void ULls::solve(double& prss1) {
   double rss1 = 0.;
   for_int(c, _nd) {
-    double newv = _vUtU[c] ? _vUtb[c] / _vUtU[c] : (Warning("ULls ill-conditioned"), _sol[c]);
+    const double newv = _vUtU[c] ? _vUtb[c] / _vUtU[c] : (Warning("ULls ill-conditioned"), _sol[c]);
     _sol[c] = float(newv);
-    double a = _btb[c] - _vUtU[c] * square(newv);
+    const double a = _btb[c] - _vUtU[c] * square(newv);
     assertw(a > -1e-8);
     if (a > 0.) rss1 += a;
   }
@@ -1946,7 +1948,7 @@ void gather_nn_1(Edge e, NewMeshNei& nn) {
   if (sdebug) {
     assertx((!mesh.is_boundary(v1) && !mesh.is_boundary(v2)) == (nn.va[0] == nn.va.last()));
     assertx(nn.ar_corners.num() == nn.va.num() - 1);
-    int nfexpect =
+    const int nfexpect =
         mesh.degree(v1) - mesh.is_boundary(v1) + mesh.degree(v2) - mesh.is_boundary(v2) - 2 * (1 + (f2 != nullptr));
     if (nfexpect != nn.ar_corners.num())
       assertnever(SSHOW(mesh.degree(v1), mesh.is_boundary(v1), mesh.degree(v2), mesh.is_boundary(v2), f2 != nullptr,
@@ -1966,12 +1968,12 @@ bool gather_nn_valid(Edge e) {
   Corner cvtfr = !f2 ? nullptr : mesh.ccw_corner(cvtfl);
   Corner cvsfro = !f2 ? nullptr : mesh.clw_corner(cvsfr);
   Corner cvtfro = !f2 ? nullptr : mesh.ccw_corner(cvtfr);
-  bool thru_sl = cvsflo && c_wedge_id(cvsfl) == c_wedge_id(cvsflo);
-  bool thru_sr = cvsfro && c_wedge_id(cvsfr) == c_wedge_id(cvsfro);
-  bool thru_tl = cvtflo && c_wedge_id(cvtfl) == c_wedge_id(cvtflo);
-  bool thru_tr = cvtfro && c_wedge_id(cvtfr) == c_wedge_id(cvtfro);
-  bool vs_has_wedge_bnd = vertex_has_hedge_scalar_bnd(vs);
-  bool vt_has_wedge_bnd = vertex_has_hedge_scalar_bnd(vt);
+  const bool thru_sl = cvsflo && c_wedge_id(cvsfl) == c_wedge_id(cvsflo);
+  const bool thru_sr = cvsfro && c_wedge_id(cvsfr) == c_wedge_id(cvsfro);
+  const bool thru_tl = cvtflo && c_wedge_id(cvtfl) == c_wedge_id(cvtflo);
+  const bool thru_tr = cvtfro && c_wedge_id(cvtfr) == c_wedge_id(cvtfro);
+  const bool vs_has_wedge_bnd = vertex_has_hedge_scalar_bnd(vs);
+  const bool vt_has_wedge_bnd = vertex_has_hedge_scalar_bnd(vt);
   if (thru_sl && thru_sr && c_wedge_id(cvsfl) == c_wedge_id(cvsfr) && vs_has_wedge_bnd && vt_has_wedge_bnd) {
     if (verb >= 2) Warning("Edge collapse would fragment wedge around vs");
     return false;
@@ -2002,14 +2004,14 @@ bool gather_nn_valid(Edge e) {
 
 bool gather_nn_2(Edge e, NewMeshNei& nn) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-  int nf = nn.ar_corners.num();
-  bool closed = nn.va[0] == nn.va.last();
+  const int nf = nn.ar_corners.num();
+  const bool closed = nn.va[0] == nn.va.last();
   assertx(!nn.ar_nwid.num());
   for_int(i, nf) nn.ar_nwid.push(-1);
   for_int(irep, nf) {
     if (nn.ar_nwid[irep] >= 0) continue;
     Corner crep = nn.ar_corners[irep][2];
-    int wid = nn.ar_rwid_v1.num();
+    const int wid = nn.ar_rwid_v1.num();
     nn.ar_nwid[irep] = wid;
     int rwid_v1 = c_wedge_id(crep);
     int rwid_v2 = c_wedge_id(crep);
@@ -2058,7 +2060,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
             }
           }
         }
-        int cnwid = nn.ar_nwid[i];
+        const int cnwid = nn.ar_nwid[i];
         // if (cnwid >= 0) break;
         Corner c = nn.ar_corners[i][2];
         Corner c1 = !dir ? mesh.clw_corner(c) : mesh.ccw_corner(c);
@@ -2066,7 +2068,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
         assertx(c1 && pc1);
         assertx((c1 == pc) == (pc1 == c));
         if (c1 == pc) {  // Two faces adjacent on same vertex.
-          bool same = c_wedge_id(c) == c_wedge_id(pc);
+          const bool same = c_wedge_id(c) == c_wedge_id(pc);
           if (cnwid >= 0 && same != (wid == cnwid)) {
             // Equivalence of wid's across edges above v2 (or below v1) would be violated.
             assertnever("Edge collapse would cause problem1");
@@ -2081,7 +2083,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
           // if (cnwid >= 0) break;
           if (!dir) assertx(mesh.ccw_face_corner(c1) == pc1);
           if (dir) assertx(mesh.clw_face_corner(c1) == pc1);
-          bool same = c_wedge_id(pc) == c_wedge_id(pc1) && c_wedge_id(c) == c_wedge_id(c1);
+          const bool same = c_wedge_id(pc) == c_wedge_id(pc1) && c_wedge_id(c) == c_wedge_id(c1);
           if (!same) {
             if (1 && c_wedge_id(pc) == c_wedge_id(pc1)) {  // 2009-04-15
               assertx(mesh.corner_face(c1) == mesh.face1(e) || mesh.corner_face(c1) == mesh.face2(e));
@@ -2106,12 +2108,12 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
         pc = c;
       }
     }
-    for (int r : nn.ar_rwid_v1) {
+    for (const int r : nn.ar_rwid_v1) {
       // This check is necessary due to new code for rwid_v1 above, else Filterprog would crash on grotto.
       // if (!assertw(r != rwid_v1 && r != rwid_v2)) return false;
       if (!(r != rwid_v1 && r != rwid_v2)) return false;
     }
-    for (int r : nn.ar_rwid_v2) {
+    for (const int r : nn.ar_rwid_v2) {
       // Same here.
       // if (!assertw(r != rwid_v1 && r != rwid_v2)) return false;
       if (!(r != rwid_v1 && r != rwid_v2)) return false;
@@ -2142,12 +2144,12 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
   bool eretire{false};                // (v1, v2) was sharp and no adjacent crease
   // Gather eoretire, eretire.
   {
-    int nc = nn.ar_corners.num();
-    bool closed = nn.va[0] == nn.va.last();
+    const int nc = nn.ar_corners.num();
+    const bool closed = nn.va[0] == nn.va.last();
     Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);
     for_int(i, nc - !closed) {
       // Consider edge between this corner and next one.
-      int j = i < nc - 1 ? i + 1 : 0;
+      const int j = i < nc - 1 ? i + 1 : 0;
       Corner c0 = nn.ar_corners[i][1];
       Corner cc0 = nn.ar_corners[i][2];
       Vertex vc0 = mesh.corner_vertex(cc0);
@@ -2157,10 +2159,10 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
       assertx(mesh.corner_vertex(c0) == mesh.corner_vertex(c1));
       assertx(mesh.corner_face(cc0) != mesh.corner_face(cc1));
       Vertex vo = mesh.corner_vertex(c0);
-      bool expect_sharp = edge_sharp(mesh.edge(vc0, vo)) || (vc1 != vc0 && edge_sharp(mesh.edge(vc1, vo)));
+      const bool expect_sharp = edge_sharp(mesh.edge(vc0, vo)) || (vc1 != vc0 && edge_sharp(mesh.edge(vc1, vo)));
       if (!expect_sharp) continue;  // No problem.
-      bool will_be_sharp = (!same_discrete(mesh.corner_face(cc0), mesh.corner_face(cc1)) || !same_scalar(c0, c1) ||
-                            nn.ar_nwid[i] != nn.ar_nwid[j]);
+      const bool will_be_sharp = (!same_discrete(mesh.corner_face(cc0), mesh.corner_face(cc1)) ||
+                                  !same_scalar(c0, c1) || nn.ar_nwid[i] != nn.ar_nwid[j]);
       if (will_be_sharp) continue;  // No problem.
       // Problem: edge will in fact retire.
       if (vo == vo1) {
@@ -2180,8 +2182,8 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
     // Retire edge e iff neither v1 nor v2 is a crease vertex
     //  (where a crease vertex has exactly 1 non-retiring sharp edge).
     if (edge_sharp(e)) {
-      int dnse = 2 + (eoretire[0] ? 1 : 0) + (eoretire[1] ? 1 : 0);  // Desired # sharp edges.
-      int v1nse = vertex_num_sharpe(v1), v2nse = vertex_num_sharpe(v2);
+      const int dnse = 2 + (eoretire[0] ? 1 : 0) + (eoretire[1] ? 1 : 0);  // Desired # sharp edges.
+      const int v1nse = vertex_num_sharpe(v1), v2nse = vertex_num_sharpe(v2);
       if (v1nse != dnse && v2nse != dnse) eretire = true;
     }
     if (eretire) SSTATV2(Seretire, eretire);
@@ -2213,13 +2215,13 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
           if ((w == vo1 && eoretire[0]) || (w == vo2 && eoretire[1])) {
             for (eptinfo* pept : e_setpts(ee)) nn.ar_eptretire.push(pept);
           } else {
-            int vi = nva - 1;
+            const int vi = nva - 1;
             for (eptinfo* pept : e_setpts(ee)) {
               nn.ar_epts.push(pept);
               nn.ar_eptv.push(vi);
             }
             if (!contains(nn.ar_vdisc, vi)) nn.ar_vdisc.push(vi);
-            int dnse = 2 + eoretire[0] + eoretire[1];
+            const int dnse = 2 + eoretire[0] + eoretire[1];
             if (edge_sharp(e) && vertex_num_sharpe(cv) == dnse) vcreasei = vi;  // Could be set twice (ok).
           }
         }
@@ -2266,7 +2268,7 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
     ar_wi.init(0);
     for_int(i, nn.ar_rwid_v1.num()) {
       // It doesn't matter here if ar_rwid_v2 would be chosen since it is interpolated as need be below.
-      int rwid = nn.ar_rwid_v1[i];
+      const int rwid = nn.ar_rwid_v1[i];
       ar_wi.push(gwinfo[rwid]);
     }
   }
@@ -2280,19 +2282,19 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
   Corner cv2f1 = mesh.ccw_face_corner(cv1f1);
   Corner cv1f1o = mesh.ccw_corner(cv1f1);
   Corner cv2f1o = mesh.clw_corner(cv2f1);
-  int nwidv1f1o = !cv1f1o ? not_used : find_nwid(nn, cv1f1o);
-  int nwidv2f1o = !cv2f1o ? not_used : find_nwid(nn, cv2f1o);
-  bool cv1f1smooth = cv1f1o && c_wedge_id(cv1f1o) == c_wedge_id(cv1f1);
-  bool cv2f1smooth = cv2f1o && c_wedge_id(cv2f1o) == c_wedge_id(cv2f1);
+  const int nwidv1f1o = !cv1f1o ? not_used : find_nwid(nn, cv1f1o);
+  const int nwidv2f1o = !cv2f1o ? not_used : find_nwid(nn, cv2f1o);
+  const bool cv1f1smooth = cv1f1o && c_wedge_id(cv1f1o) == c_wedge_id(cv1f1);
+  const bool cv2f1smooth = cv2f1o && c_wedge_id(cv2f1o) == c_wedge_id(cv2f1);
 
   Corner cv1f2 = !mesh.face2(e) ? nullptr : mesh.corner(mesh.vertex1(e), mesh.face2(e));
   Corner cv2f2 = !cv1f2 ? nullptr : mesh.clw_face_corner(cv1f2);
   Corner cv1f2o = !cv1f2 ? nullptr : mesh.clw_corner(cv1f2);
   Corner cv2f2o = !cv1f2 ? nullptr : mesh.ccw_corner(cv2f2);
-  int nwidv1f2o = !cv1f2o ? not_used : find_nwid(nn, cv1f2o);
-  int nwidv2f2o = !cv2f2o ? not_used : find_nwid(nn, cv2f2o);
-  bool cv1f2smooth = cv1f2o && c_wedge_id(cv1f2o) == c_wedge_id(cv1f2);
-  bool cv2f2smooth = cv2f2o && c_wedge_id(cv2f2o) == c_wedge_id(cv2f2);
+  const int nwidv1f2o = !cv1f2o ? not_used : find_nwid(nn, cv1f2o);
+  const int nwidv2f2o = !cv2f2o ? not_used : find_nwid(nn, cv2f2o);
+  const bool cv1f2smooth = cv1f2o && c_wedge_id(cv1f2o) == c_wedge_id(cv1f2);
+  const bool cv2f2smooth = cv2f2o && c_wedge_id(cv2f2o) == c_wedge_id(cv2f2);
 
   assertx(!((cv2f1smooth && cv2f2smooth && nwidv2f1o == nwidv2f2o && c_wedge_id(cv1f1) != c_wedge_id(cv1f2)) ||
             (cv1f1smooth && cv1f2smooth && nwidv1f1o == nwidv1f2o && c_wedge_id(cv2f1) != c_wedge_id(cv2f2))));
@@ -2314,11 +2316,11 @@ void update_initial_wi(Edge e, const NewMeshNei& nn, int ii, Array<WedgeInfo>& a
 void replace_wi(const NewMeshNei& nn, CArrayView<WedgeInfo> ar_wi, CArrayView<int> ar_rwid) {
   assertx(ar_wi.num() == ar_rwid.num());  // Optional.
   for_int(i, nn.ar_corners.num()) {
-    int rwid = ar_rwid[nn.ar_nwid[i]];
+    const int rwid = ar_rwid[nn.ar_nwid[i]];
     c_wedge_id(nn.ar_corners[i][2]) = rwid;
   }
   for_int(i, ar_wi.num()) {
-    int rwid = ar_rwid[i];
+    const int rwid = ar_rwid[i];
     gwinfo[rwid] = ar_wi[i];
   }
 }
@@ -2352,8 +2354,8 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
     dummy_init(min_bary);
     for (;;) {
       // For X3.m, had nproj = 2.16 -> (2.16 + 1) * 50 * 7 * 9 * 1.9 == ~18900 (23%).
-      int tmin_i = arg_min(ar_d2);
-      float tmin_d2 = ar_d2[tmin_i];
+      const int tmin_i = arg_min(ar_d2);
+      const float tmin_d2 = ar_d2[tmin_i];
       if (tmin_d2 >= min_d2) break;
       assertx(tmin_d2 != BIGFLOAT);
       ar_d2[tmin_i] = BIGFLOAT;
@@ -2384,7 +2386,7 @@ double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& n
   ULls ulls(newp.data(), 3);
   for_int(pi, nn.ar_fpts.num()) {
     const fptinfo& fpt = *nn.ar_fpts[pi];
-    int mini = param.ar_mini[pi];
+    const int mini = param.ar_mini[pi];
     const Bary& bary = param.ar_bary[pi];
     // 50 * (21 + 42 * 3) == ~14000 (17%).
     ulls.enter_fprojection(fpt.p, mesh.point(nn.va[mini]), mesh.point(nn.va[mini + 1]), bary[0], bary[1]);
@@ -2395,7 +2397,7 @@ double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& n
     int mini = nn.ar_eptv[i];
     auto [min_d2, min_bary, _] = project_point_segment(p, mesh.point(nn.va[mini]), newp);
     if (nn.ar_vdisc.num() == 2) {
-      int ovi = other_creasevi(nn, mini);
+      const int ovi = other_creasevi(nn, mini);
       const auto [d2, bary, unused_clp] = project_point_segment(p, mesh.point(nn.va[ovi]), newp);
       if (d2 < min_d2) {
         min_d2 = d2;
@@ -2406,8 +2408,8 @@ double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& n
     ulls.enter_eprojection(p, mesh.point(nn.va[mini]), min_bary);
   }
   if (spring) {
-    float sqrt_spring = sqrt(spring);
-    bool closed = nn.va[0] == nn.va.last();
+    const float sqrt_spring = sqrt(spring);
+    const bool closed = nn.va[0] == nn.va.last();
     for_int(i, nn.va.num() - closed) ulls.enter_spring(mesh.point(nn.va[i]), sqrt_spring);
   }
   double rss1;
@@ -2418,20 +2420,20 @@ double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& n
 // Evaluate the geometric energy with v1 position at newp.
 double evaluate_geom(const NewMeshNei& nn, const Param& param, float spring, const Point& newp) {
   double rss1 = 0.;
-  int nw = nn.va.num();
-  bool closed = nn.va[0] == nn.va.last();
+  const int nw = nn.va.num();
+  const bool closed = nn.va[0] == nn.va.last();
   for_int(pi, nn.ar_fpts.num()) {
     const fptinfo& fpt = *nn.ar_fpts[pi];
-    int mini = param.ar_mini[pi];
+    const int mini = param.ar_mini[pi];
     const Bary& bary = param.ar_bary[pi];
     rss1 += dist2(fpt.p, interp(mesh.point(nn.va[mini]), mesh.point(nn.va[mini + 1]), newp, bary));
   }
   for_int(i, nn.ar_epts.num()) {
     const eptinfo& ept = *nn.ar_epts[i];
-    int mini = nn.ar_eptv[i];
+    const int mini = nn.ar_eptv[i];
     float min_d2 = project_point_segment(ept.p, mesh.point(nn.va[mini]), newp).d2;
     if (nn.ar_vdisc.num() == 2) {
-      int ovi = other_creasevi(nn, mini);
+      const int ovi = other_creasevi(nn, mini);
       const float d2 = project_point_segment(ept.p, mesh.point(nn.va[ovi]), newp).d2;
       if (d2 < min_d2) min_d2 = d2;
     }
@@ -2445,16 +2447,16 @@ double evaluate_maxerr(const NewMeshNei& nn, const Param& param, const Point& ne
   float rss1 = 0.;
   for_int(pi, nn.ar_fpts.num()) {
     const fptinfo& fpt = *nn.ar_fpts[pi];
-    int mini = param.ar_mini[pi];
+    const int mini = param.ar_mini[pi];
     const Bary& bary = param.ar_bary[pi];
     rss1 = max(rss1, dist2(fpt.p, interp(mesh.point(nn.va[mini]), mesh.point(nn.va[mini + 1]), newp, bary)));
   }
   for_int(i, nn.ar_epts.num()) {
     const eptinfo& ept = *nn.ar_epts[i];
-    int mini = nn.ar_eptv[i];
+    const int mini = nn.ar_eptv[i];
     float min_d2 = project_point_segment(ept.p, mesh.point(nn.va[mini]), newp).d2;
     if (nn.ar_vdisc.num() == 2) {
-      int ovi = other_creasevi(nn, mini);
+      const int ovi = other_creasevi(nn, mini);
       const float d2 = project_point_segment(ept.p, mesh.point(nn.va[ovi]), newp).d2;
       if (d2 < min_d2) min_d2 = d2;
     }
@@ -2476,14 +2478,14 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
   // const bool lverb = mesh.num_faces() < 8;
   // Consider the newp itself.
   {
-    float d2 = square(npz - get_grid_value(npyx));
+    const float d2 = square(npz - get_grid_value(npyx));
     max_d2 = d2;
     if (lverb) showf(" centerpoint (%d, %d)=%g grid=%g\n", npyx[1], npyx[0], npz, get_grid_value(npyx));
     // Should be on gridpoint, so zero error.
     assertx(d2 < square(1e-5f));
   }
   // Consider the grid points strictly within the triangles, and verify that triangles are not flipped or degenerate.
-  int nf = nn.ar_corners.num();
+  const int nf = nn.ar_corners.num();
   for_int(fi, nf) {
     int p0x, p0y;
     float p0z;
@@ -2521,33 +2523,33 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     if (lverb)
       showf(" triangle (%d, %d, %g) (%d, %d, %g) (%d, %d, %g)\n", p2x, p2y, p2z, p1x, p1y, p1z, p0x, p0y, p0z);
     if (p2y - p0y < 2) continue;  // No interior grid points.
-    float p20i = 1.f / (p2y - p0y);
-    float cxrinc = (p0x - p2x) * p20i;
-    float czrinc = (p0z - p2z) * p20i;
+    const float p20i = 1.f / (p2y - p0y);
+    const float cxrinc = (p0x - p2x) * p20i;
+    const float czrinc = (p0z - p2z) * p20i;
     // Upper triangle, plus middle horizontal segment!
     if (p2y > p1y + 0) {
       float xrinc = cxrinc;
       float zrinc = czrinc;
-      float p21i = 1.f / (p2y - p1y);
+      const float p21i = 1.f / (p2y - p1y);
       float xlinc = (p1x - p2x) * p21i;
       float zlinc = (p1z - p2z) * p21i;
       if (xlinc > xrinc) {
         std::swap(xlinc, xrinc);
         std::swap(zlinc, zrinc);
       }
-      bool extra = (p1y > p0y);  // Include middle horizontal segment.
+      const bool extra = (p1y > p0y);  // Include middle horizontal segment.
       for_intL(i, 1, p2y - p1y + extra) {
-        int y = p2y - i;
-        float xl = p2x + i * xlinc;
-        float xr = p2x + i * xrinc;
-        float zl = p2z + i * zlinc;
-        float zr = p2z + i * zrinc;
+        const int y = p2y - i;
+        const float xl = p2x + i * xlinc;
+        const float xr = p2x + i * xrinc;
+        const float zl = p2z + i * zlinc;
+        const float zr = p2z + i * zrinc;
         ASSERTX(xr >= xl);
         if (lverb) showf("  upper %d: (%g, %g) z=[%g, %g]\n", y, xl, xr, zl, zr);
-        float slope = (zr - zl) / (xr - xl);
+        const float slope = (zr - zl) / (xr - xl);
         for_intL(x, int(xl + 1.f + epsilon), int(xr - epsilon) + 1) {
-          float z = zl + (x - xl) * slope;
-          float d2 = square(z - get_grid_value(V(y, x)));
+          const float z = zl + (x - xl) * slope;
+          const float d2 = square(z - get_grid_value(V(y, x)));
           if (lverb) showf("   (%d, %d)=%g grid=%g d2=%g\n", x, y, z, get_grid_value(V(y, x)), d2);
           if (d2 > max_d2) max_d2 = d2;
         }
@@ -2557,7 +2559,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     if (p1y > p0y + 1) {
       float xrinc = -cxrinc;
       float zrinc = -czrinc;
-      float p10i = 1.f / (p1y - p0y);
+      const float p10i = 1.f / (p1y - p0y);
       float xlinc = (p1x - p0x) * p10i;
       float zlinc = (p1z - p0z) * p10i;
       if (xlinc > xrinc) {
@@ -2565,17 +2567,17 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
         std::swap(zlinc, zrinc);
       }
       for_intL(i, 1, p1y - p0y) {
-        int y = p0y + i;
-        float xl = p0x + i * xlinc;
-        float xr = p0x + i * xrinc;
-        float zl = p0z + i * zlinc;
-        float zr = p0z + i * zrinc;
+        const int y = p0y + i;
+        const float xl = p0x + i * xlinc;
+        const float xr = p0x + i * xrinc;
+        const float zl = p0z + i * zlinc;
+        const float zr = p0z + i * zrinc;
         ASSERTX(xr >= xl);
         if (lverb) showf("  lower %d: (%g, %g) z=[%g, %g]\n", y, xl, xr, zl, zr);
-        float slope = (zr - zl) / (xr - xl);
+        const float slope = (zr - zl) / (xr - xl);
         for_intL(x, int(xl + 1.f + epsilon), int(xr - epsilon) + 1) {
-          float z = zl + (x - xl) * slope;
-          float d2 = square(z - get_grid_value(V(y, x)));
+          const float z = zl + (x - xl) * slope;
+          const float d2 = square(z - get_grid_value(V(y, x)));
           if (lverb) showf("   (%d, %d)=%g grid=%g d2=%g\n", x, y, z, get_grid_value(V(y, x)), d2);
           if (d2 > max_d2) max_d2 = d2;
         }
@@ -2583,7 +2585,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
     }
   }
   // Consider grid crossings strictly within edges of star(vertex).
-  bool closed = nn.va[0] == nn.va.last();
+  const bool closed = nn.va[0] == nn.va.last();
   for_int(ei, nn.va.num() - closed) {
     int p0x, p0y;
     float p0z;
@@ -2602,19 +2604,19 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
       std::swap(p0z, p1z);
     }
     if (p1x > p0x + 1) {
-      float xdi = 1.f / (p1x - p0x);
-      float yinc = (p1y - p0y) * xdi;
-      float zinc = (p1z - p0z) * xdi;
+      const float xdi = 1.f / (p1x - p0x);
+      const float yinc = (p1y - p0y) * xdi;
+      const float zinc = (p1z - p0z) * xdi;
       for_intL(i, 1, p1x - p0x) {
         int x = p0x + i;
-        float yf = p0y + i * yinc;
-        float z = p0z + i * zinc;
-        int y = int(yf);
-        float yr = yf - y;
+        const float yf = p0y + i * yinc;
+        const float z = p0z + i * zinc;
+        const int y = int(yf);
+        const float yr = yf - y;
         ASSERTX(y < grid_dims[0] - 1 || yr < epsilon);
-        float zg = (yr < epsilon ? get_grid_value(V(y, x))
-                                 : ((1.f - yr) * get_grid_value(V(y, x)) + yr * get_grid_value(V(y + 1, x))));
-        float d2 = square(z - zg);
+        const float zg = (yr < epsilon ? get_grid_value(V(y, x))
+                                       : ((1.f - yr) * get_grid_value(V(y, x)) + yr * get_grid_value(V(y + 1, x))));
+        const float d2 = square(z - zg);
         if (d2 > max_d2) max_d2 = d2;
         if (lverb) showf("  vedge(%d, %g)=%g grid=%g d2=%g\n", x, yf, z, zg, d2);
       }
@@ -2626,19 +2628,19 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
       std::swap(p0z, p1z);
     }
     if (p1y > p0y + 1) {
-      float ydi = 1.f / (p1y - p0y);
-      float xinc = (p1x - p0x) * ydi;
-      float zinc = (p1z - p0z) * ydi;
+      const float ydi = 1.f / (p1y - p0y);
+      const float xinc = (p1x - p0x) * ydi;
+      const float zinc = (p1z - p0z) * ydi;
       for_intL(i, 1, p1y - p0y) {
-        int y = p0y + i;
-        float xf = p0x + i * xinc;
-        float z = p0z + i * zinc;
+        const int y = p0y + i;
+        const float xf = p0x + i * xinc;
+        const float z = p0z + i * zinc;
         int x = int(xf);
-        float xr = xf - x;
+        const float xr = xf - x;
         ASSERTX(x < grid_dims[1] - 1 || xr < epsilon);
-        float zg = (xr < epsilon ? get_grid_value(V(y, x))
-                                 : ((1.f - xr) * get_grid_value(V(y, x)) + xr * get_grid_value(V(y, x + 1))));
-        float d2 = square(z - zg);
+        const float zg = (xr < epsilon ? get_grid_value(V(y, x))
+                                       : ((1.f - xr) * get_grid_value(V(y, x)) + xr * get_grid_value(V(y, x + 1))));
+        const float d2 = square(z - zg);
         if (d2 > max_d2) max_d2 = d2;
         if (lverb) showf("  hedge(%g, %d)=%g grid=%g d2=%g\n", xf, y, z, zg, d2);
       }
@@ -2653,18 +2655,18 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
       std::swap(p0l, p1l);
     }
     if (p0l < p1l + 1) {
-      float ldi = 1.f / (p1l - p0l);
-      float xinc = (p1x - p0x) * ldi;
-      float yinc = (p1y - p0y) * ldi;
-      float zinc = (p1z - p0z) * ldi;
+      const float ldi = 1.f / (p1l - p0l);
+      const float xinc = (p1x - p0x) * ldi;
+      const float yinc = (p1y - p0y) * ldi;
+      const float zinc = (p1z - p0z) * ldi;
       for_intL(i, 1, p1l - p0l) {
-        float xf = p0x + i * xinc;
-        float yf = p0y + i * yinc;
-        float z = p0z + i * zinc;
+        const float xf = p0x + i * xinc;
+        const float yf = p0y + i * yinc;
+        const float z = p0z + i * zinc;
         int x = int(xf);
         int y = int(yf);
         float xr = xf - x;
-        float yr = yf - y;
+        const float yr = yf - y;
         if (yr > xr + .5f) {
           ASSERTX(yr > xr + 1.f - epsilon);  // Numerical imprecision.
           y++;
@@ -2675,9 +2677,10 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
           xr = 0.f;
         }
         ASSERTX((x < grid_dims[1] - 1 && y < grid_dims[0] - 1) || xr < epsilon);
-        float zg = (xr < epsilon ? get_grid_value(V(y, x))
-                                 : ((1.f - xr) * get_grid_value(V(y, x)) + xr * get_grid_value(V(y + 1, x + 1))));
-        float d2 = square(z - zg);
+        const float zg =
+            (xr < epsilon ? get_grid_value(V(y, x))
+                          : ((1.f - xr) * get_grid_value(V(y, x)) + xr * get_grid_value(V(y + 1, x + 1))));
+        const float d2 = square(z - zg);
         if (d2 > max_d2) max_d2 = d2;
         if (lverb) showf("  dedge(%g, %g)=%g grid=%g d2=%g\n", xf, yf, z, zg, d2);
       }
@@ -2699,8 +2702,8 @@ double fit_color(const NewMeshNei& nn, const Param& param, ArrayView<WedgeInfo> 
   for_int(pi, nn.ar_fpts.num()) {
     const fptinfo& fpt = *nn.ar_fpts[pi];
     if (fpt.ptcol()[0] == k_undefined) continue;
-    int mini = param.ar_mini[pi];
-    int nwid = nn.ar_nwid[mini];
+    const int mini = param.ar_mini[pi];
+    const int nwid = nn.ar_nwid[mini];
     ASSERTX(nn.ar_rwid_v1.ok(nwid));
     const Bary& bary = param.ar_bary[pi];
     const P2WedgeInfo& p2wi = nn.ar_p2wi[mini];
@@ -2731,8 +2734,8 @@ double fit_color(const NewMeshNei& nn, const Param& param, ArrayView<WedgeInfo> 
     for_int(pi, nn.ar_fpts.num()) {
       const fptinfo& fpt = *nn.ar_fpts[pi];
       if (fpt.ptcol()[0] == k_undefined) continue;
-      int mini = param.ar_mini[pi];
-      int nwid = nn.ar_nwid[mini];
+      const int mini = param.ar_mini[pi];
+      const int nwid = nn.ar_nwid[mini];
       const Bary& bary = param.ar_bary[pi];
       const P2WedgeInfo& p2wi = nn.ar_p2wi[mini];
       // Ignore gcolc factor for now.
@@ -2749,8 +2752,8 @@ double evaluate_color(const NewMeshNei& nn, const Param& param, CArrayView<Wedge
   for_int(pi, nn.ar_fpts.num()) {
     const fptinfo& fpt = *nn.ar_fpts[pi];
     if (fpt.ptcol()[0] == k_undefined) continue;
-    int mini = param.ar_mini[pi];
-    int nwid = nn.ar_nwid[mini];
+    const int mini = param.ar_mini[pi];
+    const int nwid = nn.ar_nwid[mini];
     const Bary& bary = param.ar_bary[pi];
     const P2WedgeInfo& p2wi = nn.ar_p2wi[mini];
     // Ignore gcolc factor for now.
@@ -2766,8 +2769,8 @@ double evaluate_normal(const NewMeshNei& nn, const Param& param, CArrayView<Wedg
   for_int(pi, nn.ar_fpts.num()) {
     const fptinfo& fpt = *nn.ar_fpts[pi];
     if (fpt.ptnor()[0] == k_undefined) continue;
-    int mini = param.ar_mini[pi];
-    int nwid = nn.ar_nwid[mini];
+    const int mini = param.ar_mini[pi];
+    const int nwid = nn.ar_nwid[mini];
     const Bary& bary = param.ar_bary[pi];
     const P2WedgeInfo& p2wi = nn.ar_p2wi[mini];
     // Ignore gnorc factor for now.
@@ -2813,7 +2816,7 @@ void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldi
     float ratio_bb = !bb_x ? 1000.f : !bb_y ? 0.f : bb_y / bb_x;
     if (ratio_bb <= 1.001f) ratio_bb = 1.001f;
     // (When ratio_bb <= 1.f, only the uniform error component matters.)
-    float vtan = 1.f / sqrt(square(ratio_bb) - 1.f);
+    const float vtan = 1.f / sqrt(square(ratio_bb) - 1.f);
     float max_u = 0.f;
     for_int(i, ar_resid.num()) {
       float m2 = mag2(ar_resid[i]);
@@ -2830,15 +2833,15 @@ void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldi
         if (y > max_u * ratio_bb) max_u = y / ratio_bb;
         // Yes, checked equivalence with below.
       } else {
-        float ratio_yx = y / x;
+        const float ratio_yx = y / x;
         if (ratio_yx <= vtan) {
           // Bounded by uniform component.
-          float m = my_sqrt(m2);
+          const float m = my_sqrt(m2);
           if (m > max_u) max_u = m;
           // Yes, checked equivalence with below at ratio_yx == vtan.
         } else {
           // Bounded by directional component.
-          float desired_d = y + x / vtan;
+          const float desired_d = y + x / vtan;
           if (desired_d > max_u * ratio_bb) max_u = desired_d / ratio_bb;
         }
       }
@@ -2855,13 +2858,13 @@ void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldi
 void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error) {
   uni_error = 0.f;
   dir_error = 0.f;
-  bool handle_residuals = !!wfile_prog;
+  const bool handle_residuals = !!wfile_prog;
   Vector vnormal{};
   {
     // Compute average vertex normal (as will be done in SrMesh if the vertex doesn't have a unique normal).
     for_int(i, nn.ar_corners.num()) {
       Corner c = nn.ar_corners[i][2];
-      int wid = c_wedge_id(c);
+      const int wid = c_wedge_id(c);
       const Vector& nor = gwinfo[wid].nor;
       assertx(nor[0] != k_undefined);
       vnormal += nor;
@@ -2872,7 +2875,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
   Array<Vector> ar_resid;
   Array<float> ar_normaldist2;
   {
-    int totpoints = nn.ar_fpts.num() + nn.ar_epts.num();
+    const int totpoints = nn.ar_fpts.num() + nn.ar_epts.num();
     ar_resid.reserve(totpoints);
     ar_normaldist2.reserve(totpoints);
   }
@@ -2881,7 +2884,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
   //  the (0, 0, 1) vector direction.
   //  That mis-reprojection is the reason that we sometimes see a uniform error component here.
   {
-    int nf = nn.ar_corners.num();
+    const int nf = nn.ar_corners.num();
     Array<Bbox<float, 3>> ar_bbox(nf);
     for_int(i, nf) {
       Face f = mesh.corner_face(nn.ar_corners[i][2]);
@@ -2896,8 +2899,8 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       Face min_f = nullptr;
       Bary min_bary{};
       for (;;) {
-        int tmin_i = arg_min(ar_d2);
-        float tmin_d2 = ar_d2[tmin_i];
+        const int tmin_i = arg_min(ar_d2);
+        const float tmin_d2 = ar_d2[tmin_i];
         if (tmin_d2 >= min_d2) break;
         assertx(tmin_d2 != BIGFLOAT);
         ar_d2[tmin_i] = BIGFLOAT;
@@ -2935,7 +2938,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
           for_int(i, nf) {
             Face f = mesh.corner_face(nn.ar_corners[i][2]);
             Vec3<Point> triangle2 = mesh.triangle_points(f);
-            float eps = 1e-3f;
+            const float eps = 1e-3f;
             // We used to have eps=1e-5f, but this would result in Sres_npnor av=.95 for gcanyon_sq200
             // (it should be 1.0 except for the last edge collapse which changes terrain to a triangle).
             // With eps=1e-3f, Sres_npnor av=.9999 (excellent).
@@ -2960,7 +2963,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
       int mini = nn.ar_eptv[i];
       float min_d2 = project_point_segment(p, mesh.point(nn.va[mini]), newp).d2;
       if (nn.ar_vdisc.num() == 2) {
-        int ovi = other_creasevi(nn, mini);
+        const int ovi = other_creasevi(nn, mini);
         const float d2 = project_point_segment(p, mesh.point(nn.va[ovi]), newp).d2;
         if (d2 < min_d2) {
           min_d2 = d2;
@@ -3024,7 +3027,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
           continue;
         }
         if (innerhull) normal = -normal;
-        Point pold = poly[0];
+        const Point pold = poly[0];
         Point pnew = pold * scale + translate;
         if (1) {
           for_int(c, 3) {
@@ -3037,7 +3040,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   }
   if (1) {
     // See if (v1 + v2) / 2 satisfies the constraints.  (Useful in the case of complete planarity.)
-    Point pcand = interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e)));
+    const Point pcand = interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e)));
     Point pcandnew = pcand * scale + translate;
     const bool ok = ranges::all_of(ar_lf, [&](const LinearFunc& lf) { return lf.eval(pcandnew) >= -1e-5f; });
     if (ok) {
@@ -3050,7 +3053,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   Vector link_normal;
   {
     Polygon poly;
-    bool closed = nn.va[0] == nn.va.last();
+    const bool closed = nn.va[0] == nn.va.last();
     if (!closed) Warning("compute_hull not designed for boundaries");
     for_int(i, nn.va.num() - closed) poly.push(mesh.point(nn.va[i]));
     link_normal = poly.get_normal_dir();
@@ -3218,10 +3221,10 @@ bool is_uv_corner(Corner c) {
 int estimate_ii(Vertex v1, Vertex v2, const Point& newp) {
   const Point& p1 = mesh.point(v1);
   const Point& p2 = mesh.point(v2);
-  Vector vp = p2 - p1;
-  float vpm2 = mag2(vp);
+  const Vector vp = p2 - p1;
+  const float vpm2 = mag2(vp);
   if (!vpm2) return 1;
-  float a = dot(newp - p1, vp) / vpm2;
+  const float a = dot(newp - p1, vp) / vpm2;
   const float fudge = 0.2f;
   return a < fudge ? 2 : a > 1.f - fudge ? 0 : 1;
 }
@@ -3487,10 +3490,10 @@ double evaluate_aps(Edge e, int ii) {
 // Return: is_legal.
 bool strict_mat_neighbors(Face fc, const Vec3<Face>& fnei) {
   assertx(fc);
-  int matfc = f_matid(fc);
-  int matf0 = fnei[0] ? f_matid(fnei[0]) : -1;
-  int matf1 = fnei[1] ? f_matid(fnei[1]) : -1;
-  int matf2 = fnei[2] ? f_matid(fnei[2]) : -1;
+  const int matfc = f_matid(fc);
+  const int matf0 = fnei[0] ? f_matid(fnei[0]) : -1;
+  const int matf1 = fnei[1] ? f_matid(fnei[1]) : -1;
+  const int matf2 = fnei[2] ? f_matid(fnei[2]) : -1;
   // If all neighbors different, face is either single chart or part of one adjacent chart but at a corner,
   // so all is OK.
   if (matf0 != matf1 && matf0 != matf2 && matf1 != matf2) return true;
@@ -3652,7 +3655,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);                    // Note that f2 could be nullptr.
   Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);  // Note that vo2 could be nullptr.
-  int v1nse = vertex_num_sharpe(v1), v2nse = vertex_num_sharpe(v2);
+  const int v1nse = vertex_num_sharpe(v1), v2nse = vertex_num_sharpe(v2);
   if (!try_ecol_legal(e, v1, v2, v1nse, v2nse)) return {R_illegal};
   NewMeshNei nn;
   if (!gather_nn(e, nn)) return {R_illegal};
@@ -3661,7 +3664,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   BoundingSphere new_bsphere;
   dummy_init(new_bsphere);
   if (bspherefac) new_bsphere = bsphere_union(v_bsphere(v1), v_bsphere(v2));
-  float spring = compute_spring(nn);
+  const float spring = compute_spring(nn);
   double rssf;
   if (!relerror) {
     rssf = 0.;
@@ -3677,8 +3680,8 @@ EcolResult try_ecol(Edge e, bool commit) {
   } else {
     assertx(!maxerr);
     double rssfg = 0., rssfc = 0., rssfn = 0.;
-    for (fptinfo* pfpt : nn.ar_fpts) rssfg += pfpt->dist2;
-    for (eptinfo* pept : nn.ar_epts) rssfg += pept->dist2;
+    for (const fptinfo* pfpt : nn.ar_fpts) rssfg += pfpt->dist2;
+    for (const eptinfo* pept : nn.ar_epts) rssfg += pept->dist2;
     if (spring) {
       for (Vertex v : mesh.vertices(e)) {
         for (Edge ee : mesh.edges(v)) {
@@ -3699,7 +3702,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   }
   {
     float rssfpenalty = 0.f;
-    for (eptinfo* pept : nn.ar_eptretire) {
+    for (const eptinfo* pept : nn.ar_eptretire) {
       dummy_use(pept);
       // Do not create benefit! pept->dist2 could be > length2(e)!
       //  not: rssfg += pept->dist2;
@@ -3718,7 +3721,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   Array<WedgeInfo> min_ar_wi;
   float min_dir_error;
   dummy_init(min_dir_error);
-  bool have_fakeii = (minqem && !no_fit_geom) || hull;
+  const bool have_fakeii = (minqem && !no_fit_geom) || hull;
   for_int(fakeii, 3 + have_fakeii) {
     int ii = fakeii;
     bool strict_ii = false;
@@ -3837,7 +3840,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         for (Vertex v : mesh.vertices(tv2)) {
           if (v == tv1 || v == mesh.side_vertex1(e) || v == mesh.side_vertex2(e)) continue;
           Edge ee = mesh.edge(tv2, v);
-          int imat = f_matid(mesh.face1(ee));
+          const int imat = f_matid(mesh.face1(ee));
           if (mesh.face2(ee) && f_matid(mesh.face2(ee)) == imat) {
             for (Face f : mesh.faces(v))
               if (f_matid(f) != imat && v1mats.contains(f_matid(f))) return false;  // From lambda.
@@ -3923,26 +3926,26 @@ EcolResult try_ecol(Edge e, bool commit) {
             if (v == v2 && (f == f1 || f == f2)) continue;
             const Vec3<Point> triangle = mesh.triangle_points(f);
             const Vector vc = get_normal_dir(triangle);
-            LinearFunc lf1(vc, triangle[0]);
+            const LinearFunc lf1(vc, triangle[0]);
             lfvol.add(lf1);
           }
         }
         {
-          float sum2 = mag2(lfvol.v);
+          const float sum2 = mag2(lfvol.v);
           // The squared magnitude of area-weighted (i.e., unnormalized) normals is O(scale^4), so the constant is
           // the fourth root of the original relative threshold 1e-12.
           // (It was previously `square(gdiam * 1e-6f)`, which is incorrectly O(scale^2)).
           if (sum2 < square(square(gdiam * 1e-3f))) {
             lfvol_ok = false;
           } else {
-            float fac = 1.f / sqrt(sum2);
+            const float fac = 1.f / sqrt(sum2);
             lfvol.v *= fac;
             lfvol.offset *= fac;
           }
           SSTATV2(Slfvol_ok, lfvol_ok);
         }
       }
-      int nw = ar_wi.num();
+      const int nw = ar_wi.num();
       Matrix<float> minp(nw, k_qemsmax);
       for_int(i, nw) create_qem_vector(newp, ar_wi[i], minp[i]);
       if (fakeii == 3) {
@@ -4066,7 +4069,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       rssa = rssag + rssac + rssan + rssapenalty;
     }
     if (bspherefac) {
-      float new_radius = dist(newp, new_bsphere.point) + new_bsphere.radius;
+      const float new_radius = dist(newp, new_bsphere.point) + new_bsphere.radius;
       rssa += square(bspherefac * new_radius);
     }
     if (edgepathfac) {
@@ -4076,7 +4079,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       for (Vertex vv : mesh.vertices(ii == 0 ? v1 : v2)) {
         if (vv == v1 || vv == v2 || vv == vo1 || vv == vo2) continue;
         // Loop over vertices vv adjacent to v1|v2.
-        float area = sqrt(area2(mesh.point(v1), mesh.point(v2), mesh.point(vv)));
+        const float area = sqrt(area2(mesh.point(v1), mesh.point(v2), mesh.point(vv)));
         rssa += edgepathfac * area;
       }
     }
@@ -4093,7 +4096,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         const Point& p0 = mesh.point(nn.va[i]);
         const Point& p1 = mesh.point(nn.va[i + 1]);
         const Point& p2 = newp;
-        float triarea = sqrt(area2(p0, p1, p2));
+        const float triarea = sqrt(area2(p0, p1, p2));
         rssa += trishapeafac * trishape_quality(p0, p1, p2) * triarea;
       }
     }
@@ -4128,7 +4131,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
   }
   if (min_ii < 0) return {R_dih};  // No dihedrally admissible configuration.
-  float raw_cost = float(min_rssa - rssf);
+  const float raw_cost = float(min_rssa - rssf);
   ecol_result.cost = raw_cost + offset_cost;
   if (raw_cost < 0.f) SSTATV2(Snegcost, raw_cost);
   const float smallcost = 1e-20f;  // Dimensionless, like the cost itself.
@@ -4136,7 +4139,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   if (invertexorder == 2) {
     // Of the legal edge collapses, select the one whose opposite vertex has smallest id.
     Vertex vo = mesh.opp_vertex(mesh.id_vertex(mesh.num_vertices()), e);
-    int voi = mesh.vertex_id(vo);
+    const int voi = mesh.vertex_id(vo);
     ecol_result.cost = float(voi);
   }
   ecol_result.min_ii = min_ii;  // May change below due to bswap.
@@ -4146,8 +4149,8 @@ EcolResult try_ecol(Edge e, bool commit) {
   // ALL SYSTEMS GO.
   if (verb >= 3) SHOW("ecol:", rssf, min_rssa, raw_cost);
   if (wfile_prog) g_necols++;
-  int new_desn = v_desn(v1) + v_desn(v2);
-  int new_desh = max(v_desh(v1), v_desh(v2)) + 1;
+  const int new_desn = v_desn(v1) + v_desn(v2);
+  const int new_desh = max(v_desh(v1), v_desh(v2)) + 1;
   if (desdfac || desnfac) {
     SSTATV2(Sdesn, new_desn);
     SSTATV2(Sdesh, new_desh);
@@ -4242,9 +4245,9 @@ EcolResult try_ecol(Edge e, bool commit) {
       }
     } else {
       for_int(i, ar_rwid.num()) {
-        int rwid = ar_rwid[i];
+        const int rwid = ar_rwid[i];
         assertx(rwid == (!bswap ? nn.ar_rwid_v1[i] : nn.ar_rwid_v2[i]));
-        int orwid = !bswap ? nn.ar_rwid_v2[i] : nn.ar_rwid_v1[i];
+        const int orwid = !bswap ? nn.ar_rwid_v2[i] : nn.ar_rwid_v1[i];
         if (orwid != rwid) gwq[orwid] = nullptr;
       }
       // Remaining affected gwq are updated after edge collapse.
@@ -4284,7 +4287,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
     {
       Set<Vertex> setv;
-      bool closed = nn.va[0] == nn.va.last();
+      const bool closed = nn.va[0] == nn.va.last();
       for_int(i, nn.va.num() - closed) {
         Vertex v = nn.va[i];
         assertx(setv.add(v));
@@ -4293,9 +4296,9 @@ EcolResult try_ecol(Edge e, bool commit) {
       assertx(nn.va.num() - closed == mesh.degree(vs));
     }
     if (!minqem) {  // 2025-09-26 Disabled otherwise due to "if (minqem) return true;" shortcut in gather_nn().
-      bool closed = nn.va[0] == nn.va.last();
+      const bool closed = nn.va[0] == nn.va.last();
       for_int(i, nn.va.num() - closed) {
-        bool found = contains(nn.ar_vdisc, i);
+        const bool found = contains(nn.ar_vdisc, i);
         Edge ee = mesh.edge(vs, nn.va[i]);
         assertx(found == edge_sharp(ee));
       }
@@ -4341,7 +4344,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       assertw(strict_mat_neighbors(f, fn));
     }
     for (Edge ee : mesh.edges(vs)) {
-      int imat = f_matid(mesh.face1(ee));
+      const int imat = f_matid(mesh.face1(ee));
       if (!mesh.face2(ee) || f_matid(mesh.face2(ee)) != imat) continue;
       Vertex vv1 = mesh.vertex1(ee);
       Vertex vv2 = mesh.vertex2(ee);
@@ -4367,7 +4370,7 @@ float get_tvc_cost(Edge e, bool edir) {
   // so access the face corners in reverse order, looking into cached_vertices, accounting for cache misses so far.
   for_int(ii, ar_ce.num()) {
     const CacheEntry& ce = ar_ce[ar_ce.num() - 1 - ii];
-    int wi = ce.wid, owi = ce.owid;
+    const int wi = ce.wid, owi = ce.owid;
     int nfound = 0;
     for_int(j, tvc_cache.num() - (ii - nincache)) {
       const CacheEntry& ce2 = tvc_cache[j];
@@ -4388,7 +4391,7 @@ float get_tvc_cost(Edge e, bool edir) {
   assertx(nincache <= tvc_max_improvement);
   float cost;
   if (tvcpqa) {
-    float avg_cost = !pqecost.total_num() ? 0.f : float(pqecost.total_priority() / pqecost.total_num());
+    const float avg_cost = !pqecost.total_num() ? 0.f : float(pqecost.total_priority() / pqecost.total_num());
     cost = -nincache * avg_cost * tvcfac;
   } else {
     cost = -nincache * square(tvcfac);  // Costs are dimensionless, so this is already scale-invariant.
@@ -4401,8 +4404,8 @@ float get_tvc_cost(Edge e, bool edir) {
 #endif
 
 void get_tvc_cost_edir(Edge e, float& tvccost, bool& edir) {
-  float tvccost0 = get_tvc_cost(e, false);
-  float tvccost1 = get_tvc_cost(e, true);
+  const float tvccost0 = get_tvc_cost(e, false);
+  const float tvccost1 = get_tvc_cost(e, true);
   if (tvccost0 == tvccost1) {
     tvccost = tvccost0;
     edir = false;
@@ -4424,7 +4427,7 @@ void consider_tvc(Edge& edefault, float costdefault) {
   float costbest = costdefault;
   Set<Edge> sete;
   for (const CacheEntry& ce : tvc_cache) {
-    int wid = ce.wid, owid = ce.owid;
+    const int wid = ce.wid, owid = ce.owid;
     assertx((wid < 0) == (owid < 0));
     if (wid < 0) continue;
     Vertex v = ce.v;
@@ -4438,9 +4441,9 @@ void consider_tvc(Edge& edefault, float costdefault) {
   }
   SSTATV2(Stvcsete, sete.num());
   for (Edge e : sete) {
-    float cost = pqecost.retrieve(e);  // Note that cost could equal k_bad_cost.
+    const float cost = pqecost.retrieve(e);  // Note that cost could equal k_bad_cost.
     ASSERTX(cost >= 0.f);
-    float max_improvement =
+    const float max_improvement =
         (tvc_max_improvement *
          (tvcpqa ? (!pqecost.total_num() ? 0.f : float(pqecost.total_priority() / pqecost.total_num()))
                  : square(tvcfac)));
@@ -4448,7 +4451,7 @@ void consider_tvc(Edge& edefault, float costdefault) {
     float tvc_cost;
     bool edir;
     get_tvc_cost_edir(e, tvc_cost, edir);
-    float adjusted_cost = cost + tvc_cost;
+    const float adjusted_cost = cost + tvc_cost;
     if (adjusted_cost > costbest) continue;
     assertx(affectpq >= 3);
     costbest = adjusted_cost;
@@ -4592,12 +4595,12 @@ void optimize() {
   for (;;) {
     if (!invertexorder) assertx(pqecost.num() == mesh.num_edges());
     if (0 && ntested % 50 == 0 && pqecost.total_num()) {
-      double otot = pqecost.total_priority();
-      int ontot = pqecost.total_num();
+      const double otot = pqecost.total_priority();
+      const int ontot = pqecost.total_num();
       double tot = 0.;
       int ntot = 0;
       for (Edge e : mesh.edges()) {
-        float pri = pqecost.retrieve(e);
+        const float pri = pqecost.retrieve(e);
         assertx(pri >= 0.f);
         if (pri < k_bad_dih) {
           tot += pri;
@@ -4623,7 +4626,7 @@ void optimize() {
     // Pull what we think is the best edge.
     if (invertexorder) {
       pqecost.clear();
-      int idtoremove = mesh.num_vertices();
+      const int idtoremove = mesh.num_vertices();
       // If this fails, then we should have renumbered original mesh.
       Vertex vtoremove = assertx(mesh.id_retrieve_vertex(idtoremove));
       for (Edge e : mesh.edges(vtoremove)) {
@@ -4632,7 +4635,7 @@ void optimize() {
         neval++;
       }
     }
-    float expect_cost = pqecost.min_priority();
+    const float expect_cost = pqecost.min_priority();
     if (expect_cost == k_bad_cost) {
       cprogress.clear();
       showff("Stop. No more good edge collapses.\n");
@@ -4644,9 +4647,9 @@ void optimize() {
     }
     Edge e = pqecost.remove_min();
     mesh.valid(e);
-    float nexte_cost = pqecost.min_priority();
+    const float nexte_cost = pqecost.min_priority();
     const float a_factor = 1.0f;
-    float thresh_cost = expect_cost + (nexte_cost - expect_cost) * a_factor + 1e-20f;
+    const float thresh_cost = expect_cost + (nexte_cost - expect_cost) * a_factor + 1e-20f;
     ntested++;
     {
       const auto [result, cost, unused_min_ii, unused_vs] = try_ecol(e, false);
@@ -4703,12 +4706,12 @@ void optimize() {
       assertx(affectpq >= 2);  // affectpq == 1 no longer supported.
       for (Face f : mesh.faces(vs)) {
         Edge ee = mesh.opp_edge(vs, f);
-        float cost1 = pqecost.retrieve(ee);
+        const float cost1 = pqecost.retrieve(ee);
         if ((affectpq >= 1 && cost1 == k_bad_cost) || affectpq >= 3) assertx(seterecompute.add(ee));
       }
       for (Vertex v : mesh.vertices(vs)) {
         for (Edge ee : mesh.edges(v)) {
-          float cost1 = pqecost.retrieve(ee);
+          const float cost1 = pqecost.retrieve(ee);
           if ((affectpq >= 1 && cost1 == k_bad_cost) || affectpq >= 3) seterecompute.add(ee);
         }
       }
@@ -4842,7 +4845,7 @@ void write_original_indices() {
                                      views::transform([&](Vertex v) { return mesh.vertex_id(v); })};
   WFile fi(original_indices);
   fi() << sform("%d\n", base_mesh_indices.num() + ar_vt_indices.num());
-  for (int vi : concatenate(base_mesh_indices, reverse(ar_vt_indices))) fi() << sform("%d\n", vi);
+  for (const int vi : concatenate(base_mesh_indices, reverse(ar_vt_indices))) fi() << sform("%d\n", vi);
 }
 
 }  // namespace

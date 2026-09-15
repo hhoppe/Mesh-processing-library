@@ -78,7 +78,7 @@ int main() {
     for (const auto& u : range(a1)) SHOW(u);
     SHOW(a2);
     for (const auto& u : range(a2)) SHOW(u);
-    Vec3<int> a3{};
+    const Vec3<int> a3{};
     assertx(is_zero(a3));
     Vec3<int> a4(1, 2, 3);
     a4 = Vec3<int>{};
@@ -155,9 +155,9 @@ int main() {
     }
   }
   {
-    Vec<char, 2> magic{'B', 'M'};
+    const Vec<char, 2> magic{'B', 'M'};
     static_assert(sizeof(magic) == 2);
-    Vec<uchar, 4> buf2{uchar{0}, uchar{0}, uchar{0}, uchar{0}};
+    const Vec<uchar, 4> buf2{uchar{0}, uchar{0}, uchar{0}, uchar{0}};
     static_assert(sizeof(buf2) == 4);
   }
   {
@@ -240,7 +240,7 @@ int main() {
   {
     Set<size_t> set;
     for_int(i, 100) for_int(j, 100) {
-      size_t h = my_hash(V(i, j));
+      const size_t h = my_hash(V(i, j));
       // SHOW(i, j, h);
       assertx(set.add(h));  // all 10'000 are unique
     }
@@ -297,8 +297,8 @@ int main() {
     static_assert(std::is_trivially_copyable_v<P> == false);
     static_assert(std::is_trivially_copyable_v<Vec1<P>> == false);
     Vec1<P> s1;
-    Vec1<P> s2 = s1;
-    Vec1<P> s3 = std::move(s1);
+    const Vec1<P> s2 = s1;
+    const Vec1<P> s3 = std::move(s1);
   }
   {
     using SU2 = Vec2<unique_ptr<int>>;

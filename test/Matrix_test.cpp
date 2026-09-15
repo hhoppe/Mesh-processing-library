@@ -136,7 +136,7 @@ int main() {
     SHOW(sum(m));
     SHOW(mean(m));
     {
-      Matrix<float> expected{
+      const Matrix<float> expected{
           {-1.f / 6.f, 0.f, 1.f / 6.f, 0.f},
           {-1.f / 3.f, 1.f / 6.f, -1.f / 3.f, 1.f / 6.f},
           {11.f / 18.f, 1.f / 9.f, 1.f / 6.f, -1.f / 3.f},
@@ -146,13 +146,14 @@ int main() {
     }
     assertx(dist(mat_mul(m, inverse(m)), identity_mat<float>(4)) < 1e-6f);
     {
-      Matrix<float> expected{{1.f, 2.f, 3.f, 4.f}, {8.f, 7.f, 6.f, 5.f}, {7.f, 2.f, 3.f, 4.f}, {8.f, 7.f, 6.f, 11.f}};
+      const Matrix<float> expected{
+          {1.f, 2.f, 3.f, 4.f}, {8.f, 7.f, 6.f, 5.f}, {7.f, 2.f, 3.f, 4.f}, {8.f, 7.f, 6.f, 11.f}};
       assertx(dist(mat_mul(mat_mul(m, m), inverse(m)), expected) < 1e-4f);
     }
   }
   {
     const int n = 8;
-    Matrix<Vector4> m(V(n, n), Vector4(10.f));
+    const Matrix<Vector4> m(V(n, n), Vector4(10.f));
     SHOW(mean(m));
     // Matrix<Vector4> mn = scale(m, 5, 5, twice(FilterBnd(Filter::get("impulse"), Bndrule::reflected)));
     Matrix<Vector4> mn = scale(m, V(5, 5), twice(FilterBnd(Filter::get("box"), Bndrule::periodic)));

@@ -25,7 +25,7 @@ int main() {
   {
     using TU = std::tuple<int, float, double*>;
     double d1, d2;
-    TU tu1 = std::tuple(1, 2.f, &d1);
+    const TU tu1 = std::tuple(1, 2.f, &d1);
     assertx(my_hash(tu1) == my_hash(std::tuple(1, 2.f, &d1)));
     assertx(my_hash(tu1) != my_hash(std::tuple(1, 2.f, &d2)));
     assertx(my_hash(tu1) != my_hash(std::tuple(1, 3.f, &d1)));

@@ -85,7 +85,7 @@ int main() {
   {
     Set<int> s;
     assertx(s.num() == 0);
-    for (int i : s) {
+    for (const int i : s) {
       dummy_use(i);
       if (1) assertnever("");
     }
@@ -97,7 +97,7 @@ int main() {
     assertw(s.contains(2));
     assertw(!s.contains(100));
     int se = 0;
-    for (int i : s) se += i;
+    for (const int i : s) se += i;
     assertw(se == (0 + 99) * (100 / 2));
     assertw(!s.remove(101));
     for_int(i, 50) assertw(s.remove(i));
@@ -113,7 +113,7 @@ int main() {
     for_int(i, 100) s.enter(i);
     Set<int> s2;
     for_int(i, 10'000) {
-      int e = s.get_random(Random::G);
+      const int e = s.get_random(Random::G);
       s2.add(e);
     }
     assertx(s2.num() == 100);
@@ -142,7 +142,7 @@ int main() {
     //  s.erase(it);
     // We must use extract() instead:
     auto node = s.extract(it);
-    U u = std::move(node.value());
+    const U u = std::move(node.value());
     assertx(*u == 31 || *u == 37);
     SHOW(s.size());
   }

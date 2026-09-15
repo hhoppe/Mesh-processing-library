@@ -21,8 +21,8 @@ float ffdist(const int& v1, const int& v2) { return float(abs(v1 - v2)); }
 void show_graph(const Graph<int>& g, bool directed = false) {
   float cost = 0.f;
   SHOW("Graph: edges {");
-  for (int i : sort(Array(g.vertices()))) {
-    for (int j : sort(Array(g.edges(i)))) {
+  for (const int i : sort(Array(g.vertices()))) {
+    for (const int j : sort(Array(g.edges(i)))) {
       if (!directed && i > j) continue;
       showf(" edge (%d, %d)\n", i, j);
       cost += fidist()(i, j);
@@ -34,7 +34,7 @@ void show_graph(const Graph<int>& g, bool directed = false) {
 void do_ints() {
   SHOW("do_ints");
   Graph<int> g;
-  for (int i : {1, 2, 3, 4, 5, 6, 7}) g.enter(i);
+  for (const int i : {1, 2, 3, 4, 5, 6, 7}) g.enter(i);
   g.enter_undirected(1, 4);
   g.enter_undirected(3, 2);
   g.enter_undirected(4, 5);
@@ -43,7 +43,7 @@ void do_ints() {
   g.enter_undirected(6, 2);
   SHOW("orig:");
   show_graph(g, true);
-  int vs = 2;
+  const int vs = 2;
   {
     Dijkstra di(&g, vs, fdist());
     for (const auto& [v, dis] : di) showf("V1: %d at dist=%g\n", v, dis);

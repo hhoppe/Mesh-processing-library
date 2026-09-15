@@ -6,7 +6,7 @@ int main() {
   {
     Queue<int> q;
     assertx(q.empty());
-    for (int i : q) {
+    for (const int i : q) {
       dummy_use(i);
       if (1) assertnever("");
     }
@@ -19,7 +19,7 @@ int main() {
     assertx(q.dequeue() == 1);
     {
       int i = 0;
-      for (int j : q) assertx(j == 2 + i++);
+      for (const int j : q) assertx(j == 2 + i++);
     }
     assertx(!q.contains(1));
     q.insert_first(5);

@@ -52,16 +52,16 @@ int main() {
     // Grid<3, float> grid(3, 4.f, 2); SHOW(grid);  // correctly fails to compile
   }
   {
-    Grid<1, int> grid1(256);
+    const Grid<1, int> grid1(256);
     SHOW(ravel_index_list(grid1.dims(), 7));
     SHOW(unravel_index(grid1.dims(), ravel_index_list(grid1.dims(), 7)));
-    Grid<2, int> grid2(100, 1000);
+    const Grid<2, int> grid2(100, 1000);
     SHOW(ravel_index_list(grid2.dims(), 3, 7));
     SHOW(unravel_index(grid2.dims(), ravel_index_list(grid2.dims(), 3, 7)));
-    Grid<3, int> grid3(V(10, 100, 1000));
+    const Grid<3, int> grid3(V(10, 100, 1000));
     SHOW(ravel_index_list(grid3.dims(), 3, 4, 5));
     SHOW(unravel_index(grid3.dims(), ravel_index_list(grid3.dims(), 3, 4, 5)));
-    Grid<4, int> grid4(4, 10, 100, 1000);
+    const Grid<4, int> grid4(4, 10, 100, 1000);
     SHOW(ravel_index_list(grid4.dims(), 3, 4, 5, 6));
     SHOW(unravel_index(grid4.dims(), ravel_index_list(grid4.dims(), 3, 4, 5, 6)));
   }

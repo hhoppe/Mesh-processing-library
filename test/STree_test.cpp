@@ -54,7 +54,7 @@ int main() {
       }
     };
     STree<astruct, less_astruct> stree;
-    astruct s1(1, 2), s2(3, 4), s3(1, 2);
+    const astruct s1(1, 2), s2(3, 4), s3(1, 2);
     assertx(!func_compare_astruct(stree.retrieve(s3), astruct()));
     assertx(stree.enter(s1));
     assertx(!stree.enter(s1));
@@ -80,7 +80,7 @@ int main() {
     STree<unsigned> stree;
     for (int ib = 0; ib < n; ib += 23) {
       for_int(io, n - ib) {
-        int i = ib + io;
+        const int i = ib + io;
         assertx(!stree.retrieve(val[i]));
         assertx(stree.enter(val[i]));
       }
@@ -90,7 +90,7 @@ int main() {
         check_order_last = i;
       }
       for_int(io, n - ib) {
-        int i = ib + io;
+        const int i = ib + io;
         assertx(stree.remove(val[i]));
         assertx(!stree.retrieve(val[i]));
       }

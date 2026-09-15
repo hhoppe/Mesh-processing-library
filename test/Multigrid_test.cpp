@@ -122,7 +122,7 @@ void test(GridView<D, T> grid_orig, Periodic /*unused*/ = Periodic{}) {
   multigrid.solve();
   CGridView<D, T> grid_result = multigrid.result();
   auto result_rms_err = max_e(rms(grid_result - grid_orig));
-  bool has_an_odd_dim = ranges::any_of(dims, [](int i) { return i > 1 && i % 2; });
+  const bool has_an_odd_dim = ranges::any_of(dims, [](int i) { return i > 1 && i % 2; });
   const float fudge = has_an_odd_dim ? 2.f : 1.f;
   constexpr float tolerance = std::is_same_v<decltype(max_e(T{})), float> ? 1e-7f : 1e-16f;
   auto expected_rms_err = max(dims) * 10.f * fudge * tolerance;
@@ -203,7 +203,7 @@ int main(int argc, const char** argv) {
   if (0) {  // debug the iterators with normal and interior functions
     const auto func_norm = [&](const Vec2<int>& u) { showf("%s norm\n", make_string(u).c_str()); };
     const auto func_interior = [&](size_t i) {
-      Vec2<int> u{int(i / 5), int(i % 5)};
+      const Vec2<int> u{int(i / 5), int(i % 5)};
       showf("%s interior\n", make_string(u).c_str());
     };
     SHOW("beg");
@@ -321,14 +321,14 @@ int main(int argc, const char** argv) {
       {
         // HH_TIMER("_setup_stitch");
         const auto func_stitch = [&](int y0, int x0, int y1, int x1, double& vrhs) {
-          int label0 = grid_labels[y0, x0];
-          int label1 = grid_labels[y1, x1];
+          const int label0 = grid_labels[y0, x0];
+          const int label1 = grid_labels[y1, x1];
           if (1) vrhs += (grids[label0][y1, x1][c] - grids[label0][y0, x0][c]) * .5f;
           if (1) vrhs += (grids[label1][y1, x1][c] - grids[label1][y0, x0][c]) * .5f;  // necessary!
         };
         parallel_for(range(dims[0]), [&](const int y) {
           for_int(x, dims[1]) {
-            int label = grid_labels[y, x];
+            const int label = grid_labels[y, x];
             double vrhs = -screening_weight * grids[label][y, x][c];
             if (y > 0) func_stitch(y, x, y - 1, x + 0, vrhs);
             if (y < dims[0] - 1) func_stitch(y, x, y + 1, x + 0, vrhs);

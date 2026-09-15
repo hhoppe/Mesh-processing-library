@@ -38,7 +38,7 @@ void phase1(int argc, const char** argv) {
   args.other_args_ok();
   args.other_options_ok();
   Array<string> ar_unrecog;
-  bool optsparse = args.parse_and_extract(ar_unrecog);
+  const bool optsparse = args.parse_and_extract(ar_unrecog);
   SHOW(optsparse, ar_unrecog);
   SHOW(flag, flap, flac, val1, val2);
   SHOW(fa[0], fa[1]);
@@ -48,7 +48,7 @@ void phase1(int argc, const char** argv) {
 
 void phase2(int argc, const char** argv) {
   const auto do_showar = [](Args& args) {
-    int i = args.get_int();
+    const int i = args.get_int();
     SHOW("showar", i, vec2[i]);
   };
   const auto do_vlp = [](Args& args) { SHOW("reading vlp", args.get_filename(), vec2); };

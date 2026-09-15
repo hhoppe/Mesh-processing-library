@@ -17,7 +17,7 @@ namespace {
 
 void to_norm(const Vector4& v) {
   SHOW(v);
-  Pixel pixel = v.pixel();
+  const Pixel pixel = v.pixel();
   Vec4<int> ar = convert<int>(pixel);
   SHOW(ar);
 }
@@ -36,7 +36,7 @@ int main() {
     SHOW(std::is_trivially_default_constructible_v<Vector4>);
   }
   {
-    Vector4 v2{};
+    const Vector4 v2{};
     assertx(is_zero(v2));
   }
   {

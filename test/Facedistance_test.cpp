@@ -25,8 +25,8 @@ void test1() {
       const auto [d1, bary1, clp1] = project_point_triangle(p, p1, p2, p3);
       const auto [d2, bary2, clp2] = project_point_triangle(p, p2, p3, p1);
       const auto [d3, bary3, clp3] = project_point_triangle(p, p3, p1, p2);
-      float dmin = min({d1, d2, d3});
-      float dmax = max({d1, d2, d3});
+      const float dmin = min({d1, d2, d3});
+      const float dmax = max({d1, d2, d3});
       if (dmax - dmin < 3e-7) continue;
       SHOW(p1, p2, p3);
       SHOW(p, dmax - dmin, dmin, dmax);
@@ -39,9 +39,9 @@ void test1() {
 
 void test2() {
   WSA3dStream oa3d(std::cout);
-  Point p1(2.f, 3.f, 9.f);
-  Point p2(4.f, 7.f, 10.f);
-  Point p3(6.f, 5.f, 11.f);
+  const Point p1(2.f, 3.f, 9.f);
+  const Point p2(4.f, 7.f, 10.f);
+  const Point p3(6.f, 5.f, 11.f);
   {
     A3dElem el(A3dElem::EType::polygon);
     el.push(A3dVertex(p1, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::blue())));

@@ -32,7 +32,7 @@ void test_stack() {
     s.push_back(1);
     s.push_back(2);
     int i = 0;
-    for (int j : s) assertw(j == i++);
+    for (const int j : s) assertw(j == i++);
     assertx(i == 3);
     assertw(vec_pop(s) == 2);
     assertw(vec_pop(s) == 1);
@@ -45,7 +45,7 @@ void test_stack() {
     s.push_back(4);
     s.push_back(9);
     int i = 0;
-    for (float v : s) {
+    for (const float v : s) {
       assertw(v == square(i + 1));
       i++;
     }
@@ -58,7 +58,7 @@ void test_stack() {
   {
     std::vector<int> s;
     assertx(s.empty());
-    for (int i : s) {
+    for (const int i : s) {
       dummy_use(i);
       if (1) assertnever("");
     }
@@ -71,7 +71,7 @@ void test_stack() {
     assertw(vec_pop(s) == 2);
     {
       int i = 0;
-      for (int j : s) assertw(j == i++);
+      for (const int j : s) assertw(j == i++);
     }
     assertw(!contains(s, 2));
     assertw(vec_pop(s) == 1);
@@ -97,7 +97,7 @@ template <typename T> T queue_pop(std::deque<T>& queue) {
 void test_queue() {
   std::deque<int> q;
   assertx(q.empty());
-  for (int i : q) {
+  for (const int i : q) {
     dummy_use(i);
     if (1) assertnever("");
   }
@@ -110,7 +110,7 @@ void test_queue() {
   assertw(queue_pop(q) == 1);
   {
     int i = 0;
-    for (int j : q) assertw(j == 2 + i++);
+    for (const int j : q) assertw(j == 2 + i++);
   }
   assertw(!queue_contains(q, 1));
   q.push_front(5);
@@ -133,7 +133,7 @@ template <typename T> bool list_contains(const std::list<T>& l, const T& e) {
 void test_list() {
   std::list<int> l;
   assertx(l.empty());
-  for (int i : l) {
+  for (const int i : l) {
     dummy_use(i);
     if (1) assertnever("");
   }
@@ -162,7 +162,7 @@ void test_list() {
   l.insert(++ranges::find(l, 2), 3);
   {
     int i = 0;
-    for (int j : l) assertw(j == i++);
+    for (const int j : l) assertw(j == i++);
   }
   l.clear();
 }

@@ -84,7 +84,7 @@ void test3() {
   pq.sort();
   float a = 0.f;
   while (!pq.empty()) {
-    float b = pq.min_priority();
+    const float b = pq.min_priority();
     assertx(b >= a);
     a = b;
     pq.remove_min();
@@ -96,7 +96,7 @@ void test4() {
   for_int(i, 1000) pq.enter(i, 2.f + std::sin(float(i)));
   float a = 0.f;
   while (!pq.empty()) {
-    float b = pq.min_priority();
+    const float b = pq.min_priority();
     assertx(b >= a);
     a = b;
     pq.remove_min();
@@ -112,7 +112,7 @@ void test5() {
     pq.sort();
     float a = 0.f;
     while (!pq.empty()) {
-      float b = pq.min_priority();
+      const float b = pq.min_priority();
       assertx(b >= a);
       a = b;
       pq.remove_min();
@@ -130,7 +130,7 @@ void test6() {
     for_int(i, n * 3) pq.update(i, float(random_engine()));
     float a = 0.f;
     while (!pq.empty()) {
-      float b = pq.min_priority();
+      const float b = pq.min_priority();
       assertx(b >= a);
       a = b;
       pq.remove_min();
@@ -140,7 +140,7 @@ void test6() {
 
 void test7() {
   for_int(k, 500) {
-    int n = 30;
+    const int n = 30;
     HPqueue<int> pq;
     pq.reserve(n);
     Array<float> arval1;
@@ -156,10 +156,10 @@ void test7() {
     for_int(i, n) assertx(pq.retrieve(i) == arval3[i]);
     float a = 0.f;
     while (!pq.empty()) {
-      float b = pq.min_priority();
+      const float b = pq.min_priority();
       assertx(b >= a);
       a = b;
-      int i = pq.remove_min();
+      const int i = pq.remove_min();
       assertx(b == arval3[i]);
     }
   }
@@ -177,11 +177,11 @@ void test8() {
   assertx(*pq.min() == 6);
   assertx(pq.min_priority() == 1.2f);
   {
-    unique_ptr<int> p = pq.remove_min();
+    const unique_ptr<int> p = pq.remove_min();
     assertx(*p == 6);
   }
   {
-    unique_ptr<int> p = pq.remove_min();
+    const unique_ptr<int> p = pq.remove_min();
     assertx(*p == 4);
   }
   pq.clear();
@@ -195,11 +195,11 @@ void test8() {
   assertx(*pq.min() == 6);
   assertx(pq.min_priority() == 1.2f);
   {
-    unique_ptr<int> p = pq.remove_min();
+    const unique_ptr<int> p = pq.remove_min();
     assertx(*p == 6);
   }
   {
-    unique_ptr<int> p = pq.remove_min();
+    const unique_ptr<int> p = pq.remove_min();
     assertx(*p == 4);
   }
 }
@@ -220,18 +220,18 @@ void test9() {
     ranges::shuffle(ar3, random_engine);
     HPqueue<int> hpq;
     for_int(i, n) {
-      int j = ar1[i];
+      const int j = ar1[i];
       hpq.enter(j, ar2[j]);
     }
     for_int(i, n) {
-      int j = i;
+      const int j = i;
       hpq.update(j, ar3[j]);
     }
     {
       float expectedv = 0.f;
       while (!hpq.empty()) {
-        float pri = hpq.min_priority();
-        int j = hpq.remove_min();
+        const float pri = hpq.min_priority();
+        const int j = hpq.remove_min();
         assertx(pri == expectedv);
         assertx(ar3[j] == pri);
         expectedv += 1.f;

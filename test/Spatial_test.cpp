@@ -10,7 +10,7 @@ int main() {
     PointSpatial<int> sp(40);
     Vec<Point, 30> pa;
     Point p(.4f, .22f, .87621f);
-    Vector v(.0065f, .0212f, -.01623f);
+    const Vector v(.0065f, .0212f, -.01623f);
     for_int(i, pa.num()) {
       pa[i] = p;
       sp.enter(i, &pa[i]);

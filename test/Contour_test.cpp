@@ -24,7 +24,7 @@ void test2D() {
       el.push(A3dVertex(Point(0.f, poly[i][0], poly[i][1]), Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
     }
   };
-  int gn = 20;
+  const int gn = 20;
   WFile fcontour("Contour_test.2D");
   WSA3dStream wcontour(fcontour());
   WFile fborder("Contour_test.2Dborder");
@@ -48,7 +48,7 @@ void test2D() {
 struct feval3D {
   float operator()(const Vec3<float>& p) const {
     // Compute at double-precision to avoid numerical differences between different CONFIG.
-    Vec3<double> pd = convert<double>(p);
+    const Vec3<double> pd = convert<double>(p);
     float f = float((dist(pd, V(.2, .3, .3)) - .15) * (dist(pd, V(.6, .65, .7)) - .35));
     if (dist2(pd, V(.53, .53, .53)) < square(.15)) f = k_Contour_undefined;
     return f;
@@ -56,7 +56,7 @@ struct feval3D {
 };
 
 void test3D() {
-  int gn = 10;
+  const int gn = 10;
   WFile fcontour("Contour_test.3D");
   WSA3dStream wcontour(fcontour());
   WFile fborder("Contour_test.3Dborder");
@@ -75,11 +75,11 @@ void test3D() {
     wborder.write(el);
   };
   Contour3D contour(gn, func_contour, feval3D(), func_border);
-  int nc1 = contour.march_from(Point(.35f, .3f, .3f));
-  int nc2 = contour.march_from(Point(.25f, .65f, .7f));
-  int nc3 = contour.march_from(Point(.95f, .65f, .7f));
-  int nc4 = contour.march_from(Point(.8f, .2f, .1f));
-  int nc5 = contour.march_from(Point(.8f, .2f, .1f));
+  const int nc1 = contour.march_from(Point(.35f, .3f, .3f));
+  const int nc2 = contour.march_from(Point(.25f, .65f, .7f));
+  const int nc3 = contour.march_from(Point(.95f, .65f, .7f));
+  const int nc4 = contour.march_from(Point(.8f, .2f, .1f));
+  const int nc5 = contour.march_from(Point(.8f, .2f, .1f));
   SHOW(nc1, nc2, nc3, nc4, nc5);
 }
 
@@ -89,8 +89,8 @@ void testmesh() {
     Contour3DMesh<feval3D> contour(10, &mesh);
     if (0) contour.big_mesh_faces();
     contour.set_vertex_tolerance(1e-4f);
-    int nc1 = contour.march_from(Point(.35f, .3f, .3f));
-    int nc2 = contour.march_from(Point(.25f, .65f, .7f));
+    const int nc1 = contour.march_from(Point(.35f, .3f, .3f));
+    const int nc2 = contour.march_from(Point(.25f, .65f, .7f));
     SHOW(nc1, nc2);
   }
   for (Vertex v : mesh.vertices()) {
@@ -108,7 +108,7 @@ struct fmonkey {
     const float s = 4.f;
     const Point pp = (p * 2.f - 1.f) * s;
     const float x = pp[0], y = pp[1], z = pp[2];
-    float f = z - pow(x, 3.f) + 3.f * y * y * x;
+    const float f = z - pow(x, 3.f) + 3.f * y * y * x;
     return f;
   }
 };
@@ -136,7 +136,7 @@ void do_densemonkey() {
 void do_sphere() {
   static constexpr float k_radius = .4f;
   const auto func_sphere = [](const Vec3<float>& p) {
-    float r = dist(p, V(.5f, .5f, .5f));
+    const float r = dist(p, V(.5f, .5f, .5f));
     if (0) {
       return square(r) - square(k_radius);
     } else if (0) {

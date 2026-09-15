@@ -26,7 +26,7 @@ int main() {
   {
     Map<int, int> m;
     assertx(m.num() == 0);
-    for (int i : m.keys()) {
+    for (const int i : m.keys()) {
       (void(i));
       if (1) assertnever("");
     }
@@ -62,15 +62,15 @@ int main() {
     assertw(sv == (50 * 8 + 99 * 8) * (50 / 2));
     sk = 0;
     sv = 0;
-    for (int k : m.keys()) sk += k;
-    for (int v : m.values()) sv += v;
+    for (const int k : m.keys()) sk += k;
+    for (const int v : m.values()) sv += v;
     assertw(sk == (50 + 99) * (50 / 2));
     assertw(sv == (50 * 8 + 99 * 8) * (50 / 2));
     for_intL(i, 50, 100) m.remove(i);
     m.clear();
     assertx(m.empty());
     {
-      int num = 10000;
+      const int num = 10000;
       for_int(i, num) m.enter(i, 0);
       for_int(i, num) m.remove(i);
       assertx(m.num() == 0);
@@ -79,8 +79,8 @@ int main() {
     m.clear();
     for_int(i, 100) m.enter(i, i);
     for_int(i, 100) {
-      int val = m.get_random_value(Random::G);
-      int key = val;
+      const int val = m.get_random_value(Random::G);
+      const int key = val;
       assertx(m.contains(key));
       assertx(m.remove(key) == val);
     }

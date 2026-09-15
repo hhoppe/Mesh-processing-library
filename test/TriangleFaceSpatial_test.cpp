@@ -25,17 +25,17 @@ void test2(int gridn) {
     SpatialSearch<TriangleFace*> ss(&spatial, p);
     const auto [ptriangleface, d2] = *ss.begin();
     const TriangleFace& triangleface = *ptriangleface;
-    int found_i = int(reinterpret_cast<intptr_t>(triangleface.face));
+    const int found_i = int(reinterpret_cast<intptr_t>(triangleface.face));
     assertx(found_i == &triangleface - trianglefaces.data());
     const Vec3<Point>& triangle1 = triangleface.triangle;
-    float rd2 = project_point_triangle(p, triangle1).d2;
+    const float rd2 = project_point_triangle(p, triangle1).d2;
     assertx(abs(rd2 - d2) < 1e-8f);
     float mind2 = BIGFLOAT;
     int mini = 0;
     for_int(i, np) {
       const Vec3<Point>& triangle2 = trianglefaces[i].triangle;
-      float tmp_d2 = project_point_triangle(p, triangle2).d2;
-      float lbd2 = square(lb_dist_point_triangle(p, triangle2));
+      const float tmp_d2 = project_point_triangle(p, triangle2).d2;
+      const float lbd2 = square(lb_dist_point_triangle(p, triangle2));
       assertw(tmp_d2 >= lbd2 - 1e-12f);
       if (tmp_d2 < mind2) {
         mind2 = tmp_d2;
@@ -58,8 +58,8 @@ int main() {
         TriangleFace{V(Point(.8f, .2f, .2f), Point(.8f, .8f, .8f), Point(.8f, .8f, .2f)), f2});
   TriangleFaceSpatial spatial(trianglefaces, 10);
   {
-    Point p1(.1f, .5f, .3f);
-    Point p2(.9f, .5f, .3f);
+    const Point p1(.1f, .5f, .3f);
+    const Point p2(.9f, .5f, .3f);
     const auto result = spatial.first_along_segment(p1, p2);
     SHOW(bool(result));
     if (result) {
@@ -69,8 +69,8 @@ int main() {
     }
   }
   {
-    Point p1(.19f, .38f, .44f);
-    Point p2(.85f, .7f, .3f);
+    const Point p1(.19f, .38f, .44f);
+    const Point p2(.85f, .7f, .3f);
     const auto result = spatial.first_along_segment(p1, p2);
     SHOW(bool(result));
     if (result) {

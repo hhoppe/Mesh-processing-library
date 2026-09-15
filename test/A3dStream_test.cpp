@@ -29,10 +29,10 @@ int main() {
   A3dElem el;
   for (;;) {
     if (is_bi) {
-      RBufferedA3dStream::ERecognize st = down_cast<RBufferedA3dStream*>(pia3d.get())->recognize();
+      const RBufferedA3dStream::ERecognize st = down_cast<RBufferedA3dStream*>(pia3d.get())->recognize();
       assertx(st != RBufferedA3dStream::ERecognize::parse_error);
       if (st != RBufferedA3dStream::ERecognize::yes) {
-        RBuffer::ERefill ret = pbi->refill();
+        const RBuffer::ERefill ret = pbi->refill();
         if (pbi->eof()) break;
         assertx(ret != RBuffer::ERefill::other);
         if (0 && ret == RBuffer::ERefill::no) break;

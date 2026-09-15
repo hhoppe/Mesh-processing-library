@@ -10,7 +10,7 @@ using namespace hh;
 int main() {
   {
     Stat s1("", true);
-    for (int i : {2, 4, -1, 10, 8}) s1.enter(i);
+    for (const int i : {2, 4, -1, 10, 8}) s1.enter(i);
     SHOW(s1.short_string());
     s1.enter(12);
     s1.enter(11);

@@ -7,7 +7,7 @@ using namespace hh;
 int main() {
   double time_elapsed = 0.;
   for (int i = 0; i < 10; i++) {
-    SimpleTimer timer;
+    const SimpleTimer timer;
     my_sleep(0.05);
     time_elapsed += timer.elapsed();
   }

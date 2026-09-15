@@ -21,7 +21,8 @@ template <ranges::forward_range R> R truncate_small_floats(R&& range) {
 int main() {
   {
     Point p(1.f, 2.f, 3.f), q(8.f, 7.f, 6.f);
-    Vector v(1.f, 2.f, 3.f), w(1.f, 0.f, 1.f), x(0.f, 1.f, 0.f), y = x;
+    const Vector v(1.f, 2.f, 3.f), w(1.f, 0.f, 1.f);
+    Vector x(0.f, 1.f, 0.f), y = x;
     SHOW(p, q, v, w, x, y);
     p += 2.f * w - x;
     SHOW(p);
@@ -33,14 +34,15 @@ int main() {
     SHOW(q);
   }
   {
-    Point o(5.f, 4.f, 3.f);
-    Vector v1(0.f, 0.f, 2.f), v2(3.f, 0.f, 0.f), v3(0.f, 1.f, 1.f);
-    Point p(2.f, 3.f, 4.f), q;
+    const Point o(5.f, 4.f, 3.f);
+    const Vector v1(0.f, 0.f, 2.f), v2(3.f, 0.f, 0.f), v3(0.f, 1.f, 1.f);
+    const Point p(2.f, 3.f, 4.f);
+    Point q;
     Frame frame(v1, v2, v3, o);
     Frame frame2 = Frame::identity();
     SHOW(frame2);
     frame2 = frame;
-    Frame frame3 = frame2;
+    const Frame frame3 = frame2;
     SHOW(frame);
     q = p * frame;
     SHOW(frame[1][0]);
@@ -96,7 +98,7 @@ int main() {
     SHOW(vdeg);
   }
   {
-    Point p(1.f, 2.f, 3.f), q(8.f, 7.f, 6.f);
+    const Point p(1.f, 2.f, 3.f), q(8.f, 7.f, 6.f);
     SHOW(dist2(p, q));
     SHOW(dist(p, q));
     SHOW(dist2(p, (p + q) / 2.f));

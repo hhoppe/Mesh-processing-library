@@ -25,7 +25,7 @@ void try_it(const string& stest) {
     string s1 = quote_arg_for_sh(stest);  // stronger than quote_arg_for_shell()
     if (0) SHOW(s1);
     if (0) {
-      string s2 = "echo " + s1 + " >" + tmpf;
+      const string s2 = "echo " + s1 + " >" + tmpf;
       // Array<string> sargv = {"csh", "-c", s2};  // works always also
       // Array<string> sargv = {"sh", "-c", s2};  // fails
       // Array<string> sargv = {"bash", "-c", s2};  // fails too
@@ -36,7 +36,7 @@ void try_it(const string& stest) {
       // s1 = hh1\ \"a\'\ b\.txt\"\ \"a\'\ b\.txt\"\ \"a\'\ b\.txt\"\ \|
       // echo hh1\ \a\"\" b"\".txt"\""\"""\" "\""\""a"\"
 
-      Array<string> sargv = {"c:/mingw/msys/1.0/bin/sh", "-v", "-c", s2};
+      const Array<string> sargv = {"c:/mingw/msys/1.0/bin/sh", "-v", "-c", s2};
 
       // Array<string> sargv = {"csh", "-v", "-c", s2};
       // stest = hh1 "a' b.txt" "a' b.txt" "a' b.txt" |
@@ -45,24 +45,24 @@ void try_it(const string& stest) {
 
       assertx(!my_spawn(sargv, true));
     } else if (method == 0) {  // works always
-      string s2 = "echo " + s1 + " >" + tmpf;
-      Array<string> largv = {"csh", "-c", s2};  // or "-vc"
+      const string s2 = "echo " + s1 + " >" + tmpf;
+      const Array<string> largv = {"csh", "-c", s2};  // Or "-vc".
       assertx(!my_spawn(largv, true));
     } else if (0 && method == 1) {  // equivalent to the one below
-      string s2 = "echo " + s1 + " >" + tmpf;
+      const string s2 = "echo " + s1 + " >" + tmpf;
       // Array<string> largv = {"c:/cygwin/bin/bash", "-c", s2};  // or "-vc"
-      Array<string> largv = {"sh", "-c", s2};  // or "-vc"
+      const Array<string> largv = {"sh", "-c", s2};  // Or "-vc".
       assertx(!my_spawn(largv, true));
     } else if (1 && method == 1) {
-      string s2 = "echo " + s1 + " >" + tmpf;
+      const string s2 = "echo " + s1 + " >" + tmpf;
       assertx(!my_sh(s2));
     } else if (method == 2) {  // Give up on this.
-      string s1cmd = '"' + stest + '"';
+      const string s1cmd = '"' + stest + '"';
       // string s1cmd = windows_spawn_quote(stest);
       // string s2 = "echo " + s1cmd + " >" + tmpf;  // DOS eol; extra space at eol; echo ignores quotes
       // string s2 = "/cygwin/bin/echo " + s1cmd + " >" + tmpf;  // cygwin quote parsing is poor
-      string s2 = "/mingw/msys/1.0/bin/echo " + s1cmd + " >" + tmpf;  // still does not handle double-quotes
-      string s_bu = getenv_string("FORCE_CMD");                       // "" if undefined
+      const string s2 = "/mingw/msys/1.0/bin/echo " + s1cmd + " >" + tmpf;  // Still does not handle double-quotes.
+      const string s_bu = getenv_string("FORCE_CMD");                       // "" if undefined
       my_setenv("FORCE_CMD", "1");
       assertx(!my_sh(s2));
       my_setenv("FORCE_CMD", s_bu);
@@ -193,7 +193,7 @@ void test_implicit_default_virtual_destructor() {
     A _a;
   };
   {
-    Derived derived;
+    const Derived derived;
   }
   {
     Base* p = make_unique<Derived>().release();
@@ -216,13 +216,13 @@ void func3() {
     ~S() { SHOW("end " + _s); }
     string _s;
   };
-  S s0("s0");
+  const S s0("s0");
   struct SS {
     SS() : _s1("s1"), _s2("s2"), _s3((func2(), "s3")), _s4("s4") { SHOW("SS never"); }
     ~SS() { SHOW("~SS never"); }
     S _s1, _s2, _s3, _s4;
   };
-  SS ss;
+  const SS ss;
 }
 
 void func4() {
@@ -242,7 +242,7 @@ void func4() {
     ~SS() { SHOW("~SS never"); }
     S _s1, _s2, _s3, _s4;
   };
-  SS ss;
+  const SS ss;
 }
 
 void test_exceptions() {
@@ -274,63 +274,63 @@ int main() {
       assertx(ar == V(0, 1).view());
     }
     {
-      Array<int> ar(range(2));
+      const Array<int> ar(range(2));
       assertx(ar == V(0, 1).view());
     }
     {
-      Array ar(range(2));
+      const Array ar(range(2));
       assertx(ar == V(0, 1).view());
     }
     {
-      Array ar(range(1, 4));
+      const Array ar(range(1, 4));
       assertx(ar == V(1, 2, 3).view());
     }
     {
-      Array ar(range(0));
+      const Array ar(range(0));
       assertx(ar == V<int>().view());
     }
     {
-      Array ar(range(-1));
+      const Array ar(range(-1));
       assertx(ar == V<int>().view());
     }
     {
-      Array ar(range(-2, 0));
+      const Array ar(range(-2, 0));
       assertx(ar == V(-2, -1).view());
     }
     {
-      Array ar(range(-2, -2));
+      const Array ar(range(-2, -2));
       assertx(ar == V<int>().view());
     }
     {
-      Array ar(range(0, 0));
+      const Array ar(range(0, 0));
       assertx(ar == V<int>().view());
     }
     {
-      Array ar(range(2, 0));
+      const Array ar(range(2, 0));
       assertx(ar == V<int>().view());
     }
     {
-      Array<uchar> ar(range(uchar{4}, uchar{6}));
+      const Array<uchar> ar(range(uchar{4}, uchar{6}));
       assertx(ar == V(uchar{4}, uchar{5}).view());
     }
     {
-      Array ar(range(uchar{4}, uchar{6}));
+      const Array ar(range(uchar{4}, uchar{6}));
       assertx(ar == V(uchar{4}, uchar{5}).view());
     }
     {
-      Array<uint8_t> ar(range(uint8_t{4}, uint8_t{6}));
+      const Array<uint8_t> ar(range(uint8_t{4}, uint8_t{6}));
       assertx(ar == V(uint8_t{4}, uint8_t{5}).view());
     }
     {
-      Array ar(range(uint8_t{4}, uint8_t{6}));
+      const Array ar(range(uint8_t{4}, uint8_t{6}));
       assertx(ar == V(uint8_t{4}, uint8_t{5}).view());
     }
     {
-      Array ar(range<short>(-2, 2));
+      const Array ar(range<short>(-2, 2));
       assertx(ar == convert<short>(V(-2, -1, 0, 1)).view());
     }
     {
-      Array ar(range(uint64_t{3}));
+      const Array ar(range(uint64_t{3}));
       assertx(ar == V<uint64_t>(0u, 1u, 2u).view());
     }
   }
@@ -402,8 +402,8 @@ int main() {
   }
   test_implicit_default_virtual_destructor();
   {
-    string s1 = R"(ab"!''""'&cdefg)";
-    string s2 = R"(hh1 "a' | & " b.txt" "a' b.txt" "a' b.txt" &~!@#$%^&*()`[]{};:,.<>/?-_=\+)";
+    const string s1 = R"(ab"!''""'&cdefg)";
+    const string s2 = R"(hh1 "a' | & " b.txt" "a' b.txt" "a' b.txt" &~!@#$%^&*()`[]{};:,.<>/?-_=\+)";
     SHOW(quote_arg_for_sh(s1));
     SHOW(quote_arg_for_sh(s2));
   }
@@ -461,7 +461,7 @@ line2)";
     };
     SHOW("1");
     {
-      A a;
+      const A a;
     }
     SHOW("2");
     {
@@ -469,8 +469,8 @@ line2)";
     }
     SHOW("3");
     {
-      A a;
-      A a2(a);  // NOLINT(performance-unnecessary-copy-initialization)
+      const A a;
+      const A a2(a);  // NOLINT(performance-unnecessary-copy-initialization)
     }
     SHOW("4");
     {
@@ -479,7 +479,7 @@ line2)";
     }
     SHOW("5");
     {
-      A a;
+      const A a;
       auto b = clone(a);
       dummy_use(b);
     }
@@ -519,11 +519,11 @@ line2)";
     SHOW(vint33);
   }
   {
-    Array<uchar> buf(10);
+    const Array<uchar> buf(10);
     SHOW(sizeof(buf[0]));
   }
   {
-    Array<ushort> buf(0);
+    const Array<ushort> buf(0);
     SHOW(sizeof(buf[0]));
   }
   {
@@ -563,7 +563,7 @@ line2)";
   }
   {
     float a = 16.f;
-    int n = 5;
+    const int n = 5;
     auto b = V(2.f, 4.f);
     SHOW(a);
     SHOW(a, n, a);
@@ -582,8 +582,8 @@ line2)";
 #undef E
   }
   {
-    for (int i : {std::numeric_limits<int>::min(), std::numeric_limits<int>::min() + 1, -257, -256, -255, -1, 0, 1, 2,
-                  127, 254, 255, 256, 257, std::numeric_limits<int>::max()}) {
+    for (const int i : {std::numeric_limits<int>::min(), std::numeric_limits<int>::min() + 1, -257, -256, -255, -1, 0,
+                        1, 2, 127, 254, 255, 256, 257, std::numeric_limits<int>::max()}) {
       SHOW(i, int(clamp_to_uint8(i)));
     }
   }
@@ -598,15 +598,15 @@ line2)";
     SHOW("done");
   }
   {
-    unsigned col = 12345 + g_unoptimized_zero;
+    const unsigned col = 12345 + g_unoptimized_zero;
     func1(  // uint8_t(col >> 0), Run-Time Check Failure #1 - A cast to a smaller data type has caused a loss of data.
         uint8_t((col >> 0) & 0xFF), uint8_t((col >> 8) & 0xFF), uint8_t((col >> 16) & 0xFF), uint8_t((col >> 24)));
   }
   test_exceptions();
   if (1) {
     const int len = 5000;
-    string format = string(len, 'H') + "%d%s";  // a long format specifier
-    string str = sform_nonliteral(format.c_str(), 123, "hello");
+    const string format = string(len, 'H') + "%d%s";  // A long format specifier.
+    const string str = sform_nonliteral(format.c_str(), 123, "hello");
     assertx(str.size() == len + 3 + 5);
     assertx(ends_with(str, "HHHHHHHHHH123hello"));
 
@@ -647,11 +647,11 @@ line2)";
     auto p = make_unique<int>(57);
     unique_ptr<int> p2 = std::move(assertx(p));
     assertx(*p2 == 57 && !p);
-    unique_ptr<int> p3 = assertx(std::move(p2));
+    const unique_ptr<int> p3 = assertx(std::move(p2));
     assertx(*p3 == 57 && !p2);
   }
   {
-    int i = 3, j = 4;
+    const int i = 3, j = 4;
     assertx(SSHOW(i) == "i = 3");
     assertx(SSHOW(i, j) == "i=3 j=4");
   }

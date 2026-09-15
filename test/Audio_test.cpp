@@ -18,17 +18,17 @@ int main() {
     audio1.attrib().samplerate = samplerate;
     audio1.attrib().bitrate = 256'000;  // 256 kbps
     for_int(i, audio1.nsamples()) for_int(ch, audio1.nchannels()) {
-      double t = i / samplerate;  // time in seconds
+      const double t = i / samplerate;  // Time in seconds.
       float v;
       if (1) {
         v = std::sin(float(t * freq * TAU));  // this one compresses well using *.mp3
       } else if (0) {
-        double mod_freq = 5.;  // add a modulation frequency of 5 Hz
-        double freq2 = freq * (1. + .3 * std::sin(t * mod_freq * TAU));
+        const double mod_freq = 5.;  // Add a modulation frequency of 5 Hz.
+        const double freq2 = freq * (1. + .3 * std::sin(t * mod_freq * TAU));
         v = std::sin(float(t * freq2 * TAU));
       } else {
-        double mod_freq = 5.;  // add a modulation frequency of 5 Hz
-        double t2 = t + .5 * (1. / mod_freq) * pow(std::sin(t * mod_freq * TAU), .5);
+        const double mod_freq = 5.;  // Add a modulation frequency of 5 Hz.
+        const double t2 = t + .5 * (1. / mod_freq) * pow(std::sin(t * mod_freq * TAU), .5);
         v = std::sin(float(t2 * freq * TAU));
       }
       audio1[ch, i] = v;
@@ -55,7 +55,7 @@ int main() {
       SHOW(audio2[1].head(5));
       for_int(i, audio2.nsamples()) for_int(ch, audio2.nchannels()) {
         if (i >= audio1.nsamples()) continue;
-        float diff = audio2[ch, i] - audio1[ch, i];
+        const float diff = audio2[ch, i] - audio1[ch, i];
         if (abs(diff) > thresh) assertnever(SSHOW(i, diff));
       }
     }

@@ -24,7 +24,7 @@ int main() {
   {
     Stack<int> s;
     assertx(s.empty());
-    for (int i : s) {
+    for (const int i : s) {
       dummy_use(i);
       if (1) assertnever("");
     }
@@ -37,7 +37,7 @@ int main() {
     assertw(s.pop() == 2);
     {
       int i = 0;
-      for (int j : s) assertw(j == 1 - i++);
+      for (const int j : s) assertw(j == 1 - i++);
     }
     assertw(!s.contains(2));
     assertw(s.pop() == 1);
@@ -50,7 +50,7 @@ int main() {
     s.push(1);
     s.push(2);
     int i = 0;
-    for (int j : s) assertw(j == 2 - i++);
+    for (const int j : s) assertw(j == 2 - i++);
     assertx(i == 3);
     assertw(s.pop() == 2);
     assertw(s.pop() == 1);
@@ -63,7 +63,7 @@ int main() {
     s.push(4);
     s.push(1);
     int i = 0;
-    for (float v : s) {
+    for (const float v : s) {
       assertw(v == square(i + 1));
       i++;
     }

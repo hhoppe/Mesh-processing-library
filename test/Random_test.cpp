@@ -34,7 +34,7 @@ int main() {
     r1.seed(0);
     unsigned vmin = std::numeric_limits<int>::max(), vmax = 0;
     for_int(i, num) {
-      unsigned v = r1.get_unsigned();
+      const unsigned v = r1.get_unsigned();
       if (v < vmin) vmin = v;
       if (v > vmax) vmax = v;
     }
@@ -44,7 +44,7 @@ int main() {
     r1.seed(0);
     double vmin = 1., vmax = 0.;
     for_int(i, num) {
-      double v = r1.dunif();
+      const double v = r1.dunif();
       if (v < vmin) vmin = v;
       if (v > vmax) vmax = v;
     }
@@ -67,7 +67,7 @@ int main() {
     const unsigned ub = 11;
     Array<unsigned> ar(ub, 0);
     for_int(i, 10'000) {
-      unsigned v = Random::G.get_unsigned(ub);
+      const unsigned v = Random::G.get_unsigned(ub);
       assertx(v < ub);
       ar[v]++;
     }
@@ -76,7 +76,7 @@ int main() {
   if (1) {
     const unsigned ub = unsigned(float(std::numeric_limits<unsigned>::max()) * .99f);
     for_int(i, 10'000) {
-      unsigned v = Random::G.get_unsigned(ub);
+      const unsigned v = Random::G.get_unsigned(ub);
       assertx(v < ub);
       HH_SSTAT(S99, v);
     }

@@ -165,14 +165,14 @@ void test4() {
           Matrix<Real> U(m, n);
           Array<Real> S(n);
           Matrix<Real> VT(n, n);
-          bool success = singular_value_decomposition(A, U, S, VT);
+          const bool success = singular_value_decomposition(A, U, S, VT);
           sort_singular_values(U, S, VT);
-          Matrix<Real> R = mat_mul(mat_mul(U, diag_mat(S)), transpose(VT));
-          Matrix<Real> UTU = mat_mul(transpose(U), U);
-          Matrix<Real> VTV = mat_mul(transpose(VT), VT);
-          float Rerr = Stat(R - A).max_abs();
-          float UTUerr = Stat(UTU - identity_mat<Real>(n)).max_abs();
-          float VTVerr = Stat(VTV - identity_mat<Real>(n)).max_abs();
+          const Matrix<Real> R = mat_mul(mat_mul(U, diag_mat(S)), transpose(VT));
+          const Matrix<Real> UTU = mat_mul(transpose(U), U);
+          const Matrix<Real> VTV = mat_mul(transpose(VT), VT);
+          const float Rerr = Stat(R - A).max_abs();
+          const float UTUerr = Stat(UTU - identity_mat<Real>(n)).max_abs();
+          const float VTVerr = Stat(VTV - identity_mat<Real>(n)).max_abs();
           if (0 || !assertw(Rerr < 1e-6f && UTUerr < 1e-6f && VTVerr < 1e-6f))
             SHOW(inormalize, m, n, success, Rerr, UTUerr, VTVerr);
         }

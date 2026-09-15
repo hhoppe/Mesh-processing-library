@@ -41,7 +41,7 @@ struct Ref_VV : PArray<std::pair<int, int>, 10> {
     if (ff < 0) ff = lastf;
     int j = mesh.get_jvf(v, ff);
     int vv = mesh._wedges[mesh._faces[ff].wedges[mod3(j + 1)]].vertex;
-    int stopv = vv;
+    const int stopv = vv;
     int nextv = mesh._wedges[mesh._faces[ff].wedges[mod3(j + 2)]].vertex;
     while (vv >= 0) {
       push(std::pair{vv, ff});

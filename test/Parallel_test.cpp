@@ -10,7 +10,7 @@ using namespace hh;
 
 int main() {
   {
-    Array array(range(1000));
+    const Array array(range(1000));
     SHOW(sum(array));
   }
   {
@@ -55,7 +55,7 @@ int main() {
       latch.arrive_and_wait();  // Prevent any thread from complete its chunk and claiming a second chunk.
     });
     SHOW(count);
-    Set<std::thread::id> unique_ids(thread_ids);
+    const Set<std::thread::id> unique_ids(thread_ids);
     if (0) SHOW(num_threads, unique_ids.num(), unique_ids);
     assertx(unique_ids.num() >= 2);  // Parallelism actually occurred.
     assertx(unique_ids.num() == num_threads);

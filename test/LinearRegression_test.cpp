@@ -12,7 +12,7 @@ template <int N> void try_xy(CArrayView<Vec2<float>> xydata) {
   auto ar = regression.get_solution();
   SHOW(ar);
   for (auto xy : xydata) {
-    float yfit = float(dot(ar, Eval()(xy.head<1>())));
+    const float yfit = float(dot(ar, Eval()(xy.head<1>())));
     showf("x=%g  y=%g  yfit=%8g\n", xy[0], xy[1], yfit);
   }
 }

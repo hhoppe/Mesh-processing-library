@@ -46,7 +46,7 @@ void read_data(Matrix<float>& mi) {
 void test_inc() {
   Matrix<float> mi;
   read_data(mi);
-  int n = mi.xsize();
+  const int n = mi.xsize();
   const int ne = 8;
   Matrix<float> mo1(n, n);
   Array<float> eimag1(n);
@@ -61,7 +61,7 @@ void test_inc() {
     incr_principal_components(mi, mo2, eimag2, 2);
   }
   for_int(i, ne) {
-    float d = float(dot(mo1[i], mo2[i]));
+    const float d = float(dot(mo1[i], mo2[i]));
     showf("%d %14g %14g dot=%14g\n", i, eimag1[i], eimag2[i], d);
   }
   Matrix<float> mdot(ne, ne);
@@ -73,7 +73,7 @@ void test_em() {
   Matrix<float> mi;
   read_data(mi);
   subtract_mean(mi);
-  int n = mi.xsize();
+  const int n = mi.xsize();
   // for ne=8,  10-20  iterations are needed (variance=0.983087)
   // for ne=10, only 4 iterations are needed (variance=0.989540)
   const int ne = 8;
@@ -83,15 +83,15 @@ void test_em() {
     HH_TIMER("_pc1");
     principal_components(mi, mo1, eimag1);
   }
-  float sum = float(mag2(eimag1));
-  float sumact = float(mag2(eimag1.head(ne)));
+  const float sum = float(mag2(eimag1));
+  const float sumact = float(mag2(eimag1.head(ne)));
   Matrix<float> mo2(ne, n);
   Array<float> eimag2(ne);
   {
     HH_TIMER("_pc2");
     assertx(em_principal_components(mi, mo2, eimag2, 10));
   }
-  float sumest = float(mag2(eimag2));
+  const float sumest = float(mag2(eimag2));
   showf("sum=%g  sumest=%g (%g)  sumact=%g (%g) (lost=%g)\n",  //
         sum, sumest, sumest / sum, sumact, sumact / sum, sumact / sum - sumest / sum);
   {
@@ -100,7 +100,7 @@ void test_em() {
     SHOW(var / mi.ysize());
   }
   for_int(i, ne) {
-    float d = float(dot(mo1[i], mo2[i]));
+    const float d = float(dot(mo1[i], mo2[i]));
     showf("%d %14g %14g dot=%14g\n", i, eimag1[i], eimag2[i], d);
   }
   Matrix<float> mdot(ne, ne);

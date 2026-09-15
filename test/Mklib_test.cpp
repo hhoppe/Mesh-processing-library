@@ -30,18 +30,18 @@ int main(int argc, char** argv) {
   os.write_comment(" begin test of mklib");
   os.write_comment("cubeO");
   {
-    MkSave mk_save(mk);
+    const MkSave mk_save(mk);
     mk.translate(2, 0, 0);
     mkl.cubeO();
   }
   os.write_comment("cubeU");
   {
-    MkSave mk_save(mk);
+    const MkSave mk_save(mk);
     mk.translate(4, 0, 0);
     mkl.cubeU();
   }
   {
-    MkSave mk_save(mk);
+    const MkSave mk_save(mk);
     mk.translate(6, 0, 0);
     mk.rotate(Mk3d::Axis::z, TAU / 4);
     mk.scale(1, 1, .5);
@@ -55,43 +55,43 @@ int main(int argc, char** argv) {
   }
   os.write_comment("tetra");
   {
-    MkSave mk_save(mk);
+    const MkSave mk_save(mk);
     mk.translate(2, 5, 0);
     mkl.tetra();
   }
   os.write_comment("cylinderU");
   {
-    MkSave mk_save(mk);
+    const MkSave mk_save(mk);
     mk.translate(5, 5, 0);
     mkl.cylinderU(7);
   }
   {
-    MkSaveColor mk_save_color(mk);
+    const MkSaveColor mk_save_color(mk);
     mk.diffuse(1, 1, 1);
     mk.specular(.5f, .5f, .2f);
     mk.phong(4);
     os.write_comment("volume_ringU");
     {
-      MkSave mk_save(mk);
+      const MkSave mk_save(mk);
       mk.translate(8, 5, 0);
       mkl.volume_ringU(5, .7f);
     }
     os.write_comment("capU");
     {
-      MkSave mk_save(mk);
+      const MkSave mk_save(mk);
       mk.translate(2, 8, 0);
       mkl.capU(3);
     }
   }
   os.write_comment("sphere");
   {
-    MkSave mk_save(mk);
+    const MkSave mk_save(mk);
     mk.translate(4, 8, 2);
     mkl.sphere(4, 5);
   }
   os.write_comment("tetraU");
   {
-    MkSave mk_save(mk);
+    const MkSave mk_save(mk);
     mk.translate(7, 8, 2);
     mkl.tetraU();
   }

@@ -53,11 +53,11 @@ int main() {
   }
   {
     const Array<float> ar = {100.f, 102.f, 103.f, 110.f, 100.f, 90.f, 80.f, 71.f};
-    int n = 20;
+    const int n = 20;
     for_int(i, n) {
-      float x = i / (n - 1.f);  // x in [0, 1]
+      const float x = i / (n - 1.f);  // x in [0, 1]
       const int degree = 3;
-      float v = eval_uniform_bspline(ar, degree, x);
+      const float v = eval_uniform_bspline(ar, degree, x);
       showf("x=%7.4f   v=%6.3f\n", x, v);
     }
   }
@@ -72,12 +72,12 @@ int main() {
       uint32_t v = std::bit_cast<uint32_t>(a);
       if (std::isnan(a) && clear_nan_bit31) v &= 0x7fffffff;
       const float a2 = std::bit_cast<float>(v);
-      string s = sform("(float)%-15.9g 0x%08x  F%d I%d N%d%s\n",  //
-                       a2, v, std::isfinite(a), std::isinf(a), std::isnan(a),
-                       std::isnan(a) ? sform(" nanfv%08x", nanf_value(a)).c_str() : "");
+      const string s = sform("(float)%-15.9g 0x%08x  F%d I%d N%d%s\n",  //
+                             a2, v, std::isfinite(a), std::isinf(a), std::isnan(a),
+                             std::isnan(a) ? sform(" nanfv%08x", nanf_value(a)).c_str() : "");
       std::cerr << s;
     };
-    float float_zero = g_unoptimized_zero ? 1.f : 0.f;
+    const float float_zero = g_unoptimized_zero ? 1.f : 0.f;
     float a;
     a = +0.f;
     func_show_float(a);

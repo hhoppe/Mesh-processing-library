@@ -8,10 +8,10 @@ namespace {
 
 void show_graph(const Graph<int>& g) {
   SHOW("Graph: vertices {");
-  for (int i : sort(Array(g.vertices()))) showf("  vertex %d\n", i);
+  for (const int i : sort(Array(g.vertices()))) showf("  vertex %d\n", i);
   SHOW("}, edges {");
-  for (int i : sort(Array(g.vertices())))
-    for (int j : sort(Array(g.edges(i)))) showf(" edge (%d, %d)\n", i, j);
+  for (const int i : sort(Array(g.vertices())))
+    for (const int j : sort(Array(g.edges(i)))) showf(" edge (%d, %d)\n", i, j);
   SHOW("}");
 }
 
@@ -20,7 +20,7 @@ void show_graph(const Graph<int>& g) {
 int main() {
   Graph<int> g;
   show_graph(g);
-  for (int i : {1, 2, 3, 4, 5, 6, 7}) g.enter(i);
+  for (const int i : {1, 2, 3, 4, 5, 6, 7}) g.enter(i);
   g.enter(1, 4);
   g.enter(3, 2);
   g.enter(4, 5);

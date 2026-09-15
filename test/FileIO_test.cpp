@@ -21,18 +21,18 @@ int main() {
     RFile fi(url);
     string filename;
     {
-      TmpFile tmp_file("png", fi());
+      const TmpFile tmp_file("png", fi());
       filename = tmp_file.filename();
       assertx(file_exists(filename));
-      Image image{filename};
+      const Image image{filename};
       assertx(image.dims() == V(128, 128));
     }
     assertx(!file_exists(filename));
   }
   {
     const string url = "https://github.com/hhoppe/data/raw/main/image.png";
-    TmpFile tmp_file("png", RFile{url}());
-    Image image{tmp_file.filename()};
+    const TmpFile tmp_file("png", RFile{url}());
+    const Image image{tmp_file.filename()};
     assertx(image.dims() == V(128, 128));
   }
   {

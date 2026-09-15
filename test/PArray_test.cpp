@@ -43,7 +43,7 @@ int main() {
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<S>, 2> ar(func_construct_array(100, 2));
+    const PArray<unique_ptr<S>, 2> ar(func_construct_array(100, 2));
     SHOW("end");
   }
   {

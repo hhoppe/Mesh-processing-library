@@ -10,7 +10,7 @@ using namespace hh;
 namespace {
 
 void try_it(HashFloat& hf, float f) {
-  float f2 = hf.enter(f);
+  const float f2 = hf.enter(f);
   showf("enter %14.8f -> %14.8f\n", f, f2);
 }
 
@@ -96,9 +96,9 @@ void test_io() {
   // printf("%.9g\n", d);    // Round-trippable float, shortest possible
   // printf("%1.16e\n", d);  // Round-trippable double, always with an exponent
   // printf("%.17g\n", d);   // Round-trippable double, shortest possible
-  for (float f : concatenate(ar1eps, V(1023.9932861328125f), V(1023.9933471679687f),
-                             V(0.2288884f, 0.228888392f, 0.228888407f))) {
-    float f2 = roundtrip(f, 9);  // was 7; in principle 9 is required!  (17 is sufficient for double)
+  for (const float f : concatenate(ar1eps, V(1023.9932861328125f), V(1023.9933471679687f),
+                                   V(0.2288884f, 0.228888392f, 0.228888407f))) {
+    const float f2 = roundtrip(f, 9);  // Was 7; in principle 9 is required!  (17 is sufficient for double.)
     // %a (hexadecimal float) is not supported in mingw which uses old MS CRT
     showf("f=%-10.7g %-10.8g %-11.9g %x  f2=%-10.7g %-10.8g %-11.9g %x  f==f2=%d\n",  //
           f, f, f, as_uint(f), f2, f2, f2, as_uint(f2), f == f2);

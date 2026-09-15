@@ -26,7 +26,7 @@ int main() {
     assertx(ar10b.num() == 5);
     CStridedArrayView<int> ar10c(ar.data(), 5, 10);
     assertx(&ar10c[3] == &ar[30]);
-    for (int e : ar10c) assertx(e == 7);
+    for (const int e : ar10c) assertx(e == 7);
   }
   {
     // Non-owning views that can be piped and are safe to return iterators from.
@@ -56,8 +56,8 @@ int main() {
     Array<int> ar(20);
     for_int(i, 20) ar[i] = i;
     StridedArrayView<int> v(ar.data() + 1, 5, 4);  // 1, 5, 9, 13, 17.
-    It it = v.begin();
-    CIt cit = it;                     // The converting constructor reads the private members of It.
+    const It it = v.begin();
+    const CIt cit = it;               // The converting constructor reads the private members of It.
     assertx(cit == it && it == cit);  // The second comparison uses the reversed candidate.
     assertx(cit - it == 0);  // Mixed-type subtraction works only in this direction (operator- is not rewritten).
     assertx(cit + v.num() == v.end());

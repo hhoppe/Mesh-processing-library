@@ -79,7 +79,7 @@ int main() {
   }
   {
     SHOW(CArrayView<int>({1, 2, 3, 4}));
-    Array<int> ar{1, 2, 3, 4};
+    const Array<int> ar{1, 2, 3, 4};
     SHOW(sum(ar));
     const Array<int>& ar2 = ar;
     SHOW(sum(ar2));
@@ -88,7 +88,7 @@ int main() {
     SHOW(mean(ar2));
   }
   {
-    Array<uchar> ar = {'a', 'd'};
+    const Array<uchar> ar = {'a', 'd'};
     SHOW(sum(ar));
     SHOW(min(ar));
     SHOW(mean(ar));
@@ -133,12 +133,12 @@ int main() {
     SHOW(mean(median_two(V(8, 7, 6, 5, 4, 9, 10))));
   }
   {
-    Array<int> ar{8, 7, 6, 5, 4, 9, 10};
+    const Array<int> ar{8, 7, 6, 5, 4, 9, 10};
     for_int(i, ar.num()) SHOW(i, rank_element(ar, i));
-    for (double rankf : {0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.}) SHOW(rankf, rankf_element(ar, rankf));
+    for (const double rankf : {0., .1, .2, .3, .4, .5, .6, .7, .8, .9, 1.}) SHOW(rankf, rankf_element(ar, rankf));
   }
   {
-    Array ar1{1, 2};
+    const Array ar1{1, 2};
     SHOW(ar1 == V(1, 1 + 1).view());
     SHOW(ar1 == V(1, 2, 3).view());
     SHOW(ar1 == V(1, 3).view());
@@ -177,7 +177,7 @@ int main() {
   {
     // (1) Move-only elements from a source that is not an Array<T>, so push_array(type&&) does not apply.
     std::vector<std::unique_ptr<int>> src;
-    for (int i : range(3)) src.push_back(std::make_unique<int>(i));
+    for (const int i : range(3)) src.push_back(std::make_unique<int>(i));
     Array<std::unique_ptr<int>> all;
     all.push_array(src | views::as_rvalue);
     printf("(1) all=%d,%d,%d   src nulled=%d%d%d\n", *all[0], *all[1], *all[2], !src[0], !src[1], !src[2]);
@@ -205,7 +205,7 @@ int main() {
   {
     // (1) Move-only elements from a source that is not an Array<T>, so push_array(type&&) does not apply.
     std::vector<std::unique_ptr<int>> src;
-    for (int i : range(3)) src.push_back(std::make_unique<int>(i));
+    for (const int i : range(3)) src.push_back(std::make_unique<int>(i));
     Array<std::unique_ptr<int>> all;
     all.push_array(src | views::as_rvalue);
     std::println("(1) all={},{},{}   src nulled={:d}{:d}{:d}", *all[0], *all[1], *all[2], !src[0], !src[1], !src[2]);

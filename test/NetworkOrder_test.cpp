@@ -10,7 +10,7 @@ using namespace hh;
 
 int main() {
   {
-    string ter_grid = "NetworkOrder_test.inp";
+    const string ter_grid = "NetworkOrder_test.inp";
     RFile fi(ter_grid);
     int gridx, gridy;
     float fx;

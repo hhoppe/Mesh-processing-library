@@ -14,7 +14,7 @@ namespace {
 
 template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
   Array<const Filter*> filters;  // not: "gaussian", "preprocess", "justspline", "justomoms"
-  for (string s : {"impulse", "box", "triangle", "quadratic", "mitchell", "keys", "spline", "omoms"})
+  for (const string s : {"impulse", "box", "triangle", "quadratic", "mitchell", "keys", "spline", "omoms"})
     filters.push(&Filter::get(s));
   {  // inverse convolution is partition-of-unity
     Grid<D, float> grid(dims, 1.f);
@@ -35,13 +35,13 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
     // SHOW(Stat(grid));
   }
   {  // rescaling of unity-valued grid reproduces unity-valued grid
-    Grid<D, float> grid(dims, 1.f);
+    const Grid<D, float> grid(dims, 1.f);
     // not: Bndrule::border
-    for (Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped}) {
+    for (const Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped}) {
       for (const Filter* pfilter : filters) {
         const Filter& filter = *pfilter;
         if (filter.has_inv_convolution() && !(bndrule == Bndrule::reflected || bndrule == Bndrule::periodic)) continue;
-        Grid<D, float> gridn = scale(grid, ndims, ntimes<D>(FilterBnd(filter, bndrule)));
+        const Grid<D, float> gridn = scale(grid, ndims, ntimes<D>(FilterBnd(filter, bndrule)));
         // SHOW(Stat(gridn));
         assertx(abs(min(gridn) - 1.f) < 1e-6f);
         assertx(abs(max(gridn) - 1.f) < 1e-6f);
@@ -49,11 +49,11 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
     }
   }
   {  // random samples of unity field all reproduce unity
-    for (Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic}) {
-      for (string filter_name : {"spline", "omoms"}) {
+    for (const Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic}) {
+      for (const string filter_name : {"spline", "omoms"}) {
         const Filter& filter = Filter::get(filter_name);
         Grid<D, float> grid(dims, 1.f);
-        Vec<FilterBnd, D> nfilterbs = inverse_convolution(grid, ntimes<D>(FilterBnd(filter, bndrule)));
+        const Vec<FilterBnd, D> nfilterbs = inverse_convolution(grid, ntimes<D>(FilterBnd(filter, bndrule)));
         // SHOW(Stat(grid));
         for_int(i, 10) {
           Vec<float, D> p;
@@ -71,7 +71,7 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
       const Filter& ofilter = *pfilter;
       if (ofilter.is_impulse()) continue;         // cannot be used in sample_domain()
       if (!ofilter.is_interpolating()) continue;  // (skip mitchell)
-      for (Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::reflected101}) {
+      for (const Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::reflected101}) {
         Grid<D, float> grid(ogrid);
         auto filterbs = ntimes<D>(FilterBnd(ofilter, bndrule));
         if (0) SHOW(filterbs[0].filter().name(), ofilter.name());
@@ -82,8 +82,8 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
         for (const Vec<int, D> u : range(ogrid.dims())) {
           Vec<float, D> p;
           for_int(d, D) p[d] = (u[d] + .5f) / ogrid.dim(d);
-          float oval = ogrid[u];
-          float nval = sample_domain(grid, p, filterbs);
+          const float oval = ogrid[u];
+          const float nval = sample_domain(grid, p, filterbs);
           // SHOW(u, p, oval, nval);
           assertx(abs(nval - oval) < 1e-6f);
         }
@@ -107,8 +107,9 @@ int main() {
   }
   {  // most basic experiment
     const int D = 2;
-    Grid<D, float> grid(V(2, 2), 1.f);
-    Grid<D, float> gridn = scale(grid, V(3, 3), ntimes<D>(FilterBnd(Filter::get("impulse"), Bndrule::reflected)));
+    const Grid<D, float> grid(V(2, 2), 1.f);
+    const Grid<D, float> gridn =
+        scale(grid, V(3, 3), ntimes<D>(FilterBnd(Filter::get("impulse"), Bndrule::reflected)));
     SHOW(Stat(gridn));
     assertx(abs(min(gridn) - 1.f) < 1e-5f);
     assertx(abs(max(gridn) - 1.f) < 1e-5f);
@@ -124,41 +125,41 @@ int main() {
     SHOW("end test");
   }
   {  // scaling of Grid<2, T> matches scaling of Matrix<2, T>; no longer applicable
-    int cy = 13, cx = 17;
-    int ny = 16, nx = 11;
+    const int cy = 13, cx = 17;
+    const int ny = 16, nx = 11;
     Matrix<float> mat(cy, cx);
     for (float& e : mat) e = Random::G.unif();
-    FilterBnd filterb(Filter::get("spline"), Bndrule::reflected);
+    const FilterBnd filterb(Filter::get("spline"), Bndrule::reflected);
     // Matrix<float> matn = scale(mat, ny, nx, {filterb, filterb});
     // SHOW(Stat(matn));
-    Grid<2, float> gridn = scale(mat, V(ny, nx), twice(filterb));
+    const Grid<2, float> gridn = scale(mat, V(ny, nx), twice(filterb));
     // SHOW(Stat(gridn));
     // assertx(dist(matn, gridn) < 1e-5f);
   }
   {
-    Grid<2, int> grid(V(20, 20), 5);
+    const Grid<2, int> grid(V(20, 20), 5);
     assertx(sum(grid) == 2000);
-    Grid<2, int> newgrid = crop(grid, V(0, 0), V(10, 10));
+    const Grid<2, int> newgrid = crop(grid, V(0, 0), V(10, 10));
     assertx(newgrid.dims() == V(10, 10));
     assertx(sum(newgrid) == 500);
   }
   {
     Grid<2, Pixel> grid(V(20, 20), Pixel(65, 66, 67, 72));
     assertx(grid[19, 19] == Pixel(65, 66, 67, 72));
-    Bndrule bndrule = Bndrule::reflected;
-    Pixel gcolor(255, 255, 255, 255);
+    const Bndrule bndrule = Bndrule::reflected;
+    const Pixel gcolor(255, 255, 255, 255);
     grid = crop(grid, V(0, 0), V(10, 10), twice(bndrule), &gcolor);
     assertx(grid.dims() == V(10, 10));
     assertx(grid[9, 9] == Pixel(65, 66, 67, 72));
   }
   if (1) {
-    string name = "hamming6";
+    const string name = "hamming6";
     const Filter& filter = Filter::get(name);
     KernelFunc func = filter.func();
-    double radius = filter.radius();
+    const double radius = filter.radius();
     const int n = 30;
     for_int(i, n) {
-      double x = ((double(i) / n) - .5) * radius * 1.1 + 1e-14;
+      const double x = ((double(i) / n) - .5) * radius * 1.1 + 1e-14;
       showf("func(%12f)=%12f\n", x, func(x));
     }
   }
@@ -169,14 +170,14 @@ int main() {
       SHOW(filter.name());
       assertx(filter.name() == name);
       KernelFunc func = filter.func();
-      double radius = filter.radius();
-      bool is_partition_of_unity = filter.is_partition_of_unity();
+      const double radius = filter.radius();
+      const bool is_partition_of_unity = filter.is_partition_of_unity();
       SHOW(name);
       const int n = 100'000;
       {
         double sum = 0., xo = 0.;
         for_int(i, n) {
-          double x = ((i + .5) / n - .5) * 2. * radius * (1 - 1e-10);
+          const double x = ((i + .5) / n - .5) * 2. * radius * (1 - 1e-10);
           sum += func(x);
           if (i) assertx(abs(x - xo) < .01);  // verify that the function is continuous
           xo = x;
@@ -188,13 +189,14 @@ int main() {
       {
         Stat stat;
         for_int(i, n) {
-          double x = (i + .5) / n - .5;
+          const double x = (i + .5) / n - .5;
           double sum = 0.;
           for_intL(j, -10, 10 + 1) {
-            double xx = x + double(j);
+            const double xx = x + double(j);
             if (abs(xx) <= radius) sum += func(xx);
           }
-          float float_sum = float(sum);  // For same Stat sd results between CONFIG=win (debug) and others (release).
+          // For same Stat sd results between CONFIG=win (debug) and others (release).
+          const float float_sum = float(sum);
           stat.enter(float_sum);
           assertw(abs(sum - 1.) < (is_partition_of_unity ? 1e-5 : .07));  // gaussian needs .07
         }

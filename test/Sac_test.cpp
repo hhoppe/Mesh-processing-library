@@ -41,7 +41,7 @@ int main() {
   {
     int key_p = HH_SAC_ALLOCATE(A, Point);
     int key_b = HH_SAC_ALLOCATE_CD(A, B);
-    int key_i = HH_SAC_ALLOCATE(A, int);
+    const int key_i = HH_SAC_ALLOCATE(A, int);
     SHOW(key_p);
     SHOW(key_b);
     auto a = make_unique<A>();

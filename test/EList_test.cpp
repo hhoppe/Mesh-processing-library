@@ -15,7 +15,7 @@ int main() {
     A a2(2);
     a2._node.link_after(&a1._node);
     int count = 0;
-    for (EListNode* node : list) {
+    for (const EListNode* node : list) {
       dummy_use(node);
       count++;
     }

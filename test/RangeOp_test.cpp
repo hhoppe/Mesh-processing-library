@@ -13,7 +13,7 @@ using namespace hh;
 
 int main() {
   {
-    Array<uchar> ar1 = {4, 200, 254, 3, 7, 2};
+    const Array<uchar> ar1 = {4, 200, 254, 3, 7, 2};
     Array<uchar> ar2 = {4, 0, 0, 3, 7, 2};
     SHOW(mag2(ar1));
     SHOW(square(rms(ar1)) * ar1.num());
@@ -75,7 +75,7 @@ int main() {
     SHOW(compare(ar2, ar2, tol));
   }
   {
-    int ar[] = {10, 11, 12, 13, 14, 15};  // test C-array
+    const int ar[] = {10, 11, 12, 13, 14, 15};  // Test C-array.
     SHOW(mean(ar));
   }
   {
@@ -102,7 +102,7 @@ int main() {
     SHOW(type_name<mean_type_t<char*>>());
   }
   {
-    Array<float> ar1 = {2.7f, -3.3f, 5.1f, -6.2f, 0.f};
+    const Array<float> ar1 = {2.7f, -3.3f, 5.1f, -6.2f, 0.f};
     {
       auto ar = clone(ar1);
       auto& ar2 = rotate(ar, ar.begin() + 2);
@@ -126,13 +126,13 @@ int main() {
   {
     Array<int> result;
     const Array<int> ar1{3, 4, 5};
-    for (int i : concatenate(V(1, 2), ar1)) result.push(i);
+    for (const int i : concatenate(V(1, 2), ar1)) result.push(i);
     int c_array[1] = {6};
-    for (int i : concatenate(c_array, PArray<int, 2>{7, 8, 9})) result.push(i);
-    for (int i : concatenate(std::vector<int>{10, 11}, std::list<int>{12, 13})) result.push(i);
+    for (const int i : concatenate(c_array, PArray<int, 2>{7, 8, 9})) result.push(i);
+    for (const int i : concatenate(std::vector<int>{10, 11}, std::list<int>{12, 13})) result.push(i);
     std::vector<int> vector{14, 15};
     std::list<int> list{16, 17};
-    for (int i : concatenate(vector, list)) result.push(i);
+    for (const int i : concatenate(vector, list)) result.push(i);
     SHOW(result);
   }
   {
@@ -162,7 +162,7 @@ int main() {
     static_assert(ranges::random_access_range<Array<float>>);
     static_assert(ranges::sized_range<PArray<int, 3>>);
     static_assert(ranges::random_access_range<PArray<int, 3>>);
-    Map<int, float> map;
+    const Map<int, float> map;
     static_assert(ranges::sized_range<decltype(map.keys())>);
     static_assert(!ranges::random_access_range<decltype(map.keys())>);
     Mesh mesh;

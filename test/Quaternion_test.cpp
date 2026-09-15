@@ -31,11 +31,11 @@ int main() {
     SHOW(round(pow(q1, .25f) * pow(q1, .75f)));
     Frame frame = to_Frame(q1);
     SHOW(round(frame));
-    Frame frame_half = to_Frame(pow(q1, .5f));
+    const Frame frame_half = to_Frame(pow(q1, .5f));
     SHOW(round(frame_half));
     SHOW(round(frame_half * frame_half));
     SHOW(round(pow(frame, .5f)));
-    Quaternion qq(pow(pow(frame, .25f), 4.f));
+    const Quaternion qq(pow(pow(frame, .25f), 4.f));
     // SHOW(qq);  // rounding differences
     SHOW(qq.angle());
     SHOW(round_elements(clone(qq.axis())));
@@ -52,7 +52,7 @@ int main() {
     SHOW(pow(qi, f));
     SHOW(slerp(Quaternion(Vector(0.f, 0.f, 0.f), 0.f), qi, f));
     SHOW(exp(log(qi) * f));
-    Quaternion qo = pow(qi, f);
+    const Quaternion qo = pow(qi, f);
     SHOW(qi.axis());
     SHOW(qo.axis());
     SHOW(qi.angle());

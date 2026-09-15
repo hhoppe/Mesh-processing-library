@@ -11,7 +11,7 @@ int main() {
   mk.point(7, 8, 9);
   mk.end_polygon();
   {
-    MkSave mk_save(mk);
+    const MkSave mk_save(mk);
     mk.translate(10, 0, 0);
     mk.rotate(Mk3d::Axis::z, TAU / 4);
     mk.scale(1, 1, .5);
@@ -28,7 +28,7 @@ int main() {
   mk.normal(1, 1, 1);
   mk.end_polyline();
   {
-    MkSaveColor mk_save_color(mk);
+    const MkSaveColor mk_save_color(mk);
     mk.diffuse(1, 1, 1);
     mk.specular(.5f, .5f, .2f);
     mk.phong(4);

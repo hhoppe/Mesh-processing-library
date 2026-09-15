@@ -55,14 +55,14 @@ struct ImageFiletype {
   write_type write_func;
 };
 
-const Array<ImageFiletype> k_image_filetypes = {
+constexpr auto k_image_filetypes = to_Vec<ImageFiletype>({
     // Some of this information is redundant with that in image_suffix_for_magic_byte().
     {"rgb", u'\x01', ImageLibs::read_rgb, ImageLibs::write_rgb},  // also some *.bw files
     {"jpg", u'\xFF', ImageLibs::read_jpg, ImageLibs::write_jpg},  //
     {"bmp", 'B', ImageLibs::read_bmp, ImageLibs::write_bmp},      //
     {"ppm", 'P', ImageLibs::read_ppm, ImageLibs::write_ppm},      //
     {"png", u'\x89', ImageLibs::read_png, ImageLibs::write_png},  //
-};
+});
 
 static const ImageFiletype* recognize_filetype(const string& pfilename) {
   string filename = to_lower(pfilename);

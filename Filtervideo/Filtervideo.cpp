@@ -1773,9 +1773,8 @@ void process_gen(Args& args) {
   int ncolors = 3;
   if (name == "slits3" || name == "slits4" || name == "stars5") ncolors = 5;
   const auto func_get_color = [&](int i) {
-    static const Array<Pixel> ar_colors = {
-        Pixel::red(), Pixel::green(), Pixel::blue(), Pixel(255, 255, 0), Pixel(0, 255, 255),
-    };
+    static constexpr auto ar_colors =
+        to_Vec({Pixel::red(), Pixel::green(), Pixel::blue(), Pixel(255, 255, 0), Pixel(0, 255, 255)});
     i = i % ncolors;
     return ar_colors[i];
   };

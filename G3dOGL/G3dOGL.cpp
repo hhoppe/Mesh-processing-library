@@ -707,11 +707,11 @@ Vec2<int> find_max_texture(GLenum internal_format, const Vec2<int>& yx_aspect, i
 
 struct glt_format {
   GLenum format;
-  string name;
+  std::string_view name;
 };
 
-const Array<glt_format> k_glt_formats = {
 #define E(f) {f, #f}
+constexpr auto k_glt_formats = to_Vec<glt_format>({
     E(GL_COMPRESSED_RGB),
     E(GL_RGB16),
     E(GL_RGBA16),
@@ -732,8 +732,8 @@ const Array<glt_format> k_glt_formats = {
     E(GL_RGB_FLOAT32_ATI),
     E(GL_RGBA_FLOAT16_ATI),
     E(GL_RGB_FLOAT16_ATI),
+});
 #undef E
-};
 
 // On PC/GeForce3Quadro3 2001-10-17
 // GL_MAX_TEXTURE_SIZE: 4096
@@ -842,8 +842,8 @@ void display_texture_size_info() {
         if (1) glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_COMPRESSED, &comp);
         glGetError();                                       // ignore any error
         showf("%-20s %d:%d (%4dx%4d) [%d,%d,%d,%d]%s%s\n",  //
-              glt_format.name.c_str(), aspyx[1], aspyx[0], max_yx[1], max_yx[0], r, g, b, a, (comp ? " comp" : ""),
-              (mm ? " mipmap" : ""));
+              string(glt_format.name).c_str(), aspyx[1], aspyx[0], max_yx[1], max_yx[0], r, g, b, a,
+              (comp ? " comp" : ""), (mm ? " mipmap" : ""));
       }
     }
     if (detailed) showf("\n");
@@ -903,11 +903,11 @@ void load_texturemaps() {
     remove_at_end(name, ".obj");
     if (contains(name, ".nf")) name.erase(name.find(".nf"));
     name = replace_all(name, "Mesh-", "Atlas-");  // Kent data
-    const Array<string> exts = {"nor.bmp", "nor.jpg", "nor.ppm", "nor.rgb", "nor.png",
-                                "bmp",     "jpg",     "ppm",     "rgb",     "png"};
+    static constexpr auto exts = to_Vec<std::string_view>(
+        {"nor.bmp", "nor.jpg", "nor.ppm", "nor.rgb", "nor.png", "bmp", "jpg", "ppm", "rgb", "png"});
     string s;
     for (const auto& ext : exts) {
-      s = name + "." + ext;
+      s = name + "." + string(ext);
       if (file_exists(s)) break;
       s.clear();
     }

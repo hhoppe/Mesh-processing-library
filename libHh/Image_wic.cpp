@@ -60,10 +60,10 @@ void wic_init() {
 }
 
 struct SuffixGuid {
-  string suffix;
+  std::string_view suffix;
   const GUID* guid;
 };
-const Array<SuffixGuid> k_ar_suffix_container = {
+constexpr auto k_ar_suffix_container = to_Vec({
     SuffixGuid{"bmp", &GUID_ContainerFormatBmp}, SuffixGuid{"png", &GUID_ContainerFormatPng},
     SuffixGuid{"jpg", &GUID_ContainerFormatJpeg}, SuffixGuid{"jpeg", &GUID_ContainerFormatJpeg},
     SuffixGuid{"tif", &GUID_ContainerFormatTiff}, SuffixGuid{"tiff", &GUID_ContainerFormatTiff},
@@ -73,7 +73,7 @@ const Array<SuffixGuid> k_ar_suffix_container = {
     SuffixGuid{"adng", &GUID_ContainerFormatAdng}, SuffixGuid{"webp", &GUID_ContainerFormatWebp},
     SuffixGuid{"raw", &GUID_ContainerFormatRaw},
     // Not present: "avif" ?
-};
+});
 
 const GUID* get_container_format(const string& suffix) {
   for (const auto& p : k_ar_suffix_container)
@@ -83,7 +83,7 @@ const GUID* get_container_format(const string& suffix) {
 
 string get_suffix(const GUID* container_format) {
   for (const auto& p : k_ar_suffix_container)
-    if (*p.guid == *container_format) return p.suffix;
+    if (*p.guid == *container_format) return string(p.suffix);
   return "";
 }
 
@@ -302,11 +302,17 @@ void Image::read_file_wic(const string& filename, bool bgra) {
       bool fliph;
       bool flipv;
     };
-    const Array<S> ar = {
+    static constexpr auto ar = to_Vec<S>({
         {0, false, false},  // dummy entry for value == 0
-        {0, false, false},  {0, true, false},    {180, false, false}, {0, false, true},
-        {270, true, false}, {270, false, false}, {90, true, false},   {90, false, false},
-    };
+        {0, false, false},
+        {0, true, false},
+        {180, false, false},
+        {0, false, true},
+        {270, true, false},
+        {270, false, false},
+        {90, true, false},
+        {90, false, false},
+    });
     if (ar[orientation].angle) *this = rotate_ccw(*this, ar[orientation].angle);
     if (ar[orientation].fliph) reverse_x();
     if (ar[orientation].flipv) reverse_y();

@@ -2,12 +2,12 @@
 #ifndef MESH_PROCESSING_LIBHH_COLOR_RAMP_H_
 #define MESH_PROCESSING_LIBHH_COLOR_RAMP_H_
 
-#include "libHh/Array.h"
 #include "libHh/Pixel.h"
+#include "libHh/Vec.h"
 
 namespace hh {
 
-static const Array<Pixel> k_color_ramp = {
+inline constexpr auto k_color_ramp = to_Vec({
     Pixel(0, 127, 0, 255),     Pixel(2, 128, 0, 255),     Pixel(4, 129, 0, 255),     Pixel(6, 130, 0, 255),
     Pixel(8, 131, 0, 255),     Pixel(10, 132, 0, 255),    Pixel(12, 133, 0, 255),    Pixel(14, 135, 0, 255),
     Pixel(16, 136, 0, 255),    Pixel(18, 137, 0, 255),    Pixel(20, 138, 0, 255),    Pixel(22, 139, 0, 255),
@@ -72,7 +72,7 @@ static const Array<Pixel> k_color_ramp = {
     Pixel(255, 22, 233, 255),  Pixel(255, 20, 235, 255),  Pixel(255, 18, 237, 255),  Pixel(255, 16, 239, 255),
     Pixel(255, 14, 241, 255),  Pixel(255, 12, 243, 255),  Pixel(255, 10, 245, 255),  Pixel(255, 8, 247, 255),
     Pixel(255, 6, 249, 255),   Pixel(255, 4, 251, 255),   Pixel(255, 2, 253, 255),   Pixel(255, 0, 255, 255),
-};
+});
 
 }  // namespace hh
 

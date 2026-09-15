@@ -64,10 +64,10 @@ const bool k_no_dos_eol_warnings = false;  // Ignore end-of-line warnings when r
 const bool k_prefer_nv12 = 1;  // read videos using NV12 format (if even dimensions) to save memory and improve speed
 const bool k_use_bgra = 1;     // read images using BGRA (rather than RGBA) channel order to improve speed
 const Pixel k_background_color = Pixel::black();
-const Array<double> k_speeds = {
+constexpr auto k_speeds = to_Vec({
     // video playback speed factors
     0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 2., 3., 4., 5., 10.,
-};
+});
 const float k_key_zoom_fac = 2.f;                  // spatial zoom factor for each UI keypress
 const float k_wheel_zoom_fac = sqrt(2.f);          // spatial zoom factor for each UI mouse wheel step
 const Vec2<int> k_default_window_dims{576, 1024};  // was {480, 640}
@@ -1432,18 +1432,18 @@ bool DerivedHw::key_press(string skey) {
           break;
         }
         case '{': {  // slow down video among preselected speeds
-          if (0) set_speed(k_speeds.inside(index(k_speeds, g_speed) - 1, Bndrule::clamped));
+          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) - 1, Bndrule::clamped));
           const auto speeds = Array(concatenate(k_speeds, V(std::numeric_limits<double>::max())));
           const int index =
               discrete_binary_search(speeds, 0, speeds.num(), clamp(g_speed * .999999f, speeds[0], speeds.last()));
-          set_speed(k_speeds.inside(index + 0, Bndrule::clamped));
+          set_speed(k_speeds.view().inside(index + 0, Bndrule::clamped));
           break;
         }
         case '}': {  // speed up video among preselected speeds
-          if (0) set_speed(k_speeds.inside(index(k_speeds, g_speed) + 1, Bndrule::clamped));
+          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) + 1, Bndrule::clamped));
           const auto speeds = Array(concatenate(k_speeds, V(std::numeric_limits<double>::max())));
           const int index = discrete_binary_search(speeds, 0, speeds.num(), clamp(g_speed, speeds[0], speeds.last()));
-          set_speed(k_speeds.inside(index + 1, Bndrule::clamped));
+          set_speed(k_speeds.view().inside(index + 1, Bndrule::clamped));
           break;
         }
         case '1':

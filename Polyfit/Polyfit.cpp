@@ -53,7 +53,7 @@ struct S_op_stat {
   Vec<int, R_NUM> nor;
 } op_stat;
 
-const Array<float> spring_sched = {1e-2f, 1e-3f, 1e-4f, 1e-8f};
+constexpr auto k_spring_sched = V(1e-2f, 1e-3f, 1e-4f, 1e-8f);
 constexpr int k_max_gfit_iter = 30;
 std::optional<WFile> file_spawn;
 std::optional<WSA3dStream> a3d_spawn;
@@ -636,13 +636,13 @@ void do_lfit(Args& args) {
 }
 
 void apply_schedule() {
-  while (spring > spring_sched[0]) {
+  while (spring > k_spring_sched[0]) {
     do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
     do_stoc();                      // -stoc
     do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
     spring *= .1f;                  // -spring f
   }
-  for (const float spr : spring_sched) {
+  for (const float spr : k_spring_sched) {
     spring = spr;                   // -spring f
     do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
     do_stoc();                      // -stoc
@@ -652,7 +652,7 @@ void apply_schedule() {
 
 void do_reconstruct() {
   HH_TIMER("_reconstruct");
-  if (!spring) spring = spring_sched[0];
+  if (!spring) spring = k_spring_sched[0];
   perhaps_initialize();
   do_gfit(Args{"0"}.use());
   apply_schedule();
@@ -660,7 +660,7 @@ void do_reconstruct() {
 
 void do_simplify() {
   HH_TIMER("_simplify");
-  if (!spring) spring = spring_sched[0];
+  if (!spring) spring = k_spring_sched[0];
   perhaps_initialize();
   apply_schedule();
 }

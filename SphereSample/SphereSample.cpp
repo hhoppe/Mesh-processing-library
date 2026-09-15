@@ -508,12 +508,11 @@ struct S_TriangleSpheremap {
   TriangleSpheremap map;
 };
 
-const Array<S_TriangleSpheremap> k_triangle_maps = {
 #define E(x) {#x, map_##x}
-    E(sphere), E(2slerp0), E(2slerp1), E(2slerp2), E(2slerps), E(arvo0),
-    E(arvo1),  E(arvo2),   E(arvos),   E(buss),    E(area),    E(trisub),
+constexpr auto k_triangle_maps =
+    to_Vec<S_TriangleSpheremap>({E(sphere), E(2slerp0), E(2slerp1), E(2slerp2), E(2slerps), E(arvo0), E(arvo1),
+                                 E(arvo2), E(arvos), E(buss), E(area), E(trisub)});
 #undef E
-};
 
 TriangleSpheremap get_map(const string& triangle_map_name) {
   for (const auto& triangle_map : k_triangle_maps)

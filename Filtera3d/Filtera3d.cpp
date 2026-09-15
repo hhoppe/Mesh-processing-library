@@ -120,9 +120,9 @@ A3dVertexColor input_color;
 
 A3dVertex affinely_combine(const A3dElem& el, CArrayView<float> ar_w) {
   A3dVertex vavg{};
-  Vector pnor = el.pnormal();
+  const Vector pnor = el.pnormal();
   for_int(i, el.num()) {
-    float a = ar_w[i];
+    const float a = ar_w[i];
     vavg.n += (is_zero(el[i].n) ? pnor : el[i].n) * a;
     vavg.p += el[i].p * a;
     vavg.c.d += el[i].c.d * a;
@@ -153,7 +153,7 @@ bool is_degenerate(const A3dElem& el) {
   if (!assertw(el.num() < 3)) return true;
   Vector vt{};
   for_intL(i, 1, el.num() - 1) vt += cross(el[0].p, el[i].p, el[i + 1].p);
-  float area = .5f * mag(vt);
+  const float area = .5f * mag(vt);
   return !area;
 }
 
@@ -169,7 +169,7 @@ bool out_of_bounds(const A3dElem& el) {
 
 bool polygon_needs_flip(const A3dElem& el) {
   Vector va{};
-  Vector pnor = el.pnormal();
+  const Vector pnor = el.pnormal();
   for_int(i, el.num()) va += is_zero(el[i].n) ? pnor : el[i].n;
   return dot(va, pnor) < 0;
 }
@@ -207,7 +207,7 @@ void compute_stats(const A3dElem& el) {
   assertx(el.num() >= 3);
   Vector vt{};
   for_intL(i, 1, el.num() - 1) vt += cross(el[0].p, el[i].p, el[i + 1].p);
-  float area = .5f * mag(vt);
+  const float area = .5f * mag(vt);
   Sparea.enter(area);
   if (area) {
     assertw(vt.normalize());
@@ -216,7 +216,7 @@ void compute_stats(const A3dElem& el) {
       const Point& p = el[i].p;
       sumd += dot(p, vt);
     }
-    float d = sumd / el.num();
+    const float d = sumd / el.num();
     float tol = 0.f;
     for_int(i, el.num()) {
       const Point& p = el[i].p;
@@ -259,20 +259,20 @@ void pass2(const A3dElem& el) {
     pass3(el);
     return;
   }
-  int nt = tessellate;
+  const int nt = tessellate;
   g_tess.ntrib++;
   A3dElem el2(el.type(), el.binary(), 3);
   for_int(i, nt) {
     for_int(j, nt - i) {
-      A3dVertex v0 = get_vertex_combination(el, nt - i - j, j, i, nt);
-      A3dVertex v1 = get_vertex_combination(el, nt - i - j - 1, j + 1, i, nt);
-      A3dVertex vn = get_vertex_combination(el, nt - i - j - 1, j, i + 1, nt);
+      const A3dVertex v0 = get_vertex_combination(el, nt - i - j, j, i, nt);
+      const A3dVertex v1 = get_vertex_combination(el, nt - i - j - 1, j + 1, i, nt);
+      const A3dVertex vn = get_vertex_combination(el, nt - i - j - 1, j, i + 1, nt);
       el2[0] = v0;
       el2[1] = v1;
       el2[2] = vn;
       pass3(el2);
       if (i) {
-        A3dVertex vp = get_vertex_combination(el, nt - i - j, j + 1, i - 1, nt);
+        const A3dVertex vp = get_vertex_combination(el, nt - i - j, j + 1, i - 1, nt);
         el2[0] = v1;
         el2[1] = v0;
         el2[2] = vp;
@@ -315,7 +315,7 @@ void pass1(const A3dElem& el) {
   }
   Array<float> ar_w;
   ar_w.init(el.num(), 1.f / el.num());
-  A3dVertex vavg = affinely_combine(el, ar_w);
+  const A3dVertex vavg = affinely_combine(el, ar_w);
   for_int(i, el.num()) {
     el2[0] = el[i];
     el2[1] = el[(i + 1) % el.num()];
@@ -333,7 +333,7 @@ void show_normals(const A3dElem& el) {
     // el is not necessarily Type::polygon
     Array<Point> pa;
     for_int(i, el.num()) pa.push(el[i].p);
-    Point pavg = mean(pa);
+    const Point pavg = mean(pa);
     for_int(i, el.num()) c += dist(pa[i], pavg);
     c /= el.num();
   }
@@ -367,9 +367,9 @@ bool compute_mindis(const Point& p) {
 // process element
 bool loop(A3dElem& el) {
   if (el.type() == A3dElem::EType::endfile) return true;
-  bool polyg = el.type() == A3dElem::EType::polygon;
-  bool polyl = el.type() == A3dElem::EType::polyline;
-  bool point = el.type() == A3dElem::EType::point;
+  const bool polyg = el.type() == A3dElem::EType::polygon;
+  const bool polyl = el.type() == A3dElem::EType::polyline;
+  const bool point = el.type() == A3dElem::EType::point;
   if (!polyg && !polyl && !point) {
     if (!onlypoly) output_element(el);
     if (el.type() == A3dElem::EType::endframe) delay_frame();
@@ -379,7 +379,7 @@ bool loop(A3dElem& el) {
     input_color = el[0].c;
     Array<int> ar_vi;
     for_int(i, el.num()) {
-      int vi = g_join.hp->enter(el[i].p);
+      const int vi = g_join.hp->enter(el[i].p);
       assertx(vi <= g_join.pa.num());
       if (vi == g_join.pa.num()) {
         g_join.pa.push(el[i].p);
@@ -429,19 +429,19 @@ bool loop(A3dElem& el) {
   Vector pnor(3.f, 0.f, 0.f);
   if (optnormals && polyg) pnor = el.pnormal();
   if (smoothcurves && polyl) {
-    bool closed = el[0].p == el[el.num() - 1].p;
+    const bool closed = el[0].p == el[el.num() - 1].p;
     Array<bool> ar_sharp;
     Array<Point> ar_p(el.num());
     for_int(iter, smoothcurves) {
-      bool even = iter % 2 == 0 || 1;  // why 1?
+      const bool even = iter % 2 == 0 || 1;  // Why 1?
       ar_sharp.init(0);
       for_int(i, el.num()) {
         if (!closed && (i == 0 || i == el.num() - 1)) {
           ar_sharp.push(true);
           continue;
         }
-        int i0 = i >= 1 ? i - 1 : el.num() - 2;
-        int i1 = i <= el.num() - 2 ? i + 1 : 1;
+        const int i0 = i >= 1 ? i - 1 : el.num() - 2;
+        const int i1 = i <= el.num() - 2 ? i + 1 : 1;
         Vector n1 = el[i0].p - el[i].p;
         Vector n2 = el[i].p - el[i1].p;
         ar_sharp.push((n1.normalize() && n2.normalize() &&
@@ -453,10 +453,10 @@ bool loop(A3dElem& el) {
           ar_p[i] = el[i].p;
           continue;
         }
-        int i0 = i >= 1 ? i - 1 : el.num() - 2;
-        int i1 = i <= el.num() - 2 ? i + 1 : 1;
-        Vector disp = interp(el[i0].p, el[i1].p) - el[i].p;
-        float fac = even ? .65f : -.65f;
+        const int i0 = i >= 1 ? i - 1 : el.num() - 2;
+        const int i1 = i <= el.num() - 2 ? i + 1 : 1;
+        const Vector disp = interp(el[i0].p, el[i1].p) - el[i].p;
+        const float fac = even ? .65f : -.65f;
         ar_p[i] = el[i].p + disp * fac;
       }
       for_int(i, el.num()) el[i].p = ar_p[i];
@@ -595,7 +595,7 @@ void join_lines() {
   if (!directed_joined_lines) {
     // for undirected search, candidate vertices are ones with odd degree
     graph_symmetric_closure(graph);
-    for (int v : graph.vertices()) {
+    for (const int v : graph.vertices()) {
       assertx(graph.out_degree(v) > 0);
       if (graph.out_degree(v) % 2) candv.enter(v);
     }
@@ -605,7 +605,7 @@ void join_lines() {
         vi = candv.remove_one();
       } else {
         vi = -1;
-        for (int v : graph.vertices()) {
+        for (const int v : graph.vertices()) {
           vi = v;
           if (1) break;
         }
@@ -616,7 +616,7 @@ void join_lines() {
       for (;;) {
         el.push(A3dVertex(g_join.pa[vi], Vector(0.f, 0.f, 0.f), input_color));
         int vn = -1;
-        for (int v : graph.edges(vi)) {
+        for (const int v : graph.edges(vi)) {
           vn = v;
           if (1) break;
         }
@@ -633,10 +633,10 @@ void join_lines() {
   } else {
     // for directed search, candidate vertices are ones with no in_edges
     Graph<int> opp_graph;
-    for (int v : graph.vertices()) opp_graph.enter(v);
-    for (int v1 : graph.vertices())
-      for (int v2 : graph.edges(v1)) opp_graph.enter(v2, v1);
-    for (int v : opp_graph.vertices())
+    for (const int v : graph.vertices()) opp_graph.enter(v);
+    for (const int v1 : graph.vertices())
+      for (const int v2 : graph.edges(v1)) opp_graph.enter(v2, v1);
+    for (const int v : opp_graph.vertices())
       if (graph.out_degree(v) > opp_graph.out_degree(v)) candv.enter(v);
     for (;;) {
       int vi;
@@ -645,7 +645,7 @@ void join_lines() {
         if (graph.out_degree(vi) == 1) assertx(candv.remove(vi));
       } else {
         vi = -1;
-        for (int v : graph.vertices()) {
+        for (const int v : graph.vertices()) {
           vi = v;
           if (1) break;
         }
@@ -655,7 +655,7 @@ void join_lines() {
       for (;;) {
         el.push(A3dVertex(g_join.pa[vi], Vector(0.f, 0.f, 0.f), input_color));
         int vn = -1;
-        for (int v : graph.edges(vi)) {
+        for (const int v : graph.edges(vi)) {
           vn = v;
           if (1) break;
         }

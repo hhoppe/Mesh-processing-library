@@ -36,10 +36,10 @@ inline float to_float(uint8_t uc) {
 inline float get_deltatime(int period, int nnf) {
   const static bool b_videloop_no_temporal_scaling = getenv_bool("VIDEOLOOP_NO_TEMPORAL_SCALING");
   if (b_videloop_no_temporal_scaling) return 1.f;
-  float fnloops = float(nnf) / period * 1.000001f;
-  float facshrink = (floor(fnloops) + 1.f) / fnloops;
-  float facstretch = fnloops / (floor(fnloops) + 1e-6f);
-  float deltatime = facshrink < facstretch ? facshrink : 1.f / facstretch;
+  const float fnloops = float(nnf) / period * 1.000001f;
+  const float facshrink = (floor(fnloops) + 1.f) / fnloops;
+  const float facstretch = fnloops / (floor(fnloops) + 1e-6f);
+  const float deltatime = facshrink < facstretch ? facshrink : 1.f / facstretch;
   return deltatime;
 }
 

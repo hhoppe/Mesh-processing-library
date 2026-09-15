@@ -39,7 +39,7 @@ const float screening_weight = getenv_float("SCREENING_WEIGHT", 1e-3f, true);  /
 auto compute_deltatime(CMatrixView<int> mat_period, int nnf) {
   Matrix<float> mat_deltatime(mat_period.dims());
   parallel_for_coords(mat_period.dims(), [&](const Vec2<int>& yx) {
-    int period = mat_period[yx];
+    const int period = mat_period[yx];
     float deltatime = get_deltatime(period, nnf);
     if (period == 1) deltatime = 0.f;
     mat_deltatime[yx] = deltatime;
@@ -52,7 +52,7 @@ auto compute_framei(Vec3<int> dims, const Matrix<float>& mat_deltatime, CMatrixV
                     CMatrixView<int> mat_period) {
   Grid<3, short> grid_framei(dims);
   const int nnf = dims[0], ny = dims[1], nx = dims[2];
-  Vec2<int> sdims = dims.tail<2>();
+  const Vec2<int> sdims = dims.tail<2>();
   assertx(sdims == mat_start.dims());
   assertx(sdims == mat_period.dims());
   for_int(f, nnf) {
@@ -148,17 +148,17 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
       HH_STIMER("_fast_relax2");  // compute the right-hand-side of the multigrid system for the output frame f
       const auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const Vector4& pix0,
                                   int fi0, int fi1, int y0, int x0, int y1, int x1, Vector4& vrhs) {
-        Vector4 t = Vector4(videofi0[y1, x1]) - pix0;
+        const Vector4 t = Vector4(videofi0[y1, x1]) - pix0;
         vrhs += fi0 == fi1 ? t : (t + (Vector4(video2[fi1, y1, x1]) - Vector4(video2[fi1, y0, x0]))) * .5f;
       };
       parallel_for(range(ny), [&](const int y) {
         for_int(x, nx) {
-          int fi = mat_framei[y, x];
+          const int fi = mat_framei[y, x];
           CMatrixView<Pixel> videofi = video[fi];
-          Vector4 pixv(videofi[y, x]);
+          const Vector4 pixv(videofi[y, x]);
           Vector4 vrhs(-screening_weight * pixv);
           const int start = mat_start[y, x], period = mat_period[y, x];
-          int fm1i = get_framei(lmat_deltatime[y, x] * fm1, start, period);
+          const int fm1i = get_framei(lmat_deltatime[y, x] * fm1, start, period);
           if (fm1i <= fi) {
             vrhs += Vector4(video[fm1i, y, x]) - pixv;
           } else {
@@ -167,7 +167,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
             ft = fi + period;
             if (ft < onf) vrhs += (Vector4(video[fm1i, y, x]) - Vector4(video[ft, y, x])) * .5f;
           }
-          int fp1i = get_framei(lmat_deltatime[y, x] * fp1, start, period);
+          const int fp1i = get_framei(lmat_deltatime[y, x] * fp1, start, period);
           if (fp1i >= fi) {  // OPT:fast_relax_simple
             vrhs += Vector4(video[fp1i, y, x]) - pixv;
           } else {
@@ -210,14 +210,14 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
           vnei += w * Vector4(mat_videoloopf[y, x + 1]);
           vnum += w;
         }
-        Vector4 result = (vnei - mat_rhs[y, x]) / vnum;
+        const Vector4 result = (vnei - mat_rhs[y, x]) / vnum;
         mat_videoloopf[y, x] = result.pixel();
       };
       const auto func_update_interior = [&](int y, int x) {
-        Vector4 vnei = (Vector4(videoloop[fp1, y, x]) + Vector4(videoloop[fm1, y, x]) +
-                        Vector4(mat_videoloopf[y - 1, x]) + Vector4(mat_videoloopf[y + 1, x]) +
-                        Vector4(mat_videoloopf[y, x - 1]) + Vector4(mat_videoloopf[y, x + 1]));
-        Vector4 result = (vnei - mat_rhs[y, x]) * rwL6;  // OPT:fast_relax_interior
+        const Vector4 vnei = (Vector4(videoloop[fp1, y, x]) + Vector4(videoloop[fm1, y, x]) +
+                              Vector4(mat_videoloopf[y - 1, x]) + Vector4(mat_videoloopf[y + 1, x]) +
+                              Vector4(mat_videoloopf[y, x - 1]) + Vector4(mat_videoloopf[y, x + 1]));
+        const Vector4 result = (vnei - mat_rhs[y, x]) * rwL6;  // OPT:fast_relax_interior
         mat_videoloopf[y, x] = result.pixel();
       };
       for_int(iter, niter) {
@@ -231,7 +231,7 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
           for_2DL_interior(y0, yn, 0, nx, func_update, func_update_interior);
         });
         for_int(thread, nthreads) {  // pass 2
-          int y0 = min((thread + 1) * ychunk, ny) - sync_rows, yn = min((thread + 1) * ychunk, ny);
+          const int y0 = min((thread + 1) * ychunk, ny) - sync_rows, yn = min((thread + 1) * ychunk, ny);
           for_2DL(y0, yn, 0, nx, func_update);
         }
       }
@@ -248,10 +248,10 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
   using EType = typename MG::EType;
   const int onf = video.dim(0), ny = video.dim(1), nx = video.dim(2), nnf = videoloop.dim(0);
   assertx(same_size(video[0], videoloop[0]) && same_size(video[0], mat_start) && same_size(video[0], mat_period));
-  Vec3<int> dims(nnf, ny, nx);
+  const Vec3<int> dims(nnf, ny, nx);
   Grid<3, short> grid_framei;
   {
-    Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
+    const Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
     grid_framei = compute_framei(dims, mat_deltatime, mat_start, mat_period);
   }
   for_int(z, MG::nz) {
@@ -263,7 +263,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
       // speedup: for each f, stream rows: extract Matrix<EType> and compute difference values on edges
       const auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const EType& pix0, int fi0,
                                   int fi1, int y0, int x0, int y1, int x1, int zz, EType& vrhs) {
-        EType t = MG::get(videofi0[y1, x1], zz) - pix0;
+        const EType t = MG::get(videofi0[y1, x1], zz) - pix0;
         vrhs += fi0 == fi1 ? t : (t + (MG::get(video2[fi1, y1, x1], zz) - MG::get(video2[fi1, y0, x0], zz))) * .5f;
       };
       parallel_for(range(nnf), [&](const int f) {
@@ -275,13 +275,13 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         // const int max_xwidth = 10'000;  // because data fits in L2 cache, it is detrimental to break it up
         // for_2D_swaths(y, ny, x, nx, max_xwidth) {
         for_int(y, ny) for_int(x, nx) {
-          int fi = grid_frameif[y, x];
+          const int fi = grid_frameif[y, x];
           CMatrixView<Pixel> videofi = video[fi];
-          EType pixv = MG::get(videofi[y, x], z);
+          const EType pixv = MG::get(videofi[y, x], z);
           EType vrhs(-screening_weight * pixv);
           const int period = mat_period[y, x];
           // It is important to use grid_framei rather than deltat (e.g. brink2s loop example).
-          int fm1i = grid_framei[fm1, y, x];
+          const int fm1i = grid_framei[fm1, y, x];
           if (fm1i <= fi) {
             vrhs += MG::get(video[fm1i, y, x], z) - pixv;
           } else {
@@ -290,7 +290,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
             ft = fi + period;
             if (ft < onf) vrhs += (MG::get(video[fm1i, y, x], z) - MG::get(video[ft, y, x], z)) * .5f;
           }
-          int fp1i = grid_framei[fp1, y, x];
+          const int fp1i = grid_framei[fp1, y, x];
           if (fp1i >= fi) {
             vrhs += MG::get(video[fp1i, y, x], z) - pixv;
           } else {
@@ -319,33 +319,33 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         asx[0] = asx[nx] = EType{0};
         const int xwidth = 0 ? 600 : 100'000;  // breaking up into swaths is actually detrimental
         for (BoundedIntervals bi(nx, xwidth); *bi; ++bi) {
-          int xl = bi.l(), xu = bi.u();
+          const int xl = bi.l(), xu = bi.u();
           for_intL(x, xl, min(xu + 1, nx)) {
             const int fi = grid_frameif[0, x];
             apix0[x] = MG::get(video[fi, 0, x], z);
           }
           for_intL(x, xl, xu) { asy0[x] = EType{0}; }
           for_int(y, ny) {  // update [y, x]; apix0 has [y]; asy0 has [y] - [y - 1]
-            int y1 = y + 1;
+            const int y1 = y + 1;
             if (y1 < ny) {
               const int fi = grid_frameif[y1, xl];
               apix1[xl] = MG::get(video[fi, y1, xl], z);
             }
             if (xl > 0 && xl < xu) {
-              int fi1 = grid_frameif[y, xl], fi2 = grid_frameif[y, xl - 1];
+              const int fi1 = grid_frameif[y, xl], fi2 = grid_frameif[y, xl - 1];
               asx[xl] = .5f * (MG::get(video[fi1, y, xl], z) - MG::get(video[fi1, y, xl - 1], z) +
                                MG::get(video[fi2, y, xl], z) - MG::get(video[fi2, y, xl - 1], z));
             }
             for_intL(x, xl, xu) {  // apix1[x] has [y1, x]; asx[xl] has [y, xl] - [y, xl - 1]
-              int x1 = x + 1;
-              int fi = grid_frameif[y, x];
+              const int x1 = x + 1;
+              const int fi = grid_frameif[y, x];
               if (x1 < nx) {
                 if (y1 < ny) {
                   const int fi11 = grid_frameif[y1, x1];
                   apix1[x1] = MG::get(video[fi11, y1, x1], z);
                 }
                 // compute asx[x1] = [y, x1] - [y, x]
-                int fi01 = grid_frameif[y, x1];
+                const int fi01 = grid_frameif[y, x1];
                 asx[x1] =
                     (fi01 == fi
                          ? apix0[x1] - apix0[x]
@@ -353,7 +353,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
                                .5f);
               }
               if (y1 < ny) {  // compute asy1[x] = [y1, x] - [y, x]
-                int fi10 = grid_frameif[y1, x];
+                const int fi10 = grid_frameif[y1, x];
                 asy1[x] =
                     (fi10 == fi
                          ? apix1[x] - apix0[x]
@@ -362,11 +362,11 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
                 asy1[x] = EType{0};
               }
               // update pixel [y, x] using asy0, asy1, asx, apix0
-              EType pixv = apix0[x];
+              const EType pixv = apix0[x];
               EType vrhs(-screening_weight * pixv);
               const int period = mat_period[y, x];
               // It is important to use grid_framei rather than deltat (e.g. brink2s loop example).
-              int fm1i = grid_framei[fm1, y, x];
+              const int fm1i = grid_framei[fm1, y, x];
               if (fm1i <= fi) {
                 vrhs += MG::get(video[fm1i, y, x], z) - pixv;
               } else {
@@ -375,7 +375,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
                 ft = fi + period;
                 if (ft < onf) vrhs += (MG::get(video[fm1i, y, x], z) - MG::get(video[ft, y, x], z)) * .5f;
               }
-              int fp1i = grid_framei[fp1, y, x];
+              const int fp1i = grid_framei[fp1, y, x];
               if (fp1i >= fi) {
                 vrhs += MG::get(video[fp1i, y, x], z) - pixv;
               } else {
@@ -428,7 +428,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
     Grid<3, Pixel> diff_video(nnf, ny, nx);
     parallel_for(range(nnf), [&](const int f) {
       for_int(y, ny) for_int(x, nx) {
-        int fi = grid_framei[f, y, x];
+        const int fi = grid_framei[f, y, x];
         ref_video[f, y, x] = video[fi, y, x];
         for_int(z, 3) {
           diff_video[f, y, x][z] = clamp_to_uint8(128 + (videoloop[f, y, x][z] - ref_video[f, y, x][z]) * 5);
@@ -458,10 +458,10 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
   dummy_use(MG_sample<false>::k_offset_zero, MG_sample<true>::k_offset_zero);
   const int onf = video.dim(0), ny = video.dim(1), nx = video.dim(2), nnf = video_offset.dim(0);
   assertx(same_size(video[0], video_offset[0]) && same_size(video[0], mat_start) && same_size(video[0], mat_period));
-  Vec3<int> dims(nnf, ny, nx);
+  const Vec3<int> dims(nnf, ny, nx);
   Grid<3, short> grid_framei;
   {
-    Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
+    const Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
     grid_framei = compute_framei(dims, mat_deltatime, mat_start, mat_period);
     // HH_RSTAT(Sdeltatime, mat_deltatime);
     // HH_RSTAT(Sgrid_framei, grid_framei);
@@ -491,13 +491,13 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
         const int fm1 = f > 0 ? f - 1 : nnf - 1;
         const int fp1 = f < nnf - 1 ? f + 1 : 0;
         for_int(y, ny) for_int(x, nx) {
-          int fi = grid_frameif[y, x];
+          const int fi = grid_frameif[y, x];
           CMatrixView<Pixel> videofi = video[fi];
-          EType pixv = MG::get(videofi[y, x], z);
+          const EType pixv = MG::get(videofi[y, x], z);
           EType vrhs(0.f);
           const int period = mat_period[y, x];
           // It is important to use grid_framei rather than deltat (e.g. brink2s loop example).
-          int fm1i = grid_framei[fm1, y, x];
+          const int fm1i = grid_framei[fm1, y, x];
           if (fm1i > fi) {
             int count = 0;
             EType v(0.f);
@@ -515,7 +515,7 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
             if (count == 2) v *= .5f;
             vrhs += v;
           }
-          int fp1i = grid_framei[fp1, y, x];
+          const int fp1i = grid_framei[fp1, y, x];
           if (fp1i < fi) {
             int count = 0;
             EType v(0.f);
@@ -551,16 +551,16 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
       for_int(iphase, nphase) {
         // (With just two phases, race condition exists on frame 0 in iphase == 0 if nnf is odd.)
         parallel_for(range((nnf - 1 - iphase) / nphase + 1), [&](const int hf) {
-          int f0 = hf * nphase + iphase;
-          int f1 = (f0 + 1) % nnf;
+          const int f0 = hf * nphase + iphase;
+          const int f1 = (f0 + 1) % nnf;
           CMatrixView<short> grid_frameif0 = grid_framei[f0];
           CMatrixView<short> grid_frameif1 = grid_framei[f1];
           MatrixView<EType> mrhs0 = multigrid.rhs()[f0];
           MatrixView<EType> mrhs1 = multigrid.rhs()[f1];
           for_int(y, ny) for_int(x, nx) {
-            int yxi = y * nx + x;
-            int fi0 = grid_frameif0.flat(yxi);
-            int fi1 = grid_frameif1.flat(yxi);
+            const int yxi = y * nx + x;
+            const int fi0 = grid_frameif0.flat(yxi);
+            const int fi1 = grid_frameif1.flat(yxi);
             if (fi1 >= fi0) continue;
             const int period = mat_period.flat(yxi);  // OPT:rhs_temporal
             int count = 0;
@@ -584,8 +584,8 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
       for_int(iphase, 2) {  // run in two phases to avoid race conditions
         parallel_for(range((ny - 1 - iphase) / 2 + 1), [&](const int yh) {
           for_int(x, nx) {
-            int y = yh * 2 + iphase;
-            Vec2<int> yx = V(y, x);
+            const int y = yh * 2 + iphase;
+            const Vec2<int> yx = V(y, x);
             for (auto yxd : {V(+1, 0), V(0, +1)}) {
               auto yxn = yx + yxd;
               if (!video[0].ok(yxn) || (mat_start[yx] == mat_start[yxn] && mat_period[yx] == mat_period[yxn]))
@@ -597,13 +597,13 @@ void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_sta
               StridedArrayView<EType> ar0rhs = grid_column<0>(multigrid.rhs(), concat(V(0), yx));
               StridedArrayView<EType> ar1rhs = grid_column<0>(multigrid.rhs(), concat(V(0), yxn));
               for_int(f, nnf) {
-                int fi0 = ar0fi[f];
-                int fi1 = ar1fi[f];
+                const int fi0 = ar0fi[f];
+                const int fi1 = ar1fi[f];
                 if (fi0 == fi1) continue;
-                EType A = MG::get(ar0pix[fi0], z), B = MG::get(ar1pix[fi0], z);
-                EType C = MG::get(ar0pix[fi1], z), D = MG::get(ar1pix[fi1], z);
+                const EType A = MG::get(ar0pix[fi0], z), B = MG::get(ar1pix[fi0], z);
+                const EType C = MG::get(ar0pix[fi1], z), D = MG::get(ar1pix[fi1], z);
                 // initial difference is D - A,  desired difference is ((B - A) / 2 + (D - C) / 2)
-                EType change = (A + B - C - D) * .5f;  // desired change; OPT:rhs_spatial
+                const EType change = (A + B - C - D) * .5f;  // Desired change; OPT:rhs_spatial
                 ar0rhs[f] += change;
                 ar1rhs[f] -= change;
               }
@@ -651,8 +651,8 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   if (videoloop.size()) assertx(videoloop.dims() == ndims);
   if (0) {  // gather offsets and apply them here
     assertx(video.size() && videoloop.size());
-    Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
-    Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
+    const Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
+    const Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
     Grid<3, Pixel> video_offset(ndims);
     solve_using_offsets_aux<false>(video, mat_start_highres, mat_period_highres, video_offset);
     parallel_for(range(nnf), [&](const int f) {
@@ -775,14 +775,14 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
       Grid<3, short> grid_framei;
       {
         HH_TIMER("___grid_framei");
-        Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
-        Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
-        Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
+        const Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
+        const Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
+        const Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
         grid_framei = compute_framei(ndims, mat_deltatime, mat_start_highres, mat_period_highres);
       }
       parallel_for(range(nnf), [&](const int f) {
         for_int(y, ny) for_int(x, nx) {
-          int fi = grid_framei[f, y, x];
+          const int fi = grid_framei[f, y, x];
           const Pixel& pixel = video[fi, y, x];
           videoloop[f, y, x] =
               (Vector4(pixel) + Vector4(hvideo_offset[f / DT, y / DS, x / DS]) - k_vec_zero_offset).pixel();
@@ -805,8 +805,8 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
                                                            : queue_frames.rear());
           parallel_for(range(hny), [&](const int hy) {
             for_int(hx, hnx) {
-              int fi = get_framei(f * hmat_deltatime[hy, hx], hmat_start[hy, hx], hmat_period[hy, hx]);
-              Vector4i offset = Vector4i(hvideo_offset[f / DT, hy, hx]) - 128;
+              const int fi = get_framei(f * hmat_deltatime[hy, hx], hmat_start[hy, hx], hmat_period[hy, hx]);
+              const Vector4i offset = Vector4i(hvideo_offset[f / DT, hy, hx]) - 128;
               const CMatrixView<Pixel> videofi = video[fi];
               MatrixView<Pixel> lnframe = nframe;  // local view to help optimizer
               for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
@@ -860,7 +860,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
           if (0) {
             parallel_for(range(hny), [&](const int hy) {
               for_int(hx, hnx) {
-                int fi = get_framei(f * hmat_deltatime[hy, hx], hmat_start[hy, hx], hmat_period[hy, hx]);
+                const int fi = get_framei(f * hmat_deltatime[hy, hx], hmat_start[hy, hx], hmat_period[hy, hx]);
                 const Pixel& poff = hvideo_offset[f / DT, hy, hx];
                 Vector4i offset_YUV = YUV_Vector4i_from_RGB(poff[0], poff[1], poff[2]) - YUV_zero_offset;
                 for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
@@ -880,7 +880,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
               auto lvideo_nv12_Y = video_nv12.get_Y();
               auto lvideo_nv12_UV = video_nv12.get_UV();
               for_int(hx, hnx) {
-                int fi = get_framei(f * hmat_deltatimehy[hx], hmat_starthy[hx], hmat_periodhy[hx]);
+                const int fi = get_framei(f * hmat_deltatimehy[hx], hmat_starthy[hx], hmat_periodhy[hx]);
                 const Pixel& poff = hvideo_offsethy[hx];
                 Vector4i offset_YUV = YUV_Vector4i_from_RGB(poff[0], poff[1], poff[2]) - YUV_zero_offset;
                 auto video_nv12_Yfi = lvideo_nv12_Y[fi];
@@ -925,13 +925,13 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   HH_TIMER("__recon_multistream");
   assertx(video_filename != "");
   assertx(file_requires_pipe(video_filename) || file_exists(video_filename));
-  int onf_actual = max(mat_start + mat_period);
+  const int onf_actual = max(mat_start + mat_period);
   assertx(onf_actual <= onf);
   Array<int> periods = sort_unique(hmat_period);
   if (verbose) SHOW(periods);
   const int max_num_periods = 3;  // one static period (period == 1) and up to 2 looping periods (period > 1)
   assertx(periods.num() <= max_num_periods && periods[0] == 1);
-  Matrix<float> hmat_deltatime = compute_deltatime(hmat_period, nnf);
+  const Matrix<float> hmat_deltatime = compute_deltatime(hmat_period, nnf);
   Array<float> ar_deltatime(periods.num());
   for_int(pi, periods.num()) ar_deltatime[pi] = get_deltatime(periods[pi], nnf);
   if (verbose) SHOW(ar_deltatime);
@@ -939,7 +939,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   for_int(pi, periods.num()) ar_nstreams[pi] = (onf_actual + periods[pi] - 1) / periods[pi];
   ar_nstreams[0] = 0;  // static frame is handled separately in pre-pass
   if (verbose) SHOW(ar_nstreams);
-  int totstreams = int(sum(ar_nstreams));
+  const int totstreams = int(sum(ar_nstreams));
   Array<unique_ptr<RVideo>> prvideos(totstreams);  // video streams
   const bool use_nv12 = true;
   Array<Nv12> rvideoframes(totstreams);  // current image frame in each video stream
@@ -969,14 +969,14 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
           assertx(periods[pi] == 1);
           continue;  // static frame is handled separately
         }
-        int period = periods[pi];
-        int wrap = (onf_actual + period - 1) / period * period;
-        int nstreams = ar_nstreams[pi];
+        const int period = periods[pi];
+        const int wrap = (onf_actual + period - 1) / period * period;
+        const int nstreams = ar_nstreams[pi];
         ar_fi0[pi] = int(f * ar_deltatime[pi] + .5f);
         // The input frames corresponding to output frame f are ar_fi0[pi] + k * period  (signed k)
         //  with si = my_mod(k, nstreams).
         for_int(streami, nstreams) {
-          int si = func_get_si(pi, streami);
+          const int si = func_get_si(pi, streami);
           int fi = my_mod(ar_fi0[pi] + streami * period, wrap);
           // SHOW(pi, streami, si, fi, period, wrap, onf_actual);
           // if fi is in range [onf_actual, wrap), the streami is not useful.
@@ -1012,19 +1012,19 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
       assertx(DS == 1 || DSh * 2 == DS);
       parallel_for(range(hny), [&](const int hy) {
         for_int(hx, hnx) {
-          int period = hmat_period[hy, hx];
-          int pi = index(periods, period);
+          const int period = hmat_period[hy, hx];
+          const int pi = index(periods, period);
           int si;
           {
             if (pi == 0) {
               si = -1;  // if period == 1, access static frame
             } else {
-              int fi = get_framei(f * ar_deltatime[pi], hmat_start[hy, hx], period);
-              int dfi = fi - ar_fi0[pi];
+              const int fi = get_framei(f * ar_deltatime[pi], hmat_start[hy, hx], period);
+              const int dfi = fi - ar_fi0[pi];
               // if (!(my_mod(dfi, period) == 0)) SHOW(f, hy, hx, period, pi, fi, ar_fi0[pi], dfi);
               ASSERTX(my_mod(dfi, period) == 0);
-              int nstreams = ar_nstreams[pi];
-              int streami = my_mod(dfi / period, nstreams);
+              const int nstreams = ar_nstreams[pi];
+              const int streami = my_mod(dfi / period, nstreams);
               si = func_get_si(pi, streami);
               // if (rvideo_fi[si] != fi) SHOW(f, hy, hx, period, fi, dfi, streami, si, rvideo_fi);
               ASSERTX(rvideo_fi[si] == fi);
@@ -1074,7 +1074,7 @@ void compute_gdloop_aux1(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
 void show_spatial_cost(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CMatrixView<int> mat_period, int nnf) {
   Grid<3, short> grid_framei;
   {
-    Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
+    const Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
     grid_framei = compute_framei(V(nnf, video.dim(1), video.dim(2)), mat_deltatime, mat_start, mat_period);
   }
   const int ny = video.dim(1), nx = video.dim(2);
@@ -1084,7 +1084,8 @@ void show_spatial_cost(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CM
       float cost = 0.f;
       for_int(f, nnf) {
         for_int(axis, 2) for_int(dir, 2) {
-          int y0 = y, x0 = x, y1 = y, x1 = x;
+          const int y0 = y, x0 = x;
+          int y1 = y, x1 = x;
           if (axis == 0) {
             y1 += !dir ? -1 : +1;
             if (y1 < 0 || y1 >= ny) continue;
@@ -1092,8 +1093,8 @@ void show_spatial_cost(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CM
             x1 += !dir ? -1 : +1;
             if (x1 < 0 || x1 >= nx) continue;
           }
-          int fi0 = grid_framei[f, y0, x0];
-          int fi1 = grid_framei[f, y1, x1];
+          const int fi0 = grid_framei[f, y0, x0];
+          const int fi1 = grid_framei[f, y1, x1];
           for_int(c, 3) {
             cost += square(to_float(video[fi0, y0, x0][c]) - to_float(video[fi1, y0, x0][c]));
             cost += square(to_float(video[fi0, y1, x1][c]) - to_float(video[fi1, y1, x1][c]));
@@ -1103,7 +1104,7 @@ void show_spatial_cost(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CM
       cost = max(cost, 1e-10f);
       HH_SSTAT(Scost, cost);
       const float c1 = .12f, c2 = 1.f, gamma = .5f;
-      float v = pow(clamp(1.f - std::log(cost) * c1 + c2, 0.f, 1.f), gamma) * 255.f;
+      const float v = pow(clamp(1.f - std::log(cost) * c1 + c2, 0.f, 1.f), gamma) * 255.f;
       HH_SSTAT(Sv, v);
       image[y, x] = Pixel::gray(clamp_to_uint8(int(v)));
     }
@@ -1118,7 +1119,7 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
   const int nnf = videoloop.dim(0);
   Grid<3, short> grid_framei;
   {
-    Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
+    const Matrix<float> mat_deltatime = compute_deltatime(mat_period, nnf);
     grid_framei = compute_framei(V(nnf, video.dim(1), video.dim(2)), mat_deltatime, mat_start, mat_period);
   }
   const int ny = video.dim(1), nx = video.dim(2);
@@ -1127,7 +1128,7 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
   double spatial_sum_cost = 0., spatial_sum_seam_cost = 0.;
   for_int(f, nnf) for_int(y, ny) for_int(x, nx) {
     const int y0 = y, x0 = x;
-    int fi0 = grid_framei[f, y0, x0];
+    const int fi0 = grid_framei[f, y0, x0];
     for_int(axis, 2) {
       int y1 = y, x1 = x;
       if (axis == 0) {
@@ -1137,12 +1138,12 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
         x1 += 1;
         if (x1 >= nx) continue;
       }
-      int fi1 = grid_framei[f, y1, x1];
-      bool is_seam = fi1 != fi0;
-      float cost = (mag2((Vector4(videoloop[f, y1, x1]) - Vector4(videoloop[f, y0, x0])) -
-                         (Vector4(video[fi0, y1, x1]) - Vector4(video[fi0, y0, x0]))) +
-                    mag2((Vector4(videoloop[f, y1, x1]) - Vector4(videoloop[f, y0, x0])) -
-                         (Vector4(video[fi1, y1, x1]) - Vector4(video[fi1, y0, x0]))));
+      const int fi1 = grid_framei[f, y1, x1];
+      const bool is_seam = fi1 != fi0;
+      const float cost = (mag2((Vector4(videoloop[f, y1, x1]) - Vector4(videoloop[f, y0, x0])) -
+                               (Vector4(video[fi0, y1, x1]) - Vector4(video[fi0, y0, x0]))) +
+                          mag2((Vector4(videoloop[f, y1, x1]) - Vector4(videoloop[f, y0, x0])) -
+                               (Vector4(video[fi1, y1, x1]) - Vector4(video[fi1, y0, x0]))));
       spatial_sum_cost += cost;
       if (is_seam) {
         spatial_nseams++;
@@ -1155,23 +1156,23 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
   // rms errors on all pixel pairs and on just on seams
   SHOW(sqrt(spatial_sum_cost / (ny * nx * 2) / nnf / 6));
   SHOW(sqrt(spatial_sum_seam_cost / spatial_nseams / 6));
-  int64_t nstatic_pixels = ranges::count(mat_period, 1);
+  const int64_t nstatic_pixels = ranges::count(mat_period, 1);
   int64_t temporal_nseams = 0;
   double temporal_sum_cost = 0., temporal_sum_seam_cost = 0.;
   for_int(f, nnf - 1) {
     for_int(y, ny) for_int(x, nx) {
       const int f0 = f, f1 = f + 1;
       if (mat_period[y, x] == 1) continue;
-      int fi0 = grid_framei[f0, y, x];
-      int fi1 = grid_framei[f1, y, x];
-      int fid = fi1 - fi0;
+      const int fi0 = grid_framei[f0, y, x];
+      const int fi1 = grid_framei[f1, y, x];
+      const int fid = fi1 - fi0;
       // bool is_seam = fid != 1;
-      bool is_seam = abs(fid - 1) > 1;
+      const bool is_seam = abs(fid - 1) > 1;
       ASSERTX(fi1 > 0 && fi0 + 1 < nnf);
-      float cost = (mag2((Vector4(videoloop[f1, y, x]) - Vector4(videoloop[f0, y, x])) -
-                         (Vector4(video[fi1, y, x]) - Vector4(video[is_seam ? fi1 - 1 : fi0, y, x]))) +
-                    mag2((Vector4(videoloop[f1, y, x]) - Vector4(videoloop[f0, y, x])) -
-                         (Vector4(video[is_seam ? fi0 + 1 : fi1, y, x]) - Vector4(video[fi0, y, x]))));
+      const float cost = (mag2((Vector4(videoloop[f1, y, x]) - Vector4(videoloop[f0, y, x])) -
+                               (Vector4(video[fi1, y, x]) - Vector4(video[is_seam ? fi1 - 1 : fi0, y, x]))) +
+                          mag2((Vector4(videoloop[f1, y, x]) - Vector4(videoloop[f0, y, x])) -
+                               (Vector4(video[is_seam ? fi0 + 1 : fi1, y, x]) - Vector4(video[fi0, y, x]))));
       temporal_sum_cost += cost;
       if (is_seam) {
         temporal_nseams++;
@@ -1185,9 +1186,9 @@ void compute_costs(CGridView<3, Pixel> video, CGridView<3, Pixel> videoloop, CMa
   // rms errors on all pixel pairs and on just on seams
   SHOW(sqrt(temporal_sum_cost / (ny * nx) / nnf / 6));
   SHOW(sqrt(temporal_sum_seam_cost / temporal_nseams / 6));
-  double rms_spatial = sqrt(spatial_sum_cost / (ny * nx * 2) / nnf / 6);
-  double rms_temporal = sqrt(temporal_sum_cost / (ny * nx) / nnf / 6);
-  double rms_total =
+  const double rms_spatial = sqrt(spatial_sum_cost / (ny * nx * 2) / nnf / 6);
+  const double rms_temporal = sqrt(temporal_sum_cost / (ny * nx) / nnf / 6);
+  const double rms_total =
       sqrt((spatial_sum_cost + temporal_sum_cost) / (float(ny * nx * 2) * nnf * 6 + float(ny * nx) * nnf * 6));
   SHOW(rms_spatial, rms_temporal, rms_total);
 }
@@ -1303,11 +1304,11 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
   if (verbose) showf("Rendering looping video of %d frames.\n", nnf);
   switch (scheme) {
     case GdLoopScheme::no_blend: {
-      Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
-      Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
+      const Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
+      const Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
       Grid<3, short> grid_framei;
       {
-        Matrix<float> mat_deltatime = compute_deltatime(mat_period_highres, nnf);
+        const Matrix<float> mat_deltatime = compute_deltatime(mat_period_highres, nnf);
         grid_framei = compute_framei(ndims, mat_deltatime, mat_start_highres, mat_period_highres);
       }
       const int ny = sdims[0], nx = sdims[1];
@@ -1363,8 +1364,8 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
     case GdLoopScheme::exact: {
       // Old, slower, more precise scheme
       assertx(video.size() && videoloop.size());  // it does not implement streaming video read, write, or nv12
-      Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
-      Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
+      const Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
+      const Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
       const bool b_exact = scheme == GdLoopScheme::exact;
       const bool use_halfres = !b_exact;
       if (!use_halfres) {
@@ -1382,8 +1383,8 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         }
         if (debug) write_video(hvideo, "hvideo.mp4");
         const Vec2<int> hdims = hvideo.dims().tail<2>();
-        Matrix<int> hmat_start = scale_filter_nearest(mat_start, hdims);    // half-resolution
-        Matrix<int> hmat_period = scale_filter_nearest(mat_period, hdims);  // half-resolution
+        const Matrix<int> hmat_start = scale_filter_nearest(mat_start, hdims);    // Half-resolution.
+        const Matrix<int> hmat_period = scale_filter_nearest(mat_period, hdims);  // Half-resolution.
         // HH_RSTAT(Shstart, hmat_start); HH_RSTAT(Shperiod, hmat_period);
         timer_gdloop1.terminate();
         Grid<3, Pixel> hvideoloop(concat(V(videoloop.dim(0)), hdims));  // half-resolution loop
@@ -1412,14 +1413,14 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
   }
   if (getenv_bool("VIDEOLOOP_SHOW_SPATIAL_COST")) {
     assertx(video.size());
-    Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
-    Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
+    const Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
+    const Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
     show_spatial_cost(video, mat_start_highres, mat_period_highres, nnf);
   }
   if (getenv_bool("VIDEOLOOP_COMPUTE_COSTS")) {
     assertx(video.size() && videoloop.size());  // it does not implement streaming video read, write, or nv12
-    Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
-    Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
+    const Matrix<int> mat_start_highres = possibly_rescale(mat_start, sdims);
+    const Matrix<int> mat_period_highres = possibly_rescale(mat_period, sdims);
     compute_costs(video, videoloop, mat_start_highres, mat_period_highres);
   }
 }

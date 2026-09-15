@@ -76,21 +76,21 @@ auto gather_edge_ring(const GMesh& mesh, Edge e) {
 }
 
 float min_local_dihedral(CArrayView<const Point*> wa, const Point& newp) {
-  int nw = wa.num();
+  const int nw = wa.num();
   assertx(nw > 1);
-  bool open = wa[0] != wa[nw - 1];
+  const bool open = wa[0] != wa[nw - 1];
   float mindic = 2.f;
   for_intL(i, 1, nw - open) {
     int i1 = i + 1;
     if (i1 == nw) i1 = 1;
-    float dic = dihedral_angle_cos(newp, *wa[i], *wa[i - 1], *wa[i1]);
+    const float dic = dihedral_angle_cos(newp, *wa[i], *wa[i - 1], *wa[i1]);
     mindic = min(mindic, dic);
   }
   return mindic;
 }
 
 float min_dihedral_about_vertex(const GMesh& mesh, Vertex v) {
-  Array<const Point*> wa = gather_vertex_ring(mesh, v);
+  const Array<const Point*> wa = gather_vertex_ring(mesh, v);
   return min_local_dihedral(wa, mesh.point(v));
 }
 
@@ -227,9 +227,9 @@ Vertex edge_face_opp_vertex(Edge e, Face f) {
 }
 
 float edge_dihedral_energy(const Point& p1, const Point& p2, const Point& ps1, const Point& ps2) {
-  float angcos = dihedral_angle_cos(p1, p2, ps1, ps2);
+  const float angcos = dihedral_angle_cos(p1, p2, ps1, ps2);
   // ang is the unsigned angle away from planarity (range 0 .. TAU / 2)
-  float ang = angcos < -1.f ? TAU / 2 : std::acos(angcos);
+  const float ang = angcos < -1.f ? TAU / 2 : std::acos(angcos);
   HH_SSTAT(Sang, ang);
   return pow(ang, dihpower) * dihfac;
 }
@@ -265,29 +265,30 @@ double get_edih() {
 double get_erep() { return crep * (mesh.num_vertices() + get_nbv() * (crbf - 1)); }
 
 double show_energies(const string& s) {
-  double edis = get_edis(), espr = get_espr(), edih = get_edih();
-  double etot = edis + espr + edih;
+  const double edis = get_edis(), espr = get_espr(), edih = get_edih();
+  const double etot = edis + espr + edih;
   if (s != "") showdf("%s F=%-12g S=%-12g D=%-12g T=%-12g\n", s.c_str(), edis, espr, edih, etot);
   return etot;
 }
 
 void analyze_mesh(const string& s) {
-  double edis = get_edis(), espr = get_espr(), edih = get_edih();
-  double erep = get_erep();
-  double etot = edis + espr + edih + erep;
+  const double edis = get_edis(), espr = get_espr(), edih = get_edih();
+  const double erep = get_erep();
+  const double etot = edis + espr + edih + erep;
   showdf("%-12s: mesh v=%d f=%d e=%d (nbv=%d)\n",  //
          s.c_str(), mesh.num_vertices(), mesh.num_faces(), mesh.num_edges(), get_nbv());
   showdf("  F=%g S=%g D=%g R=%g T=%g\n", edis, espr, edih, erep, etot);
-  float drms = float(sqrt(edis / pt.co.num()) * xform_inverse[0, 0]), dmax2 = 0.f;
+  const float drms = float(sqrt(edis / pt.co.num()) * xform_inverse[0, 0]);
+  float dmax2 = 0.f;
   for_int(i, pt.co.num()) dmax2 = max(dmax2, dist2(pt.co[i], pt.clp[i]));
-  float dmax = my_sqrt(dmax2) * xform_inverse[0, 0];
+  const float dmax = my_sqrt(dmax2) * xform_inverse[0, 0];
   showdf("  distances: rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",  //
          drms, drms / gdiam * 100, dmax, dmax / gdiam * 100);
 }
 
 void push_face_points(Face f, Array<int>& ar_pts) {
   // Note: appends to existing ar_pts array.
-  for (int pi : f_setpts(f)) ar_pts.push(pi);
+  for (const int pi : f_setpts(f)) ar_pts.push(pi);
 }
 
 void point_change_face(int i, Face newf) {
@@ -300,7 +301,7 @@ void point_change_face(int i, Face newf) {
 
 // Make face's points project nowhere and remove from pt
 void remove_face(Face f) {
-  Set<int>& set = f_setpts(f);
+  const Set<int>& set = f_setpts(f);
   while (!set.empty()) point_change_face(set.get_one(), nullptr);
 }
 
@@ -324,7 +325,7 @@ float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp) {
     assertx(poly.num() == 4);
     const bool other_diag = dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor);
     if (other_diag) {
-      Point pp = poly[0];
+      const Point pp = poly[0];
       poly[0] = poly[1];
       poly[1] = poly[2];
       poly[2] = poly[3];
@@ -355,7 +356,7 @@ float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp) {
 
 float project_point_neighborhood_helper(const Point& p, Face& cf, Bary& ret_bary, Point& ret_clp) {
   if (1 && !have_quads) {
-    float d2 = project_point_neighborhood(mesh, p, cf, ret_bary, ret_clp, false);
+    const float d2 = project_point_neighborhood(mesh, p, cf, ret_bary, ret_clp, false);
     return d2;
   }
   // For now, slow method to re-project on all neighboring faces.
@@ -369,7 +370,7 @@ float project_point_neighborhood_helper(const Point& p, Face& cf, Bary& ret_bary
         if (!setfvis.add(f)) continue;
         Bary bary;
         Point clp;
-        float d2 = project_point(p, f, bary, clp);
+        const float d2 = project_point(p, f, bary, clp);
         if (d2 < mind2) {
           mind2 = d2;
           ret_bary = bary;
@@ -428,7 +429,7 @@ void global_project_aux() {
     TriangleFaceSpatial spatial(trianglefaces, gridn);  // Not MeshSearch because of triangulated mesh quads.
     for_int(i, pt.co.num()) {
       SpatialSearch<TriangleFace*> ss(&spatial, pt.co[i]);
-      TriangleFace* triangleface = (*ss.begin()).id;
+      const TriangleFace* triangleface = (*ss.begin()).id;
       Face f = triangleface->face;
       point_change_face(i, f);
       project_point(pt.co[i], f, dummy_bary, pt.clp[i]);
@@ -479,7 +480,7 @@ void do_mfilename(Args& args) {
   assertx(mesh.empty());
   mesh.read(RFile(args.get_filename())());
   for (Face f : mesh.faces()) {
-    int nv = mesh.num_vertices(f);
+    const int nv = mesh.num_vertices(f);
     assertx(nv <= 4);
     if (nv == 4) have_quads = true;
   }
@@ -514,7 +515,7 @@ void perhaps_initialize() {
 }
 
 void do_outlierdelete(Args& args) {
-  float vdist = args.get_float();
+  const float vdist = args.get_float();
   perhaps_initialize();
   Array<Point> ar_pt;
   for_int(i, pt.co.num()) {
@@ -552,11 +553,11 @@ void global_fit() {
   }
   // Add spring constraints
   if (spring) {
-    float sqrtit = sqrt(spring), sqrtbt = sqrt(spring * spbf);
+    const float sqrtit = sqrt(spring), sqrtbt = sqrt(spring * spbf);
     Vector vzero(0.f, 0.f, 0.f);
     int ri = pt.co.num();
     for (Edge e : mesh.edges()) {
-      float sqrt_tension = mesh.is_boundary(e) ? sqrtbt : sqrtit;
+      const float sqrt_tension = mesh.is_boundary(e) ? sqrtbt : sqrtit;
       lls.enter_a_rc(ri, mvi.get(mesh.vertex1(e)), sqrt_tension);
       lls.enter_a_rc(ri, mvi.get(mesh.vertex2(e)), -sqrt_tension);
       lls.enter_b_r(ri, vzero);
@@ -579,7 +580,7 @@ void global_fit() {
 void do_gfit(Args& args) {
   perhaps_initialize();
   HH_TIMER("_gfit");
-  int niter = args.get_int();
+  const int niter = args.get_int();
   assertw(!dihfac);
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning gfit, %d iterations, spr=%g\n", niter, spring);
@@ -602,9 +603,9 @@ void do_gfit(Args& args) {
       pt.ok();
       mesh.ok();
     }
-    double oetot = etot;
+    const double oetot = etot;
     etot = show_energies(verb >= 3 ? sform("it%2d/%-2d", i, niter) : "");
-    double echange = etot - oetot;
+    const double echange = etot - oetot;
     assertw(echange < 0);
     if (!niter && echange > -1e-4) break;
   }
@@ -623,7 +624,7 @@ void do_fgfit(Args& args) {
   // Improve fit for constant simplicial complex.
   perhaps_initialize();
   HH_TIMER("_fgfit");
-  int niter = args.get_int();
+  const int niter = args.get_int();
   assertx(pt.co.num() && !mesh.empty());
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning fgfit, %d iterations, spr=%g dihfac=%g\n", niter, spring, dihfac);
@@ -678,7 +679,7 @@ void do_fgfit(Args& args) {
         pt.ok();
         mesh.ok();
       }
-      double prev_etot = _etot;
+      const double prev_etot = _etot;
       _etot = show_energies(verb >= 3 ? sform("it%2d/%-2d", _iter, _niter) : "");
       const double echange = _etot - prev_etot;
       dummy_use(echange);
@@ -693,12 +694,12 @@ void do_fgfit(Args& args) {
         Bary bary;
         Point clp;
         project_point(pt.co[i], pt.cmf[i], bary, clp);
-        Vector vtop = pt.co[i] - clp;
+        const Vector vtop = pt.co[i] - clp;
         for_int(k, va.num()) {
-          float baryk = k < 3 ? bary[k] : 1.f - sum<float>(bary);
+          const float baryk = k < 3 ? bary[k] : 1.f - sum<float>(bary);
           Vector vd = vtop * (-2.f * baryk);
           bool present;
-          int vi = _mvi.retrieve(va[k], present);
+          const int vi = _mvi.retrieve(va[k], present);
           if (!present) continue;
           for_int(c, 3) ret_grad[vi * 3 + c] += vd[c];
         }
@@ -707,12 +708,12 @@ void do_fgfit(Args& args) {
       if (spring) {
         for (Vertex v : mesh.vertices()) {
           bool present;
-          int vi = _mvi.retrieve(v, present);
+          const int vi = _mvi.retrieve(v, present);
           if (!present) continue;
           for (Edge e : mesh.edges(v)) {
             Vertex vv = mesh.opp_vertex(v, e);
-            Vector vtovv = mesh.point(vv) - mesh.point(v);
-            float sp = mesh.is_boundary(e) ? spring * spbf : spring;
+            const Vector vtovv = mesh.point(vv) - mesh.point(v);
+            const float sp = mesh.is_boundary(e) ? spring * spbf : spring;
             Vector vd = vtovv * (-2 * sp);
             for_int(c, 3) ret_grad[vi * 3 + c] += vd[c];
           }
@@ -770,8 +771,8 @@ class UPointLls {
 
 inline void UPointLls::enter_spring(const Point& pother, float sqrt_tension) {
   for_int(c, 3) {
-    double u = sqrt_tension;
-    double b = double(pother[c]) * sqrt_tension;
+    const double u = sqrt_tension;
+    const double b = double(pother[c]) * sqrt_tension;
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
     _btb[c] += b * b;
@@ -781,10 +782,10 @@ inline void UPointLls::enter_spring(const Point& pother, float sqrt_tension) {
 
 inline void UPointLls::enter_projection(const Point& pdata, const Point& p1, const Point& p2, float param1,
                                         float param2) {
-  double u = 1.f - param1 - param2;
-  double pa1 = param1, pa2 = param2;
+  const double u = 1.f - param1 - param2;
+  const double pa1 = param1, pa2 = param2;
   for_int(c, 3) {
-    double b = pdata[c] - pa1 * p1[c] - pa2 * p2[c];
+    const double b = pdata[c] - pa1 * p1[c] - pa2 * p2[c];
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
     _btb[c] += b * b;
@@ -795,9 +796,9 @@ inline void UPointLls::enter_projection(const Point& pdata, const Point& p1, con
 void UPointLls::solve(double* prss0, double* prss1) {
   double rss1 = 0.;
   for_int(c, 3) {
-    double newv = assertw(_vUtU[c]) ? _vUtb[c] / _vUtU[c] : _p[c];
+    const double newv = assertw(_vUtU[c]) ? _vUtb[c] / _vUtU[c] : _p[c];
     _p[c] = float(newv);
-    double a = _btb[c] - _vUtU[c] * square(newv);
+    const double a = _btb[c] - _vUtU[c] * square(newv);
     assertw(a > -1e-8);
     if (a > 0) rss1 += a;
   }
@@ -807,11 +808,11 @@ void UPointLls::solve(double* prss0, double* prss1) {
 }
 
 void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
-  int nf = ar_faces.num();
+  const int nf = ar_faces.num();
   const auto vertex_point = [&](Vertex v) { return mesh.point(v); };
   const auto face_bbox = [&](Face f) { return Bbox{mesh.vertices(f) | views::transform(vertex_point)}; };
   const Array<Bbox<float, 3>> ar_bbox{ar_faces | views::transform(face_bbox)};
-  for (int pi : ar_pts) {
+  for (const int pi : ar_pts) {
     const Point& p = pt.co[pi];
     static Array<float> ar_d2;
     ar_d2.init(nf);
@@ -819,8 +820,8 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
     float mind2 = BIGFLOAT;
     Face minf = nullptr;
     for (;;) {
-      int tmini = arg_min(ar_d2);
-      float tmind2 = ar_d2[tmini];
+      const int tmini = arg_min(ar_d2);
+      const float tmind2 = ar_d2[tmini];
       if (tmind2 == BIGFLOAT) break;  // ok, no more triangles to consider
       if (tmind2 >= mind2) break;
       ar_d2[tmini] = BIGFLOAT;
@@ -853,10 +854,10 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
 // rss1: energy after final refit, before final reprojection (over-estimate)
 void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, Point& newp, double& prss0,
                double& prss1) {
-  int nw = wa.num();
+  const int nw = wa.num();
   assertx(nw > 1 && niter > 0);  // at least one face
-  bool closed = wa[0] == wa[nw - 1];
-  float sqrtit = sqrt(spring), sqrtbt = sqrt(spring * spbf);
+  const bool closed = wa[0] == wa[nw - 1];
+  const float sqrtit = sqrt(spring), sqrtbt = sqrt(spring * spbf);
   double rss1;
   dummy_init(rss1);
   for_int(ni, niter) {
@@ -864,7 +865,7 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
     ar_bbox.init(nw - 1);
     for_int(i, nw - 1) ar_bbox[i] = Bbox{V(newp, *wa[i], *wa[i + 1])};
     UPointLls ulls(newp);
-    for (int pi : ar_pts) {
+    for (const int pi : ar_pts) {
       // HH_SSTAT(SLFconsid, nw - 1);
       const Point& p = pt.co[pi];
       static Array<float> ar_d2;
@@ -879,8 +880,8 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
       Bary minbary;
       dummy_init(minbary);
       for (;;) {
-        int tmini = arg_min(ar_d2);
-        float tmind2 = ar_d2[tmini];
+        const int tmini = arg_min(ar_d2);
+        const float tmind2 = ar_d2[tmini];
         if (tmind2 == BIGFLOAT) break;  // ok, no more triangles to consider
         if (tmind2 >= mind2) break;
         ar_d2[tmini] = BIGFLOAT;
@@ -900,7 +901,7 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
     }
     if (spring) {
       for_int(i, nw - closed) {
-        bool is_be = !closed && (i == 0 || i == nw - 1);
+        const bool is_be = !closed && (i == 0 || i == nw - 1);
         ulls.enter_spring(*wa[i], is_be ? sqrtbt : sqrtit);
       }
     }
@@ -915,16 +916,16 @@ void fit_ring(Vertex v, int niter) {
   assertx(niter > 0);
   Array<int> ar_pts;
   Array<Face> ar_faces;
-  Array<const Point*> wa = gather_vertex_ring(mesh, v);
+  const Array<const Point*> wa = gather_vertex_ring(mesh, v);
   for (Face f : mesh.faces(v)) {
     ar_faces.push(f);
-    for (int pi : f_setpts(f)) ar_pts.push(pi);
+    for (const int pi : f_setpts(f)) ar_pts.push(pi);
   }
   Point newp = mesh.point(v);
-  float minb = min_local_dihedral(wa, newp);
+  const float minb = min_local_dihedral(wa, newp);
   double rss0, rss1;
   local_fit(ar_pts, wa, niter, newp, rss0, rss1);
-  float mina = min_local_dihedral(wa, newp);
+  const float mina = min_local_dihedral(wa, newp);
   if (mina < k_mincos && mina < minb) return;  // change disallowed
   mesh.set_point(v, newp);
   reproject_locally(ar_pts, ar_faces);
@@ -940,8 +941,8 @@ void cleanup_neighborhood(Vertex v, int nri) {
 void do_lfit(Args& args) {
   perhaps_initialize();
   HH_STIMER("_lfit");
-  int ni = args.get_int();
-  int nli = args.get_int();
+  const int ni = args.get_int();
+  const int nli = args.get_int();
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning lfit, %d iters (nli=%d), spr=%g\n", ni, nli, spring);
   for_int(i, ni) {
@@ -955,7 +956,7 @@ void do_four1split() {
   // Currently loses edge flags and face strings
   perhaps_initialize();
   HH_TIMER("_four1split");
-  Array<Face> arf(mesh.faces());
+  const Array<Face> arf(mesh.faces());
   Map<Edge, Vertex> menewv;  // old Edge -> Vertex
   // Create new vertices and compute their positions
   for (Edge e : Array(mesh.edges())) {
@@ -1067,9 +1068,9 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
       }
     }
   }
-  Array<const Point*> wa = gather_edge_ring(mesh, e);
-  int nbvb = mesh.is_boundary(v1) + mesh.is_boundary(v2);
-  float minb = min(min_dihedral_about_vertex(mesh, v1), min_dihedral_about_vertex(mesh, v2));
+  const Array<const Point*> wa = gather_edge_ring(mesh, e);
+  const int nbvb = mesh.is_boundary(v1) + mesh.is_boundary(v2);
+  const float minb = min(min_dihedral_about_vertex(mesh, v1), min_dihedral_about_vertex(mesh, v2));
   double rssf = 0.;
   Array<int> ar_pts;
   Array<Face> ar_faces;
@@ -1083,7 +1084,7 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
     push_face_points(f, ar_pts);
     ar_faces.push(f);
   }
-  for (int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
+  for (const int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
   for (Vertex v : mesh.vertices(v1)) rssf += spring_energy(v1, v);
   for (Vertex v : mesh.vertices(v2))
     if (v != v1) rssf += spring_energy(v2, v);
@@ -1105,13 +1106,13 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
     }
     Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
     if (k_simp96) {
-      float mina = min_local_dihedral(wa, newp);
+      const float mina = min_local_dihedral(wa, newp);
       if (mina < k_mincos && mina < minb) continue;  // change disallowed
     }
     double rss0, rss1;
     local_fit(ar_pts, wa, 1, newp, rss0, rss1);
     {
-      float mina = min_local_dihedral(wa, newp);
+      const float mina = min_local_dihedral(wa, newp);
       if (mina < k_mincos && mina < minb) continue;  // change disallowed
     }
     if (rss1 < minrss1) {
@@ -1122,14 +1123,14 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   }
   if (minii < 0) return R_dih;  // no dihedrally admissible configuration
   // Then, explore ni iterations from that chosen starting point
-  float w1 = minii * .5f;
+  const float w1 = minii * .5f;
   if (ni) {
     double rss0;
     local_fit(ar_pts, wa, ni, minp, rss0, minrss1);
-    float mina = min_local_dihedral(wa, minp);
+    const float mina = min_local_dihedral(wa, minp);
     if (mina < k_mincos && mina < minb) return R_dih;  // change disallowed
   }
-  double drss = minrss1 - rssf - (nbvb == 2 ? crbf : 1) * double(crep);
+  const double drss = minrss1 - rssf - (nbvb == 2 ? crbf : 1) * double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("ecol:", rssf, minrss1, drss);
   if (drss >= 0.) return R_energy;  // energy function does not decrease
@@ -1171,17 +1172,17 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
   Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);
   Array<const Point*> wa{&mesh.point(v2), &mesh.point(vo1), &mesh.point(v1)};
   if (vo2) wa.push_array(V(&mesh.point(vo2), &mesh.point(v2)));
-  float minb = vo2 ? edge_dihedral_angle_cos(mesh, e) : 2.f;
+  const float minb = vo2 ? edge_dihedral_angle_cos(mesh, e) : 2.f;
   double rssf = spring_energy(e);
   Array<int> ar_pts;
   for (Face f : mesh.faces(e)) push_face_points(f, ar_pts);
-  for (int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
+  for (const int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
   Point newp = interp(*wa[0], *wa[2]);
   double rss0, rss1;
   local_fit(ar_pts, wa, (ni ? ni : 1), newp, rss0, rss1);
-  float mina = min_local_dihedral(wa, newp);
+  const float mina = min_local_dihedral(wa, newp);
   if (mina < k_mincos && mina < minb) return R_dih;  // change disallowed
-  double drss = rss1 - rssf + (vo2 ? 1.f : crbf) * double(crep);
+  const double drss = rss1 - rssf + (vo2 ? 1.f : crbf) * double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("espl:", rssf, rss1, drss);
   if (drss >= 0.) return R_energy;  // energy function does not decrease
@@ -1230,16 +1231,16 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
   push_face_points(f1, ar_pts);
   push_face_points(f2, ar_pts);
   double rssf = 0.;
-  for (int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
+  for (const int pi : ar_pts) rssf += dist2(pt.co[pi], pt.clp[pi]);
   for (Vertex v : mesh.vertices(vo1)) rssf += spring_energy(vo1, v);
   rssf += spring_energy(e);
   Point newp = mesh.point(vo1);
-  float minb = min(min_dihedral_about_vertex(mesh, vo1), edge_dihedral_angle_cos(mesh, e));
+  const float minb = min(min_dihedral_about_vertex(mesh, vo1), edge_dihedral_angle_cos(mesh, e));
   double rss0, rss1;
   local_fit(ar_pts, wa, (ni ? ni : 1), newp, rss0, rss1);
-  float mina = min_local_dihedral(wa, newp);
+  const float mina = min_local_dihedral(wa, newp);
   if (mina < k_mincos && mina < minb) return R_dih;  // change disallowed
-  double drss = rss1 - rssf + crep * feswaasym;
+  const double drss = rss1 - rssf + crep * feswaasym;
   edrss = float(drss);
   if (verb >= 4) SHOW("eswa:", rssf, rss1, drss);
   if (drss > 0) return R_energy;
@@ -1293,8 +1294,8 @@ EResult try_eswa(Edge e, int ni, int nri, float& edrss) {
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);
   Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);
   // Compare angles immediately before and after swap
-  float minb = edge_dihedral_angle_cos(mesh, e);
-  float mina = dihedral_angle_cos(mesh.point(vo1), mesh.point(vo2), mesh.point(v1), mesh.point(v2));
+  const float minb = edge_dihedral_angle_cos(mesh, e);
+  const float mina = dihedral_angle_cos(mesh.point(vo1), mesh.point(vo2), mesh.point(v1), mesh.point(v2));
   if (mina < k_mincos && mina < minb) return R_dih;
   // Will try both cases, but randomly select which one to try first
   EResult result;
@@ -1398,7 +1399,7 @@ void apply_schedule() {
     do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
     spring *= .1f;                  // -spring f
   }
-  for (float spr : k_spring_sched) {
+  for (const float spr : k_spring_sched) {
     spring = spr;                   // -spring f
     do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
     do_stoc();                      // -stoc
@@ -1424,7 +1425,7 @@ void do_simplify() {
 
 void do_quicksimplify() {
   HH_TIMER("quicksimplify");
-  float gfliter = fliter;
+  const float gfliter = fliter;
   const Array<float> k_spring_sched2 = {1e-2f, 1e-4f};
   spring = k_spring_sched2[0];
   perhaps_initialize();
@@ -1447,7 +1448,7 @@ void do_zippysimplify() {
   // const Array<float> k_spring_sched2 = {1e-2f, 0.f};  // try no springs at end
   spring = k_spring_sched2[0];
   perhaps_initialize();
-  for (float spr : k_spring_sched2) {
+  for (const float spr : k_spring_sched2) {
     spring = spr;  // -spring f
     fliter = 0;
     do_stoc();

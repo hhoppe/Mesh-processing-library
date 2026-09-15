@@ -182,7 +182,9 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
 
  public:
   explicit GridView(T* a, const Vec<int, D>& dims) : base(a, dims) {}  // Stop recursion if ArrayView == GridView.
-  GridView(const type&) = default;                                     // Because it has explicit copy assignment.
+  // The copy source is non-const so that a const Grid or const GridView cannot yield a modifiable view.
+  GridView(type&) = default;  // Because it has explicit copy assignment.
+  GridView(type&&) = default;
   explicit GridView(ArrayView<T> ar) requires(D == 1) : GridView(ar.data(), V(ar.num())) {}
   // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
   // `gridview = grid` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.

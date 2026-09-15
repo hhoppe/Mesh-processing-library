@@ -111,7 +111,7 @@ class VideoNv12 : noncopyable {
 class VideoNv12View {
  public:
   explicit VideoNv12View(GridView<3, uint8_t> grid_Y, GridView<3, Vec2<uint8_t>> grid_UV)
-      : _grid_Y(grid_Y), _grid_UV(grid_UV) {
+      : _grid_Y(std::move(grid_Y)), _grid_UV(std::move(grid_UV)) {
     assertx(_grid_Y.dims() == _grid_UV.dims() * V(1, 2, 2));
   }
   VideoNv12View(VideoNv12& vnv12) : _grid_Y(vnv12.get_Y()), _grid_UV(vnv12.get_UV()) {}

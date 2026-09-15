@@ -57,7 +57,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   Matrix<double> _as;        // last _m search step          (s_k = x_k - x_{k-1})
   Matrix<double> _ay;        // last _m gradient differences (y_k = g_k - g_{k-1})
   NonlinearOptimization(void*, ArrayView<double> px, Eval eval)
-      : _x(px),
+      : _x(std::move(px)),
         _n(_x.num()),
         _eval(eval),
         _g(_n),

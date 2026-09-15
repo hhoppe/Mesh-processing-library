@@ -184,7 +184,8 @@ class Nv12 {
 // View of an image consisting of an 8-bit luminance matrix and 2*8-bit chroma at half spatial resolution.
 class Nv12View {
  public:
-  Nv12View(MatrixView<uint8_t> mat_Y, MatrixView<Vec2<uint8_t>> mat_UV) : _mat_Y(mat_Y), _mat_UV(mat_UV) {
+  Nv12View(MatrixView<uint8_t> mat_Y, MatrixView<Vec2<uint8_t>> mat_UV)
+      : _mat_Y(std::move(mat_Y)), _mat_UV(std::move(mat_UV)) {
     assertx(_mat_Y.dims() == _mat_UV.dims() * 2);
   }
   Nv12View(Nv12& nv12) : _mat_Y(nv12.get_Y()), _mat_UV(nv12.get_UV()) {}

@@ -50,7 +50,7 @@ void do_mfile(Args& args) {
   GMesh& mesh = meshes.last();
   mesh.read(RFile(filename)());
   for (Vertex v : mesh.vertices()) {
-    Vnors vnors(mesh, v);
+    const Vnors vnors(mesh, v);
     v_normal(v) = vnors.is_unique() ? vnors.unique_nor() : Vector(BIGFLOAT, BIGFLOAT, BIGFLOAT);
     for (Corner c : mesh.corners(v)) {
       {
@@ -83,7 +83,7 @@ void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const 
   {
     pstats.Sgd2.enter(d2);
     if (errmesh && vv) {
-      float g_K = 1'000'000.f / bbdiag;
+      const float g_K = 1'000'000.f / bbdiag;
       float g_MK = 0.f;
       if (0) g_MK = 75.f / bbdiag;
       float val = g_K * std::log(d2 + 1.f);
@@ -110,34 +110,34 @@ void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_
                    string& str, PStats& pstats) {
   dummy_use(fs);
   Vec3<Corner> cas = mesh_s.triangle_corners(fs);
-  Point ps = interp(mesh_s.point(mesh_s.corner_vertex(cas[0])), mesh_s.point(mesh_s.corner_vertex(cas[1])),
-                    mesh_s.point(mesh_s.corner_vertex(cas[2])), barys);
-  A3dColor pscol = interp(c_color(cas[0]), c_color(cas[1]), c_color(cas[2]), barys);
-  Vector psnor = interp(c_normal(cas[0]), c_normal(cas[1]), c_normal(cas[2]), barys);
+  const Point ps = interp(mesh_s.point(mesh_s.corner_vertex(cas[0])), mesh_s.point(mesh_s.corner_vertex(cas[1])),
+                          mesh_s.point(mesh_s.corner_vertex(cas[2])), barys);
+  const A3dColor pscol = interp(c_color(cas[0]), c_color(cas[1]), c_color(cas[2]), barys);
+  const Vector psnor = interp(c_normal(cas[0]), c_normal(cas[1]), c_normal(cas[2]), barys);
   project_point(mesh_s, ps, pscol, psnor, mesh_d, mesh_search, nullptr, str, pstats);
 }
 
 void print_it(const string& s, const PStats& pstats) {
   if (1) {
-    float vg = my_sqrt(pstats.Sgd2.avg());
-    string s_g = (unitcube0   ? sform("uL2=%%%#-10.4f", vg / g_side0 * 100.f)
-                  : unitdiag0 ? sform("dL2=%%%#-10.4f", vg / g_diag0 * 100.f)
-                              : sform(" L2=%#-10.5f", vg));
+    const float vg = my_sqrt(pstats.Sgd2.avg());
+    const string s_g = (unitcube0   ? sform("uL2=%%%#-10.4f", vg / g_side0 * 100.f)
+                        : unitdiag0 ? sform("dL2=%%%#-10.4f", vg / g_diag0 * 100.f)
+                                    : sform(" L2=%#-10.5f", vg));
     showdf("%s(%7d)  %s  cL2=%#-10.4g  nL2=%#-10.4g\n",  //
            s.c_str(), pstats.Sgd2.inum(), s_g.c_str(), my_sqrt(pstats.Scd2.avg()), my_sqrt(pstats.Snd2.avg()));
     {
-      float d = vg;
-      float peak = g_diag0;
-      float psnr = 20.f * std::log10(peak / d);
-      float npsnr = 20.f * std::log10(2.f / my_sqrt(pstats.Snd2.avg()));
+      const float d = vg;
+      const float peak = g_diag0;
+      const float psnr = 20.f * std::log10(peak / d);
+      const float npsnr = 20.f * std::log10(2.f / my_sqrt(pstats.Snd2.avg()));
       showdf("PSNR=%.1f  nPSNR=%.1f\n", psnr, npsnr);
     }
   }
   if (maxerror) {
-    float vg = my_sqrt(pstats.Sgd2.max());
-    string s_g = (unitcube0   ? sform("uLi=%%%#-10.4f", vg / g_side0 * 100.f)
-                  : unitdiag0 ? sform("dLi=%%%#-10.4f", vg / g_diag0 * 100.f)
-                              : sform(" Li=%#-10.5f", vg));
+    const float vg = my_sqrt(pstats.Sgd2.max());
+    const string s_g = (unitcube0   ? sform("uLi=%%%#-10.4f", vg / g_side0 * 100.f)
+                        : unitdiag0 ? sform("dLi=%%%#-10.4f", vg / g_diag0 * 100.f)
+                                    : sform(" Li=%#-10.5f", vg));
     showdf("%s(%7d)  %s  cLi=%#-10.4g  nLi=%#-10.4g\n",  //
            s.c_str(), pstats.Sgd2.inum(), s_g.c_str(), my_sqrt(pstats.Scd2.max()), my_sqrt(pstats.Snd2.max()));
   }
@@ -158,7 +158,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
     {
       double sum_area = 0.;  // for accuracy
       for (Face f : mesh_s.faces()) {
-        float area = mesh_s.area(f);
+        const float area = mesh_s.area(f);
         fface.push(f);
         fcarea.push(float(sum_area));
         sum_area += area;
@@ -177,7 +177,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
         Face f = fface[face_index];
         float a = randoms[i * 3 + 1], b = randoms[i * 3 + 2];
         if (a + b > 1.f) a = 1.f - a, b = 1.f - b;
-        Bary bary(a, b, 1.f - a - b);
+        const Bary bary(a, b, 1.f - a - b);
         project_point(mesh_s, f, bary, mesh_d, mesh_search, str, ar_pstats[thread_index]);
       }
     });

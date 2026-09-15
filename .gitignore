@@ -91,6 +91,9 @@ Makefile.dep
 # RCS version control
 RCS/
 
+# Claude Code local state (e.g. worktrees)
+.claude/
+
 # Specific paths
 /TAGS
 

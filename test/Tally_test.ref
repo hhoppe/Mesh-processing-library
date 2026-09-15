@@ -1,0 +1,15 @@
+# Tally[0..9] (tot=5):{
+#   [  2]: 2
+#   [  4]: 2
+#   [  9]: 1
+# }
+tally.num()=10 tally.total()=5
+tally[2]=2 tally[3]=0 tally[9]=1 tally[10]=0
+stat.num()=5 stat.min()=2 stat.max()=9 stat.avg()=4.2
+# Tally[0..2] (tot=10):{
+#   [  0]: 7
+#   [  1]: 1
+#   [  2]: 2
+# }
+tally.num()=4 tally.total()=4
+tally.num()=0 tally.total()=0 tally[0]=0

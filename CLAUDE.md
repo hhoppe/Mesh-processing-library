@@ -116,6 +116,9 @@ These are strict, and they are the point of the project.
 
 - `clang-tidy`, configured by the repository `.clang-tidy`. Its header comment has the
   command lines for running it on one file or across the whole tree.
+- Run `clang-tidy` both under WSL (with `-I./libHwX`) and under Windows with the Windows LLVM
+  build (with `-I./libHwWindows`). Each covers code that the other does not: `libHwWindows`, the
+  `_WIN32` code paths, and the MSVC STL on one side, and `libHwX` and libstdc++ on the other.
 - Clang Static Analyzer, with `ipa-always-inline-size=5` in `ExtraArgs`.
 - Do not suppress `-Wdangling-reference` or `-Wnrvo` broadly. Silence a confirmed false
   positive locally, as `[[HH_NO_DANGLING]]` (`libHh/Hh.h`) and the pragma in

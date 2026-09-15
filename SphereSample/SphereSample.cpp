@@ -504,7 +504,7 @@ Point map_trisub(const Vec3<Point>& triangle, const Bary& bary) {
 }
 
 struct S_TriangleSpheremap {
-  const char* name;
+  std::string_view name;
   TriangleSpheremap map;
 };
 

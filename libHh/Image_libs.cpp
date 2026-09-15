@@ -47,7 +47,7 @@ struct ImageLibs {  // friend of Image
 };
 
 struct ImageFiletype {
-  const char* suffix;
+  std::string_view suffix;
   uchar magic;
   using read_type = void (*)(Image&, FILE*);
   using write_type = void (*)(const Image&, FILE*);
@@ -71,7 +71,7 @@ static const ImageFiletype* recognize_filetype(const string& pfilename) {
   size_t imax = 0;
   const ImageFiletype* filetype = nullptr;
   for (const auto& imagefiletype : k_image_filetypes) {
-    auto i = filename.rfind(string(".") + imagefiletype.suffix);  // supports root_name.bmp.gz
+    auto i = filename.rfind("." + string(imagefiletype.suffix));  // supports root_name.bmp.gz
     if (i != string::npos && i > imax) {
       imax = i;
       filetype = &imagefiletype;
@@ -1187,7 +1187,7 @@ void Image::read_file_libs(const string& filename, bool bgra) {
     }
   }
   if (!filetype) throw std::runtime_error(sform("Unknown image format (%d) in file '%s'", c, filename.c_str()));
-  set_suffix(filetype->suffix);
+  set_suffix(string(filetype->suffix));
   const ImageFiletype* filetype2 = recognize_filetype(filename);
   if (filetype2 && filetype2 != filetype) {
     SHOW(filetype->suffix, filetype2->suffix);
@@ -1199,7 +1199,7 @@ void Image::read_file_libs(const string& filename, bool bgra) {
 
 void Image::write_file_libs(const string& filename, bool bgra) const {
   if (const ImageFiletype* filetype = recognize_filetype(filename))
-    const_cast<Image&>(*this).set_suffix(filetype->suffix);  // mutable
+    const_cast<Image&>(*this).set_suffix(string(filetype->suffix));  // mutable
   if (suffix() == "") throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");
   WFile fi(filename);
   FILE* file = fi.cfile();

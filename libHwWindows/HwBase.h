@@ -209,7 +209,7 @@ inline void HwBase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
     Warning("Non-ASCII characters present in string will not be displayed properly in window");
     string s2;
     for (const size_t i : range(s.size())) {
-      uchar ch = uchar(s[i]);
+      const uchar ch = uchar(s[i]);
       s2 += uchar(ch >= 32 && ch <= 126 ? s[i] : 127);
     }
     return draw_text(yx, s2, style, back_color, wrap);
@@ -218,7 +218,7 @@ inline void HwBase::draw_text(const Vec2<int>& yx, const string& s, EStyle style
     assertx(_font_dims[1] > 0);
     assertx(_win_dims[1] > 0);
     if (yx[1] + narrow_cast<int>(s.size()) * _font_dims[1] > _win_dims[1]) {
-      int nch = (_win_dims[1] - yx[1]) / _font_dims[1];
+      const int nch = (_win_dims[1] - yx[1]) / _font_dims[1];
       if (nch > 0) {
         draw_text(yx, s.substr(0, nch), style, back_color, wrap);
         assertx(nch < narrow_cast<int>(s.size()));
@@ -326,7 +326,7 @@ inline void HwBase::soft_discard() {
 
 inline void HwBase::process_keystring(string& keystring) {
   for (string::size_type i = 0;;) {
-    char ch = keystring[i];
+    const char ch = keystring[i];
     if (!ch) {
       keystring = "";
       return;
@@ -345,7 +345,7 @@ inline void HwBase::process_keystring(string& keystring) {
 
 inline void HwBase::query_keypress(string s) {
   if (s == "<left>") s = "\b";
-  char ch = s[0];
+  const char ch = s[0];
   if (ch == '\b') {                              // <backspace>/C-h key (== uchar{8} == 'H' - 64)
     if (get_key_modifier(EModifier::control)) {  // C-<backspace> deletes word
       if (_query_buffer != "" && _query_buffer.back() == '/') _query_buffer.pop_back();
@@ -392,14 +392,14 @@ inline bool HwBase::query(const Vec2<int>& yx, string prompt, string& buffer) {
 
 inline bool HwBase::query(const Vec2<int>& yx, string prompt, float& f) {
   string s = sform("%g", f);
-  bool success = query(yx, std::move(prompt), s);
+  const bool success = query(yx, std::move(prompt), s);
   if (success) f = to_float(s);
   return success;
 }
 
 inline bool HwBase::query(const Vec2<int>& yx, string prompt, int& i) {
   string s = sform("%d", i);
-  bool success = query(yx, std::move(prompt), s);
+  const bool success = query(yx, std::move(prompt), s);
   if (success) i = to_int(s);
   return success;
 }
@@ -466,7 +466,7 @@ inline Pixel parse_color(const string& scolor) {
     return parse_color("#5987B3");
   } else if (1 && to_uint(s) > 0) {
     Warning("Old int32-style color specification; now use #RRGGBBAA");
-    unsigned u = to_uint(s);
+    const unsigned u = to_uint(s);
     return Pixel((u >> 0) & 255, (u >> 8) & 255, (u >> 16) & 255, (u >> 24) & 255);
   } else {
     assertnever("Cannot parse color '" + scolor + "'");

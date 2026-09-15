@@ -236,7 +236,7 @@ bool Hw::loop() {
         continue;
       }
       if (_watch_fd0) {
-        DWORD ret =
+        const DWORD ret =
             MsgWaitForMultipleObjectsEx(1, &g_buf_event_data_available, INFINITE, QS_ALLEVENTS, MWMO_INPUTAVAILABLE);
         assertx(ret != WAIT_FAILED);
         if (ret == WAIT_OBJECT_0) input_received();
@@ -298,7 +298,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       DragAcceptFiles(_hwnd, TRUE);
       return 0;
     case WM_SHOWWINDOW: {
-      BOOL fShow = BOOL(wParam);
+      const BOOL fShow = BOOL(wParam);
       if (_hwdebug) SHOW("WM_SHOWWINDOW", fShow);
       if (fShow) {
         // Window is about to be SHOWN (like X-windows MapNotify)
@@ -367,7 +367,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       if (0 && gl_extensions_string() != "") {  // only if OpenGL is already initialized.
         // This draws directly to the front buffer.  However, the window is already painted white.
         glDrawBuffer(GL_FRONT);
-        bool bu_is_glx_dbuf = _is_glx_dbuf;
+        const bool bu_is_glx_dbuf = _is_glx_dbuf;
         _is_glx_dbuf = false;
         draw_it();
         _is_glx_dbuf = bu_is_glx_dbuf;
@@ -431,7 +431,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       return 0;
     }
     case WM_MOUSEWHEEL: {
-      bool shift = (wParam & MK_SHIFT) != 0;
+      const bool shift = (wParam & MK_SHIFT) != 0;
       dummy_use(shift);
       int wheel_motion = HIWORD(wParam);
       if (wheel_motion >= (1 << 15)) wheel_motion = wheel_motion - (1 << 16);
@@ -445,7 +445,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       {
         HDROP hdrop = HDROP(wParam);
         // POINT pt; DragQueryPoint(hdrop, &pt); SHOW(pt.x, pt.y);
-        int cFiles = int(DragQueryFileW(hdrop, unsigned(-1), nullptr, 0));
+        const int cFiles = int(DragQueryFileW(hdrop, unsigned(-1), nullptr, 0));
         filenames.init(cFiles);
         for_int(i, cFiles) {
           Vec<wchar_t, 2000> filename;
@@ -550,7 +550,7 @@ void Hw::handle_key(int why_called, WPARAM key_data) {
   string s;
   // SHOW(why_called, why_called == WM_KEYDOWN, int(key_data));
   if (why_called == WM_KEYDOWN) {
-    int virt_key = int(key_data);
+    const int virt_key = int(key_data);
     if (virt_key >= VK_F1 && virt_key <= VK_F12) {
       s = sform("<f%d>", virt_key - VK_F1 + 1);
     } else {
@@ -568,7 +568,7 @@ void Hw::handle_key(int why_called, WPARAM key_data) {
         default:
           if (get_key_modifier(EModifier::control) && virt_key >= '0' && virt_key <= '9') {
             // control-numbers (C-0 .. C-9) do not produce any subsequent WM_CHAR message, so handle now.
-            char ch = assert_narrow_cast<char>(virt_key);
+            const char ch = assert_narrow_cast<char>(virt_key);
             s = ch;
           } else {
             return;  // we don't care about this key, or it will be handled later (by WM_CHAR)
@@ -684,7 +684,7 @@ bool Hw::get_key_modifier(EModifier modifier) {
     case EModifier::alt: virt_key = VK_MENU; break;
     default: assertnever("");
   }
-  short v = GetKeyState(virt_key);
+  const short v = GetKeyState(virt_key);
   return !!(v & (1 << 15));  // high-order bit indicates key down, low-order bit is odd "toggle" state for caps_lock
 }
 
@@ -744,8 +744,8 @@ void Hw::resize_window(const Vec2<int>& yx) {
   assertx(SystemParametersInfo(SPI_GETWORKAREA, 0, &wa_rect, 0));
   RECT rect = {0, 0, yx[1], yx[0]};  // left, top, right, bottom
   assertx(AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0));
-  int width = rect.right - rect.left;
-  int height = rect.bottom - rect.top;
+  const int width = rect.right - rect.left;
+  const int height = rect.bottom - rect.top;
   // or consider MoveWindow()
   // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos
   int new_top = 0, new_left = 0;  // unused unless force_move
@@ -766,7 +766,7 @@ void Hw::resize_window(const Vec2<int>& yx) {
 }
 
 bool Hw::is_fullscreen() {
-  DWORD style = GetWindowLong(_hwnd, GWL_STYLE);
+  const DWORD style = GetWindowLong(_hwnd, GWL_STYLE);
   return !(style & WS_OVERLAPPEDWINDOW);
 }
 
@@ -774,7 +774,7 @@ void Hw::make_fullscreen(bool b) {
   if (b == is_fullscreen()) return;
   static WINDOWPLACEMENT g_wp_prev;
   g_wp_prev.length = sizeof(g_wp_prev);
-  DWORD style = GetWindowLong(_hwnd, GWL_STYLE);
+  const DWORD style = GetWindowLong(_hwnd, GWL_STYLE);
   if (b) {  // go full screen
     MONITORINFO mi;
     mi.cbSize = sizeof(mi);
@@ -818,8 +818,8 @@ void Hw::hard_flush() {
 
 Array<string> Hw::query_open_filenames(const string& hint_filename) {
   // http://www.winprog.org/tutorial/app_two.html
-  std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
-  std::wstring whint_tail = utf16_from_utf8(get_path_tail(hint_filename));
+  const std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
+  const std::wstring whint_tail = utf16_from_utf8(get_path_tail(hint_filename));
   Array<wchar_t> buffer(64000);
   assertx(whint_tail.size() < buffer.size());
   wcsncpy(buffer.data(), whint_tail.c_str(), buffer.size());
@@ -849,7 +849,7 @@ Array<string> Hw::query_open_filenames(const string& hint_filename) {
     filenames.reserve(1);
     filenames.push(get_canonical_path(utf8_from_utf16(buffer.data())));
   } else {  // multiple files
-    string directory = get_canonical_path(utf8_from_utf16(buffer.data()));
+    const string directory = get_canonical_path(utf8_from_utf16(buffer.data()));
     for (wchar_t* p = &buffer[int(directory.size() + 1)]; *p;) {
       if (0) SHOW(directory, utf8_from_utf16(p));
       filenames.push(directory + "/" + utf8_from_utf16(p));
@@ -862,9 +862,9 @@ Array<string> Hw::query_open_filenames(const string& hint_filename) {
 
 string Hw::query_save_filename(const string& hint_filename, bool force) {
   // https://learn.microsoft.com/en-us/windows/win32/api/commdlg/nf-commdlg-getsavefilenamea
-  std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
-  std::wstring whint_tail = utf16_from_utf8(get_path_tail(hint_filename));
-  std::wstring whint_extension = utf16_from_utf8(get_path_extension(hint_filename));
+  const std::wstring whint_directory = utf16_from_utf8(replace_all(get_path_head(hint_filename), "/", "\\"));
+  const std::wstring whint_tail = utf16_from_utf8(get_path_tail(hint_filename));
+  const std::wstring whint_extension = utf16_from_utf8(get_path_extension(hint_filename));
   Array<wchar_t> buffer(64000);
   assertx(whint_tail.size() < buffer.size());
   wcsncpy(buffer.data(), whint_tail.c_str(), buffer.size());
@@ -898,8 +898,8 @@ void Hw::end_draw_visible() {
 }
 
 void Hw::wake_up() {
-  WPARAM wParam = 0;
-  LPARAM lParam = 0;
+  const WPARAM wParam = 0;
+  const LPARAM lParam = 0;
   if (_exposed) assertw(PostMessage(_hwnd, WM_USER + 0, wParam, lParam));
 }
 
@@ -928,7 +928,7 @@ void Hw::set_pixel_format(bool fake_first) {
     SHOW(p.dwFlags, unsigned(p.cColorBits), unsigned(p.cAlphaBits), unsigned(p.cAccumBits));
     SHOW(unsigned(p.cDepthBits), unsigned(p.cStencilBits), unsigned(p.cAuxBuffers), unsigned(p.iLayerType));
   }
-  int iPixelFormat = assertx(ChoosePixelFormat(_hRenderDC, &pfd));
+  const int iPixelFormat = assertx(ChoosePixelFormat(_hRenderDC, &pfd));
   // note: pfd is not modified by ChoosePixelFormat.
   if (1) {
     PIXELFORMATDESCRIPTOR pfd2;
@@ -941,7 +941,7 @@ void Hw::set_pixel_format(bool fake_first) {
     }
     assertx(PFD_SWAP_COPY == 1024);  // dwFlags == 1061 == 1024 + 32 + 4 + 1
     if (!fake_first) {
-      unsigned desired = pfd.dwFlags & ~PFD_SUPPORT_COMPOSITION;
+      const unsigned desired = pfd.dwFlags & ~PFD_SUPPORT_COMPOSITION;
       assertw((pfd2.dwFlags & desired) == desired);
       assertw(pfd2.iPixelType == pfd.iPixelType);
       assertw(pfd2.cColorBits >= pfd.cColorBits);
@@ -971,7 +971,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   // hbrBackground was (HBRUSH) GetStockObject(BLACK_BRUSH),  then was nullptr
   wnd_class.hbrBackground = HBRUSH(COLOR_WINDOW + 1);
   wnd_class.lpszMenuName = nullptr;
-  std::wstring wargv0 = utf16_from_utf8(_argv0);  // must live until the RegisterClassExW() call
+  const std::wstring wargv0 = utf16_from_utf8(_argv0);  // Must live until the RegisterClassExW() call.
   wnd_class.lpszClassName = wargv0.c_str();
   wnd_class.hIconSm = LoadIcon(nullptr, IDI_APPLICATION);
   // wnd_class.hIconSm      = LoadImage(_hInstance, MAKEINTRESOURCE(5), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
@@ -984,7 +984,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   _scr_stencilbits = getenv_int("STENCIL_BITS");  // dynamically updated by my_setenv() in G3dOGL.cpp
   {
     _hwnd = k_bogus_hwnd;
-    int style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+    const int style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     _hwnd = CreateWindowW(utf16_from_utf8(_argv0).c_str(), utf16_from_utf8(_window_title).c_str(), style, 0, 0,
                           rect.right - rect.left, rect.bottom - rect.top, nullptr, nullptr, _hInstance, nullptr);
     if (!_hwnd) SHOW(GetLastError());
@@ -1085,7 +1085,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     // _hRC = assertx(wglCreateContext(_hRenderDC));
     // assertx(wglMakeCurrent(_hRenderDC, _hRC));
 
-    int orig_multisample = _multisample;
+    const int orig_multisample = _multisample;
     int iPixelFormat;
     for (;;) {
       const unsigned WGL_DRAW_TO_WINDOW_ARB = 0x2001;
@@ -1261,12 +1261,12 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     // Can be set to zero to go faster than monitor refresh.
     // Default is usually 1.
     Warning("Setting swap_interval");
-    int interval = getenv_int("SWAP_INTERVAL");
+    const int interval = getenv_int("SWAP_INTERVAL");
     assertw(wglSwapIntervalEXT);
     if (wglSwapIntervalEXT) assertw(wglSwapIntervalEXT(interval));
   }
   if (_multisample && contains(gl_extensions_string(), "GL_NV_multisample_filter_hint")) {
-    int val = _multisample == 3 || _multisample == 5 ? GL_NICEST : GL_FASTEST;
+    const int val = _multisample == 3 || _multisample == 5 ? GL_NICEST : GL_FASTEST;
     glHint(GL_MULTISAMPLE_FILTER_HINT_NV, val);
   }
 }
@@ -1294,10 +1294,10 @@ struct bmp_BITMAPINFOHEADER {  // size 40
 
 bool Hw::copy_image_to_clipboard(const Image& image) {
   if (!assertw(image.size())) return false;
-  int ncomp = image.zsize() == 4 ? 4 : 3;
+  const int ncomp = image.zsize() == 4 ? 4 : 3;
   int rowsize = image.xsize() * ncomp;
   while ((rowsize & 3) != 0) rowsize++;
-  int size = sizeof(bmp_BITMAPINFOHEADER) + size_t(rowsize) * image.ysize();
+  const int size = sizeof(bmp_BITMAPINFOHEADER) + size_t(rowsize) * image.ysize();
   HANDLE hGlobal = assertx(GlobalAlloc(GHND | GMEM_SHARE, size));
   {
     uint8_t* buf = static_cast<uint8_t*>(assertx(GlobalLock(hGlobal)));
@@ -1313,7 +1313,7 @@ bool Hw::copy_image_to_clipboard(const Image& image) {
       *reinterpret_cast<bmp_BITMAPINFOHEADER*>(buf) = bmih;
       uint8_t* p = buf + sizeof(bmih);
       for_int(y, image.ysize()) {
-        int yy = image.ysize() - 1 - y;  // because bmp has image origin at lower-left
+        const int yy = image.ysize() - 1 - y;  // Because BMP has image origin at lower-left.
         for_int(x, image.xsize()) {
           const Pixel& pixel = image[yy, x];
           // RGBA to BGRA
@@ -1329,7 +1329,7 @@ bool Hw::copy_image_to_clipboard(const Image& image) {
     assertx(!GlobalUnlock(hGlobal));
   }
   bool ok = true;
-  unsigned enc_format = CF_DIB;
+  const unsigned enc_format = CF_DIB;
   assertx(OpenClipboard(nullptr));
   {  // no window handle, but OK.
     assertx(EmptyClipboard());
@@ -1346,7 +1346,7 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
   if (IsClipboardFormatAvailable(CF_DIB)) {
     if (!assertw(OpenClipboard(nullptr))) return {};
     HANDLE hGlobal = assertx(GetClipboardData(CF_DIB));
-    size_t size = assertx(GlobalSize(hGlobal));
+    const size_t size = assertx(GlobalSize(hGlobal));
     assertx(size >= sizeof(bmp_BITMAPINFOHEADER));
     {
       uint8_t* buf = static_cast<uint8_t*>(assertx(GlobalLock(hGlobal)));
@@ -1361,7 +1361,7 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
         image.set_zsize(ncomp);
         uint8_t* p = buf + bmih.biSize;
         for_int(y, image.ysize()) {
-          int yy = image.ysize() - 1 - y;  // flip vertically
+          const int yy = image.ysize() - 1 - y;  // Flip vertically.
           for_int(x, image.xsize()) {
             Pixel& pixel = image[yy, x];
             // BGRA to RGBA

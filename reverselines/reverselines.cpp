@@ -17,14 +17,14 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", "filename : output the lines in file in reverse order");
   args.other_args_ok();
   args.parse();
-  string filename = args.get_filename();
+  const string filename = args.get_filename();
   if (args.num()) args.problem("expect a single argument");
-  int fd = open(filename.c_str(), O_RDONLY);
+  const int fd = open(filename.c_str(), O_RDONLY);
   assertx(fd >= 0);
   struct stat stat_buf;
   static_assert(sizeof(stat_buf.st_size) == sizeof(int64_t), "Likely must use '#define _FILE_OFFSET_BITS 64'");
   assertx(!fstat(fd, &stat_buf));  // off_t st_size
-  int64_t rlen = stat_buf.st_size;
+  const int64_t rlen = stat_buf.st_size;
   if (!rlen) {
     Warning("File has zero length");
     return 0;
@@ -37,14 +37,14 @@ int main(int argc, const char** argv) {
     offset += segsize;
     len -= segsize;
   }
-  void* const p = mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset);
+  const void* const p = mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset);
   assertx(p != MAP_FAILED);
   CArrayView<char> buf(static_cast<const char*>(p), len);
   int i = assert_narrow_cast<int>(len);  // Always points right after '\n'.
   for (;;) {
     if (!i) break;
     assertx(buf[i - 1] == '\n');
-    int iend = i;
+    const int iend = i;
     --i;
     for (;;) {
       if (!i) break;
@@ -58,7 +58,7 @@ int main(int argc, const char** argv) {
       offset -= segsize;
       len = size_t(segsize) * 2;
       i += segsize;
-      void* const p2 = mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset);
+      const void* const p2 = mmap(nullptr, len, PROT_READ, MAP_SHARED, fd, offset);
       assertx(p2 != MAP_FAILED);
       buf.reinit(CArrayView<char>(static_cast<const char*>(p2), len));
     }
@@ -81,7 +81,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", "filename : output the lines in file in reverse order");
   args.other_args_ok();
   args.parse();
-  string filename = args.get_filename();
+  const string filename = args.get_filename();
   if (args.num()) args.problem("expect a single argument");
   // nullptr: no_security;  nullptr: no_copy_attribute_from_existing_fhandle.
   HANDLE h_file = CreateFileW(utf16_from_utf8(filename).c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
@@ -118,7 +118,7 @@ int main(int argc, const char** argv) {
   int nwarnings = 0;
   while (i) {
     assertx(buf[i - 1] == '\n');
-    int iend = i;
+    const int iend = i;
     if (i > 1 && buf[i - 2] == '\r') {
       if (!nwarnings++) showf("Warning: found '\\r' in end-of-line\n");
       --i;

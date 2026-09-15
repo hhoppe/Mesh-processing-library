@@ -621,6 +621,20 @@ float dihedral_penalty(const Dihedral& dih, const NewMeshNei& nn, const Point& n
       }
     }
   }
+  if (!bad) {
+    // Also reject a new face of essentially zero area (e.g., newp nearly collinear with or coincident with ring
+    // vertices), unless the face it replaces was already degenerate.  The dihedral test does not detect such a
+    // sliver, because the rounding-dominated normal of its tiny cross product still normalizes successfully,
+    // whereas the face normal and quadric later computed from other base vertices can be exactly zero.
+    // The squared magnitude of a cross product is O(scale^4).
+    const float min_mag2 = square(square(gdiam * 1e-6f));
+    bad = ranges::any_of(nn.ar_corners, [&](const Vec3<Corner>& corners) {
+      const Point& p0 = mesh.point(mesh.corner_vertex(corners[0]));
+      const Point& p1 = mesh.point(mesh.corner_vertex(corners[1]));
+      return (mag2(cross(p0, p1, newp)) < min_mag2 &&
+              mag2(cross(p0, p1, mesh.point(mesh.corner_vertex(corners[2])))) >= min_mag2);
+    });
+  }
   const float penalty = dihallow ? k_bad_dih : BIGFLOAT;
   return bad ? penalty : 0.f;
 }

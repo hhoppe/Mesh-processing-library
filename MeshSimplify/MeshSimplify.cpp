@@ -890,7 +890,13 @@ WedgeInfo interp_wi(const WedgeInfo& wi1, const WedgeInfo& wi2, int ii) {
   WedgeInfo wio{interp_floats(wi1.col, wi2.col, ii), interp_floats(wi1.nor, wi2.nor, ii),
                 interp_floats(wi1.uv, wi2.uv, ii)};
   // Interpolated normal may be zero.  Will test for this later.
-  if (wio.nor[0] != k_undefined && ii == 1) wio.nor.normalize();  // Endpoint copies are already unit length.
+  if (wio.nor[0] != k_undefined && ii == 1) {
+    // Nearly opposite normals have no meaningful midpoint, and the PM reflection encoding could not recover them.
+    if (mag2(wio.nor) < square(.02f))
+      wio.nor = Vector(0.f, 0.f, 0.f);  // The subsequent zero-normal test in try_ecol() will disallow this ii.
+    else
+      wio.nor.normalize();  // Endpoint copies are already unit length.
+  }
   return wio;
 }
 
@@ -4118,7 +4124,8 @@ EcolResult try_ecol(Edge e, bool commit) {
     rssa += dihpenalty;
     assertx(std::isfinite(float(rssa)));
     if (ranges::any_of(ar_wi, [&](const WedgeInfo& wi) { return is_zero(wi.nor); })) {
-      Warning("Edge collapse would introduce zero normal");
+      // Besides an exactly zero average, this includes the midpoint of nearly opposite normals zeroed in interp_wi().
+      if (0) Warning("Edge collapse would introduce zero normal");
       continue;
     }
     if (rssa < min_rssa) {

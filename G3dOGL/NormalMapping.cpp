@@ -117,7 +117,7 @@ class NormalMapping_ogl2 final : public NormalMapping {
   GLuint fragment_shader_id;
   GLint get_loc(const char* name) const {
     USE_GL_EXT(glGetUniformLocation, PFNGLGETUNIFORMLOCATIONPROC);
-    GLint loc = glGetUniformLocation(program_id, name);
+    const GLint loc = glGetUniformLocation(program_id, name);
     assertx(loc >= 0);
     return loc;
   }
@@ -170,7 +170,7 @@ class NormalMapping_frag1 final : public NormalMapping {
     glGenProgramsARB(1, &program_id);
     assertx(program_id);
     // Setup the program string
-    GLuint len = narrow_cast<int>(fragment_shader.size());
+    const GLuint len = narrow_cast<int>(fragment_shader.size());
     glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, program_id);
     glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len,
                        reinterpret_cast<const GLubyte*>(fragment_shader.c_str()));
@@ -188,14 +188,14 @@ class NormalMapping_frag1 final : public NormalMapping {
 
   void set_parameters(const Vector& lightdirmodel, const Vector& eyedirmodel, float ambient, float lightsource,
                       const Pixel& meshcolor_s) override {
-    Vector vhalf = ok_normalized(lightdirmodel + eyedirmodel);
-    Vector scaled_light = lightdirmodel * lightsource;
+    const Vector vhalf = ok_normalized(lightdirmodel + eyedirmodel);
+    const Vector scaled_light = lightdirmodel * lightsource;
     // just pull the Red channel out; (default is gray 0.5f)
-    float meshspecular = meshcolor_s[0] / 255.f;
+    const float meshspecular = meshcolor_s[0] / 255.f;
     assertw(meshcolor_s[0] == meshcolor_s[1]);
     assertw(meshcolor_s[0] == meshcolor_s[2]);
     const int phong = 4;
-    Vector scaled_vhalf = vhalf * pow(lightsource * meshspecular, 1.f / phong);
+    const Vector scaled_vhalf = vhalf * pow(lightsource * meshspecular, 1.f / phong);
     USE_GL_EXT(glBindProgramARB, PFNGLBINDPROGRAMARBPROC);
     USE_GL_EXT(glProgramLocalParameter4fvARB, PFNGLPROGRAMLOCALPARAMETER4FVARBPROC);
     glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, program_id);
@@ -292,8 +292,8 @@ class NormalMapping_dot3 final : public NormalMapping {
       glGenTextures(1, &texture_name1);
       glBindTexture(GL_TEXTURE_2D, texture_name1);
       Image itexture(V(2, 2), Pixel::black());
-      int level = 0, border = 0;
-      GLenum internal_format = GL_RGBA8;
+      const int level = 0, border = 0;
+      const GLenum internal_format = GL_RGBA8;
       glTexImage2D(GL_TEXTURE_2D, level, internal_format, itexture.xsize(), itexture.ysize(), border, GL_RGBA,
                    GL_UNSIGNED_BYTE, itexture.data());
       glDisable(GL_TEXTURE_GEN_S);
@@ -335,7 +335,7 @@ class NormalMapping_dot3 final : public NormalMapping {
   void set_parameters(const Vector& lightdirmodel, const Vector& eyedirmodel, float ambient, float lightsource,
                       const Pixel& meshcolor_s) override {
     dummy_use(eyedirmodel, ambient, meshcolor_s);
-    Vector dot3_scaled_light = lightdirmodel * lightsource / .85f;
+    const Vector dot3_scaled_light = lightdirmodel * lightsource / .85f;
     Vec4<float> light2 = normalizef(dot3_scaled_light);
     glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, light2.data());
   }
@@ -418,16 +418,16 @@ class NormalMapping_nvrc final : public NormalMapping {
 
   void set_parameters(const Vector& lightdirmodel, const Vector& eyedirmodel, float ambient, float lightsource,
                       const Pixel& meshcolor_s) override {
-    Vector vhalf = ok_normalized(lightdirmodel + eyedirmodel);
+    const Vector vhalf = ok_normalized(lightdirmodel + eyedirmodel);
     // Vector scaled_light = lightdirmodel * (lambient / .6f);
     // Vector scaled_vhalf = vhalf * .93f * (lightsource / .75f);
-    Vector scaled_light = lightdirmodel * lightsource;
+    const Vector scaled_light = lightdirmodel * lightsource;
     // just pull the Red channel out; (default is gray 0.5f)
-    float meshspecular = meshcolor_s[0] / 255.f;
+    const float meshspecular = meshcolor_s[0] / 255.f;
     assertw(meshcolor_s[0] == meshcolor_s[1]);
     assertw(meshcolor_s[0] == meshcolor_s[2]);
     const int phong = 4;
-    Vector scaled_vhalf = vhalf * pow(lightsource * meshspecular, 1.f / phong);
+    const Vector scaled_vhalf = vhalf * pow(lightsource * meshspecular, 1.f / phong);
     USE_GL_EXT(glCombinerParameterfvNV, PFNGLCOMBINERPARAMETERFVNVPROC);
     // C0 = light_vector, scalar_ambient
     Vec4<float> light2 = normalizef(scaled_light);
@@ -456,7 +456,7 @@ NormalMapping* NormalMapping::get() {
       new NormalMapping_nvrc,
       new NormalMapping_dot3,
   };
-  string desired_name = getenv_string("NORMAL_MAPPING");
+  const string desired_name = getenv_string("NORMAL_MAPPING");
   for (NormalMapping* normalmapping : normalmappings) {
     if (desired_name != "") {
       if (normalmapping->name() == desired_name) {

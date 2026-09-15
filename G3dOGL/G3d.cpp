@@ -205,7 +205,7 @@ bool try_finding_it(const string& name) {
   // #endif
   // bash:  0<&- or <&-  close stdin.
   // string com = "s3dname -s " + quote_arg_for_shell(name) + " <" + s_nul + " |";
-  string com = "s3dname -s " + quote_arg_for_shell(name) + " |";
+  const string com = "s3dname -s " + quote_arg_for_shell(name) + " |";
   try {
     RFile fi(com);  // may throw
     string line;
@@ -261,7 +261,7 @@ int main(int argc, const char** argv) {
   lod_level = getenv_float("LOD_LEVEL", lod_level);
   override_frametime = getenv_float("G3D_FRAMETIME", override_frametime);
   selected.frel = Frame::identity();
-  bool hb_success = HB::init(aargs, KeyPressed, ButtonPressed, WheelTurned, Draw);
+  const bool hb_success = HB::init(aargs, KeyPressed, ButtonPressed, WheelTurned, Draw);
   float hither = -1.f, yonder = -1.f;
   bool eyeob = false;
   string statefilename;
@@ -325,7 +325,7 @@ int main(int argc, const char** argv) {
   // For command "PMview parasauru.pm -key Dt -st parasaur", window title ("parasaur") is poor choice;
   //  it occurs because PMview passes name through -st, which is overridden.?
   {
-    string filenametail = get_path_tail(g_filename);
+    const string filenametail = get_path_tail(g_filename);
     HB::set_window_title(title != "" ? title : sform("G3D %.80s", filenametail.c_str()));
   }
   // always jump to good viewpoint

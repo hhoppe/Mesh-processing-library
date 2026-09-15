@@ -18,7 +18,7 @@ int ScGeomorph::degenerate(const Vec3<Simplex>& v) {
 
 // Determine vertex normal by averaging normals of adjacent faces belonging to the same normal group.
 void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm, bool skip_degenerate) {
-  int ngroup = s_norgroup[corner_fct->getVAttribute()];
+  const int ngroup = s_norgroup[corner_fct->getVAttribute()];
   Vec3<Simplex> verts = corner_fct->vertices();
 
   int i_vs = index(verts, vs);
@@ -250,11 +250,11 @@ void ScGeomorph::read(std::istream& is) {
     // old area
     const char* soa = GMesh::string_key(str, v->get_string(), "Oarea");
     if (soa) {
-      float area = to_float(soa);
+      const float area = to_float(soa);
       aold.enter(v, area);
 
       // old material
-      int attrid = to_int(assertx(GMesh::string_key(str, v->get_string(), "Omat")));
+      const int attrid = to_int(assertx(GMesh::string_key(str, v->get_string(), "Omat")));
       mold.enter(v, attrid);
     }
 
@@ -262,7 +262,7 @@ void ScGeomorph::read(std::istream& is) {
     if (v->isPrincipal()) {
       if (0) {
         const char* sna = assertx(GMesh::string_key(str, v->get_string(), "Narea"));
-        float area = to_float(sna);
+        const float area = to_float(sna);
         anew.enter(v, area);
       } else {
         anew.enter(v, v->getArea());
@@ -275,18 +275,18 @@ void ScGeomorph::read(std::istream& is) {
     // old area
     const char* soa = GMesh::string_key(str, e->get_string(), "Oarea");
     if (soa) {
-      float area = to_float(soa);
+      const float area = to_float(soa);
       aold.enter(e, area);
 
       // old material
-      int attrid = to_int(assertx(GMesh::string_key(str, e->get_string(), "Omat")));
+      const int attrid = to_int(assertx(GMesh::string_key(str, e->get_string(), "Omat")));
       mold.enter(e, attrid);
     }
     // new area
     if (e->isPrincipal()) {
       if (0) {
         const char* sna = assertx(GMesh::string_key(str, e->get_string(), "Narea"));
-        float area = to_float(sna);
+        const float area = to_float(sna);
         anew.enter(e, area);
       } else {
         anew.enter(e, e->getArea());

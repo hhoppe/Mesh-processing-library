@@ -22,9 +22,9 @@ void save_state() {
   ExpandStateFilename();
   try {
     WFile fi(statefile);  // may throw
-    Frame frame_not_a_frame = FrameIO::get_not_a_frame();
+    const Frame frame_not_a_frame = FrameIO::get_not_a_frame();
     for (int i = 0; i <= g_obs.last; i++) {
-      bool is_vis = g_obs[i].visible() || (g_obs.first == 1 && i == 0);
+      const bool is_vis = g_obs[i].visible() || (g_obs.first == 1 && i == 0);
       if (is_vis) g_obs[i].tm() = normalized_frame(g_obs[i].t());
       const Frame& frame = is_vis ? g_obs[i].t() : frame_not_a_frame;
       if (i && frame.is_ident()) continue;
@@ -91,7 +91,7 @@ bool ob_next() {
 
 void set_hither_yonder() {
   if (cob == obview) return;
-  float d = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
+  const float d = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
   if (!d) return;
   auto_hither = false;
   HB::set_hither(d * .999f);
@@ -140,9 +140,9 @@ void all_reset() {
 void aim_towards(const Point& p) { frame_aim_at(g_obs[obview].tm(), p - g_obs[obview].t().p()); }
 
 void enter_aim() {
-  int obn = cob != obview ? cob : 1;
-  Point paim = g_obs[obn].center() * g_obs[obn].t();
-  Vector vaim = paim - g_obs[obview].t().p();
+  const int obn = cob != obview ? cob : 1;
+  const Point paim = g_obs[obn].center() * g_obs[obn].t();
+  const Vector vaim = paim - g_obs[obview].t().p();
   // Make g_obs[obview].tm() point in direction vaim without zeroing roll.
   Vector vf = g_obs[obview].t().v(0);
   assertx(vf.normalize());
@@ -151,7 +151,7 @@ void enter_aim() {
   Quaternion rot(vf, vt);  // get twice the angle!
   rot = pow(rot, .5f);     // divide angle in half
   Frame& frame = g_obs[obview].tm();
-  Point pt = frame.p();
+  const Point pt = frame.p();
   frame.p() = Point(0.f, 0.f, 0.f);
   frame *= to_Frame(rot);
   frame.p() = pt;
@@ -168,7 +168,7 @@ float determ2d(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& 
 std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
   std::optional<SelectedVertex> selected_vertex;
   const Vec2<float> ps = yx.rev();
-  Vec2<int> win_dims = HB::get_extents();
+  const Vec2<int> win_dims = HB::get_extents();
   // must be this close (4 pixel radius)
   // for all vertices in that range, pick closest one
   // select first object for which this is true
@@ -178,7 +178,7 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
     if (!g_obs[obn].visible()) continue;
     GMesh& mesh = *g_obs[obn].get_mesh();
     for (Vertex v : mesh.vertices()) {
-      Point p = mesh.point(v) * g_obs[obn].t();
+      const Point p = mesh.point(v) * g_obs[obn].t();
       const auto [zs, xys] = HB::vdc_from_world(p);
       if (xys) {
         const auto [xs, ys] = *xys;
@@ -195,7 +195,7 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
 
 std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
   std::optional<SelectedEdge> selected_edge;
-  Vec2<int> win_dims = HB::get_extents();
+  const Vec2<int> win_dims = HB::get_extents();
   // must be this close (3 pixels)
   // for all vertices in that range, pick closest one
   // select first object for which this is true
@@ -208,21 +208,21 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
     const Frame& t = g_obs[obn].t();
     for (Edge e : mesh.edges()) {
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-      Point p1 = mesh.point(v1), p2 = mesh.point(v2);
+      const Point p1 = mesh.point(v1), p2 = mesh.point(v2);
       const auto [zs1, xys1] = HB::vdc_from_world(p1 * t);
       const auto [zs2, xys2] = HB::vdc_from_world(p2 * t);
       if (!xys1 || !xys2) continue;
       const auto xys = yx.rev();
       const Vec2<float> vd = ok_normalized(*xys2 - *xys1);
-      float a = clamp(dot(vd, xys - *xys1) / mag(*xys2 - *xys1), 0.f, 1.f);
-      float d = dist(xys, interp(*xys2, *xys1, a));
-      float z = max(zs1, zs2);
+      const float a = clamp(dot(vd, xys - *xys1) / mag(*xys2 - *xys1), 0.f, 1.f);
+      const float d = dist(xys, interp(*xys2, *xys1, a));
+      const float z = max(zs1, zs2);
       if (d > maxd || z > minz) continue;
       float minzsn = BIGFLOAT;
       for (Face f : mesh.faces(e)) {
         Polygon poly;
         mesh.polygon(f, poly);
-        Point pn = p1 + poly.get_normal_dir();
+        const Point pn = p1 + poly.get_normal_dir();
         const auto [zs, _] = HB::vdc_from_world(pn * t);
         minzsn = min(minzsn, zs);
       }
@@ -264,7 +264,7 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
         if (!all_in) continue;
         for_int(i, 3) areas[i] = determ2d(psa[mod3(i + 1)], psa[i], ps) * .5f;
         if (areas[0] < 0.f || areas[1] < 0.f || areas[2] < 0.f) continue;
-        float z = max(psz);
+        const float z = max(psz);
         if (z > minz) continue;
         minz = z;
         selected_face = {obn, &mesh, f};
@@ -313,7 +313,7 @@ void collapse_edge(bool tovertex) {
       auto& [_, mesh, e, inter] = *selected_edge;
       if (mesh->legal_edge_collapse(e)) {
         Vertex v1 = mesh->vertex1(e), v2 = mesh->vertex2(e);
-        Point p1 = mesh->point(v1), p2 = mesh->point(v2);
+        const Point p1 = mesh->point(v1), p2 = mesh->point(v2);
         mesh->collapse_edge(e);
         if (tovertex) inter = dist2(p1, inter) < dist2(inter, p2) ? p1 : p2;
         mesh->set_point(v1, inter);
@@ -331,7 +331,7 @@ bool try_toggle_vertex() {
     const Vec2<float> yx = *pointer;
     if (auto selected_vertex = select_vertex(yx)) {
       const auto [_, mesh, v] = *selected_vertex;
-      bool tagged = mesh->flags(v).flag(GMesh::vflag_cusp);
+      const bool tagged = mesh->flags(v).flag(GMesh::vflag_cusp);
       showf("Setting vertex %d tag to %d\n", mesh->vertex_id(v), !tagged);
       mesh->flags(v).flag(GMesh::vflag_cusp) = !tagged;
       mesh->set_string(v, mesh->flags(v).flag(GMesh::vflag_cusp) ? "cusp" : nullptr);
@@ -347,7 +347,7 @@ bool try_toggle_edge() {
     const Vec2<float> yx = *pointer;
     if (auto selected_edge = select_edge(yx)) {
       const auto [_, mesh, e, unused] = *selected_edge;
-      bool tagged = mesh->flags(e).flag(GMesh::eflag_sharp);
+      const bool tagged = mesh->flags(e).flag(GMesh::eflag_sharp);
       showf("Setting edge (%d, %d) tag to %d\n",  //
             mesh->vertex_id(mesh->vertex1(e)), mesh->vertex_id(mesh->vertex2(e)), !tagged);
       mesh->flags(e).flag(GMesh::eflag_sharp) = !tagged;
@@ -460,7 +460,7 @@ void print_info_mesh_elements() {
       Vertex v = selected_vertex->v;
       Face f = selected_face->f;
       // It is possible that v is in a different mesh, or that v and f are not adjacent.
-      GMesh* mesh = selected_face->mesh;
+      const GMesh* mesh = selected_face->mesh;
       Array<Vertex> vertices;
       mesh->get_vertices(f, vertices);
       if (contains(vertices, v)) {
@@ -513,7 +513,7 @@ void crop_mesh_to_view() {
 
 void write_mesh(GMesh& mesh) {
   assertx(cob >= 1 && cob <= g_aargs1.num());
-  string filename = g_aargs1[cob - 1];
+  const string filename = g_aargs1[cob - 1];
   showf("overwriting %s...\n", filename.c_str());
   try {
     WFile fi(filename);  // may throw
@@ -667,9 +667,9 @@ void select_frel() {
   frel.zero();
   frel[vax1, oax1] = float(sign1);
   frel[vax2, oax2] = float(sign2);
-  int a1 = min(vax1, vax2), a2 = max(vax1, vax2);
-  int vax3 = a1 == 0 && a2 == 1 ? 2 : a1 == 0 && a2 == 2 ? 1 : 0;
-  int dir = (vax2 == mod3(vax1 + 1)) ? 1 : -1;
+  const int a1 = min(vax1, vax2), a2 = max(vax1, vax2);
+  const int vax3 = a1 == 0 && a2 == 1 ? 2 : a1 == 0 && a2 == 2 ? 1 : 0;
+  const int dir = (vax2 == mod3(vax1 + 1)) ? 1 : -1;
   frel.v(vax3) = cross(frel.v(vax1), frel.v(vax2)) * float(dir);
 }
 
@@ -680,14 +680,14 @@ void DoJump() {
   if (cob == obview) return;
   const auto& bbox = g_obs[cob].bbox();
   Vector diag = bbox[1] - bbox[0];
-  Point centerbb = bbox[0] + diag / 2.f;
+  const Point centerbb = bbox[0] + diag / 2.f;
   if (!object_mode) {
     zoom = .2f;
-    int minc = arg_min(diag);
-    float mind = diag[minc];
-    float maxd = max(diag);
+    const int minc = arg_min(diag);
+    const float mind = diag[minc];
+    const float maxd = max(diag);
     Point newvp = centerbb;
-    float a = mind * .5f + maxd * .5f / zoom * 1.1f;
+    const float a = mind * .5f + maxd * .5f / zoom * 1.1f;
     newvp[minc] += (minc == 2 ? 1 : -1) * a;
     g_obs[obview].tm().p() = newvp * g_obs[cob].t();
     aim_towards(centerbb * g_obs[cob].t());
@@ -696,9 +696,9 @@ void DoJump() {
     Vector v = diag * (.55f / zoom);
     v[0] = -v[0];
     v[1] = -v[1];
-    Point newvp = (Point(g_obs[cob].center() + v)) * g_obs[cob].t();
+    const Point newvp = (Point(g_obs[cob].center() + v)) * g_obs[cob].t();
     g_obs[obview].tm().p() = newvp;
-    int obn = cob != obview ? cob : 1;
+    const int obn = cob != obview ? cob : 1;
     aim_towards(g_obs[obn].center() * g_obs[obn].t());
   }
 }
@@ -1085,7 +1085,7 @@ void ButtonPressed(int butnum, bool pressed, bool shift, const Vec2<float>& yx) 
 }
 
 void WheelTurned(float v) {
-  float yq = v * .15f;
+  const float yq = v * .15f;
   Dolly(V(yq, 0.f));
   HB::redraw_later();
 }

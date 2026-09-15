@@ -39,7 +39,7 @@ bool SplitRecord::read(std::istream& is) {
   assertx(is >> dim);
   while (dim != -1) {
     assertx(is >> id >> matid);
-    int index = _material.add(1);
+    const int index = _material.add(1);
     _material[index].dim = dim;
     _material[index].id = id;
     _material[index].matid = matid;
@@ -52,7 +52,7 @@ bool SplitRecord::read(std::istream& is) {
   assertx(is >> dim);
   while (dim != -1) {
     assertx(is >> id >> area);
-    int index = _area.add(1);
+    const int index = _area.add(1);
     _area[index].dim = dim;
     _area[index].id = id;
     _area[index].area = area;

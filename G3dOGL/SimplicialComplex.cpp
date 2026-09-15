@@ -45,7 +45,7 @@ PArray<Simplex, 20> ISimplex::get_star() const {
   simplices.push(s);
   for (Simplex ss : s->getParents()) simplices.push(ss);
   if (s->getDim() == 0) {
-    int index = simplices.num();
+    const int index = simplices.num();
     // for each edge
     for_intL(i, 1, index) {
       // add in faces
@@ -804,7 +804,7 @@ void SimplicialComplex::readGMesh(std::istream& is) {
     s0->setPosition(mesh.point(v));
 
     // compute normals
-    Vnors vnors(mesh, v);
+    const Vnors vnors(mesh, v);
 
     for (Corner c : mesh.corners(v)) {
       Vector nor = vnors.get_nor(mesh.corner_face(c));
@@ -866,7 +866,7 @@ void SimplicialComplex::readGMesh(std::istream& is) {
     for (const string& srep : hashstring) {
       const char* smat = GMesh::string_key(str, srep.c_str(), "attrid");
       if (!smat) continue;
-      int attrid = to_int(smat);
+      const int attrid = to_int(smat);
       assertx(attrid >= 0);
       _material_strings.access(attrid);
       assertx(_material_strings[attrid] == "");  // no duplicate attrid's
@@ -875,11 +875,11 @@ void SimplicialComplex::readGMesh(std::istream& is) {
     }
     showdf("Found %d materials with existing attrid (%d empty)\n",  //
            msrepattrid.num(), _material_strings.num() - msrepattrid.num());
-    int nfirst = msrepattrid.num();
+    const int nfirst = msrepattrid.num();
     // string str;
     for (const string& srep : hashstring) {
       if (GMesh::string_has_key(srep.c_str(), "attrid")) continue;  // handled above
-      int attrid = _material_strings.add(1);
+      const int attrid = _material_strings.add(1);
       _material_strings[attrid] = GMesh::string_update(srep, "attrid", csform(str, "%d", attrid));
       msrepattrid.enter(&srep, attrid);
     }
@@ -892,7 +892,7 @@ void SimplicialComplex::readGMesh(std::istream& is) {
 // Allocates new simplex of dimension dim and inserts into simplicial complex.
 // Note: children and parents if any must be specified later.
 Simplex SimplicialComplex::createSimplex(int dim) {
-  int sid = _free_sid[dim]++;
+  const int sid = _free_sid[dim]++;
   Simplex s = new ISimplex(dim, sid);
   // _child = nullptr's; _parent = empty
 
@@ -903,7 +903,7 @@ Simplex SimplicialComplex::createSimplex(int dim) {
 
 // Same as createSimplex(dim) but use the given id instead of next available one.
 Simplex SimplicialComplex::createSimplex(int dim, int id) {
-  int sid = id;
+  const int sid = id;
   Simplex s = new ISimplex(dim, id);
   // _child = nullptr's; _parent = empty
 

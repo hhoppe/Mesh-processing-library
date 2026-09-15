@@ -37,21 +37,21 @@ void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int use_text
       omatid = -1;
     }
     if (!(pminfo._has_uv && use_texture) && !pminfo._has_rgb) {
-      int matid = _faces[f].attrib.matid;
+      const int matid = _faces[f].attrib.matid;
       if (matid != omatid) {
         omatid = matid;
         glColor4ubv(_ogl_mat_byte_rgba[matid].data());
       }
     }
     for_int(i, 3) {
-      int w = _faces[f].wedges[i];
+      const int w = _faces[f].wedges[i];
       if (pminfo._has_uv && use_texture) {
         glTexCoord2fv(_wedges[w].attrib.uv.data());
       } else if (pminfo._has_rgb) {
         glColor3fv(_wedges[w].attrib.rgb.data());
       }
       glNormal3fv(_wedges[w].attrib.normal.data());
-      int v = _wedges[w].vertex;
+      const int v = _wedges[w].vertex;
       glVertex3fv(_vertices[v].attrib.point.data());
     }
   }
@@ -78,13 +78,13 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
   }
   if (pminfo._has_rgb) Warning("ogl_render: RGB ignored");
   for_int(f, _faces.num()) {
-    int matid = _faces[f].attrib.matid;
+    const int matid = _faces[f].attrib.matid;
     if ((matid & k_Face_visited_mask) == lcur_frame_mask) continue;
-    int matidv = matid ^ k_Face_visited_mask;  // "material id visited"
+    const int matidv = matid ^ k_Face_visited_mask;  // "material id visited"
     _faces[f].attrib.matid = matidv;
     if (matid != omatid) {
       omatid = matid;
-      int rmatid = (matid & matidv);  // strip off high bit
+      const int rmatid = (matid & matidv);  // Strip off high bit.
       if (!has_uv) glColor4ubv(_ogl_mat_byte_rgba[rmatid].data());
     }
     if (write_ntstrips) ntstrips++;
@@ -97,7 +97,7 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
       glNormal3fv(_wedges[w1n].attrib.normal.data());
       glVertex3fv(_vertices[v1n].attrib.point.data());
       w2n = _faces[f].wedges[1];
-      int v2n = _wedges[w2n].vertex;
+      const int v2n = _wedges[w2n].vertex;
       if (has_uv) glTexCoord2fv(_wedges[w2n].attrib.uv.data());
       glNormal3fv(_wedges[w2n].attrib.normal.data());
       glVertex3fv(_vertices[v2n].attrib.point.data());
@@ -112,7 +112,7 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
       // *** First iteration of loop.
       {
         if (fn < 0 || _faces[fn].attrib.matid != matid) break;
-        int wrand = _faces[fn].wedges[0];
+        const int wrand = _faces[fn].wedges[0];
         if (wrand == w2n) {
           if (_faces[fn].wedges[2] != w1n) break;
           _faces[fn].attrib.matid = matidv;
@@ -137,7 +137,7 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
       // *** Second iteration of loop.
       {
         if (fn < 0 || _faces[fn].attrib.matid != matid) break;
-        int wrand = _faces[fn].wedges[0];
+        const int wrand = _faces[fn].wedges[0];
         if (wrand == w2n) {
           if (_faces[fn].wedges[2] != w1n) break;
           _faces[fn].attrib.matid = matidv;
@@ -179,15 +179,15 @@ void AWMesh::ogl_render_edges() {
       glEnd();
       glBegin(GL_LINES);
     }
-    int w0 = _faces[f].wedges[0];
-    int w1 = _faces[f].wedges[1];
-    int v0 = _wedges[w0].vertex;
-    int v1 = _wedges[w1].vertex;
+    const int w0 = _faces[f].wedges[0];
+    const int w1 = _faces[f].wedges[1];
+    const int v0 = _wedges[w0].vertex;
+    const int v1 = _wedges[w1].vertex;
     const Point& p0 = _vertices[v0].attrib.point;
     const Point& p1 = _vertices[v1].attrib.point;
     pm_draw_segment(v0, v1, _fnei[f].faces[2], p0, p1);
-    int w2 = _faces[f].wedges[2];
-    int v2 = _wedges[w2].vertex;
+    const int w2 = _faces[f].wedges[2];
+    const int v2 = _wedges[w2].vertex;
     const Point& p2 = _vertices[v2].attrib.point;
     pm_draw_segment(v1, v2, _fnei[f].faces[0], p1, p2);
     pm_draw_segment(v2, v0, _fnei[f].faces[1], p2, p0);

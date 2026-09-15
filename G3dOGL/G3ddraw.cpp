@@ -22,10 +22,10 @@ static const int g_g3d_ellipse = getenv_int("G3D_ELLIPSE");
 
 template <ranges::input_range R> static void recompute_sharpe(GMesh& mesh, const R& range_edges) {
   assertx(anglethresh >= 0.f);
-  float vcos = std::cos(rad_from_deg(anglethresh));
+  const float vcos = std::cos(rad_from_deg(anglethresh));
   for (Edge e : range_edges) {
     if (mesh.is_boundary(e)) continue;
-    bool is_sharp = edge_dihedral_angle_cos(mesh, e) < vcos;
+    const bool is_sharp = edge_dihedral_angle_cos(mesh, e) < vcos;
     if (mesh.flags(e).flag(GMesh::eflag_sharp) == is_sharp) continue;
     mesh.flags(e).flag(GMesh::eflag_sharp) = is_sharp;
     mesh.set_string(e, is_sharp ? "sharp" : nullptr);
@@ -40,7 +40,7 @@ static void recompute_all_sharpe() {
 }
 
 void Applyq(const Frame& tq) {
-  Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : Vector(g_obs[cob].center());
+  const Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : Vector(g_obs[cob].center());
   if (sizemode && !editmode && !lod_mode) {
     Frame xform = Frame::identity();
     for_int(c, 3) xform[c, c] = std::exp(tq.p()[c] / ddistance);
@@ -49,21 +49,21 @@ void Applyq(const Frame& tq) {
     return;
   }
   static Frame frame_edit;
-  bool ledit = editmode && button_active != 1;  // button1 has old semantics
+  const bool ledit = editmode && button_active != 1;  // Button1 has old semantics.
   if (ledit && !(button_active && selected.selected_vertex)) return;
   if (ledit) frame_edit = g_obs[selected.selected_vertex->obn].t();
   Frame& frame_to_modify = ledit ? frame_edit : viewmode ? tview : g_obs[cob].tm();
-  bool is_eye_move = eye_move && !viewmode && !ledit && cob != obview;
-  Frame frame_old = frame_to_modify;
+  const bool is_eye_move = eye_move && !viewmode && !ledit && cob != obview;
+  const Frame frame_old = frame_to_modify;
   if (object_mode) {
     // Complicated change-of-frame to apply the correct transformation.
     const int ob = obview;
     Frame xform = Frame::translation(vtran) * frame_to_modify * ~g_obs[ob].t();
-    Vector vtran2 = xform.p();
+    const Vector vtran2 = xform.p();
     xform *= Frame::translation(-vtran2) * tq * Frame::translation(vtran2);
     frame_to_modify = normalized_frame(Frame::translation(-vtran) * xform * g_obs[ob].t());
   } else {
-    Frame frel = selected.frel * Frame::translation(vtran);
+    const Frame frel = selected.frel * Frame::translation(vtran);
     frame_to_modify = normalized_frame(~frel * tq * frel * frame_to_modify);
   }
   if (is_eye_move) {
@@ -73,7 +73,7 @@ void Applyq(const Frame& tq) {
   }
   if (ledit) {
     auto& [_, mesh, v] = *selected.selected_vertex;
-    Point p = mesh->point(v) * frame_to_modify * ~frame_old;
+    const Point p = mesh->point(v) * frame_to_modify * ~frame_old;
     mesh->set_point(v, p);
     mesh->gflags().flag(mflag_ok) = false;
     if (sizemode && anglethresh >= 0.f) {
@@ -89,7 +89,7 @@ void Applyq(const Frame& tq) {
 static void get_time() {
   static int nscreens;
   static double lastti;
-  double ti = get_precise_time();
+  const double ti = get_precise_time();
   fchange = float(ti - lastti);
   if (override_frametime) fchange = override_frametime;
   lastti = ti;
@@ -120,7 +120,7 @@ static void get_time() {
 
 static void to_spherical(Vector& v) {
   v /= k_globe_radius;
-  float m2 = mag2(v);
+  const float m2 = mag2(v);
   if (m2 > 1.f)
     v.normalize();
   else
@@ -139,7 +139,7 @@ static void act_globe(const Vec2<float>& yxi, const Vec2<float>& yxi_d) {
 }
 
 static void get_lod(float flevel, int last, int& obi, float& finterp) {
-  float fracobi = 1.f + last * flevel;
+  const float fracobi = 1.f + last * flevel;
   if (geomorph) {
     obi = int(fracobi);
     if (obi == last + 1) obi = last;
@@ -154,7 +154,7 @@ static void get_lod(float flevel, int last, int& obi, float& finterp) {
 // Note: also called from G3dOGL
 void update_lod() {
   if (!lod_mode) return;
-  float flevel = min(lod_level, 1.f);
+  const float flevel = min(lod_level, 1.f);
   int obi;
   float finterp;
   get_lod(flevel, g_obs.last, obi, finterp);
@@ -180,9 +180,9 @@ static void handle_sliders(bool show, float yq) {
     sliders.push(Slider{"yonder", &yonder});
   }
   if (!show) {
-    int i = int(selected.yxpressed[1] * sliders.num() * .9999f);
+    const int i = int(selected.yxpressed[1] * sliders.num() * .9999f);
     float* val = sliders[i].val;
-    float oldval = *val;
+    const float oldval = *val;
     if (val == &lod_level)
       *val = 1.1f - (selected.yx[0]) * 1.2f;
     else
@@ -202,27 +202,27 @@ static void handle_sliders(bool show, float yq) {
     }
   } else {
     if (lod_mode) {
-      float flevel = min(lod_level, 1.f);
+      const float flevel = min(lod_level, 1.f);
       int obi = 1 + int(g_obs.last * flevel);
       if (obi == g_obs.last + 1) obi = g_obs.last;
-      int nfaces = g_obs[obi].get_mesh()->num_faces();
+      const int nfaces = g_obs[obi].get_mesh()->num_faces();
       HB::draw_row_col_text(V(1, 10), sliders[0].name);
       HB::draw_row_col_text(V(2, 11), sform("%.3f", *sliders[0].val));
       HB::draw_row_col_text(V(1, 21), "#Faces");
       HB::draw_row_col_text(V(2, 22), sform("%d", nfaces));
-      float xleft = .05f, yline = .004f;
+      const float xleft = .05f, yline = .004f;
       {  // current level
-        float lod = clamp(lod_level, 0.f, 1.f);
+        const float lod = clamp(lod_level, 0.f, 1.f);
         float x1 = xleft + .01f, x2 = xleft + .05f;
-        float y1 = (1.1f - lod) / 1.2f - .002f;
-        float y2 = y1 + yline;
+        const float y1 = (1.1f - lod) / 1.2f - .002f;
+        const float y2 = y1 + yline;
         HB::draw_segment(V(y1, x1), V(y1, x2));
         HB::draw_segment(V(y2, x1), V(y2, x2));
         HB::draw_segment(V(y1, x1), V(y2, x1));
         HB::draw_segment(V(y1, x2), V(y2, x2));
       }
       {  // slider
-        float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
+        const float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
         float x1 = xleft + .02f, x2 = xleft + .04f, xm = xleft + .03f;
         HB::draw_segment(V(y1 + yd, x1), V(y1, xm));
         HB::draw_segment(V(y1 + yd, x2), V(y1, xm));
@@ -232,9 +232,9 @@ static void handle_sliders(bool show, float yq) {
         HB::draw_segment(V(y2 - yd, x1), V(y2 - yd, x2));
         HB::draw_segment(V(y1, xm), V(y2, xm));
       }
-      int n = g_obs.last;
+      const int n = g_obs.last;
       for_int(i, n + 1) {  // intervals
-        float y = (1.1f - float(i) / n) / 1.2f;
+        const float y = (1.1f - float(i) / n) / 1.2f;
         HB::draw_segment(V(y, xleft + .023f), V(y, xleft + .037f));
       }
     } else {
@@ -257,12 +257,12 @@ void Dolly(const Vec2<float>& yxq) {
     v *= d;
   }
   if (cob != obview) v = -v;
-  float d = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
+  const float d = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
   Applyq(Frame::translation(v));
   static const bool dolly_lod = getenv_bool("G3D_DOLLY_LOD");
   if (lod_mode && sizemode && dolly_lod) {
-    float dn = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
-    float ratio = d / (max(dn, 1e-10f));
+    const float dn = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
+    const float ratio = d / (max(dn, 1e-10f));
     lod_level *= ratio;
     update_lod();
   }
@@ -287,8 +287,8 @@ static void act_button1(const Vec2<float>& yxq) {
     pan(yxq);
   } else {  // rotate
     // Applyq(Frame::rotation(2, yxq[1]) * Frame::rotation(1, -yxq[0]));
-    Vector axis(0.f, -yxq[0], yxq[1]);
-    Quaternion q(axis, mag(yxq));
+    const Vector axis(0.f, -yxq[0], yxq[1]);
+    const Quaternion q(axis, mag(yxq));
     Applyq(to_Frame(q));
   }
 }
@@ -306,11 +306,11 @@ static void act_button2(const Vec2<float>& pyxq) {
 
 static void act_button3(const Vec2<float>& yxq) {
   if (selected.shift) {  // zoom
-    float a = std::exp(-yxq[0]);
+    const float a = std::exp(-yxq[0]);
     zoom *= a;
     if (object_mode && cob != obview) {
-      float d = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
-      float dnew = d / a, disp = d - dnew;
+      const float d = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
+      const float dnew = d / a, disp = d - dnew;
       g_obs[obview].tm() = Frame::translation(V(disp, 0.f, 0.f)) * g_obs[obview].t();
     }
   } else {  // dolly (translation on x)
@@ -334,17 +334,17 @@ static void act_button() {
     yxi = (yx - selected.yxpressed) * 2.f;
   }
   // i +- 0 to 1 (half-screen) to 2 (full-screen)
-  Vec2<float> yxi_d = yxi - selected.yxio;
+  const Vec2<float> yxi_d = yxi - selected.yxio;
   selected.yxio = yxi;
   Vec2<float> yxf;
   if (expo && ratemode != ERatemode::position) {
     // f +- 0 to 8 to 64  * .2 == 0 to 1.6 to 13
-    float c1 = 1.f;  // 2012-04-17 was previously .2f;
+    const float c1 = 1.f;  // 2012-04-17 was previously .2f;
     for_int(c, 2) yxf[c] = pow(abs(yxi[c]) * 2.f, 3.f) * sign(yxi[c]) * c1;
   } else {
     yxf = yxi;
   }
-  Vec2<float> yxfd = yxf - selected.yxfo;
+  const Vec2<float> yxfd = yxf - selected.yxfo;
   selected.yxfo = yxf;
   Vec2<float> yxq;
   switch (ratemode) {
@@ -370,8 +370,8 @@ static void act_fly() {
   yxf = (2.f * yxf - twice(1.f)) * V(-1.f, 1.f);
   const float a = .1f;
   yxf *= a;
-  Frame frame1 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));
-  Frame frame2 = to_Frame(Quaternion(Vector(0.f, -yxf[0], -yxf[1]), mag(yxf)));
+  const Frame frame1 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));
+  const Frame frame2 = to_Frame(Quaternion(Vector(0.f, -yxf[0], -yxf[1]), mag(yxf)));
   Frame frame = frame1 * frame2;
   static const bool g3d_fly_use_frame_speed = getenv_bool("G3D_FLY_USE_FRAME_SPEED");
   assertw(!g3d_fly_use_frame_speed);
@@ -391,14 +391,14 @@ static void act_flight() {
   // Convert from (0..1)screen to (-1..1)math.
   yxf = (2.f * yxf - twice(1.f)) * V(-1.f, 1.f);
   // following coded adapted from g3dfly.c
-  float speed = .7f;
-  float fturn = abs(speed) > .1f ? .8f / pow(abs(speed), .7f) : .3f;
+  const float speed = .7f;
+  const float fturn = abs(speed) > .1f ? .8f / pow(abs(speed), .7f) : .3f;
   Frame& obframe = g_obs[cob].tm();
   Vec3<float> ang = euler_angles_from_frame(obframe);
   {
-    Frame frame1 = Frame::rotation(0, yxf[1] * fturn * .037f);         // roll
-    Frame frame2 = Frame::rotation(1, yxf[0] * fturn * .037f);         // pitch
-    Frame frame3 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));  // forward
+    const Frame frame1 = Frame::rotation(0, yxf[1] * fturn * .037f);         // Roll.
+    const Frame frame2 = Frame::rotation(1, yxf[0] * fturn * .037f);         // Pitch.
+    const Frame frame3 = Frame::translation(V(ddistance * .05f, 0.f, 0.f));  // Forward.
     Frame frame = frame3 * frame2 * frame1;
     frame = pow(frame, 10.f * fchange);
     obframe = normalized_frame(frame * obframe);
@@ -410,10 +410,10 @@ static void act_flight() {
     a = sign(a) * pow(abs(a) / 45.f, .5f);
     // Doing "translation * rotation * ~translation" is incorrect!
     // It gives rise to a small secondary translation.  It is unclear why g3dfly.c doesn't show that problem.
-    Point savep = obframe.p();
-    Frame frame1 = Frame::translation(-obframe.p());
-    const float yaw_factor = 0.032f;                                                      // was 0.025f in g3dfly.c
-    Frame frame2 = Frame::rotation(2, -a * yaw_factor * fturn - yxf[1] * fturn * .004f);  // yaw
+    const Point savep = obframe.p();
+    const Frame frame1 = Frame::translation(-obframe.p());
+    const float yaw_factor = 0.032f;  // Was 0.025f in g3dfly.c.
+    const Frame frame2 = Frame::rotation(2, -a * yaw_factor * fturn - yxf[1] * fturn * .004f);  // Yaw.
     Frame frame = frame1 * frame2;
     frame = pow(frame, 10.f * fchange);
     obframe = normalized_frame(obframe * frame);
@@ -422,7 +422,7 @@ static void act_flight() {
 }
 
 static void act_auto() {
-  bool osizemode = sizemode;
+  const bool osizemode = sizemode;
   sizemode = false;
   // default at 60fps is fchange=.016667 ddistance=1, so rotation of .016667 / TAU * 360 = 0.954929896 degree/frame
   const float fudge = 1. / 0.954929896;  // desire 1 degree/frame at 60fps -> 360 frames == 6 sec for one rotation
@@ -454,7 +454,7 @@ static void act_auto() {
       tt += t;
       t = 0.f;
     }
-    float th = -tt * (TAU / 21.f);
+    const float th = -tt * (TAU / 21.f);
     act_button1(V(abs(std::sin(th)) * ch, abs(std::cos(th)) * ch));
   } else {
     static const bool g3d_rev_auto = getenv_bool("G3D_REV_AUTO");
@@ -473,22 +473,22 @@ static void act_bobble() {
 }
 
 static void g3d_michael1() {
-  float d = dist(g_obs[0].t().p(), g_obs[1].center());
+  const float d = dist(g_obs[0].t().p(), g_obs[1].center());
   float relsize = g_obs[1].radius() / zoom / d;
   relsize *= 15;
-  int obn = relsize < 0.3 ? 1 : relsize < 0.6 ? 2 : relsize < 1.0 ? 3 : relsize < 7 ? 4 : relsize < 25 ? 5 : 6;
+  const int obn = relsize < 0.3 ? 1 : relsize < 0.6 ? 2 : relsize < 1.0 ? 3 : relsize < 7 ? 4 : relsize < 25 ? 5 : 6;
   for (int i = g_obs.first; i <= g_obs.last; i++) g_obs[i].set_vis(i == obn);
 }
 
 static void ellipse_config(int inst, int nlod, Frame& frame_ellipse, Frame& frame, int& obi, float& finterp) {
-  int ninst = g_obs.last / nlod;
+  const int ninst = g_obs.last / nlod;
   assertx(nlod * ninst == g_obs.last);
-  float obradius = g_obs[nlod].radius();
-  float r1 = obradius * 3;
-  float r2 = obradius * 20;
+  const float obradius = g_obs[nlod].radius();
+  const float r1 = obradius * 3;
+  const float r2 = obradius * 20;
   const bool object_up_y = true;
   const int timeperiod = 12;  // seconds/revolution
-  float ang = (cumtime / timeperiod + float(inst) / ninst) * TAU;
+  const float ang = (cumtime / timeperiod + float(inst) / ninst) * TAU;
   Frame frame_ob_up = Frame::identity();
   {
     Point p;
@@ -507,13 +507,13 @@ static void ellipse_config(int inst, int nlod, Frame& frame_ellipse, Frame& fram
   if (object_up_y)
     frame_ob_up = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 0.f, 1.f), Vector(0.f, -1.f, 0.f), Point(0.f, 0.f, 0.f));
   frame = frame_ob_up * frame_ellipse;
-  float flevel = .5f + .5f * std::sin(ang);
+  const float flevel = .5f + .5f * std::sin(ang);
   get_lod(flevel, nlod, obi, finterp);
 }
 
 static void g3d_ellipse1() {
-  int ninst = g_g3d_ellipse;
-  int nlod = g_obs.last / ninst;
+  const int ninst = g_g3d_ellipse;
+  const int nlod = g_obs.last / ninst;
   assertx(nlod * ninst == g_obs.last);
   for_int(i, ninst) {
     Frame frame_ellipse, frame;
@@ -522,7 +522,7 @@ static void g3d_ellipse1() {
     ellipse_config(i, nlod, frame_ellipse, frame, obi, finterp);
     obi = i * nlod + obi;
     for_int(j, nlod) {
-      int ob = 1 + i * nlod + j;
+      const int ob = 1 + i * nlod + j;
       g_obs[ob].tm() = frame;
       g_obs[ob].set_vis(ob == obi);
     }
@@ -532,17 +532,17 @@ static void g3d_ellipse1() {
 }
 
 static void g3d_ellipse2() {
-  int ninst = g_g3d_ellipse;
-  int nlod = g_obs.last / ninst;
+  const int ninst = g_g3d_ellipse;
+  const int nlod = g_obs.last / ninst;
   assertx(nlod * ninst == g_obs.last);
-  float obradius = g_obs[nlod].radius();
+  const float obradius = g_obs[nlod].radius();
   for_int(i, ninst) {
     Frame frame_ellipse, frame;
     int obi;
     float finterp;
     ellipse_config(i, nlod, frame_ellipse, frame, obi, finterp);
     obi = i * nlod + obi;
-    int nfaces = g_obs[obi].get_mesh()->num_faces();
+    const int nfaces = g_obs[obi].get_mesh()->num_faces();
     Point pabove = Point(0.f, 0.f, obradius * 1.8f) * frame_ellipse;
     const auto [zs, xys] = HB::vdc_from_world(pabove);
     if (xys) {
@@ -584,7 +584,7 @@ static void change_frames() {
 }
 
 static void set_viewing() {
-  bool is_view = !tview.is_ident();
+  const bool is_view = !tview.is_ident();
   if (auto_level) g_obs[obview].tm() = make_level(g_obs[obview].t());
   // while (obview && !g_obs[obview].visible()) --obview;
   Frame tpos = g_obs[obview].t();  // original frame
@@ -594,7 +594,7 @@ static void set_viewing() {
   if (g3d_radar && is_view && auto_level)  // auto_level radar view
     thead = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f), tpos.p());
   if (is_view) thead = tview * thead;
-  Frame frame_camera = thead;  // final camera transform
+  const Frame frame_camera = thead;  // Final camera transform.
   float vzoom = zoom;
   if (is_view) {
     const float g3d_view_zoom = getenv_float("G3D_VIEW_ZOOM", 0.f);  // 2017-02-21
@@ -605,15 +605,15 @@ static void set_viewing() {
   if (1 && g_obs.first == 0) g_obs[0].set_vis(is_view || obview != 0);
   if (auto_hither) {
     Bbox<float, 3> gbb;
-    Frame frame_camera_inv = inverse(frame_camera);
-    int firstobn = g_obs.first == 0 && (is_view || obview != 0) ? 0 : 1;
+    const Frame frame_camera_inv = inverse(frame_camera);
+    const int firstobn = g_obs.first == 0 && (is_view || obview != 0) ? 0 : 1;
     for (int obn = firstobn; obn <= g_obs.last; obn++)
       gbb.union_with(g_obs[obn].bbox().transform(g_obs[obn].t() * frame_camera_inv));
     float minx = gbb[0][0];          // could be negative
     if (minx > 0.f) minx *= .9999f;  // for -key ojo on zero-height data.
-    float diam = gbb.max_side();
+    const float diam = gbb.max_side();
     // float thresh = diam*1e-4;
-    float thresh = diam * 2e-3f;  // made larger for OpenGL glPolygonOffsetEXT()
+    const float thresh = diam * 2e-3f;  // Made larger for OpenGL glPolygonOffsetEXT().
     if (minx < thresh) minx = thresh;
     HB::set_hither(minx);
   }
@@ -661,7 +661,7 @@ void ShowInfo() {
     static int onfaces = 0;
     static string str;
     const GMesh* pmesh = g_obs[cob].get_mesh();
-    int nfaces = pmesh->num_faces();
+    const int nfaces = pmesh->num_faces();
     if (pmesh != opmesh || nfaces != onfaces) {
       opmesh = pmesh;
       onfaces = nfaces;
@@ -689,7 +689,7 @@ static void show_caption() {
 
 static void show_cross() {
   if (info < 2 || HB::get_font_dims()[1] > 11) return;  // Used to be "> 9".
-  float r = .01f;
+  const float r = .01f;
   HB::draw_segment(V(.5f - r, .5f - r), V(.5f + r, .5f + r));
   HB::draw_segment(V(.5f + r, .5f - r), V(.5f - r, .5f + r));
 }
@@ -700,8 +700,8 @@ static void show_globe() {
   Vec2<float> yxo;
   dummy_init(yxo);
   for_int(i, n) {
-    float a = i * TAU / n;
-    Vec2<float> yx = .5f + V(std::sin(a), std::cos(a)) * .5f * k_globe_radius;
+    const float a = i * TAU / n;
+    const Vec2<float> yx = .5f + V(std::sin(a), std::cos(a)) * .5f * k_globe_radius;
     if (i & 0x1) HB::draw_segment(yxo, yx);
     yxo = yx;
   }
@@ -709,7 +709,7 @@ static void show_globe() {
 
 void Draw() {
   if (keystring != "") {
-    for (char ch : keystring) KeyPressed(string(1, ch));
+    for (const char ch : keystring) KeyPressed(string(1, ch));
     keystring = "";
   }
   cur_needs_redraw = false;

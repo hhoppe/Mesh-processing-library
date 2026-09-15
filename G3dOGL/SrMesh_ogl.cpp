@@ -24,7 +24,7 @@ void SrMesh::ogl_render_faces_individually(bool unlit_texture) {
   if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
   glBegin(GL_TRIANGLES);
   if (unlit_texture) {
-    for (SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+    for (const SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
       const auto& vertices = f->vertices;
 #if defined(SR_SW_CULLING)
       if (!vertices[0]->visible && !vertices[1]->visible && !vertices[2]->visible) continue;
@@ -35,15 +35,15 @@ void SrMesh::ogl_render_faces_individually(bool unlit_texture) {
     }
   } else {
     int omatid = -1;
-    for (SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+    for (const SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
       const auto& vertices = f->vertices;
 #if defined(SR_SW_CULLING)
       if (!vertices[0]->visible && !vertices[1]->visible && !vertices[2]->visible) continue;
 #endif
-      int matid = f->matid;  // material of f
+      const int matid = f->matid;  // Material of f.
       if (matid != omatid) {
         omatid = matid;
-        int rmatid = matid & ~k_Face_visited_mask;  // strip off high bit
+        const int rmatid = matid & ~k_Face_visited_mask;  // Strip off high bit.
         glColor4ubv(_ogl_mat_byte_rgba[rmatid].data());
       }
       const SrAVertex* v0 = vertices[0];
@@ -71,18 +71,18 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
   int omatid = -1;
   const EListNode* ndelim = _active_faces.delim();
   assertx(offsetof(SrAFace, activef) == 0);
-  for (EListNode* n = ndelim->next();;) {
+  for (const EListNode* n = ndelim->next();;) {
     if (n == ndelim) break;
     SrAFace* const f = HH_ELIST_OUTER(SrAFace, activef, n);
     const auto& vertices = f->vertices;
     n = n->next();
-    int matid = f->matid;
+    const int matid = f->matid;
     if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;
-    int matidv = matid ^ k_Face_visited_mask;  // "material id visited"
+    const int matidv = matid ^ k_Face_visited_mask;  // "material id visited"
     f->matid = matidv;
     if (!use_texture && matid != omatid) {
       omatid = matid;
-      int rmatid = (matid & matidv);  // strip off high bit
+      const int rmatid = (matid & matidv);  // Strip off high bit.
       glColor4ubv(_ogl_mat_byte_rgba[rmatid].data());
     }
     const SrAVertex* v1n;
@@ -143,10 +143,10 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
       // *** First iteration of loop.
       {
         fn->matid = matidv;
-        SrAVertex** pvrand = fn->vertices.data();
-        SrAVertex* vrand = *pvrand;
+        SrAVertex* const* pvrand = fn->vertices.data();
+        const SrAVertex* vrand = *pvrand;
         pvrand += (vrand == v2n) + (vrand == v1n) * 2;
-        SrAFace** pfnei = &fn->fnei[2];
+        SrAFace* const* pfnei = &fn->fnei[2];
         pfnei -= (vrand == v1n) + (vrand == v2n) * 2;
         v2n = *pvrand;
 #if defined(SR_SW_CULLING)
@@ -160,10 +160,10 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
       // *** Second iteration of loop.
       {
         fn->matid = matidv;
-        SrAVertex** pvrand = fn->vertices.data();
-        SrAVertex* vrand = *pvrand;
+        SrAVertex* const* pvrand = fn->vertices.data();
+        const SrAVertex* vrand = *pvrand;
         pvrand += (vrand == v2n) + (vrand == v1n) * 2;
-        SrAFace** pfnei = &fn->fnei[1];
+        SrAFace* const* pfnei = &fn->fnei[1];
         pfnei += (vrand == v2n) - (vrand == v1n);
         v1n = *pvrand;
 #if defined(SR_SW_CULLING)
@@ -197,12 +197,12 @@ int SrMesh::ogl_render_striplines() {
   // doesn't need to be all that fast, so not carefully optimized.
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
   for (SrAFace* ff : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
-    SrAFace* const f = ff;  // current face
-    int matid = f->matid;   // material of f
-    SrAFace* fn;            // next neighboring face
+    SrAFace* const f = ff;       // Current face.
+    const int matid = f->matid;  // Material of f.
+    SrAFace* fn;                 // Next neighboring face.
     if ((matid & k_Face_visited_mask) == _cur_frame_mask) continue;
     ntstrips++;
-    int matidv = matid ^ k_Face_visited_mask;
+    const int matidv = matid ^ k_Face_visited_mask;
     f->matid = matidv;
     const SrAVertex* v1n;
     const SrAVertex* v2n;
@@ -340,23 +340,23 @@ void SrMesh::ogl_render_edges() {
 }
 
 void SrMesh::ogl_show_radii() {
-  for (SrAVertex* v : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* v : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
     if (!splitable(v)) continue;
     const Point& p = get_point(v);
     glRasterPos3fv(p.data());
-    float radius = -get_radiusneg(v);
-    string s = sform("%g", radius);
+    const float radius = -get_radiusneg(v);
+    const string s = sform("%g", radius);
     glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
   }
 }
 
 void SrMesh::ogl_show_residuals(bool uniform_too) {
   glBegin(GL_LINES);
-  for (SrAVertex* v : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* v : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
     if (!splitable(v)) continue;
     if (1) {
-      float dir_error_mag = sqrt(get_dir_error_mag2(v));
-      Vector dir_error_dir = dir_error_mag * get_normal(v);
+      const float dir_error_mag = sqrt(get_dir_error_mag2(v));
+      const Vector dir_error_dir = dir_error_mag * get_normal(v);
       Point p1 = get_point(v) - dir_error_dir;
       Point p2 = get_point(v) + dir_error_dir;
       glVertex3fv(p1.data());
@@ -405,14 +405,14 @@ int SrMesh::ogl_render_tvclines() {
   const EListNode* ndelim = _active_faces.delim();
   assertx(offsetof(SrAFace, activef) == 0);
   Point p;
-  for (EListNode* n = ndelim->next();;) {
+  for (const EListNode* n = ndelim->next();;) {
   GOTO_STRIP_RESTART_FROM_SCRATCH:
     if (n == ndelim) break;
     SrAFace* f = HH_ELIST_OUTER(SrAFace, activef, n);
     n = n->next();
-    int matid = f->matid;
+    const int matid = f->matid;
     if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;
-    int matidv = matid ^ k_Face_visited_mask;  // material id visited
+    const int matidv = matid ^ k_Face_visited_mask;  // Material id visited.
     // index j of Corner c within current face
     int j = 0;
     SrAFace* fnext;
@@ -513,18 +513,18 @@ void SrMesh::ogl_render_faces_tvc(bool unlit_texture) {
   const EListNode* ndelim = _active_faces.delim();
   assertx(offsetof(SrAFace, activef) == 0);
   glBegin(GL_TRIANGLES);
-  for (EListNode* n = ndelim->next();;) {
+  for (const EListNode* n = ndelim->next();;) {
   GOTO_STRIP_RESTART_FROM_SCRATCH:
     if (n == ndelim) break;
     SrAFace* f = HH_ELIST_OUTER(SrAFace, activef, n);
     n = n->next();
-    int matid = f->matid;
+    const int matid = f->matid;
     if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;
-    int matidv = matid ^ k_Face_visited_mask;  // material id visited
+    const int matidv = matid ^ k_Face_visited_mask;  // Material id visited.
 #if !defined(SR_USE_TEXTURE)
     if (matid != omatid) {
       omatid = matid;
-      int rmatid = (matid & matidv);  // strip off high bit
+      const int rmatid = (matid & matidv);  // Strip off high bit.
       glColor4ubv(_ogl_mat_byte_rgba[rmatid].data());
     }
 #endif

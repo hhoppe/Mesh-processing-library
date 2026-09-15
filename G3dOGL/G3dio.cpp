@@ -21,7 +21,7 @@ float wait_command;
 
 void add_extra(int n) {
   if (!n) return;
-  int oobn = robn - 1;
+  const int oobn = robn - 1;
   assertx(oobn >= g_obs.first);
   if (!terse) showf(" (+%d)\n", n);
   for_int(i, n) {
@@ -65,7 +65,7 @@ int decode_obn(const A3dElem& el) {
 A3dElem::EType read_a3delem(RA3dStream& ia3d) {
   A3dElem el;
   ia3d.read(el);
-  A3dElem::EType elt = el.type();
+  const A3dElem::EType elt = el.type();
   if (elt == A3dElem::EType::polygon || elt == A3dElem::EType::polyline || elt == A3dElem::EType::point) {
     open_if_closed();
     switch (elt) {
@@ -84,7 +84,7 @@ A3dElem::EType read_a3delem(RA3dStream& ia3d) {
   CloseIfOpen();
   if (elt == A3dElem::EType::editobject) {
     assertx(!el.f()[2]);
-    int obn = decode_obn(el);
+    const int obn = decode_obn(el);
     g_obs[obn].clear();
     HB::clear_segment(obn);
   } else if (elt == A3dElem::EType::endobject) {
@@ -130,7 +130,7 @@ bool try_g3d_command(const string& pstr) {
   } else if (remove_at_start(str, "keys ")) {
     // assertx(str.size() == 1);  // new 2012-12-13
     // KeyPressed(str);
-    for (char ch : str) KeyPressed(string(1, ch));
+    for (const char ch : str) KeyPressed(string(1, ch));
     return true;
   } else if (remove_at_start(str, "wait ")) {
     wait_command = Args::parse_float(str);
@@ -167,7 +167,7 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
     case RBufferedA3dStream::ERecognize::parse_error: assertnever("");
     case RBufferedA3dStream::ERecognize::partial: return ETryInput::nothing;  // partial a3d
     case RBufferedA3dStream::ERecognize::yes: {
-      A3dElem::EType rr = read_a3delem(ra3d);
+      const A3dElem::EType rr = read_a3delem(ra3d);
       if (rr == A3dElem::EType::endfile) return ETryInput::eof;
       if (rr == A3dElem::EType::endframe) return ETryInput::success_frame;
       return ETryInput::success;
@@ -260,7 +260,7 @@ void CloseIfOpen() {
   HB::close_segment();
   g_obs[robn].update_stats();
   if (!terse) {
-    string s = sform("G3d: (%d) File:%s", robn, filename.c_str());
+    const string s = sform("G3d: (%d) File:%s", robn, filename.c_str());
     if (total_gons + total_lines + total_points)
       showf("%s %dgons %dlines %dpts\n", s.c_str(), total_gons, total_lines, total_points);
     if (total_vertices + total_faces) {
@@ -307,7 +307,7 @@ void ReadInput(bool during_init) {
     cur_needs_redraw = true;
     return;
   }
-  bool eof = read_buffer(buf, ra3d, during_init);
+  const bool eof = read_buffer(buf, ra3d, during_init);
   if (eof) {
     HB::redraw_later();
     cur_needs_redraw = true;

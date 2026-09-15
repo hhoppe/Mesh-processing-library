@@ -462,7 +462,7 @@ void update_mat_color2(const Color& col) {
   assertx(lmcad);
   if (col.g != matcol.g) {
     matcol.g = col.g;
-    float shininess = min(matcol.g, 128.f);  // OpenGL limit is 128.
+    const float shininess = min(matcol.g, 128.f);  // OpenGL limit is 128.
     glMaterialf(g_twosided ? GL_FRONT_AND_BACK : GL_FRONT, GL_SHININESS, shininess);
   }
   if (col.s != matcol.s) {
@@ -493,10 +493,10 @@ bool normalmap_init() {
   if (pnormalmap->name() == "dot3") {
     Warning("Resorting to 'dot3' for normal-mapping");
     if (1) {  // make material brighter
-      uint8_t meshca = mesh_color.d[3];
+      const uint8_t meshca = mesh_color.d[3];
       A3dColor material;
       for_int(c, 3) material[c] = mesh_color.d[c] / 255.f;
-      float maxv = assertx(max(material));
+      const float maxv = assertx(max(material));
       material /= maxv;
       mesh_color.d = pack_color(material);
       mesh_color.d[3] = meshca;
@@ -564,12 +564,12 @@ void do_texturemap(Args& args) {
 bool DerivedHw::key_press(string s) { return fkeyp(s); }
 
 void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
-  Vec2<float> yxf = convert<float>(yx) / convert<float>(win_dims);
+  const Vec2<float> yxf = convert<float>(yx) / convert<float>(win_dims);
   if (pressed) yx_pointer_old = yxf;
-  bool shift = get_key_modifier(EModifier::shift);
-  bool in_slider = (slidermode && !(pm_mode && yx_pointer_old[1] >= k_one_slider_left_thresh) &&
-                    !(psc_mode && yx_pointer_old[1] >= k_one_slider_left_thresh) &&
-                    !(sc_gm_mode && yx_pointer_old[1] >= k_one_slider_left_thresh));
+  const bool shift = get_key_modifier(EModifier::shift);
+  const bool in_slider = (slidermode && !(pm_mode && yx_pointer_old[1] >= k_one_slider_left_thresh) &&
+                          !(psc_mode && yx_pointer_old[1] >= k_one_slider_left_thresh) &&
+                          !(sc_gm_mode && yx_pointer_old[1] >= k_one_slider_left_thresh));
   if (pressed) {
     was_using_dl = use_dl;
     if (in_slider) {
@@ -831,7 +831,7 @@ void display_texture_size_info() {
         if (aspx == 3) continue;  // always fails to allocate
         if (aspx == 4) continue;  // always same size as aspx == 2
         Vec2<int> aspyx(1, aspx);
-        int border = 0;
+        const int border = 0;
         Vec2<int> max_yx =
             find_max_texture(glt_format.format, aspyx, border, (mm ? std::numeric_limits<int>::max() : 0));
         int r = 0, g = 0, b = 0, a = 0, comp = 0;
@@ -928,7 +928,7 @@ void load_texturemaps() {
     const string filename = texturemaps[i];
     Image itexture(filename);
     if (1) itexture.reverse_y();  // because glTexImage2D() has image pixel-grid origin at lower-left
-    int orig_xsize = itexture.xsize(), orig_ysize = itexture.ysize();
+    const int orig_xsize = itexture.xsize(), orig_ysize = itexture.ysize();
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     // On ATI, default GL_RGB is in fact GL_RGB5.
     GLenum internal_format = GL_RGBA8;  // was GL_RGB8
@@ -1053,7 +1053,7 @@ void load_texturemaps() {
       glGenTextures(1, &texture_name1);
       glBindTexture(GL_TEXTURE_1D, texture_name1);
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-      GLenum internal_format2 = GL_RGBA8;
+      const GLenum internal_format2 = GL_RGBA8;
       if (0) {
         const int n = 128;
         int level = 0, nl = n;
@@ -1076,7 +1076,7 @@ void load_texturemaps() {
             }
             etexture[0, x] = Pixel::gray(v);
           }
-          int border = 0;
+          const int border = 0;
           glTexImage1D(GL_TEXTURE_1D, level, internal_format2, etexture.xsize(), border, GL_RGBA, GL_UNSIGNED_BYTE,
                        etexture.data());
           if (etexture.xsize() == 1) break;
@@ -1132,7 +1132,7 @@ void gl_init() {
   {  // matrices
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    float a = 1.f / min(win_dims);
+    const float a = 1.f / min(win_dims);
     if (perspec) {
       glFrustum(-win_dims[1] * a * view_zoom * hither, win_dims[1] * a * view_zoom * hither,
                 -win_dims[0] * a * view_zoom * hither, win_dims[0] * a * view_zoom * hither, hither, yonder);
@@ -1157,7 +1157,7 @@ void gl_init() {
   }
   {  // lighting
     if (1) {
-      Vector lightdireyegl = k_lightdir_eye0 * k_eye_to_gleye;
+      const Vector lightdireyegl = k_lightdir_eye0 * k_eye_to_gleye;
       glLightfv(GL_LIGHT0, GL_POSITION, concat(lightdireyegl, V(0.f)).data());  // directional; current matrix
       // ambient color of light is (0, 0, 0, 1) by default  (!= scene_ambient)
       Vec4<float> color = concat(thrice(lightsource), V(1.f));
@@ -1166,7 +1166,7 @@ void gl_init() {
       glEnable(GL_LIGHT0);
     }
     if (g_twolights) {
-      Vector lightdireyegl = k_lightdir_eye1 * k_eye_to_gleye;
+      const Vector lightdireyegl = k_lightdir_eye1 * k_eye_to_gleye;
       glLightfv(GL_LIGHT1, GL_POSITION, concat(lightdireyegl, V(0.f)).data());
       Vec4<float> color = concat(thrice(lightsource), V(1.f));
       if (g_twolights > 1) {
@@ -1270,9 +1270,9 @@ bool setup_ob(int i) {
     fmodeltoworld.v(1) *= real_zoom * float(win_dims[1]) / min(win_dims);
     fmodeltoworld.v(2) *= real_zoom * float(win_dims[0]) / min(win_dims);
   }
-  Frame fworldtomodel = ~fmodeltoworld;
-  Frame fmodeltoeye = fmodeltoworld * tcami;
-  Frame fmodeltoeyegl = fmodeltoeye * k_eye_to_gleye;
+  const Frame fworldtomodel = ~fmodeltoworld;
+  const Frame fmodeltoeye = fmodeltoworld * tcami;
+  const Frame fmodeltoeyegl = fmodeltoeye * k_eye_to_gleye;
   glLoadMatrixf(to_Matrix(fmodeltoeyegl).const_grid_view().data());
   // GL looks at orthonormality of f automatically (see nmode())
   feyetomodel = tcam * fworldtomodel;
@@ -1283,7 +1283,7 @@ bool setup_ob(int i) {
   lsmooth = g_xobs.smooth[i];
   ledges = g_xobs.edges[i];
   if (!lshading && ledges) lsmooth = false;  // cheaper
-  bool twoside = !g_xobs.cullface[i] || g_xobs.reverse_cull[i];
+  const bool twoside = !g_xobs.cullface[i] || g_xobs.reverse_cull[i];
   float lambient = ambient;
   if (i == 0 && worldlight) lambient = 1.f;
   set_light_ambient(lambient);
@@ -1294,11 +1294,11 @@ bool setup_ob(int i) {
   if (worldlight) {
     // rebind using current model-view matrix
     if (1) {
-      Vector lightdireyegl = k_lightdir_eye0 * k_eye_to_gleye;
+      const Vector lightdireyegl = k_lightdir_eye0 * k_eye_to_gleye;
       glLightfv(GL_LIGHT0, GL_POSITION, concat(lightdireyegl, V(0.f)).data());  // directional
     }
     if (g_twolights) {
-      Vector lightdireyegl = k_lightdir_eye1 * k_eye_to_gleye;
+      const Vector lightdireyegl = k_lightdir_eye1 * k_eye_to_gleye;
       glLightfv(GL_LIGHT1, GL_POSITION, concat(lightdireyegl, V(0.f)).data());  // directional
     }
   }
@@ -1321,8 +1321,8 @@ bool setup_ob(int i) {
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
     if (texturenormal) {
-      Vector lightdirmodel = ok_normalized(k_lightdir_eye0 * ~fmodeltoeye);
-      Vector eyedirmodel = ok_normalized(Vector(-1.f, 0.f, 0.f) * ~fmodeltoeye);
+      const Vector lightdirmodel = ok_normalized(k_lightdir_eye0 * ~fmodeltoeye);
+      const Vector eyedirmodel = ok_normalized(Vector(-1.f, 0.f, 0.f) * ~fmodeltoeye);
       normalmap_setlight(lightdirmodel, eyedirmodel, lambient);
     }
   }
@@ -1356,8 +1356,8 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
         else
           glBegin(GL_POLYGON);
         for (int j = 0;;) {
-          bool csmooth = lsmooth && n->vnors.num();
-          bool hascolors = n->colors.num() > 1;
+          const bool csmooth = lsmooth && n->vnors.num();
+          const bool hascolors = n->colors.num() > 1;
           if (!hascolors) {
             update_mat_color(n->colors[0]);
             if (!csmooth) glNormal3fv(n->pnor.data());
@@ -1464,7 +1464,7 @@ Map<const GMesh*, Array<Face>> map_mfa;
 void mesh_init(GMesh& mesh) {
   static Set<const GMesh*> have_vnors, have_fnors;
   Polygon poly;
-  bool mesh_modified = !mesh.gflags().flag(g3d::mflag_ok).set(true);
+  const bool mesh_modified = !mesh.gflags().flag(g3d::mflag_ok).set(true);
   if (mesh_modified) {
     // Could free up mesh strings after use; useful?
     // For future: mesh.gflags().flag(mflag_f_colors) = false;
@@ -1541,7 +1541,7 @@ void mesh_init(GMesh& mesh) {
   }
   if (lsmooth && have_vnors.add(&mesh)) {
     for (Vertex v : mesh.vertices()) {
-      Vnors vnors(mesh, v);
+      const Vnors vnors(mesh, v);
       bool uniquenors = true;
       int num = 0;
       Vector gOnor, gNnor;
@@ -1715,15 +1715,15 @@ void draw_mesh(GMesh& mesh) {
   const int buffer_nquads = g_is_ati ? std::numeric_limits<int>::max() : 32;
   const int buffer_nedges = g_is_ati ? std::numeric_limits<int>::max() : 128;
   if (!ledges || lshading) {
-    bool has_f_color = mesh.gflags().flag(mflag_f_colors);
-    bool has_v_color = mesh.gflags().flag(mflag_v_colors);
-    bool has_c_color = mesh.gflags().flag(mflag_c_colors);
+    const bool has_f_color = mesh.gflags().flag(mflag_f_colors);
+    const bool has_v_color = mesh.gflags().flag(mflag_v_colors);
+    const bool has_c_color = mesh.gflags().flag(mflag_c_colors);
     // bool has_only_v_color = has_v_color && !has_c_color;
-    bool has_either_color = has_v_color || has_c_color;
+    const bool has_either_color = has_v_color || has_c_color;
     assertw(!(has_f_color && (has_v_color || has_c_color)));
-    bool smooth_shade_model = lsmooth || has_either_color;
+    const bool smooth_shade_model = lsmooth || has_either_color;
     glShadeModel(smooth_shade_model ? GL_SMOOTH : GL_FLAT);
-    bool cannot_strip = !lsmooth && smooth_shade_model;
+    const bool cannot_strip = !lsmooth && smooth_shade_model;
     initialize_lit();
     update_mat_color(mesh_color);
     if (texture_active) {
@@ -1819,7 +1819,7 @@ void draw_mesh(GMesh& mesh) {
       // toggle visited flag (to avoid a pass to clear all the flags)
       static const FlagMask mflag_fvisited = Mesh::allocate_flag();
       static const FlagMask fflag_visited = Mesh::allocate_Face_flag();
-      bool vis_new_state = !mesh.gflags().flag(mflag_fvisited);
+      const bool vis_new_state = !mesh.gflags().flag(mflag_fvisited);
       mesh.gflags().flag(mflag_fvisited) = vis_new_state;
       if (k_debug)
         for (Face f : mesh.faces()) assertw(mesh.flags(f).flag(fflag_visited) != vis_new_state);
@@ -1926,7 +1926,7 @@ void draw_mesh(GMesh& mesh) {
       }
       if (cullbackedges && lcullface && !uvtopos && !defining_dl) {
         const Point& p = mesh.point(mesh.vertex1(e));
-        Vector vtoe = p - feyetomodel.p();
+        const Vector vtoe = p - feyetomodel.p();
         bool cull = true;
         for (Face f : mesh.faces(e)) {
           if (dot(vtoe, f_pnor(f)) < 0.f) {
@@ -2005,7 +2005,7 @@ void draw_mesh(GMesh& mesh) {
     set_thickness(thicka3d);
   }
   if (strip_lines && !lquickmode) {
-    bool strip_always_connect = strip_lines >= 2;
+    const bool strip_always_connect = strip_lines >= 2;
     glShadeModel(GL_FLAT);
     initialize_unlit();
     update_cur_color(pix_sharpedgecolor);
@@ -2200,8 +2200,8 @@ void wrap_draw(bool show) {
   if (!show) {
     if (button_active) {
       const Vec2<float> yxf = HB::get_pointer().value();
-      float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
-      int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
+      const float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
+      const int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
       *sliders[i].val *= dval;
       hw.redraw_later();
     }
@@ -2394,12 +2394,12 @@ void GxObject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.
   use_dl = false;
   GMesh& mesh = *_pmesh;
   mesh_init(mesh);
-  bool has_v_color = mesh.gflags().flag(mflag_v_colors);
-  bool has_c_color = mesh.gflags().flag(mflag_c_colors);
-  bool has_only_v_color = has_v_color && !has_c_color;
-  bool has_either_color = has_v_color || has_c_color;
-  float f1 = finterp, f2 = 1.f - f1;
-  int if1 = int(finterp * 256.f), if2 = 256 - if1;
+  const bool has_v_color = mesh.gflags().flag(mflag_v_colors);
+  const bool has_c_color = mesh.gflags().flag(mflag_c_colors);
+  const bool has_only_v_color = has_v_color && !has_c_color;
+  const bool has_either_color = has_v_color || has_c_color;
+  const float f1 = finterp, f2 = 1.f - f1;
+  const int if1 = int(finterp * 256.f), if2 = 256 - if1;
   for (Vertex v : mesh.vertices()) {
     const VertexLOD& vlod = v_lod(v);
     mesh.set_point(v, interp(vlod.Npos, vlod.Opos, f1));
@@ -2417,7 +2417,7 @@ void GxObject::morph(float finterp) {  // finterp == 1.f is new,   finterp == 0.
     }
     if (lsmooth) {
       if (mesh.flags(v).flag(vflag_unique_nors)) {
-        Vector nnor = interp_normal(vlod.Nnor, vlod.Onor, f1, f2);
+        const Vector nnor = interp_normal(vlod.Nnor, vlod.Onor, f1, f2);
         for (Corner c : mesh.corners(v)) c_nor(c) = nnor;
       } else {
         for (Corner c : mesh.corners(v)) {
@@ -2552,7 +2552,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   string psc_filename;
   string sr_filename;
   string ply_filename;
-  bool hw_success = hw.init(aargs);
+  const bool hw_success = hw.init(aargs);
   ParseArgs args(aargs, "HB_GL");
   HH_ARGSP(edgecolor, "#RRGGBB : set 'De' color");
   HH_ARGSP(sharpedgecolor, "#RRGGBB : ''");
@@ -2610,7 +2610,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   cusp_color = create_mat_color(
       A3dVertexColor(A3dColor(spherecolor), A3dColor(spherecolor), A3dColor((cusp_bright ? 1.f : 7.f), 0.f, 0.f)));
   mesh_color = create_mat_color(A3dVertexColor(A3dColor(meshcold), A3dColor(meshcols), A3dColor(meshcolp)));
-  int mesha = int(meshcola[0] * 255.f + .5f);
+  const int mesha = int(meshcola[0] * 255.f + .5f);
   assertx(mesha >= 0 && mesha <= 255);
   mesh_color.d[3] = uint8_t(mesha);
   // Without a visible window, nothing could end the program except the completion of a picture, movie, or video.
@@ -2792,9 +2792,9 @@ void HB::draw_space() {
   draw_all();
   gl_fixup();
   if (outside_frustum) {
-    float xrad = .5f / frustum_frac;
+    const float xrad = .5f / frustum_frac;
     float x1 = .5f - xrad, x2 = .5f + xrad;
-    float yrad = .5f / frustum_frac;
+    const float yrad = .5f / frustum_frac;
     float y1 = .5f - yrad, y2 = .5f + yrad;
     HB::draw_segment(V(y1, x1), V(y1, x2));
     HB::draw_segment(V(y2, x1), V(y2, x2));
@@ -3006,7 +3006,7 @@ depthc<u>e  <a>ntialiasing  <n>ice_rendering  <p>erspective  <S>liders
 }
 
 string HB::show_info() {
-  int obn = cob;
+  const int obn = cob;
   return sform("[GL %c%c%c%c%c%c%c%c%c%c%c%c%c]",  //
                g_xobs.cullface[obn] ? 'b' : ' ', g_xobs.reverse_cull[obn] ? 'r' : ' ', g_xobs.shading[obn] ? 's' : ' ',
                g_xobs.smooth[obn] ? 'm' : ' ', g_xobs.edges[obn] ? 'e' : ' ', mdepthcue ? 'u' : ' ',
@@ -3081,7 +3081,7 @@ void HB::beep() { hw.beep(); }
 int HB::id() { return 2000; }
 
 void* HB::escape(int code, void* data) {
-  float fdata = *static_cast<float*>(data);
+  const float fdata = *static_cast<float*>(data);
   switch (code) {
     case 1: {
       if (fdata < 0.f) {
@@ -3149,14 +3149,14 @@ void read_pm(const string& filename) {
 }
 
 void pm_update_lod() {
-  float flevel = min(pm_lod_level, 1.f);
-  int nv0 = pmesh._base_mesh._vertices.num();
-  int nvsplits = pmesh._info._tot_nvsplits;
-  int nv = nv0 + int((nvsplits + 1) * flevel * .999999f);
+  const float flevel = min(pm_lod_level, 1.f);
+  const int nv0 = pmesh._base_mesh._vertices.num();
+  const int nvsplits = pmesh._info._tot_nvsplits;
+  const int nv = nv0 + int((nvsplits + 1) * flevel * .999999f);
   pmi->goto_nvertices(nv);
   invalidate_dls();
   if (g3d::output) {
-    float val = lod_use_nvertices ? pmi->_vertices.num() : pm_lod_level;
+    const float val = lod_use_nvertices ? pmi->_vertices.num() : pm_lod_level;
     std::cout << "lod " << val << '\n' << std::flush;
   }
 }
@@ -3166,15 +3166,15 @@ void pm_wrap_draw(bool show) {
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
       const Vec2<float> yxf = HB::get_pointer().value();
-      float oldval = pm_lod_level;
+      const float oldval = pm_lod_level;
       switch (button_active) {
         case 1: {
           pm_lod_level = 1.1f - (yxf[0]) * 1.2f;
           break;
         }
         case 2: {
-          float a = (yxf[0] - 0.5f) * -3.f;
-          float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
+          const float a = (yxf[0] - 0.5f) * -3.f;
+          const float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
           pm_lod_level += a2;
           break;
         }
@@ -3200,19 +3200,19 @@ void pm_wrap_draw(bool show) {
     HB::draw_row_col_text(V(2, lmargin + 8), sform(" %d", pmi->_faces.num()));
     // HB::draw_row_col_text(V(4, 21), "#Verts");
     // HB::draw_row_col_text(V(5, 22), sform("%d", pmi->_vertices.num()));
-    float yline = .004f, xleft = .05f;
+    const float yline = .004f, xleft = .05f;
     {  // current level
-      float lod = clamp(pm_lod_level, 0.f, 1.f);
+      const float lod = clamp(pm_lod_level, 0.f, 1.f);
       float x1 = xleft + .01f, x2 = xleft + .05f;
-      float y1 = (1.1f - lod) / 1.2f - .002f;
-      float y2 = y1 + yline;
+      const float y1 = (1.1f - lod) / 1.2f - .002f;
+      const float y2 = y1 + yline;
       HB::draw_segment(V(y1, x1), V(y1, x2));
       HB::draw_segment(V(y2, x1), V(y2, x2));
       HB::draw_segment(V(y1, x1), V(y2, x1));
       HB::draw_segment(V(y1, x2), V(y2, x2));
     }
     {  // slider
-      float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
+      const float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
       float x1 = xleft + .02f, x2 = xleft + .04f, xm = xleft + .03f;
       HB::draw_segment(V(y1 + yd, x1), V(y1, xm));
       HB::draw_segment(V(y1 + yd, x2), V(y1, xm));
@@ -3227,8 +3227,8 @@ void pm_wrap_draw(bool show) {
 
 void pm_set_lod(float lod) {
   if (lod_use_nvertices) {
-    int nv = int(lod);
-    int nv0 = pmesh._base_mesh._vertices.num();
+    const int nv = int(lod);
+    const int nv0 = pmesh._base_mesh._vertices.num();
     int nvsplits = pmesh._info._tot_nvsplits;
     if (!assertw(nvsplits)) return;
     pm_lod_level = (float(nv) - nv0) / nvsplits;
@@ -3330,7 +3330,7 @@ void read_sr(const string& filename) {
   RFile fi(filename);
   for (string line; fi().peek() == '#';) assertx(my_getline(fi(), line));
   assertx(fi().peek() == 'P' || fi().peek() == 'S');
-  bool srm_input = fi().peek() == 'S';
+  const bool srm_input = fi().peek() == 'S';
   if (!srm_input) {
     PMeshRStream local_pmrs(fi());
     // Note that there is no memory-resident PMesh; great!
@@ -3343,18 +3343,18 @@ void read_sr(const string& filename) {
 }
 
 void sr_regulator() {
-  float goal_nfaces = sr_regulatenf;
+  const float goal_nfaces = sr_regulatenf;
   if (!goal_nfaces) return;
-  int cur_nfaces = srmesh.num_active_faces();
+  const int cur_nfaces = srmesh.num_active_faces();
   const float minpixtol = 0.5f;
   if (!product(win_dims)) {  // window is iconified on _WIN32
                              // don't modify sr_screen_thresh
   } else {
-    float min_screen_thresh = 2.0f * minpixtol / min(win_dims);
+    const float min_screen_thresh = 2.0f * minpixtol / min(win_dims);
     if (abs(cur_nfaces - goal_nfaces) > 10) sr_screen_thresh *= pow(cur_nfaces / goal_nfaces, sr_gain);
     sr_screen_thresh = max(sr_screen_thresh, min_screen_thresh);
   }
-  float pixtol = sr_screen_thresh * min(win_dims) * .5f;
+  const float pixtol = sr_screen_thresh * min(win_dims) * .5f;
   static int count;
   if (++count > 50)  // Ignore the transient behavior in the first 50 frames.
     HH_SSTAT(Stau, pixtol);
@@ -3373,7 +3373,7 @@ void sr_adapt_refinement() {
       vp.set_zooms(real_zoom * convert<float>(win_dims) / float(min(win_dims)));
     }
     vp.set_screen_thresh(sr_screen_thresh);
-    float true_hither = !sr_radar ? hither : hither < 1.f ? hither : sr_radar_old_hither;
+    const float true_hither = !sr_radar ? hither : hither < 1.f ? hither : sr_radar_old_hither;
     vp.set_hither(true_hither);
     vp.set_yonder(yonder == k_default_yonder ? -1.f : yonder);
     srmesh.set_view_params(vp);
@@ -3381,7 +3381,7 @@ void sr_adapt_refinement() {
   {
     // const float upper_limit = 1.1f;
     // int max_active_faces = sr_regulatenf ? sr_regulatenf * upper_limit : std::numeric_limits<int>::max();
-    int nvtrav =
+    const int nvtrav =
         sr_fracvtrav >= 1.f ? std::numeric_limits<int>::max() : int(srmesh.num_active_vertices() * sr_fracvtrav);
     srmesh.adapt_refinement(nvtrav);
   }
@@ -3422,7 +3422,7 @@ void sr_pre_space() {
     static int frame;
     if (g3d_dump_frame && frame++ == g3d_dump_frame) {
       SHOW("dumping v.m and sleep 10 s");
-      GMesh gmesh = srmesh.extract_gmesh();
+      const GMesh gmesh = srmesh.extract_gmesh();
       WFile fi("v.m");
       gmesh.write(fi());
       my_sleep(10.);
@@ -3524,11 +3524,11 @@ void sr_wrap_draw(bool show) {
     }
   }
   if (show && g3d::info) {
-    int nf = srmesh.num_active_faces();
+    const int nf = srmesh.num_active_faces();
     float pixtol = sr_screen_thresh * min(win_dims) * .5f;
     if (outside_frustum) pixtol /= frustum_frac;
-    bool morph = sr_morph_active;
-    string s1 = sform("faces=%-5d", nf);
+    const bool morph = sr_morph_active;
+    const string s1 = sform("faces=%-5d", nf);
     string s2 = !bigfont() || !morph ? sform(" pixtol=%4.2f", pixtol) : sform(" pix=%4.2f", pixtol);
     string s3 =
         (!morph       ? ""
@@ -3538,9 +3538,9 @@ void sr_wrap_draw(bool show) {
                       : sform("vgr=%04.1f%% vgc=%04.1f%%",  //
                               srmesh.num_vertices_refine_morphing() * 100.f / srmesh.num_active_vertices(),
                               srmesh.num_vertices_coarsen_morphing() * 100.f / srmesh.num_active_vertices()));
-    string s4 = (sr_ntstrips     ? sform(" f/strip=%4.1f", float(nf) / sr_ntstrips)
-                 : sr_ncachemiss ? sform(" v/t=%4.2f", float(sr_ncachemiss) / srmesh.num_active_faces())
-                                 : "");
+    const string s4 = (sr_ntstrips     ? sform(" f/strip=%4.1f", float(nf) / sr_ntstrips)
+                       : sr_ncachemiss ? sform(" v/t=%4.2f", float(sr_ncachemiss) / srmesh.num_active_faces())
+                                       : "");
     if (!bigfont()) {
       HB::draw_row_col_text(V(1, 4), s1 + s2 + s3 + s4);
     } else {
@@ -3563,8 +3563,8 @@ void sr_wrap_draw(bool show) {
     if (!show) {
       if (button_active) {
         const Vec2<float> yxf = HB::get_pointer().value();
-        float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
-        int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
+        const float dval = std::exp((yxf[0] - yx_pointer_old[0]) * -1.5f * g3d::fchange);
+        const int i = int(yx_pointer_old[1] * sliders.num() * .9999f);
         *sliders[i].val *= dval;
         hw.redraw_later();
       }
@@ -3590,7 +3590,7 @@ void sr_wrap_draw(bool show) {
 }
 
 void sr_update_morph_times() {
-  int refine_time = sr_morph_active ? sr_gtime : 0;
+  const int refine_time = sr_morph_active ? sr_gtime : 0;
   int coarsen_time = sr_morph_active ? sr_gtime / 2 : 0;
   if (coarsen_time == 1) coarsen_time = 2;
   srmesh.set_refine_morph_time(refine_time);
@@ -3764,7 +3764,7 @@ void psc_update_lod();
 
 // Determine vertex normal by averaging normals of adjacent faces belonging to the same normal group.
 void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
-  int ngroup = s_norgroup[corner_fct->getVAttribute()];
+  const int ngroup = s_norgroup[corner_fct->getVAttribute()];
   Vec3<Simplex> verts = corner_fct->vertices();
   const int i_vs = index(verts, vs);
   avg_norm = fct_pnor[corner_fct->getId()];
@@ -3936,7 +3936,7 @@ void read_psc(const string& filename) {
       {
         HH_ATIMER("vunify");
         for (int i = psc_lod_list.num() - 2; i >= 0; --i) {
-          SplitRecord& vsplit = psc_lod_list[i];
+          const SplitRecord& vsplit = psc_lod_list[i];
           vsplit.applyUnify(Kmesh);
         }
       }
@@ -3953,13 +3953,13 @@ void read_psc(const string& filename) {
 }
 
 void psc_update_lod() {
-  int new_lod_num = int((psc_lod_list.num() - 1) * psc_lod_level * .999999f);
+  const int new_lod_num = int((psc_lod_list.num() - 1) * psc_lod_level * .999999f);
   // SHOW(psc_lod_level, new_lod_num, psc_lod_num);
   // go down in complexity
   if (new_lod_num < psc_lod_num) {
     Simplex vs, vt;
     for (int i = psc_lod_num - 1; i >= new_lod_num; --i) {
-      SplitRecord& vsplit = psc_lod_list[i];
+      const SplitRecord& vsplit = psc_lod_list[i];
       vs = assertx(Kmesh.getSimplex(0, vsplit.getVs()));
       vt = assertx(Kmesh.getSimplex(0, vsplit.getVt()));
       // remove former principal simplices
@@ -4030,7 +4030,7 @@ void psc_update_lod() {
         }
       }
       assertx(psc_unify_area_list[i]);
-      for (AreaData& ar : *psc_unify_area_list[i]) {
+      for (const AreaData& ar : *psc_unify_area_list[i]) {
         Simplex s = Kmesh.getSimplex(ar.dim, ar.id);
         assertx(Kmesh.valid(s) && s->isPrincipal());
         s->setArea(ar.area);
@@ -4151,7 +4151,7 @@ void psc_update_lod() {
   psc_lod_num = new_lod_num;
   invalidate_dls();
   if (g3d::output) {
-    float val = lod_use_nvertices ? psc_lod_num + 1 : psc_lod_level;
+    const float val = lod_use_nvertices ? psc_lod_num + 1 : psc_lod_level;
     std::cout << "lod " << val << '\n' << std::flush;
   }
 }
@@ -4160,7 +4160,7 @@ void psc_wrap_draw(bool show) {
   if (!slidermode) return;
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
-      float oldval = psc_lod_level;
+      const float oldval = psc_lod_level;
       const Vec2<float> yxf = HB::get_pointer().value();
       switch (button_active) {
         case 1: {
@@ -4168,8 +4168,8 @@ void psc_wrap_draw(bool show) {
           break;
         }
         case 2: {
-          float a = ((yxf[0]) - 0.5f) * -3.f;
-          float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
+          const float a = ((yxf[0]) - 0.5f) * -3.f;
+          const float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
           psc_lod_level += a2;
           break;
         }
@@ -4187,7 +4187,7 @@ void psc_wrap_draw(bool show) {
       hw.redraw_later();
     }
   } else {
-    int nfaces = Kmesh.num(2);
+    const int nfaces = Kmesh.num(2);
     int lmargin = !bigfont() ? 7 : 3;
     if (win_dims[1] < 400 && !bigfont()) lmargin -= 3;
     static const bool psc2win = getenv_bool("G3D_PSC2WIN");
@@ -4218,19 +4218,19 @@ void psc_wrap_draw(bool show) {
       HB::draw_row_col_text(V(5, lmargin), "#0s");
       HB::draw_row_col_text(V(5, lmargin + 4), sform("%d", psc_orphan_nverts));
     }
-    float yline = .004f, xleft = .05f;
+    const float yline = .004f, xleft = .05f;
     {  // current level
-      float lod = clamp(psc_lod_level, 0.f, 1.f);
+      const float lod = clamp(psc_lod_level, 0.f, 1.f);
       float x1 = xleft + .01f, x2 = xleft + .05f;
-      float y1 = (1.1f - lod) / 1.2f - .002f;
-      float y2 = y1 + yline;
+      const float y1 = (1.1f - lod) / 1.2f - .002f;
+      const float y2 = y1 + yline;
       HB::draw_segment(V(y1, x1), V(y1, x2));
       HB::draw_segment(V(y2, x1), V(y2, x2));
       HB::draw_segment(V(y1, x1), V(y2, x1));
       HB::draw_segment(V(y1, x2), V(y2, x2));
     }
     {  // slider
-      float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
+      const float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
       float x1 = xleft + .02f, x2 = xleft + .04f, xm = xleft + .03f;
       HB::draw_segment(V(y1 + yd, x1), V(y1, xm));
       HB::draw_segment(V(y1 + yd, x2), V(y1, xm));
@@ -4245,7 +4245,7 @@ void psc_wrap_draw(bool show) {
 
 void psc_set_lod(float lod) {
   if (lod_use_nvertices) {
-    int nv = int(lod);
+    const int nv = int(lod);
     if (!assertw(psc_lod_list.num() > 1)) return;
     psc_lod_level = (float(nv) - 1) / (psc_lod_list.num() - 1);
   } else {
@@ -4265,8 +4265,8 @@ inline float projected_area(float area, const Point& x) {
 }
 
 void draw_point(const Point& vp, float area) {
-  float sphererad = sqrt(area / (TAU * 2));
-  float prad = projected_area(sphererad, vp);
+  const float sphererad = sqrt(area / (TAU * 2));
+  const float prad = projected_area(sphererad, vp);
   int complexity;
   if (prad < 10) {
     complexity = 3;
@@ -4323,11 +4323,11 @@ void draw_sc() {
         psc_orphan_nedges++;
         const Point& vj = s1->getChild(0)->getPosition();
         const Point& vk = s1->getChild(1)->getPosition();
-        float area = s1->getArea();
+        const float area = s1->getArea();
         assertx(area >= 0.f);
         // radius of a cylinder from vj to vk with same area
         float rad;
-        float height = dist(vj, vk);
+        const float height = dist(vj, vk);
         rad = area / (TAU * height);
         // cylinder center
         const Point& center = interp(vj, vk);
@@ -4338,10 +4338,10 @@ void draw_sc() {
           continue;
         }
         // find projected area
-        float prad = projected_area(rad, center);
+        const float prad = projected_area(rad, center);
         // skip lines of disregardable thickness
         if (prad < 0.2f) continue;
-        int thickness = int(prad);
+        const int thickness = int(prad);
         if (thickness < 5) {
           // draw a line
           initialize_unlit();
@@ -4367,7 +4367,7 @@ void draw_sc() {
       assertx(s0->isPrincipal());
       psc_orphan_nverts++;
       maybe_update_mat_diffuse(s_color[s0->getVAttribute()]);
-      float area = s0->getArea();
+      const float area = s0->getArea();
       assertx(area >= 0.f);
       draw_point(s0->getPosition(), area);
     }
@@ -4440,11 +4440,11 @@ void read_sc_gm(const string& filename) {
 }
 
 void sc_gm_update_lod() {
-  float step = 1.f / sc_gm_num;
+  const float step = 1.f / sc_gm_num;
   sc_gm_morph = int((sc_gm_lod_level / step) - 1e-6);
-  float bot = sc_gm_morph * step;
-  float top = (sc_gm_morph + 1) * step;
-  float alpha = (sc_gm_lod_level - bot) / (top - bot);
+  const float bot = sc_gm_morph * step;
+  const float top = (sc_gm_morph + 1) * step;
+  const float alpha = (sc_gm_lod_level - bot) / (top - bot);
   Gmorphs[sc_gm_morph].update(alpha, corner_pnor);
 }
 
@@ -4452,7 +4452,7 @@ void sc_gm_wrap_draw(bool show) {
   if (!slidermode) return;
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
-      float oldval = sc_gm_lod_level;
+      const float oldval = sc_gm_lod_level;
       const Vec2<float> yxf = HB::get_pointer().value();
       switch (button_active) {
         case 1: {
@@ -4460,8 +4460,8 @@ void sc_gm_wrap_draw(bool show) {
           break;
         }
         case 2: {
-          float a = ((yxf[0]) - 0.5f) * -3.f;
-          float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
+          const float a = ((yxf[0]) - 0.5f) * -3.f;
+          const float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
           sc_gm_lod_level += a2;
           break;
         }
@@ -4473,7 +4473,7 @@ void sc_gm_wrap_draw(bool show) {
       hw.redraw_later();
     }
   } else {
-    int nfaces = Gmorphs[sc_gm_morph].getK().num(2);
+    const int nfaces = Gmorphs[sc_gm_morph].getK().num(2);
     int lmargin = !bigfont() ? 7 : 3;
     if (win_dims[1] < 400 && !bigfont()) lmargin -= 3;
     HB::draw_row_col_text(V(1, lmargin), "GM#");
@@ -4484,19 +4484,19 @@ void sc_gm_wrap_draw(bool show) {
     HB::draw_row_col_text(V(4, lmargin + 4), sform("%d", psc_orphan_nedges));
     HB::draw_row_col_text(V(5, lmargin), "#0s");
     HB::draw_row_col_text(V(5, lmargin + 4), sform("%d", psc_orphan_nverts));
-    float yline = .004f, xleft = .05f;
+    const float yline = .004f, xleft = .05f;
     {  // current level
-      float lod = clamp(sc_gm_lod_level, 0.f, 1.f);
+      const float lod = clamp(sc_gm_lod_level, 0.f, 1.f);
       float x1 = xleft + .01f, x2 = xleft + .05f;
-      float y1 = (1.1f - lod) / 1.2f - .002f;
-      float y2 = y1 + yline;
+      const float y1 = (1.1f - lod) / 1.2f - .002f;
+      const float y2 = y1 + yline;
       HB::draw_segment(V(y1, x1), V(y1, x2));
       HB::draw_segment(V(y2, x1), V(y2, x2));
       HB::draw_segment(V(y1, x1), V(y2, x1));
       HB::draw_segment(V(y1, x2), V(y2, x2));
     }
     {  // slider
-      float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
+      const float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
       float x1 = xleft + .02f, x2 = xleft + .04f, xm = xleft + .03f;
       HB::draw_segment(V(y1 + yd, x1), V(y1, xm));
       HB::draw_segment(V(y1 + yd, x2), V(y1, xm));
@@ -4562,11 +4562,11 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
         psc_orphan_nedges++;
         const Point& vj = s1->getChild(0)->getPosition();
         const Point& vk = s1->getChild(1)->getPosition();
-        float area = s1->getArea();
+        const float area = s1->getArea();
         assertx(area >= 0.f);
         // radius of a cylinder from vj to vk with same area
         float rad;
-        float height = dist(vj, vk);
+        const float height = dist(vj, vk);
         rad = area / (TAU * height);
         // cylinder center
         const Point& center = interp(vj, vk);
@@ -4577,10 +4577,10 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
           continue;
         }
         // find projected area
-        float prad = projected_area(rad, center);
+        const float prad = projected_area(rad, center);
         // skip lines of disregardable thickness
         if (prad < 0.2) continue;
-        int thickness = int(prad);
+        const int thickness = int(prad);
         if (thickness < 5) {
           // draw a line
           initialize_unlit();
@@ -4606,7 +4606,7 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
       if (s0->getArea() < 1e-3f) continue;
       psc_orphan_nverts++;
       maybe_update_mat_diffuse(s_color[s0->getVAttribute()]);
-      float area = s0->getArea();
+      const float area = s0->getArea();
       assertx(area >= 0.f);
       if (area < 1e-3f) continue;
       draw_point(s0->getPosition(), area);
@@ -4636,12 +4636,12 @@ Cylinder::Cylinder(int depth) {
   Vec<float, 64> verts;
   // clip maximum depth
   depth = clamp(depth, 1, 3);
-  int nv = 4 * (1 << (depth - 1));
+  const int nv = 4 * (1 << (depth - 1));
   assertx(nv > 0);  // For clang-tidy.
-  int num = 2 * (nv + 1);
+  const int num = 2 * (nv + 1);
   _v.init(num);
   _n.init(num);
-  float dth = TAU / nv;
+  const float dth = TAU / nv;
   float th = .5f * dth;
   int i;
   for (i = 0; i < nv; i++) {
@@ -5039,7 +5039,7 @@ void draw_ply() {
         glNormal3fv(fnormal.data());
       }
       for_int(j, indices.num()) {
-        int vi = indices[j];
+        const int vi = indices[j];
         if (texture_active) {
           if (ply_fuv.num())
             glTexCoord2fv(ply_fuv[i][j].data());
@@ -5077,7 +5077,7 @@ void draw_ply() {
     update_cur_color(pix_edgecolor);
     glBegin(GL_LINES);
     for (const auto& indices : ply_findices) {
-      int n = indices.num();
+      const int n = indices.num();
       for_int(j, n) {
         // draws most edges twice :-(
         glVertex3fv(ply_vpos[indices[j]].data());

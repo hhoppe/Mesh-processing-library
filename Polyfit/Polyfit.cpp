@@ -76,9 +76,9 @@ float get_erep() { return crep * verts.num(); }
 void analyze_poly(int indent, const string& s) {
   string str;
   for_int(i, indent) str += " ";
-  int nv = verts.num();
-  float edis = get_edis(), espr = get_espr(), erep = get_erep();
-  float etot = edis + espr + erep;
+  const int nv = verts.num();
+  const float edis = get_edis(), espr = get_espr(), erep = get_erep();
+  const float etot = edis + espr + erep;
   showdf("%sPoly analysis: %s\n", str.c_str(), s.c_str());
   showdf("%s  poly: v=%d\n", str.c_str(), nv);
   showdf("%s  parameters: crep=%g spring=%g\n", str.c_str(), crep, spring);
@@ -166,7 +166,7 @@ void enter_point(const Point& p, vertex v) {
 
 void initialize_poly(const Polygon& poly) {
   int num = poly.num();
-  bool closed = std::is_eq(compare(poly[0], poly[num - 1], 1e-6f));
+  const bool closed = std::is_eq(compare(poly[0], poly[num - 1], 1e-6f));
   if (closed) --num;
   assertx(num >= (closed ? 3 : 2));
   vertex vf = nullptr, vl = nullptr;
@@ -238,7 +238,7 @@ void global_fit() {
   }
   // Add spring constraints
   if (spring) {
-    float sqrtit = sqrt(spring);
+    const float sqrtit = sqrt(spring);
     Vector vzero(0.f, 0.f, 0.f);
     int ri = pt.n;
     for (vertex v : verts) {
@@ -265,7 +265,7 @@ void global_fit() {
 // v[0] or v[1] may be nullptr
 void local_fit(CArrayView<int> arpts, Vec2<vertex>& v, int niter, Point& newp, double& prss0, double& prss1) {
   assertx(v[0] || v[1]);
-  float sqrtit = sqrt(spring);
+  const float sqrtit = sqrt(spring);
   for_int(ni, niter) {
     Vec3<double> UtU, Utb, btb;
     fill(UtU, 0.);
@@ -273,7 +273,7 @@ void local_fit(CArrayView<int> arpts, Vec2<vertex>& v, int niter, Point& newp, d
     fill(btb, 0.);
     double rss0 = 0., rss1 = 0.;
     // Enter projections
-    for (int pi : arpts) {
+    for (const int pi : arpts) {
       const Point& p = pt.co[pi];
       const Vec2<SegmentProjectionResult> results{
           v[0] ? project_point_segment(p, v[0]->p, newp) : SegmentProjectionResult{BIGFLOAT, 0.f, Point{}},
@@ -294,7 +294,7 @@ void local_fit(CArrayView<int> arpts, Vec2<vertex>& v, int niter, Point& newp, d
     for_int(i, 2) {
       if (!v[i]) continue;
       for_int(c, 3) {
-        double u = sqrtit, b = double(v[i]->p[c]) * sqrtit;
+        const double u = sqrtit, b = double(v[i]->p[c]) * sqrtit;
         UtU[c] += u * u;
         Utb[c] += u * b;
         btb[c] += b * b;
@@ -303,9 +303,9 @@ void local_fit(CArrayView<int> arpts, Vec2<vertex>& v, int niter, Point& newp, d
     }
     // Solve
     for_int(c, 3) {
-      double newv = assertw(UtU[c]) ? Utb[c] / UtU[c] : newp[c];
+      const double newv = assertw(UtU[c]) ? Utb[c] / UtU[c] : newp[c];
       newp[c] = float(newv);
-      double a = btb[c] - UtU[c] * square(newv);
+      const double a = btb[c] - UtU[c] * square(newv);
       assertw(a > -1e-8);
       if (a > 0.) rss1 += a;
     }
@@ -320,12 +320,12 @@ void fit_ring(vertex v, int niter) {
   Vec2<vertex> va{v->v[0], v->v[1]};
   Array<int> arpts;
   if (va[0])
-    for (int pi : va[0]->pts) arpts.push(pi);
+    for (const int pi : va[0]->pts) arpts.push(pi);
   if (va[1])
-    for (int pi : v->pts) arpts.push(pi);
+    for (const int pi : v->pts) arpts.push(pi);
   double rss0, rss1;
   local_fit(arpts, va, niter, v->p, rss0, rss1);
-  for (int pi : arpts) reproject_locally(pi);
+  for (const int pi : arpts) reproject_locally(pi);
 }
 
 void cleanup_neighborhood(vertex v, int nri) {
@@ -359,10 +359,10 @@ EResult try_ecol(vertex v, int ni, int nri, float& edrss) {
   Array<int> arpts;
   for_int(i, 3) {
     if (!ev[i] || !ev[i]->v[1]) continue;
-    for (int pi : ev[i]->pts) arpts.push(pi);
+    for (const int pi : ev[i]->pts) arpts.push(pi);
     rssf += spring * dist2(ev[i]->p, ev[i]->v[1]->p);
   }
-  for (int pi : arpts) rssf += pt.dis2[pi];
+  for (const int pi : arpts) rssf += pt.dis2[pi];
   // Find the best starting location by exploring one iteration.
   double minrss1 = BIGFLOAT;
   int minii = -1;
@@ -380,13 +380,13 @@ EResult try_ecol(vertex v, int ni, int nri, float& edrss) {
   Point newp = interp(v->p, v1->p, minii * .5f);
   double rss0, rss1;
   local_fit(arpts, va, ni, newp, rss0, rss1);
-  double drss = rss1 - rssf - double(crep);
+  const double drss = rss1 - rssf - double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("ecol:", rssf, rss1, drss);
   if (drss >= 0.) return R_energy;  // energy function does not decrease
   // ALL SYSTEMS GO
   // move points off to other segment and reproject later
-  for (int pi : v->pts) {
+  for (const int pi : v->pts) {
     ov->pts.enter(pi);
     pt.cle[pi] = ov;
   }
@@ -408,12 +408,12 @@ EResult try_espl(vertex v, int ni, int nri, float& edrss) {
   Vec2<vertex> va{v, assertx(v->v[1])};
   double rssf = spring * dist2(va[0]->p, va[1]->p);
   Array<int> arpts;
-  for (int pi : v->pts) arpts.push(pi);
-  for (int pi : arpts) rssf += pt.dis2[pi];
+  for (const int pi : v->pts) arpts.push(pi);
+  for (const int pi : arpts) rssf += pt.dis2[pi];
   Point newp = interp(va[0]->p, va[1]->p);
   double rss0, rss1;
   local_fit(arpts, va, ni, newp, rss0, rss1);
-  double drss = rss1 - rssf + double(crep);
+  const double drss = rss1 - rssf + double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("espl:", rssf, rss1, drss);
   if (drss >= 0.) return R_energy;  // energy function does not decrease
@@ -455,15 +455,15 @@ void create_poly(bool pclosed, int n) {
   Polygon poly;
   if (!pclosed) {
     assertx(n > 1);
-    float stdv = 1.1f;
+    const float stdv = 1.1f;
     // generate n points along principal line (-1, 1) * stdv
     for_int(i, n) poly.push(Point(-stdv + 2.f * stdv * i / (n - 1.f), 0.f, 0.f) * frame);
   } else {
     assertx(n > 2);
-    float stdv = 1.5f;
+    const float stdv = 1.5f;
     // generate n points along ellipse at radius stdv
     for_int(i, n + 1) {
-      float a = float(i) / n * TAU;
+      const float a = float(i) / n * TAU;
       poly.push(Point(stdv * std::cos(a), stdv * std::sin(a), 0.f) * frame);
     }
   }
@@ -493,7 +493,7 @@ void do_pfilename(Args& args) {
 
 void do_sample(Args& args) {
   assertx(!pt.n && verts.num());
-  int n = args.get_int();
+  const int n = args.get_int();
   // Note: could add sample points from the polygon based on edge length.
   Array<vertex> arv;
   for (vertex v : verts)
@@ -533,7 +533,7 @@ void do_closedcurve(Args& args) { create_poly(true, args.get_int()); }
 void do_gfit(Args& args) {
   perhaps_initialize();
   HH_TIMER("_gfit");
-  int niter = args.get_int();
+  const int niter = args.get_int();
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning gfit, %d iterations, spr=%g\n", niter, spring);
   float ecsc = get_edis() + get_espr();  // energy constant simplicial complex
@@ -551,8 +551,8 @@ void do_gfit(Args& args) {
       HH_ATIMER("__project");
       global_project();
     }
-    float necsc = get_edis() + get_espr();
-    float echange = necsc - ecsc;
+    const float necsc = get_edis() + get_espr();
+    const float echange = necsc - ecsc;
     assertw(echange < 0.f);
     if (verb >= 4) {
       analyze_poly(2, "gfit_iter");
@@ -623,8 +623,8 @@ void do_stoc() {
 void do_lfit(Args& args) {
   perhaps_initialize();
   HH_STIMER("_lfit");
-  int ni = args.get_int();
-  int nli = args.get_int();
+  const int ni = args.get_int();
+  const int nli = args.get_int();
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning lfit, %d iters (nli=%d), spr=%g\n", ni, nli, spring);
   for_int(i, ni) {
@@ -642,7 +642,7 @@ void apply_schedule() {
     do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
     spring *= .1f;                  // -spring f
   }
-  for (float spr : spring_sched) {
+  for (const float spr : spring_sched) {
     spring = spr;                   // -spring f
     do_lfit(Args{"2", "3"}.use());  // -lfit 2 3
     do_stoc();                      // -stoc

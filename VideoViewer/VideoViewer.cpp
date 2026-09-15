@@ -749,7 +749,7 @@ Vec2<float> get_zooms() {
   const SGrid<float, 2, 2> matrix_2d{{g_view[0, 0], g_view[0, 1]}, {g_view[1, 0], g_view[1, 1]}};
   SGrid<float, 2, 2> mo;
   Vec2<float> eimag;
-  principal_components(matrix_2d.const_grid_view(), mo.grid_view(), eimag);
+  principal_components(matrix_2d.grid_view(), mo.grid_view(), eimag);
   eimag *= sqrt(float(eimag.num()));
   return eimag;
 }

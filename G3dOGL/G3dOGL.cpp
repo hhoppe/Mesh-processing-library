@@ -1016,7 +1016,7 @@ void load_texturemaps() {
       const auto m1 = V(V(texturescale, 0.f, 0.f, 0.f), V(0.f, texturescale, 0.f, 0.f),  //
                         V(0.f, 0.f, 1.f, 0.f), V(0.f, 0.f, 0.f, 1.f));
       glMatrixMode(GL_TEXTURE);
-      glLoadMatrixf(m1.const_grid_view().data());
+      glLoadMatrixf(m1.grid_view().data());
       glMatrixMode(GL_MODELVIEW);
     }
 
@@ -4713,7 +4713,7 @@ void Cylinder::draw(const Point& p1, const Point& p2, float r) {
   glPushMatrix();
   {
     glTranslatef(p1[0], p1[1], p1[2]);
-    glMultMatrixf(m.const_grid_view().data());
+    glMultMatrixf(m.grid_view().data());
     glScalef(r, r, D);
     draw();
   }

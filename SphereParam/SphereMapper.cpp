@@ -794,7 +794,7 @@ class SphereMapper::Implementation {
   }
 
   void check_ostream() {
-    std::ostream& os = (*_visualizer)();
+    const std::ostream& os = (*_visualizer)();
     if (!os) {
       showf("Failed pipe write to visualizer; its window is likely closed.  Continuing non-interactively.\n");
       delete _visualizer;

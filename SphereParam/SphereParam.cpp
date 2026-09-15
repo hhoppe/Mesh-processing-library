@@ -34,7 +34,7 @@ Frame get_rotate_frame(const string& rotate_s3d) {
   // Snap the frame axes to the nearest canonical axes.
   for_int(i, 3) {
     Vector& vec = frame.v(i);
-    int axis = arg_max(abs(vec));
+    const int axis = arg_max(abs(vec));
     for_int(j, 3) vec[j] = j == axis ? sign(vec[j]) : 0.f;
   }
 
@@ -134,12 +134,12 @@ template <int n, bool need_normalize> class SaveSplitEdgeAttrib {
     _v1 = _mesh.vertex1(e), _v2 = _mesh.vertex2(e), _vs1 = _mesh.side_vertex1(e), _vs2 = _mesh.side_vertex2(e);
     Face f1 = _mesh.face1(e), f2 = _mesh.face2(e);
     assertx(_vs2 && f2);
-    int num_defined = (int(_mesh.parse_corner_key_vec(_mesh.corner(_v1, f1), _key, _vec_v1f1)) +
-                       int(_mesh.parse_corner_key_vec(_mesh.corner(_v2, f1), _key, _vec_v2f1)) +
-                       int(_mesh.parse_corner_key_vec(_mesh.corner(_v1, f2), _key, _vec_v1f2)) +
-                       int(_mesh.parse_corner_key_vec(_mesh.corner(_v2, f2), _key, _vec_v2f2)) +
-                       int(_mesh.parse_corner_key_vec(_mesh.corner(_vs1, f1), _key, _vec_vs1f1)) +
-                       int(_mesh.parse_corner_key_vec(_mesh.corner(_vs2, f2), _key, _vec_vs2f2)));
+    const int num_defined = (int(_mesh.parse_corner_key_vec(_mesh.corner(_v1, f1), _key, _vec_v1f1)) +
+                             int(_mesh.parse_corner_key_vec(_mesh.corner(_v2, f1), _key, _vec_v2f1)) +
+                             int(_mesh.parse_corner_key_vec(_mesh.corner(_v1, f2), _key, _vec_v1f2)) +
+                             int(_mesh.parse_corner_key_vec(_mesh.corner(_v2, f2), _key, _vec_v2f2)) +
+                             int(_mesh.parse_corner_key_vec(_mesh.corner(_vs1, f1), _key, _vec_vs1f1)) +
+                             int(_mesh.parse_corner_key_vec(_mesh.corner(_vs2, f2), _key, _vec_vs2f2)));
     if (!(num_defined == 0 || num_defined == 6)) assertnever(SSHOW(_key, num_defined));
     _is_defined = num_defined > 0;
   }
@@ -296,7 +296,7 @@ Uv snap_uv(Uv uv) {
 }
 
 template <int n> Vec<float, n> normalized_double(const Vec<float, n>& vec) {
-  double val = assertx(mag<double>(vec));
+  const double val = assertx(mag<double>(vec));
   return vec / float(val);
 }
 
@@ -521,7 +521,7 @@ void write_parameterized_pm(PMeshIter pmi, CArrayView<Point> sphmap, bool split_
   }
   if (split_meridian) split_awmesh_along_prime_meridian(pmi);
   hh_clean_up();
-  PMesh pmesh(std::move(pmi), pminfo);
+  const PMesh pmesh(std::move(pmi), pminfo);
   pmesh.write(std::cout);
 }
 
@@ -635,7 +635,7 @@ int main(int argc, const char** argv) {
 
   // Compute the spherical parameterization for the base mesh.
   if (mesh_for_base != "") base_param_scheme = "mesh";
-  Array<Point> base_sphmap = get_base_sphmap(pmi, base_param_scheme, mesh_for_base);
+  const Array<Point> base_sphmap = get_base_sphmap(pmi, base_param_scheme, mesh_for_base);
 
   // Run a coarse-to-fine optimization to obtain the spherical parameterization for the full-res mesh.
   Array<Point> sphmap{mapper.compute(base_sphmap)};

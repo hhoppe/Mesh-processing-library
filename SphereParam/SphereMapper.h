@@ -1,6 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#ifndef SPHEREPARAM_SPHEREMAPPER_H_
-#define SPHEREPARAM_SPHEREMAPPER_H_
+#ifndef MESH_PROCESSING_SPHEREPARAM_SPHEREMAPPER_H_
+#define MESH_PROCESSING_SPHEREPARAM_SPHEREMAPPER_H_
 
 #include "libHh/Array.h"
 #include "libHh/Geometry.h"
@@ -65,4 +65,4 @@ class SphereMapper {
 
 }  // namespace hh
 
-#endif  // SPHEREPARAM_SPHEREMAPPER_H_
+#endif  // MESH_PROCESSING_SPHEREPARAM_SPHEREMAPPER_H_

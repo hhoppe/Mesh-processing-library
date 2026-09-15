@@ -1,4 +1,6 @@
 // -*- C++ -*-
+#ifndef MESH_PROCESSING_SPHEREPARAM_BOOST_MINIMA_H_
+#define MESH_PROCESSING_SPHEREPARAM_BOOST_MINIMA_H_
 // Brent algorithm to find the minimum of a 1D function, adapted from Boost.
 
 // Doc: https://www.boost.org/doc/libs/1_84_0/libs/math/doc/html/math_toolkit/brent_minima.html
@@ -146,3 +148,5 @@ BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& ma
 }
 
 }  // namespace boost_minima
+
+#endif  // MESH_PROCESSING_SPHEREPARAM_BOOST_MINIMA_H_

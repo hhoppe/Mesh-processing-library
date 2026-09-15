@@ -908,7 +908,7 @@ void do_zero_resid() {
   pmesh._info._has_resid = false;
 }
 
-PmWedgeAttrib zero_wad;  // Cannot declare const because default constructor leaves uninitialized.
+constexpr PmWedgeAttrib zero_wad{};
 
 void do_compute_nor() {
   if (1) assertnever("compute_nor() abandoned for now");

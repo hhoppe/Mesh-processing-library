@@ -885,7 +885,7 @@ PmWedgeAttribD diff(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2) {
 }
 
 PmWedgeAttribD diff_zero(const PmWedgeAttrib& a1) {
-  static PmWedgeAttrib zero;  // Cannot declare const because default constructor leaves uninitialized.
+  static constexpr PmWedgeAttrib zero{};
   PmWedgeAttribD ad;
   diff(ad, a1, zero);
   return ad;

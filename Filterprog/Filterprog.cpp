@@ -154,13 +154,13 @@ void carry_old_corner_info(Edge e) {
     for (Corner c : mesh.corners(f)) c_owedge_id(c) = 0;
   for (Face ff : mesh.faces(e)) {
     for (Corner crep : mesh.corners(ff)) {
-      int crepcwid = c_cwedge_id(crep);
+      const int crepcwid = c_cwedge_id(crep);
       int owid = 0;
       for_int(dir, 2) {
         for (Corner c = crep;;) {
           c = !dir ? mesh.ccw_corner(c) : mesh.clw_corner(c);
           if (!c || c == crep || c_cwedge_id(c) != crepcwid) break;
-          int towid = c_owedge_id(c);
+          const int towid = c_owedge_id(c);
           if (towid) {
             owid = towid;
             break;
@@ -181,7 +181,7 @@ void carry_old_corner_info(Edge e) {
       if (c_owedge_id(c)) continue;
       Vertex vo = mesh.opp_vertex(v, e);
       Corner co = mesh.corner(vo, f);
-      int towid = c_owedge_id(co);
+      const int towid = c_owedge_id(co);
       if (towid) {
         c_owedge_id(c) = towid;
       } else {
@@ -206,7 +206,7 @@ void carry_old_corner_info(Edge e) {
 Point compute_screenpoint(Vertex v) {
   Point pview = mesh.point(v) * view_iframe;
   if (pview[0] > 0.f) {
-    float denom = pview[0] * view_zoom;
+    const float denom = pview[0] * view_zoom;
     pview[1] /= denom;
     pview[2] /= denom;
   }
@@ -222,23 +222,23 @@ bool screenpoint_within_frustum(const Point& pscreen) {
 bool should_perform_vsplit(Vertex vs) {
   if (!sel_refinement) return true;
   Point p1screen = compute_screenpoint(vs);
-  bool in_frustum = screenpoint_within_frustum(p1screen);
+  const bool in_frustum = screenpoint_within_frustum(p1screen);
   bool some_in_frustum = in_frustum;
   Array<Point> ar_pscreen;
   for (Vertex v : mesh.ccw_vertices(vs)) {
-    Point pscreen = compute_screenpoint(v);
+    const Point pscreen = compute_screenpoint(v);
     ar_pscreen.push(pscreen);
     if (screenpoint_within_frustum(pscreen)) some_in_frustum = true;
   }
   bool facing_front = false, facing_back = false;
   float area2 = 0.f;
   for_int(i, ar_pscreen.num()) {
-    int i1 = (i + 1) % ar_pscreen.num();
+    const int i1 = (i + 1) % ar_pscreen.num();
     if (!i1 && mesh.is_boundary(vs)) continue;                      // Not a face.
     if (ar_pscreen[i][0] <= 0 || ar_pscreen[i1][0] <= 0) continue;  // Behind viewer.
-    float x1 = p1screen[1], y1 = p1screen[2];
-    float x2 = ar_pscreen[i][1], y2 = ar_pscreen[i][2];
-    float x3 = ar_pscreen[i1][1], y3 = ar_pscreen[i1][2];
+    const float x1 = p1screen[1], y1 = p1screen[2];
+    const float x2 = ar_pscreen[i][1], y2 = ar_pscreen[i][2];
+    const float x3 = ar_pscreen[i1][1], y3 = ar_pscreen[i1][2];
     float vcross = (x2 - x1) * (y3 - y1) - (x3 - x1) * (y2 - y1);  // Expansion about first point.
     vcross = -vcross;                                              // Use -x axis towards viewer.
     if (vcross >= 0.f)
@@ -247,9 +247,9 @@ bool should_perform_vsplit(Vertex vs) {
       facing_back = true;
     if (vcross >= 0.f) area2 += vcross;
   }
-  bool near_silhouette = facing_front && facing_back;
+  const bool near_silhouette = facing_front && facing_back;
   const float frac_screen = 80.f / 500.f;
-  bool sufficient_area = area2 > square(frac_screen);
+  const bool sufficient_area = area2 > square(frac_screen);
   if (!some_in_frustum) return false;
   if (!use_silhouette && !use_area) return true;
   return (use_silhouette && near_silhouette) || (use_area && sufficient_area);
@@ -301,9 +301,9 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         assert_no_more_chars(s);
         assertx(vni == vsi);  // Redundancy.
         dummy_use(fli, fri);
-        int vsie = vlineage.existing_id(vsi);
-        int vlie = vlineage.existing_id(vli);
-        int vrie = vri ? vlineage.existing_id(vri) : 0;
+        const int vsie = vlineage.existing_id(vsi);
+        const int vlie = vlineage.existing_id(vli);
+        const int vrie = vri ? vlineage.existing_id(vri) : 0;
         Vertex vs = mesh.id_vertex(vsie);
         Vertex vl = mesh.id_vertex(vlie);
         Vertex vr = vrie ? mesh.id_vertex(vrie) : nullptr;
@@ -411,11 +411,11 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         if (record_changes) std::cout << sline << '\n';
         const char* sinfo = assertx(get_sinfo(s));
         string str;
-        int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
+        const int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
         c_cwedge_id(c) = wid;
         if (save0.wid_read.add(wid)) {
           mesh.set_string(c, sinfo);
-          WedgeInfo wi = create_winfo(c);
+          const WedgeInfo wi = create_winfo(c);
           mesh.set_string(c, nullptr);
           gcwinfo.set(wid, wi);
         }
@@ -441,7 +441,7 @@ int get_unique_wid(Vertex v, bool use_old) {
   dummy_init(u_wid);
   bool same_wid = true;
   for (Corner c : mesh.corners(v)) {
-    int wid = !use_old ? c_cwedge_id(c) : c_owedge_id(c);
+    const int wid = !use_old ? c_cwedge_id(c) : c_owedge_id(c);
     if (!num++) {
       u_wid = wid;
     } else {
@@ -500,7 +500,7 @@ void write_init_vertex(Vertex v, bool write_morph) {
   if (u_nwid > 0 && u_owid < 0) {
     for (Corner c : mesh.corners(v)) {
       // int nwid = c_cwedge_id(c);
-      int owid = c_owedge_id(c);
+      const int owid = c_owedge_id(c);
       // Rare case in which partial sharp edge collapses into a boundary vertex.
       if (owid && owid != u_nwid) {
         Warning("Rare case of u_nwid > 0 && u_owid < 0");
@@ -531,7 +531,7 @@ void write_mesh(bool write_morph = false) {
       Set<Corner> setcvis;
       for (Corner crep : mesh.corners(v)) {
         if (setcvis.contains(crep)) continue;
-        int crepcwid = c_cwedge_id(crep);
+        const int crepcwid = c_cwedge_id(crep);
         Vertex vn = nmesh.create_vertex();
         nmesh.set_point(vn, mesh.point(mesh.corner_vertex(crep)));
         nmesh.set_string(vn, write_pa_string(v, crepcwid, c_owedge_id(crep), write_morph).c_str());
@@ -663,7 +663,7 @@ void do_fbasemesh(Args& args) {
   for (Vertex v : mesh.vertices()) {
     for (Corner c : mesh.corners(v)) {
       const char* s = assertx(mesh.corner_key(str, c, "wid"));
-      int wid = assertx(to_int(s));
+      const int wid = assertx(to_int(s));
       c_cwedge_id(c) = wid;
       if (!gcwinfo.contains(wid)) gcwinfo.set(wid, create_winfo(c));
     }
@@ -680,7 +680,7 @@ void do_fprogressive(Args& args) {
 
 // Write a sequence of morphs forming an arithmetic sequence.
 void do_arithseq(Args& args) {
-  int deltanf = args.get_int();
+  const int deltanf = args.get_int();
   for (;;) {
     int nfaces = mesh.num_faces() + deltanf;
     if (maxnfaces) nfaces = min(nfaces, maxnfaces);
@@ -692,12 +692,12 @@ void do_arithseq(Args& args) {
 void do_geomseq(Args& args) {
   float factornf = args.get_float();
   if (maxnfaces) {
-    float oldfactornf = factornf;
-    int cnfaces = mesh.num_faces();
-    int wnfaces = maxnfaces;
+    const float oldfactornf = factornf;
+    const int cnfaces = mesh.num_faces();
+    const int wnfaces = maxnfaces;
     const int fudge = 1;
-    float ratio = float(wnfaces + fudge) / cnfaces;
-    int nsteps = int(std::log(ratio) / std::log(factornf) + .5f);
+    const float ratio = float(wnfaces + fudge) / cnfaces;
+    const int nsteps = int(std::log(ratio) / std::log(factornf) + .5f);
     factornf = pow(ratio, 1.f / nsteps);
     showdf("rounded factor %.3f to %.3f for %d steps (%d to %d faces)\n",  //
            oldfactornf, factornf, nsteps, cnfaces, wnfaces);
@@ -714,13 +714,13 @@ void do_geomseq(Args& args) {
 
 // Write a single morph from the current mesh up to the mesh with nfaces.
 void do_to(Args& args) {
-  int nfaces = args.get_int();
+  const int nfaces = args.get_int();
   next_morph(nfaces);
 }
 
 // Parse vsplit records until mesh has nfaces.
 void do_from(Args& args) {
-  int nfaces = args.get_int();
+  const int nfaces = args.get_int();
   RFile& fi_prog = *assertx(pfi_prog);
   std::istream& is = fi_prog();
   {
@@ -736,7 +736,7 @@ void do_from(Args& args) {
 // Parse a fixed number of vsplit records.  (Useful for considering a fixed PM prefix in conjunction with
 // sel_refinement.)
 void do_consider(Args& args) {
-  int nrecords = args.get_int();
+  const int nrecords = args.get_int();
   RFile& fi_prog = *assertx(pfi_prog);
   std::istream& is = fi_prog();
   int nrec = 0;
@@ -762,7 +762,7 @@ void do_at(Args& args) {
 
 // Begin sel_refinement using the specified s3d file as viewing parameter.
 void do_view(Args& args) {
-  string filename = args.get_string();
+  const string filename = args.get_string();
   if (filename == "") {
     sel_refinement = false;
     return;
@@ -786,7 +786,7 @@ void do_view(Args& args) {
 
 // Parse vsplit records until mesh has nfaces, recording changes on stdout.
 void do_animateto(Args& args) {
-  int nfaces = args.get_int();
+  const int nfaces = args.get_int();
   RFile& fi_prog = *assertx(pfi_prog);
   std::istream& is = fi_prog();
   {
@@ -831,24 +831,24 @@ unsigned encode_wlr(int wid_s, int wid_a, int wid_b) {
 
 int parse_matid(Face f) {
   string str;
-  int i = to_int(assertx(GMesh::string_key(str, mesh.get_string(f), "matid")));
+  const int i = to_int(assertx(GMesh::string_key(str, mesh.get_string(f), "matid")));
   assertx(i >= 0);
   return i;
 }
 
 int face_prediction(Face f, Face fa, Face fb, int ii) {
   assertx(fa || fb);
-  int m = parse_matid(f);
-  int ma = fa ? parse_matid(fa) : -1;
-  int mb = fb ? parse_matid(fb) : -1;
-  int predicted_matid = ii == 0 ? (mb >= 0 ? mb : ma) : (ma >= 0 ? ma : mb);
+  const int m = parse_matid(f);
+  const int ma = fa ? parse_matid(fa) : -1;
+  const int mb = fb ? parse_matid(fb) : -1;
+  const int predicted_matid = ii == 0 ? (mb >= 0 ? mb : ma) : (ma >= 0 ? ma : mb);
   return m == predicted_matid ? -1 : m;
 }
 
 PmWedgeAttrib get_wattrib(Corner c) {
   assertx(c);
   PmWedgeAttrib wa;
-  int wid = c_cwedge_id(c);
+  const int wid = c_cwedge_id(c);
   const WedgeInfo& wi = gcwinfo.get(wid);
   assertx(has_normal);
   assertx(wi.nor[0] != k_undefined);
@@ -920,30 +920,30 @@ void process_vsplit() {
     Corner cl = mesh.ccw_corner(save.vs, e);
     Corner cr = mesh.clw_corner(save.vs, e);
     int wid_vsfl = retrieve_wid(cl);
-    int wid_vsfr = retrieve_wid(cr);
+    const int wid_vsfr = retrieve_wid(cr);
     assertx(wid_vsfl);
     assertx(!wid_vsfr == !save.vr);
-    int wid_vsflo = retrieve_wid(mesh.ccw_corner(cl));
-    int wid_vsfro = retrieve_wid(cr ? mesh.clw_corner(cr) : nullptr);
+    const int wid_vsflo = retrieve_wid(mesh.ccw_corner(cl));
+    const int wid_vsfro = retrieve_wid(cr ? mesh.clw_corner(cr) : nullptr);
     code |= (encode_wst(wid_vsfl, wid_vsfr, wid_vsflo, wid_vsfro) << Vsplit::S_SHIFT);
   }
   {
     Corner cl = mesh.clw_corner(save.vt, e);
     Corner cr = mesh.ccw_corner(save.vt, e);
     int wid_vtfl = retrieve_wid(cl);
-    int wid_vtfr = retrieve_wid(cr);
+    const int wid_vtfr = retrieve_wid(cr);
     assertx(wid_vtfl);
     assertx(!wid_vtfr == !save.vr);
-    int wid_vtflo = retrieve_wid(mesh.clw_corner(cl));
-    int wid_vtfro = retrieve_wid(cr ? mesh.ccw_corner(cr) : nullptr);
+    const int wid_vtflo = retrieve_wid(mesh.clw_corner(cl));
+    const int wid_vtfro = retrieve_wid(cr ? mesh.ccw_corner(cr) : nullptr);
     code |= (encode_wst(wid_vtfl, wid_vtfr, wid_vtflo, wid_vtfro) << Vsplit::T_SHIFT);
   }
   if (1) {
     Corner c = mesh.corner(save.vl, mesh.face(save.vl, save.vs));
     assertx(mesh.corner_vertex(mesh.clw_face_corner(c)) == save.vt);
-    int wid_vlfl = assertx(retrieve_wid(c));
-    int wid_a = retrieve_wid(mesh.ccw_corner(c));
-    int wid_b = retrieve_wid(mesh.clw_corner(c));
+    const int wid_vlfl = assertx(retrieve_wid(c));
+    const int wid_a = retrieve_wid(mesh.ccw_corner(c));
+    const int wid_b = retrieve_wid(mesh.clw_corner(c));
     code |= (encode_wlr(wid_vlfl, wid_a, wid_b) << Vsplit::L_SHIFT);
   }
   if (!save.vr) {
@@ -951,9 +951,9 @@ void process_vsplit() {
   } else {
     Corner c = mesh.corner(save.vr, mesh.face(save.vr, save.vt));
     assertx(mesh.corner_vertex(mesh.clw_face_corner(c)) == save.vs);
-    int wid_vrfr = assertx(retrieve_wid(c));
-    int wid_a = retrieve_wid(mesh.clw_corner(c));
-    int wid_b = retrieve_wid(mesh.ccw_corner(c));
+    const int wid_vrfr = assertx(retrieve_wid(c));
+    const int wid_a = retrieve_wid(mesh.clw_corner(c));
+    const int wid_b = retrieve_wid(mesh.ccw_corner(c));
     code |= (encode_wlr(wid_vrfr, wid_a, wid_b) << Vsplit::R_SHIFT);
   }
   // Predict face attributes.
@@ -963,7 +963,7 @@ void process_vsplit() {
     assertx(fl);
     Face fa = mesh.clw_face(save.vt, fl);
     Face fb = mesh.ccw_face(save.vs, fl);
-    int matid = face_prediction(fl, fa, fb, save.ii);
+    const int matid = face_prediction(fl, fa, fb, save.ii);
     // HH_SSTAT(Sflmatid, matid >= 0);
     if (matid < 0) {
       vspl.fl_matid = 0;
@@ -976,7 +976,7 @@ void process_vsplit() {
     assertx(fr);
     Face fa = mesh.ccw_face(save.vt, fr);
     Face fb = mesh.clw_face(save.vs, fr);
-    int matid = face_prediction(fr, fa, fb, save.ii);
+    const int matid = face_prediction(fr, fa, fb, save.ii);
     // HH_SSTAT(Sfrmatid, matid >= 0);
     if (matid < 0) {
       vspl.fr_matid = 0;
@@ -1020,8 +1020,8 @@ void process_vsplit() {
   const bool verify_reflection = !pm_has_wad2 && !big_rgb;
   const float tolerance = 1e-4f;
   if (1) {
-    bool nt = !(code & Vsplit::T_LSAME);
-    bool ns = !(code & Vsplit::S_LSAME);
+    const bool nt = !(code & Vsplit::T_LSAME);
+    const bool ns = !(code & Vsplit::S_LSAME);
     if (nt && ns) {
       vspl.ar_wad.push(diff_zero(get_wattrib(mesh.corner(save.vt, fl))));
       vspl.ar_wad.push(diff_zero(get_wattrib(mesh.corner(save.vs, fl))));
@@ -1053,10 +1053,10 @@ void process_vsplit() {
     }
   }
   if (save.vr) {
-    bool nt = !(code & Vsplit::T_RSAME);
-    bool ns = !(code & Vsplit::S_RSAME);
-    bool ut = !(code & Vsplit::T_CSAME);
-    bool us = !(code & Vsplit::S_CSAME);
+    const bool nt = !(code & Vsplit::T_RSAME);
+    const bool ns = !(code & Vsplit::S_RSAME);
+    const bool ut = !(code & Vsplit::T_CSAME);
+    const bool us = !(code & Vsplit::S_CSAME);
     if (nt && ns) {
       if (ut) vspl.ar_wad.push(diff_zero(get_wattrib(mesh.corner(save.vt, fr))));
       if (us) vspl.ar_wad.push(diff_zero(get_wattrib(mesh.corner(save.vs, fr))));
@@ -1082,7 +1082,7 @@ void process_vsplit() {
   if (code & Vsplit::R_NEW) vspl.ar_wad.push(diff_zero(get_wattrib(mesh.corner(save.vr, fr))));
   if (pm_has_wad2) {
     assertx(vspl.ar_wad.num() == 1);
-    bool ns = !(code & Vsplit::S_LSAME);
+    const bool ns = !(code & Vsplit::S_LSAME);
     vspl.ar_wad.init(0);
     const PmWedgeAttrib& waovsfl = (code & Vsplit::S_LSAME) ? save.wavsflo : save.wavsfro;
     const PmWedgeAttrib& waovtfl = (code & Vsplit::T_LSAME) ? save.wavtflo : save.wavtfro;
@@ -1159,7 +1159,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         // Encode location of vs within that face.
         {
           Vec3<Vertex> va = mesh.triangle_vertices(f);
-          int vs_index = index(va, vs);
+          const int vs_index = index(va, vs);
           code |= (vs_index << Vsplit::VSINDEX_SHIFT);
         }
         vspl.code = narrow_cast<ushort>(code);
@@ -1246,7 +1246,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         }
         mfrenumber.enter(f, renum);
         if (append_old_pm != "") {
-          int old_f_num = fi - 1;
+          const int old_f_num = fi - 1;
           append_f_renumber.access(old_f_num);
           append_f_renumber[old_f_num] = renum;
           append_f_vsi_offset.access(old_f_num);
@@ -1283,11 +1283,11 @@ bool parse_line2(char* sline, bool& after_vsplit) {
           assertnever("");
         }();
         string str;
-        int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
+        const int wid = assertx(to_int(assertx(GMesh::string_key(str, sinfo, "wid"))));
         c_cwedge_id(c) = wid;
         if (save.wid_read.add(wid)) {
           mesh.set_string(c, sinfo);
-          WedgeInfo wi = create_winfo(c);
+          const WedgeInfo wi = create_winfo(c);
           mesh.set_string(c, nullptr);
           gcwinfo.set(wid, wi);
         }
@@ -1317,7 +1317,7 @@ void do_pm_encode() {
   }
   for (Face f : mesh.faces()) {
     for (Corner c : mesh.corners(f)) {
-      int wid = c_cwedge_id(c);
+      const int wid = c_cwedge_id(c);
       const WedgeInfo& wi = gcwinfo.get(wid);
       // Note that has_normal=true already.
       if (wi.col[0] != k_undefined) has_rgb = true;
@@ -1330,10 +1330,10 @@ void do_pm_encode() {
     int i0 = 0;
     // Ordered for StitchPM.
     for (Vertex v : mesh.ordered_vertices()) {
-      int rvi = mvrenumber.get(v);
+      const int rvi = mvrenumber.get(v);
       int nunique = 0;
       for (Corner c : mesh.corners(v)) {
-        int wid = c_cwedge_id(c);
+        const int wid = c_cwedge_id(c);
         bool is_new;
         int& i = mwrenumber.enter(wid, 0, is_new);
         if (!is_new) continue;
@@ -1365,7 +1365,7 @@ void do_pm_encode() {
       for (Face f : mesh.ordered_faces()) {
         mfrenumber.enter(f, i);
         if (append_old_pm != "") {
-          int old_f_num = mesh.face_id(f) - 1;
+          const int old_f_num = mesh.face_id(f) - 1;
           // Face renumbered.
           append_f_renumber.access(old_f_num);
           append_f_renumber[old_f_num] = i;
@@ -1375,23 +1375,23 @@ void do_pm_encode() {
         }
         int j = 0;
         for (Corner c : mesh.corners(f)) {
-          int wid = c_cwedge_id(c);
-          int rwid = mwrenumber.get(wid);
+          const int wid = c_cwedge_id(c);
+          const int rwid = mwrenumber.get(wid);
           bmesh._faces[i].wedges[j] = rwid;
           j++;
         }
-        int matid = to_int(assertx(GMesh::string_key(str, mesh.get_string(f), "matid")));
+        const int matid = to_int(assertx(GMesh::string_key(str, mesh.get_string(f), "matid")));
         bmesh._faces[i].attrib.matid = matid;
         i++;
       }
     }
     bmesh._fnei.init(mesh.num_faces());
     for (Face f : mesh.faces()) {
-      int i = mfrenumber.get(f);
+      const int i = mfrenumber.get(f);
       int j = 0;
       for (Corner c : mesh.corners(f)) {
         Face fn = mesh.opp_face(mesh.corner_vertex(c), f);
-        int fni = fn ? mfrenumber.get(fn) : -1;
+        const int fni = fn ? mfrenumber.get(fn) : -1;
         bmesh._fnei[i].faces[j] = fni;
         j++;
       }
@@ -1469,10 +1469,10 @@ void do_pm_encode() {
       pmesh._vsplits.push(*pvspl);
       Vsplit& vspl1 = pmesh._vsplits.last();
       if (vspl1.flclw >= num_old_bmesh_faces) continue;
-      int old_flclw = std::exchange(vspl1.flclw, append_f_renumber[vspl1.flclw]);
-      int old_vsindex = (vspl1.code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
+      const int old_flclw = std::exchange(vspl1.flclw, append_f_renumber[vspl1.flclw]);
+      const int old_vsindex = (vspl1.code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
       assertx(old_vsindex >= 0 && old_vsindex <= 2);
-      int new_vsindex = mod3(old_vsindex + append_f_vsi_offset[old_flclw]);
+      const int new_vsindex = mod3(old_vsindex + append_f_vsi_offset[old_flclw]);
       vspl1.code = narrow_cast<ushort>((vspl1.code & ~Vsplit::VSINDEX_MASK) | (new_vsindex << Vsplit::VSINDEX_SHIFT));
       // Note 'continue' above.
     }

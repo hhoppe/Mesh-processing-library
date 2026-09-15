@@ -127,7 +127,7 @@ Frame get_rotate_frame() {
   // Snap the frame axes to the nearest canonical axes.
   for_int(i, 3) {
     Vector& vec = frame.v(i);
-    int axis = arg_max(abs(vec));
+    const int axis = arg_max(abs(vec));
     for_int(j, 3) vec[j] = j == axis ? sign(vec[j]) : 0.f;
   }
 
@@ -683,7 +683,7 @@ void create(bool b_triangulate) {
   if (quad_interp) {
   } else if (scheme[0] == 'T') {
     if (quad_domain) assertx(split_quad_ntris);
-    string map_name = scheme.substr(1);
+    const string map_name = scheme.substr(1);
     if (map_name == "domain") {
       domain_interp = true;
     } else {
@@ -724,7 +724,7 @@ void create(bool b_triangulate) {
         //   v0 - v1     (+i, +v down,  +j, +u right)
         //   |     |
         //   v3 - v2
-        float tu = float(j) / gridn, tv = float(i) / gridn;
+        const float tu = float(j) / gridn, tv = float(i) / gridn;
         bary = Bary(max(0.f, (1.f - tu) * (1.f - tv)), max(0.f, tu * (1.f - tv)), tu * tv);
       }
       Point p;
@@ -755,9 +755,9 @@ void create(bool b_triangulate) {
       }
       if (write_imagen) {
         const Uv& uv = v_imageuv(v);
-        int imi = int(uv[0] * (2 * gridn) + .5f);
-        int imj = int(uv[1] * (2 * gridn) + .5f);
-        int imn = imj * (2 * gridn + 1) + imi + 1;
+        const int imi = int(uv[0] * (2 * gridn) + .5f);
+        const int imj = int(uv[1] * (2 * gridn) + .5f);
+        const int imn = imj * (2 * gridn + 1) + imi + 1;
         g_mesh.update_string(v, "imagen", csform(str, "%d", imn));
       }
       if ((i == 0 || i == gridn) && (j == 0 || j == gridn) && contains(key_names, "domaincorner"))
@@ -1278,8 +1278,8 @@ void do_signal(Args& args) {
 }
 
 void do_texture_file(Args& args) {
-  string filename = args.get_string();
-  Image texture_image{filename};
+  const string filename = args.get_string();
+  const Image texture_image{filename};
   texture_image_vector4.init(texture_image.dims());
   convert(texture_image, texture_image_vector4);
 }
@@ -1306,7 +1306,7 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
       break;
     }
     case 'C': {
-      Vector rgb = interp_f_rgb(mesh, f, bary);
+      const Vector rgb = interp_f_rgb(mesh, f, bary);
       pixel.head<3>() = convert<uint8_t>(rgb * 255.f + .5f);
       break;
     }
@@ -1349,7 +1349,7 @@ void set_filled_pixels_using_voronoi_dilate(Image& image) {
   assertx(k_color_zero_alpha[3] == 0);
   Matrix<Vec2<int>> mvec(image.dims(), image.dims());
   for (const auto& yx : range(image.dims())) {
-    bool is_undef = image[yx][3] == 0;
+    const bool is_undef = image[yx][3] == 0;
     if (!is_undef) mvec[yx] = V(0, 0);
   }
   euclidean_distance_map(mvec);
@@ -1756,7 +1756,7 @@ void do_create_lonlat_sphere() {
 void do_create_lonlat_checker(Args& args) {
   int imagesize = args.get_int();
   assertx(imagesize > 1);
-  string image_name = args.get_filename();
+  const string image_name = args.get_filename();
 
   assertx(checkern);
   if (!gridn) gridn = 128;

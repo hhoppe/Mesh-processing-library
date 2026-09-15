@@ -237,8 +237,8 @@ GxObjects g_xobs;
 bool DerivedHw::key_press(string s) { return fkeyp(s); }
 
 void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
-  Vec2<float> yxf = convert<float>(yx) / convert<float>(win_dims);
-  bool shift = get_key_modifier(EModifier::shift);
+  const Vec2<float> yxf = convert<float>(yx) / convert<float>(win_dims);
+  const bool shift = get_key_modifier(EModifier::shift);
   fbutp(butnum, pressed, shift, yxf);
   if (pressed) {
     if (butnum <= 3) button_active = butnum;
@@ -258,7 +258,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
 }
 
 void adjust_viewing() {
-  float a = 1.f / min(win_dims);
+  const float a = 1.f / min(win_dims);
   tzs1 = -.5f / (zoom * a);
   tzs2 = -.5f / (zoom * a);
   tzp1 = .5f / (zoom * win_dims[1] * a);
@@ -289,10 +289,11 @@ Point hlr_point_from_coord(const coord* c) { return hlr_point_from_point(c->pp);
 
 void transf2(coord* c) {
   const Point& pt = c->pt;
-  float pt0 = pt[0];
+  const float pt0 = pt[0];
   ConditionCode ccode = pt0 < hither ? k_code_hither : is_yonder && pt0 > yonder ? k_code_yonder : 0;
   if (!ccode) {
-    float a = 1.f / pt0, pp1, pp2;
+    const float a = 1.f / pt0;
+    float pp1, pp2;
     c->pp[0] = -a;
     c->pp[1] = pp1 = pt[1] * a;
     c->pp[2] = pp2 = pt[2] * a;
@@ -319,7 +320,7 @@ void transf(coord* c) {
 }
 
 void inbound(coord* c, const coord* c2) {
-  ConditionCode cc = c->ccode;
+  const ConditionCode cc = c->ccode;
   float border;
   if (cc & k_code_hither) {
     border = hither;
@@ -328,7 +329,7 @@ void inbound(coord* c, const coord* c2) {
   } else {
     assertnever("");
   }
-  float ratio = (border - c->pt[0]) / (c2->pt[0] - c->pt[0]);
+  const float ratio = (border - c->pt[0]) / (c2->pt[0] - c->pt[0]);
   c->pt[0] = border;
   c->pt[1] = c->pt[1] + (c2->pt[1] - c->pt[1]) * ratio;
   c->pt[2] = c->pt[2] + (c2->pt[2] - c->pt[2]) * ratio;
@@ -337,8 +338,8 @@ void inbound(coord* c, const coord* c2) {
 }
 
 bool clip_side(coord* c1, const coord* c2, int axis, float val) {
-  float s1 = c1->pt[0] + val * c1->pt[axis];
-  float s2 = c2->pt[0] + val * c2->pt[axis];
+  const float s1 = c1->pt[0] + val * c1->pt[axis];
+  const float s2 = c2->pt[0] + val * c2->pt[axis];
   if ((s1 <= 0.f && s2 <= 0.f) || (s1 >= 0.f && s2 >= 0.f)) {
     return true;  // numerical problem
   } else {
@@ -380,7 +381,7 @@ void draw_point(coord* c) {
   if (c->ccode) return;
   if (lhlrmode && !hlr.draw_point(hlr_point_from_coord(c))) return;
   float c1s0 = center_yx[1] + c->pp[1] * tzs1;  // no need for + .5f because center_yx already centered
-  float c1s1 = center_yx[0] + c->pp[2] * tzs2;
+  const float c1s1 = center_yx[0] + c->pp[2] * tzs2;
   hw.draw_point(V(c1s1, c1s0));
   if (highlight_vertices) {
     hw.draw_point(V(c1s1 - 1.f, c1s0 - 1.f));
@@ -396,7 +397,7 @@ void draw_segment(coord* c1, coord* c2);  // forward declaration
 void draw_fisheye(const coord* c1, const coord* c2) {
   assertx(quicki > 0);
   Point p1 = c1->pt, p2 = c2->pt;
-  Vector vd = (p2 - p1) / float(quicki);
+  const Vector vd = (p2 - p1) / float(quicki);
   coord o1, o2;
   for_int(i, quicki + 1) {
     Vector v = p1 - Point(0.f, 0.f, 0.f);
@@ -451,9 +452,9 @@ void slow_draw_seg(coord* c1, coord* c2) {
     return;
   }
   float c1s0 = center_yx[1] + c1->pp[1] * tzs1;
-  float c1s1 = center_yx[0] + c1->pp[2] * tzs2;
+  const float c1s1 = center_yx[0] + c1->pp[2] * tzs2;
   float c2s0 = center_yx[1] + c2->pp[1] * tzs1;
-  float c2s1 = center_yx[0] + c2->pp[2] * tzs2;
+  const float c2s1 = center_yx[0] + c2->pp[2] * tzs2;
   hw.draw_segment(V(c1s1, c1s0), V(c2s1, c2s0));
   if (highlight_vertices) {
     hw.draw_segment(V(c1s1 - 1.f, c1s0 - 1.f), V(c1s1 + 1.f, c1s0 + 1.f));
@@ -492,9 +493,9 @@ void fast_draw_seg(coord* c1, coord* c2) {
     if (cc2 && clip2(c2, c1)) return;
   }
   float c1s0 = center_yx[1] + c1->pp[1] * tzs1;  // no need for + .5f because center_yx is correctly centered
-  float c1s1 = center_yx[0] + c1->pp[2] * tzs2;
+  const float c1s1 = center_yx[0] + c1->pp[2] * tzs2;
   float c2s0 = center_yx[1] + c2->pp[1] * tzs1;
-  float c2s1 = center_yx[0] + c2->pp[2] * tzs2;
+  const float c2s1 = center_yx[0] + c2->pp[2] * tzs2;
   hw.draw_segment(V(c1s1, c1s0), V(c2s1, c2s0));
 }
 
@@ -573,7 +574,7 @@ void enter_hidden_polygon(Polygon& poly, int and_codes, int or_codes) {
   // If not all vertices are beyond hither, do clipping
   // don't have to worry at all about yonder plane!
   if (or_codes & k_code_hither) {
-    float s = 1.95f;
+    const float s = 1.95f;
     // s = 2.2;  // debug, shrink inside screen boundaries
     poly.intersect_hyperplane(Point(hither, 0.f, 0.f), Vector(+1.f, 0.f, 0.f));
     if (!poly.num()) return;
@@ -612,12 +613,12 @@ void enter_hidden_polygons(CArrayView<unique_ptr<Node>> arn) {
       {
         coord* cfirst;
         {
-          segment* s1 = n->ars[0];
-          segment* s2 = n->ars[1];
+          const segment* s1 = n->ars[0];
+          const segment* s2 = n->ars[1];
           cfirst = (s1->c1 == s2->c1 || s1->c1 == s2->c2) ? s1->c2 : s1->c1;
         }
         coord* cc = cfirst;
-        for (segment* s : n->ars) {
+        for (const segment* s : n->ars) {
           cc = s->c1 == cc ? s->c2 : s->c1;
           transf(cc);
           and_codes &= cc->ccode;
@@ -667,7 +668,7 @@ void enter_mesh_hidden_polygons(GMesh& mesh) {
     ConditionCode and_codes = k_code_hither | k_code_yonder | k_code_right | k_code_left | k_code_down | k_code_up;
     ConditionCode or_codes = 0;
     for (Vertex v : mesh.vertices(f)) {
-      coord& cc = v_coord(v);
+      const coord& cc = v_coord(v);
       and_codes &= cc.ccode;
       or_codes |= cc.ccode;
       poly.push(cc.pt);  // viewing frame coordinates
@@ -697,8 +698,8 @@ void draw_mesh(GMesh& mesh) {
       Face f2 = mesh.face2(e);
       if (cullface && mesh.flags(mesh.face1(e)).flag(fflag_invisible) && (!f2 || mesh.flags(f2).flag(fflag_invisible)))
         continue;
-      bool is_sharp = mesh.flags(e).flag(GMesh::eflag_sharp) || !f2;
-      float curthick = is_sharp ? thicksharp : thicknormal;
+      const bool is_sharp = mesh.flags(e).flag(GMesh::eflag_sharp) || !f2;
+      const float curthick = is_sharp ? thicksharp : thicknormal;
       if (!curthick) continue;
       if (show_sharp && !is_sharp) continue;
       if (postscript) {
@@ -720,7 +721,7 @@ void hlr_draw_seg(const Point& p1, const Point& p2) {
     co[i].ccode = 0;
     co[i].pp = Point(pa[i][0], (pa[i][1] - .5f) / tzp1, (pa[i][2] - .5f) / tzp2);
     // faked this part to get fisheye to work
-    float a = hither * 1.001f;
+    const float a = hither * 1.001f;
     co[i].pt = Point(a, co[i].pp[1] * a, co[i].pp[2] * a);
   }
   lhlrmode = false;
@@ -732,7 +733,7 @@ void draw_all() {
   lquickmode = quickmode || (butquick && button_active);
   lhlrmode = hlrmode || (buthlr && !button_active);
   if (lhlrmode) {
-    int oldframe = frame_index;
+    const int oldframe = frame_index;
     hlr.clear();
     hlr.set_draw_seg_cb(hlr_draw_seg);
     for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
@@ -834,7 +835,7 @@ void GxObject::add(const A3dElem& el) {
 
 coord* GxObject::add_coord(const Point& p) {
   if (!nohash) {
-    int vi = _hp.enter(p);
+    const int vi = _hp.enter(p);
     if (vi < _ac.num()) return _ac[vi].get();
   }
   s_nuvertices++;
@@ -872,7 +873,7 @@ void GxObject::close() {
     Node* un = _arnc[i].get();
     if (un->_type == Node::EType::polygon) {
       auto* n = down_cast<NodePolygon*>(un);
-      for (segment* s : n->ars) {
+      for (const segment* s : n->ars) {
         s->c1->count++;
         s->c2->count++;
       }
@@ -884,7 +885,7 @@ void GxObject::close() {
       auto* n = down_cast<NodePolygon*>(un);
       coord* maxc = nullptr;
       int maxn = -1;
-      for (segment* s : n->ars) {
+      for (const segment* s : n->ars) {
         if (s->c1->count > maxn) {
           maxn = s->c1->count;
           maxc = s->c1;
@@ -895,7 +896,7 @@ void GxObject::close() {
         }
       }
       n->repc = assertx(maxc);
-      for (segment* s : n->ars) {
+      for (const segment* s : n->ars) {
         s->c1->count -= 1;
         s->c2->count -= 1;
       }
@@ -987,7 +988,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   psfile = "g3d.ps";
   quicki = 4;
   hither = k_default_hither;
-  bool hw_success = hw.init(aargs);
+  const bool hw_success = hw.init(aargs);
   ParseArgs args(aargs, "HB_X");
   HH_ARGSF(datastat, ": geometric hashing stats");
   HH_ARGSP(psfile, "file.ps : set postscript output");

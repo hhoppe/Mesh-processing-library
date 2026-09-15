@@ -298,7 +298,7 @@ void Hw::open() {
     pxsh->min_width = 0;
     pxsh->min_height = 0;
   }
-  int bitmask =
+  const int bitmask =
       XWMGeometry(_display, _screen, to_nullptr_or_cstring(_user_geometry), to_nullptr_or_cstring(_default_geometry),
                   1, pxsh, &pxsh->x, &pxsh->y, &pxsh->width, &pxsh->height, &pxsh->win_gravity);
 #if defined(__CYGWIN__)
@@ -317,7 +317,7 @@ void Hw::open() {
     _win = XCreateWindow(_display, RootWindow(_display, _screen), pxsh->x, pxsh->y, pxsh->width, pxsh->height,
                          border_width, _depth, InputOutput, visual, CWColormap | CWBorderPixel | CWBackPixel, &swa);
   }
-  Pixmap icon_pixmap = assertx(XCreateBitmapFromData(_display, _win, hw_bits, hw_width, hw_height));
+  const Pixmap icon_pixmap = assertx(XCreateBitmapFromData(_display, _win, hw_bits, hw_width, hw_height));
   _pwmhints->flags |= IconPixmapHint;
   _pwmhints->icon_pixmap = icon_pixmap;
   XClassHint* pxclasshint = assertx(XAllocClassHint());
@@ -325,7 +325,7 @@ void Hw::open() {
   pxclasshint->res_class = const_cast<char*>("Hw");
   Vec2<const char*> largv = {_argv0.c_str(), nullptr};
   const int largc = 1;
-  string icon_name = _argv0;
+  const string icon_name = _argv0;
   XmbSetWMProperties(_display, _win, _window_title.c_str(), icon_name.c_str(), const_cast<char**>(largv.data()), largc,
                      pxsh, _pwmhints, pxclasshint);
   // XmbSetWMProperties() has copied these structures, so the client-side copies can be released.
@@ -334,7 +334,7 @@ void Hw::open() {
   XFree(pxclasshint);
   XFree(_pwmhints), _pwmhints = nullptr;
   XStoreName(_display, _win, _window_title.c_str());  // necessary to set window title in CYGWIN
-  Cursor cursor = XCreateFontCursor(_display, XC_crosshair);
+  const Cursor cursor = XCreateFontCursor(_display, XC_crosshair);
   XDefineCursor(_display, _win, cursor);
   XSelectInput(_display, _win,
                ExposureMask | KeyPressMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask);
@@ -409,15 +409,15 @@ void Hw::open() {
         font_name = "fixed";  // == "6x13"
         font_info2 = assertx(XLoadQueryFont(_display, font_name.c_str()));
       }
-      Font id = font_info2->fid;
-      int first = font_info2->min_char_or_byte2;
-      int last = font_info2->max_char_or_byte2;
+      const Font id = font_info2->fid;
+      const int first = font_info2->min_char_or_byte2;
+      const int last = font_info2->max_char_or_byte2;
       if (0) SHOW(first, last);  // first=0 last=255
       _listbase_font = assertx(glGenLists(last + 1));
       assertx(!gl_report_errors());
       glXUseXFont(id, first, last - first + 1, _listbase_font + first);
       {
-        GLenum v = glGetError();
+        const GLenum v = glGetError();
         if (v) {
           assertx(v == GL_OUT_OF_MEMORY);  // Unexpected behavior under WSL after glXUseXFont().
           Warning("Got GL_OUT_OF_MEMORY after glXUseXFont(); ignoring");
@@ -503,7 +503,7 @@ bool Hw::loop() {
       if (_update != EUpdate::nothing) break;
       // Later found: https://stackoverflow.com/questions/8592292/how-to-quit-the-blocking-of-xlibs-xnextevent
       fd_set fdr;
-      int fd = ConnectionNumber(_display);
+      const int fd = ConnectionNumber(_display);
       FD_ZERO(&fdr);
       FD_SET(fd, &fdr);
       if (_watch_fd0) FD_SET(0, &fdr);
@@ -558,7 +558,7 @@ void Hw::handle_event() {
     case ConfigureNotify: {
       _win_pos = V(_event.xconfigure.y, _event.xconfigure.x);
       _win_dims = V(_event.xconfigure.height, _event.xconfigure.width);
-      bool send_event = _event.xconfigure.send_event;
+      const bool send_event = _event.xconfigure.send_event;
       if (_hwdebug) SHOW("configure", _win_pos, _win_dims, send_event, _exposed, _oglx);
       if (send_event) return;  // WM has moved window
       if (!_exposed && _oglx) return;
@@ -577,7 +577,7 @@ void Hw::handle_event() {
         set_color_to_foreground();
 #endif
       } else if (_is_pixbuf) {
-        bool draw_was_bbuf = _draw == _bbuf;
+        const bool draw_was_bbuf = _draw == _bbuf;
         XFreePixmap(_display, _bbuf);
         _bbuf = XCreatePixmap(_display, _win, _win_dims[1], _win_dims[0], _depth);
         if (draw_was_bbuf) _draw = _bbuf;
@@ -647,7 +647,7 @@ void Hw::start_hwkey() {
   struct itimerval ti;
   struct timeval tv;
   signal(SIGALRM, handle_alarm);
-  int64_t usec = int(_hwdelay * 1'000'000.f + .5f);
+  const int64_t usec = int(_hwdelay * 1'000'000.f + .5f);
   tv.tv_sec = int(usec / 1'000'000);
   tv.tv_usec = int(usec % 1'000'000);
   ti.it_value = tv;
@@ -674,7 +674,7 @@ void Hw::handle_key() {
   {
     Vec<char, 20> buf;
     KeySym keysym;
-    int nchar =
+    const int nchar =
         XLookupString(&_event.xkey, buf.data(), buf.num() - 1, &keysym, implicit_cast<XComposeStatus*>(nullptr));
     assertx(buf.ok(nchar));
     buf[nchar] = 0;
@@ -846,7 +846,7 @@ void Hw::set_double_buffering(bool newstate) {
     if (_hwdebug) SHOW(_is_glx_dbuf);
     return;
   }
-  bool ostate = _is_pixbuf ^ _need_toggle_buffering;
+  const bool ostate = _is_pixbuf ^ _need_toggle_buffering;
   if (newstate != ostate) {
     if (_async || _state != EState::open) {
       assertx(!_need_toggle_buffering);
@@ -871,7 +871,7 @@ bool Hw::get_key_modifier(EModifier modifier) {
   Vec<char, 32> keys;
   XQueryKeymap(_display, keys.data());
   const auto key_pressed = [&](KeySym keysym) {
-    int keycode = XKeysymToKeycode(_display, keysym);
+    const int keycode = XKeysymToKeycode(_display, keysym);
     return !!(keys[keycode / 8] & (1 << (keycode % 8)));
   };
   switch (modifier) {
@@ -969,7 +969,7 @@ Vec2<int> Hw::get_max_window_dims() {
   // SHOW(attribs.x, attribs.y, attribs.height, attribs.width);
   // SHOW(DisplayWidth(_display, _screen), DisplayHeight(_display, _screen));  // same
   // Vec2<int> window_borders = V(55, 0);  // taskbar at bottom in Ubuntu Cinnamon
-  Vec2<int> window_borders = V(55, 0);  // taskbar at bottom in Debian Linux Cinnamon (Window borders Albatross)
+  const Vec2<int> window_borders = V(55, 0);  // Taskbar at bottom in Debian Linux Cinnamon (Window borders Albatross).
   return V(attribs.height, attribs.width) - window_borders;
 }
 
@@ -1026,7 +1026,7 @@ void Hw::make_fullscreen(bool b) {
     event.xclient.data.l[0] = b ? 1 : 0;  // 0 == unset, 1 == set, 2 == toggle
     event.xclient.data.l[1] = XInternAtom(_display, "_NET_WM_STATE_FULLSCREEN", False);
     event.xclient.data.l[2] = 0;
-    long mask = SubstructureRedirectMask | SubstructureNotifyMask;
+    const long mask = SubstructureRedirectMask | SubstructureNotifyMask;
     assertx(XSendEvent(_display, XDefaultRootWindow(_display), False, mask, &event));
     XFlush(_display);
   }

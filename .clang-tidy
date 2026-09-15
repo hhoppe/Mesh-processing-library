@@ -32,6 +32,10 @@ Checks:
   - '-performance-no-int-to-ptr'
   - 'misc-*'
   - '-misc-include-cleaner'
+  # misc-const-correctness is worth running occasionally (--checks='-*,misc-const-correctness'), with its output
+  # filtered by hand.  Its analysis misses writes through `*p++`, in `if constexpr` branches, and in fold expressions,
+  # and pointers that are returned or stored as non-const, leaving about 50 false positives: too many for NOLINT.
+  # Views, scope guards, and file handles are also intentionally left non-const.
   - '-misc-const-correctness'
   - '-misc-non-private-member-variables-in-classes'
   - '-misc-use-anonymous-namespace'
@@ -86,6 +90,8 @@ CheckOptions:
   performance-move-const-arg.CheckTriviallyCopyableMove: false
   # Loop elements of range adaptors (e.g. the tuple from views::enumerate) are cheap to copy.
   performance-for-range-copy.AllowedTypes: '^std::ranges::'
+  # Views (like pointers), scope guards, and file handles are not made const.  (Requires LLVM 21.)
+  misc-const-correctness.AllowedTypes: 'hh::C?ArrayView;hh::C?GridView;hh::C?MatrixView;hh::C?StridedArrayView;hh::C?Nv12View;hh::C?VideoNv12View;hh::Timer;hh::MkSave;hh::RFile;hh::WFile;LockIMFMediaBuffer;std::scoped_lock;std::lock_guard;std::unique_lock'
 HeaderFilterRegex: '.*'
 SystemHeaders: false
 ExcludeHeaderFilterRegex: '.*(glext|wglext|glxext|mikktspace)\.h$'

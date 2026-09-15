@@ -106,7 +106,7 @@ inline bool same_string(const char* s1, const char* s2) {
 
 void show_rate(Timer& timer) {
   timer.stop();
-  double runtime = timer.cpu();
+  const double runtime = timer.cpu();
   showdf("reordering rate: %.0f faces / sec\n", mesh.num_faces() / max(runtime, 1e-6));
   timer.start();
 }
@@ -127,7 +127,7 @@ int record_face(Corner cc, VertexCache& vcache) {
   for_int(j, 3) {
     Vertex v = mesh.corner_vertex(cc);
     ar_verts.push(mesh.vertex_id(v));
-    bool miss = !vcache.access_hits(mesh.vertex_id(v));
+    const bool miss = !vcache.access_hits(mesh.vertex_id(v));
     nmiss += miss;
     cc = mesh.ccw_face_corner(cc);
   }
@@ -178,7 +178,7 @@ void do_diff_corners(Args& args) {
   Map<int, int> mapfoldf;
   string str;
   for (Face f2 : mesh2.faces()) {
-    int oldfid = to_int(assertx(GMesh::string_key(str, mesh.get_string(f2), "oldfid")));
+    const int oldfid = to_int(assertx(GMesh::string_key(str, mesh.get_string(f2), "oldfid")));
     mapfoldf.enter(oldfid, mesh.face_id(f2));
   }
   string str2;
@@ -191,7 +191,7 @@ void do_diff_corners(Args& args) {
       const char* s = assertx(GMesh::string_key(str, mesh.get_string(c), "rgb"));
       const char* s2 = assertx(GMesh::string_key(str2, mesh2.get_string(c2), "rgb"));
       if (!strcmp(s, s2)) continue;
-      bool was_red = !strstr(s, ".0 .0");
+      const bool was_red = !strstr(s, ".0 .0");
       if (!was_red) continue;
       mesh.update_string(c, "rgb", "(0. 0. .6)");
     }
@@ -207,7 +207,7 @@ void extract_mesh() {
     Face f = mesh.id_face(1 + fi);
     assertx(mesh.is_triangle(f));
     for (Vertex v : mesh.vertices(f)) {
-      int vid = mesh.vertex_id(v);
+      const int vid = mesh.vertex_id(v);
       ar_verts.push(vid);
     }
     ar_faces.push(f);
@@ -226,9 +226,9 @@ void replace_mesh() {
     Vec3<Vertex> va;
     for_int(fi, mesh.num_faces()) {
       for_int(j, 3) {
-        int ovi = ar_verts[fi * 3 + j];
+        const int ovi = ar_verts[fi * 3 + j];
         bool is_new;
-        int& ni = movivi.enter(ovi, movivi.num() + 1, is_new);
+        const int& ni = movivi.enter(ovi, movivi.num() + 1, is_new);
         dummy_use(is_new);
         va[j] = nmesh.id_vertex(ni);
       }
@@ -250,7 +250,7 @@ void replace_mesh() {
     Vec3<Vertex> va;
     for_int(fi, mesh.num_faces()) {
       for_int(j, 3) {
-        int ovi = ar_verts[fi * 3 + j];
+        const int ovi = ar_verts[fi * 3 + j];
         bool is_new;
         int& vi = movivi.enter(ovi, 0, is_new);
         if (is_new || !vcache.contains(vi)) {
@@ -272,7 +272,7 @@ void replace_mesh() {
   if (reorder_vertices) {
     for_int(fi, mesh.num_faces()) {
       for_int(j, 3) {
-        int ovi = ar_verts[fi * 3 + j];
+        const int ovi = ar_verts[fi * 3 + j];
         bool is_new;
         movivi.enter(ovi, movivi.num() + 1, is_new);
         dummy_use(is_new);
@@ -319,7 +319,7 @@ void replace_mesh() {
       const float ftot = float(fi) / mesh.num_faces();
       const int max_nf = 20;
       const float floc = (min(nf, max_nf - 1) % max_nf) / float(max_nf) * .7f + .15f;
-      Vector rgb(ftot, floc, .5f);
+      const Vector rgb(ftot, floc, .5f);
       mesh.update_string(f, "rgb", csform_vec(str, rgb));
     }
   } else if (color_fmiss && cache_type != VertexCache::EType::notype) {
@@ -340,8 +340,8 @@ void replace_mesh() {
       Face f = mesh.id_face(1 + fi);
       int nmiss = 0;
       for_int(j, 3) {
-        int vi = movivi.get(ar_verts[fi * 3 + j]);
-        bool miss = !vcache.access_hits(vi);
+        const int vi = movivi.get(ar_verts[fi * 3 + j]);
+        const bool miss = !vcache.access_hits(vi);
         nmiss += miss;
       }
       mesh.update_string(f, "rgb", color_nmiss[nmiss]);
@@ -357,10 +357,10 @@ void replace_mesh() {
     for_int(fi, mesh.num_faces()) {
       Face f = mesh.id_face(1 + fi);
       for_int(j, 3) {
-        int vi = movivi.get(ar_verts[fi * 3 + j]);
+        const int vi = movivi.get(ar_verts[fi * 3 + j]);
         Vertex v = mesh.id_vertex(vi);
         Corner c = mesh.corner(v, f);
-        bool miss = !vcache.access_hits(vi);
+        const bool miss = !vcache.access_hits(vi);
         mesh.update_string(c, "rgb", (miss ? color_miss : color_hit));
       }
     }
@@ -389,7 +389,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
   //          expected_j: 2, 0, 2, 0, ...
   // newway: vertices reused from prev face are in vid[0..1]
   //          expected_j: 1, 2, 1, 2, ...
-  bool oldway = old_strip_order;
+  const bool oldway = old_strip_order;
   // Assumption: turn face1-face2-face3 is expected to be ccw.
   const int first_expected_j = oldway ? 2 : 1;
   const int sum_expected_j = oldway ? 2 : 3;
@@ -456,14 +456,14 @@ void analyze_strips(int& pnverts, int& pnstrips) {
 void do_analyze() {
   HH_PTIMER("_analyze");
   showdf("Mesh analysis (%s)\n", VertexCache::type_string(cache_type).c_str());
-  int nmiss = analyze_mesh(cache_size);
+  const int nmiss = analyze_mesh(cache_size);
   int nverts, nstrips;
   analyze_strips(nverts, nstrips);
-  float b_v = float(nmiss * k_bytes_per_vertex) / mesh.num_faces();
-  float b_i = float(nverts * k_bytes_per_vindex) / mesh.num_faces();
-  float b_t = b_v + b_i;
+  const float b_v = float(nmiss * k_bytes_per_vertex) / mesh.num_faces();
+  const float b_i = float(nverts * k_bytes_per_vindex) / mesh.num_faces();
+  const float b_t = b_v + b_i;
   showdf("Bandwidth: vertices %4.2f b/t, indices %4.2f b/t, Total %4.2f byte/tri\n", b_v, b_i, b_t);
-  string nametail = get_path_tail(gfilename);
+  const string nametail = get_path_tail(gfilename);
   showdf("%-14.14s v/t=%5.3f v/v=%5.3f slen=%4.1f bv=%4.2f bi=%4.2f bt=%4.2f\n",  //
          nametail.c_str(), float(nmiss) / mesh.num_faces(), float(nmiss) / mesh.num_vertices(),
          float(mesh.num_faces()) / nstrips, b_v, b_i, b_t);
@@ -477,7 +477,7 @@ void do_strip_analyze() {
   int nverts, nstrips;
   analyze_strips(nverts, nstrips);
   // number of vertices transferred
-  int nvt = nverts - (nstrips - 1) * k_strip_restart_nvindices;
+  const int nvt = nverts - (nstrips - 1) * k_strip_restart_nvindices;
   showdf("nverts_transf=%d     %5.1f%%  v/t=%5.3f  v/v=%5.3f\n",  //
          nvt, float(nvt) / ar_verts.num() * 100.f, float(nvt) / mesh.num_faces(), float(nvt) / mesh.num_vertices());
   showdf("Bandwidth:                                       Total %4.2f byte/tri\n",
@@ -532,8 +532,8 @@ void do_fixup_indices() {
       Face fn = fi < mesh.num_faces() - 1 ? ar_faces[fi + 1] : nullptr;
       face_vertices_neighbors(f, va, fa);
       for_int(k, 3) ASSERTX(contains(va, mesh.id_vertex(ar_verts[fi * 3 + k])));
-      int ifn = !fn ? -1 : find_index(fa, fn).value_or(-1);  // -1 if next face not adjacent
-      int iov1 = find_index(va, ov1).value_or(-1);           // -1 if prev face not adjacent
+      const int ifn = !fn ? -1 : find_index(fa, fn).value_or(-1);  // -1 if next face is not adjacent.
+      const int iov1 = find_index(va, ov1).value_or(-1);           // -1 if previous face is not adjacent.
       int j;
       if (ifn >= 0) {  // have next face, so that determines order
         j = ifn;
@@ -574,7 +574,7 @@ void do_fixup_indices() {
                     // j is OK as is
       } else {      // no previous face, examine next face
         Face fn = fi < mesh.num_faces() - 1 ? ar_faces[fi + 1] : nullptr;
-        int ifn = !fn ? -1 : find_index(fa, fn).value_or(-1);  // -1 if next face not adjacent
+        const int ifn = !fn ? -1 : find_index(fa, fn).value_or(-1);  // -1 if next face is not adjacent.
         if (ifn >= 0) {
           j = ifn;
         } else {  // no next face; anything goes
@@ -604,10 +604,10 @@ void do_randomize_faces() {
   ar_verts.init(0);
   ar_faces.init(0);
   Array<Vertex> va;
-  for (int fi : ar) {
+  for (const int fi : ar) {
     Face f = mesh.id_face(1 + fi);
     mesh.get_vertices(f, va);
-    int rot = Random::G.get_unsigned(3);
+    const int rot = Random::G.get_unsigned(3);
     for_int(j, 3) ar_verts.push(mesh.vertex_id(va[mod3(rot + j)]));
     ar_faces.push(f);
   }
@@ -706,7 +706,7 @@ void MeshStatus::process(Face f) {
     // Decrement nnei for each of the face's neighbors.
     for (Face ff : mesh.faces(f)) {
       if (processed(ff)) continue;
-      int nnei = face_nnei(ff);
+      const int nnei = face_nnei(ff);
       f_elist(ff).el_unp.relink_after(_l_unp_nnei[nnei].delim());
     }
   }
@@ -775,7 +775,7 @@ Face MeshStatus::find_initial_face() {
   for (;;) {
     for_int(nnei, 4) {
       if (_l_unp_nnei[nnei].empty()) continue;
-      EListNode* nodee = _l_unp_nnei[nnei].delim()->next();
+      const EListNode* nodee = _l_unp_nnei[nnei].delim()->next();
       Face f = HH_ELIST_OUTER(FaceEList, el_unp, nodee)->f;
       ASSERTX(!processed(f));
       return f;
@@ -794,7 +794,7 @@ Corner MeshStatus::find_initial_corner(const VertexCache& vcache) {
     auto up_vci = vcache.make_iterator();
     VertexCache::Iter& vci = *up_vci;
     for (;;) {
-      int vi = vci.next();
+      const int vi = vci.next();
       if (!vi) break;
       Vertex v = mesh.id_vertex(vi);
       for (Face f : mesh.faces(v))
@@ -806,7 +806,8 @@ Corner MeshStatus::find_initial_corner(const VertexCache& vcache) {
   int max_nvcached = -1;
   int min_nnei = std::numeric_limits<int>::max();
   for (Face f : setf) {
-    int nvcached = face_nvcached(f, vcache), nnei;
+    const int nvcached = face_nvcached(f, vcache);
+    int nnei;
     if (nvcached > max_nvcached ||
         (nvcached == max_nvcached &&
          (nnei = face_nnei(f), nnei < min_nnei ||
@@ -935,12 +936,12 @@ int find_next_face(CArrayView<Face> fa, const MeshStatus& ms) {
   for_int(i, 3) {
     if (!fa[i]) continue;
     if (ms.processed(fa[i])) continue;  // already visited
-    int nnei = ms.face_nnei(fa[i]);
+    const int nnei = ms.face_nnei(fa[i]);
     assertx(nnei < 3);
     int min_next_nnei = std::numeric_limits<int>::max();
     for (Face ff : mesh.faces(fa[i])) {
       if (ms.processed(ff)) continue;
-      int next_nnei = ms.face_nnei(ff);
+      const int next_nnei = ms.face_nnei(ff);
       if (next_nnei >= 0 && next_nnei < min_next_nnei) min_next_nnei = next_nnei;
     }
     if (min_next_nnei == std::numeric_limits<int>::max()) min_next_nnei = -1;  // the best
@@ -1070,9 +1071,9 @@ void simulate5(int nfcontinue, MeshStatus& ms, Corner oc, int ostripnf, const Qu
       Corner cc = c;
       if (!stripnf++) cc = mesh.ccw_face_corner(cc);
       for_int(j, 3) {
-        int vid = mesh.vertex_id(mesh.corner_vertex(cc));
+        const int vid = mesh.vertex_id(mesh.corner_vertex(cc));
         // bool hit = reinterpret_cast<FifoVertexCache&>(vcache).FifoVertexCache::access_hits(vid);
-        bool hit = vcache.access_hits(vid);
+        const bool hit = vcache.access_hits(vid);
         ngood += hit;
         // if (verb >= 4) std::cerr << sform("%c", !hit ? '*' : '.');
         cc = mesh.ccw_face_corner(cc);
@@ -1179,7 +1180,7 @@ void do_meshify5() {
         brestart = false;
         break;
       }
-      int old_best_nfcont = best_nfcont;
+      const int old_best_nfcont = best_nfcont;
       for_intL(nfcont, 1, maxnf) {
         if (nfcont == old_best_nfcont) continue;
         float value;
@@ -1212,8 +1213,8 @@ void do_meshify5() {
     if (verb >= 2) status += sform("%d", nfmiss);
     Corner cint = mesh.ccw_corner(c);
     Corner cext = mesh.ccw_corner(mesh.clw_face_corner(c));
-    bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
-    bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
+    const bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
+    const bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
     if (fintnei) {
       if (fextnei) qnextc.enqueue(cext);
       c = cint;
@@ -1252,8 +1253,8 @@ void do_meshify8() {
         record_face(c, vcache);
         Corner cint = mesh.ccw_corner(c);
         Corner cext = mesh.ccw_corner(mesh.clw_face_corner(c));
-        bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
-        bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
+        const bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
+        const bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
         if (fintnei) {
           c = cint;
           if (fextnei) {
@@ -1270,16 +1271,16 @@ void do_meshify8() {
       for (;;) {  // form ring(s) while having cnext
         if (verb == 1) cprogress.update(float(ar_faces.num()) / mesh.num_faces());
         ms.process(mesh.corner_face(c));
-        int nmiss = record_face(c, vcache);
+        const int nmiss = record_face(c, vcache);
         locnext += nmiss;
         Corner cint = mesh.ccw_corner(c);
-        bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
+        const bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
         if (fintnei) {
           c = cint;
           continue;
         }
         Corner cext = mesh.ccw_corner(mesh.clw_face_corner(c));
-        bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
+        const bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
         if (!fextnei) break;
         c = cext;
         // Decide to add next ring (e.g. 2 faces) or restart.
@@ -1349,12 +1350,12 @@ void do_meshify9() {
       }
       for (;;) {
         ms.process(mesh.corner_face(c));
-        int nmiss = record_face(c, vcache);
+        const int nmiss = record_face(c, vcache);
         locnext += nmiss;
         Corner cint = mesh.ccw_corner(c);
         Corner cext = mesh.ccw_corner(mesh.clw_face_corner(c));
-        bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
-        bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
+        const bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
+        const bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
         if (fintnei) {
           if (fextnei) {
             if (!cnext) {
@@ -1450,12 +1451,12 @@ void do_meshify10() {
       }
       for (;;) {
         ms.process(mesh.corner_face(c));
-        int nmiss = record_face(c, vcache);
+        const int nmiss = record_face(c, vcache);
         locnext += nmiss;
         Corner cint = mesh.ccw_corner(c);
         Corner cext = mesh.ccw_corner(mesh.clw_face_corner(c));
-        bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
-        bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
+        const bool fintnei = cint && !ms.processed(mesh.corner_face(cint));
+        const bool fextnei = cext && !ms.processed(mesh.corner_face(cext));
         if (fintnei) {
           if (fextnei) {
             if (!cnext) {
@@ -1494,7 +1495,7 @@ void do_meshify10() {
 // *** misc
 
 void do_timingtest(Args& args) {
-  int niter = args.get_int();
+  const int niter = args.get_int();
   for_int(iter, niter) do_meshify8();
 }
 

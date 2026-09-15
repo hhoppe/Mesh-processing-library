@@ -22,7 +22,7 @@ void read_pms() {
   pmeshes.init(blockx, blocky);
   for_int(bx, blockx) {
     for_int(by, blocky) {
-      string filename = sform("%s.x%d.y%d.pm", rootname.c_str(), bx, by);
+      const string filename = sform("%s.x%d.y%d.pm", rootname.c_str(), bx, by);
       RFile fi(filename);
       if (!bx && !by) {
         for (string line; fi().peek() == '#';) {
@@ -118,11 +118,11 @@ void do_stitch() {
       m_basematid[bx, by] = bmesh._materials.num();
       for_int(matid, bmeshxy._materials.num()) {
         string s = bmeshxy._materials.get(matid);
-        int nmatid = bmesh._materials.num();
+        const int nmatid = bmesh._materials.num();
         s = GMesh::string_update(s, "matid", csform(str, "%d", nmatid));
         if (!GMesh::string_has_key(s.c_str(), "rgb")) {
-          int odd = (bx + by) % 2;
-          Vector rgb(.6f + .2f * odd, .6f + .2f * !odd, .6f);
+          const int odd = (bx + by) % 2;
+          const Vector rgb(.6f + .2f * odd, .6f + .2f * !odd, .6f);
           s = GMesh::string_update(s, "rgb", csform_vec(str, rgb));
         }
         bmesh._materials.set(nmatid, s);
@@ -135,24 +135,25 @@ void do_stitch() {
   // - first, (blocky + 1) rows of length (blockx * blocks + 1)
   // - next, (blockx + 1) broken columns of length (blocky * (blocks - 1))
   // - finally, internal vertices of blocks
-  int tot_bnd_vertices = (blocky + 1) * (blockx * blocks + 1) + (blockx + 1) * (blocky * (blocks - 1));
+  const int tot_bnd_vertices = (blocky + 1) * (blockx * blocks + 1) + (blockx + 1) * (blocky * (blocks - 1));
   bmesh._vertices.init(tot_bnd_vertices);
   bmesh._wedges.init(tot_bnd_vertices);
   for_int(bx, blockx) {
     for_int(by, blocky) {
       const PMesh& pmxy = pmeshes[bx, by];
       const AWMesh& bmeshxy = pmxy._base_mesh;
-      int vertex_offset = bmesh._vertices.num();
-      int nbnd_vertices = 4 * blocks;
-      int nint_vertices = bmeshxy._vertices.num() - nbnd_vertices;
+      const int vertex_offset = bmesh._vertices.num();
+      const int nbnd_vertices = 4 * blocks;
+      const int nint_vertices = bmeshxy._vertices.num() - nbnd_vertices;
       bmesh._vertices.add(nint_vertices);
       bmesh._wedges.add(nint_vertices);
       f_renumber[bx, by].init(pmxy._info._full_nfaces);
       for_int(fi, bmeshxy._faces.num()) {
-        int nfi = bmesh._faces.add(1);
+        const int nfi = bmesh._faces.add(1);
         f_renumber[bx, by][fi] = nfi;
         for_int(j, 3) {
-          int vi = bmeshxy._faces[fi].wedges[j], nvi;
+          const int vi = bmeshxy._faces[fi].wedges[j];
+          int nvi;
           if (vi >= 4 * blocks) {  // vertex internal to block
             nvi = vertex_offset + vi - (4 * blocks);
           } else {  // vertex on block boundary

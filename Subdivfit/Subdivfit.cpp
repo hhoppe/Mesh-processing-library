@@ -182,7 +182,7 @@ float min_dihedral_about_vertices(const GMesh& mesh, Vertex v) {
   float mindic = 2;
   for (Edge e : sete) {
     if (mesh.is_boundary(e)) continue;
-    float dic = edge_dihedral_angle_cos(mesh, e);
+    const float dic = edge_dihedral_angle_cos(mesh, e);
     mindic = min(mindic, dic);
   }
   return mindic;
@@ -209,7 +209,7 @@ double get_espr() {
   } else {
     for (Vertex v : gmesh.vertices()) {
       Homogeneous h(gmesh.point(v));
-      float fac = 1.f / gmesh.degree(v);
+      const float fac = 1.f / gmesh.degree(v);
       for (Vertex vv : gmesh.vertices(v)) h -= fac * Homogeneous(gmesh.point(vv));
       sum += mag2(to_Vector(h)) * spring;
     }
@@ -278,15 +278,15 @@ void global_neighb_project(const SubMesh& smesh) {
 void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
   HH_STIMER("___glls");
   GMesh& omesh = smesh.orig_mesh();
-  GMesh& mesh = smesh.mesh();
+  const GMesh& mesh = smesh.mesh();
   Map<Vertex, int> mvi;
   Array<Vertex> iv;
   for (Vertex v : omesh.vertices()) {
     mvi.enter(v, iv.num());
     iv.push(v);
   }
-  int m = co.num(), n = iv.num();
-  int mm = spring ? m + n : m;
+  const int m = co.num(), n = iv.num();
+  const int mm = spring ? m + n : m;
   SparseLls lls(mm, n, 3);
   lls.set_max_iter(10);
   Array<Vertex> va;
@@ -295,7 +295,7 @@ void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
     assertx(va.num() == 3);
     Combvh tricomb;
     for_int(j, 3) tricomb.c[va[j]] = gbary[i][j];
-    Combvh comb = smesh.compose_c_mvcvh(tricomb);
+    const Combvh comb = smesh.compose_c_mvcvh(tricomb);
     HH_SSTAT(Scombnum, comb.c.num());
     Homogeneous h = Homogeneous(co[i]) - comb.h;
     lls.enter_b_r(i, h.head(3));
@@ -303,10 +303,10 @@ void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
   }
   if (spring) {
     // These are vertex-based springs, unlike edge-based in Meshfit.
-    float sqrt_spring = sqrt(spring);
+    const float sqrt_spring = sqrt(spring);
     for_int(i, n) {
       lls.enter_a_rc(m + i, i, +sqrt_spring);
-      int deg = omesh.degree(iv[i]);
+      const int deg = omesh.degree(iv[i]);
       for (Vertex v : omesh.vertices(iv[i])) lls.enter_a_rc(m + i, mvi.get(v), -sqrt_spring / deg);
       Vector zero(0.f, 0.f, 0.f);
       lls.enter_b_r(m + i, zero);
@@ -340,7 +340,7 @@ void do_gfit(Args& args) {
   std::ostream* os = gmesh.record_changes(nullptr);
   if (verb >= 2) showdf("\n");
   HH_TIMER("_gfit");
-  int niter = args.get_int();
+  const int niter = args.get_int();
   for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
   SubMesh smesh(gmesh);
   subdivide(smesh, true);
@@ -372,7 +372,7 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Vector, v_grad);
 // verdict: not stable enough; often jumps out of initial minimum to worse state; use do_gfit instead.
 void do_fgfit(Args& args) {
   HH_TIMER("_fgfit");
-  int niter = args.get_int();
+  const int niter = args.get_int();
   assertx(co.num() && !gmesh.empty());
   initialize();
   if (verb >= 2) showdf("\n");
@@ -430,7 +430,7 @@ void do_fgfit(Args& args) {
       unpack_vertices();
       _smesh.update_vertex_positions();
       {
-        bool bu_force_global_project = g_force_global_project;
+        const bool bu_force_global_project = g_force_global_project;
         if (_desire_global_project) {
           g_force_global_project = true;
           _desire_global_project = false;
@@ -443,7 +443,7 @@ void do_fgfit(Args& args) {
       // float espr = float(get_espr());
       // float earea = float(get_earea());
       {
-        double prev_etot = _etot;
+        const double prev_etot = _etot;
         _etot = get_etot();  // edis + espr + earea;
         if (_etot > prev_etot * 1.1) {
           showdf("Large increase in energy after it%d, so next iteration uses global projection\n", _iter);
@@ -467,10 +467,10 @@ void do_fgfit(Args& args) {
         }
       }
       if (spring) {
-        float sqrt_spring = sqrt(spring);
+        const float sqrt_spring = sqrt(spring);
         for (Vertex v : gmesh.vertices()) {
           Homogeneous h(gmesh.point(v));
-          float fac = 1.f / gmesh.degree(v);
+          const float fac = 1.f / gmesh.degree(v);
           for (Vertex vv : gmesh.vertices(v)) h -= fac * Homogeneous(gmesh.point(vv));
           v_grad(v) += to_Vector(h) * sqrt_spring;
         }
@@ -480,14 +480,14 @@ void do_fgfit(Args& args) {
         // grad area = 0.5 * w * normalized(hv) = hv * (area / mag2(hv))
         const GMesh& mesh = _smesh.mesh();
         for (Face f : mesh.faces()) {
-          float farea = mesh.area(f);
+          const float farea = mesh.area(f);
           for (Vertex v : mesh.vertices(f)) {
-            Point p = mesh.point(v);
-            Point p0 = mesh.point(mesh.clw_vertex(f, v));
-            Point p1 = mesh.point(mesh.ccw_vertex(f, v));
-            Point pp = proj_line(p, p0, p1);
+            const Point p = mesh.point(v);
+            const Point p0 = mesh.point(mesh.clw_vertex(f, v));
+            const Point p1 = mesh.point(mesh.ccw_vertex(f, v));
+            const Point pp = proj_line(p, p0, p1);
             Vector h = p - pp;
-            float weight = farea / assertx(mag2(h));
+            const float weight = farea / assertx(mag2(h));
             h *= weight;
             const Combvh& comb = _smesh.combination(v);
             assertx(is_zero(comb.h));
@@ -534,7 +534,7 @@ void do_interp() {
     mvi.enter(v, iv.num());
     iv.push(v);
   }
-  int n = iv.num();
+  const int n = iv.num();
   // auto up_lls = Lls::make(n, n, 3, 12.f / n); Lls& lls = *up_lls;
   SparseLls lls(n, n, 3);
   for_int(i, n) {
@@ -585,14 +585,14 @@ void do_imagefit() {
   const bool sprlimit = false;
   if (spring && !sprlimit) m += iv.num();
   if (spring && sprlimit) m *= 2;
-  int n = iv.num();
+  const int n = iv.num();
   SparseLls lls(m, n, 3);
   int row = 0;
   string str;
   for (Vertex v : smesh.mesh().vertices()) {
     Face f1 = assertx(smesh.mesh().most_ccw_face(v));
     Corner c1 = smesh.mesh().corner(v, f1);
-    int imagen = to_int(assertx(smesh.mesh().corner_key(str, c1, "imagen")));
+    const int imagen = to_int(assertx(smesh.mesh().corner_key(str, c1, "imagen")));
     assertx(imagen >= 1 && imagen <= co.num());
     Point p = co[imagen - 1];
     lls.enter_b_r(row, p);
@@ -603,10 +603,10 @@ void do_imagefit() {
   }
   if (spring && !sprlimit) {
     // These are vertex-based springs, unlike edge-based in Meshfit.
-    float sqrt_spring = sqrt(spring);
+    const float sqrt_spring = sqrt(spring);
     for_int(i, n) {
       lls.enter_a_rc(row, i, +sqrt_spring);
-      int deg = gmesh.degree(iv[i]);
+      const int deg = gmesh.degree(iv[i]);
       for (Vertex v : gmesh.vertices(iv[i])) lls.enter_a_rc(row, mvi.get(v), -sqrt_spring / deg);
       Vector zero(0.f, 0.f, 0.f);
       lls.enter_b_r(row, zero);
@@ -614,13 +614,13 @@ void do_imagefit() {
     }
   }
   if (spring && sprlimit) {
-    float sqrt_spring = sqrt(spring);
+    const float sqrt_spring = sqrt(spring);
     for (Vertex v : smesh.mesh().vertices()) {
-      int deg = smesh.mesh().degree(v);
+      const int deg = smesh.mesh().degree(v);
       Combvh barycomb;
       barycomb.c[v] = +sqrt_spring;
       for (Vertex vv : smesh.mesh().vertices(v)) barycomb.c[vv] = -sqrt_spring / deg;
-      Combvh comb = smesh.compose_c_mvcvh(barycomb);
+      const Combvh comb = smesh.compose_c_mvcvh(barycomb);
       for_combination(comb.c, [&](Vertex vv, float val) { lls.enter_a_rc(row, mvi.get(vv), val); });
       Vector zero(0.f, 0.f, 0.f);
       lls.enter_b_r(row, zero);
@@ -634,7 +634,7 @@ void do_imagefit() {
   }
   static const float tolerance = getenv_float("LLS_TOLERANCE", 1e-9f, true);  // larger than default 1e-10f
   lls.set_tolerance(tolerance);
-  int max_iter = getenv_int("LLS_MAXITER", std::numeric_limits<int>::max(), true);
+  const int max_iter = getenv_int("LLS_MAXITER", std::numeric_limits<int>::max(), true);
   lls.set_max_iter(max_iter);
   double rss0, rss1;
   {
@@ -674,7 +674,7 @@ void create_mvcvih(const SubMesh& smesh, const Set<Vertex>& setmv, Mvcvih& mvcvi
     v_index(v) = mvcvih.iv.num();
     mvcvih.iv.push(v);
   }
-  int nv = setmv.num();
+  const int nv = setmv.num();
   for (Vertex v : m.vertices()) {
     Combvih& cvih = v_combvih(v);
     cvih.c.init(nv, 0.f);
@@ -686,12 +686,12 @@ void create_mvcvih(const SubMesh& smesh, const Set<Vertex>& setmv, Mvcvih& mvcvi
 
 void update_local(SubMesh& smesh, const Mvcvih& mvcvih) {
   GMesh& m = smesh.mesh();
-  int nv = mvcvih.iv.num();
+  const int nv = mvcvih.iv.num();
   for (Vertex v : m.vertices()) {
     const Combvih& cvih = v_combvih(v);
     Homogeneous h(cvih.h);
     for_int(j, nv) {
-      float b = cvih.c[j];
+      const float b = cvih.c[j];
       if (b) h += b * Homogeneous(smesh.orig_mesh().point(mvcvih.iv[j]));
     }
     m.set_point(v, to_Point(h));
@@ -711,10 +711,10 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
   }
   TriangleFaceSpatial spatial(trianglefaces, 60);  // Not MeshSearch because of face subset selection using `setgoodf`.
   HH_STIMER("____lspatialproject");
-  for (int i : setpts) {
+  for (const int i : setpts) {
     if (setbadpts.contains(i)) {
       SpatialSearch<TriangleFace*> ss(&spatial, co[i] * xform);
-      TriangleFace* triangleface = (*ss.begin()).id;
+      const TriangleFace* triangleface = (*ss.begin()).id;
       gscmf[i] = triangleface->face;
     } else {
       Face f = trfmm(gcmf[i], gmesh, smesh.orig_mesh());
@@ -731,12 +731,12 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
   const GMesh& mesh = smesh.mesh();
   {
     HH_STIMER("____lneighproject");
-    for (int pi : setpts) {
+    for (const int pi : setpts) {
       Point dummy_clp;
       project_point_neighborhood(mesh, co[pi], gscmf[pi], gbary[pi], dummy_clp, true);
     }
   }
-  int m = setpts.num(), n = mvcvih.iv.num();
+  const int m = setpts.num(), n = mvcvih.iv.num();
   assertx(n == setmv.num());  // optional
   // auto up_lls = make_unique<SparseLls>(m, n, 3); SparseLls& lls = *up_lls;
   auto up_lls = Lls::make(m, n, 3, 1.f);
@@ -745,7 +745,7 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
   {
     HH_STIMER("____lcombinations");
     Array<Vertex> va;
-    for (int pi : setpts) {
+    for (const int pi : setpts) {
       mesh.get_vertices(gscmf[pi], va);
       assertx(va.num() == 3);
       const Vec3<double> baryd = convert<double>(gbary[pi]);
@@ -814,15 +814,15 @@ void build_lmesh1(const Set<Vertex>& setgmv, const Set<Face>& setbadfg, GMesh& l
   for (Vertex v : lmesh.vertices()) lmesh.flags(v) = gmesh.flags(trvmm(v, lmesh, gmesh));
   // Gather into setpts the points projecting on faces in setmfg
   for (Face f : setmfg)
-    for (int pi : mfpts.get(f)) setpts.enter(pi);
+    for (const int pi : mfpts.get(f)) setpts.enter(pi);
   {
     double sum = 0.;
-    for (int pi : setpts) sum += gdis2[pi];
+    for (const int pi : setpts) sum += gdis2[pi];
     rssf = sum;
   }
   // Gather into setbadpts the points projecting on faces in setbadfg
   for (Face f : setbadfg)
-    for (int pi : mfpts.get(f)) setbadpts.enter(pi);
+    for (const int pi : mfpts.get(f)) setbadpts.enter(pi);
 }
 
 void build_lmesh2(GMesh& lmesh, const Set<Vertex>& setmv, Set<Face>& setmf) {
@@ -860,9 +860,9 @@ void local_update_gmesh(const SubMesh& smesh, const Set<Vertex>& setmv, const Se
     Vertex vg = v == v1l ? v1g : trvmm(v, lmesh, gmesh);
     gmesh.set_point(vg, lmesh.point(v));
   }
-  for (int pi : setpts) {
+  for (const int pi : setpts) {
     const GMesh& mesh = smesh.mesh();
-    Vec3<Point> triangle = mesh.triangle_points(gscmf[pi]);
+    const Vec3<Point> triangle = mesh.triangle_points(gscmf[pi]);
     gdis2[pi] = project_point_triangle(co[pi], triangle).d2;
     Face fl;
     int index;
@@ -939,7 +939,7 @@ EResult try_ecol(Edge eg, double& edrss) {
   for (Vertex v : gmesh.vertices(eg)) minb = min(minb, min_dihedral_about_vertices(gmesh, v));
   Edge e = tremm(eg, gmesh, lmesh);
   Vertex v1 = lmesh.vertex1(e), v2 = lmesh.vertex2(e);
-  Point p1 = lmesh.point(v1), p2 = lmesh.point(v2);
+  const Point p1 = lmesh.point(v1), p2 = lmesh.point(v2);
   int ndsharp = lmesh.flags(e).flag(GMesh::eflag_sharp) ? 1 : 0;
   {
     Vertex vo1 = lmesh.side_vertex1(e), vo2 = lmesh.side_vertex2(e);
@@ -987,11 +987,11 @@ EResult try_ecol(Edge eg, double& edrss) {
     }
   }
   if (minii < 0) return R_dih;
-  double threshrss = rssf + wcrep + ndsharp * wcsharp;
+  const double threshrss = rssf + wcrep + ndsharp * wcsharp;
   // SHOW(minii, threshrss);
   lmesh.set_point(v1, interp(p1, p2, minii * .5f));
   if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss)) return R_energy;
-  float mina = min_dihedral_about_vertices(lmesh, v1);
+  const float mina = min_dihedral_about_vertices(lmesh, v1);
   if (mina < k_min_cos && mina < minb) return R_dih;
   // ALL SYSTEMS GO
   Face f1g = gmesh.face1(eg), f2g = gmesh.face2(eg);
@@ -1013,7 +1013,7 @@ EResult try_esha(Edge eg, double& edrss) {
   const bool testdih = false;
   if (gmesh.is_boundary(eg)) return R_illegal;
   bool is_sharp = gmesh.flags(eg).flag(GMesh::eflag_sharp);
-  float vcos = edge_dihedral_angle_cos(gmesh, eg);
+  const float vcos = edge_dihedral_angle_cos(gmesh, eg);
   static const float k_cos30d = std::cos(rad_from_deg(30.f));
   if (!is_sharp && vcos > k_cos30d) return R_sharp;  // quick culling
   // if is_sharp then always consider smoothing it
@@ -1024,7 +1024,7 @@ EResult try_esha(Edge eg, double& edrss) {
   double rssf;
   {
     Set<Vertex> setgmv;
-    Set<Face> setbadfg;
+    const Set<Face> setbadfg;
     for (Vertex v : gmesh.vertices(eg))
       for (Vertex vv : gmesh.vertices(v)) setgmv.add(vv);
     build_lmesh1(setgmv, setbadfg, lmesh, setpts, setbadpts, rssf);
@@ -1039,7 +1039,7 @@ EResult try_esha(Edge eg, double& edrss) {
     for (Vertex vv : lmesh.vertices(v)) setmv.add(vv);
   Set<Face> setmf;
   build_lmesh2(lmesh, setmv, setmf);
-  Set<Face> setgoodf;
+  const Set<Face> setgoodf;
   SubMesh smesh(lmesh);
   subdiv_trim(smesh, setmf);
   Mvcvih mvcvih;
@@ -1050,7 +1050,7 @@ EResult try_esha(Edge eg, double& edrss) {
   HH_SSTAT(Seshasmv, smesh.mesh().num_vertices());
   update_local(smesh, mvcvih);
   local_all_project(smesh, setgoodf, setpts, setbadpts);
-  double threshrss = rssf - wcrep * feshaasym + (is_sharp ? 1. : -1.) * wcsharp;
+  const double threshrss = rssf - wcrep * feshaasym + (is_sharp ? 1. : -1.) * wcsharp;
   if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss)) return R_energy;
   if (testdih) {
     float mina = BIGFLOAT;
@@ -1075,12 +1075,12 @@ EResult try_esha(Edge eg, double& edrss) {
 EResult try_eswa(Edge eg, double& edrss) {
   // SHOW("try_eswa");
   if (!gmesh.legal_edge_swap(eg)) return R_illegal;
-  bool is_sharp = gmesh.flags(eg).flag(GMesh::eflag_sharp);
+  const bool is_sharp = gmesh.flags(eg).flag(GMesh::eflag_sharp);
   Vertex v1g = gmesh.vertex1(eg), v2g = gmesh.vertex2(eg);
   Vertex vo1g = gmesh.side_vertex1(eg), vo2g = gmesh.side_vertex2(eg);
   Face of1g = gmesh.face1(eg), of2g = gmesh.face2(eg);
-  float minb = edge_dihedral_angle_cos(gmesh, eg);
-  float mina = dihedral_angle_cos(gmesh.point(vo1g), gmesh.point(vo2g), gmesh.point(v1g), gmesh.point(v2g));
+  const float minb = edge_dihedral_angle_cos(gmesh, eg);
+  const float mina = dihedral_angle_cos(gmesh.point(vo1g), gmesh.point(vo2g), gmesh.point(v1g), gmesh.point(v2g));
   if (mina < k_min_cos && mina < minb) return R_dih;
   // could do culling check if mina > cos5 && minb > cos5 ?
   HH_STIMER("__try_eswa");
@@ -1123,7 +1123,7 @@ EResult try_eswa(Edge eg, double& edrss) {
   HH_SSTAT(Seswasmv, smesh.mesh().num_vertices());
   update_local(smesh, mvcvih);
   local_all_project(smesh, setgoodf, setpts, setbadpts);
-  double threshrss = rssf - wcrep * feswaasym + (is_sharp ? 1. : 0.) * wcsharp;
+  const double threshrss = rssf - wcrep * feswaasym + (is_sharp ? 1. : 0.) * wcsharp;
   if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss)) return R_energy;
   // ALL SYSTEMS GO
   ecand.remove(eg);
@@ -1145,7 +1145,7 @@ EResult try_eswa(Edge eg, double& edrss) {
 EResult try_espl(Edge eg, double& edrss) {
   // SHOW("try_espl");
   // always legal
-  bool is_sharp = gmesh.flags(eg).flag(GMesh::eflag_sharp);
+  const bool is_sharp = gmesh.flags(eg).flag(GMesh::eflag_sharp);
   Vertex v1g = gmesh.vertex1(eg), v2g = gmesh.vertex2(eg);
   Vertex vo1g = gmesh.side_vertex1(eg), vo2g = gmesh.side_vertex2(eg);
   Face f1g = gmesh.face1(eg), f2g = gmesh.face2(eg);
@@ -1188,7 +1188,7 @@ EResult try_espl(Edge eg, double& edrss) {
   HH_SSTAT(Sesplsmv, smesh.mesh().num_vertices());
   update_local(smesh, mvcvih);
   local_all_project(smesh, setgoodf, setpts, setbadpts);
-  double threshrss = rssf - wcrep - (is_sharp ? 1. : 0.) * wcsharp;
+  const double threshrss = rssf - wcrep - (is_sharp ? 1. : 0.) * wcsharp;
   if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss)) return R_energy;
   // ALL SYSTEMS GO
   for (Face f : gmesh.faces(eg))
@@ -1313,7 +1313,7 @@ void do_stoc() {
     else
       nbad++;
     if (result == R_success) {
-      double nedis = get_edis(), netot = get_etot();
+      const double nedis = get_edis(), netot = get_etot();
       // showf("edis:%g->%g  etot:%g->%g\n", cedis, nedis, cetot, netot);
       HH_SSTAT(Sechange, netot - cetot);
       if (!assertw(netot <= cetot)) HH_SSTAT(HHH_PECHANGE, netot - cetot);

@@ -142,7 +142,7 @@ void compute_xform() {
   const Bbox bbox{co};
   xform = bbox.get_frame_to_small_cube();
   if (!is_3D) xform.p()[0] = 0.f;  // preserve x == 0
-  float xform_scale = xform[0, 0];
+  const float xform_scale = xform[0, 0];
   showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   xform_inverse = ~xform;
   for_int(i, num) co[i] *= xform;
@@ -193,7 +193,7 @@ void compute_tp(int i, int& n, Frame& frame) {
 }
 
 void draw_pc_extent(Mk3d& mk) {
-  MkSave mk_save(mk);
+  const MkSave mk_save(mk);
   mk.scale(2);
   Mklib mklib(mk);
   // frame is defined in terms of principal frame!
@@ -206,7 +206,7 @@ void draw_pc_extent(Mk3d& mk) {
 
 void draw_pc_linear(Mk3d& mk) {
   if (is_3D) {
-    MkSave mksave(mk);
+    const MkSave mksave(mk);
     mk.scale(2);
     Mklib mklib(mk);
     mklib.squareU();
@@ -268,7 +268,7 @@ void process_principal() {
     compute_tp(i, n, frame);
     if (ioo) pctrans[i] = frame;
     Snei.enter(n);
-    float len0 = mag(frame.v(0)), len1 = mag(frame.v(1)), len2 = mag(frame.v(2));
+    const float len0 = mag(frame.v(0)), len1 = mag(frame.v(1)), len2 = mag(frame.v(2));
     assertx(len2 > 0.f);  // principal_components() should do this
     Slen0.enter(len0);
     Slen1.enter(len1);
@@ -349,7 +349,7 @@ void add_exterior_orientation(const Set<int>& nodes) {
   gpcpseudo->enter(num);
   if (have_normals) {
     // add pseudo-edges from "exterior" to points with normals
-    for (int i : nodes) {
+    for (const int i : nodes) {
       if (is_zero(nor[i])) continue;
       gpcpseudo->enter_undirected(i, num);
     }
@@ -357,7 +357,7 @@ void add_exterior_orientation(const Set<int>& nodes) {
     // add 1 pseudo-edge to point with largest z value
     float maxz = -BIGFLOAT;
     int maxi = -1;
-    for (int i : nodes) {
+    for (const int i : nodes) {
       if (pcorg[i][2] > maxz) {
         maxz = pcorg[i][2];
         maxi = i;
@@ -368,14 +368,14 @@ void add_exterior_orientation(const Set<int>& nodes) {
 }
 
 void remove_exterior_orientation() {
-  for (int i : Array(gpcpseudo->edges(num))) gpcpseudo->remove_undirected(num, i);
+  for (const int i : Array(gpcpseudo->edges(num))) gpcpseudo->remove_undirected(num, i);
   gpcpseudo->remove(num);
 }
 
 void show_propagation(int i, int j, float dotp) {
   assertx(i >= 0 && i <= num && j >= 0 && j < num && dotp >= 0.f);
   if (i == num || !iop) return;
-  float f = min((1.f - dotp) * 10.f, 1.f);  // low dotp, high f are signific.
+  const float f = min((1.f - dotp) * 10.f, 1.f);  // Low dotp and high f are significant.
   iop->diffuse(.2f + .8f * f, .8f + .2f * f, .5f + .5f * f);
   iop->specular(0.f, 0.f, 0.f);
   iop->phong(3.f);
@@ -390,10 +390,10 @@ void show_propagation(int i, int j, float dotp) {
 void propagate_along_path(int i) {
   assertx(i >= 0 && i <= num);
   if (i < num) assertx(pciso[i]);
-  for (int j : gpcpath->edges(i)) {
+  for (const int j : gpcpath->edges(i)) {
     assertx(j >= 0 && j <= num);
     if (j == num || pciso[j]) continue;  // immediate caller
-    float corr = pc_dot(i, j);
+    const float corr = pc_dot(i, j);
     pScorr->enter(abs(corr));
     if (corr < 0.f) pcnor[j] = -pcnor[j];
     pciso[j] = true;
@@ -413,7 +413,7 @@ void orient_set(const Set<int>& nodes) {
     assertx(is_connected);
     *gpcpath = std::move(graph);
   }
-  int nextlink = gpcpath->out_degree(num);
+  const int nextlink = gpcpath->out_degree(num);
   if (nextlink > 1) showdf(" num_exteriorlinks_used=%d\n", nextlink);
   propagate_along_path(num);
   gpcpath.reset();
@@ -447,7 +447,7 @@ void draw_oriented_tps() {
 
 void print_graph(Mk3d& mk, const Graph<int>& g, CArrayView<Point> pa, CArrayView<Vector>* pn) {
   for_int(i, num) {
-    for (int j : g.edges(i)) {
+    for (const int j : g.edges(i)) {
       if (j >= i) continue;
       mk.point(pa[i] * xform_inverse);
       if (pn) mk.normal((*pn)[i]);
@@ -474,7 +474,7 @@ void orient_tp() {
   }
   {
     HH_TIMER("__graphnumcompon");
-    int nc = graph_num_components(*gpcpseudo);
+    const int nc = graph_num_components(*gpcpseudo);
     showdf("Number of components: %d\n", nc);
     if (nc > 1) showdf("*** #comp > 1, may want larger -samp\n");
   }
@@ -491,13 +491,13 @@ void orient_tp() {
   while (!setnotvis.empty()) {
     Set<int> nodes;
     Queue<int> queue;
-    int fi = setnotvis.get_one();
+    const int fi = setnotvis.get_one();
     nodes.enter(fi);
     queue.enqueue(fi);
     while (!queue.empty()) {
-      int i = queue.dequeue();
+      const int i = queue.dequeue();
       assertx(setnotvis.remove(i));
-      for (int j : gpcpseudo->edges(i))
+      for (const int j : gpcpseudo->edges(i))
         if (nodes.add(j)) queue.enqueue(j);
     }
     pScorr.emplace("Scorr", true);
@@ -536,8 +536,8 @@ float compute_signed(const Point& p, Point& proj) {
     SpatialSearch<int> ss(&*SPpc, p);
     tpi = (*ss.begin()).id;
   }
-  Vector vptopc = p - pcorg[tpi];
-  float dis = dot(vptopc, pcnor[tpi]);
+  const Vector vptopc = p - pcorg[tpi];
+  const float dis = dot(vptopc, pcnor[tpi]);
   proj = p - dis * pcnor[tpi];
   if (!is_3D) assertx(!proj[0]);
   if ((is_3D && (proj[0] <= 0.f || proj[0] >= 1.f)) || proj[1] <= 0.f || proj[1] >= 1.f || proj[2] <= 0.f ||
@@ -552,7 +552,7 @@ float compute_signed(const Point& p, Point& proj) {
     // check that grid point is close to a data point
     SpatialSearch<int> ss(&*SPp, p);
     const float d2 = (*ss.begin()).d2;
-    float grid_diagonal2 = square(1.f / gridsize) * 3.f;
+    const float grid_diagonal2 = square(1.f / gridsize) * 3.f;
     const float fudge = 1.2f;
     if (d2 > grid_diagonal2 * square(fudge)) return k_Contour_undefined;
   }
@@ -578,9 +578,9 @@ Point build_Point(const Vec2<float>& p) { return Point(0.f, p[0], p[1]); }
 template <int D> struct eval_point {
   float operator()(const Vec<float, D>& pp) const {
     ASSERTX((D == 3) == is_3D);
-    Point p = build_Point(pp);
+    const Point p = build_Point(pp);
     Point proj;
-    float dis = unsigneddis ? compute_unsigned(p, proj) : compute_signed(p, proj);
+    const float dis = unsigneddis ? compute_unsigned(p, proj) : compute_signed(p, proj);
     if (dis == k_Contour_undefined) return dis;
     if (iol) {
       if (dis < 0.f)
@@ -708,7 +708,7 @@ void process() {
   }
   {
     HH_TIMER("_SPp");
-    int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
+    const int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
     SPp.emplace(n);
     for_int(i, num) SPp->enter(i, &co[i]);
   }
@@ -718,7 +718,7 @@ void process() {
     process_principal();
     {
       HH_TIMER("_SPpc");
-      int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
+      const int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
       SPpc.emplace(n);
       for_int(i, num) SPpc->enter(i, &pcorg[i]);
     }

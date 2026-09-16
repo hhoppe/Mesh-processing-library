@@ -125,6 +125,9 @@ constexpr int k_axis2 = 2;  // Axis whose extreme values define the two poles.
 // Introduce a vertex exactly at each pole, and give each of its corners a separate longitude.
 constexpr bool k_split_at_poles = true;
 
+// Relax the sph coordinates of the vertices of the faces that are inverted in the lon-lat uv parameterization.
+constexpr bool k_relax_inverted_lonlat_faces = true;
+
 // Split edges to attempt to remove the remaining faces that are inverted in the lon-lat uv parameterization.
 constexpr bool k_split_inverted_lonlat_faces = true;
 
@@ -402,6 +405,80 @@ bool split_reduces_inversion(const GMesh& mesh, Edge e, const Point& sph_m, cons
   return after.area < before.area * .99f;
 }
 
+// Return the inversion, in the lon-lat domain, of the faces incident to a vertex.
+Inversion inversion_around_vertex(const GMesh& mesh, Vertex v) {
+  Inversion inversion;
+  for (Face f : mesh.faces(v)) {
+    const Vec3<Uv> uvs = transformed(mesh.triangle_corners(f), [&](Corner c) { return corner_lonlat_uv(mesh, c); });
+    const float area = signed_area(uvs[0], uvs[1], uvs[2]);
+    if (!(area > 0.f)) inversion.num_faces++, inversion.area += -area;
+  }
+  return inversion;
+}
+
+// Return true if the faces incident to a vertex are all properly oriented on the sphere.
+bool faces_around_vertex_are_positive(const GMesh& mesh, Vertex v) {
+  const auto is_positive = [&](Face f) {
+    const Vec3<Point> sphs = transformed(mesh.triangle_vertices(f), v_sph);
+    return dot(sphs[0], cross(sphs[1], sphs[2])) > 0.f;
+  };
+  return ranges::all_of(mesh.faces(v), is_positive);
+}
+
+// Move the sph coordinate of a vertex to lessen the inversion of its incident faces in the lon-lat domain, keeping
+// those faces properly oriented on the sphere.  The move changes only the uv of the incident faces, so it cannot
+// invert any other face.  Return true if the vertex was moved.
+bool relax_vertex(GMesh& mesh, Vertex v) {
+  const Point sph_old = v_sph(v);
+  if (!vertex_lonlat_uv_is_shared(sph_old)) return false;  // Its uv is constrained by the cut or by the pole.
+  Inversion best = inversion_around_vertex(mesh, v);
+  if (!best.num_faces) return false;
+  float min_arc = BIGFLOAT;
+  for (Vertex vv : mesh.vertices(v)) min_arc = min(min_arc, angle_between_unit_vectors(sph_old, v_sph(vv)));
+  // Two orthonormal tangent directions at the vertex: toward the pole, and eastward along the parallel.
+  const Vector north = normalized(Vector(0.f, 0.f, 1.f) - sph_old[k_axis2] * sph_old);
+  const Vector east = cross(north, sph_old);
+  Point best_sph = sph_old;
+  bool found = false;
+  constexpr int k_num_directions = 8;
+  for_int(i, k_num_directions) {
+    const float angle = i * (TAU / k_num_directions);
+    const Vector dir = std::cos(angle) * north + std::sin(angle) * east;
+    // Ascending, so that (improvements being strict) the smallest sufficient displacement is the one retained.
+    for (const float frac : {.03125f, .0625f, .125f, .25f, .5f}) {
+      const Point sph_new = normalized(sph_old + (min_arc * frac) * dir);
+      if (!vertex_lonlat_uv_is_shared(sph_new)) continue;  // Do not move a vertex onto the cut or onto a pole.
+      v_sph(v) = sph_new;
+      const bool positive = faces_around_vertex_are_positive(mesh, v);
+      const Inversion after = positive ? inversion_around_vertex(mesh, v) : Inversion{};
+      v_sph(v) = sph_old;
+      if (!positive) continue;
+      const bool improves =
+          after.num_faces != best.num_faces ? after.num_faces < best.num_faces : after.area < best.area * .99f;
+      if (improves) best = after, best_sph = sph_new, found = true;
+    }
+  }
+  if (found) v_sph(v) = best_sph;
+  return found;
+}
+
+// Relax the sph coordinates of the vertices of the faces that are inverted in the lon-lat domain.  Unlike an edge
+// split, this adds no vertices, and it can repair a face whose every candidate split merely hands the inversion to
+// a neighbor; it does perturb the spherical parameterization, though only locally and by a fraction of an edge.
+void relax_mesh_at_inverted_lonlat_faces(GMesh& mesh) {
+  constexpr int k_max_rounds = 20;
+  for_int(round, k_max_rounds) {
+    Set<Vertex> candidates;
+    for (Face f : mesh.faces())
+      if (lonlat_face_is_inverted(mesh, f))
+        for (Vertex v : mesh.triangle_vertices(f)) candidates.add(v);
+    bool any_moved = false;
+    for (Vertex v : candidates)
+      if (relax_vertex(mesh, v)) any_moved = true;
+    if (!any_moved) break;
+  }
+}
+
 // Split edges to remove the faces that are inverted in the lon-lat domain.  Such a face arises where the
 // great-circle arc of one of its edges bows poleward by more than the face itself extends in latitude, so that the
 // linear uv triangle through the three vertex lon-lat values is reversed.  Splitting the edge at its spherical
@@ -462,7 +539,13 @@ template <int n> Vec<float, n> normalized_double(const Vec<float, n>& vec) {
 void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   assertx(!(split_meridian && !mesh_uv.empty()));  // (!mesh_uv.empty() uses split_mesh_along_octa() instead.)
   if (split_meridian) split_mesh_along_prime_meridian(gmesh);
-  if (k_split_inverted_lonlat_faces && split_meridian && !keep_uv) split_mesh_at_inverted_lonlat_faces(gmesh);
+  if (split_meridian && !keep_uv) {
+    // Repair the faces that are inverted in the lon-lat domain, first by relaxing vertices and then, for those that
+    // remain, by splitting edges; a final relaxation addresses any face that the splitting itself left inverted.
+    if (k_relax_inverted_lonlat_faces) relax_mesh_at_inverted_lonlat_faces(gmesh);
+    if (k_split_inverted_lonlat_faces) split_mesh_at_inverted_lonlat_faces(gmesh);
+    if (k_relax_inverted_lonlat_faces) relax_mesh_at_inverted_lonlat_faces(gmesh);
+  }
   if (!mesh_uv.empty()) {
     if (0)
       for (Face f : mesh_uv.faces()) assertx(!spherical_triangle_is_flipped(mesh_uv.triangle_points(f)));

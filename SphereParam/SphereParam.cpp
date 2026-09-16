@@ -379,6 +379,19 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
       }
     }
   });
+  if (k_debug && mesh_uv.empty() && !keep_uv) {
+    // The lon-lat map inverts the faces of the fan at a pole, because the pole is not a vertex and the fan
+    // therefore shares a single longitude, and also inverts faces whose great-circle edge bows poleward by more
+    // than the face extends in latitude.  (The "sph" parameterization itself remains a valid embedding.)
+    for (Face f : gmesh.faces()) {
+      const Vec3<Uv> uvs = transformed(gmesh.triangle_corners(f), [&](Corner c) {
+        Uv uv;
+        assertx(gmesh.parse_corner_key_vec(c, "uv", uv));
+        return uv;
+      });
+      if (!(signed_area(uvs[0], uvs[1], uvs[2]) > 0.f)) Warning("Face is inverted in the lon-lat uv parameterization");
+    }
+  }
   hh_clean_up();
   gmesh.write(std::cout);
   if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().

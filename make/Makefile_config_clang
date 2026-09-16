@@ -7,6 +7,7 @@ release ?= 1#  0=debug or 1=release (usually 1).
 include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_clang
 
 # 2025-10-28 LLVM-20.1.8-win64.exe from https://github.com/llvm/llvm-project/releases
+# 2026-09-15 https://github.com/llvm/llvm-project/releases/download/llvmorg-23.1.1/LLVM-23.1.1-win64.msi
 # LLVM_ROOT = C:/Program Files/LLVM
 
 # Possibly consider: C:/Program Files/Microsoft Visual Studio/2022/*/VC/Tools/Llvm/x64/bin/$(CXX).exe, but full

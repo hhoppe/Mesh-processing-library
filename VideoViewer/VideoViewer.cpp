@@ -2380,6 +2380,7 @@ bool DerivedHw::key_press(string skey) {
           if (ob.nframes() < 4) throw "too few video frames";
           g_request_loop_synchronously = false;
           g_high_quality_loop = true;
+          dummy_use(g_high_quality_loop);
           initiate_loop_request();
           break;
         }

@@ -64,13 +64,19 @@ struct SuffixGuid {
   const GUID* guid;
 };
 constexpr auto k_ar_suffix_container = to_Vec({
-    SuffixGuid{"bmp", &GUID_ContainerFormatBmp}, SuffixGuid{"png", &GUID_ContainerFormatPng},
-    SuffixGuid{"jpg", &GUID_ContainerFormatJpeg}, SuffixGuid{"jpeg", &GUID_ContainerFormatJpeg},
-    SuffixGuid{"tif", &GUID_ContainerFormatTiff}, SuffixGuid{"tiff", &GUID_ContainerFormatTiff},
-    SuffixGuid{"gif", &GUID_ContainerFormatGif}, SuffixGuid{"wmp", &GUID_ContainerFormatWmp},
-    SuffixGuid{"dds", &GUID_ContainerFormatDds}, SuffixGuid{"heif", &GUID_ContainerFormatHeif},
+    SuffixGuid{"bmp", &GUID_ContainerFormatBmp},
+    SuffixGuid{"png", &GUID_ContainerFormatPng},
+    SuffixGuid{"jpg", &GUID_ContainerFormatJpeg},
+    SuffixGuid{"jpeg", &GUID_ContainerFormatJpeg},
+    SuffixGuid{"tif", &GUID_ContainerFormatTiff},
+    SuffixGuid{"tiff", &GUID_ContainerFormatTiff},
+    SuffixGuid{"gif", &GUID_ContainerFormatGif},
+    SuffixGuid{"wmp", &GUID_ContainerFormatWmp},
+    SuffixGuid{"dds", &GUID_ContainerFormatDds},
+    SuffixGuid{"heif", &GUID_ContainerFormatHeif},
     // Decoder but no encoder for these:
-    SuffixGuid{"adng", &GUID_ContainerFormatAdng}, SuffixGuid{"webp", &GUID_ContainerFormatWebp},
+    SuffixGuid{"adng", &GUID_ContainerFormatAdng},
+    SuffixGuid{"webp", &GUID_ContainerFormatWebp},
     SuffixGuid{"raw", &GUID_ContainerFormatRaw},
     // Not present: "avif" ?
 });

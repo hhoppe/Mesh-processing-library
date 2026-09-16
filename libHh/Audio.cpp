@@ -24,7 +24,8 @@ string Audio::diagnostic_string() const {
 
 bool filename_is_audio(const string& filename) {
   static constexpr auto k_extensions = to_Vec<std::string_view>({
-      "wav", "mp3",
+      "wav",
+      "mp3",
       // "pcm",
   });
   return contains(k_extensions, to_lower(get_path_extension(filename)));

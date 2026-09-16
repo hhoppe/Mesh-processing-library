@@ -1559,11 +1559,11 @@ void do_write_primal_texture(Args& args) {
   // For octa, we need the extra border of samples on all sides.
   const int imagesize = (domain == "tetra"                          ? gridn * 2
                          : domain == "octa" || domain == "octaflat" ? gridn * 2 + 1
-                         : domain == "cube"                         ? gridn * 4
+                         : domain == "cube" ? gridn * 4
                                             : (assertnever("domain '" + domain + "' not recognized"), 0));
   const int scale = (domain == "tetra"                          ? gridn * 2
                      : domain == "octa" || domain == "octaflat" ? gridn * 2
-                     : domain == "cube"                         ? gridn * 4
+                     : domain == "cube" ? gridn * 4
                                         : (assertnever("domain '" + domain + "' not recognized"), 0));
   const Pixel background = Pixel::white();  // Outside color.
   Image image(V(imagesize, imagesize), background);

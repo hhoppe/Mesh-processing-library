@@ -769,8 +769,8 @@ const Filter& get_resampling_filter() {
           : g_kernel == EKernel::keys   ? Filter::get("spline")
                                         :  // higher quality than "keys"
               g_kernel == EKernel::lanczos6 ? Filter::get("lanczos6")
-            : g_kernel == EKernel::lanczos10  ? Filter::get("lanczos10")
-                                              : (assertnever_ret(""), Filter::get("impulse")));
+          : g_kernel == EKernel::lanczos10  ? Filter::get("lanczos10")
+                                            : (assertnever_ret(""), Filter::get("impulse")));
 }
 
 Frame scale_2d(const Vec2<float>& vec) { return Frame::scaling(concat(vec, V(1.f))); }

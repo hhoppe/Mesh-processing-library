@@ -28,7 +28,7 @@ class Tally {
   }
   [[nodiscard]] int64_t total() const { return sum<int64_t>(_counts); }
   void show() const {
-    showff("Tally[0..%d] (tot=%lld):{\n", num() - 1, static_cast<long long>(total()));
+    showff("Tally[0..%d] (tot=%lld):{\n", num() - 1, possible_cast<long long>(total()));
     for_int(i, num()) {
       if (_counts[i]) showff("  [%3d]: %d\n", i, _counts[i]);
     }

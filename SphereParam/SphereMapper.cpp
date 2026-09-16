@@ -470,7 +470,7 @@ class SphereMapper::Implementation {
         // centroid of the 1-ring vertices; the optimize_vertex() calls below already tolerate an empty kernel.
         Warning("Empty kernel for the 1-ring of a vertex split");
         Vector centroid{};
-        for (const auto [vv, ff] : _pmi.ccw_vertices(v, someface)) centroid += _sphmap[vv];
+        for (const auto [vv, unused_ff] : _pmi.ccw_vertices(v, someface)) centroid += _sphmap[vv];
         assertx(centroid.normalize());
         _sphmap[v] = centroid;
       }
@@ -601,8 +601,7 @@ class SphereMapper::Implementation {
     if (_options.verbose >= 2) std::cerr << "\n" << std::flush;
     {
       // The map must be an embedding; report the extent of any failure rather than just the first flipped face.
-      int num_flipped = 0;
-      for_int(f, _pmi._faces.num()) num_flipped += face_flipped(f);
+      const int num_flipped = int(ranges::count_if(range(_pmi._faces.num()), [&](int f) { return face_flipped(f); }));
       if (num_flipped)
         assertnever(sform("The spherical parameterization is not an embedding: %d of %d faces are flipped",
                           num_flipped, _pmi._faces.num()));

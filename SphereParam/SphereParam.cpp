@@ -125,7 +125,7 @@ constexpr int k_axis2 = 2;  // Axis whose extreme values define the two poles.
 // Introduce a vertex exactly at each pole, and give each of its corners a separate longitude.
 constexpr bool k_split_at_poles = true;
 
-// Split edges to remove the remaining faces that are inverted in the lon-lat uv parameterization.
+// Split edges to attempt to remove the remaining faces that are inverted in the lon-lat uv parameterization.
 constexpr bool k_split_inverted_lonlat_faces = true;
 
 constexpr float k_uv_undefined = -1.f;
@@ -281,8 +281,8 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
         const bool straddles_pole = ((sph1[k_axis1] < -eps && sph2[k_axis1] > eps) ||  //
                                      (sph2[k_axis1] < -eps && sph1[k_axis1] > eps));
         if (in_meridian_plane && in_pole_hemisphere && straddles_pole) {
+          assertx(!pole_edge);  // Two edges could both pass through the pole only if they overlapped.
           pole_edge = e;
-          break;
         }
       }
       if (!assertw(pole_edge)) continue;  // The pole does not lie in the interior of any edge.
@@ -324,10 +324,11 @@ void split_mesh_along_octa(GMesh& mesh) {
 
 // Return false if the vertex lies on the prime meridian or at a pole, where its lon-lat uv is not a single value
 // shared by all its corners.
+bool vertex_is_at_a_pole(const Point& sph) { return k_split_at_poles && sph[k_axis0] == 0.f && sph[k_axis1] == 0.f; }
+
 bool vertex_lonlat_uv_is_shared(const Point& sph) {
-  const bool at_pole = k_split_at_poles && sph[k_axis0] == 0.f && sph[k_axis1] == 0.f;
   const bool near_prime_meridian = abs(sph[k_axis0]) < 1e-5f && sph[k_axis1] > -1e-5f;
-  return !at_pole && !near_prime_meridian;
+  return !vertex_is_at_a_pole(sph) && !near_prime_meridian;
 }
 
 // Return the lon-lat uv of a corner, which differs from the uv of its vertex on the prime meridian (where the two
@@ -339,22 +340,23 @@ Uv corner_lonlat_uv(const GMesh& mesh, Corner c) {
   const float lon = [&] {
     if (vertex_lonlat_uv_is_shared(sph)) return lonlat[0];
     Face f = mesh.corner_face(c);
-    if (!(k_split_at_poles && sph[k_axis0] == 0.f && sph[k_axis1] == 0.f)) {
-      // Tweak texture coordinates for correct rendering assuming split_mesh_along_prime_meridian has been called.
-      return mean(transformed(mesh.triangle_vertices(f), v_sph))[k_axis0] < 0.f ? 0.f : 1.f;
+    if (vertex_is_at_a_pole(sph)) {
+      // The longitude is undefined at a pole, so we give each corner the longitude of the midpoint of its face's
+      // opposite edge, and give the two corners adjacent to the prime meridian the extreme longitudes 0 and 1.
+      // Consequently the fan of polar faces leaves undefined gaps in the uv domain near the pole.
+      Vector sum{};
+      bool adjacent_to_meridian = false;
+      for (Vertex vv : mesh.triangle_vertices(f)) {
+        if (vv == v) continue;
+        const Point& sph2 = v_sph(vv);
+        sum += sph2;
+        if (abs(sph2[k_axis0]) < 1e-5f && sph2[k_axis1] > 1e-5f) adjacent_to_meridian = true;
+      }
+      return adjacent_to_meridian ? (sum[k_axis0] < 0.f ? 0.f : 1.f) : lonlat_from_sph(normalized(sum))[0];
     }
-    // The longitude is undefined at a pole, so we give each corner the longitude of the midpoint of its face's
-    // opposite edge, and give the two corners adjacent to the prime meridian the extreme longitudes 0 and 1.
-    // Consequently the fan of polar faces leaves undefined gaps in the uv domain near the pole.
-    Vector sum{};
-    bool adjacent_to_meridian = false;
-    for (Vertex vv : mesh.triangle_vertices(f)) {
-      if (vv == v) continue;
-      const Point& sph2 = v_sph(vv);
-      sum += sph2;
-      if (abs(sph2[k_axis0]) < 1e-5f && sph2[k_axis1] > 1e-5f) adjacent_to_meridian = true;
-    }
-    return adjacent_to_meridian ? (sum[k_axis0] < 0.f ? 0.f : 1.f) : lonlat_from_sph(normalized(sum))[0];
+    // The vertex lies on the prime meridian; tweak its texture coordinates for correct rendering, assuming that
+    // split_mesh_along_prime_meridian() has been called, by giving each side of the cut an extreme longitude.
+    return mean(transformed(mesh.triangle_vertices(f), v_sph))[k_axis0] < 0.f ? 0.f : 1.f;
   }();
   return Uv(lon, lonlat[1]);
 }

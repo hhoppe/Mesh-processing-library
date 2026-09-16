@@ -255,9 +255,9 @@ class SphereMapper::Implementation {
   // The initial edges are given as a list of normals to their supporting plane (great circle).
   // The centroid is computed using linear average and reprojection to sphere.
   // If the kernel is larger than a hemisphere, the centroid is flipped.
-  Point kernel_centroid_of_spherical_polygon(CArrayView<Vector> enormals) {
+  // Return nothing if the polygon is not star-shaped, i.e. if its kernel is empty.
+  std::optional<Point> kernel_centroid_of_spherical_polygon(CArrayView<Vector> enormals) {
     Vector center{};
-    int n = 0;
     for_int(i, enormals.num()) {
       const Vector& enormal = enormals[i];
       // Get a point x0 on the edge.
@@ -285,12 +285,9 @@ class SphereMapper::Implementation {
       if (tmin < tmax) {
         const float tmid = (tmin + tmax) / 2;
         center += x0 * std::cos(tmid) + dir0 * std::sin(tmid);
-        n += 1;
       }
     }
-    if (!center.normalize() && 1)
-      assertnever("kernel_centroid_of_spherical_polygon fails: " +
-                  SSHOW_PRECISE(enormals, center, n, _pmi._vertices.num()));
+    if (!center.normalize()) return {};
     if (dot(center, enormals[0]) < 0.f) center = -center;
     for_int(i, enormals.num()) ASSERTX(dot(enormals[i], center) >= -1e-6f);
     return center;
@@ -465,7 +462,18 @@ class SphereMapper::Implementation {
       if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
     } else {
       const auto edge_normals = gather_1ring_external_edges(v, someface);
-      _sphmap[v] = kernel_centroid_of_spherical_polygon(edge_normals);
+      if (const std::optional<Point> center = kernel_centroid_of_spherical_polygon(edge_normals)) {
+        _sphmap[v] = *center;
+      } else {
+        // The 1-ring polygon is not star-shaped, e.g. when two of its edges lie on a common great circle with
+        // opposite orientations, so there is no point from which all its vertices are visible.  Fall back to the
+        // centroid of the 1-ring vertices; the optimize_vertex() calls below already tolerate an empty kernel.
+        Warning("Empty kernel for the 1-ring of a vertex split");
+        Vector centroid{};
+        for (const auto [vv, ff] : _pmi.ccw_vertices(v, someface)) centroid += _sphmap[vv];
+        assertx(centroid.normalize());
+        _sphmap[v] = centroid;
+      }
       if (1) assertx(is_unit(_sphmap[v]));
       if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
     }
@@ -591,7 +599,14 @@ class SphereMapper::Implementation {
 
     optimize_all();
     if (_options.verbose >= 2) std::cerr << "\n" << std::flush;
-    for_int(f, _pmi._faces.num()) assertx(!face_flipped(f));
+    {
+      // The map must be an embedding; report the extent of any failure rather than just the first flipped face.
+      int num_flipped = 0;
+      for_int(f, _pmi._faces.num()) num_flipped += face_flipped(f);
+      if (num_flipped)
+        assertnever(sform("The spherical parameterization is not an embedding: %d of %d faces are flipped",
+                          num_flipped, _pmi._faces.num()));
+    }
   }
 
   void set_stretch_scaling() {

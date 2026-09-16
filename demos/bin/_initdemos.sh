@@ -12,6 +12,9 @@ allow_sigpipe() { local status=$?; ((status == 141)) || return $status; }
 # Report the failing command's line and status, since errexit otherwise exits silently.
 trap 'echo "${BASH_SOURCE[0]}: line $LINENO: exit status $?" >&2' ERR
 
+# Include stack-trace frames that lack debug information (e.g., graphics drivers) in any crash report.
+export STACKTRACE_VERBOSE=1
+
 # The demos read their inputs from data/ and write all generated files into results/.
 mkdir -p results
 

@@ -531,6 +531,7 @@ void split_edges(GMesh& mesh) {
 // Repair the faces that are inverted in the lon-lat domain, first by relaxing vertices and then, for those that
 // remain, by splitting edges; a final relaxation addresses any face that the splitting itself left inverted.
 void repair_inverted_lonlat_faces(GMesh& mesh) {
+  HH_TIMER("_repair_inverted_lonlat");
   lonlat_repair::relax_vertices(mesh);
   lonlat_repair::split_edges(mesh);
   lonlat_repair::relax_vertices(mesh);

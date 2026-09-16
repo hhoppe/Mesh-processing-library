@@ -30,13 +30,6 @@ LDFLAGS += -Wl,-debug#  Write a *.pdb file (adjacent to *.exe) to enable stacktr
 
 cxxall += -D_CRT_SECURE_NO_WARNINGS#  Because the C++ library is _MSVC_STL_VERSION.
 
-# The clang 23 lifetime-safety analysis crashes the frontend on Image.cpp and Video_IO.cpp, and
-#  -Wno-lifetime-safety does not prevent the analysis from running; this threshold skips it.
-#  A larger threshold does not help (50 already crashes), and its 35 findings here were all
-#  reviewed and found to be false positives.  This belongs here rather than in Makefile_base_clang
-#  because CONFIG=unix and CONFIG=cygwin may use an older clang that rejects this unknown option.
-cpedantic += -Xclang -lifetime-safety-max-cfg-blocks=1
-
 graphics_libs ?= -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
 
 # c:/Progra~1/LLVM/bin/clang++ --version:

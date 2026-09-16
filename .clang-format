@@ -13,6 +13,7 @@ DerivePointerAlignment: false               # default is false; Google default i
 ReflowComments: false                       # default is Always; Google default is Always.
 IncludeBlocks: Preserve                     # default is Preserve; Google default is Regroup.
 RequiresClausePosition: SingleLine          # default is OwnLine; Google default is OwnLine.
+AttributeMacros: ['_Inout_']                # default is []; keeps the space in "_Inout_ ::Name".
 
 # ForEachMacros: ['for_int', 'for_intL']
 # # Avoid 'for_int (' using the following:

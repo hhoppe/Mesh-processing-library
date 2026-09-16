@@ -120,6 +120,14 @@ Array<Point> get_base_sphmap(const PMeshIter& pmi, const string& base_param_sche
 
 constexpr int k_axis0 = 0;  // Axis whose zero value defines the plane of the prime meridian.
 constexpr int k_axis1 = 1;  // Axis whose positive range defines the halfspace containing the prime meridian.
+constexpr int k_axis2 = 2;  // Axis whose extreme values define the two poles.
+
+// Introduce a vertex exactly at each pole, and give each of its corners a separate longitude.
+constexpr bool k_split_at_poles = true;
+
+// Attempt to repair the faces that are inverted in the lon-lat uv parameterization, by relaxing vertices and by
+// splitting edges; see the section introducing repair_inverted_lonlat_faces().
+constexpr bool k_repair_inverted_lonlat_faces = true;
 
 constexpr float k_uv_undefined = -1.f;
 
@@ -260,6 +268,31 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
     }
   }
 
+  if (k_split_at_poles) {
+    // The splitting above leaves each pole in the interior of an edge whose two endpoints lie in the plane x = 0
+    // and straddle y = 0.  We split that edge to obtain a vertex exactly at the pole, so that
+    // write_parameterized_gmesh() can assign a separate longitude to each of its corners.
+    for_int(i, 2) {
+      const float pole_z = i == 0 ? 1.f : -1.f;
+      Edge pole_edge = nullptr;
+      for (Edge e : mesh.edges()) {
+        const Point sph1 = v_sph(mesh.vertex1(e)), sph2 = v_sph(mesh.vertex2(e));
+        const bool in_meridian_plane = abs(sph1[k_axis0]) < eps && abs(sph2[k_axis0]) < eps;
+        const bool in_pole_hemisphere = sph1[k_axis2] * pole_z > 0.f && sph2[k_axis2] * pole_z > 0.f;
+        const bool straddles_pole = ((sph1[k_axis1] < -eps && sph2[k_axis1] > eps) ||  //
+                                     (sph2[k_axis1] < -eps && sph1[k_axis1] > eps));
+        if (in_meridian_plane && in_pole_hemisphere && straddles_pole) {
+          assertx(!pole_edge);  // Two edges could both pass through the pole only if they overlapped.
+          pole_edge = e;
+        }
+      }
+      if (!assertw(pole_edge)) continue;  // The pole does not lie in the interior of any edge.
+      Vertex v = split_edge(pole_edge, k_axis1);
+      assertx(dist(v_sph(v), Point(0.f, 0.f, pole_z)) < 1e-3f);
+      v_sph(v) = Point(0.f, 0.f, pole_z);  // The split point is the pole, up to rounding.
+    }
+  }
+
   collapse_zero_param_length_edges(mesh, new_vertices);
 }
 
@@ -290,6 +323,220 @@ void split_mesh_along_octa(GMesh& mesh) {
   collapse_zero_param_length_edges(mesh, new_vertices);
 }
 
+bool at_a_pole(const Point& sph) { return k_split_at_poles && sph[k_axis0] == 0.f && sph[k_axis1] == 0.f; }
+
+bool near_prime_meridian(const Point& sph) { return abs(sph[k_axis0]) < 1e-5f && sph[k_axis1] > -1e-5f; }
+
+// Return true if the vertex needs a separate lon-lat uv on each of its corners: on the prime meridian the two sides
+// of the cut get the extreme longitudes, and at a pole the longitude is undefined.
+bool needs_multiple_lonlat_uv(const Point& sph) { return at_a_pole(sph) || near_prime_meridian(sph); }
+
+// Return the lon-lat uv of a corner, which differs from the uv of its vertex where needs_multiple_lonlat_uv().
+Uv corner_lonlat_uv(const GMesh& mesh, Corner c) {
+  Vertex v = mesh.corner_vertex(c);
+  const Point& sph = v_sph(v);
+  const Uv lonlat = lonlat_from_sph(sph);
+  const float lon = [&] {
+    if (!needs_multiple_lonlat_uv(sph)) return lonlat[0];
+    Face f = mesh.corner_face(c);
+    if (at_a_pole(sph)) {
+      // The longitude is undefined at a pole, so we give each corner the longitude of the midpoint of its face's
+      // opposite edge, and give the two corners adjacent to the prime meridian the extreme longitudes 0 and 1.
+      // Consequently the fan of polar faces leaves undefined gaps in the uv domain near the pole.
+      Vector sum{};
+      bool adjacent_to_meridian = false;
+      for (Vertex vv : mesh.triangle_vertices(f)) {
+        if (vv == v) continue;
+        sum += v_sph(vv);
+        if (near_prime_meridian(v_sph(vv))) adjacent_to_meridian = true;
+      }
+      return adjacent_to_meridian ? (sum[k_axis0] < 0.f ? 0.f : 1.f) : lonlat_from_sph(normalized(sum))[0];
+    }
+    // The vertex lies on the prime meridian; tweak its texture coordinates for correct rendering, assuming that
+    // split_mesh_along_prime_meridian() has been called, by giving each side of the cut an extreme longitude.
+    return mean(transformed(mesh.triangle_vertices(f), v_sph))[k_axis0] < 0.f ? 0.f : 1.f;
+  }();
+  return Uv(lon, lonlat[1]);
+}
+
+// Return the lon-lat uv of the three corners of a face.
+Vec3<Uv> face_lonlat_uvs(const GMesh& mesh, Face f) {
+  return transformed(mesh.triangle_corners(f), [&](Corner c) { return corner_lonlat_uv(mesh, c); });
+}
+
+// Return true if the face is inverted (or degenerate) in the lon-lat uv domain.
+bool lonlat_face_is_inverted(const GMesh& mesh, Face f) {
+  const Vec3<Uv> uvs = face_lonlat_uvs(mesh, f);
+  return !(signed_area(uvs[0], uvs[1], uvs[2]) > 0.f);
+}
+
+// Return true if the spherical triangle is properly oriented, seen from outside the sphere.
+bool sph_triangle_is_positive(const Vec3<Point>& sphs) { return dot(sphs[0], cross(sphs[1], sphs[2])) > 0.f; }
+
+// *** Repair of the faces that are inverted in the lon-lat uv parameterization.
+//
+// Such a face arises where the great-circle arc of one of its edges bows poleward by more than the face itself
+// extends in latitude, so that the third vertex falls between the arc and its straight uv chord and the linear uv
+// triangle through the three vertex lon-lat values is reversed.  (The sph parameterization remains an embedding.)
+// The whole of this repair is best-effort: it lessens the inversion, usually to zero, and never worsens it.  It is
+// self-contained below repair_inverted_lonlat_faces(), and setting k_repair_inverted_lonlat_faces to false removes
+// it from the program entirely.
+namespace lonlat_repair {
+
+// The extent to which some set of faces is inverted in the lon-lat domain.
+struct Inversion {
+  int num_faces{0};  // Number of inverted faces.
+  float area{0.f};   // Total (positive) magnitude of their inverted areas.
+  void enter(const Vec3<Uv>& uvs) {
+    const float area2 = signed_area(uvs[0], uvs[1], uvs[2]);
+    if (!(area2 > 0.f)) num_faces++, area += -area2;
+  }
+};
+
+// Return true if `after` is an improvement over `before`.  We require a geometric decrease of the inverted area, so
+// that a sequence of such improvements terminates.
+bool is_lessened(const Inversion& after, const Inversion& before) {
+  if (after.num_faces != before.num_faces) return after.num_faces < before.num_faces;
+  return after.area < before.area * .99f;
+}
+
+// Return the inversion, in the lon-lat domain, of the faces incident to a vertex.
+Inversion inversion_around_vertex(const GMesh& mesh, Vertex v) {
+  Inversion inversion;
+  for (Face f : mesh.faces(v)) inversion.enter(face_lonlat_uvs(mesh, f));
+  return inversion;
+}
+
+// Return true if splitting edge e at the point sph_m (whose lon-lat is uv_m) would lessen the inversion of its
+// adjacent faces, without creating a face that is flipped or degenerate on the sphere.  The split modifies only the
+// faces adjacent to e, so it cannot invert any other face, and the mesh inversion therefore never increases.
+bool split_is_an_improvement(const GMesh& mesh, Edge e, const Point& sph_m, const Uv& uv_m) {
+  Inversion before, after;
+  for (Face f : mesh.faces(e)) {
+    const Vec3<Vertex> vertices = mesh.triangle_vertices(f);
+    const Vec3<Uv> uvs = face_lonlat_uvs(mesh, f);
+    before.enter(uvs);
+    for_int(i, 3) {  // The two sub-faces replace, in turn, each endpoint of e by the new split vertex.
+      if (vertices[i] != mesh.vertex1(e) && vertices[i] != mesh.vertex2(e)) continue;
+      Vec3<Uv> sub_uvs = uvs;
+      sub_uvs[i] = uv_m;
+      after.enter(sub_uvs);
+      Vec3<Point> sub_sphs = transformed(vertices, v_sph);
+      sub_sphs[i] = sph_m;
+      if (!sph_triangle_is_positive(sub_sphs)) return false;
+    }
+  }
+  return is_lessened(after, before);
+}
+
+// Move the sph coordinate of a vertex to lessen the inversion of its incident faces in the lon-lat domain, keeping
+// those faces properly oriented on the sphere.  The move changes only the uv of the incident faces, so it cannot
+// invert any other face.  Return true if the vertex was moved.
+bool relax_vertex(GMesh& mesh, Vertex v) {
+  const Point sph_old = v_sph(v);
+  if (needs_multiple_lonlat_uv(sph_old)) return false;  // Its uv is constrained by the cut or by the pole.
+  Inversion best = inversion_around_vertex(mesh, v);
+  if (!best.num_faces) return false;
+  float min_arc = BIGFLOAT;
+  for (Vertex vv : mesh.vertices(v)) min_arc = min(min_arc, angle_between_unit_vectors(sph_old, v_sph(vv)));
+  // Two orthonormal tangent directions at the vertex: toward the pole, and eastward along the parallel.
+  const Vector north = normalized(Vector(0.f, 0.f, 1.f) - sph_old[k_axis2] * sph_old);
+  const Vector east = cross(north, sph_old);
+  Point best_sph = sph_old;
+  bool found = false;
+  constexpr int k_num_directions = 8;
+  for_int(i, k_num_directions) {
+    const float angle = i * (TAU / k_num_directions);
+    const Vector dir = std::cos(angle) * north + std::sin(angle) * east;
+    // Ascending, so that (improvements being strict) the smallest sufficient displacement is the one retained.
+    for (const float frac : {.03125f, .0625f, .125f, .25f, .5f}) {
+      const Point sph_new = normalized(sph_old + (min_arc * frac) * dir);
+      if (needs_multiple_lonlat_uv(sph_new)) continue;  // Do not move a vertex onto the cut or onto a pole.
+      v_sph(v) = sph_new;
+      const bool positive = ranges::all_of(mesh.faces(v), [&](Face f) {
+        return sph_triangle_is_positive(transformed(mesh.triangle_vertices(f), v_sph));
+      });
+      const Inversion after = positive ? inversion_around_vertex(mesh, v) : Inversion{};
+      v_sph(v) = sph_old;
+      if (positive && is_lessened(after, best)) best = after, best_sph = sph_new, found = true;
+    }
+  }
+  if (found) v_sph(v) = best_sph;
+  return found;
+}
+
+// Relax the vertices of the faces that are inverted.  Unlike an edge split, this adds no vertices, and it can
+// repair a face whose every candidate split merely hands the inversion to a neighbor; it does perturb the
+// spherical parameterization, though only locally and by a fraction of an edge.
+void relax_vertices(GMesh& mesh) {
+  constexpr int k_max_rounds = 20;
+  for_int(round, k_max_rounds) {
+    Set<Vertex> candidates;
+    for (Face f : mesh.faces())
+      if (lonlat_face_is_inverted(mesh, f))
+        for (Vertex v : mesh.triangle_vertices(f)) candidates.add(v);
+    bool any_moved = false;
+    for (Vertex v : candidates)
+      if (relax_vertex(mesh, v)) any_moved = true;
+    if (!any_moved) break;
+  }
+}
+
+// Split an edge of each remaining inverted face at a point on its great-circle arc, which introduces the bow as a
+// new vertex.  Because the split also perturbs the face on the other side of the edge, we only perform a split
+// that is locally an improvement.
+void split_edges(GMesh& mesh) {
+  constexpr int k_max_rounds = 20;
+  Set<Vertex> new_vertices;
+  for_int(round, k_max_rounds) {
+    Set<Face> modified;  // Faces already adjacent to a split in this round, whose uv is therefore not up to date.
+    Array<Edge> edges_to_split;
+    Array<Point> sph_split_points;
+    for (Face f : mesh.faces()) {
+      if (!lonlat_face_is_inverted(mesh, f) || modified.contains(f)) continue;
+      bool found = false;
+      for (Edge e : mesh.edges(f)) {
+        if (ranges::any_of(mesh.faces(e), [&](Face f2) { return modified.contains(f2); })) continue;
+        // The arc midpoint is the natural split point; we then try points progressively nearer the two ends.
+        for (const float t : {.5f, .25f, .75f, .125f, .375f, .625f, .875f}) {
+          const Point sph_m = normalized(interp(v_sph(mesh.vertex1(e)), v_sph(mesh.vertex2(e)), 1.f - t));
+          // A split point on the prime meridian or at a pole would need a separate longitude on each of its corners.
+          if (needs_multiple_lonlat_uv(sph_m)) continue;
+          if (!split_is_an_improvement(mesh, e, sph_m, lonlat_from_sph(sph_m))) continue;
+          for (Face f2 : mesh.faces(e)) modified.add(f2);
+          edges_to_split.push(e);
+          sph_split_points.push(sph_m);
+          found = true;
+          break;
+        }
+        if (found) break;
+      }
+    }
+    if (!edges_to_split.num()) break;
+    for_int(i, edges_to_split.num()) {
+      Edge e = edges_to_split[i];
+      const Point sph1 = v_sph(mesh.vertex1(e)), sph2 = v_sph(mesh.vertex2(e));
+      const float frac1 =
+          angle_between_unit_vectors(sph_split_points[i], sph2) / angle_between_unit_vectors(sph1, sph2);
+      Vertex v = split_mesh_edge(mesh, e, frac1);
+      new_vertices.enter(v);
+      v_sph(v) = sph_split_points[i];
+    }
+  }
+  collapse_zero_param_length_edges(mesh, new_vertices);
+}
+
+}  // namespace lonlat_repair
+
+// Repair the faces that are inverted in the lon-lat domain, first by relaxing vertices and then, for those that
+// remain, by splitting edges; a final relaxation addresses any face that the splitting itself left inverted.
+void repair_inverted_lonlat_faces(GMesh& mesh) {
+  HH_TIMER("_repair_inverted_lonlat");
+  lonlat_repair::relax_vertices(mesh);
+  lonlat_repair::split_edges(mesh);
+  lonlat_repair::relax_vertices(mesh);
+}
+
 Uv snap_uv(Uv uv) {
   for_int(c, 2) if (abs(uv[c]) < 1e-8f) uv[c] = 0.f;
   return uv;
@@ -304,6 +551,7 @@ template <int n> Vec<float, n> normalized_double(const Vec<float, n>& vec) {
 void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
   assertx(!(split_meridian && !mesh_uv.empty()));  // (!mesh_uv.empty() uses split_mesh_along_octa() instead.)
   if (split_meridian) split_mesh_along_prime_meridian(gmesh);
+  if (k_repair_inverted_lonlat_faces && split_meridian && !keep_uv) repair_inverted_lonlat_faces(gmesh);
   if (!mesh_uv.empty()) {
     if (0)
       for (Face f : mesh_uv.faces()) assertx(!spherical_triangle_is_flipped(mesh_uv.triangle_points(f)));
@@ -360,25 +608,28 @@ void write_parameterized_gmesh(GMesh& gmesh, bool split_meridian) {
         }
       } else {  // Replace any "uv" with longitude-latitude.
         // Note the rendering challenges with lonlat parameterization: https://gamedev.stackexchange.com/a/197936.
-        const Uv lonlat = lonlat_from_sph(sph);
-        const bool near_prime_meridian = abs(sph[k_axis0]) < 1e-5f && sph[k_axis1] > -1e-5f;
-        if (!near_prime_meridian) {
-          // If not near the discontinuity on the +Y (k_axis1) axis.
-          gmesh.update_string(v, "uv", csform_vec(str, lonlat));
-        } else {
-          // Tweak texture coordinates for correct rendering assuming split_mesh_along_prime_meridian has been called.
+        if (needs_multiple_lonlat_uv(sph)) {
           gmesh.update_string(v, "uv", nullptr);
-          for (Corner c : gmesh.corners(v)) {
-            Face f = gmesh.corner_face(c);
-            const Vec3<Point> sphs = transformed(gmesh.triangle_vertices(f), v_sph);
-            const Point center = mean(sphs);
-            const float lon2 = center[0] < 0.f ? 0.f : 1.f;
-            gmesh.update_string(c, "uv", csform_vec(str, Uv(lon2, lonlat[1])));
-          }
+          for (Corner c : gmesh.corners(v)) gmesh.update_string(c, "uv", csform_vec(str, corner_lonlat_uv(gmesh, c)));
+        } else {
+          gmesh.update_string(v, "uv", csform_vec(str, lonlat_from_sph(sph)));
         }
       }
     }
   });
+  if (k_debug && mesh_uv.empty() && !keep_uv) {
+    // The lon-lat map inverts the faces of the fan at a pole, because the pole is not a vertex and the fan
+    // therefore shares a single longitude, and also inverts faces whose great-circle edge bows poleward by more
+    // than the face extends in latitude.  (The "sph" parameterization itself remains a valid embedding.)
+    for (Face f : gmesh.faces()) {
+      const Vec3<Uv> uvs = transformed(gmesh.triangle_corners(f), [&](Corner c) {
+        Uv uv;
+        assertx(gmesh.parse_corner_key_vec(c, "uv", uv));
+        return uv;
+      });
+      if (!(signed_area(uvs[0], uvs[1], uvs[2]) > 0.f)) Warning("Face is inverted in the lon-lat uv parameterization");
+    }
+  }
   hh_clean_up();
   gmesh.write(std::cout);
   if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().
@@ -477,12 +728,10 @@ void split_awmesh_faces_along_meridian(AWMesh& awmesh) {
 // Split the vertices along the zero meridian into pairs of wedges and reconnect the existing triangles.
 void split_awmesh_vertices_along_meridian(AWMesh& awmesh) {
   assertx(awmesh._wedges.num() == awmesh._vertices.num());
-  const float eps = 1e-5f;
   const Array<int> someface = awmesh.gather_someface();
   for_int(w, awmesh._wedges.num()) {
     const Point sph = sph_from_lonlat(awmesh._wedges[w].attrib.uv);
-    const bool near_prime_meridian = abs(sph[k_axis0]) < eps && sph[k_axis1] > -eps;
-    if (!near_prime_meridian) continue;
+    if (!near_prime_meridian(sph)) continue;
     const int v = awmesh._wedges[w].vertex;
     const int wnew = awmesh._wedges.add(1);
     awmesh._wedges[wnew].vertex = v;

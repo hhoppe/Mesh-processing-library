@@ -492,7 +492,7 @@ Array<string> get_in_directory(const string& directory, EType type) {
   WIN32_FIND_DATAW file_data;
   HANDLE dir = FindFirstFileW(utf16_from_utf8(directory + "/*").c_str(), &file_data);
   {
-    if (dir == INVALID_HANDLE_VALUE) return {};  // No files found.
+    if (dir == INVALID_HANDLE_VALUE) return ar_filenames;  // No files found; i.e., return {}, but named for NRVO.
     do {
       string file_name = utf8_from_utf16(file_data.cFileName);
       const bool is_directory = !!(file_data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY);

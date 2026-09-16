@@ -589,7 +589,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
       AS(_pReader->ReadSample(DWORD(MF_SOURCE_READER_FIRST_VIDEO_STREAM), 0, nullptr, &dwFlags, nullptr, &pSample));
       if (dwFlags & MF_SOURCE_READERF_ENDOFSTREAM) {
         assertx(!pSample);
-        return {};
+        return pSample;  // I.e., return {}, but named for NRVO.
       }
       // It is possible for real media to be 960x540 and then get "changed" to 960x544.
       // Both tx and ty may change:  Filtervideo ~/proj/videoloops/data/ReallyFreakinAll/SDBaiModelS.mp4 -noo

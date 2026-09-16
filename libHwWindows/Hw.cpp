@@ -1344,7 +1344,7 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
   std::optional<Image> optional_image;
   if (IsClipboardFormatAvailable(CF_BITMAP)) Warning("ignoring CF_BITMAP for now");
   if (IsClipboardFormatAvailable(CF_DIB)) {
-    if (!assertw(OpenClipboard(nullptr))) return {};
+    if (!assertw(OpenClipboard(nullptr))) return optional_image;  // I.e., return {}, but named for NRVO.
     HANDLE hGlobal = assertx(GetClipboardData(CF_DIB));
     const size_t size = assertx(GlobalSize(hGlobal));
     assertx(size >= sizeof(bmp_BITMAPINFOHEADER));

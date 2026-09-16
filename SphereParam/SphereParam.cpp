@@ -371,11 +371,11 @@ struct Inversion {
   float area{0.f};   // Total (positive) magnitude of their inverted areas.
 };
 
-// Return true if splitting edge e at the spherical midpoint sph_m (whose lon-lat is uv_m) would lessen the
+// Return true if splitting edge e at the point sph_m (whose lon-lat is uv_m) would lessen the
 // inversion of its adjacent faces, without creating a face that is flipped or degenerate on the sphere.  The split
 // modifies only the faces adjacent to e, so it cannot invert any other face; the number of inverted faces in the
 // mesh therefore never increases, and their total inverted area strictly decreases, which bounds the recursion.
-bool split_would_reduce_inversion(const GMesh& mesh, Edge e, const Point& sph_m, const Uv& uv_m) {
+bool split_reduces_inversion(const GMesh& mesh, Edge e, const Point& sph_m, const Uv& uv_m) {
   Inversion before, after;
   const auto enter = [](Inversion& inversion, const Vec3<Uv>& uvs) {
     const float area = signed_area(uvs[0], uvs[1], uvs[2]);
@@ -396,7 +396,8 @@ bool split_would_reduce_inversion(const GMesh& mesh, Edge e, const Point& sph_m,
     }
   }
   if (after.num_faces != before.num_faces) return after.num_faces < before.num_faces;
-  return after.area < before.area * .99f;  // Require a geometric decrease, so that the process terminates.
+  // Require a geometric decrease of the inverted area, so that the process terminates.
+  return after.area < before.area * .99f;
 }
 
 // Split edges to remove the faces that are inverted in the lon-lat domain.  Such a face arises where the
@@ -410,26 +411,36 @@ void split_mesh_at_inverted_lonlat_faces(GMesh& mesh) {
   for_int(round, k_max_rounds) {
     Set<Face> modified;  // Faces already adjacent to a split in this round, whose uv is therefore not up to date.
     Array<Edge> edges_to_split;
-    Array<Point> sph_midpoints;
+    Array<Point> sph_split_points;
     for (Face f : mesh.faces()) {
       if (!lonlat_face_is_inverted(mesh, f) || modified.contains(f)) continue;
+      bool found = false;
       for (Edge e : mesh.edges(f)) {
         if (ranges::any_of(mesh.faces(e), [&](Face f2) { return modified.contains(f2); })) continue;
-        const Point sph_m = normalized(v_sph(mesh.vertex1(e)) + v_sph(mesh.vertex2(e)));
-        // A midpoint on the prime meridian or at a pole would need a separate longitude on each of its corners.
-        if (!vertex_lonlat_uv_is_shared(sph_m)) continue;
-        if (!split_would_reduce_inversion(mesh, e, sph_m, lonlat_from_sph(sph_m))) continue;
-        for (Face f2 : mesh.faces(e)) modified.add(f2);
-        edges_to_split.push(e);
-        sph_midpoints.push(sph_m);
-        break;
+        // The arc midpoint is the natural split point; we then try points progressively nearer the two ends.
+        for (const float t : {.5f, .25f, .75f, .125f, .375f, .625f, .875f}) {
+          const Point sph_m = normalized(interp(v_sph(mesh.vertex1(e)), v_sph(mesh.vertex2(e)), 1.f - t));
+          // A split point on the prime meridian or at a pole would need a separate longitude on each of its corners.
+          if (!vertex_lonlat_uv_is_shared(sph_m)) continue;
+          if (!split_reduces_inversion(mesh, e, sph_m, lonlat_from_sph(sph_m))) continue;
+          for (Face f2 : mesh.faces(e)) modified.add(f2);
+          edges_to_split.push(e);
+          sph_split_points.push(sph_m);
+          found = true;
+          break;
+        }
+        if (found) break;
       }
     }
     if (!edges_to_split.num()) break;
     for_int(i, edges_to_split.num()) {
-      Vertex v = split_mesh_edge(mesh, edges_to_split[i], .5f);  // The arc midpoint is at half the arc length.
+      Edge e = edges_to_split[i];
+      const Point sph1 = v_sph(mesh.vertex1(e)), sph2 = v_sph(mesh.vertex2(e));
+      const float frac1 =
+          angle_between_unit_vectors(sph_split_points[i], sph2) / angle_between_unit_vectors(sph1, sph2);
+      Vertex v = split_mesh_edge(mesh, e, frac1);
       new_vertices.enter(v);
-      v_sph(v) = sph_midpoints[i];
+      v_sph(v) = sph_split_points[i];
     }
   }
   collapse_zero_param_length_edges(mesh, new_vertices);

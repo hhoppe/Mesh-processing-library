@@ -19,6 +19,8 @@ ifneq ($(want_plain_compiler),1)
     -Wno-conversion -Wno-sign-conversion -Wno-float-equal -Wno-double-promotion -Wno-ctad-maybe-unsupported
   # The clang 23 lifetime-safety analysis crashes the frontend on Image.cpp and Video_IO.cpp, and
   #  -Wno-lifetime-safety does not prevent the analysis from running; this threshold skips it.
+  #  A larger threshold does not help (50 already crashes), and its 35 findings here were all
+  #  reviewed and found to be false positives.
   cpedantic += -Xclang -lifetime-safety-max-cfg-blocks=1
   # New in clang 23; tolerated by earlier clang thanks to -Wno-unknown-warning-option above.
   cpedantic += -Wno-unique-object-duplication#  We never build shared libraries.

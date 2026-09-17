@@ -235,32 +235,6 @@ class WVideo::Implementation {
   WVideo& _wvideo;
 };
 
-namespace {
-
-class Unsupported_RVideo_Implementation : public RVideo::Implementation {
- public:
-  explicit Unsupported_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) { assertnever_ret("?"); }
-  ~Unsupported_RVideo_Implementation() override = default;
-  [[nodiscard]] string name() const override { return "unsupported"; }
-  bool read(MatrixView<Pixel> frame) override {
-    dummy_use(frame);
-    assertnever("?");
-  }
-};
-
-class Unsupported_WVideo_Implementation : public WVideo::Implementation {
- public:
-  explicit Unsupported_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) { assertnever_ret("?"); }
-  ~Unsupported_WVideo_Implementation() override = default;
-  [[nodiscard]] string name() const override { return "unsupported"; }
-  void write(CMatrixView<Pixel> frame) override {
-    dummy_use(frame);
-    assertnever("?");
-  }
-};
-
-}  // namespace
-
 //----------------------------------------------------------------------------
 
 RVideo::RVideo(string filename, bool use_nv12) : _filename(std::move(filename)), _use_nv12(use_nv12) {
@@ -811,6 +785,32 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
 };
 
 #else
+
+namespace {
+
+class Unsupported_RVideo_Implementation : public RVideo::Implementation {
+ public:
+  explicit Unsupported_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) { assertnever_ret("?"); }
+  ~Unsupported_RVideo_Implementation() override = default;
+  [[nodiscard]] string name() const override { return "unsupported"; }
+  bool read(MatrixView<Pixel> frame) override {
+    dummy_use(frame);
+    assertnever("?");
+  }
+};
+
+class Unsupported_WVideo_Implementation : public WVideo::Implementation {
+ public:
+  explicit Unsupported_WVideo_Implementation(WVideo& wvideo) : WVideo::Implementation(wvideo) { assertnever_ret("?"); }
+  ~Unsupported_WVideo_Implementation() override = default;
+  [[nodiscard]] string name() const override { return "unsupported"; }
+  void write(CMatrixView<Pixel> frame) override {
+    dummy_use(frame);
+    assertnever("?");
+  }
+};
+
+}  // namespace
 
 class Mf_RVideo_Implementation : public Unsupported_RVideo_Implementation {
  public:

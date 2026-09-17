@@ -1,4 +1,4 @@
-# clang-tidy --verify-config --config-file=.clang-tidy
+# clang-tidy --verify-config --config-file=.clang-tidy  # An older clang-tidy reports newer check names as unknown.
 # clang-tidy --dump-config --config-file=.clang-tidy libHh/Grid.cpp -- -I.
 # clang-tidy --enable-check-profile --checks='-*,bugprone-*' Filterframe/Filterframe.cpp -- -I. 1>/dev/null  # Timings.
 # clang-tidy --enable-check-profile Filterframe/Filterframe.cpp -- -I.  # Timings.
@@ -26,18 +26,13 @@ Checks:
   - '-bugprone-unchecked-optional-access'
   - '-bugprone-incorrect-roundings'
   - '-bugprone-inc-dec-in-conditions'
-  # LLVM 22/23 moved several checks out of the `cert-*`, `hicpp-*`, `google-*`, and `fuchsia-*` modules (which are
-  # never enabled here) into the modules enabled below, and added some new ones.  The old names survive as aliases, so
-  # these checks turned on silently.  The disabled ones below conflict with deliberate conventions of this codebase.
-  # Disabling a check that an older clang-tidy does not know is silently ignored, so these entries remain compatible
-  # with LLVM 21; only `--verify-config` reports them there as unknown.
-  - '-bugprone-signed-bitwise'  # Was `hicpp-signed-bitwise`; bit manipulation on signed `int` is intentional.
-  - '-bugprone-throwing-static-initialization'  # Was `cert-err58-cpp`; namespace-scope containers and strings abound.
+  - '-bugprone-signed-bitwise'  # Bit manipulation on signed `int` is intentional.
+  - '-bugprone-throwing-static-initialization'  # Namespace-scope containers and strings abound.
   - '-bugprone-std-exception-baseclass'  # `throw string(...)` and `throw "..."` are caught locally in VideoViewer.
   - '-bugprone-unchecked-string-to-number-conversion'  # `atoi()` and `atof()` parse already-validated argument strings.
   - '-bugprone-derived-method-shadowing-base-method'  # Wrapper classes intentionally hide non-virtual base methods.
   - '-bugprone-std-namespace-modification'  # Only `std::hash` specializations, which are well-defined.
-  - '-bugprone-random-generator-seed'  # Was `cert-msc51-cpp`; a default seed gives reproducible results.
+  - '-bugprone-random-generator-seed'  # A default seed gives reproducible results.
   - 'performance-*'
   - '-performance-enum-size'
   - '-performance-inefficient-string-concatenation'
@@ -55,9 +50,9 @@ Checks:
   - '-misc-unconventional-assign-operator'
   - '-misc-misplaced-const'
   - '-misc-confusable-identifiers'
-  - '-misc-explicit-constructor'  # Was `google-explicit-constructor`; the implicit conversions here are intentional.
+  - '-misc-explicit-constructor'  # The implicit conversions here are intentional.
   - '-misc-override-with-different-visibility'  # Virtual functions are deliberately overridden as private.
-  - '-misc-multiple-inheritance'  # Was `fuchsia-multiple-inheritance`; used to combine storage with an interface.
+  - '-misc-multiple-inheritance'  # Used to combine storage with an interface.
   - 'modernize-*'
   - '-modernize-use-trailing-return-type'
   - '-modernize-avoid-c-arrays'
@@ -70,7 +65,7 @@ Checks:
   - '-modernize-use-std-numbers'
   - '-modernize-deprecated-headers'
   - '-modernize-use-auto'
-  - '-modernize-avoid-c-style-cast'  # Was `google-readability-casting`; functional casts like `float(v)` are the norm.
+  - '-modernize-avoid-c-style-cast'  # Functional casts like `float(v)` are the norm.
   - '-modernize-avoid-variadic-functions'  # `sform()` and the `assertx()` helpers wrap `printf`-style APIs.
   - 'readability-*'
   - '-readability-identifier-length'

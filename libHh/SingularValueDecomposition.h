@@ -40,32 +40,32 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
   const T eps = std::numeric_limits<T>::epsilon() * T{8};
   for (int iter = 0;; iter++) {
     T max_e = T{0};
-    for_intL(j, 1, n) for_int(i, j) {  // for indices i < j of columns of U
+    for_intL(j, 1, n) for_int(i, j) {  // For indices i < j of columns of U.
       // SHOW(U, VT);
       TT a = TT{0}, b = TT{0}, c = TT{0};
-      for_int(k, m) {  // construct 2 * 2 submatrix [ a, c; c, b ] of column inner products on U
+      for_int(k, m) {  // Construct the 2 * 2 submatrix [ a, c; c, b ] of column inner products on U.
         a += square(TT{U[k, i]});
         b += square(TT{U[k, j]});
         c += TT{U[k, i]} * TT{U[k, j]};
       }
       T e = T(abs(c) / sqrt(a * b));
-      max_e = max(max_e, e);  // measure non-orthogonality of pair of columns
+      max_e = max(max_e, e);  // Measure the non-orthogonality of the pair of columns.
       // SHOW(iter, j, i, a, b, c, e);
-      if (c == TT{0}) continue;  // columns are already orthogonal
+      if (c == TT{0}) continue;  // The columns are already orthogonal.
       T cs, sn;
-      {  // compute Jacobi rotation parameters: cos(theta), sin(theta)
+      {  // Compute the Jacobi rotation parameters: cos(theta), sin(theta).
         const TT z = (b - a) / (TT{2} * c);
         const TT t = sign(z) / (abs(z) + std::hypot(TT{1}, z));  // tan(theta); note that sign(z) is never zero.
         cs = T{1} / T(std::hypot(TT{1}, t));
         sn = T(TT{cs} * t);
         // SHOW(z, t, cs, sn);
       }
-      for_int(k, m) {  // apply Jacobi rotation to U
+      for_int(k, m) {  // Apply the Jacobi rotation to U.
         T vlk = U[k, i];
         U[k, i] = cs * vlk - sn * U[k, j];
         U[k, j] = sn * vlk + cs * U[k, j];
       }
-      for_int(k, n) {  // apply Jacobi rotation to VT
+      for_int(k, n) {  // Apply the Jacobi rotation to VT.
         T vlk = VT[k, i];
         VT[k, i] = cs * vlk - sn * VT[k, j];
         VT[k, j] = sn * vlk + cs * VT[k, j];
@@ -83,8 +83,8 @@ bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T
     }
   }
   for_int(i, n) {
-    S[i] = T(mag(column(U, i)));  // singular value is norm of column vector of U
-    // normalize the column vector
+    S[i] = T(mag(column(U, i)));  // The singular value is the norm of the column vector of U.
+    // Normalize the column vector.
     if (S[i]) {
       T recip = T{1} / S[i];
       for_int(j, m) U[j, i] *= recip;
@@ -100,7 +100,7 @@ template <typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S,
   assertx(m >= n);
   assertx(S.num() == n);
   assertx(VT.dims() == V(n, n));
-  // Insertion sort
+  // Insertion sort.
   for_int(i0, n - 1) {
     const int i1 = arg_max(S.slice(i0, n)) + i0;
     if (i0 == i1) continue;

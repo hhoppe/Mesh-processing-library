@@ -19,7 +19,7 @@ void test_stack() {
     };
     std::vector<const S*> s;
     assertx(s.empty());
-    s.push_back(new S(1));  // never deleted
+    s.push_back(new S(1));  // Never deleted.
     s.push_back(new S(2));
     s.push_back(new S(3));
     assertw(vec_pop(s)->_i == 3);

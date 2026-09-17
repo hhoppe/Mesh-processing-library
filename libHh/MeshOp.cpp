@@ -25,7 +25,7 @@ struct hash_edge {
   }
   const GMesh& _mesh;
 };
-using SetEdge = Set<Edge, hash_edge>;  // hashing does not use pointer values, for portable random.
+using SetEdge = Set<Edge, hash_edge>;  // Hashing does not use pointer values, for portable random.
 
 int retriangulate(GMesh& mesh, SetEdge& sete, bool recurse, Set<Vertex>* setvr, float mincos, EDGEF fdoswap,
                   EDGEF fdel, EDGEF fadd) {
@@ -123,7 +123,7 @@ Array<Set<Face>> gather_components(const Mesh& mesh) {
 
 Stat mesh_stat_boundaries(const Mesh& mesh) {
   Stat Sbound;
-  Set<Edge> setevis;  // boundary edges already considered
+  Set<Edge> setevis;  // Boundary edges already considered.
   for (Edge e : mesh.edges()) {
     if (!mesh.is_boundary(e)) continue;
     if (setevis.contains(e)) continue;
@@ -137,7 +137,7 @@ Stat mesh_stat_boundaries(const Mesh& mesh) {
 Stat mesh_stat_components(const Mesh& mesh) {
   Stat Scompf;
   if (0) {
-    Set<Face> setfvis;  // faces already considered
+    Set<Face> setfvis;  // Faces already considered.
     for (Face f : mesh.faces()) {
       if (setfvis.contains(f)) continue;
       const Set<Face> setf = gather_component(mesh, f);
@@ -170,8 +170,8 @@ float mesh_genus(const Mesh& mesh) {
   const int nf = mesh.num_faces();
   const int ne = mesh.num_edges();
   // Notes:
-  //  For mesh without boundary, nf = nv * 2 + (genus - 1) * 4
-  //  For mesh without boundary, ec = 2 - 2 * genus
+  //  For a mesh without boundary, nf = nv * 2 + (genus - 1) * 4.
+  //  For a mesh without boundary, ec = 2 - 2 * genus.
   const Stat Sbound = mesh_stat_boundaries(mesh);
   const int nb = Sbound.inum();
   const Stat Scompf = mesh_stat_components(mesh);
@@ -186,8 +186,8 @@ string mesh_genus_string(const Mesh& mesh) {
   const int nf = mesh.num_faces();
   const int ne = mesh.num_edges();
   // Notes:
-  //  For mesh without boundary, nf = nv * 2 + (genus - 1) * 4
-  //  For mesh without boundary, ec = 2 - 2 * genus
+  //  For a mesh without boundary, nf = nv * 2 + (genus - 1) * 4.
+  //  For a mesh without boundary, ec = 2 - 2 * genus.
   const Stat Sbound = mesh_stat_boundaries(mesh);
   const int nb = Sbound.inum();
   const Stat Scompf = mesh_stat_components(mesh);
@@ -213,10 +213,10 @@ bool triangulate_face(GMesh& mesh, Face f) {
   }
   mesh.destroy_face(f);
   for_int(i, nv - 2) mesh.create_face(va[0], va[i + 1], va[i + 2]);
-  Set<Vertex> setvr;  // vertices on ring of original face
+  Set<Vertex> setvr;  // Vertices on the ring of the original face.
   for_int(i, nv) setvr.enter(va[i]);
   const hash_edge he{mesh};
-  SetEdge sete(he);  // initially, inner edges
+  SetEdge sete(he);  // Initially, the inner edges.
   for_intL(i, 2, nv - 1) sete.enter(mesh.edge(va[0], va[i]));
   retriangulate(mesh, sete, true, &setvr, -2, circum_radius_swap_criterion, nullptr, nullptr);
   return true;
@@ -323,7 +323,7 @@ float collapse_edge_volume_criterion(const GMesh& mesh, Edge e) {
       Vec3<Point> triangle = mesh.triangle_points(f);
       for_int(i, 3) if (va[i] == v1 || va[i] == v2) triangle[i] = newp;
       vol_a += dot<float>(cross(triangle[0], triangle[1]), triangle[2]);
-      if (dot(ar_normals[nnor], get_normal_dir(triangle)) < 0.f) return BIGFLOAT;  // flipped normal
+      if (dot(ar_normals[nnor], get_normal_dir(triangle)) < 0.f) return BIGFLOAT;  // A flipped normal.
       nnor++;
     }
   }
@@ -385,9 +385,9 @@ Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep) {
         // qc.add_to_end(queuee);  // clears queuee
         while (!queuee.empty()) qc.enqueue(queuee.dequeue());
       } else {
-        // Rotate queuee to put v at front
+        // Rotate queuee to put v at the front.
         while (mesh.vertex2(queuee.front()) != v) queuee.enqueue(queuee.dequeue());
-        // Extract loop from queuee into qc
+        // Extract the loop from queuee into qc.
         for (;;) {
           Edge e = queuee.dequeue();
           qc.enqueue(e);
@@ -395,7 +395,7 @@ Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep) {
         }
       }
     }
-    // Remove the simple boundary in qc
+    // Remove the simple boundary in qc.
     {
       Array<Vertex> va;
       // vertex1(e) ok but slower
@@ -632,7 +632,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
     PArray<Vertex, 10> av;
     PArray<Face, 10> af;
     Face f = frep;
-    for (;;) {  // find f: most_clw, or frep if closed
+    for (;;) {  // Find f: most_clw, or frep if closed.
       Edge e = mesh.ccw_edge(f, v);
       if (sharp(mesh, v, e)) break;
       f = mesh.opp_face(f, e);
@@ -641,7 +641,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
         break;
       }
     }
-    for (;;) {  // now go ccw
+    for (;;) {  // Now go ccw.
       av.push(mesh.opp_vertex(v, mesh.ccw_edge(f, v)));
       af.push(f);
       Edge e = mesh.clw_edge(f, v);
@@ -651,7 +651,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
         break;
       }
       if (!closed && sharp(mesh, v, e)) {
-        // could still be a dart (!closed and opp_vertex(v, e) == va[0])
+        // Could still be a dart (!closed and opp_vertex(v, e) == va[0]).
         if (mesh.opp_vertex(v, e) != av[0]) av.push(mesh.opp_vertex(v, e));
         break;
       }
@@ -698,9 +698,9 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
         }
         break;
       default:
-        if (nsharpe > 2 || is_cusp) {  // corner
+        if (nsharpe > 2 || is_cusp) {  // A corner.
           vec = cross(vp, mesh.point(av[0]), mesh.point(av.last()));
-          if (avn > 2) {  // from Polygon::get_normal_dir()
+          if (avn > 2) {  // From Polygon::get_normal_dir().
             Vector pnor{};
             for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
             if (dot(vec, pnor) < 0.f) {
@@ -709,13 +709,13 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
             }
           }
         } else if (nsharpe == 2 && !extraordinary_crease_vertex(mesh, v)) {
-          // regular crease vertex 1, .5, -1, -1, .5
+          // Regular crease vertex 1, .5, -1, -1, .5.
           assertx(avn == 4);
           const Vector v1 = mesh.point(av[3]) - mesh.point(av[0]);
           const Vector v2 =
               vp + mesh.point(av[0]) * .5f + mesh.point(av[3]) * .5f - mesh.point(av[1]) - mesh.point(av[2]);
           vec = cross(v1, v2);
-          {  // direction could be wrong (very bad case)
+          {  // The direction could be wrong (very bad case).
             Vector pnor{};
             for_int(i, avn - 1) pnor += cross(vp, mesh.point(av[i]), mesh.point(av[i + 1]));
             if (dot(vec, pnor) < 0.f) {
@@ -809,7 +809,7 @@ float project_point_neighborhood(const GMesh& mesh, const Point& p, Face& pf, Ba
   auto [mind2, minbary, clp1] = project_point_triangle(p, triangle1);
   ret_clp = clp1;
   const float nearest_edge = min(minbary);
-  ASSERTX(nearest_edge >= 0.f && nearest_edge < .34f);  // optional
+  ASSERTX(nearest_edge >= 0.f && nearest_edge < .34f);  // Optional.
   const bool nearedge = nearest_edge < bnearedge;
   const bool projquick = pfsmooth && !nearedge;
   HH_SSTAT(Sprojquick, projquick);

@@ -19,7 +19,7 @@ namespace hh {
 
 [[nodiscard]] inline bool is_prime(int i) {
   assertx(i > 0);
-  if (i == 1) return false;  // according to Mathematica
+  if (i == 1) return false;  // According to Mathematica.
   return smallest_factor_gt1(i) == i;
 }
 
@@ -44,7 +44,7 @@ namespace hh {
 
 [[nodiscard]] inline int random_prime_under(int n, Random& random) {
   assertx(n < 100'000);
-  static Array<int> primes;  // not threadsafe
+  static Array<int> primes;  // Not thread-safe.
   if (!primes.num()) primes.push(2);
   while (primes.last() < n) primes.push(next_prime(primes.last()));
   int i = discrete_binary_search(primes, 0, primes.num() - 1, n - 1);
@@ -53,7 +53,7 @@ namespace hh {
 
 [[nodiscard]] inline bool are_coprime(int i1, int i2) {
   assertx(i1 > 0 && i2 > 0);
-  // very inefficient
+  // Very inefficient.
   int m = min(i1, i2);
   for_intL(i, 2, m + 1) {
     if (i1 % i == 0 && i2 % i == 0) return false;

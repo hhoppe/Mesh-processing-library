@@ -28,7 +28,7 @@ constexpr uint32_t float_bits_to_unsigned(float f) { return std::bit_cast<uint32
 }  // namespace
 
 HashFloat::HashFloat(int nignorebits, float small) : _nignorebits(nignorebits), _small(small) {
-  // use float to detect override with "0"
+  // Use float to detect an override with "0".
   _nignorebits = getenv_int("HASHFLOAT_NIGNOREBITS", _nignorebits, true);
   assertx(_nignorebits >= 0 && _nignorebits <= 22);
   _small = getenv_float("HASHFLOAT_SMALL", _small, true);
@@ -49,7 +49,7 @@ inline uint32_t HashFloat::encode(float f) const {
 float HashFloat::enter(float f) {
   bool foundexact = false;
   const uint32_t bucketn = encode(f);
-  float r = _m.retrieve(bucketn);  // retrieve closest float
+  float r = _m.retrieve(bucketn);  // Retrieve the closest float.
   if (r) foundexact = true;
   if (0) {
     SHOW(encode(f / _factor / _factor));
@@ -62,8 +62,8 @@ float HashFloat::enter(float f) {
   if (!r) r = _m.retrieve(encode(f / _factor));
   if (!r) r = _m.retrieve(encode(f * _factor * _factor));
   if (!r) r = _m.retrieve(encode(f / _factor / _factor));
-  if (r) {  // found
-    // if found in adjacent cell, propagate close value here
+  if (r) {  // Found.
+    // If found in an adjacent cell, propagate the close value here.
     if (!foundexact) _m.enter(bucketn, r);
     if (r == k_small_val) r = 0.f;
     return r;

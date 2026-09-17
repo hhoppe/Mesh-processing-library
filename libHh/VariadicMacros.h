@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_VARIADICMACROS_H_
 #define MESH_PROCESSING_LIBHH_VARIADICMACROS_H_
 
-// This file is included from Hh.h
+// This file is included from Hh.h.
 
 // My projects now use /Zc:preprocessor (standard-compliance) in MSVC compilation, so in principle I could simplify
 // some of these macros definitions below (very slightly), but it would decrease portability and increase the

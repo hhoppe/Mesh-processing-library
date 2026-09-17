@@ -226,7 +226,7 @@ void setup_exception_hooks() {
   assign_my_signal_handler();
 #endif
 #if defined(__CYGWIN__)
-  // The default behavior is to throw std::bad_alloc
+  // The default behavior is to throw std::bad_alloc.
   std::set_new_handler(&my_new_handler);  // Else on Cygwin, no diagnostic is reported (other than nonzero exit code).
 #endif
 #if defined(_MSVC_STL_VERSION)
@@ -391,7 +391,7 @@ void exercise_errors() {
     SHOW(b);
   }
   if (0) {
-    throw 0;  // unhandled exception
+    throw 0;  // An unhandled exception.
   }
   SHOW(g_unoptimized_zero);
   exit(0);

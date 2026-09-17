@@ -108,10 +108,10 @@ float lanczos(float x, float r) {
   return x < r ? sinc_abs((TAU / 2.f) * x) * sinc_abs(((TAU / 2.f) / r) * x) : 0.f;
 }
 
-// lanczos6 has support [-3, +3].
+// The lanczos6 kernel has support [-3, +3].
 float lanczos6(float x) { return lanczos(x, 3.f); }
 
-// lanczos10 has support [-5, +5].
+// The lanczos10 kernel has support [-5, +5].
 float lanczos10(float x) { return lanczos(x, 5.f); }
 
 float eval_kernel(float x, int kernel_id) {
@@ -132,7 +132,7 @@ vec4 eval_general(vec2 p, int kernel_id, sampler2D ptexture) {
   bool is_magnification = l < 0.001f;
   // Because I do not manually construct good minified levels, do not use expensive lanczos kernels when minifying.
   if (!is_magnification && kernel_id >= 2) kernel_id = 1;
-  // kernel support: keys [-2, +2], lanczos6 [-3, +3], lanczos10 [-5, +5].
+  // Kernel support: keys [-2, +2], lanczos6 [-3, +3], lanczos10 [-5, +5].
   int r = kernel_id == 1 ? 2 : kernel_id == 2 ? 3 : kernel_id == 3 ? 5 : -1;
   ivec2 tdim = textureSize(tex, 0);
   vec2 lidim = vec2(tdim);
@@ -152,7 +152,7 @@ vec4 eval_general(vec2 p, int kernel_id, sampler2D ptexture) {
         tcolor += textureLod(ptexture, (pfl - float(r) + 1.5f + vec2(float(x), float(y))) / lidim, 0.f) * w;
         tw += w;
       }
-    if (kernel_id >= 2) tcolor /= tw;  // lanczos6 and lanczos10 need renormalization.
+    if (kernel_id >= 2) tcolor /= tw;  // Here, lanczos6 and lanczos10 need renormalization.
     // Note that because they are truncated windowed sinc approximations, lanczos6 and lanczos10 may
     //  suffer from well-known ringing artifacts,
     //  e.g.: VideoViewer ~/data/image/genpattern/rhhhs.bmp -key kk====
@@ -174,7 +174,7 @@ vec4 eval_general(vec2 p, int kernel_id, sampler2D ptexture) {
           t0color += textureLod(ptexture, (pfl - float(r) + 1.5f + vec2(float(x), float(y))) / dim, lfl + 0.f) * w;
           tw += w;
         }
-      if (kernel_id >= 2) t0color /= tw;  // lanczos6 and lanczos10 need renormalization.
+      if (kernel_id >= 2) t0color /= tw;  // Here, lanczos6 and lanczos10 need renormalization.
     }
     vec4 t1color = vec4(0.f);
     {
@@ -190,7 +190,7 @@ vec4 eval_general(vec2 p, int kernel_id, sampler2D ptexture) {
           t1color += textureLod(ptexture, (pfl - float(r) + 1.5f + vec2(float(x), float(y))) / dim, lfl + 1.f) * w;
           tw += w;
         }
-      if (kernel_id >= 2) t1color /= tw;  // lanczos6 and lanczos10 need renormalization.
+      if (kernel_id >= 2) t1color /= tw;  // Here, lanczos6 and lanczos10 need renormalization.
     }
     color = lerp(t0color, t1color, lfr);
   }
@@ -215,13 +215,13 @@ vec4 YUV_to_RGB(vec4 yuv) {
 void main() {
   // gl_FragColor = vec4(gl_TexCoord[0].st, 0.f, 1.f); return;
   vec4 color;
-  if (kernel_id == 0 || kernel_id == 4) {  // linear, nearest.
+  if (kernel_id == 0 || kernel_id == 4) {  // Linear, nearest.
     color = texture(tex, frag_uv);
   } else {
     color = eval_general(frag_uv, kernel_id, tex);
   }
   vec4 backcolor = through_color;
-  if (backcolor[0] < 0.f) {                // Use checkerboard pattern; e.g.: vv ~/data/image/dancer_charts.png
+  if (backcolor[0] < 0.f) {                // Use checkerboard pattern; e.g.: vv ~/data/image/dancer_charts.png.
     backcolor = vec4(1.f, 1.f, 1.f, 1.f);  // White.
     vec4 coord = gl_FragCoord;             // Center of the lower-left pixel is (0.5, 0.5).
     int checker_size = 6;

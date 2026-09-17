@@ -104,7 +104,7 @@ void testmesh() {
 
 struct fmonkey {
   float operator()(const Point& p) const {
-    // Monkey saddle, z = x^3 - 3 y^2 x
+    // Monkey saddle, z = x^3 - 3 y^2 x.
     const float s = 4.f;
     const Point pp = (p * 2.f - 1.f) * s;
     const float x = pp[0], y = pp[1], z = pp[2];
@@ -164,7 +164,7 @@ int main() {
     };
     GMesh mesh;
     {
-      Contour3DMesh contour(50, &mesh, func_eval);  // or 6
+      Contour3DMesh contour(50, &mesh, func_eval);  // Or 6.
       contour.march_near(Point(.9f, .5f, .5f));
     }
     mesh.write(std::cout);

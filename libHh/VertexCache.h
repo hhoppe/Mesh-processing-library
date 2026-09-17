@@ -13,20 +13,20 @@ class VertexCache : noncopyable {
  public:
   enum class EType { notype, fifo, lru };
   static string type_string(EType type);
-  static unique_ptr<VertexCache> make(EType type, int nverts1, int cs);  // vertex ids begin at 1
+  static unique_ptr<VertexCache> make(EType type, int nverts1, int cs);  // Vertex ids begin at 1.
 
   virtual ~VertexCache() = default;
   [[nodiscard]] virtual EType type() const = 0;
-  virtual void init(int nverts1, int cs) = 0;    // vertex ids begin at 1
-  virtual void copy(const VertexCache& vc) = 0;  // must be init'ed !
+  virtual void init(int nverts1, int cs) = 0;    // Vertex ids begin at 1.
+  virtual void copy(const VertexCache& vc) = 0;  // Must be initialized!
   virtual bool access_hits(int vi) = 0;
   [[nodiscard]] virtual bool contains(int vi) const = 0;
-  [[nodiscard]] virtual int location(int vi) const = 0;      // -1 .. cs - 1 (0 == recent) (may be slow)
-  [[nodiscard]] virtual int location_alt(int vi) const = 0;  // 0 .. cs (0 == recent) (may be slow)
-  class Iter : noncopyable {                                 // ordering of vertices undefined!
+  [[nodiscard]] virtual int location(int vi) const = 0;      // -1 .. cs - 1 (0 == recent) (may be slow).
+  [[nodiscard]] virtual int location_alt(int vi) const = 0;  // 0 .. cs (0 == recent) (may be slow).
+  class Iter : noncopyable {                                 // The ordering of vertices is undefined!
    public:
     virtual ~Iter() = default;
-    virtual int next() = 0;  // return 0 if no more vertices
+    virtual int next() = 0;  // Return 0 if no more vertices.
    protected:
     Iter() = default;
   };
@@ -52,23 +52,23 @@ class FifoVertexCache : public VertexCache {
         const int vif = q[qi];
         q[qi] = k_no_entry;
         ASSERTX(vif == k_no_entry || _vinqueue[vif] == qi);
-        _vinqueue[vif] = -1;  // vif == k_no_entry is OK
+        _vinqueue[vif] = -1;  // Here, vif == k_no_entry is OK.
       }
     }
     _iprev = 0;
   }
-  void copy(const VertexCache& pvc) override {  // pvc must be a FifoVertexCache!
+  void copy(const VertexCache& pvc) override {  // The pvc must be a FifoVertexCache!
     const FifoVertexCache& vc = static_cast<const FifoVertexCache&>(pvc);
     ASSERTX(vc.type() == type() && vc._vinqueue.num() == _vinqueue.num() && vc._queuev.num() == _queuev.num());
     if (0) {
-      for_int(qi, _queuev.num()) {  // copied from init()
+      for_int(qi, _queuev.num()) {  // Copied from init().
         const int vif = _queuev[qi];
         ASSERTX(vif == k_no_entry || _vinqueue[vif] == qi);
-        _vinqueue[vif] = -1;  // vif == k_no_entry is OK
+        _vinqueue[vif] = -1;  // Here, vif == k_no_entry is OK.
       }
       for_int(qi, _queuev.num()) {
         const int vif = vc._queuev[qi];
-        _vinqueue[vif] = qi;  // vif == k_no_entry is OK
+        _vinqueue[vif] = qi;  // Here, vif == k_no_entry is OK.
         _queuev[qi] = vif;
       }
       _iprev = vc._iprev;
@@ -92,7 +92,7 @@ class FifoVertexCache : public VertexCache {
   bool access_hits(int vi) override {
     ASSERTX(vi >= 1 && vi < _vinqueue.num());
     if (0) {
-      if (_vinqueue[vi] >= 0) return true;  // if there, do nothing
+      if (_vinqueue[vi] >= 0) return true;  // If there, do nothing.
       if (_iprev == 0) {
         if (!_queuev.num()) return false;
         _iprev = _queuev.num();
@@ -100,18 +100,18 @@ class FifoVertexCache : public VertexCache {
       --_iprev;
       const int vj = _queuev[_iprev];  // Oldest vertex.
       ASSERTX(vj == k_no_entry || _vinqueue[vj] == _iprev);
-      _vinqueue[vj] = -1;  // vj == k_no_entry is OK
+      _vinqueue[vj] = -1;  // Here, vj == k_no_entry is OK.
       _queuev[_iprev] = vi;
       _vinqueue[vi] = _iprev;
     } else {
       int* q = _queuev.data();
       int* vinq = _vinqueue.data();
-      if (vinq[vi] >= 0) return true;  // if there, do nothing
+      if (vinq[vi] >= 0) return true;  // If there, do nothing.
       _iprev = _iprev - 1 + (_iprev == 0) * _queuev.num();
       const int vj = q[_iprev];  // Oldest vertex.
       q[_iprev] = vi;
       ASSERTX(vj == k_no_entry || vinq[vj] == _iprev);
-      vinq[vj] = -1;  // vj == k_no_entry is OK
+      vinq[vj] = -1;  // Here, vj == k_no_entry is OK.
       vinq[vi] = _iprev;
     }
     return false;
@@ -150,7 +150,7 @@ class FifoVertexCache : public VertexCache {
       const int vi = _qv[_qi];
       _qi++;
       if (_qi == _qv.num()) _qi = 0;
-      return vi;  // vi == k_no_entry is OK
+      return vi;  // Here, vi == k_no_entry is OK.
     }
 
    private:
@@ -159,9 +159,9 @@ class FifoVertexCache : public VertexCache {
     int _numi;
   };
   static constexpr int k_no_entry = 0;
-  Array<int> _queuev;    // dec. circ. FIFO queue, may contain k_no_entry's
-  int _iprev{-1};        // 0 .. cs - 1: entry_last_added
-  Array<int> _vinqueue;  // vid -> [0 .. cs - 1, -1];  _vinqueue[k_no_entry = 0] is trash
+  Array<int> _queuev;    // Decreasing circular FIFO queue; may contain k_no_entry's.
+  int _iprev{-1};        // 0 .. cs - 1: entry_last_added.
+  Array<int> _vinqueue;  // Maps vid -> [0 .. cs - 1, -1];  _vinqueue[k_no_entry = 0] is trash.
 };
 
 class LruVertexCache : public VertexCache {
@@ -190,12 +190,12 @@ class LruVertexCache : public VertexCache {
         Node* node = &_nodes[ci];
         const int vif = node->vert;
         ASSERTX(vif == k_no_entry || _vinlist[vif] == node);
-        _vinlist[vif] = nullptr;  // vif == k_no_entry is OK
+        _vinlist[vif] = nullptr;  // Here, vif == k_no_entry is OK.
         node->vert = k_no_entry;
       }
     }
   }
-  void copy(const VertexCache& pvc) override {  // pvc must be a LruVertexCache!
+  void copy(const VertexCache& pvc) override {  // The pvc must be a LruVertexCache!
     const LruVertexCache& vc = static_cast<const LruVertexCache&>(pvc);
     ASSERTX(vc.type() == type() && vc._vinlist.num() == _vinlist.num() && vc._cs == _cs);
     init(vc._vinlist.num(), vc._cs);
@@ -207,7 +207,7 @@ class LruVertexCache : public VertexCache {
       Node* tnode = HH_ELIST_OUTER(Node, elist, tnodee);
       const int vif = onode->vert;
       tnode->vert = vif;
-      _vinlist[vif] = tnode;  // vif == k_no_entry is OK
+      _vinlist[vif] = tnode;  // Here, vif == k_no_entry is OK.
       tnodee = tnodee->next();
       onodee = onodee->next();
     }
@@ -216,17 +216,17 @@ class LruVertexCache : public VertexCache {
   bool access_hits(int vi) override {
     ASSERTX(vi >= 1 && vi < _vinlist.num());
     Node* node = _vinlist[vi];
-    if (node) {  // if there, move to front
+    if (node) {  // If there, move to the front.
       ASSERTX(node->vert == vi);
       node->elist.relink_after(_list.delim());
       return true;
     }
-    EListNode* nodee = _list.delim()->prev();  // rear node
+    EListNode* nodee = _list.delim()->prev();  // The rear node.
     // if (nodee == _list.delim()) return false;  // cs == 0
     node = HH_ELIST_OUTER(Node, elist, nodee);
     const int vj = node->vert;
     ASSERTX(vj == k_no_entry || _vinlist[vj] == node);
-    _vinlist[vj] = nullptr;  // vj == k_no_entry is OK
+    _vinlist[vj] = nullptr;  // Here, vj == k_no_entry is OK.
     nodee->relink_after(_list.delim());
     node->vert = vi;
     _vinlist[vi] = node;
@@ -266,7 +266,7 @@ class LruVertexCache : public VertexCache {
       if (_n == _delim) return 0;
       const int vi = HH_ELIST_OUTER(LruVertexCache::Node, elist, _n)->vert;
       _n = _n->next();
-      return vi;  // vi == k_no_entry is OK
+      return vi;  // Here, vi == k_no_entry is OK.
     }
 
    private:
@@ -275,13 +275,13 @@ class LruVertexCache : public VertexCache {
   };
   struct Node {
     EListNode elist;
-    int vert{k_no_entry};  // k_no_entry if cache entry is empty
+    int vert{k_no_entry};  // Set to k_no_entry if the cache entry is empty.
   };
   static constexpr int k_no_entry = 0;
   int _cs{0};
-  Array<Node> _nodes;  // Note: Node is noncopyable but Array is never resized
+  Array<Node> _nodes;  // Note: Node is noncopyable but Array is never resized.
   EList _list;
-  Array<Node*> _vinlist;  // _vinlist[k_no_entry = 0] is trash
+  Array<Node*> _vinlist;  // Here, _vinlist[k_no_entry = 0] is trash.
 };
 
 //----------------------------------------------------------------------------

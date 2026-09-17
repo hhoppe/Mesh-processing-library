@@ -53,7 +53,7 @@ int main() {
     for_int(i, 8) {
       Point p;
       for_int(c, 3) p[c] = Random::G.unif();
-      p[2] *= 1e-7f;  // was 1e-4f
+      p[2] *= 1e-7f;  // Was 1e-4f.
       SHOW(p);
       const auto [f, bary, clp, d2] = mesh_search.search(p, hint_f);
       hint_f = f;

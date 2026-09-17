@@ -83,10 +83,10 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
   }
   for_int(i, n) {
     float v = val[i];
-    if (v < 0.f) v = 0.f;  // for numerics
+    if (v < 0.f) v = 0.f;  // For numerics.
     v = sqrt(v);
     eimag[i] = v;
-    if (!v) v = 1e-15f;  // very small but non-zero vector
+    if (!v) v = 1e-15f;  // A very small but non-zero vector.
     frame.v(i) = v * vec[i];
   }
   frame.p() = avgp;
@@ -113,7 +113,7 @@ void subtract_mean(MatrixView<float> mi) {
   assertx(m >= 2 && n > 0);
   for_int(j, n) {
     double sum = 0.;
-    for_int(i, m) sum += mi[i, j];  // sum across columns
+    for_int(i, m) sum += mi[i, j];  // Sum across columns.
     const float avg = float(sum / m);
     for_int(i, m) mi[i, j] -= avg;
   }
@@ -183,9 +183,9 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
   {
     // HH_TIMER("_pca_cov");
     auto up_timer = m * n > 10'000 * 100 ? make_unique<Timer>("__pca_cov", Timer::EMode::abbrev) : nullptr;
-    if (1) {  // more cache-coherent
+    if (1) {  // More cache-coherent.
       Matrix<double> t(V(n, n), 0.);
-      if (0) {  // unoptimized
+      if (0) {  // Unoptimized.
         for_int(i, m) for_int(c0, n) for_int(c1, c0 + 1) t[c0, c1] += mi[i, c0] * mi[i, c1];
       } else {
         for_int(i, m) {
@@ -225,7 +225,7 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
     std::swap(eimag[i], eimag[imax]);
     swap_elements(mo[i], mo[imax]);
   }
-  // Orient eigenvectors canonically
+  // Orient eigenvectors canonically.
   const Array<float> all1(n, 1.f);
   for_int(i, n) {
     if (dot(mo[i], all1) < 0.) mo[i] *= -1.f;
@@ -289,7 +289,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
     std::swap(vnorm[i], vnorm[imax]);
     swap_elements(mo[i], mo[imax]);
   }
-  // Orthogonalize the approximate eigenvectors
+  // Orthogonalize the approximate eigenvectors.
   for_int(i, ne) {
     for_int(j, i) {
       // vi = vi - dot(vi, vj / mag(vj)) * vj / mag(vj)  or  = vi - dot(vi, vj) / mag2(vj) * vj

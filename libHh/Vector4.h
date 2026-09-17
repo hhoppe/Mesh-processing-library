@@ -36,7 +36,7 @@ class Vector4;
 // See also class F32vec4 in <fvec.h> in Microsoft Visual Studio, provided by Intel.
 // And also https://github.com/scoopr/vectorial/blob/master/include/vectorial/simd4f_sse.h
 //      and https://github.com/scoopr/vectorial/blob/master/include/vectorial/simd4f_neon.h
-// See ~/git/CompPhoto/ClassLibs/VisionTools/src/common/SSEonNeon.h
+// See ~/git/CompPhoto/ClassLibs/VisionTools/src/common/SSEonNeon.h.
 // https://gcc.gnu.org/onlinedocs/gcc-4.8.1/gcc/ARM-NEON-Intrinsics.html#ARM-NEON-Intrinsics
 class Vector4 {
   using type = Vector4;

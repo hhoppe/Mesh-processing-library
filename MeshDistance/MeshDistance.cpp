@@ -36,8 +36,8 @@ bool unitcube0 = false;
 bool unitdiag0 = true;
 bool maxerror = false;
 
-Array<GMesh> meshes;  // meshes to compare
-Frame xform;          // space -> "small" unit cube around all meshes
+Array<GMesh> meshes;  // Meshes to compare.
+Frame xform;          // Space -> "small" unit cube around all meshes.
 int numpts;
 float g_side0;
 float g_diag0;
@@ -67,9 +67,9 @@ void do_mfile(Args& args) {
 }
 
 struct PStats {
-  Stat Sgd2;  // geometric error
-  Stat Scd2;  // color error
-  Stat Snd2;  // normal error
+  Stat Sgd2;  // Geometric error.
+  Stat Scd2;  // Color error.
+  Stat Snd2;  // Normal error.
   void add(const PStats& pstats) {
     Sgd2.add(pstats.Sgd2);
     Scd2.add(pstats.Scd2);
@@ -153,10 +153,10 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
   if (numpts) {
     PStats pstats;
     // showdf("- random sampling of %d points\n", numpts);
-    Array<Face> fface;    // Face of this index (nf)
-    Array<float> fcarea;  // cumulative area (nf + 1)
+    Array<Face> fface;    // Face of this index (nf).
+    Array<float> fcarea;  // Cumulative area (nf + 1).
     {
-      double sum_area = 0.;  // for accuracy
+      double sum_area = 0.;  // For accuracy.
       for (Face f : mesh_s.faces()) {
         const float area = mesh_s.area(f);
         fface.push(f);

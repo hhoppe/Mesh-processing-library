@@ -8,7 +8,7 @@
 
 namespace hh {
 
-// Nonlinear optimization: find n-dimensional vector x that minimize a function f(x) : R^n -> R
+// Nonlinear optimization: find the n-dimensional vector x that minimizes a function f(x) : R^n -> R.
 // Given:
 //  - a container vector x,
 //  - a function eval that evaluates both f(x) and \grad f(x) == (df / dx_1, df / dx_2, ..., df / dx_n);
@@ -23,15 +23,15 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   explicit NonlinearOptimization(ArrayView<double> x, Eval eval = Eval()) : NonlinearOptimization(nullptr, x, eval) {
     _debug = getenv_int("NLOPT_DEBUG");
   }
-  void set_max_neval(int max_neval) { _max_neval = max_neval; }  // default is -1 which signifies infinity
-  [[nodiscard]] bool solve() { return solve_i(); }               // ret: success
+  void set_max_neval(int max_neval) { _max_neval = max_neval; }  // Default is -1, which signifies infinity.
+  [[nodiscard]] bool solve() { return solve_i(); }               // Returns success.
  private:
   // ** Approach-independent:
-  ArrayView<double> _x;  // view of user-supplied vector; stores initial estimate and final solution
-  const int _n;          // _x.num()
-  const Eval _eval;      // callback function to evaluate both the value f and gradient _grad at _x
-  int _max_neval{-1};    // -1 is infinity
-  int _debug;            // 0 == no_output, 1 == show_final, 2 == show_each_iteration
+  ArrayView<double> _x;  // View of the user-supplied vector; stores the initial estimate and final solution.
+  const int _n;          // _x.num().
+  const Eval _eval;      // Callback function to evaluate both the value f and the gradient _grad at _x.
+  int _max_neval{-1};    // Here, -1 is infinity.
+  int _debug;            // 0 == no_output, 1 == show_final, 2 == show_each_iteration.
   void show_debug(const string& s, int iter, int neval, double f, double magg) {
     showf("NonlinearOptimization %s iter=%-3d neval=%-3d f=%.12g mag(g)=%.12g\n", s.c_str(), iter, neval, f, magg);
   }
@@ -47,15 +47,15 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   // (e.g. fortran implementation in https://users.iems.northwestern.edu/~nocedal/lbfgs.html
   //   and threadsafe C version in https://github.com/chokkan/liblbfgs )
   // (_m not constexpr because V() later accesses it as a const reference)
-  const int _m = 6;          // number of stored prior gradients and differences; recommended range 3..7
+  const int _m = 6;          // Number of stored prior gradients and differences; recommended range 3..7.
   const double _eps = 1e-6;  // mag(_g) < _eps*max(1., mag(_x)); default 1e-5 in github.com/chokkan/liblbfgs
-  Array<double> _g;          // current gradient
-  Array<double> _tmp;        // temporary storage
-  Array<double> _xinit;      // _x at start of line search
-  Array<double> _rho;        // scalars \rho from [Nocedal 1980]
-  Array<double> _alphak;     // used in the formula that computes H*g
-  Matrix<double> _as;        // last _m search step          (s_k = x_k - x_{k-1})
-  Matrix<double> _ay;        // last _m gradient differences (y_k = g_k - g_{k-1})
+  Array<double> _g;          // The current gradient.
+  Array<double> _tmp;        // Temporary storage.
+  Array<double> _xinit;      // Value of _x at the start of the line search.
+  Array<double> _rho;        // Scalars \rho from [Nocedal 1980].
+  Array<double> _alphak;     // Used in the formula that computes H * g.
+  Matrix<double> _as;        // Last _m search step          (s_k = x_k - x_{k-1}).
+  Matrix<double> _ay;        // Last _m gradient differences (y_k = g_k - g_{k-1}).
   NonlinearOptimization(void*, ArrayView<double> px, Eval eval)
       : _x(std::move(px)),
         _n(_x.num()),
@@ -73,18 +73,18 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   //  with initial step size alpha.  Updates number of evaluations neval.  Ret: success.
   [[nodiscard]] bool line_search(double& f, CArrayView<double> p, double& alpha, int& neval, int iter) {
     // https://en.wikipedia.org/wiki/Backtracking_line_search
-    const double finit = f;  // initial f
-    _xinit.assign(_x);       // initial _x
-    const double c = .5;     // factor for Armijo-Goldstein condition
-    const double tau = .5;   // backtracking factor (used in geometric sequence on alpha)
+    const double finit = f;  // The initial f.
+    _xinit.assign(_x);       // The initial _x.
+    const double c = .5;     // Factor for the Armijo-Goldstein condition.
+    const double tau = .5;   // Backtracking factor (used in a geometric sequence on alpha).
     const double m = dot(_g, p);
-    assertx(m < 0.);  // must be a descent direction
+    assertx(m < 0.);  // Must be a descent direction.
     for (;;) {
       for_int(i, _n) _x[i] = _xinit[i] + alpha * p[i];
-      f = _eval(_g);  // evaluate both objective f and its gradient _g at _x
+      f = _eval(_g);  // Evaluate both the objective f and its gradient _g at _x.
       neval++;
       if (_debug >= 2) show_debug("", iter, neval, f, mag(_g));
-      if (finit - f >= -alpha * (c * m)) return true;  // Armijo-Goldstein condition satisfied
+      if (finit - f >= -alpha * (c * m)) return true;  // The Armijo-Goldstein condition is satisfied.
       alpha *= tau;
       if (alpha < 1e-10) {
         Warning("line_search fails to converge");
@@ -93,32 +93,32 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
     }
   }
   bool solve_i() {
-    int ic = 0;                          // index into circular buffers _as, _ay
-    double f = _eval(_g);                // evaluate both the objective f and its gradient _g at _x
-    int neval = 1;                       // number of times that _eval is called
-    for_int(i, _n) _as[ic, i] = -_g[i];  // initial line search direction
-    double alpha = 1. / mag(_g);         // initial step size
+    int ic = 0;                          // Index into the circular buffers _as, _ay.
+    double f = _eval(_g);                // Evaluate both the objective f and its gradient _g at _x.
+    int neval = 1;                       // Number of times that _eval is called.
+    for_int(i, _n) _as[ic, i] = -_g[i];  // The initial line search direction.
+    double alpha = 1. / mag(_g);         // The initial step size.
     for_int(iter, 1000) {
-      _tmp.assign(_g);  // archive the current gradient
+      _tmp.assign(_g);  // Archive the current gradient.
       if (!line_search(f, _as[ic], alpha, neval, iter)) {
         if (_debug >= 1) show_debug("line_search_failed", iter, neval, f, mag(_g));
         return false;
       }
-      if (_max_neval >= 0 && neval >= _max_neval) {  // reached maximum number of function evaluations?
+      if (_max_neval >= 0 && neval >= _max_neval) {  // Reached the maximum number of function evaluations?
         if (_debug >= 1) show_debug("max_neval", iter, neval, f, mag(_g));
         return true;
       }
-      if (mag(_g) / max(mag(_x), 1.) <= _eps) {  // numerically converged?
+      if (mag(_g) / max(mag(_x), 1.) <= _eps) {  // Numerically converged?
         if (_debug >= 1) show_debug("converged", iter, neval, f, mag(_g));
         return true;
       }
-      _as[ic] *= alpha;                             // record the search step
-      for_int(i, _n) _ay[ic, i] = _g[i] - _tmp[i];  // record the gradient difference
+      _as[ic] *= alpha;                             // Record the search step.
+      for_int(i, _n) _ay[ic, i] = _g[i] - _tmp[i];  // Record the gradient difference.
       const double ys = dot(_ay[ic], _as[ic]);
       const double yy = dot(_ay[ic], _ay[ic]);
       // Compute -H*_g using [Nocedal 1980].
       _rho[ic] = 1. / ys;
-      ic = my_mod(ic + 1, _m);  // roll the circular buffers
+      ic = my_mod(ic + 1, _m);  // Roll the circular buffers.
       for_int(i, _n) _tmp[i] = -_g[i];
       const int mm = min(iter + 1, _m);
       for_int(i, mm) {
@@ -132,8 +132,8 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
         _tmp += beta * _as[ic];
         ic = my_mod(ic + 1, _m);
       }
-      _as[ic].assign(_tmp);  // new search direction
-      alpha = 1.;            // new step size
+      _as[ic].assign(_tmp);  // The new search direction.
+      alpha = 1.;            // The new step size.
     }
     assertnever("NonlinearOptimization fails unexpectedly");
   }

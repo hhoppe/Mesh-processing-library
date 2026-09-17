@@ -29,7 +29,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     filename = tmpfile->filename();
   }
   if (!file_exists(filename)) throw std::runtime_error("Image file '" + filename + "' does not exist");
-  {  // read header for dimensions and attributes (ignore actual data)
+  {  // Read the header for dimensions and attributes (ignore actual data).
     RFile fi("ffmpeg -nostdin -i " + quote_arg_for_shell(filename) + " -vn -an 2>&1 |");
     // Input #0, image2, from 'c:/hh/data/image/lake.png':
     //   Duration: 00:00:00.04, start: 0.000000, bitrate: N/A
@@ -109,7 +109,7 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
   string filename = pfilename;
   const bool ldebug = getenv_bool("FFMPEG_DEBUG");
   assertx(product(dims()));
-  if (suffix() == "") const_cast<Image&>(*this).set_suffix(to_lower(get_path_extension(filename)));  // mutable
+  if (suffix() == "") const_cast<Image&>(*this).set_suffix(to_lower(get_path_extension(filename)));  // Mutable.
   if (suffix() == "") throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");
   if (!ffmpeg_command_exists()) throw std::runtime_error("Cannot find ffmpeg program to write image content");
   std::optional<TmpFile> tmpfile;
@@ -122,7 +122,7 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
     Warning("Image format likely does not support alpha channel");
   string s_compression;
   if (suffix() == "jpg") {
-    const int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
+    const int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75).
     assertt(quality > 0 && quality <= 100);
     // Nonlinear mapping; see
     // https://web.archive.org/web/20170405194543/http://www.ffmpeg-archive.org/How-to-get-JPEG-Quality-factor-td4672891.html
@@ -145,9 +145,9 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
     s_compression = sform(" -qscale:v %d", qscale);
   }
   if (suffix() == "png" && getenv("PNG_COMPRESSION_LEVEL")) {
-    int level = getenv_int("PNG_COMPRESSION_LEVEL", 6);  // 0-9; 0=none
+    int level = getenv_int("PNG_COMPRESSION_LEVEL", 6);  // 0-9; 0 = none.
     assertt(level >= 0 && level <= 9);
-    level = clamp(level * 17, 0, 100);  // default 6 should map to ffmpeg default 100
+    level = clamp(level * 17, 0, 100);  // Default 6 should map to the ffmpeg default 100.
     // Note: it appears that we cannot approach the high compression ratio of
     //  png_set_compression_level(png_ptr, level) with level > 6.
     s_compression = sform(" -compression_level %d", level);
@@ -232,7 +232,7 @@ void Image::write_file_i(const string& filename, bool bgra) const {
 #endif
   }
   if (implementation == "libs") {
-#if defined(HH_IMAGE_HAVE_LIBS)  // unlike WIC, allows writing image domains larger than 4 GiB
+#if defined(HH_IMAGE_HAVE_LIBS)  // Unlike WIC, allows writing image domains larger than 4 GiB.
     write_file_libs(filename, bgra);
     return;
 #else

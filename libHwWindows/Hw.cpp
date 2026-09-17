@@ -11,7 +11,7 @@ HH_REFERENCE_LIB("comdlg32.lib");  // GetOpenFilenameW(), GetSaveFileNameW()
 HH_REFERENCE_LIB("opengl32.lib");
 HH_REFERENCE_LIB("shcore.lib");   // SetProcessDpiAwareness()
 HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
-HH_REFERENCE_LIB("winmm.lib");    // timeEndPeriod, etc.
+HH_REFERENCE_LIB("winmm.lib");    // TimeEndPeriod, etc.
 
 #include <mutex>  // once_flag, call_once()
 
@@ -44,7 +44,7 @@ static bool win_started_from_console_aux() {
   static bool result;
   static std::once_flag flag;
   std::call_once(flag, [] {
-    // the result seems to be only correct the first time it is run
+    // The result seems to be only correct the first time it is run.
     result = false;
     fwbp_pid = GetCurrentProcessId();
     if (fwbp_pid) {
@@ -60,7 +60,7 @@ static bool win_started_from_console() { return details::win_started_from_consol
 
 const HWND k_bogus_hwnd = HWND(intptr_t{-7});
 
-extern HANDLE g_buf_event_data_available;  // from Buffer.cpp
+extern HANDLE g_buf_event_data_available;  // From Buffer.cpp.
 
 // Solutions in https://stackoverflow.com/questions/117792/best-method-for-storing-this-pointer-for-use-in-wndproc
 //  seems too complicated.  We can assume a single-window model.
@@ -171,7 +171,7 @@ bool Hw::init_aux(Array<string>& aargs) {
 void Hw::open() {
   assertx(_state == EState::init);
   _state = EState::open;
-  // Create a window
+  // Create a window.
   {
     if (_backcolor == "") _backcolor = _default_background;
     if (_forecolor == "") _forecolor = _default_foreground;
@@ -219,19 +219,19 @@ void Hw::open() {
 
 bool Hw::loop() {
   for (;;) {
-    // handle all possible types of events
+    // Handle all possible types of events.
     if (_update == EUpdate::quit) return true;
     handle_events();  // WM_ MESSAGES
     if (_update == EUpdate::quit) return true;
-    handle_keyintr();  // non-interactive key input
+    handle_keyintr();  // Non-interactive key input.
     if (_update == EUpdate::quit) return true;
     if (!got_event() && !_is_keyintr) {
-      // no more events, so possibly blocked
+      // No more events, so possibly blocked.
       if (_update != EUpdate::nothing) break;
       // We've really got nothing to do, so let's pause to avoid CPU usage when nothing is happening.
       if (_hwkey != "") {
-        // it would be best if callbackSimuKey() would post a message so we could wait in the MsgWait.
-        const double delay_no_activity = 0.001;  // how long to sleep (in seconds) when there is no activity
+        // It would be best if callbackSimuKey() would post a message so we could wait in the MsgWait.
+        const double delay_no_activity = 0.001;  // How long to sleep (in seconds) when there is no activity.
         my_precise_sleep(delay_no_activity);
         continue;
       }
@@ -250,7 +250,7 @@ bool Hw::loop() {
   draw_it();
   // This improves load-balancing a bit in G3dcmp (see also discussion on SetPriorityClass)
   //  and doesn't seem to hurt performance too much for single window.
-  if (1) SleepEx(0, TRUE);  // 0 milliseconds; relinquish time slice
+  if (1) SleepEx(0, TRUE);  // 0 milliseconds; relinquish time slice.
   return false;
 }
 
@@ -283,13 +283,13 @@ LRESULT CALLBACK wndProc_wrapper(HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lPa
 
 LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
   if (_hwdebug) SHOW("wndProc", iMsg);
-  static PAINTSTRUCT ps;  // always zero
+  static PAINTSTRUCT ps;  // Always zero.
   switch (iMsg) {
     case WM_ERASEBKGND:
       // https://www.opengl.org/pipeline/article/vol003_7/
       // Handle the application window's WM_ERASEBKGND by returning non-zero in the message handler
       // (this will avoid GDI clearing the OpenGL windows background).
-      return 1;  // introduced 2014-12-03
+      return 1;  // Introduced 2014-12-03.
     case WM_CREATE:
       // On window creation, send a WM_SHOWWINDOW msg,
       //  since that msg doesn't get sent when ShowWindow() is called, in certain situations.
@@ -301,7 +301,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       const BOOL fShow = BOOL(wParam);
       if (_hwdebug) SHOW("WM_SHOWWINDOW", fShow);
       if (fShow) {
-        // Window is about to be SHOWN (like X-windows MapNotify)
+        // Window is about to be SHOWN (like X-windows MapNotify).
         if (!_exposed) {
           _exposed = true;
           if (_hwdebug) SHOW("window now exposed");
@@ -323,7 +323,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       // To support several OpenGL contexts, see https://stackoverflow.com/questions/2842319/swapbuffers-causes-redraw
       assertx(BeginPaint(_hwnd, &ps));
       assertx(EndPaint(_hwnd, &ps));
-      // Redraw the screen
+      // Redraw the screen.
       redraw_now();
       return 0;
     }
@@ -331,14 +331,14 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       // Window size has changed (like X-windows ConfigureNotify).
       // Might want to do some tricks (for efficiency only) to see if we _really_ need to resize the window, like:
       //  if (wParam == SIZE_MAXHIDE || wParam == SIZE_MAXHIDE)...
-      // Update value of '_exposed' flag
+      // Update the value of the '_exposed' flag.
       if (wParam == SIZE_MAXIMIZED || wParam == SIZE_RESTORED) {
         _exposed = true;
       } else if (wParam == SIZE_MINIMIZED) {
         _exposed = false;
       }
       // This is size of _client_ area.  Do we need to subtract window border, scrollbars, etc?  No.
-      _win_dims = convert<int>(V(HIWORD(lParam), LOWORD(lParam)));  // new (height, width) of client area
+      _win_dims = convert<int>(V(HIWORD(lParam), LOWORD(lParam)));  // New (height, width) of client area.
       if (_hwdebug) SHOW("WM_SIZE", _win_dims);
       if (!_exposed) return 0;
       soft_discard();
@@ -364,7 +364,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
         if (_is_glx_dbuf) glDrawBuffer(GL_BACK);
         set_color_to_foreground();
       }
-      if (0 && gl_extensions_string() != "") {  // only if OpenGL is already initialized.
+      if (0 && gl_extensions_string() != "") {  // Only if OpenGL is already initialized.
         // This draws directly to the front buffer.  However, the window is already painted white.
         glDrawBuffer(GL_FRONT);
         const bool bu_is_glx_dbuf = _is_glx_dbuf;
@@ -372,12 +372,12 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
         draw_it();
         _is_glx_dbuf = bu_is_glx_dbuf;
       } else {
-        redraw_now();  // redraw it later; works just as well
+        redraw_now();  // Redraw it later; works just as well.
       }
       return 0;
     }
     case WM_MOVE: {
-      _win_pos = convert<int>(V(HIWORD(lParam), LOWORD(lParam)));  // y, x
+      _win_pos = convert<int>(V(HIWORD(lParam), LOWORD(lParam)));  // The (y, x) coordinates.
       if (_hwdebug) SHOW("WM_MOVE", _win_pos);
       return 0;
     }
@@ -394,7 +394,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
     case WM_RBUTTONUP:
     case WM_XBUTTONDOWN:
     case WM_XBUTTONUP: {
-      // cursor relative to upper-left of client area
+      // Cursor relative to upper-left of client area.
       const Vec2<int> yx = convert<int>(V(HIWORD(lParam), LOWORD(lParam)));
       const bool shift = (wParam & MK_SHIFT) != 0;
       dummy_use(shift);
@@ -407,7 +407,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
         case WM_RBUTTONDOWN:
         case WM_RBUTTONUP: butnum = 3; break;
         case WM_XBUTTONDOWN:
-        case WM_XBUTTONUP: butnum = 3 + HIWORD(wParam); break;  // thus 4 or 5
+        case WM_XBUTTONUP: butnum = 3 + HIWORD(wParam); break;  // Thus 4 or 5.
         default: assertnever("");
       }
       bool pressed;
@@ -474,17 +474,17 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       // The fix below seems to allow small geometry from command-line,
       //   but not when resizing window (min width 100 on Windows 7).  This seems OK.
       MINMAXINFO* p = reinterpret_cast<MINMAXINFO*>(lParam);
-      p->ptMinTrackSize.x = 20;  // was previously 50
-      p->ptMinTrackSize.y = 20;  // no effect
+      p->ptMinTrackSize.x = 20;  // Was previously 50.
+      p->ptMinTrackSize.y = 20;  // No effect.
       if (_hwdebug) SHOW("WM_GETMINMAXINFO");
       return 0;
     }
       // case WM_DPICHANGED:
-      // do nothing currently
+      // do nothing currently.
       // break;
     default:
       void();
-      // unrecognized message, pass through
+      // Unrecognized message, pass through.
   }  // end switch
   // If got here, didn't handle the message, so pass on to default handler.
   return DefWindowProcW(_hwnd, iMsg, wParam, lParam);
@@ -507,7 +507,7 @@ bool Hw::suggests_stop() {
 // Warning: Can't call any system-defined functions inside a multimedia-timer callback,
 //  except for PostMessage, OutputDebugString, certain 'timeXXXX' functions, and certain 'midiOutXXXX' functions.
 //  (See 'TimeProc' documentation for full details.)
-// Only called by start_hwkey()
+// Only called by start_hwkey().
 void CALLBACK callbackSimuKey(UINT id, UINT msg, DWORD_PTR userData, DWORD_PTR dw1, DWORD_PTR dw2) {
   dummy_use(id, msg, dw1, dw2);
   // Set flag, meaning that a "new" keypress (simulated) has occurred.
@@ -518,13 +518,13 @@ void CALLBACK callbackSimuKey(UINT id, UINT msg, DWORD_PTR userData, DWORD_PTR d
 
 void Hw::start_hwkey() {
   // *** TURN-ON timer (periodic) ***
-  UINT timer_delay;    // How long b/w timer events (mSec)
-  TIMECAPS time_caps;  // timer capabilities
-  // Check what resolution, etc the timer supports
+  UINT timer_delay;    // How long b/w timer events (mSec).
+  TIMECAPS time_caps;  // Timer capabilities.
+  // Check what resolution, etc the timer supports.
   assertx(timeGetDevCaps(&time_caps, sizeof(time_caps)) == TIMERR_NOERROR);
-  // Clamp desired timer resolution to allowed range
+  // Clamp desired timer resolution to allowed range.
   _sk_timerResolution = clamp(_sk_timerResolution, time_caps.wPeriodMin, time_caps.wPeriodMax);
-  // Set our req'd timer resolution
+  // Set our req'd timer resolution.
   assertx(timeBeginPeriod(_sk_timerResolution) == TIMERR_NOERROR);
   // Start/create the timer
   _hwdelay = max(_hwdelay, .01f);
@@ -567,16 +567,16 @@ void Hw::handle_key(int why_called, WPARAM key_data) {
         case VK_DELETE: s = "<delete>"; break;
         default:
           if (get_key_modifier(EModifier::control) && virt_key >= '0' && virt_key <= '9') {
-            // control-numbers (C-0 .. C-9) do not produce any subsequent WM_CHAR message, so handle now.
+            // Control-numbers (C-0 .. C-9) do not produce any subsequent WM_CHAR message, so handle now.
             const char ch = assert_narrow_cast<char>(virt_key);
             s = ch;
           } else {
-            return;  // we don't care about this key, or it will be handled later (by WM_CHAR)
+            return;  // We don't care about this key, or it will be handled later (by WM_CHAR).
           }
       }
     }
   } else {
-    // we assume we're handling a WM_CHAR message
+    // We assume we're handling a WM_CHAR message.
     char ch = assert_narrow_cast<char>(key_data);
     if (ch == 127) ch = '\b';  // C-<backspace> should just be <backspace> for now
     s = ch;
@@ -586,7 +586,7 @@ void Hw::handle_key(int why_called, WPARAM key_data) {
     if (_query) {
       query_keypress(s);
     } else if (key_press(s)) {
-      // client has handled key press
+      // Client has handled key press.
     } else if (s == "\033") {  // <esc> key ( == uchar{27})
       quit();
     } else if (s == "~") {  // toggle console window
@@ -613,14 +613,14 @@ void Hw::draw_it() {
     // 2014-12-13
     glEnable(GL_BLEND);
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   // for non-premultiplied alpha
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // 2017-02-23; source is assumed to have premultiplied alpha
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // Since 2017-02-23, source is assumed to have premultiplied alpha.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();  // glLoadMatrixf(to_Matrix(Frame::identity()).const_grid_view().data());
     if (0) {
-      glOrtho(-.5, _win_dims[1] - .5, _win_dims[0] - .5, -.5, -1., 1.);  // multiplies GL_PROJECTION; reverse y
+      glOrtho(-.5, _win_dims[1] - .5, _win_dims[0] - .5, -.5, -1., 1.);  // Multiplies GL_PROJECTION; reverse y.
     } else {
-      // 2015-01-08 pixels are now centered at half-integers
-      glOrtho(0., _win_dims[1] - 0., _win_dims[0] - 0., 0., -1., 1.);  // multiplies GL_PROJECTION; reverse y
+      // Since 2015-01-08, pixels are centered at half-integers.
+      glOrtho(0., _win_dims[1] - 0., _win_dims[0] - 0., 0., -1., 1.);  // Multiplies GL_PROJECTION; reverse y.
     }
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -655,7 +655,7 @@ void Hw::beep() {
 void Hw::set_double_buffering(bool newstate) {
   if (!assertw(_state == EState::init)) return;
   _is_glx_dbuf = newstate;
-  // if !_is_glx_dbuf, do not call glXSwapBuffers(), glDrawBuffer(GL_BACK)
+  // If !_is_glx_dbuf, do not call glXSwapBuffers(), glDrawBuffer(GL_BACK).
   if (_hwdebug) SHOW(_is_glx_dbuf);
 }
 
@@ -685,7 +685,7 @@ bool Hw::get_key_modifier(EModifier modifier) {
     default: assertnever("");
   }
   const short v = GetKeyState(virt_key);
-  return !!(v & (1 << 15));  // high-order bit indicates key down, low-order bit is odd "toggle" state for caps_lock
+  return !!(v & (1 << 15));  // High-order bit indicates key down, low-order bit is odd "toggle" state for caps_lock.
 }
 
 void Hw::set_color_to_foreground() {
@@ -728,11 +728,11 @@ Vec2<int> Hw::get_max_window_dims() {
   // Use Win->Up_arrow to maximize window height, then use '@' key to compare:
   //  get_max_window_dims() = [1573, 2464]
   //  g_win_dims=[1568, 2360]
-  Vec2<int> top = V(16, 0);  // Windows 7
-  top = V(19, 0);            // Windows 10
-  top = V(24, 0);            // Windows 10 update1511
+  Vec2<int> top = V(16, 0);  // Windows 7.
+  top = V(19, 0);            // Windows 10.
+  top = V(24, 0);            // Windows 10 update1511.
   auto window_borders =
-      top + V(2 * (3 + 1 + 0), 2 * (3 + 1 + 0));  // iBorderWidth default 1, +iPaddedBorderWidth (def 4, set 0)
+      top + V(2 * (3 + 1 + 0), 2 * (3 + 1 + 0));  // Here, iBorderWidth default 1, +iPaddedBorderWidth (def 4, set 0).
   return V(int(wa_rect.bottom - wa_rect.top), int(wa_rect.right - wa_rect.left)) - window_borders;
 }
 
@@ -742,13 +742,13 @@ void Hw::resize_window(const Vec2<int>& yx) {
   // https://stackoverflow.com/questions/692742
   RECT wa_rect;
   assertx(SystemParametersInfo(SPI_GETWORKAREA, 0, &wa_rect, 0));
-  RECT rect = {0, 0, yx[1], yx[0]};  // left, top, right, bottom
+  RECT rect = {0, 0, yx[1], yx[0]};  // Left, top, right, bottom.
   assertx(AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0));
   const int width = rect.right - rect.left;
   const int height = rect.bottom - rect.top;
-  // or consider MoveWindow()
+  // or consider MoveWindow().
   // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos
-  int new_top = 0, new_left = 0;  // unused unless force_move
+  int new_top = 0, new_left = 0;  // Unused unless force_move.
   bool force_move = false;
   if (_win_pos[0] + height > wa_rect.bottom || _win_pos[1] + width > wa_rect.right) {
     new_top = wa_rect.top;
@@ -775,7 +775,7 @@ void Hw::make_fullscreen(bool b) {
   static WINDOWPLACEMENT g_wp_prev;
   g_wp_prev.length = sizeof(g_wp_prev);
   const DWORD style = GetWindowLong(_hwnd, GWL_STYLE);
-  if (b) {  // go full screen
+  if (b) {  // Go full screen.
     MONITORINFO mi;
     mi.cbSize = sizeof(mi);
     if (GetWindowPlacement(_hwnd, &g_wp_prev) &&
@@ -845,7 +845,7 @@ Array<string> Hw::query_open_filenames(const string& hint_filename) {
   // If the user selects only one file, the lpstrFile string does not have a separator between the path and
   //  file name.
   Array<string> filenames;
-  if (ofn.nFileOffset == 0 || buffer[ofn.nFileOffset - 1]) {  // single file
+  if (ofn.nFileOffset == 0 || buffer[ofn.nFileOffset - 1]) {  // Single file.
     filenames.reserve(1);
     filenames.push(get_canonical_path(utf8_from_utf16(buffer.data())));
   } else {  // multiple files
@@ -881,7 +881,7 @@ string Hw::query_save_filename(const string& hint_filename, bool force) {
     ofn.lpstrInitialDir = whint_directory.c_str();
   }
   if (!GetSaveFileNameW(&ofn)) return "";
-  assertx(ofn.nFileOffset == 0 || buffer[ofn.nFileOffset - 1]);  // single file
+  assertx(ofn.nFileOffset == 0 || buffer[ofn.nFileOffset - 1]);  // Single file.
   return get_canonical_path(utf8_from_utf16(buffer.data()));
 }
 
@@ -914,14 +914,14 @@ void Hw::set_pixel_format(bool fake_first) {
   pfd.nVersion = 1;
   pfd.dwFlags = PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW | PFD_SUPPORT_COMPOSITION;
   if (_is_glx_dbuf) pfd.dwFlags |= PFD_DOUBLEBUFFER;
-  pfd.iPixelType = PFD_TYPE_RGBA;             // COLORINDEX or RGBA
-  pfd.cColorBits = BYTE(_scr_bpp);            // Bits per pixel used for color
+  pfd.iPixelType = PFD_TYPE_RGBA;             // COLORINDEX or RGBA.
+  pfd.cColorBits = BYTE(_scr_bpp);            // Bits per pixel used for color.
   pfd.cAlphaBits = 0;                         // >= 0
   pfd.cAccumBits = 0;                         // >= 0
   pfd.cDepthBits = BYTE(_scr_zbufbits);       // >= 0
   pfd.cStencilBits = BYTE(_scr_stencilbits);  // >= 0
   pfd.cAuxBuffers = 0;                        // >= 0
-  pfd.iLayerType = PFD_MAIN_PLANE;            // MAIN or OVERLAY or UNDERLAY
+  pfd.iLayerType = PFD_MAIN_PLANE;            // MAIN or OVERLAY or UNDERLAY.
   if (_hwdebug) {
     SHOW("Requested:");
     const PIXELFORMATDESCRIPTOR& p = pfd;
@@ -929,7 +929,7 @@ void Hw::set_pixel_format(bool fake_first) {
     SHOW(unsigned(p.cDepthBits), unsigned(p.cStencilBits), unsigned(p.cAuxBuffers), unsigned(p.iLayerType));
   }
   const int iPixelFormat = assertx(ChoosePixelFormat(_hRenderDC, &pfd));
-  // note: pfd is not modified by ChoosePixelFormat.
+  // Note: pfd is not modified by ChoosePixelFormat.
   if (1) {
     PIXELFORMATDESCRIPTOR pfd2;
     assertx(DescribePixelFormat(_hRenderDC, iPixelFormat, sizeof(pfd2), &pfd2));
@@ -939,7 +939,7 @@ void Hw::set_pixel_format(bool fake_first) {
       SHOW(p.dwFlags, unsigned(p.cColorBits), unsigned(p.cAlphaBits), unsigned(p.cAccumBits));
       SHOW(unsigned(p.cDepthBits), unsigned(p.cStencilBits), unsigned(p.cAuxBuffers), unsigned(p.iLayerType));
     }
-    assertx(PFD_SWAP_COPY == 1024);  // dwFlags == 1061 == 1024 + 32 + 4 + 1
+    assertx(PFD_SWAP_COPY == 1024);  // Here, dwFlags == 1061 == 1024 + 32 + 4 + 1.
     if (!fake_first) {
       const unsigned desired = pfd.dwFlags & ~PFD_SUPPORT_COMPOSITION;
       assertw((pfd2.dwFlags & desired) == desired);
@@ -959,7 +959,7 @@ void Hw::set_pixel_format(bool fake_first) {
 
 void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   WNDCLASSEXW wnd_class;
-  // Setup parameters of window class
+  // Setup parameters of window class.
   wnd_class.cbSize = sizeof(wnd_class);
   wnd_class.style = 0;
   wnd_class.lpfnWndProc = wndProc_wrapper;
@@ -968,7 +968,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   wnd_class.hInstance = _hInstance;
   wnd_class.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
   wnd_class.hCursor = LoadCursor(nullptr, IDC_ARROW);
-  // hbrBackground was (HBRUSH) GetStockObject(BLACK_BRUSH),  then was nullptr
+  // Here, hbrBackground was (HBRUSH) GetStockObject(BLACK_BRUSH),  then was nullptr.
   wnd_class.hbrBackground = HBRUSH(COLOR_WINDOW + 1);
   wnd_class.lpszMenuName = nullptr;
   const std::wstring wargv0 = utf16_from_utf8(_argv0);  // Must live until the RegisterClassExW() call.
@@ -977,11 +977,11 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   // wnd_class.hIconSm      = LoadImage(_hInstance, MAKEINTRESOURCE(5), IMAGE_ICON, GetSystemMetrics(SM_CXSMICON),
   //                                    GetSystemMetrics(SM_CYSMICON), LR_DEFAULTCOLOR);
   assertx(RegisterClassExW(&wnd_class));
-  RECT rect = {0, 0, _win_dims[1], _win_dims[0]};  // left, top, right, bottom
+  RECT rect = {0, 0, _win_dims[1], _win_dims[0]};  // Left, top, right, bottom.
   assertx(AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0));
 
   string wgl_extensions;
-  _scr_stencilbits = getenv_int("STENCIL_BITS");  // dynamically updated by my_setenv() in G3dOGL.cpp
+  _scr_stencilbits = getenv_int("STENCIL_BITS");  // Dynamically updated by my_setenv() in G3dOGL.cpp.
   {
     _hwnd = k_bogus_hwnd;
     const int style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
@@ -1027,7 +1027,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   if (0 && !contains(wgl_extensions, "WGL_ARB_multisample")) _multisample = 0;
   if (_multisample && !contains(wgl_extensions, "WGL_ARB_multisample")) {
     if (wgl_extensions == "") {
-      // likely Remote Desktop session.
+      // Likely Remote Desktop session.
     } else {
       Warning("Multisample is not available");
     }
@@ -1045,25 +1045,25 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     const int y = yxpos[0] < 0 ? CW_USEDEFAULT : yxpos[0];
     const int width = rect.right - rect.left;
     const int height = rect.bottom - rect.top;
-    _hwnd = CreateWindowW(utf16_from_utf8(_argv0).c_str(),         // window class name
-                          utf16_from_utf8(_window_title).c_str(),  // window title bar
+    _hwnd = CreateWindowW(utf16_from_utf8(_argv0).c_str(),         // Window class name.
+                          utf16_from_utf8(_window_title).c_str(),  // Window title bar.
                           style,
-                          x,  // initial x position
-                          y,  // initial y position
-                          // size of entire window; not necessarily client area
-                          width,       // initial width
-                          height,      // initial height
-                          nullptr,     // parent window handle
-                          nullptr,     // window menu handle
-                          _hInstance,  // program instance handle
-                          nullptr);    // creation parameters
+                          x,  // Initial x position.
+                          y,  // Initial y position.
+                          // Size of entire window; not necessarily client area.
+                          width,       // Initial width.
+                          height,      // Initial height.
+                          nullptr,     // Parent window handle.
+                          nullptr,     // Window menu handle.
+                          _hInstance,  // Program instance handle.
+                          nullptr);    // Creation parameters.
     // Make sure we were able to create the window.
     assertx(_hwnd);
-    // Get a DC for the window (for convenience; let's only do it once)
+    // Get a DC for the window (for convenience; let's only do it once).
     _hDC = assertx(GetDC(_hwnd));
     _hRenderDC = _hDC;
     if (!_hidden) {
-      // Display the window
+      // Display the window.
       ShowWindow(_hwnd, (_iconic ? SW_SHOWMINIMIZED : _maximize ? SW_MAXIMIZE : SW_SHOWDEFAULT));
       assertx(UpdateWindow(_hwnd));
       // Grabbing focus often fails because of focus rules.  G3dcmp uses -nosetforeground but it does not fix it.
@@ -1095,8 +1095,8 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
       const unsigned WGL_COLOR_BITS_ARB = 0x2014;
       const unsigned WGL_DEPTH_BITS_ARB = 0x2022;
       const unsigned WGL_STENCIL_BITS_ARB = 0x2023;
-      const unsigned WGL_SAMPLE_BUFFERS_ARB = 0x2041;  // 0 or 1
-      const unsigned WGL_SAMPLES_ARB = 0x2042;         // number of samples
+      const unsigned WGL_SAMPLE_BUFFERS_ARB = 0x2041;  // 0 or 1.
+      const unsigned WGL_SAMPLES_ARB = 0x2042;         // Number of samples.
       const unsigned WGL_FULL_ACCELERATION_ARB = 0x2027;
       const unsigned WGL_RED_BITS_ARB = 0x2015;
       const unsigned WGL_GREEN_BITS_ARB = 0x2017;
@@ -1168,7 +1168,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     // assertx(wglMakeCurrent(_hRenderDC, 0));  // release
     // assertx(wglDeleteContext(_hRC)); _hRC = 0;
 
-    // Set the pixelFormat
+    // Set the pixelFormat.
     PIXELFORMATDESCRIPTOR pfd = {};
     pfd.nSize = sizeof(pfd);
     pfd.nVersion = 1;
@@ -1190,7 +1190,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   //  ALSO: a GL rendering context basically contains all the GL machine
   //    "state".  That's why GL calls won't do anything unless you have a
   //    GL rendering context (for a particular thread).
-  // Create the *main* rendering context
+  // Create the *main* rendering context.
   _hRC = assertx(wglCreateContext(_hRenderDC));
   assertx(wglMakeCurrent(_hRenderDC, _hRC));
   _hidden_samples = _multisample == 3 ? 2 : _multisample == 5 ? 4 : _multisample;  // As for WGL_SAMPLES_ARB above.
@@ -1217,7 +1217,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     // GetDeviceCaps(_hDC, LOGPIXELSY)=96, height=-15
     LOGFONTW lf = {};
     lf.lfHeight = height;
-    lf.lfWidth = 0;  // default aspect ratio
+    lf.lfWidth = 0;  // Default aspect ratio.
     lf.lfEscapement = 0;
     lf.lfOrientation = 0;
     lf.lfWeight = _bigfont ? FW_BOLD : FW_NORMAL;
@@ -1225,7 +1225,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     lf.lfUnderline = 0 ? 1 : 0;
     lf.lfStrikeOut = 0 ? 1 : 0;
     lf.lfCharSet = DEFAULT_CHARSET;
-    lf.lfOutPrecision = OUT_OUTLINE_PRECIS;  // or OUT_TT_ONLY_PRECIS
+    lf.lfOutPrecision = OUT_OUTLINE_PRECIS;  // Or OUT_TT_ONLY_PRECIS.
     lf.lfClipPrecision = 0;
     lf.lfQuality = 0;
     lf.lfPitchAndFamily = FIXED_PITCH | FF_SCRIPT;
@@ -1253,7 +1253,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   }
   // Create the bitmap display lists
   //  We are making images of glyphs 0 through 255, and the display list numbering starts at 1000 (arbitrary choice).
-  _listbase_font = 1000;  // arbitrary value
+  _listbase_font = 1000;  // Arbitrary value.
   assertw(wglUseFontBitmaps(_hRenderDC, 0, 255, _listbase_font));
   // wglUseFontBitmapsW(_hRenderDC, 0, 65535, _listbase_font);  // would generate bitmaps for all Unicode (large)
   // done later: glListBase(_listbase_font);
@@ -1276,7 +1276,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
 
 namespace {
 
-struct bmp_BITMAPINFOHEADER {  // size 40
+struct bmp_BITMAPINFOHEADER {  // Size 40.
   uint32_t biSize;
   int biWidth;
   int biHeight;
@@ -1316,7 +1316,7 @@ bool Hw::copy_image_to_clipboard(const Image& image) {
         const int yy = image.ysize() - 1 - y;  // Because BMP has image origin at lower-left.
         for_int(x, image.xsize()) {
           const Pixel& pixel = image[yy, x];
-          // RGBA to BGRA
+          // RGBA to BGRA.
           *p++ = pixel[2];
           *p++ = pixel[1];
           *p++ = pixel[0];
@@ -1331,9 +1331,9 @@ bool Hw::copy_image_to_clipboard(const Image& image) {
   bool ok = true;
   const unsigned enc_format = CF_DIB;
   assertx(OpenClipboard(nullptr));
-  {  // no window handle, but OK.
+  {  // No window handle, but OK.
     assertx(EmptyClipboard());
-    if (!assertw(SetClipboardData(enc_format, hGlobal))) ok = false;  // data may be too big
+    if (!assertw(SetClipboardData(enc_format, hGlobal))) ok = false;  // Data may be too big.
   }
   assertx(CloseClipboard());
   // Note: should not call GlobalFree(hGlobal) since ownership has been transferred to system.
@@ -1364,7 +1364,7 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
           const int yy = image.ysize() - 1 - y;  // Flip vertically.
           for_int(x, image.xsize()) {
             Pixel& pixel = image[yy, x];
-            // BGRA to RGBA
+            // BGRA to RGBA.
             pixel[2] = *p++;
             pixel[1] = *p++;
             pixel[0] = *p++;
@@ -1380,7 +1380,7 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
         if (0) assertx(narrow_cast<size_t>(p - buf) == size);
         if (1) assertw(abs((p - buf) - ptrdiff_t(size)) < 32);
       }
-      GlobalUnlock(hGlobal);  // decrement reference count; nonzero because still owned by clipboard
+      GlobalUnlock(hGlobal);  // Decrement reference count; nonzero because still owned by clipboard.
     }
     assertx(CloseClipboard());
   }

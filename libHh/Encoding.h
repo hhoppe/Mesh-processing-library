@@ -103,7 +103,7 @@ template <typename T> class Encoding : noncopyable {
     return float(sum / tot_prob);
   }
 
-  // include probability table
+  // Include the probability table.
   [[nodiscard]] float worst_entropy() const {
     assertnever("not implemented");
     // Sturling's approximation: n! =~ sqrt(TAU * n) * n^n * e^-n

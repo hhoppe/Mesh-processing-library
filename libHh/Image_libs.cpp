@@ -33,7 +33,7 @@ namespace hh {
 
 namespace details {
 
-struct ImageLibs {  // friend of Image
+struct ImageLibs {  // A friend of Image.
   static void read_rgb(Image& image, FILE* file);
   static void write_rgb(const Image& image, FILE* file);
   static void read_jpg(Image& image, FILE* file);
@@ -57,7 +57,7 @@ struct ImageFiletype {
 
 constexpr auto k_image_filetypes = to_Vec<ImageFiletype>({
     // Some of this information is redundant with that in image_suffix_for_magic_byte().
-    {"rgb", u'\x01', ImageLibs::read_rgb, ImageLibs::write_rgb},  // also some *.bw files
+    {"rgb", u'\x01', ImageLibs::read_rgb, ImageLibs::write_rgb},  // Also some *.bw files.
     {"jpg", u'\xFF', ImageLibs::read_jpg, ImageLibs::write_jpg},  //
     {"bmp", 'B', ImageLibs::read_bmp, ImageLibs::write_bmp},      //
     {"ppm", 'P', ImageLibs::read_ppm, ImageLibs::write_ppm},      //
@@ -67,11 +67,11 @@ constexpr auto k_image_filetypes = to_Vec<ImageFiletype>({
 static const ImageFiletype* recognize_filetype(const string& pfilename) {
   string filename = to_lower(pfilename);
   assertx(filename != "");
-  if (filename[0] == '|') return nullptr;  // pipe can take any image type
+  if (filename[0] == '|') return nullptr;  // A pipe can take any image type.
   size_t imax = 0;
   const ImageFiletype* filetype = nullptr;
   for (const auto& imagefiletype : k_image_filetypes) {
-    auto i = filename.rfind("." + string(imagefiletype.suffix));  // supports root_name.bmp.gz
+    auto i = filename.rfind("." + string(imagefiletype.suffix));  // Supports root_name.bmp.gz.
     if (i != string::npos && i > imax) {
       imax = i;
       filetype = &imagefiletype;
@@ -99,7 +99,7 @@ inline float frac_zy(int z, int y, const Image& image) {
 
 // *** RGB (SGI) image
 
-struct rgb_IMAGE {  // stuff saved on disk
+struct rgb_IMAGE {  // Stuff saved on disk.
   ushort imagic;
   ushort type;
   ushort dim;
@@ -125,9 +125,9 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
     for_int(i, 3) from_std((&rgbi.vmin) + i);
     assertt(rgbi.imagic == k_rgb_imagic);
     discard_bytes(file, k_rgb_header_length - sizeof(rgbi));
-    assertt((rgbi.type & 0x00ff) == 1);  // one byte per component
+    assertt((rgbi.type & 0x00ff) == 1);  // One byte per component.
     rle = (rgbi.type & 0xff00) != 0;
-    // has (x, y, z) dimensions (!= zsize)
+    // Has (x, y, z) dimensions (!= zsize).
     assertt(rgbi.dim == 3 || (rgbi.dim == 2 && rgbi.zsize == 1));
     // assertw(!rgbi.wastebytes);
     assertt(rgbi.colormap == 0);
@@ -153,7 +153,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
     int nlines = 0;
     int y = 0, z = 0;
     for (;;) {
-      if (!image.ysize()) break;  // exception
+      if (!image.ysize()) break;  // An exception.
       cprogress.update(float(nlines++) / (image.zsize() * image.ysize()));
       const int nskip = rowstart[z * image.ysize() + y] - offset;
       assertw(!nskip);
@@ -207,7 +207,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { image[yx][2] = image[yx][1] = image[yx][0]; });
   if (image.zsize() < 4)
     for (Pixel& pixel : image) pixel[3] = 255;
-  if (1) image.reverse_y();  // because *.rgb format has image origin at lower-left
+  if (1) image.reverse_y();  // Because the *.rgb format has its image origin at lower-left.
 }
 
 void ImageLibs::write_rgb(const Image& image, FILE* file) {
@@ -257,7 +257,7 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
     Array<int32_t> rowsize;
     rowsize.reserve(nrows);
     Array<uchar> buf;
-    buf.reserve(int(nrows * image.xsize() * .8f));  // rough conservative guess; will grow if insufficient
+    buf.reserve(int(nrows * image.xsize() * .8f));  // A rough conservative guess; will grow if insufficient.
     for_int(z, image.zsize()) {
       for_int(y, image.ysize()) {
         cprogress.update(frac_zy(z, y, image) * .333f + .333f);
@@ -359,7 +359,7 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
   jpeg_stdio_src(&cinfo, file);
 
   // Step 3: read file parameters with jpeg_read_header():
-  jpeg_save_markers(&cinfo, JPEG_APP0 + 1, 0xFFFF);  // marker_code (APP1=Exif), length_limit (64 KiB max)
+  jpeg_save_markers(&cinfo, JPEG_APP0 + 1, 0xFFFF);  // Here, marker_code (APP1 = Exif), length_limit (64 KiB max).
   jpeg_read_header(&cinfo, TRUE);
   // We can ignore the return value from jpeg_read_header since
   //   (a) suspension is not possible with the stdio data source, and
@@ -371,7 +371,7 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
   if (cinfo.output_components == 3) {
     assertw(cinfo.jpeg_color_space == JCS_YCbCr);
     assertw(cinfo.out_color_space == JCS_RGB);
-    cinfo.out_color_space = JCS_RGB;  // just in case it is JCS_YCbCr
+    cinfo.out_color_space = JCS_RGB;  // Just in case it is JCS_YCbCr.
   }
 
   // Step 5: Start decompressor:
@@ -415,7 +415,7 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
         assertt(marker->data_length >= 2);
         if (marker->data[0] == 'E' && marker->data[1] == 'x') {
           if (env_jpg_debug()) SHOWL;
-          image.attrib().exif_data = CArrayView(marker->data, marker->data_length);  // copy the data
+          image.attrib().exif_data = CArrayView(marker->data, marker->data_length);  // Copy the data.
         }
       }
     }
@@ -443,7 +443,7 @@ struct jpeg_marker_struct {
   unsigned original_length;    // # bytes of data in the file
   unsigned data_length;        // # bytes of data saved at data[]
   JOCTET FAR* data;            // the data contained in the marker
-                               // the marker length word is not counted in data_length or original_length
+  // the marker length word is not counted in data_length or original_length
 };
 
 // Control saving of COM and APPn markers into marker_list.
@@ -474,11 +474,11 @@ EXTERN(void) jpeg_write_marker JPP((j_compress_ptr cinfo, int marker, const JOCT
     if (dstinfo->write_JFIF_header && marker->marker == JPEG_APP0 && marker->data_length >= 5 &&
         GETJOCTET(marker->data[0]) == 0x4A && GETJOCTET(marker->data[1]) == 0x46 &&
         GETJOCTET(marker->data[2]) == 0x49 && GETJOCTET(marker->data[3]) == 0x46 && GETJOCTET(marker->data[4]) == 0)
-      continue;  // reject duplicate JFIF
+      continue;  // Reject duplicate JFIF.
     if (dstinfo->write_Adobe_marker && marker->marker == JPEG_APP0 + 14 && marker->data_length >= 5 &&
         GETJOCTET(marker->data[0]) == 0x41 && GETJOCTET(marker->data[1]) == 0x64 &&
         GETJOCTET(marker->data[2]) == 0x6F && GETJOCTET(marker->data[3]) == 0x62 && GETJOCTET(marker->data[4]) == 0x65)
-      continue;  // reject duplicate Adobe
+      continue;  // Reject duplicate Adobe.
     jpeg_write_marker(dstinfo, marker->marker, marker->data, marker->data_length);
   }
 }
@@ -520,12 +520,12 @@ void ImageLibs::write_jpg(const Image& image, FILE* file) {
   // Now use the library routine to set default compression parameters.
   // (You must set at least cinfo.in_color_space before calling this,
   // since the defaults depend on the source color space.)
-  jpeg_set_defaults(&cinfo);  // quality defaults to 75
+  jpeg_set_defaults(&cinfo);  // Quality defaults to 75.
   // JFIF only supports JCS_YCbCr and JCS_GRAYSCALE, so
   //  for RGB we do automatic conversion to YCbCr (this should be the default).
   if (image.zsize() == 3) {
     assertw(cinfo.jpeg_color_space == JCS_YCbCr);
-    jpeg_set_colorspace(&cinfo, JCS_YCbCr);  // this should automatically set write_JFIF_header
+    jpeg_set_colorspace(&cinfo, JCS_YCbCr);  // This should automatically set write_JFIF_header.
     assertw(cinfo.jpeg_color_space == JCS_YCbCr);
     assertw(int(cinfo.write_JFIF_header));
   }
@@ -533,7 +533,7 @@ void ImageLibs::write_jpg(const Image& image, FILE* file) {
   // Now you can set any non-default parameters you wish to.
   // Here we just illustrate the use of quality (quantization table) scaling:
   if (1) {
-    const int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75)
+    const int quality = getenv_int("JPG_QUALITY", 95);  // 0--100 (default 75).
     assertt(quality > 0 && quality <= 100);
     jpeg_set_quality(&cinfo, quality, TRUE);
   }
@@ -583,8 +583,8 @@ void ImageLibs::write_jpg(const Image& image, FILE* file) {
 
 // *** BMP image
 
-struct bmp_BITMAPFILEHEADER_HH {  // size 2 + 12 would be 14, but
-  // if include this first entry, then sizeof() == 16 instead of 14
+// Size 2 + 12 would be 14, but if we include this first entry, then sizeof() == 16 instead of 14.
+struct bmp_BITMAPFILEHEADER_HH {
   // ushort bfType;
   uint32_t bfSize;
   ushort bfReserved1;
@@ -593,7 +593,7 @@ struct bmp_BITMAPFILEHEADER_HH {  // size 2 + 12 would be 14, but
 };
 constexpr int k_size_BITMAPFILEHEADER = 14;
 
-struct bmp_BITMAPINFOHEADER {  // size 40
+struct bmp_BITMAPINFOHEADER {  // Size 40.
   uint32_t biSize;
   int biWidth;
   int biHeight;
@@ -607,7 +607,7 @@ struct bmp_BITMAPINFOHEADER {  // size 40
   uint32_t biClrImportant;
 };
 
-// ignoring additional fields in BITMAPV4HEADER and BITMAPV5HEADER (size > 40)
+// Ignoring additional fields in BITMAPV4HEADER and BITMAPV5HEADER (size > 40).
 
 static inline bool is_gray(const Pixel& p) { return p[0] == p[1] && p[1] == p[2]; }
 
@@ -634,21 +634,21 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
   from_dos(&bmih.biCompression);
   from_dos(&bmih.biSizeImage);
   from_dos(&bmih.biClrUsed);
-  assertt(bmih.biSize >= 40);  // ancient OS2 bmp can have size 12
+  assertt(bmih.biSize >= 40);  // Ancient OS2 bmp can have size 12.
   assertt(bmih.biWidth >= 0);
   if (bmih.biHeight < 0) {
     bmih.biHeight *= -1;
     flip_vertical = true;
   }
-  assertt(bmih.biHeight >= 0);    // could be negative for top-down bitmap
-  assertt(bmih.biPlanes == 1);    // always 1
-  if (bmih.biCompression == 3) {  // BI_BITFIELDS == 3; BI_ALPHABITFIELDS == 4
+  assertt(bmih.biHeight >= 0);    // Could be negative for a top-down bitmap.
+  assertt(bmih.biPlanes == 1);    // Always 1.
+  if (bmih.biCompression == 3) {  // Here, BI_BITFIELDS == 3; BI_ALPHABITFIELDS == 4.
     Warning("Ignoring BI_BITFIELDS color masks");
     bmih.biCompression = 0;
   } else if (bmih.biBitCount != 8) {
-    assertt(bmih.biCompression == 0);  // no compression
+    assertt(bmih.biCompression == 0);  // No compression.
   } else {
-    assertt(bmih.biCompression <= 1);  // RLE8 on 8-bit allowed
+    assertt(bmih.biCompression <= 1);  // RLE8 on 8-bit is allowed.
   }
   switch (bmih.biBitCount) {
     case 24:
@@ -671,7 +671,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
     colormap[i][0] = buf[2];
     colormap[i][1] = buf[1];
     colormap[i][2] = buf[0];
-    colormap[i][3] = buf[3];  // BGRA to RGBA
+    colormap[i][3] = buf[3];  // BGRA to RGBA.
     if (all_gray && !is_gray(colormap[i])) all_gray = false;
   }
   if (0)
@@ -705,7 +705,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
         case 32:
           for_int(x, image.xsize()) {
             Pixel& pixel = image[y, x];
-            // convert BGRA to RGBA
+            // Convert BGRA to RGBA.
             for_int(z, 3) pixel[2 - z] = *p++;
             pixel[3] = *p++;
           }
@@ -713,7 +713,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
         case 24:
           for_int(x, image.xsize()) {
             Pixel& pixel = image[y, x];
-            // convert BGR to RGB
+            // Convert BGR to RGB.
             for_int(z, 3) pixel[2 - z] = *p++;
             pixel[3] = 255;
           }
@@ -759,7 +759,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
         c = buf[i++];
         // showf("at %d: (0, %d)\n", i - 2, c);
         // cannot be "switch (c)" because of embedded "break"
-        if (c == 0) {  // end of row
+        if (c == 0) {  // End of row.
           assertw(x == image.xsize());
           x = 0;
           y++;
@@ -769,7 +769,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
           assertw(i == bufsize);
           break;
         } else if (c == 2) {  // move to (+dx, +dy)
-          assertt(false);     // not implemented
+          assertt(false);     // Not implemented.
         } else {              // use next c pixels literally
           const int count = int(c);
           for_int(j, count) {
@@ -783,11 +783,11 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
             x++;
           }
           assertt(count % 2 == i % 2);
-          if (count % 2) {  // pad to 2-byte boundary
+          if (count % 2) {  // Pad to a 2-byte boundary.
             assertt(i < bufsize);
             c = buf[i++];
             dummy_use(c);
-            if (0) assertw(c == 0);  // does not seem true?
+            if (0) assertw(c == 0);  // Does not seem true?
           }
         }
       } else {  // repeat pixel c times
@@ -808,7 +808,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
         }
       }
     }
-    image.reverse_y();  // because *.bmp format has image origin at lower-left
+    image.reverse_y();  // Because the *.bmp format has its image origin at lower-left.
   }
 }
 
@@ -841,7 +841,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     to_dos(&bmih.biClrUsed);
     bmfh.bfOffBits = headers2size + 256 * 4;
     to_dos(&bmfh.bfOffBits);
-    // RLE encoding
+    // RLE encoding.
     Array<uchar> buf;
     ConsoleProgress cprogress("Iwrite", image._silent_io_progress);
     for_int(y, image.ysize()) {
@@ -855,7 +855,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
           count++;
           if (count == 255) break;
         }
-        if (count >= 2 || (image.xsize() - x) < 3) {  // repeat pixel
+        if (count >= 2 || (image.xsize() - x) < 3) {  // Repeat the pixel.
           buf.push(uchar(count));
           buf.push(image[yy, x][0]);
           x += count - 1;
@@ -875,9 +875,9 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
           x += count - 1;
         }
       }
-      buf.push(0), buf.push(0);  // end of row
+      buf.push(0), buf.push(0);  // End of row.
     }
-    buf.push(0), buf.push(1);  // end of image
+    buf.push(0), buf.push(1);  // End of image.
     bmfh.bfSize = headers2size + 256 * 4 + buf.num();
     to_dos(&bmfh.bfSize);
     bmih.biSizeImage = buf.num();
@@ -901,7 +901,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     to_dos(&bmih.biSizeImage);
     assertt(write_raw(file, V(bmfh)));
     assertt(write_raw(file, V(bmih)));
-    Array<uchar> row(rowsize, uchar{0});  // make sure any padding region is initialized to zero
+    Array<uchar> row(rowsize, uchar{0});  // Make sure any padding region is initialized to zero.
     ConsoleProgress cprogress("Iwrite", image._silent_io_progress);
     assertt(ncomp == 3 || ncomp == 4);
     for_int(y, image.ysize()) {
@@ -910,7 +910,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
       int i = 0;
       for_int(x, image.xsize()) {
         const Pixel& pixel = image[yy, x];
-        // convert RGB to BGR, or RGBA to BGRA
+        // Convert RGB to BGR, or RGBA to BGRA.
         for_int(z, 3) row[i++] = pixel[2 - z];
         if (ncomp == 4) row[i++] = pixel[3];
       }
@@ -1003,7 +1003,7 @@ void ImageLibs::read_png(Image& image, FILE* file) {
   // png_set_sig_bytes(png_ptr, 0);
   // callback to handle user chunk data
   // png_set_read_user_chunk_fn(png_ptr, user_chunk_ptr, read_chunk_callback);
-  // callback used to control a progress meter
+  // callback used to control a progress meter.
   // png_set_read_status_fn(png_ptr, read_row_callback);
 
   if (0) {                                                // High-level read.
@@ -1076,20 +1076,20 @@ void ImageLibs::read_png(Image& image, FILE* file) {
       assertw(ncomp == 1);
       ncomp = 3;
     }
-    if (0) png_set_bgr(png_ptr);  // retrieve data as BGR or BGRA
+    if (0) png_set_bgr(png_ptr);  // Retrieve data as BGR or BGRA.
     image.init(V(height, width));
     image.set_zsize(ncomp);
     if (bit_depth == 16) png_set_strip_16(png_ptr);
     if (bit_depth < 8) png_set_packing(png_ptr);
     if (color_type == PNG_COLOR_TYPE_GRAY || color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
-      png_set_gray_to_rgb(png_ptr);                // always RGB
-    png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);  // always RGBA since Pixel expects it
+      png_set_gray_to_rgb(png_ptr);                // Always RGB.
+    png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);  // Always RGBA since Pixel expects it.
     Array<png_bytep> row_pointers(image.ysize());
     for_int(y, image.ysize()) row_pointers[y] = image[y, 0].data();
     png_read_image(png_ptr, row_pointers.data());
     if (bit_depth == 1) {
       Warning("correcting for bit_depth == 1");
-      // apparently the "filler" expansion above expands it to 2 bytes rather than 4 bytes RGBA
+      // Apparently the "filler" expansion above expands it to 2 bytes rather than 4 bytes RGBA.
       const int nx = image.xsize();
       for_int(y, image.ysize()) for_int(x, nx) {
         const int xx = nx - x;
@@ -1109,7 +1109,7 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
   png_set_error_fn(png_ptr, png_get_error_ptr(png_ptr), my_png_user_error_fn, my_png_user_warning_fn);
   png_infop info_ptr = assertt(png_create_info_struct(png_ptr));
   png_init_io(png_ptr, file);
-  // turn off compression or set another filter
+  // Turn off compression or set another filter.
   // png_set_filter(png_ptr, 0, PNG_FILTER_NONE);
   png_set_IHDR(png_ptr, info_ptr, image.xsize(), image.ysize(), 8,
                (image.zsize() == 1   ? PNG_COLOR_TYPE_GRAY
@@ -1124,11 +1124,11 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
     png_set_sRGB_gAMA_and_cHRM(png_ptr, info_ptr, srgb_intent);
   }
   if (1) {
-    const int level = getenv_int("PNG_COMPRESSION_LEVEL", 6);  //  0-9; 0=none
+    const int level = getenv_int("PNG_COMPRESSION_LEVEL", 6);  //  0-9; 0 = none.
     assertt(level >= 0 && level <= 9);
     png_set_compression_level(png_ptr, level);
   }
-  if (1) {  // 2010-01-03 to get consistent import size into Word
+  if (1) {  // On 2010-01-03, to get consistent import size into Word.
     // png_set_pHYs(png_ptr, info_ptr, res_x, res_y, unit_type);
     // res_x       - pixels/unit physical resolution in x direction
     // res_y       - pixels/unit physical resolution in y direction
@@ -1138,8 +1138,8 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
     // 3779 pixels/meter == 95.9866 pixels/inch (dpi)
     png_set_pHYs(png_ptr, info_ptr, 3779, 3779, PNG_RESOLUTION_METER);
   }
-  if (0) png_set_bgr(png_ptr);  // provide data as BGR or BGRA
-  if (0) {                      // high-level write
+  if (0) png_set_bgr(png_ptr);  // Provide data as BGR or BGRA.
+  if (0) {                      // A high-level write.
     Matrix<uchar> matrix(V(image.ysize(), image.xsize() * image.zsize()));
     Array<png_bytep> row_pointers(image.ysize());
     parallel_for(range(image.ysize()), [&](const int y) {
@@ -1199,7 +1199,7 @@ void Image::read_file_libs(const string& filename, bool bgra) {
 
 void Image::write_file_libs(const string& filename, bool bgra) const {
   if (const ImageFiletype* filetype = recognize_filetype(filename))
-    const_cast<Image&>(*this).set_suffix(string(filetype->suffix));  // mutable
+    const_cast<Image&>(*this).set_suffix(string(filetype->suffix));  // Mutable.
   if (suffix() == "") throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");
   WFile fi(filename);
   FILE* file = fi.cfile();
@@ -1213,7 +1213,7 @@ void Image::write_file_libs(const string& filename, bool bgra) const {
   if (!filetype)
     throw std::runtime_error("Image: unrecognized suffix '" + suffix() + "' when writing '" + filename + "'");
   if (bgra && zsize() >= 3) {
-    Image timage(*this);  // make a copy because write_func() below could throw exception
+    Image timage(*this);  // Make a copy because write_func() below could throw an exception.
     convert_rgba_bgra(timage);
     filetype->write_func(timage, file);
   } else {

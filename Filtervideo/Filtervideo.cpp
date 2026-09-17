@@ -24,20 +24,20 @@ using namespace hh;
 
 namespace {
 
-Video video;  // [frame, ypos, xpos][Z=color_channel]
+Video video;  // Indexed [frame, ypos, xpos][Z = color_channel].
 VideoNv12 video_nv12;
 
-constexpr int nz = 3;  // 3 color channels; no alpha channel
+constexpr int nz = 3;  // 3 color channels; no alpha channel.
 
 bool g_not = false;
 Pixel gcolor{255, 255, 255, 255};
 Bndrule bndrule = Bndrule::reflected;
 FilterBnd filterb{Filter::get("spline"), bndrule};
 int startframe = 0;
-int tradius = 0;  // was 4
+int tradius = 0;  // Was 4.
 bool nooutput = false;
-int trunc_begin = 0;                                 // skip the first trunc_begin frames
-int trunc_frames = std::numeric_limits<int>::max();  // read at most trunc_frames frames
+int trunc_begin = 0;                                 // Skip the first trunc_begin frames.
+int trunc_frames = std::numeric_limits<int>::max();  // Read at most trunc_frames frames.
 
 // ***
 
@@ -112,7 +112,7 @@ void read_video(const string& filename, bool use_nv12) {
   const int nf_read_expect = max(min(nfexpect, trunc_frames), 0);
   assertw(nf_read_expect > 0);
   int nfread = 0;
-  const int padframes = 2;  // because may read a different number of frames
+  const int padframes = 2;  // Because we may read a different number of frames.
   video.attrib() = rvideo.attrib();
   if (use_nv12) {
     assertx(!video.size());
@@ -160,12 +160,12 @@ void do_create(Args& args) {
   assertx(nframes >= 0 && nx >= 0 && ny >= 0);
   video.init(nframes, V(ny, nx));
   if (0) {
-    fill(video, gcolor);  // slower
+    fill(video, gcolor);  // Slower.
   } else {
     const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(video.ysize() * video.xsize()) * 4};
     parallel_for(parallel_options, range(video.nframes()), [&](const int f) {
       MatrixView<Pixel> frame = video[f];
-      fill(frame, gcolor);  // white by default
+      fill(frame, gcolor);  // White by default.
     });
   }
   // video.set_filename() is not called, so no default file extension.
@@ -233,7 +233,7 @@ void apply_assemble_operations(Grid<3, Pixel>& vid, const Vec2<int>& yx, const V
     const float fac = float(nnf) / assertx(vid.dim(0));
     Grid<3, Pixel> newvid(concat(V(nnf), vid.dims().tail<2>()));
     for_int(f, nnf) {
-      const int of = int(f / fac);  // not +.5f !
+      const int of = int(f / fac);  // Not +.5f!
       assertx(of >= 0 && of < vid.dim(0));
       newvid[f].assign(vid[of]);
     }
@@ -257,7 +257,7 @@ void assemble_videos(MatrixView<Video> videos) {
     }
     assertw(videos[yx].nframes() == videos[0, 0].nframes());
   }
-  CGridView<3, Video> gvideos = raise_grid_rank(videos);  // 3D grid of Videos
+  CGridView<3, Video> gvideos = raise_grid_rank(videos);  // A 3D grid of Videos.
   if (0)
     for (const Vec3<int> ugrid : range(gvideos.dims())) SHOW(ugrid, gvideos[ugrid].dims());
   video = assemble(gvideos, gcolor);
@@ -301,7 +301,7 @@ void do_assemble(Args& args) {
     for (const auto& yx : range(videos.dims())) SHOW(yx, filenames[yx], videos[yx].nframes());
   ConsoleProgress::set_all_silent(prev_silent);
   assemble_videos(videos);
-  video.attrib() = videos[0, 0].attrib();  // including audio
+  video.attrib() = videos[0, 0].attrib();  // Including audio.
   const float recoding_allowance = 1.5f;
   const int newbitrate = int(float(videos[0, 0].attrib().bitrate) / product(videos[0, 0].spatial_dims()) *
                                  product(video.spatial_dims()) * recoding_allowance +
@@ -312,7 +312,7 @@ void do_assemble(Args& args) {
 
 void do_fromimages(Args& args) {
   string root_name = args.get_filename();
-  assertx(contains(root_name, '%'));  // root_name.%03d.png
+  assertx(contains(root_name, '%'));  // Such as root_name.%03d.png.
   int first_named_file = startframe;
   int nframes = 0;
   {
@@ -331,7 +331,7 @@ void do_fromimages(Args& args) {
     showf("Found %d image frames (starting at %d)\n", nframes, first_named_file);
     assertx(nframes);
   }
-  if (1) {  // first frame must be read sequentially before others to get dimensions
+  if (1) {  // The first frame must be read sequentially before others to get dimensions.
     Image image;
     image.set_silent_io_progress(true);
     image.read_file(sform_nonliteral(root_name.c_str(), first_named_file + 0));
@@ -408,7 +408,7 @@ void do_append(Args& args) {
   Video nvideo(nnf, video.spatial_dims());
   nvideo.attrib() = video.attrib();
   parallel_for(range(nnf), [&](const int f) {
-    const int f2 = f - (nf1 - tradius * 2);  // frame from video2
+    const int f2 = f - (nf1 - tradius * 2);  // Frame from video2.
     if (f < nf1 - tradius * 2) {
       nvideo[f].assign(video[f]);
     } else if (f >= nf1) {
@@ -427,8 +427,8 @@ void do_append(Args& args) {
 
 void do_toimages(Args& args) {
   string root_name = args.get_filename();
-  assertx(contains(root_name, '%'));                                            // root_name.%03d.png
-  assertx(!file_exists(sform_nonliteral(root_name.c_str(), video.nframes())));  // last + 1 should not exist
+  assertx(contains(root_name, '%'));                                            // Such as root_name.%03d.png.
+  assertx(!file_exists(sform_nonliteral(root_name.c_str(), video.nframes())));  // The last + 1 should not exist.
   parallel_for(range(video.nframes()), [&](const int f) {
     Image image(video.spatial_dims());
     image.set_silent_io_progress(true);
@@ -685,16 +685,16 @@ void do_tcrossfade(Args& args) {
   int nframes = video.nframes();
   assertw(fbeg - tradius >= 0 && fend + tradius < nframes);
   assertx(fbeg + tradius - 1 < fend - tradius);
-  Video tvideo(2 * tradius, video.spatial_dims());  // necessary if clamping on {fb, fe} occurs below
+  Video tvideo(2 * tradius, video.spatial_dims());  // Necessary if clamping on {fb, fe} occurs below.
   parallel_for(range(2 * tradius), [&](const int i) {
     const int fb = fbeg - tradius + i;
     const int fe = fend - tradius + i;
     const int fdst = fb >= fbeg ? fb : fe;
-    const float alpha = 1.f - .5f * (i + .5f) / tradius;  // weight given to end frame fe
+    const float alpha = 1.f - .5f * (i + .5f) / tradius;  // Weight given to end frame fe.
     if (0) showf("alpha=%.4f fb=%-3d fe=%-3d fdst=%-3d\n", alpha, fb, fe, fdst);
     const int fbc = clamp(fb, 0, nframes - 1);
     const int fec = clamp(fe, 0, nframes - 1);
-    if (1) {  // good code always
+    if (1) {  // Good code always.
       for_int(y, video.ysize()) for_int(x, video.xsize()) for_int(z, nz) {
         tvideo[i, y, x][z] = uint8_t((1.f - alpha) * video[fbc, y, x][z] + alpha * video[fec, y, x][z] + .5f);
       }
@@ -717,7 +717,7 @@ void do_makeloop(Args& args) {
   int fend = parse_nframes(args.get_string(), true);
   const int nf = fend - fbeg, ny = video.ysize(), nx = video.xsize();
 
-  assertw(fbeg > 0 && fend < video.nframes());  // at least one frame padding at beg/end to retrieve gradient
+  assertw(fbeg > 0 && fend < video.nframes());  // At least one frame of padding at beg/end to retrieve gradient.
   assertx(nf >= 3);
   Video nvideo(nf, video.spatial_dims());
   nvideo.attrib() = video.attrib();
@@ -727,9 +727,9 @@ void do_makeloop(Args& args) {
   }
   showf("Rendering looping video of %d frames.\n", nf);
   ConsoleProgress cprogress;
-  for_int(z, nz) {  // optimize one color channel at a time
+  for_int(z, nz) {  // Optimize one color channel at a time.
     cprogress.update(float(z) / nz);
-    if (0) {  // solve directly for colors; may require many iterations to accurately converge
+    if (0) {  // Solve directly for colors; may require many iterations to converge accurately.
 #if 1
       const float wtemporal = 1.f;  // Temporal weight (1.f == isotropic space and time).
       using MultigridType = Multigrid<3, float, MultigridPeriodicTemporally>;
@@ -766,14 +766,14 @@ void do_makeloop(Args& args) {
         });
       }
       multigrid.set_desired_mean(mean(multigrid.initial_estimate()));
-      if (1) multigrid.set_num_vcycles(10);  // was 3
+      if (1) multigrid.set_num_vcycles(10);  // Was 3.
       if (1) multigrid.set_verbose(true);
       multigrid.solve();
       for_int(f, nf) for_int(y, ny) for_int(x, nx) {
         nvideo[f, y, x][z] = clamp_to_uint8(int(multigrid.result()[f, y, x] + .5f));
       }
     } else {  // solve for offsets instead of colors themselves
-      const float screening_weight = getenv_float("SCREENING_WEIGHT", 1e-3f, true);  // weak screening
+      const float screening_weight = getenv_float("SCREENING_WEIGHT", 1e-3f, true);  // Weak screening.
       using MultigridType = Multigrid<3, float, MultigridPeriodicTemporally>;
       using EType = float;
       MultigridType multigrid(nvideo.dims());
@@ -799,7 +799,7 @@ void do_makeloop(Args& args) {
         }
       }
       if (1) multigrid.set_screening_weight(screening_weight);
-      if (1) multigrid.set_num_vcycles(3);  // was 3 then 10 then 3
+      if (1) multigrid.set_num_vcycles(3);  // Was 3, then 10, then 3.
       if (0) multigrid.set_verbose(true);
       multigrid.solve();
       parallel_for(range(nf), [&](const int f) {
@@ -1011,7 +1011,7 @@ void do_disassemble(Args& args) {
   HH_TIMER("_disassemble");
   // Filtervideo ~/data/video/short.mp4 -disassemble 480 270 dis
   // Filtervideo -assemble 2 2 dis.{0.0,1.0,0.1,1.1}.mp4 >reassemble.mp4
-  int tilex = args.get_int();  // resulting tile size (x, y)
+  int tilex = args.get_int();  // Resulting tile size (x, y).
   const int tiley = args.get_int();
   assertx(tilex > 0 && tiley > 0);
   assertw(video.ysize() % tiley == 0);
@@ -1085,19 +1085,19 @@ void do_gamma(Args& args) {
 
 // *** looping videos
 
-constexpr bool use_activation = true;  // setting to "false" speeds up the loading of pjo/pjr files
+constexpr bool use_activation = true;  // Setting to "false" speeds up the loading of pjo/pjr files.
 
 struct {
-  Matrix<int> mat_static;  // static frame
-  Matrix<int> mat_start;   // start frame
-  Matrix<int> mat_period;  // period (1 or a multiple of K)
+  Matrix<int> mat_static;  // Static frame.
+  Matrix<int> mat_start;   // Start frame.
+  Matrix<int> mat_period;  // Period (1 or a multiple of K).
   Matrix<float> mat_activation;
-  // per-pixel data
-  Matrix<float> mat_tcost;  // temporal cost
-  Matrix<int> mat_iregion;  // index of independent looping region
-  // per-region data
-  Array<Pixel> region_color;     // color
-  Array<Point> region_centroid;  // center point
+  // Per-pixel data.
+  Matrix<float> mat_tcost;  // Temporal cost.
+  Matrix<int> mat_iregion;  // Index of the independent looping region.
+  // Per-region data.
+  Array<Pixel> region_color;     // Color.
+  Array<Point> region_centroid;  // Center point.
 } g_lp;                          // looping data structures
 
 void possibly_rescale_loop_parameters() {
@@ -1127,7 +1127,7 @@ void verify_loop_parameters() {
     {
       HH_STAT(Speriodd);
       for (const auto e : g_lp.mat_period)
-        if (e > 1) Speriodd.enter(e);  // dynamic
+        if (e > 1) Speriodd.enter(e);  // Dynamic.
     }
     {
       HH_STAT(Send);
@@ -1165,15 +1165,15 @@ void do_loadpj(Args& args) {
   assertx(is);
   if (use_activation) {
     g_lp.mat_activation.init(video.spatial_dims());
-    for (auto& e : g_lp.mat_activation) is >> e;  // note that parsing float is slow
+    for (auto& e : g_lp.mat_activation) is >> e;  // Note that parsing float is slow.
     assertx(is);
     assertx(is.get() == '\t');
     assertx(is.get() == '\n');
     assertx(is.get() < 0);
     assertx(min(g_lp.mat_activation) >= 0.f);
-    assertx(max(g_lp.mat_activation) <= 2.f);  // <= 1.f, or == 2.f for static
+    assertx(max(g_lp.mat_activation) <= 2.f);  // Either <= 1.f, or == 2.f for static.
   } else {
-    while (is) is.get();  // flush the remainder of the input to avoid any "dropped pipe" event
+    while (is) is.get();  // Flush the remainder of the input to avoid any "dropped pipe" event.
   }
   verify_loop_parameters();
 }
@@ -1196,17 +1196,17 @@ void do_loadvlp(Args& args) {
     if (0) {
       Warning("Using old period mapping");
       assertx(image[yx][2] >= 1);
-      g_lp.mat_period[yx] = (image[yx][2] - 1) * K;  // we previously had pixelvalue = period / K + 1
+      g_lp.mat_period[yx] = (image[yx][2] - 1) * K;  // We previously had pixelvalue = period / K + 1.
     }
     g_lp.mat_activation[yx] = image.zsize() == 4 ? image[yx][3] / 254.f : 0.f;
-    if (g_lp.mat_period[yx] == 0) g_lp.mat_period[yx] = 1;  // static pixel should have period == 1
+    if (g_lp.mat_period[yx] == 0) g_lp.mat_period[yx] = 1;  // A static pixel should have period == 1.
     if (g_lp.mat_period[yx] == 1) g_lp.mat_start[yx] += static_frame_offset;
     if (1) {
-      g_lp.mat_static[yx] = g_lp.mat_start[yx];  // pick any frame for now
+      g_lp.mat_static[yx] = g_lp.mat_start[yx];  // Pick any frame for now.
     } else {
       // mat_static actually points into scaled/stretched looping video (including phase offset).
       // The code below likely does not reproduce Loopers computation!  not debugged.
-      const int looplen = 5;  // in seconds
+      const int looplen = 5;  // In seconds.
       const int nnf = int(looplen * video.attrib().framerate + .5);
       const int period = g_lp.mat_period[yx];
       const float deltatime = get_deltatime(period, nnf);
@@ -1298,7 +1298,7 @@ void do_compressloop() {
   const bool b_compress_magenta = getenv_bool("LOOP_COMPRESS_MAGENTA");
   const bool b_compress_hold = getenv_bool("LOOP_COMPRESS_HOLD");
   for_coords(video.spatial_dims(), [&](const Vec2<int>& yx) {
-    const int period = g_lp.mat_period[yx];  // period == 1 for a static pixel
+    const int period = g_lp.mat_period[yx];  // Here, period == 1 for a static pixel.
     const float deltatime = get_deltatime(period, nnf);
     const float new_period = period / deltatime;
     if (period > 1) HH_SSTAT(Snew_period, new_period);
@@ -1319,7 +1319,7 @@ void do_compressloop() {
 
 void compute_temporal_costs() {
   possibly_rescale_loop_parameters();
-  assertx(max(g_lp.mat_start) > 0);  // cannot evaluate temporal cost if video is already remapped
+  assertx(max(g_lp.mat_start) > 0);  // Cannot evaluate temporal cost if the video is already remapped.
   g_lp.mat_tcost.init(video.spatial_dims());
   const int onf = video.nframes();
   parallel_for_coords({.cycles_per_elem = 30}, video.spatial_dims(), [&](const Vec2<int>& yx) {
@@ -1336,17 +1336,17 @@ void compute_temporal_costs() {
 void compute_looping_regions() {
   HH_TIMER("_compute_looping_regions");
   possibly_rescale_loop_parameters();
-  const bool small_looping_regions = getenv_bool("SMALL_LOOPING_REGIONS");  // bad; used in *.wind1
+  const bool small_looping_regions = getenv_bool("SMALL_LOOPING_REGIONS");  // Bad; used in *.wind1.
   if (small_looping_regions) assertx(use_activation && g_lp.mat_activation.ysize() > 0);
   assertx(!g_lp.region_color.num());
-  {  // compute g_lp.mat_iregion : index of region at each pixel
+  {  // Compute g_lp.mat_iregion: index of the region at each pixel.
     UnionFind<Vec2<int>> uf;
     if (0) {
       // Always use case (4) of spatial cost in [Liao et al. 2013] to predict consistency if adjacent
       //  pixels were to advance at different temporal rates.  ongoing initial exploration.
       Image image(video.spatial_dims() * 2 - 1, Pixel::white());
       for_int(y, video.ysize()) for_int(x, video.xsize()) {
-        image[y * 2, x * 2] = Pixel(170, 170, 255);  // nodes are colored light-blue; edges are colored below
+        image[y * 2, x * 2] = Pixel(170, 170, 255);  // Nodes are colored light-blue; edges are colored below.
         for_int(axis, 2) {
           int y0 = y, y1 = y, x0 = x, x1 = x;
           if (axis == 0) {
@@ -1357,7 +1357,7 @@ void compute_looping_regions() {
             if (x1 == video.xsize()) continue;
           }
           float scost2 = 0.f;
-          for_int(edge_direction, 2) {  // two parts (at adjacent pixels x and z) of the spatial cost term
+          for_int(edge_direction, 2) {  // Two parts (at adjacent pixels x and z) of the spatial cost term.
             std::swap(y0, y1), std::swap(x0, x1);
             const int start0 = g_lp.mat_start[y0, x0], period0 = g_lp.mat_period[y0, x0];
             const int start1 = g_lp.mat_start[y1, x1], period1 = g_lp.mat_period[y1, x1];
@@ -1369,7 +1369,7 @@ void compute_looping_regions() {
             }
             for_intL(f, start1, start1 + period1) for_int(c, 3) {
               p1sum[c] += to_float(video[f, y0, x0][c]);
-              p1sum2[c] += square(to_float(video[f, y0, x0][c]));  // again at same pixel [y0, x0]
+              p1sum2[c] += square(to_float(video[f, y0, x0][c]));  // Again at the same pixel [y0, x0].
             }
             const Vector vmul = p0sum * p1sum;
             Vector vtot = (1.f / period0) * p0sum2 + (1.f / period1) * p1sum2 - (2.f / (period0 * period1)) * vmul;
@@ -1384,7 +1384,7 @@ void compute_looping_regions() {
       }
       image.write_file("image_scost.png");
     } else {  // form regions based on period equality and overlapping time intervals (and optionally activation)
-      assertx(max(g_lp.mat_start) > 0);  // input time intervals are lost if video is already remapped
+      assertx(max(g_lp.mat_start) > 0);  // Input time intervals are lost if the video is already remapped.
       for (const auto& yx : range(video.spatial_dims())) {
         for_int(axis, 2) {
           Vec2<int> yx1 = yx;
@@ -1407,7 +1407,7 @@ void compute_looping_regions() {
         const Vec2<int>& pi = uf.get_label(yx);
         bool is_new;
         const int iregion = mpii.enter(pi, g_lp.region_color.num(), is_new);
-        if (is_new) g_lp.region_color.add(1);  // initialized later
+        if (is_new) g_lp.region_color.add(1);  // Initialized later.
         g_lp.mat_iregion[yx] = iregion;
       }
     }
@@ -1458,22 +1458,22 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
     nvideo.attrib().audio.clear();
   }
   showf("Rendering looping video of %d frames.\n", nnf);
-  const bool pixel_adapted_trad = true;                 // perform temporal crossfading only if temporal cost is high
-  Matrix<int> mat_trad(video.spatial_dims(), tradius);  // temporal crossfading radius
+  const bool pixel_adapted_trad = true;                 // Perform temporal crossfading only if temporal cost is high.
+  Matrix<int> mat_trad(video.spatial_dims(), tradius);  // Temporal crossfading radius.
   constexpr bool have_func_dtime = !std::is_same_v<Func, NormalDeltaTime>;
   if (!have_func_dtime && pixel_adapted_trad) {
     compute_temporal_costs();
     parallel_for_coords({.cycles_per_elem = 20}, video.spatial_dims(), [&](const Vec2<int>& yx) {
       const int period = g_lp.mat_period[yx];
       const bool big_temporal_cost = g_lp.mat_tcost[yx] > 2.f * 3.f * square(10.f);
-      int pixtradius = big_temporal_cost ? tradius : 0;  // temporal crossfading radius
+      int pixtradius = big_temporal_cost ? tradius : 0;  // Temporal crossfading radius.
       if (0) pixtradius = min(pixtradius, period / 2);
       mat_trad[yx] = pixtradius;
     });
   }
   if (have_func_dtime)
     if (max(g_lp.mat_start) > 0) Warning("Should have run remap to obtain temporal crossfading");
-  // could be Array<float> indexed by iregion
+  // Could be Array<float> indexed by iregion.
   Matrix<float> mat_time;
   if (have_func_dtime) mat_time.init(video.spatial_dims(), 0.f);
   for_int(f, nnf) {
@@ -1493,23 +1493,23 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
         const float flfi = floor(fi);
         const float frfi = fi - flfi;  // Weight for linear interpolation over time.
         const int fi0 = int(flfi);
-        // Note: no spatial crossfading
+        // Note: no spatial crossfading.
         for_int(z, nz) {
           const int fi1 = fi0 + 1 < start + period ? fi0 + 1 : start;
-          // (run do_remap() as preprocess if temporal crossfading is desired)
+          // Run do_remap() as a preprocess if temporal crossfading is desired.
           nvideo[f][yx][z] =
               uint8_t((1.f - frfi) * to_float(video[fi0][yx][z]) + frfi * to_float(video[fi1][yx][z]) + 0.5f);
         }
       } else {
         const int fi = get_framei(float(f), start, period);
         ASSERTX(fi >= start && fi < start + period);
-        // Note: no spatial crossfading
+        // Note: no spatial crossfading.
         const int pixtradius = mat_trad[yx];
         if (!pixtradius) {
           nvideo[f][yx] = video[fi][yx];
         } else {        // temporal crossfading
-          int fio;      // other frame with which to blend
-          float alpha;  // weight of that other frame
+          int fio;      // Other frame with which to blend.
+          float alpha;  // Weight of that other frame.
           if (fi - start < pixtradius) {
             fio = fi + period;
             alpha = .5f - .5f * (fi - start + .5f) / pixtradius;
@@ -1535,7 +1535,7 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
 void do_remap() {
   HH_TIMER("_remap");
   possibly_rescale_loop_parameters();
-  if (max(g_lp.mat_start) == 0) return;  // already remapped (quite possible)
+  if (max(g_lp.mat_start) == 0) return;  // Already remapped (quite possible).
   const int nnf = max(g_lp.mat_period);  // Maximum period.
   internal_render_loops(nnf, true);
   parallel_for_coords({.cycles_per_elem = 6}, video.spatial_dims(), [&](const Vec2<int>& yx) {
@@ -1548,9 +1548,9 @@ void do_render_loops(Args& args) {
   HH_TIMER("_render_loops");
   const int nnf = parse_nframes(args.get_string(), false);
   possibly_rescale_loop_parameters();
-  assertw(max(g_lp.mat_start) > 0);                                 // else hopefully already temporally crossfaded
-  do_remap();                                                       // for temporal crossfading
-  const bool no_stretch_shrink = getenv_bool("NO_STRETCH_SHRINK");  // create original no-global-period result
+  assertw(max(g_lp.mat_start) > 0);                                 // Else hopefully already temporally crossfaded.
+  do_remap();                                                       // For temporal crossfading.
+  const bool no_stretch_shrink = getenv_bool("NO_STRETCH_SHRINK");  // Create the original no-global-period result.
   // Note that temporally scaling all pixels with the same period by the same scaling value will
   //  have zero effect on the spatial and temporal consistency.
   if (!no_stretch_shrink) {
@@ -1575,8 +1575,8 @@ void do_render_wind(Args& args) {
   HH_TIMER("_render_wind");
   int nnf = parse_nframes(args.get_string(), false);
   compute_looping_regions();
-  do_remap();                                                // for temporal crossfading
-  static const bool no_regions = getenv_bool("NO_REGIONS");  // show lack of phase coherence when done per-pixel
+  do_remap();                                                // For temporal crossfading.
+  static const bool no_regions = getenv_bool("NO_REGIONS");  // Shows lack of phase coherence when done per-pixel.
   const auto func_dtime = [&](int f, const Vec2<int>& yx) -> float {
     const float ssdv = .25f;
     Point pcentroid = g_lp.region_centroid[g_lp.mat_iregion[yx]];  // (y, x, 0.f)
@@ -1591,7 +1591,7 @@ void do_render_harmonize(Args& args) {
   HH_TIMER("_render_harmonize");
   const int nnf = parse_nframes(args.get_string(), false);
   compute_looping_regions();
-  do_remap();  // for temporal crossfading
+  do_remap();  // For temporal crossfading.
   Matrix<float> mat_avgdyn(video.spatial_dims(), 0.f);
   parallel_for_coords({.cycles_per_elem = 30}, video.spatial_dims(), [&](const Vec2<int>& yx) {
     const int start = g_lp.mat_start[yx], period = g_lp.mat_period[yx];
@@ -1604,14 +1604,14 @@ void do_render_harmonize(Args& args) {
   });
   HH_RSTAT(Savgdyn, mat_avgdyn);
   if (1) as_image(1.f - standardize_rms(clone(mat_avgdyn)) / 3.f).write_file("image_pixel_avgdyn.png");
-  Array<Stat> region_avgdyn(g_lp.region_color.num());  // for each region, build statistic of dynamism of its pixels
-  HH_STAT(Ssumdyn);                                    // average dynamism of all non-static pixels
+  Array<Stat> region_avgdyn(g_lp.region_color.num());  // For each region, a statistic of the dynamism of its pixels.
+  HH_STAT(Ssumdyn);                                    // Average dynamism of all non-static pixels.
   for (const auto& yx : range(video.spatial_dims())) {
     const int iregion = g_lp.mat_iregion[yx];
     region_avgdyn[iregion].enter(mat_avgdyn[yx]);
     if (mat_avgdyn[yx]) Ssumdyn.enter(mat_avgdyn[yx]);
   }
-  if (1) {  // find the average dynamim for each region
+  if (1) {  // Find the average dynamism for each region.
     Matrix<float> mat_region_avgdyn(video.spatial_dims());
     for (const auto& yx : range(video.spatial_dims())) {
       const int iregion = g_lp.mat_iregion[yx];
@@ -1700,7 +1700,7 @@ void do_gdloopstream(Args& args) {
   {
     const RVideo rvideo(video_filename);
     showf("Reading video %s\n", Video::diagnostic_string(rvideo.dims(), rvideo.attrib()).c_str());
-    odims = rvideo.dims();  // this may underestimate or overestimate the number of frames actually in the video
+    odims = rvideo.dims();  // This may underestimate or overestimate the number of frames in the video.
     attrib = rvideo.attrib();
   }
   const bool use_nv12 = true;
@@ -1779,8 +1779,8 @@ void process_gen(Args& args) {
     return ar_colors[i];
   };
   if (name == "cos_x") {
-    float speriod = 100.f;  // was 20.f then 50.f
-    float tperiod = 20.f;   // was 20.f then 60.f
+    float speriod = 100.f;  // Was 20.f, then 50.f.
+    float tperiod = 20.f;   // Was 20.f, then 60.f.
     parallel_for(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
         const float v = std::cos((yx[1] / speriod - f / tperiod) * TAU) * .5f + .5f;
@@ -1788,8 +1788,8 @@ void process_gen(Args& args) {
       }
     });
   } else if (name == "box_y") {
-    float speriod = 100.f;  // was 20.f then 50.f
-    float tperiod = 20.f;   // was 20.f then 60.f
+    float speriod = 100.f;  // Was 20.f, then 50.f.
+    float tperiod = 20.f;   // Was 20.f, then 60.f.
     parallel_for(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
         const float v = frac(yx[0] / speriod - f / tperiod) > .5f ? 1.f : 0.f;
@@ -1797,7 +1797,7 @@ void process_gen(Args& args) {
       }
     });
   } else if (starts_with(name, "checker")) {
-    float speriod = 100.f;  // was 20.f then 50.f
+    float speriod = 100.f;  // Was 20.f, then 50.f.
     float tperiod = 45.f;
     float sradius = .3f;
     if (0) {
@@ -1872,9 +1872,9 @@ void process_gen(Args& args) {
       }
     });
   } else if (starts_with(name, "stars")) {
-    int n;           // number of stars
-    float radius;    // in pixels
-    float velrange;  // fraction of screen extent
+    int n;           // Number of stars.
+    float radius;    // In pixels.
+    float velrange;  // Fraction of screen extent.
     if (0) {
     } else if (name == "stars1") {
       n = 200;
@@ -1899,7 +1899,7 @@ void process_gen(Args& args) {
     } else {
       assertnever("");
     }
-    fill(video, Pixel::black());  // default black usually
+    fill(video, Pixel::black());  // Default black usually.
     using F2 = Vec2<float>;
     Array<F2> ar_point0(n);
     Array<F2> ar_velocity(n);
@@ -1927,7 +1927,7 @@ void process_gen(Args& args) {
              Pixel::gray(uint8_t(max(1.f - abs(frac(f * 4.f / video.nframes()) - .5f) * 4.f, 0.f) * 255.f + .5f)));
       for_int(i, n) {
         F2 p = ar_point0[i] + ar_velocity[i] * float(f);
-        for_int(c, 2) p[c] = frac(p[c]);  // periodic boundaries
+        for_int(c, 2) p[c] = frac(p[c]);  // Periodic boundaries.
         F2 pp = p * F2(mvec.ysize() - 1.f, mvec.xsize() - 1.f) + .5f;
         const int y0 = int(pp[0]);
         const int x0 = int(pp[1]);
@@ -1993,7 +1993,7 @@ void do_procedure(Args& args) {
       }
       parallel_for_coords({.cycles_per_elem = 50}, video.spatial_dims(), [&](const Vec2<int>& yx) {
         Point p = Point(float(yx[1]), float(yx[0]), 0.f) * frame;
-        // rather inexact: box-filtering against non-rotated pixel square
+        // Rather inexact: box-filtering against a non-rotated pixel square.
         const float flx = floor(p[0]);
         const float fracx = p[0] - flx;
         const float fly = floor(p[1]);
@@ -2007,9 +2007,9 @@ void do_procedure(Args& args) {
       });
     }
   } else if (name == "slow_value_drift") {
-    const float period = 60.f;     // in frames
-    const float magnitude = 25.f;  // in [0..255] range
-    const float sradius = 60.f;    // in pixels
+    const float period = 60.f;     // In frames.
+    const float magnitude = 25.f;  // In the [0..255] range.
+    const float sradius = 60.f;    // In pixels.
     for_int(f, video.nframes()) {
       parallel_for_coords({.cycles_per_elem = 20}, video.spatial_dims(), [&](const Vec2<int>& yx) {
         const float d = mag(convert<float>(yx) - convert<float>(video.spatial_dims()) * .5f);
@@ -2071,11 +2071,11 @@ void do_procedure(Args& args) {
       SHOW(sum(mask));
       if (f == 0) {
         grid0 = gridf;
-        continue;  // frame 0 is assumed to contain no black border
+        continue;  // Frame 0 is assumed to contain no black border.
       }
       Multigrid<2, Vector4> multigrid(dims);
       {
-        const auto func_stitch = [&](int y0, int x0, int y1, int x1, Vector4& vrhs) {  // change to yx0, yx1
+        const auto func_stitch = [&](int y0, int x0, int y1, int x1, Vector4& vrhs) {  // Change to yx0, yx1.
           if (mask[y0, x0] || mask[y1, x1])
             vrhs += grid0[y1, x1] - grid0[y0, x0];
           else

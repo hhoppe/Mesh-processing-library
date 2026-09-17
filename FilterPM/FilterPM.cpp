@@ -576,8 +576,8 @@ void do_compression() {
     Encoding<int> enc_corners_ii_matp;
     Encoding<int> enc_flr_matid;
     Encoding<int> enc_just_flrn;
-    DeltaEncoding de_pl;  // vad_l, using 3*max_bits(coord).
-    DeltaEncoding de_ps;  // vad_s.
+    DeltaEncoding de_pl;  // Here, vad_l, using 3 * max_bits(coord).
+    DeltaEncoding de_ps;  // Here, vad_s.
     DeltaEncoding de_n;
     DeltaEncoding de_uv;
     int flclwo = 0;
@@ -649,7 +649,7 @@ void do_compression() {
       pmi->_materials = no_materials;
       quantize_mesh_int(*pmi, pmi->rstream()._info);
       pmi->write(fo(), pmi->rstream()._info);
-      // pmi is messed up, so clear it.
+      // Here, pmi is messed up, so clear it.
       pmi->_vertices.init(0);
       pmi->_wedges.init(0);
       pmi->_faces.init(0);
@@ -697,7 +697,7 @@ void do_gcompression() {
   assertx(pmesh._info._full_bbox[0][0] != BIGFLOAT);
   pmi->goto_nvertices(0);
   ensure_pm_loaded();
-  DeltaEncoding de_p;     // vad_l, before pred., using 3*max_bits(coord).
+  DeltaEncoding de_p;     // Here, vad_l, before prediction, using 3 * max_bits(coord).
   DeltaEncoding de_pp;    // After prediction.
   DeltaEncoding de_ppc;   // After prediction, separate coordinates.
   DeltaEncoding de_ppl;   // After prediction, local frame.
@@ -723,7 +723,7 @@ void do_gcompression() {
       // Extend beyond a corner.  Use only vs itself as prediction (this makes sense).
     } else if (nrot == 0) {
       // Along a boundary.  Use vs and the next vertex along the boundary.
-      for (;;) {  // rotate clw
+      for (;;) {  // Rotate clw.
         const int j = pmi->get_jvf(vs, f);
         const int fn = pmi->_fnei[f].faces[mod3(j + 2)];
         if (fn < 0) break;
@@ -734,7 +734,7 @@ void do_gcompression() {
       poly.push(pmi->_vertices[vo].attrib.point);
     } else {
       // Interior vertex.  Note: polygon will be oriented clockwise.
-      {  // first add vl
+      {  // First add vl.
         const int j = pmi->get_jvf(vs, f);
         const int vl = pmi->_wedges[pmi->_faces[f].wedges[mod3(j + 2)]].vertex;
         poly.push(pmi->_vertices[vl].attrib.point);
@@ -1009,11 +1009,11 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
   assertx(first_ivspl >= 0);
   assertx(first_ivspl < last_ivspl);
   assertx(last_ivspl <= pmesh._info._tot_nvsplits);
-  // ivspl refers to number of vsplits after first_ivspl !
+  // Here, ivspl refers to the number of vsplits after first_ivspl!
   // Compute dependency graphs, record fl's in original sequence, and set up face renaming.
-  Graph<int> gdep;       // ivspl -> previous ivspl on which it depends.
+  Graph<int> gdep;       // Maps ivspl -> previous ivspl on which it depends.
   Graph<int> gidep;      // Inverse relation of above.
-  Array<int> ivspl_fl;   // ivspl -> face fl it creates.
+  Array<int> ivspl_fl;   // Maps ivspl -> face fl it creates.
   Array<int> oldf_newf;  // New face indexing (renaming) used later.
   {
     HH_ATIMER("__compute_depend");
@@ -1034,14 +1034,14 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
       gidep.enter(ivspl);
       for (const int f : faces) {
         assertx(f_ivspldep.ok(f));
-        const int ivspldep = f_ivspldep[f];  // vsplit is dependent on ivspldep.
+        const int ivspldep = f_ivspldep[f];  // The vsplit is dependent on ivspldep.
         if (ivspldep >= 0 && !gdep.contains(ivspl, ivspldep)) {
           gdep.enter(ivspl, ivspldep);
           gidep.enter(ivspldep, ivspl);
         }
         f_ivspldep[f] = ivspl;  // The face now depends on this vsplit.
       }
-      // new 1 or 2 faces depend on this vsplit
+      // New 1 or 2 faces depend on this vsplit.
       f_ivspldep.push(ivspl);
       if (isr) f_ivspldep.push(ivspl);
       oldf_newf.push(-1);
@@ -1062,16 +1062,16 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
     temp_mesh = *pmi;
     struct Sivspl {
       int ivspl;
-      int flclw1;  // flclw + 1, to reserve 0 for undefined Sivspl()
+      int flclw1;  // Equals flclw + 1, to reserve 0 for undefined Sivspl().
     };
     struct less_Sivspl {
       bool operator()(const Sivspl& s1, const Sivspl& s2) const {
-        return s1.flclw1 < s2.flclw1;  // flclw1 may be zero
+        return s1.flclw1 < s2.flclw1;  // Here, flclw1 may be zero.
       }
     };
-    STree<Sivspl, less_Sivspl> stivspl;  // current legal ivspl's
-    Array<bool> ivspl_done;              // was ivspl already done?
-    int ncand = 0;                       // size of stivspl
+    STree<Sivspl, less_Sivspl> stivspl;  // The current legal ivspl's.
+    Array<bool> ivspl_done;              // Was ivspl already done?
+    int ncand = 0;                       // Size of stivspl.
     for_int(ivspl, last_ivspl - first_ivspl) ivspl_done.push(false);
     if (1) {
       for (const int ivspl : gdep.vertices()) {
@@ -1079,7 +1079,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
         HH_SSTAT(Sidep_outd, gidep.out_degree(ivspl));
       }
     }
-    // Enter into STree all ivspl which do not depend on anything
+    // Enter into STree all ivspl which do not depend on anything.
     for (const int ivspl : gdep.vertices()) {
       if (gdep.out_degree(ivspl)) continue;
       Sivspl n;
@@ -1095,7 +1095,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
     static const bool bothways = getenv_bool("BOTH_WAYS");
     assertw(!bothways);
     while (!stivspl.empty()) {
-      // number of mesh faces per candidate legal vsplit
+      // Number of mesh faces per candidate legal vsplit.
       HH_SSTAT(Sfpcand, pmi->_faces.num() / float(ncand));
       Sivspl nmin;
       if (bothways) {
@@ -1155,7 +1155,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
       }
       pmi->apply_vsplit_private(new_vspl, pmesh._info, nullptr);
     }
-    implicit_cast<AWMesh&>(*pmi) = temp_mesh;  // since PMeshRStream not advanced!
+    implicit_cast<AWMesh&>(*pmi) = temp_mesh;  // Since PMeshRStream is not advanced!
   }
   assertx(new_vsplits.num() == pmesh._vsplits.num());
   pmesh._vsplits = new_vsplits;
@@ -1258,10 +1258,10 @@ void do_write_resid_dir() {
 
 // Cache type must be set explicitly on the command line.
 VertexCache::EType cache_type = VertexCache::EType::notype;
-int cache_size = 16;  // default size is 16-entry cache
+int cache_size = 16;  // Default size is a 16-entry cache.
 
-// see MeshReorder.cpp
-constexpr int k_bytes_per_vertex = 32;  // default position + normal + uv
+// See MeshReorder.cpp.
+constexpr int k_bytes_per_vertex = 32;  // Default position + normal + uv.
 constexpr int k_bytes_per_vindex = 2;
 constexpr int k_strip_restart_nvindices = 1;
 
@@ -1289,7 +1289,7 @@ int analyze_mesh(int cs) {
 
 void analyze_strips(int& pnverts, int& pnstrips) {
   const bool debug = false;
-  // newway: vertices reused from prev face are in vid[0..1]; expected_j: 1, 2, 1, 2, ...
+  // New way: vertices reused from the previous face are in vid[0..1]; expected_j: 1, 2, 1, 2, ...
   // Assumption: turn face1-face2-face3 is expected to be ccw.
   const int first_expected_j = 1;
   const int sum_expected_j = 3;
@@ -1327,7 +1327,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
     } else if (j == sum_expected_j - expected_j) {
       if (debug) std::cerr << ":";
       nverts += 2;
-      // expected_j stays the same:  LRLR*R*LRLR.
+      // Here, expected_j stays the same:  LRLR*R*LRLR.
     } else {
       if (debug) std::cerr << "*";
       if (0) Warning("Strip turns on itself");
@@ -1452,7 +1452,7 @@ Point sph_from_lonlat(const Uv& uv) {
 void do_uvsphtopos() {
   // Assumes: 1 wedge per vertex, ii == 2 everywhere.
   assertx(pmesh._info._has_uv);
-  Array<int> array_vs;  // vspli -> vs.
+  Array<int> array_vs;  // Maps vspli -> vs.
   ensure_pm_loaded();
   pmi->goto_nvertices(0);
   for_int(vspli, pmesh._vsplits.num()) {

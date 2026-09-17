@@ -161,7 +161,7 @@ void RA3dStream::set_current_color(char ctype, const Vec3<float>& f) {
 bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& comment) {
   // _is >> std::ws;  // commented 2012-12-11
   char ch;
-  if (_is.peek() == '\n') _is.get(ch);  // there may be a blank line between elements
+  if (_is.peek() == '\n') _is.get(ch);  // There may be a blank line between elements.
   const int vpeek = _is.peek();
   if (vpeek < 0) return false;
   assertx(_is);
@@ -195,7 +195,7 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
       assert_no_more_chars(s);
     } else {
       assertx(_is >> f[0] >> f[1] >> f[2]);
-      _is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // likely needed
+      _is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // Likely needed.
       assertx(_is);
     }
   }
@@ -210,13 +210,13 @@ void WA3dStream::write(const A3dElem& el) {
   if (_first) {
     _first = false;
     _curcol.d = _curcol.s = _curcol.g = k_color_undefined;
-    _force_choice_binary = !!getenv("A3D_BINARY");  // dynamically updated by my_setenv() in Filtera3d
+    _force_choice_binary = !!getenv("A3D_BINARY");  // Dynamically updated by my_setenv() in Filtera3d.
     if (_force_choice_binary) _choice_binary = getenv_bool("A3D_BINARY");
     write_comment(" Created by WA3dStream on " + get_current_datetime());
   }
   if (_force_choice_binary) binary = _choice_binary;
   if (type == A3dElem::EType::polygon || type == A3dElem::EType::polyline || type == A3dElem::EType::point) {
-    // common case, skip for now
+    // Common case; skip for now.
   } else if (A3dElem::command_type(type)) {
     if (!binary && !_pblank) blank_line();
     output(binary, char(type), el.f());
@@ -329,7 +329,7 @@ void WSA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
     }
     write_binary_raw(_os, V(buf));
   } else {
-    // precision determined by that in WFile::WFile()
+    // Precision determined by that in WFile::WFile().
     _os << ctype << " " << f[0] << " " << f[1] << " " << f[2] << '\n';
   }
   if (!_os) {

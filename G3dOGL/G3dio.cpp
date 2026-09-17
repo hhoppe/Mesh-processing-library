@@ -15,7 +15,7 @@ namespace g3d {
 
 namespace {
 
-int robn;  // current a3d object to read
+int robn;  // Current a3d object to read.
 string filename = "-";
 float wait_command;
 
@@ -151,7 +151,7 @@ enum class ETryInput { nothing, success, success_frame, eof };
 
 ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
   if (!buf.num()) return ETryInput::nothing;
-  if (buf[0] == '\x0d') {  // DOS eol
+  if (buf[0] == '\x0d') {  // DOS eol.
     if (buf.num() >= 2 && buf[1] == '\x0a') {
       buf.extract(2);
       return ETryInput::success;
@@ -162,10 +162,10 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
     buf.extract(1);
     return ETryInput::success;
   }
-  // try A3d
+  // Try A3d.
   switch (ra3d.recognize()) {
     case RBufferedA3dStream::ERecognize::parse_error: assertnever("");
-    case RBufferedA3dStream::ERecognize::partial: return ETryInput::nothing;  // partial a3d
+    case RBufferedA3dStream::ERecognize::partial: return ETryInput::nothing;  // Partial a3d.
     case RBufferedA3dStream::ERecognize::yes: {
       const A3dElem::EType rr = read_a3delem(ra3d);
       if (rr == A3dElem::EType::endfile) return ETryInput::eof;
@@ -173,14 +173,14 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
       return ETryInput::success;
     }
     case RBufferedA3dStream::ERecognize::no:
-      // fall-out
+      // Fall-out.
       break;
     default: assertnever("");
   }
-  // try Frame
+  // Try Frame.
   switch (FrameIO::recognize(buf)) {
     case FrameIO::ERecognize::parse_error: assertnever("");
-    case FrameIO::ERecognize::partial: return ETryInput::nothing;  // partial frame
+    case FrameIO::ERecognize::partial: return ETryInput::nothing;  // Partial frame.
     case FrameIO::ERecognize::yes: {
       const auto object_frame = assertw(FrameIO::read(buf));
       if (!object_frame) return ETryInput::success;
@@ -189,13 +189,13 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
       return ETryInput::success;
     }
     case FrameIO::ERecognize::no:
-      // fall-out
+      // Fall-out.
       break;
     default: assertnever("");
   }
-  if (!buf.extract_line(str)) return ETryInput::nothing;  // partial something
+  if (!buf.extract_line(str)) return ETryInput::nothing;  // Partial something.
   // 2012-12-11: now trailing '\n' has been removed; all still OK?
-  {  // try Mesh
+  {  // Try Mesh.
     if (GMesh::recognize_line(str)) {
       char* s = const_cast<char*>(str.c_str());
       read_mesh_line(s);
@@ -207,7 +207,7 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
   return ETryInput::success;
 }
 
-// ret: eof
+// Returns true at eof.
 bool read_buffer(RBuffer& buf, RBufferedA3dStream& ra3d, bool during_init) {
   string str;
   for (;;) {
@@ -220,17 +220,17 @@ bool read_buffer(RBuffer& buf, RBufferedA3dStream& ra3d, bool during_init) {
         cur_needs_redraw = true;
       }
       if (ret == ETryInput::eof) return true;
-      if (ret == ETryInput::success_frame || wait_command) {  // end of frame
+      if (ret == ETryInput::success_frame || wait_command) {  // End of frame.
         HB::redraw_later();
         cur_needs_redraw = true;
         break;
       }
-      if (ret == ETryInput::success) continue;  // read something
+      if (ret == ETryInput::success) continue;  // Read something.
     }
-    // nothing recognizable in buffer, so try filling it
+    // Nothing recognizable in buffer, so try filling it.
     {
       auto ret = buf.refill();
-      if (ret == RBuffer::ERefill::no) {  // no more data to fill
+      if (ret == RBuffer::ERefill::no) {  // No more data to fill.
         if (!asynchronousinput && during_init) {
           buf.wait_for_input();
           continue;
@@ -238,7 +238,7 @@ bool read_buffer(RBuffer& buf, RBufferedA3dStream& ra3d, bool during_init) {
         break;
       }
     }
-    // got data, try again for more.
+    // Got data, try again for more.
   }
   return false;
 }
@@ -248,7 +248,7 @@ void read_file(int fd, bool during_init) {
   HB::clear_segment(robn);
   RBuffer fbuf(fd);
   RBufferedA3dStream fa3d(fbuf);
-  assertw(read_buffer(fbuf, fa3d, during_init));  // should get eof
+  assertw(read_buffer(fbuf, fa3d, during_init));  // Should get eof.
   CloseIfOpen();
 }
 

@@ -31,7 +31,7 @@ class WA3dStream;
 class A3dElem;
 struct A3dVertexColor;
 
-// Corner data is currently not handled
+// Corner data is currently not handled.
 
 // A Mesh with geometric structure (Point at each Vertex) and with strings at each mesh element.
 class GMesh : public Mesh {
@@ -42,11 +42,11 @@ class GMesh : public Mesh {
   GMesh& operator=(GMesh&& m) noexcept { return clear(), swap(*this, m), *this; }
 
   // ** Extend functionality:
-  void copy(const GMesh& m);  // carries flags (but not sac fields), hence not named operator=().
+  void copy(const GMesh& m);  // Carries flags (but not sac fields), hence not named operator=().
   void merge(const GMesh& mo, Map<Vertex, Vertex>* mvvn = nullptr);
   void destroy_vertex(Vertex v) override;
   void destroy_face(Face f) override;
-  // Do appropriate actions with geometry, eflag_sharp, and face strings
+  // Do appropriate actions with geometry, eflag_sharp, and face strings.
   void collapse_edge_vertex(Edge e, Vertex vs) override;  // Vertex vs is kept.
   void collapse_edge_vertex_saving_attribs(Edge e, Vertex vs);
   void collapse_edge(Edge e) override;
@@ -85,7 +85,7 @@ class GMesh : public Mesh {
   [[nodiscard]] static const char* string_key(string& str, const char* ss, const char* key);
   [[nodiscard]] const char* corner_key(string& str, Corner c, const char* key) const;  // Corner | Vertex
   bool parse_corner_key_vec(Corner c, const char* key, ArrayView<float> ar) const;     // Corner | Vertex
-  // copies string
+  // Copies the string.
   void set_string(Vertex v, const char* s) { v->_string = make_unique_c_string(s); }
   void set_string(Face f, const char* s) { f->_string = make_unique_c_string(s); }
   void set_string(Edge e, const char* s) { e->_string = make_unique_c_string(s); }
@@ -102,22 +102,22 @@ class GMesh : public Mesh {
   static void update_string_ptr(unique_ptr<char[]>& ss, const char* key, const char* val);
 
   // ** Standard I/O for my meshes (see format below):
-  void read(std::istream& is);  // read a whole mesh, discard comments
-  void read_line(char* s);      // no '\n' required
+  void read(std::istream& is);  // Read a whole mesh, discarding comments.
+  void read_line(char* s);      // No '\n' required.
   [[nodiscard]] static bool recognize_line(std::string_view line);
   void write(std::ostream& os) const;
   void write(WA3dStream& oa3d, const A3dVertexColor& col) const;
   void write_face(WA3dStream& oa3d, A3dElem& el, const A3dVertexColor& col, Face f) const;
-  std::ostream* record_changes(std::ostream* pos);  // pos may be nullptr, ret old
+  std::ostream* record_changes(std::ostream* pos);  // Here, pos may be nullptr; returns the old value.
 
   // ** Flag bits:
   // Predefined {Vertex, Face, Edge} flag bits; vflag_cusp and eflag_sharp are parsed when reading a mesh.
-  static const FlagMask vflag_cusp;   // "cusp" on Vertex
-  static const FlagMask eflag_sharp;  // "sharp" on Edge
+  static const FlagMask vflag_cusp;   // "cusp" on a Vertex.
+  static const FlagMask eflag_sharp;  // "sharp" on an Edge.
 
   // ** Discouraged:
   Vertex create_vertex_private(int id) override;
-  Face create_face_private(int id, CArrayView<Vertex> va) override;  // or die
+  Face create_face_private(int id, CArrayView<Vertex> va) override;  // Or die.
 
   // ** Misc:
   friend void swap(GMesh& l, GMesh& r) noexcept;
@@ -125,7 +125,7 @@ class GMesh : public Mesh {
   void show_keys(Vertex v) const;
 
  private:
-  std::ostream* _os{nullptr};  // for record_changes
+  std::ostream* _os{nullptr};  // For record_changes().
 };
 
 // Format a vector string "(%g ... %g)".
@@ -147,7 +147,7 @@ bool parse_key_vec(const char* ss, const char* key, ArrayView<float> ar);
 //   Vertex 2  0 1.5 0
 //   Face 1  1 2 3
 //   Face 2  2 3 4 5 {color=red, phong=2}
-//  fi may be zero, in which case a number is assigned
+//  Here fi may be zero, in which case a number is assigned.
 
 class StringKeyIter {
  public:

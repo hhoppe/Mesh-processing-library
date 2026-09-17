@@ -87,7 +87,7 @@ class Pool : noncopyable {
   ~Pool() = default;  // Do nothing here; wait for other destruction means.
   HH_ATTRIBUTE_NO_SANITIZE_ADDRESS void construct(const char* name, unsigned esize, int ealign) {
     if (1) {
-      // initialized to zero by static initialization
+      // Initialized to zero by static initialization.
       assertx(!_name && !_esize && !_ealign && !_h && !_nalloc && !_chunkh);
     }
     _name = assertx(name);
@@ -96,7 +96,7 @@ class Pool : noncopyable {
     _h = nullptr;
     _nalloc = 0;
     _chunkh = nullptr;
-    // static variable sdebug may not yet be initialized.
+    // The static variable sdebug may not yet be initialized.
     if (getenv_int("POOL_DEBUG") >= 2) showf("Pool %-20s: construct (size=%2u, align=%2d)\n", _name, _esize, _ealign);
     if (_esize) init();
   }
@@ -119,7 +119,7 @@ class Pool : noncopyable {
     _nalloc = 0;
     _chunkh = nullptr;
   }
-  // allocate based on static size of class
+  // Allocate based on the static size of the class.
   [[nodiscard]] void* alloc() {
     if (!_h) grow();
     Link* p = _h;
@@ -135,7 +135,7 @@ class Pool : noncopyable {
     p->next = _h;
     _h = p;
   }
-  // allocate based on size of first alloc_size() call
+  // Allocate based on the size of the first alloc_size() call.
   [[nodiscard]] void* alloc_size(int align, size_t s64) {
     const int s = narrow_cast<int>(s64);
     if (!_h) grow_size(s, align);
@@ -154,9 +154,9 @@ class Pool : noncopyable {
 
  private:
   static constexpr int k_pagesize = 16 * 1024;  // could refer to getpagesize();
-  static constexpr int k_malloc_overhead = 64;  // high just to be safe, multiple of 16; was 32
+  static constexpr int k_malloc_overhead = 64;  // High just to be safe; a multiple of 16; was 32.
   static constexpr int k_chunksize = k_pagesize - k_malloc_overhead;
-  const int sdebug = getenv_int("POOL_DEBUG");  // 0, 1, 2, or 3; may be uninitialized in constructor() and init()
+  const int sdebug = getenv_int("POOL_DEBUG");  // 0, 1, 2, or 3; may be uninitialized in constructor() and init().
   struct Link {
     Link* next;
   };
@@ -165,21 +165,21 @@ class Pool : noncopyable {
   };
   unsigned _esize;
   int _ealign;
-  const char* _name;  // not "string" because construct() may be called before constructor!
+  const char* _name;  // Not "string" because construct() may be called before constructor!
   Link* _h;
   Chunk* _chunkh;
   int _nalloc;
   int _offset;
 
   HH_ATTRIBUTE_NO_SANITIZE_ADDRESS void init() {
-    // make allocated size a multiple of sizeof(Link)!
+    // Make the allocated size a multiple of sizeof(Link)!
     _esize = ((_esize + sizeof(Link) - 1) / sizeof(Link)) * sizeof(Link);
     assertx(_esize >= sizeof(Link) && (_esize % sizeof(Link)) == 0);
-    // make allocated size a multiple of _ealign
+    // Make the allocated size a multiple of _ealign.
     _esize = ((_esize + _ealign - 1) / _ealign) * _ealign;
     assertx(_esize >= unsigned(_ealign) && (_esize % _ealign) == 0);
     _offset = k_chunksize - sizeof(Chunk);
-    // static variable sdebug may not yet be initialized.
+    // The static variable sdebug may not yet be initialized.
     if (getenv_int("POOL_DEBUG") >= 2)
       showf("Pool %-20s: _esize=%u _ealign=%d _offset=%d\n", _name, _esize, _ealign, _offset);
   }

@@ -10,7 +10,7 @@
 
 namespace hh {
 
-static const int sdebug = getenv_int("LLS_DEBUG");  // 0, 1, or 2
+static const int sdebug = getenv_int("LLS_DEBUG");  // 0, 1, or 2.
 
 // *** Factory: select an Lls implementation based on environment overrides and problem size/sparsity.
 
@@ -224,7 +224,7 @@ bool LudLls::solve_aux() {
     if (!vmax) return false;
     t[i] = 1.f / vmax;
   }
-  int imax = 0;  // undefined
+  int imax = 0;  // Undefined.
   for_int(j, _n) {
     for_int(i, j) {
       double s = a[i, j];
@@ -323,7 +323,7 @@ bool GivensLls::solve_aux() {
     }
   }
   if (sdebug) showf("Givens: %d/%d rotations done\n", ngivens, nposs);
-  // Backsubstitutions
+  // Backsubstitutions.
   for_int(di, _nd) {
     for (int i = _n - 1; i >= 0; --i) {
       float sum = _b[di, i];
@@ -346,7 +346,7 @@ constexpr double k_double_cond_max = 1e12;
 namespace {
 
 inline int work_size(int m, int n) {
-  return max(n * 67, m * 8) + 128;  // picked somewhat arbitrarily
+  return max(n * 67, m * 8) + 128;  // Picked somewhat arbitrarily.
 }
 
 }  // namespace
@@ -366,7 +366,7 @@ bool SvdLls::solve_aux() {
     for_int(d, _nd) for_int(i, _m) { *bp++ = _b[d, i]; }
   }
   float rcond = 1.f / k_float_cond_max;
-  if (0) rcond = -1.f;  // use machine precision to determine rank
+  if (0) rcond = -1.f;  // Use machine precision to determine the rank.
   lapack_int irank, lwork = _work.num(), info;
   lapack_int lm = _m, ln = _n, lnd = _nd;
   sgelss_(&lm, &ln, &lnd, _fa.data(), &lm, _fb.data(), &lm, _s.data(), &rcond, &irank, _work.data(), &lwork, &info);
@@ -402,7 +402,7 @@ bool SvdDoubleLls::solve_aux() {
     for_int(d, _nd) for_int(i, _m) { *bp++ = _b[d, i]; }
   }
   double rcond = 1. / k_double_cond_max;
-  if (0) rcond = -1.;  // use machine precision to determine rank
+  if (0) rcond = -1.;  // Use machine precision to determine the rank.
   lapack_int irank, lwork = _work.num(), info;
   lapack_int lm = _m, ln = _n, lnd = _nd;
   dgelss_(&lm, &ln, &lnd, _fa.data(), &lm, _fb.data(), &lm, _s.data(), &rcond, &irank, _work.data(), &lwork, &info);
@@ -442,16 +442,16 @@ bool QrdLls::solve_aux() {
     for_int(d, _nd) for_int(i, _m) { *bp++ = _b[d, i]; }
   }
   Array<lapack_int> jpvt(_n);
-  fill(jpvt, 0);  // all columns free to pivot
+  fill(jpvt, 0);  // All columns free to pivot.
   float rcond = 1.f / k_float_cond_max;
   lapack_int irank, info;
   lapack_int lm = _m, ln = _n, lnd = _nd;
   // sgelsx_(&lm, &ln, &lnd, _fa.data(), &lm, _fb.data(), &lm, jpvt.data(), &rcond, &irank, _work.data(), &info);
   _work.init(1, 0);
   lapack_int lwork = -1;
-  info = 0;  // query
+  info = 0;  // Query.
   sgelsy_(&lm, &ln, &lnd, _fa.data(), &lm, _fb.data(), &lm, jpvt.data(), &rcond, &irank, _work.data(), &lwork,
-          &info);  // query optimal work size
+          &info);  // Query the optimal work size.
   assertx(info == 0);
   _work.init(int(_work[0]));
   lwork = _work.num();
@@ -506,7 +506,7 @@ bool SvdDoubleLls::solve_aux() {
   if (cond > k_double_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   for (double& s : _mS) s = 1. / s;
   for_int(d, _nd) {
-    _x[d].assign(convert<float>(mat_mul(_mVT, mat_mul(convert<double>(_b[d]), _mU) * _mS)));  // slow
+    _x[d].assign(convert<float>(mat_mul(_mVT, mat_mul(convert<double>(_b[d]), _mU) * _mS)));  // Slow.
   }
   return true;
 }

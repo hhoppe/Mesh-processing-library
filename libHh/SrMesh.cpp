@@ -26,10 +26,10 @@ namespace {
 // In Vis98 flythrough at 60fps: change is very minor:
 // Stau:       (8713   )        0.5:8.28283     av=3.45052     sd=1.33553
 // Stau:       (8781   )        0.5:9.23064     av=3.42375     sd=1.33939
-// So it should be more efficient to use VIEWPARAMS_LRB
+// So it should be more efficient to use VIEWPARAMS_LRB.
 // #define VIEWPARAMS_LRB
 
-// Set in SrMesh.h
+// Set in SrMesh.h.
 #if !defined(SR_NOR001)
 constexpr bool b_nor001 = false;
 #else
@@ -184,8 +184,8 @@ HH_ALLOCATE_POOL(SrAFacePair);
 
 HH_ALLOCATE_POOL(SrVertexMorph);
 
-SrFace SrMesh::_isolated_face;    // initialized in SrMesh::SrMesh()
-SrAFace SrMesh::_isolated_aface;  // initialized in SrMesh::SrMesh()
+SrFace SrMesh::_isolated_face;    // Initialized in SrMesh::SrMesh().
+SrAFace SrMesh::_isolated_aface;  // Initialized in SrMesh::SrMesh().
 
 inline SrAFace* SrMesh::rotate_clw(SrAFace* f, SrAVertex* v) const {
   // Could implement this functionality using fnei comparisons.
@@ -219,7 +219,7 @@ inline SrFace* SrMesh::get_fl(int vspli) {
 
 inline int SrMesh::get_vspli(const SrFace* fl) const {
   ASSERTX(_faces.ok(fl));
-  return int((fl - _quick_first_fl) / 2);  // slow but seldom
+  return int((fl - _quick_first_fl) / 2);  // Slow but seldom.
 }
 
 inline bool SrMesh::is_active_f(const SrFace* f) const { return f->aface != &_isolated_aface; }
@@ -262,7 +262,7 @@ SrMesh::SrMesh() {
 SrMesh::~SrMesh() {
   if (1) {
     fully_coarsen();
-    {  // to avoid ~EList(): not empty
+    {  // To avoid ~EList(): not empty.
       for_int(vi, _base_vertices.num()) _vertices[vi].avertex->activev.unlink();
       assertx(_active_vertices.empty());
       for_int(fi, _base_faces.num()) _faces[fi].aface->activef.unlink();
@@ -277,7 +277,7 @@ SrMesh::~SrMesh() {
     const EListNode* ndelim = _active_vertices.delim();
     for (const EListNode* n = ndelim->next(); n != ndelim;) {
       SrAVertex* va = HH_ELIST_OUTER(SrAVertex, activev, n);
-      n = n->next();  // advance here before node gets deleted
+      n = n->next();  // Advance here before the node gets deleted.
       bool branch_has_left_child = false;
       bool branch_has_right_child = false;
       for (const SrVertex* v = va->vertex;;) {
@@ -308,7 +308,7 @@ SrMesh::~SrMesh() {
       }
     }
   }
-  // optimize: instead, could associate the two Pools (SrAVertex, SrAFacePair) with this object,
+  // Optimize: instead, could associate the two Pools (SrAVertex, SrAFacePair) with this object,
   //  and simply deallocate the pools.
 }
 
@@ -342,7 +342,7 @@ bool SrMesh::ecol_legal(const SrVertex* vt) const {
     // Preconditions.
     ASSERTX(vs);
     ASSERTX(is_active_v(vt));
-    ASSERTX(get_vt(vspli) == vt);  // vt is the left child of its parent!
+    ASSERTX(get_vt(vspli) == vt);  // Here, vt is the left child of its parent!
     // Sanity checks.
     ASSERTX(is_splitable(vs));
     ASSERTX(!is_active_v(vs));
@@ -409,7 +409,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
   // Copy materials.
   _materials = bmesh._materials;
   Timer timer("___read_convert");
-  Array<SrVertexGeometry> vgeoms(_vertices.num());  // all vertex geometries
+  Array<SrVertexGeometry> vgeoms(_vertices.num());  // All vertex geometries.
   // Process the base mesh.
   {
     assertx(bmesh._vertices.num() == bmesh._wedges.num());
@@ -451,15 +451,15 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
     _num_active_faces = _base_faces.num();
   }
   // Process vsplit records.
-  Array<int> f_pm2sr(full_nfaces);  // PM faces index -> SR face index
+  Array<int> f_pm2sr(full_nfaces);  // PM face index -> SR face index.
   f_pm2sr.init(0);
   for_int(fi, _base_faces.num()) f_pm2sr.push(fi);
 
-  Array<short> f_matid(full_nfaces);  // temporary back-up
+  Array<short> f_matid(full_nfaces);  // A temporary back-up.
   f_matid.init(0);
   for_int(fi, _base_faces.num()) {
     f_matid.push(narrow_cast<short>(_faces[fi].aface->matid));
-    _faces[fi].aface->matid = fi;  // in the next section, matid is temporarily used to store face indices?
+    _faces[fi].aface->matid = fi;  // In the next section, matid is temporarily used to store face indices?
   }
 
   for_int(vspli, tot_nvsplits) {
@@ -471,7 +471,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
     SrVsplit* vspl = &_vsplits[vspli];
     SrAVertex* vsa;
     const int flclwi = f_pm2sr[pm_vspl.flclw];
-    assertx(pm_vspl.vlr_offset1 > 0);  // flclw non-existent is now illegal
+    assertx(pm_vspl.vlr_offset1 > 0);  // A non-existent flclw is now illegal.
     SrFace* flclw = &_faces[flclwi];
     ASSERTX(is_active_f(flclw));
     vsa = flclw->aface->vertices[vs_index];
@@ -552,7 +552,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
     }
     {
       EListNode* n = _active_vertices.delim();
-      apply_vspl(vs, n);  // apply vsplit on SrMesh
+      apply_vspl(vs, n);  // Apply the vsplit on the SrMesh.
     }
     for_int(i, 2) {
       const int matid = (fl + i)->aface->matid;
@@ -562,7 +562,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
         // In summary, support of > 1 material seems broken.
         if (0) assertw(_materials.ok(matid));
       }
-      // 2012-12-12 added mask (_isolated_aface.matid == k_illegal_matid or bad matid)
+      // On 2012-12-12, added mask (_isolated_aface.matid == k_illegal_matid or bad matid).
       f_matid.push(short(matid & 0xFFFF));
       if (!i || cr2faces) (fl + i)->aface->matid = _base_faces.num() + 2 * vspli + i;
       if (!i || cr2faces) f_pm2sr.push(_base_faces.num() + 2 * vspli + i);
@@ -570,11 +570,11 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
   }
   assertx(f_pm2sr.num() == num_active_faces());
   for_int(fi, full_nfaces) {
-    if (!is_active_f(&_faces[fi])) continue;  // !creates_2faces()
-    _faces[fi].aface->matid = f_matid[fi];    // restore matid
+    if (!is_active_f(&_faces[fi])) continue;  // Here, !creates_2faces().
+    _faces[fi].aface->matid = f_matid[fi];    // Restore matid.
   }
-  f_pm2sr.clear();  // cleanup to shrink memory usage
-  f_matid.clear();  // cleanup to shrink memory usage
+  f_pm2sr.clear();  // Cleanup to shrink memory usage.
+  f_matid.clear();  // Cleanup to shrink memory usage.
   assertx(!pmrs.peek_next_vsplit());
   timer.terminate();  // "___read_convert"
   if (k_debug) ok();
@@ -610,11 +610,11 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
 
 void SrMesh::compute_bspheres(CArrayView<SrVertexGeometry> vgeoms) {
   HH_TIMER("___compute_bspheres");
-  // spheres bounding positions over surface.
+  // Spheres bounding positions over the surface.
   Array<BoundingSphere> ar_bsphere(_vertices.num());
   // Compute bound(star(v)) of vertices in fully refined mesh.
   {
-    // based on shirman-abi-ezzi93.
+    // Based on shirman-abi-ezzi93.
     Array<Bbox<float, 3>> ar_bbox(_vertices.num());
     for_int(vi, _vertices.num()) {
       if (!is_active_v(&_vertices[vi])) continue;
@@ -622,10 +622,10 @@ void SrMesh::compute_bspheres(CArrayView<SrVertexGeometry> vgeoms) {
     }
     for_int(fi, _faces.num()) {
       SrAFace* fa = _faces[fi].aface;
-      if (fa == &_isolated_aface) continue;  // !creates_2faces()
+      if (fa == &_isolated_aface) continue;  // Here, !creates_2faces().
       Vec3<int> ar_vi;
       for_int(j, 3) {
-        // division in here may be slow.
+        // Division in here may be slow.
         ar_vi[j] = narrow_cast<int>(fa->vertices[j]->vertex - _vertices.data());
       }
       for_int(j, 3) {
@@ -646,10 +646,10 @@ void SrMesh::compute_bspheres(CArrayView<SrVertexGeometry> vgeoms) {
     }
     for_int(fi, _faces.num()) {
       SrAFace* fa = _faces[fi].aface;
-      if (fa == &_isolated_aface) continue;  // !creates_2faces()
+      if (fa == &_isolated_aface) continue;  // Here, !creates_2faces().
       Vec3<int> ar_vi;
       for_int(j, 3) {
-        // division in here may be slow.
+        // Division in here may be slow.
         ar_vi[j] = narrow_cast<int>(fa->vertices[j]->vertex - _vertices.data());
       }
       for_int(j, 3) {
@@ -695,15 +695,15 @@ void SrMesh::compute_bspheres(CArrayView<SrVertexGeometry> vgeoms) {
 
 void SrMesh::compute_nspheres(CArrayView<SrVertexGeometry> vgeoms) {
   HH_TIMER("___compute_nspheres");
-  // spheres bounding normals over surface.
+  // Spheres bounding normals over the surface.
   Array<BoundingSphere> ar_nsphere(_vertices.num());
   // Compute bound(star(v)) of vertices in fully refined mesh.
   {
     Array<Bbox<float, 3>> ar_bbox(_vertices.num());
-    Array<Vector> ar_fnormal(_faces.num());  // cache face normals
+    Array<Vector> ar_fnormal(_faces.num());  // Cache the face normals.
     for_int(fi, _faces.num()) {
       SrAFace* fa = _faces[fi].aface;
-      if (fa == &_isolated_aface) continue;  // !creates_2faces()
+      if (fa == &_isolated_aface) continue;  // Here, !creates_2faces().
       const Point& p0 = fa->vertices[0]->vgeom.point;
       const Point& p1 = fa->vertices[1]->vgeom.point;
       const Point& p2 = fa->vertices[2]->vgeom.point;
@@ -724,7 +724,7 @@ void SrMesh::compute_nspheres(CArrayView<SrVertexGeometry> vgeoms) {
     }
     for_int(fi, _faces.num()) {
       SrAFace* fa = _faces[fi].aface;
-      if (fa == &_isolated_aface) continue;  // !creates_2faces()
+      if (fa == &_isolated_aface) continue;  // Here, !creates_2faces().
       for_int(j, 3) {
         const SrVertex* v = fa->vertices[j]->vertex;
         const int vi = narrow_cast<int>(v - _vertices.data());
@@ -767,7 +767,7 @@ void SrMesh::compute_nspheres(CArrayView<SrVertexGeometry> vgeoms) {
     const float alpha_p = angle_between_unit_vectors(nor_b, vgeoms[vi].vnormal);
     float alpha = alpha_b + alpha_p;
     if (sr_no_normal_test) alpha = TAU / 4;
-    if (alpha >= TAU / 4) alpha = TAU / 4;  // then backface cone is empty.
+    if (alpha >= TAU / 4) alpha = TAU / 4;  // Then the backface cone is empty.
     HH_SSTAT(Salpha, alpha);
     vspl->sin2alpha = square(std::sin(alpha));
   }
@@ -829,7 +829,7 @@ void SrMesh::write_srm(std::ostream& os) const {
 void SrMesh::read_srm(std::istream& is) {
   HH_TIMER("__read_srm");
   assertx(!_base_vertices.num());
-  assertx(!_refine_morph_time && !_coarsen_morph_time);  // just to be safe
+  assertx(!_refine_morph_time && !_coarsen_morph_time);  // Just to be safe.
   // Read past comments.
   for (string line;;) {
     assertx(my_getline(is, line));
@@ -1073,7 +1073,7 @@ bool SrMesh::qrefine(const SrVertex* vs) const {
 
 bool SrMesh::qcoarsen(const SrVertex* vt) const {
   ASSERTX(is_active_v(vt));
-  ASSERTX(get_vt(vt->parent->vspli) == vt);  // left child of its parent!
+  ASSERTX(get_vt(vt->parent->vspli) == vt);  // The left child of its parent!
   const SrVertex* vs = vt->parent;
   const SrVsplit* vspl = &_vsplits[vs->vspli];
   const SrVertexGeometry* vg = refined_vg(vt->avertex);
@@ -1082,7 +1082,7 @@ bool SrMesh::qcoarsen(const SrVertex* vt) const {
 
 void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
   ASSERTX(vspl_legal(vs));
-  SrAVertex* vta = vs->avertex;  // vsa becomes vta!
+  SrAVertex* vta = vs->avertex;  // Here, vsa becomes vta!
   if (vta->vmorph && vta->vmorph->coarsening) abort_coarsen_morphing(vta->vertex);
   ASSERTX(!(vta->vmorph && vta->vmorph->coarsening));
   SrAVertex* vua = new SrAVertex;
@@ -1187,7 +1187,7 @@ void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
   {
     SrAFace* fa = flclw;
     int j0 = get_vf_j0(vta, fa);
-    fa->fnei[mod3(j0 + 1)] = fla;  // fa == flclw
+    fa->fnei[mod3(j0 + 1)] = fla;  // Here, fa == flclw.
     vla = fa->vertices[mod3(j0 + 2)];
     fa->vertices[j0] = vua;
     for (;;) {
@@ -1198,7 +1198,7 @@ void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
         fa->vertices[j0] = vua;
         continue;
       }
-      fa->fnei[mod3(j0 + 2)] = fra;  // fa == frccw
+      fa->fnei[mod3(j0 + 2)] = fra;  // Here, fa == frccw.
       vra = fa->vertices[mod3(j0 + 1)];
       break;
     }
@@ -1216,7 +1216,7 @@ void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
   fla->fnei[1] = flccw;
   fla->fnei[2] = fra;
   fra->vertices[0] = vta;
-  fra->vertices[1] = vra;  // undefined if frccw == &_isolated_aface (ok)
+  fra->vertices[1] = vra;  // Undefined if frccw == &_isolated_aface (OK).
   fra->vertices[2] = vua;
   fra->fnei[0] = frccw;
   fra->fnei[1] = fla;
@@ -1237,9 +1237,9 @@ void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
     ASSERTX(vra);
     if (vra->vmorph && vra->vmorph->coarsening) perhaps_abort_coarsen_morphing(vra->vertex);
   } else {
-    fr->aface = &_isolated_aface;     // correction
-    fla->fnei[2] = &_isolated_aface;  // correction
-    --_num_active_faces;              // anticipating correction
+    fr->aface = &_isolated_aface;     // A correction.
+    fla->fnei[2] = &_isolated_aface;  // A correction.
+    --_num_active_faces;              // Anticipating a correction.
   }
   if (vla->vmorph && vla->vmorph->coarsening) perhaps_abort_coarsen_morphing(vla->vertex);
   EListNode* n = pn;
@@ -1264,12 +1264,12 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
   SrFace* fl = get_fl(vspli);
   (fl + 0)->aface->activef.unlink();
   SrVertex* vt = get_vt(vspli);
-  SrAVertex* vsa = (vt + 0)->avertex;  // vta becomes vsa!
+  SrAVertex* vsa = (vt + 0)->avertex;  // Here, vta becomes vsa!
   SrAVertex* vua = (vt + 1)->avertex;
   vua->activev.unlink();
   ASSERTX(!(vsa->vmorph && vsa->vmorph->coarsening));
   ASSERTX(!(vua->vmorph && vua->vmorph->coarsening));
-  // vua may in fact be refine-morphing if apply_ecol() is called directly
+  // Here, vua may in fact be refine-morphing if apply_ecol() is called directly
   //  from adapt_refinement() without coarsen-morphing.
   vs->avertex = vsa;
   (vt + 0)->avertex = nullptr;
@@ -1331,7 +1331,7 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
     if (!vsp) {
       if (n == &vsa->activev) pn = n->next();
     } else {
-      const SrVertex* vspt = get_vt(vsp->vspli);  // vs's sibling (or itself)
+      const SrVertex* vspt = get_vt(vsp->vspli);  // The sibling of vs (or itself).
       SrAVertex* vspta = (vspt + 0)->avertex;
       if (vspta && (vspt + 1)->avertex) {
         // Reconsider vspt + 0 if not next node.
@@ -1365,7 +1365,7 @@ GMesh SrMesh::extract_gmesh() const {
   //  would not get reproducible face id's (no SrAFace* -> SrFace* info).
   for_int(fi, _faces.num()) {
     SrAFace* fa = _faces[fi].aface;
-    if (fa == &_isolated_aface) continue;  // inactive or !creates_2faces()
+    if (fa == &_isolated_aface) continue;  // Inactive or !creates_2faces().
     gvaa.init(0);
     for_int(j, 3) {
       const int vi = narrow_cast<int>(fa->vertices[j]->vertex - _vertices.data());
@@ -1464,40 +1464,40 @@ void SrMesh::set_view_params(const SrViewParams& vp) {
   _view_params = vp;
   // Now create new _refp:
   const Frame& frame = vp._frame;
-  // Note: frame.p() == Point(0.f, 0.f, 0.f) * frame
+  // Note: frame.p() == Point(0.f, 0.f, 0.f) * frame.
   _refp._nplanes = 0;
   if (activate_lr_planes) {
-    // Left
+    // Left.
     _refp._planes[_refp._nplanes++] =
         LinearFunc(ok_normalized(cross(frame.p(), Point(1.f, +vp._zoomyx[1], -1.f) * frame,
                                        Point(1.f, +vp._zoomyx[1], +1.f) * frame)),
                    frame.p());
-    // Right
+    // Right.
     _refp._planes[_refp._nplanes++] =
         LinearFunc(ok_normalized(cross(frame.p(), Point(1.f, -vp._zoomyx[1], +1.f) * frame,
                                        Point(1.f, -vp._zoomyx[1], -1.f) * frame)),
                    frame.p());
   }
   if (activate_bottom_plane) {
-    // Bottom
+    // Bottom.
     _refp._planes[_refp._nplanes++] =
         LinearFunc(ok_normalized(cross(frame.p(), Point(1.f, -1.f, -vp._zoomyx[0]) * frame,
                                        Point(1.f, +1.f, -vp._zoomyx[0]) * frame)),
                    frame.p());
   }
   if (activate_top_plane) {
-    // Top
+    // Top.
     _refp._planes[_refp._nplanes++] =
         LinearFunc(ok_normalized(cross(frame.p(), Point(1.f, +1.f, +vp._zoomyx[0]) * frame,
                                        Point(1.f, -1.f, +vp._zoomyx[0]) * frame)),
                    frame.p());
   }
   if (hither >= 0.f) {
-    // Front (hither)
+    // Front (hither).
     _refp._planes[_refp._nplanes++] = LinearFunc(frame.v(0), frame.p() + hither * frame.v(0));
   }
   if (yonder >= 0.f) {
-    // Rear (yonder)
+    // Rear (yonder).
     _refp._planes[_refp._nplanes++] = LinearFunc(-frame.v(0), frame.p() + yonder * frame.v(0));
   }
   Point old_eye = _refp._eye;
@@ -1605,7 +1605,7 @@ void SrMesh::force_vsplit(SrVertex* vsf, EListNode*& n) {
 }
 
 // Given:   00011'1010'1000
-// Returns: 00000'0000'1000
+// Returns: 00000'0000'1000.
 static inline unsigned lsb_mask(unsigned size) {
   int count = 0;
   while ((size & 1) == 0) {
@@ -1680,7 +1680,7 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
     rvg = &pvspl->vs_vgeom;
     new_vis = false;
 #endif
-    if (!new_vis && !is_visible(rvg, pvspl)) {  // instant. coarsening
+    if (!new_vis && !is_visible(rvg, pvspl)) {  // Instantaneous coarsening.
       is_modified = true;
       if (vm && vm->coarsening) {
         finish_vmorph(vsa);
@@ -1696,7 +1696,7 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
     } else {  // geomorph coarsening
       is_modified = true;
       if (vm && vm->coarsening) {
-        if (vm->time) continue;  // still coarsen-morphing
+        if (vm->time) continue;  // Still coarsen-morphing.
         finish_vmorph(vsa);
         SrAVertex* vua = (vs + 1)->avertex;
         ASSERTX(vua->vmorph && vua->vmorph->coarsening && vua->vmorph->time == 0);
@@ -1758,7 +1758,7 @@ void SrMesh::start_coarsen_morphing(SrVertex* vt) {
       va->vmorph = new SrVertexMorph();
       vm = va->vmorph;
       vm->vgrefined = va->vgeom;
-      // if i == 0, left child is not going to morph, so may want to
+      // If i == 0, the left child is not going to morph, so we may want to
       //  do something more efficient than adding zero's every frame.
     } else {
       ASSERTX(!vm->coarsening);
@@ -1938,7 +1938,7 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
       n = n->prev();
     }
   }
-  // Compute geoinfo._ancestors[0]
+  // Compute geoinfo._ancestors[0].
   for (const SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* v = va->vertex;
     SrVertex* vv = v;
@@ -1973,7 +1973,7 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
       apply_vspl(vs, n);
     }
   }
-  // Compute geoinfo._ancestors[1]
+  // Compute geoinfo._ancestors[1].
   for (const SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* v = va->vertex;
     SrVertex* vv = v;
@@ -2034,7 +2034,7 @@ int SrMesh::get_iflclw(SrVertex* vs) const {
 void SrMesh::refine_in_best_dflclw_order() {
   struct Scvspl {
     SrVertex* vs;
-    int iflclw1;  // iflclw + 1 to reserve 0 for undefined Scvspl()
+    int iflclw1;  // Equals iflclw + 1, to reserve 0 for undefined Scvspl().
   };
   struct less_Scvspl {
     static int compare_Scvspl(const Scvspl& s1, const Scvspl& s2) {
@@ -2045,8 +2045,8 @@ void SrMesh::refine_in_best_dflclw_order() {
     }
     bool operator()(const Scvspl& s1, const Scvspl& s2) const { return compare_Scvspl(s1, s2) < 0; }
   };
-  STree<Scvspl, less_Scvspl> stcvspl;  // current legal vsplits
-  int ncand = 0;                       // number in stcvspl
+  STree<Scvspl, less_Scvspl> stcvspl;  // The current legal vsplits.
+  int ncand = 0;                       // Number in stcvspl.
   for (SrAVertex* vsa : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* vs = vsa->vertex;
     if (!is_splitable(vs) || !vspl_legal(vs)) continue;
@@ -2056,7 +2056,7 @@ void SrMesh::refine_in_best_dflclw_order() {
     assertx(stcvspl.enter(n));
     ncand++;
   }
-  Array<SrVertex*> pncands;  // possible new candidates
+  Array<SrVertex*> pncands;  // Possible new candidates.
   DeltaEncoding de_dflclw;
   Scvspl nlast;
   nlast.iflclw1 = 0;

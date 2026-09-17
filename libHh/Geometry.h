@@ -52,7 +52,7 @@ inline Vector& operator*=(Vector& v, const Frame& frame) { return v = v * frame;
 [[nodiscard]] inline Vector normalized(Vector v) { return assertx(v.normalize()), v; }
 [[nodiscard]] inline Vector ok_normalized(Vector v) { return v.normalize(), v; }
 
-// Overload these to refer to low-precision versions from Vec.h and not high-precision versions from RangeOp.h
+// Overload these to refer to low-precision versions from Vec.h and not high-precision ones from RangeOp.h.
 [[nodiscard]] inline float dot(const Vec3<float>& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
 [[nodiscard]] inline float dot(const Vector& v1, const Vec3<float>& v2) { return dot(v1.vec(), v2.vec()); }
 [[nodiscard]] inline float dot(const Vector& v1, const Vector& v2) { return dot(v1.vec(), v2.vec()); }
@@ -82,7 +82,7 @@ inline Point& operator*=(Point& p, const Frame& frame) { return p = p * frame; }
 }
 [[nodiscard]] inline float area2(const Vec3<Point>& triangle) { return area2(triangle[0], triangle[1], triangle[2]); }
 
-// Overload these to refer to low-precision versions from Vec.h and not high-precision versions from RangeOp.h
+// Overload these to refer to low-precision versions from Vec.h and not high-precision ones from RangeOp.h.
 [[nodiscard]] inline float dist2(const Vec3<float>& v1, const Point& v2) { return dist2(v1.vec(), v2.vec()); }
 [[nodiscard]] inline float dist2(const Point& v1, const Vec3<float>& v2) { return dist2(v1.vec(), v2.vec()); }
 [[nodiscard]] inline float dist2(const Point& v1, const Point& v2) { return dist2(v1.vec(), v2.vec()); }

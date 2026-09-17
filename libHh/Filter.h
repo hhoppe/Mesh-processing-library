@@ -42,7 +42,7 @@ class Filter : noncopyable {
   // justomoms:   just the approximating OMOMS kernel     (evaluated after inverse_convolution2)
   // lanczos6:    Lanczos filter with support [-3, 3]
   // lanczos10:   Lanczos filter with support [-5, 5] -- best but slowest
-  // hamming6:    Hamming filter with support [-3, 3]
+  // hamming6:    Hamming filter with support [-3, 3].
   friend std::ostream& operator<<(std::ostream& os, const Filter& filter) {
     return os << "Filter{" << filter.name() << "}";
   }
@@ -104,14 +104,14 @@ struct LUfactorization {
         Uupper(f) {
     validate();
   }
-  Array<float> Llower;       // lower off-diagonal of L (except last row)
-  Array<float> Llastrow;     // last row of L (except last two elements)
-  Array<float> LlastrowPen;  // penultimate element of last row of L, as a function of matrix size ([0]=size1)
-  Array<float> Uidiag;       // inverse diagonal of U (except last row)
-  Array<float> UidiagLast;   // last diagonal element of U, as a function of matrix size
-  Array<float> Ulastcol;     // last column of U (except last two elements)
-  Array<float> UlastcolPen;  // penultimate element of last column of U, as a function of matrix size ([0]=size1)
-  float Uupper;              // upper off-diagonal of U, constant along the diagonal
+  Array<float> Llower;       // Lower off-diagonal of L (except the last row).
+  Array<float> Llastrow;     // Last row of L (except the last two elements).
+  Array<float> LlastrowPen;  // Penultimate element of last row of L, as a function of matrix size ([0]=size1).
+  Array<float> Uidiag;       // Inverse diagonal of U (except the last row).
+  Array<float> UidiagLast;   // Last diagonal element of U, as a function of matrix size.
+  Array<float> Ulastcol;     // Last column of U (except the last two elements).
+  Array<float> UlastcolPen;  // Penultimate element of last column of U, as a function of matrix size ([0]=size1).
+  float Uupper;              // Upper off-diagonal of U, constant along the diagonal.
   void validate() const {
     const bool last_special = Llastrow.num() > 0;
     assertx(last_special == (LlastrowPen.num() > 0));

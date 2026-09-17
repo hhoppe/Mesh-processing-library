@@ -16,7 +16,7 @@ static Vec4<float> normalizef(const Vec3<float>& v) { return concat(v * .5f + .5
 class NormalMapping_ogl2 final : public NormalMapping {
  public:
   using type = NormalMapping_ogl2;
-  // Great tutorial: "GLSL Tutorial von Lighthouse3D"
+  // Great tutorial: "GLSL Tutorial von Lighthouse3D".
   // https://web.archive.org/web/20170204132401/http://zach.in.tu-clausthal.de/teaching/cg_literatur/glsl_tutorial/
 
   [[nodiscard]] string name() const override { return "ogl2"; }
@@ -169,7 +169,7 @@ class NormalMapping_frag1 final : public NormalMapping {
     USE_GL_EXT(glIsProgramARB, PFNGLISPROGRAMARBPROC);
     glGenProgramsARB(1, &program_id);
     assertx(program_id);
-    // Setup the program string
+    // Setup the program string.
     const GLuint len = narrow_cast<int>(fragment_shader.size());
     glBindProgramARB(GL_FRAGMENT_PROGRAM_ARB, program_id);
     glProgramStringARB(GL_FRAGMENT_PROGRAM_ARB, GL_PROGRAM_FORMAT_ASCII_ARB, len,
@@ -190,7 +190,7 @@ class NormalMapping_frag1 final : public NormalMapping {
                       const Pixel& meshcolor_s) override {
     const Vector vhalf = ok_normalized(lightdirmodel + eyedirmodel);
     const Vector scaled_light = lightdirmodel * lightsource;
-    // just pull the Red channel out; (default is gray 0.5f)
+    // Just pull the Red channel out; (default is gray 0.5f).
     const float meshspecular = meshcolor_s[0] / 255.f;
     assertw(meshcolor_s[0] == meshcolor_s[1]);
     assertw(meshcolor_s[0] == meshcolor_s[2]);
@@ -422,7 +422,7 @@ class NormalMapping_nvrc final : public NormalMapping {
     // Vector scaled_light = lightdirmodel * (lambient / .6f);
     // Vector scaled_vhalf = vhalf * .93f * (lightsource / .75f);
     const Vector scaled_light = lightdirmodel * lightsource;
-    // just pull the Red channel out; (default is gray 0.5f)
+    // Just pull the Red channel out; (default is gray 0.5f).
     const float meshspecular = meshcolor_s[0] / 255.f;
     assertw(meshcolor_s[0] == meshcolor_s[1]);
     assertw(meshcolor_s[0] == meshcolor_s[2]);
@@ -468,7 +468,7 @@ NormalMapping* NormalMapping::get() {
     }
   }
   if (desired_name != "") assertnever("NormalMapping '" + desired_name + "' not recognized");
-  return nullptr;  // normal mapping not supported at all
+  return nullptr;  // Normal mapping not supported at all.
 }
 
 }  // namespace hh

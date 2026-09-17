@@ -20,10 +20,10 @@ template <typename T> [[nodiscard]] StridedArrayView<T> column(MatrixView<T> mat
   return grid_column<0>(mat, V(0, x));
 }
 
-// ret: success
+// Returns success.
 template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T> mo) {
   static_assert(std::is_floating_point_v<T>);
-  // mi.data() == mo.data() is OK
+  // Note that mi.data() == mo.data() is OK.
   const int n = mi.ysize();
   assertx(n && mi.xsize() == n);
   assertx(same_size(mi, mo));
@@ -36,7 +36,7 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
   }
   for_int(i, n) { t[i, n + i] = T{1}; }
   for_int(i, n) {
-    if (i < n - 1) {  // swap row with largest front coefficient
+    if (i < n - 1) {  // Swap the row with the largest front coefficient.
       T a = abs(t[i, i]), max_a;
       int max_i = i;
       for_intL(l, i + 1, n) {
@@ -49,7 +49,7 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
     }
     if (!t[i, i]) return false;
     parallel_for({.cycles_per_elem = uint64_t(n) * 2}, range(n), [&](const int j) {
-      if (j == i) return;  // must be done outside the parallel loop
+      if (j == i) return;  // Must be done outside the parallel loop.
       T a = -t[j, i] / t[i, i];
       for_int(k, 2 * n) t[j, k] += a * t[i, k];
     });
@@ -63,7 +63,7 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
   return true;
 }
 
-// asserts it is invertible
+// Asserts that it is invertible.
 template <typename T> [[nodiscard]] Matrix<T> inverse(CMatrixView<T> mi) {
   Matrix<T> m(mi.dims());
   assertx(invert(mi, m));
@@ -247,10 +247,10 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
       // Approach 1: find conservative rectangular box in source image and compute sum of source samples
       //  weighted by filter kernel.
       Vec2<float> src_kernel_radii = twice(0.f);
-      {  // conservative radii in source image (in pixels)
+      {  // Conservative radii in the source image (in pixels).
         for_int(i, 2) {
           Vec2<float> dst_vec = kernel_radii;
-          if (i == 1) dst_vec[1] *= -1.f;  // opposite diagonal
+          if (i == 1) dst_vec[1] *= -1.f;  // Opposite diagonal.
           Vec2<float> src_vec =
               affine_transform(dst_vec / convert<float>(m.dims()), frame) * convert<float>(nm.dims());
           for_int(c, 2) src_kernel_radii[c] = max(src_kernel_radii[c], abs(src_vec[c]));
@@ -268,9 +268,9 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
           for (const Vec2<int> yx :
                range(convert<int>(floor(psrc - src_kernel_radii)), convert<int>(ceil(psrc + src_kernel_radii)) + 1)) {
             const Vec2<float> dyx = convert<float>(yx) - psrc;
-            Vec2<float> dst_dyx = affine_transform(dyx, frame_inv);  // unreasonably slow
+            Vec2<float> dst_dyx = affine_transform(dyx, frame_inv);  // Unreasonably slow.
             float w = 1.f;
-            if (!transform_filter_radial) {  // normal tensor-product of kernels
+            if (!transform_filter_radial) {  // Normal tensor-product of kernels.
               for_int(c, 2) w *= float(kernels[c](dst_dyx[c]));
             } else {  // single kernel based on radial distance
               w = float(kernels[0](mag(dst_dyx)));
@@ -290,8 +290,8 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
     } else {
       // Approach 2: supersample uniformly in kernel window of destination image, evaluating reconstruction
       //  kernels at corresponding points in source image (expensive!).
-      const Vec2<int> super_sampling = twice(8);         // samples/pixel on each axis
-      const Filter& recon_kernel = Filter::get("keys");  // bicubic reconstruction kernel
+      const Vec2<int> super_sampling = twice(8);         // Samples per pixel on each axis.
+      const Filter& recon_kernel = Filter::get("keys");  // Bicubic reconstruction kernel.
       const Vec2<int> num_samples = convert<int>(convert<float>(super_sampling) * kernel_radii + .5f);
       const Vec2<FilterBnd> fb_reconstruction =
           V(FilterBnd(recon_kernel, filterbs[0].bndrule()), FilterBnd(recon_kernel, filterbs[1].bndrule()));
@@ -306,9 +306,9 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
           for (const Vec2<int>& sample_yx : range(num_samples)) {
             const Vec2<float> sample_offset =
                 ((convert<float>(sample_yx) + .5f) / convert<float>(num_samples) * 2.f - 1.f) *
-                kernel_radii;  // pixels
+                kernel_radii;  // Pixels.
             float w = 1.f;
-            if (!transform_filter_radial) {  // normal tensor-product of kernels
+            if (!transform_filter_radial) {  // Normal tensor-product of kernels.
               for_int(c, 2) w *= float(kernels[c](sample_offset[c]));
             } else {  // single kernel based on radial distance
               w = float(kernels[0](mag(sample_offset)));
@@ -346,7 +346,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
 }
 
 // Input: mvec[y, x].mag() is large except near seedpoints where it should indicate relative location of seedpoints.
-// Output: vectors indicating relative location of nearest seedpoint.  e.g. T = int or float
+// Output: vectors indicating the relative location of the nearest seedpoint.  E.g. T = int or float.
 template <typename T> void euclidean_distance_map(MatrixView<Vec2<T>> mvec);
 
 // Compute the matrix which is the outer product of two vectors (ar1 is column vector, ar2 is row vector).
@@ -402,7 +402,7 @@ template <typename T> [[nodiscard]] Matrix<string> right_justify(CMatrixView<T> 
     int maxlen = 0;
     for_int(y, nmat.ysize()) maxlen = max(maxlen, narrow_cast<int>(nmat[y, x].size()));
     for_int(y, nmat.ysize()) {
-      while (narrow_cast<int>(nmat[y, x].size()) < maxlen) nmat[y, x] = " " + nmat[y, x];  // slow but easy
+      while (narrow_cast<int>(nmat[y, x].size()) < maxlen) nmat[y, x] = " " + nmat[y, x];  // Slow but easy.
     }
   }
   return nmat;
@@ -447,7 +447,7 @@ template <typename T> void euclidean_distance_map(MatrixView<Vec2<T>> mvec) {
   //    polygonal models using volumetric techniques.
   //    Georgia Tech TR GIT-GVU-99-37, 1999.
   // See also version in HTest.cpp function do_lloyd_relax() which supports spatially non-uniform metric.
-  // Lower precision than RangeOp.h template mag2<>
+  // Lower precision than the RangeOp.h template mag2<>.
   const auto lmag2 = [](const Vec2<T>& v) { return square(v[0]) + square(v[1]); };
   for_intL(y, 1, mvec.ysize()) {
     for_int(x, mvec.xsize()) {

@@ -9,7 +9,7 @@ namespace {
 class A {
  public:
   A() = default;
-  HH_MAKE_SAC(A);  // must be last entry of class!
+  HH_MAKE_SAC(A);  // Must be the last entry of the class!
 };
 
 class B {
@@ -29,7 +29,7 @@ HH_SACABLE(B);
 class A2 {
  public:
   A2() = default;
-  HH_MAKE_POOLED_SAC(A2);  // must be last entry of class!
+  HH_MAKE_POOLED_SAC(A2);  // Must be the last entry of the class!
 };
 HH_SAC_ALLOCATE_FUNC(A2, Point, point);
 HH_ALLOCATE_POOL(A2);

@@ -5,7 +5,7 @@
 
 namespace hh {
 
-extern bool g_is_ati;  // defined in G3dOGL
+extern bool g_is_ati;  // Defined in G3dOGL.
 
 void AWMesh::ogl_process_materials() {
   _ogl_mat_byte_rgba.reserve(_materials.num());
@@ -70,7 +70,7 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
   const int lcur_frame_mask = _cur_frame_mask;
   int omatid = -1;
   int ntstrips = 0;
-  const int write_ntstrips = 0;  // get about 3 faces/strip on dragon3
+  const int write_ntstrips = 0;  // Gets about 3 faces per strip on dragon3.
   const bool has_uv = pminfo._has_uv && use_texture;
   if (has_uv) {
     glDisable(GL_TEXTURE_GEN_S);
@@ -80,7 +80,7 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
   for_int(f, _faces.num()) {
     const int matid = _faces[f].attrib.matid;
     if ((matid & k_Face_visited_mask) == lcur_frame_mask) continue;
-    const int matidv = matid ^ k_Face_visited_mask;  // "material id visited"
+    const int matidv = matid ^ k_Face_visited_mask;  // The "material id visited".
     _faces[f].attrib.matid = matidv;
     if (matid != omatid) {
       omatid = matid;

@@ -27,9 +27,9 @@ namespace {
 // weighta is subdivision mask weight, not averaging mask weight, so it must be adjusted.
 int nsubdiv = 2;
 bool nolimit = false;
-float selective = 0.f;  // set to 180 to refine near sharp only
-bool s222 = false;      // use s222 instead of n222 (not C1 for n=3)
-float weighta = 0.f;    // for extraord. interior case, interior weight
+float selective = 0.f;  // Set to 180 to refine near sharp only.
+bool s222 = false;      // Use s222 instead of n222 (not C1 for n = 3).
+float weighta = 0.f;    // For the extraordinary interior case, the interior weight.
 float xformsize = .8f;
 bool markcuts = false;
 bool outn = false;
@@ -52,8 +52,8 @@ int verb = 1;
 std::optional<WFile> wf_record;
 constexpr float k_min_cos = -1.f / 3.f;  // acos(109.471) == tetrahedron angle
 
-Array<Point> co;  // points
-GMesh gmesh;      // current control mesh
+Array<Point> co;  // Points.
+GMesh gmesh;      // Current control mesh.
 Bbox<float, 3> gbbox;
 Frame xform;
 float xform_scale;
@@ -62,18 +62,18 @@ bool g_force_global_project = false;
 
 const FlagMask eflag_cut = Mesh::allocate_Edge_flag();
 
-// always updated
-Array<float> gdis2;  // squared distance associated with each point
+// Always updated.
+Array<float> gdis2;  // Squared distance associated with each point.
 
-// for stoc
-Map<Face, Set<int>> mfpts;  // Face in gmesh -> Set of point indices
-Array<Face> gcmf;           // pi -> Face in gmesh
-Array<int> gscmfi;          // smesh closest face index (in face gcmf)
+// For stoc.
+Map<Face, Set<int>> mfpts;  // Maps Face in gmesh -> Set of point indices.
+Array<Face> gcmf;           // Maps pi -> Face in gmesh.
+Array<int> gscmfi;          // The smesh closest face index (in face gcmf).
 
-// for general procedures
-Array<Face> gscmf;  // face point projects to in some_smesh
-Array<Bary> gbary;  // barycentric coordinates in some_smesh
-Array<Point> gclp;  // closest point on some_smesh
+// For general procedures.
+Array<Face> gscmf;  // Face that the point projects to in some_smesh.
+Array<Bary> gbary;  // Barycentric coordinates in some_smesh.
+Array<Point> gclp;  // Closest point on some_smesh.
 
 enum EOperation { OP_ecol, OP_espl, OP_eswa, OP_esha, OP_NUM };
 const Vec<string, OP_NUM> op_name = {"ecol", "espl", "eswa", "esha"};
@@ -157,13 +157,13 @@ void subdivide(SubMesh& smesh, bool triang) {
   smesh.subdivide_n(nsubdiv, !nolimit, std::cos(rad_from_deg(selective)), triang);
 }
 
-// translate Vertex from one Mesh to another Mesh
+// Translate a Vertex from one Mesh to another Mesh.
 Vertex trvmm(Vertex v, const Mesh& mf, const Mesh& mt) { return mt.id_vertex(mf.vertex_id(v)); }
 
-// translate Face from one Mesh to another Mesh
+// Translate a Face from one Mesh to another Mesh.
 Face trfmm(Face f, const Mesh& mf, const Mesh& mt) { return mt.id_face(mf.face_id(f)); }
 
-// translate Edge from one Mesh to another Mesh
+// Translate an Edge from one Mesh to another Mesh.
 Edge tremm(Edge e, const Mesh& mf, const Mesh& mt) {
   return mt.edge(trvmm(mf.vertex1(e), mf, mt), trvmm(mf.vertex2(e), mf, mt));
 }
@@ -228,7 +228,7 @@ double get_earea() {
 
 int num_sharp_edges() {
   int nsharpe = 0;
-  // boundary edges are never sharp!
+  // Boundary edges are never sharp!
   for (Edge e : gmesh.edges()) {
     if (gmesh.flags(e).flag(GMesh::eflag_sharp)) {
       if (gmesh.is_boundary(e)) {
@@ -386,9 +386,9 @@ void do_fgfit(Args& args) {
   global_all_project(smesh);
   if (verb >= 2) analyze_mesh("fgfit_before");
   struct EvalGrad {
-    Map<Vertex, int> _mvi;  // vertex -> index in _x
-    Array<Vertex> _iv;      // index -> mesh vertex
-    Array<double> _x;       // linearized unknown vertex coordinates
+    Map<Vertex, int> _mvi;  // Maps vertex -> index in _x.
+    Array<Vertex> _iv;      // Maps index -> mesh vertex.
+    Array<double> _x;       // Linearized unknown vertex coordinates.
     SubMesh& _smesh;
     int _iter{0};
     int _niter;
@@ -424,7 +424,7 @@ void do_fgfit(Args& args) {
       }
       return p0 + dot(p - p0, v01) * v01;
     }
-    double feval(ArrayView<double> ret_grad) {  // evaluate function and its gradient
+    double feval(ArrayView<double> ret_grad) {  // Evaluate the function and its gradient.
       assertx(ret_grad.num() == _iv.num() * 3);
       HH_STIMER("___computegrad");
       unpack_vertices();
@@ -450,7 +450,7 @@ void do_fgfit(Args& args) {
           _desire_global_project = true;
         }
       }
-      // Computer gradient
+      // Compute the gradient.
       for (Vertex v : gmesh.vertices()) v_grad(v) = Vector(0.f, 0.f, 0.f);
       Array<Vertex> va;
       for_int(i, co.num()) {
@@ -632,7 +632,7 @@ void do_imagefit() {
     Point p = gmesh.point(iv[i]);
     lls.enter_xest_r(i, p);
   }
-  static const float tolerance = getenv_float("LLS_TOLERANCE", 1e-9f, true);  // larger than default 1e-10f
+  static const float tolerance = getenv_float("LLS_TOLERANCE", 1e-9f, true);  // Larger than the default 1e-10f.
   lls.set_tolerance(tolerance);
   const int max_iter = getenv_int("LLS_MAXITER", std::numeric_limits<int>::max(), true);
   lls.set_max_iter(max_iter);
@@ -651,19 +651,19 @@ void do_imagefit() {
 
 // *** stoc
 
-// defined in smesh
+// Defined in smesh.
 struct Combvih {
-  Array<float> c;  // partial comb.: vertex index in iv -> float
-  Homogeneous h;   // remainder of combination (constant term)
+  Array<float> c;  // Partial combination: vertex index in iv -> float.
+  Homogeneous h;   // Remainder of the combination (constant term).
 };
 HH_SACABLE(Combvih);
 HH_SAC_ALLOCATE_CD_FUNC(Mesh::MVertex, Combvih, v_combvih);
 
-// defined in omesh() if vertex is in setmv
+// Defined in omesh() if the vertex is in setmv.
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, int, v_index);
 
 struct Mvcvih {
-  Array<Vertex> iv;  // int -> mesh Vertex
+  Array<Vertex> iv;  // Maps int -> mesh Vertex.
 };
 
 void create_mvcvih(const SubMesh& smesh, const Set<Vertex>& setmv, Mvcvih& mvcvih) {
@@ -723,7 +723,7 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
   }
 }
 
-// Optimization of setmv given setpts, gscmf, mvcvih
+// Optimization of setmv given setpts, gscmf, mvcvih.
 void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, const Mvcvih& mvcvih,
                     double& rss1) {
   HH_STIMER("___loptimize");
@@ -737,7 +737,7 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
     }
   }
   const int m = setpts.num(), n = mvcvih.iv.num();
-  assertx(n == setmv.num());  // optional
+  assertx(n == setmv.num());  // Optional.
   // auto up_lls = make_unique<SparseLls>(m, n, 3); SparseLls& lls = *up_lls;
   auto up_lls = Lls::make(m, n, 3, 1.f);
   Lls& lls = *up_lls;
@@ -809,10 +809,10 @@ void build_lmesh1(const Set<Vertex>& setgmv, const Set<Face>& setbadfg, GMesh& l
     for_int(i, 3) va[i] = trvmm(va[i], gmesh, lmesh);
     lmesh.create_face_private(gmesh.face_id(f), va);
   }
-  // Add flags to lmesh
+  // Add flags to lmesh.
   for (Edge e : lmesh.edges()) lmesh.flags(e) = gmesh.flags(tremm(e, lmesh, gmesh));
   for (Vertex v : lmesh.vertices()) lmesh.flags(v) = gmesh.flags(trvmm(v, lmesh, gmesh));
-  // Gather into setpts the points projecting on faces in setmfg
+  // Gather into setpts the points projecting on faces in setmfg.
   for (Face f : setmfg)
     for (const int pi : mfpts.get(f)) setpts.enter(pi);
   {
@@ -820,7 +820,7 @@ void build_lmesh1(const Set<Vertex>& setgmv, const Set<Face>& setbadfg, GMesh& l
     for (const int pi : setpts) sum += gdis2[pi];
     rssf = sum;
   }
-  // Gather into setbadpts the points projecting on faces in setbadfg
+  // Gather into setbadpts the points projecting on faces in setbadfg.
   for (Face f : setbadfg)
     for (const int pi : mfpts.get(f)) setbadpts.enter(pi);
 }
@@ -832,17 +832,17 @@ void build_lmesh2(GMesh& lmesh, const Set<Vertex>& setmv, Set<Face>& setmf) {
       for (Face f : lmesh.faces(vv)) setmf.add(f);
 }
 
-// subdivide submesh; trim its outlying faces and vertices.
+// Subdivide the submesh; trim its outlying faces and vertices.
 void subdiv_trim(SubMesh& smesh, const Set<Face>& setmf) {
   subdivide(smesh, true);
-  {  // trim faces from smesh outside setmf
+  {  // Trim faces from smesh outside setmf.
     Set<Face> setfrem;
     for (Face f : smesh.mesh().faces())
       if (!setmf.contains(smesh.orig_face(f))) setfrem.enter(f);
     HH_SSTAT(Ssetfrem, setfrem.num());
     for (Face f : setfrem) smesh.mesh().destroy_face(f);
   }
-  {  // trim isolated vertices
+  {  // Trim isolated vertices.
     Set<Vertex> setvrem;
     for (Vertex v : smesh.mesh().vertices())
       if (!smesh.mesh().degree(v)) setvrem.enter(v);
@@ -855,7 +855,7 @@ void local_update_gmesh(const SubMesh& smesh, const Set<Vertex>& setmv, const Se
                         Face f1g = nullptr, Face f2l = nullptr, Face f2g = nullptr, Vertex v1l = nullptr,
                         Vertex v1g = nullptr) {
   const GMesh& lmesh = smesh.orig_mesh();
-  // Update positions of setmv in gmesh
+  // Update the positions of setmv in gmesh.
   for (Vertex v : setmv) {
     Vertex vg = v == v1l ? v1g : trvmm(v, lmesh, gmesh);
     gmesh.set_point(vg, lmesh.point(v));
@@ -895,7 +895,7 @@ bool try_opt(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, c
   HH_SSTAT(Soptnit, ni);
   edrss = rss1 - threshrss;
   if (edrss >= 0.) return false;
-  // do some more fitting
+  // Do some more fitting.
   while (ni < maxni) {
     optimize_local(smesh, setmv, setpts, mvcvih, rss1);
     ni++;
@@ -950,7 +950,7 @@ EResult try_ecol(Edge eg, double& edrss) {
         lmesh.flags(lmesh.edge(v2, vo2)).flag(GMesh::eflag_sharp))
       ndsharp++;
   }
-  lmesh.collapse_edge(e);  // keep v1
+  lmesh.collapse_edge(e);  // Keep v1.
   Set<Vertex> setmv;
   setmv.enter(v1);
   for (Vertex vv : lmesh.vertices(v1)) setmv.enter(vv);
@@ -968,19 +968,19 @@ EResult try_ecol(Edge eg, double& edrss) {
   HH_SSTAT(Secolsmv, smesh.mesh().num_vertices());
   lmesh.set_point(v1, interp(p1, p2));
   update_local(smesh, mvcvih);
-  local_all_project(smesh, setgoodf, setpts, setbadpts);  // get guess
+  local_all_project(smesh, setgoodf, setpts, setbadpts);  // Get a guess.
   double minrss = BIGFLOAT;
   int minii = -1;
   for_int(ii, 3) {
     lmesh.set_point(v1, interp(p1, p2, ii * .5f));
     float mina = min_dihedral_about_vertices(lmesh, v1);
-    if (mina < k_min_cos && mina < minb) continue;  // disallow
+    if (mina < k_min_cos && mina < minb) continue;  // Disallow.
     double rss1;
     optimize_local(smesh, setmv, setpts, mvcvih, rss1);
     mina = min_dihedral_about_vertices(lmesh, v1);
     // Return to initial state.
     for (Vertex v : setmv) lmesh.set_point(v, gmesh.point(trvmm(v, lmesh, gmesh)));
-    if (mina < k_min_cos && mina < minb) continue;  // disallow
+    if (mina < k_min_cos && mina < minb) continue;  // Disallow.
     if (rss1 < minrss) {
       minrss = rss1;
       minii = ii;
@@ -993,13 +993,13 @@ EResult try_ecol(Edge eg, double& edrss) {
   if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss)) return R_energy;
   const float mina = min_dihedral_about_vertices(lmesh, v1);
   if (mina < k_min_cos && mina < minb) return R_dih;
-  // ALL SYSTEMS GO
+  // ALL SYSTEMS GO.
   Face f1g = gmesh.face1(eg), f2g = gmesh.face2(eg);
   for (Vertex v : gmesh.vertices(eg))
     for (Edge ee : gmesh.edges(v)) ecand.remove(ee);
   Vertex v1g = gmesh.vertex1(eg);
-  gmesh.collapse_edge(eg);  // keep v1g
-  // add about 12-16 edges
+  gmesh.collapse_edge(eg);  // Keep v1g.
+  // Add about 12-16 edges.
   for (Edge ee : gmesh.edges(v1g)) ecand.add(ee);
   for (Face f : gmesh.faces(v1g)) ecand.add(gmesh.opp_edge(v1g, f));
   local_update_gmesh(smesh, setmv, setpts);
@@ -1015,10 +1015,10 @@ EResult try_esha(Edge eg, double& edrss) {
   bool is_sharp = gmesh.flags(eg).flag(GMesh::eflag_sharp);
   const float vcos = edge_dihedral_angle_cos(gmesh, eg);
   static const float k_cos30d = std::cos(rad_from_deg(30.f));
-  if (!is_sharp && vcos > k_cos30d) return R_sharp;  // quick culling
-  // if is_sharp then always consider smoothing it
+  if (!is_sharp && vcos > k_cos30d) return R_sharp;  // Quick culling.
+  // If is_sharp, then always consider smoothing it.
   HH_STIMER("__try_esha");
-  // setbadpts and setgoodf are empty
+  // Here, setbadpts and setgoodf are empty.
   GMesh lmesh;
   Set<int> setpts, setbadpts;
   double rssf;
@@ -1057,7 +1057,7 @@ EResult try_esha(Edge eg, double& edrss) {
     for (Vertex v : lmesh.vertices(e)) mina = min(mina, min_dihedral_about_vertices(lmesh, v));
     if (mina < k_min_cos && mina < minb) return R_dih;
   }
-  // ALL SYSTEMS GO
+  // ALL SYSTEMS GO.
   is_sharp = !is_sharp;
   gmesh.flags(eg).flag(GMesh::eflag_sharp) = is_sharp;
   if (wf_record) {
@@ -1082,7 +1082,7 @@ EResult try_eswa(Edge eg, double& edrss) {
   const float minb = edge_dihedral_angle_cos(gmesh, eg);
   const float mina = dihedral_angle_cos(gmesh.point(vo1g), gmesh.point(vo2g), gmesh.point(v1g), gmesh.point(v2g));
   if (mina < k_min_cos && mina < minb) return R_dih;
-  // could do culling check if mina > cos5 && minb > cos5 ?
+  // Could do a culling check if mina > cos5 && minb > cos5?
   HH_STIMER("__try_eswa");
   GMesh lmesh;
   Set<int> setpts, setbadpts;
@@ -1101,7 +1101,7 @@ EResult try_eswa(Edge eg, double& edrss) {
   Edge oe = tremm(eg, gmesh, lmesh);
   Vertex v1 = lmesh.vertex1(oe), v2 = lmesh.vertex2(oe);
   Vertex vo1 = lmesh.side_vertex1(oe), vo2 = lmesh.side_vertex2(oe);
-  Edge ne = lmesh.swap_edge(oe);  // new edge is not sharp.  make sharp?
+  Edge ne = lmesh.swap_edge(oe);  // The new edge is not sharp.  Make it sharp?
   Face nf1l = lmesh.face1(ne), nf2l = lmesh.face2(ne);
   Set<Vertex> setmv;
   setmv.enter(v1);
@@ -1125,9 +1125,9 @@ EResult try_eswa(Edge eg, double& edrss) {
   local_all_project(smesh, setgoodf, setpts, setbadpts);
   const double threshrss = rssf - wcrep * feswaasym + (is_sharp ? 1. : 0.) * wcsharp;
   if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss)) return R_energy;
-  // ALL SYSTEMS GO
+  // ALL SYSTEMS GO.
   ecand.remove(eg);
-  Edge neg = gmesh.swap_edge(eg);  // new edge is not sharp!
+  Edge neg = gmesh.swap_edge(eg);  // The new edge is not sharp!
   Face nf1g = gmesh.face1(neg), nf2g = gmesh.face2(neg);
   ecand.add(neg);
   ecand.add(gmesh.edge(v1g, vo1g));
@@ -1149,7 +1149,7 @@ EResult try_espl(Edge eg, double& edrss) {
   Vertex v1g = gmesh.vertex1(eg), v2g = gmesh.vertex2(eg);
   Vertex vo1g = gmesh.side_vertex1(eg), vo2g = gmesh.side_vertex2(eg);
   Face f1g = gmesh.face1(eg), f2g = gmesh.face2(eg);
-  // vo2g and f2g may be zero
+  // Here, vo2g and f2g may be zero.
   HH_STIMER("__try_espl");
   GMesh lmesh;
   Set<int> setpts, setbadpts;
@@ -1170,7 +1170,7 @@ EResult try_espl(Edge eg, double& edrss) {
   Vertex vn = lmesh.split_edge(e);
   Edge eul = lmesh.edge(vn, v2);
   Face nf1l = lmesh.face1(eul), nf2l = lmesh.face2(eul);
-  // edges (vn, vo1) [and (vn, vo2)] are not sharp
+  // Edges (vn, vo1) [and (vn, vo2)] are not sharp.
   Set<Vertex> setmv;
   setmv.enter(vn);
   for (Vertex v : lmesh.vertices(vn)) setmv.enter(v);
@@ -1190,7 +1190,7 @@ EResult try_espl(Edge eg, double& edrss) {
   local_all_project(smesh, setgoodf, setpts, setbadpts);
   const double threshrss = rssf - wcrep - (is_sharp ? 1. : 0.) * wcsharp;
   if (!try_opt(smesh, setmv, setpts, mvcvih, threshrss, edrss)) return R_energy;
-  // ALL SYSTEMS GO
+  // ALL SYSTEMS GO.
   for (Face f : gmesh.faces(eg))
     for (Edge ee : gmesh.edges(f)) ecand.remove(ee);
   Vertex vng = gmesh.split_edge(eg);
@@ -1224,7 +1224,7 @@ void stoc_init() {
     subdivide(smesh, true);
     smesh.update_vertex_positions();
     global_all_project(smesh);
-    // Build up global projection information
+    // Build up global projection information.
     const GMesh& mesh = smesh.mesh();
     for_int(i, co.num()) {
       smesh.orig_face_index(gscmf[i], gcmf[i], gscmfi[i]);
@@ -1281,7 +1281,7 @@ void do_stoc() {
     HH_STIMER("__lattempt");
     i++;
     Edge e = ecand.remove_random(Random::G);
-    gmesh.valid(e);  // optional
+    gmesh.valid(e);  // Optional.
     EOperation op = OP_ecol;
     EResult result = R_illegal;
     double edrss = 0.;
@@ -1326,7 +1326,7 @@ void do_stoc() {
   stoc_end();
   if (verb >= 2) showdf(" last cedis=%g cetot=%g\n", cedis, cetot);
   if (verb >= 2) analyze_mesh("stoc_after ");
-  ecol = gecol = esha = eswa = espl = false;  // reset flags (for perhaps other stoc)
+  ecol = gecol = esha = eswa = espl = false;  // Reset flags (for perhaps another stoc).
 }
 
 void do_reconstruct() {

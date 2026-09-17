@@ -5,15 +5,15 @@
 
 namespace hh {
 
-Random Random::G;  // initialized with a default seed
+Random Random::G;  // Initialized with a default seed.
 
 class Random::Implementation {
-  using Engine = std::mt19937;  // a standard mersenne_twister_engine, implementation-independent!
+  using Engine = std::mt19937;  // A standard mersenne_twister_engine, implementation-independent!
   Engine _engine;
 
  public:
   void seed(uint32_t seedv) {
-    _engine.seed(seedv ^ Engine::default_seed);  // my default zero seed should map to engine's default_seed
+    _engine.seed(seedv ^ Engine::default_seed);  // My default zero seed should map to the engine's default_seed.
   }
   uint32_t operator()() { return _engine(); }
   static constexpr uint32_t k_expected_first_value = 3'499'211'612;
@@ -21,14 +21,14 @@ class Random::Implementation {
 
 int Random::g_init() {
   // This must run after construction of Random::G.
-  assertx(G._impl);  // ensure that G is initialized
+  assertx(G._impl);  // Ensure that G is initialized.
   const int seedv = getenv_int("SEED_RANDOM");
   if (seedv) {
     if (0) {
-      // Note: Warnings class is not yet initialized
+      // Note: the Warnings class is not yet initialized.
       Warning("SEED_RANDOM used");
     }
-    assertx((*G._impl)() == Implementation::k_expected_first_value);  // ensure that G has never been used
+    assertx((*G._impl)() == Implementation::k_expected_first_value);  // Ensure that G has never been used.
     G.seed(seedv);
   }
   return 0;
@@ -62,13 +62,13 @@ Random::result_type Random::operator()() { return get_int<sizeof(result_type)>()
 
 unsigned Random::get_unsigned(unsigned ub) {
   ASSERTX(ub);
-  if (0) {  // unfortunately, implementation-dependent
+  if (0) {  // Unfortunately, implementation-dependent.
     std::uniform_int_distribution<unsigned> distrib(0, ub - 1);
     return distrib(*this);
   } else {
     const bool ub_is_pow2 = (ub & (ub - 1)) == 0;
-    if (ub_is_pow2) return get_unsigned() & (ub - 1);                   // fast case: no need for loop or remainder
-    const unsigned nspans = std::numeric_limits<unsigned>::max() / ub;  // number of whole spans of length ub
+    if (ub_is_pow2) return get_unsigned() & (ub - 1);                   // Fast case: no need for loop or remainder.
+    const unsigned nspans = std::numeric_limits<unsigned>::max() / ub;  // Number of whole spans of length ub.
     const unsigned maxv = nspans * ub;
     for (;;) {
       const unsigned v = get_unsigned();
@@ -93,9 +93,9 @@ double Random::dunif() { return get_unif<double>(); }
 
 template <typename T> T Random::get_gauss() requires std::floating_point<T> {
   static_assert(std::is_floating_point_v<T>);
-  // See experiments in test/opt/test_random.cpp   (Box-Muller transform is best)
+  // See experiments in test/opt/test_random.cpp (the Box-Muller transform is best).
   if (0) {
-    const int k_ngauss = 10;  // number of uniform randoms to obtain Gaussian
+    const int k_ngauss = 10;  // Number of uniform randoms to obtain a Gaussian.
     const double gauss_factor = sqrt(12.) / sqrt(double(k_ngauss));
     double acc = 0.;
     for_int(i, k_ngauss) acc += get_unif<T>();

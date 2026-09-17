@@ -138,8 +138,8 @@ inline TriangleProjectionResult project_aux(const Point& p, const Point& p1, con
 }  // namespace details
 
 // Two bad cases:
-// - v2 == 0 or v3 == 0 (two points of triangle are same) -> ok
-// - v2v3 * v2v3 == v2v2 * v3v3 (!area but v2 != 0 && v3 != 0) -> project on sides
+// - v2 == 0 or v3 == 0 (two points of the triangle are the same) -> ok.
+// - v2v3 * v2v3 == v2v2 * v3v3 (!area but v2 != 0 && v3 != 0) -> project on the sides.
 inline TriangleProjectionResult project_point_triangle(const Point& p, const Point& p1, const Point& p2,
                                                        const Point& p3) {
   const Vector v2 = p2 - p1, v3 = p3 - p1;

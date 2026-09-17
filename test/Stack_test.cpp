@@ -11,7 +11,7 @@ int main() {
   {
     Stack<const S*> s;
     assertx(s.empty());
-    s.push(new S(1));  // never deleted
+    s.push(new S(1));  // Never deleted.
     s.push(new S(2));
     s.push(new S(3));
     SHOW(s.top()->_i);
@@ -80,7 +80,7 @@ int main() {
     stack.push(make_unique<S>(5));
     stack.push(make_unique<S>(6));
     for (auto& e : stack) SHOW(e->_i);
-    for (auto& e : stack) e = nullptr;  // otherwise, ~Stack() may destroy elements in unknown order
+    for (auto& e : stack) e = nullptr;  // Otherwise, ~Stack() may destroy elements in unknown order.
     SHOW("end");
   }
 }

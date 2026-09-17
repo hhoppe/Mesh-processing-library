@@ -9,7 +9,7 @@ namespace hh {
 void Video::init(const Vec3<int>& dims) {
   base::init(dims);
   if (0) {
-    // required for Nv12/YUV support, but VideoViewer uses Video as a container for arbitrary images
+    // Required for Nv12/YUV support, but VideoViewer uses Video as a container for arbitrary images.
     assertx(xsize() % 2 == 0 && ysize() % 2 == 0);
   }
 }
@@ -50,7 +50,7 @@ bool filename_is_video(const string& filename) {
 }
 
 string video_suffix_for_magic_byte(uchar c) {
-  // see also image_suffix_for_magic_byte() and audio_suffix_for_magic_byte()
+  // See also image_suffix_for_magic_byte() and audio_suffix_for_magic_byte().
   // Documentation on prefixes for various video containers:
   //  *.mp4: "\000\000\000\030ftypmp42", "\000\000\000 ftypisom", "\000\000\000\034ftypisom"
   //  *.wmv: "0&\262u"
@@ -88,7 +88,7 @@ Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& f
   Video newvideo = &pnewvideo == &video ? Video() : std::move(pnewvideo);
   assertx(min(syx) >= 0.f);
   Vec2<int> newdims = convert<int>(convert<float>(video.spatial_dims()) * syx + .5f);
-  if (video.attrib().suffix != "avi") newdims = (newdims + 1) / 2 * 2;  // make sizes be even integers
+  if (video.attrib().suffix != "avi") newdims = (newdims + 1) / 2 * 2;  // Make the sizes be even integers.
   if (!product(newdims)) {
     Warning("scaling to zero-sized frame");
     if (0) fill(newdims, 0);
@@ -106,7 +106,7 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
   assertx(min(syx) >= 0.f);
   const Vec2<int> sdims = video_nv12.get_Y().dims().tail<2>();
   Vec2<int> newdims = convert<int>(convert<float>(sdims) * syx + .5f);
-  if (1) newdims = (newdims + 1) / 2 * 2;  // make sizes be even integers
+  if (1) newdims = (newdims + 1) / 2 * 2;  // Make the sizes be even integers.
   if (!product(newdims)) {
     Warning("scaling to zero-sized frame");
     if (0) fill(newdims, 0);

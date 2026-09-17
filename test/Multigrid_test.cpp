@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#define HH_MULTIGRID_TIMER(name)  // override before "Multigrid.h"
+#define HH_MULTIGRID_TIMER(name)  // Override before "Multigrid.h".
 #include "libHh/Multigrid.h"
 
 #include "libHh/Args.h"
@@ -13,7 +13,7 @@ using namespace hh;
 namespace {
 
 // Notes:
-//  see also test_Multigrid2D.cpp and test_Multigrid1D.cpp
+//  See also test_Multigrid2D.cpp and test_Multigrid1D.cpp.
 
 // Read an image into a grid.  Used reference grid_orig rather than return value for template matching.
 template <typename T> void read_image(Image& image, Grid<2, T>& grid_orig) {
@@ -134,16 +134,16 @@ void test(GridView<D, T> grid_orig, Periodic /*unused*/ = Periodic{}) {
 }
 
 struct MultigridPeriodicDim0 {
-  bool operator()(int d) const { return d == 0; }  // only dimension-0 is periodic
+  bool operator()(int d) const { return d == 0; }  // Only dimension-0 is periodic.
 };
 
 }  // namespace
 
 int main(int argc, const char** argv) {
-  // To disable parallelism: OMP_NUM_THREADS=1
+  // To disable parallelism: OMP_NUM_THREADS=1.
   ParseArgs args(argc, argv);
   const bool standard_test = 1;
-  if (standard_test && !args.num()) {  // verify multigrid convergence with different grid dimensions
+  if (standard_test && !args.num()) {  // Verify multigrid convergence with different grid dimensions.
     if (1) {
       test(Grid<1, float>(1025));
       test(Grid<1, float>(257));
@@ -161,7 +161,7 @@ int main(int argc, const char** argv) {
     }
     return 0;
   }
-  if (standard_test && !args.num()) {  // verify multigrid convergence with different grid dimensions
+  if (standard_test && !args.num()) {  // Verify multigrid convergence with different grid dimensions.
     test(Grid<1, float>(1024));
     test(Grid<1, float>(4096));
     test(Grid<1, float>(4095));
@@ -179,7 +179,7 @@ int main(int argc, const char** argv) {
     test(Grid<3, float>(64, 8, 4), MultigridPeriodicDim0());
     return 0;
   }
-  if (0) {  // debug the iterators with normal and interior functions
+  if (0) {  // Debug the iterators with normal and interior functions.
     const auto func_norm = [&](int y, int x) { showf("(%2d, %2d) norm\n", y, x); };
     const auto func_interior = [&](int y, int x) { showf("(%2d, %2d) interior\n", y, x); };
     SHOW("beg");
@@ -200,7 +200,7 @@ int main(int argc, const char** argv) {
     for_2DL_interior(0, 5, 3, 6, func_norm, func_interior);
     return 0;
   }
-  if (0) {  // debug the iterators with normal and interior functions
+  if (0) {  // Debug the iterators with normal and interior functions.
     const auto func_norm = [&](const Vec2<int>& u) { showf("%s norm\n", make_string(u).c_str()); };
     const auto func_interior = [&](size_t i) {
       const Vec2<int> u{int(i / 5), int(i % 5)};
@@ -214,7 +214,7 @@ int main(int argc, const char** argv) {
     for_coordsL_interior(V(5, 5), V(0, 0), V(2, 4), func_norm, func_interior);
     return 0;
   }
-  if (1) {  // reconstruct noise grid from its Laplacian
+  if (1) {  // Reconstruct noise grid from its Laplacian.
     // test_multigrid 256 256 256
     // test_multigrid 4096 4096
     // test_Multigrid 1048576
@@ -232,13 +232,13 @@ int main(int argc, const char** argv) {
       assertnever("");
     }
   }
-  if (0) {  // gradient sharpening
+  if (0) {  // Gradient sharpening.
     float gradient_sharpening, screening_weight;
-    gradient_sharpening = 10.f, screening_weight = 1e8f;  // original
-    gradient_sharpening = 1.f, screening_weight = 0.f;    // original
-    gradient_sharpening = 3.f, screening_weight = 10.f;   // good gradient amplification
-    gradient_sharpening = .7f, screening_weight = 1.f;    // good gradient attenuation
-    gradient_sharpening = 1.5f, screening_weight = 1.f;   // good gradient amplification
+    gradient_sharpening = 10.f, screening_weight = 1e8f;  // Original.
+    gradient_sharpening = 1.f, screening_weight = 0.f;    // Original.
+    gradient_sharpening = 3.f, screening_weight = 10.f;   // Good gradient amplification.
+    gradient_sharpening = .7f, screening_weight = 1.f;    // Good gradient attenuation.
+    gradient_sharpening = 1.5f, screening_weight = 1.f;   // Good gradient amplification.
     string image_name;
     image_name = "multigrid/rampart256.png";
     image_name = "multigrid/rampart2048.png";
@@ -260,7 +260,7 @@ int main(int argc, const char** argv) {
     CGridView<2, Vector4> grid_result = multigrid.result();
     as_image(grid_result).write_file("image_result.bmp");
   }
-  if (0) {  // reconstruct image from its Laplacian
+  if (0) {  // Reconstruct image from its Laplacian.
     string image_name;
     image_name = "multigrid/lake16.png";
     image_name = "multigrid/lake256.png";
@@ -291,7 +291,7 @@ int main(int argc, const char** argv) {
     if (1)
       as_image(Vector4(.5f) + standardize_rms(grid_result - grid_orig) * Vector4(.1f)).write_file("image_err.bmp");
   }
-  if (1) {  // stitch two images together
+  if (1) {  // Stitch two images together.
     string image_name0, image_name1;
     image_name0 = "multigrid/rampart237.png";
     image_name1 = "multigrid/prismatic237.png";
@@ -311,8 +311,8 @@ int main(int argc, const char** argv) {
       if (1) grid_labels[yx] = yx[1] * .7f / grids[0].dim(1) + yx[0] * .2f / grids[0].dim(0) < 0.45f ? 0 : 1;
       if (1 && square(yx[0] - 500) + square(yx[1] - 500) < square(300)) grid_labels[yx] = 2;
     });
-    float screening_weight;  // 2048: 1e-5f good; 1e-6f weak; 1e-4f strong; 3e-5 good too; 1e-7f or 0.f none
-    // 256: 1e-4f good
+    float screening_weight;  // 2048: 1e-5f good; 1e-6f weak; 1e-4f strong; 3e-5 good too; 1e-7f or 0.f none.
+    // 256: 1e-4f good.
     screening_weight = product(dims) >= square(1024) ? 1e-5f : 1e-4f;
     Image image_result(dims);
     for_int(c, 3) {

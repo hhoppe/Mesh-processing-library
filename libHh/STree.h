@@ -30,7 +30,7 @@ template <typename T, typename Less = std::less<T>> requires Copyable<T> class S
   [[nodiscard]] int num() const { return narrow_cast<int>(_s.size()); }
   [[nodiscard]] size_t size() const { return _s.size(); }
   // To avoid ambiguity, e should not equal T{}.
-  bool enter(const T& e) {  // ret: is_new
+  bool enter(const T& e) {  // Returns true if the element is new.
     const auto [it, is_new] = _s.insert(e);
     return is_new;
   }

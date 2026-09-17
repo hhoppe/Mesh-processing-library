@@ -18,7 +18,7 @@ struct MultigridPeriodicTemporally {
 // Determine input frame based on temporal mapping function.
 inline int get_framei(float t, int start, int period) { return start + my_mod(int(t + .5f) - start, period); }
 
-// Fast conversion from uint8_t to float
+// Fast conversion from uint8_t to float.
 inline float to_float(uint8_t uc) {
 #if 0
   static const Vec<float, 256> ar = [] {

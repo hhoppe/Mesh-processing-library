@@ -17,7 +17,7 @@ namespace hh {
 //  may contain 'groups="%s"'    (the model to which this face belongs)
 class Materials {
  public:
-  void read(std::istream& is) {  // must be empty
+  void read(std::istream& is) {  // Must be empty.
     assertx(!_matstrings.num());
     int nmaterials;
     {

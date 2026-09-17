@@ -20,19 +20,19 @@ namespace {
 
 // TODO: Let REFINE() function look at mesh after vsplit?
 
-int maxnfaces = 0;            // number of faces in next request
-bool stringent = false;       // in sel.ref., condition (1) instead of (1')
-bool use_silhouette = false;  // REFINE criterion
-bool use_area = false;        // REFINE criterion
-bool splitcorners = false;    // output meshes: split wid into vertices
-string append_old_pm;         // name of old PM file
+int maxnfaces = 0;            // Number of faces in the next request.
+bool stringent = false;       // In selective refinement, condition (1) instead of (1').
+bool use_silhouette = false;  // A REFINE criterion.
+bool use_area = false;        // A REFINE criterion.
+bool splitcorners = false;    // Split wedges (wid) into vertices in output meshes.
+string append_old_pm;         // Name of the old PM file.
 
-std::optional<RFile> pfi_prog;  // progressive file being read
-GMesh mesh;                     // current mesh
-bool record_changes = false;    // output stream of mesh changes
-bool sel_refinement = false;    // selective refinement is active
-Frame view_frame;               // if sel_refinement
-float view_zoom = 0.f;          // if sel_refinement
+std::optional<RFile> pfi_prog;  // The progressive file being read.
+GMesh mesh;                     // The current mesh.
+bool record_changes = false;    // The output stream of mesh changes.
+bool sel_refinement = false;    // Selective refinement is active.
+Frame view_frame;               // Used only if sel_refinement.
+float view_zoom = 0.f;          // Used only if sel_refinement.
 Frame view_iframe;              // inverse(view_frame)
 const bool sdebug = getenv_bool("FILTERPROG_DEBUG");
 
@@ -98,7 +98,7 @@ class LivingAncestor {
 
  private:
   bool _is_active{false};
-  Map<int, int> _mapvidvid;  // vid -> closest living ancestor vid.
+  Map<int, int> _mapvidvid;  // Maps a vid to its closest living ancestor vid.
 };
 
 void LivingAncestor::activate() {
@@ -902,7 +902,7 @@ struct _save {
   PmVertexAttrib vaovs;
   PmWedgeAttrib wavtflo, wavsflo, wavtfro, wavsfro;
   // Vsplit parameters.
-  Vertex vs, vt, vl, vr;  // vr may be nullptr.
+  Vertex vs, vt, vl, vr;  // The vertex vr may be nullptr.
   int ii;
   // After vsplit.
   Set<int> wid_read;
@@ -1185,7 +1185,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
     case 'F':
       if (const char* s = after_prefix(sline, "Face ")) {
         // NOTE: because of reverselines, face2 arrives before face1!
-        // Note: still true with std::swap(vs, vt) and collapse_edge_vertex
+        // Note: still true with std::swap(vs, vt) and collapse_edge_vertex.
         PArray<Vertex, 3> va;
         const int fi = int_from_chars(s);
         for (;;) {

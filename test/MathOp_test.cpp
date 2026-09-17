@@ -55,7 +55,7 @@ int main() {
     const Array<float> ar = {100.f, 102.f, 103.f, 110.f, 100.f, 90.f, 80.f, 71.f};
     const int n = 20;
     for_int(i, n) {
-      const float x = i / (n - 1.f);  // x in [0, 1]
+      const float x = i / (n - 1.f);  // Here, x in [0, 1].
       const int degree = 3;
       const float v = eval_uniform_bspline(ar, degree, x);
       showf("x=%7.4f   v=%6.3f\n", x, v);

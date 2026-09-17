@@ -15,14 +15,14 @@ void SplitRecord::write(std::ostream& os) const {
 }
 
 bool SplitRecord::read(std::istream& is) {
-  // get vs and vt
+  // Get vs and vt.
   if (!(is >> _vsid)) return true;
   assertx(is >> _vtid);
 
   assertx(_vsid > 0 && _vtid > 0);
   assertx(is.get() == '\n');
 
-  // get the code
+  // Get the code.
   int c;
   while ((c = is.get()) != '\n') {
     assertx(c >= 0);
@@ -30,11 +30,11 @@ bool SplitRecord::read(std::istream& is) {
   }
   _outcome.push(-1);
 
-  // get the position bit
+  // Get the position bit.
   assertx(is >> _pos_bit);
   assertx(is >> _deltap[0] >> _deltap[1] >> _deltap[2]);
 
-  // get the material ids
+  // Get the material ids.
   int dim, id, matid;
   assertx(is >> dim);
   while (dim != -1) {
@@ -47,7 +47,7 @@ bool SplitRecord::read(std::istream& is) {
     assertx(is >> dim);
   }
 
-  // get the partition area
+  // Get the partition area.
   float area;
   assertx(is >> dim);
   while (dim != -1) {
@@ -84,23 +84,23 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
     assertx(pq[dim].remove_min() == vs);
     int outcome = getNextOutcome();
 
-    // debug
+    // Debug.
     assertx(outcome == 9);
     outcome = getNextOutcome();
 
     vt = K.createSimplex(0);
     const Point& vsp = vs->getPosition();
     const Point& dp = _deltap;
-    // always set vt's position
+    // Always set vt's position.
     vt->setPosition(Point(dp[0] + vsp[0], dp[1] + vsp[1], dp[2] + vsp[2]));
 
-    // if vs is at a former midpoint need to update vs as well
+    // If vs is at a former midpoint need to update vs as well.
     if (_pos_bit == 0)  // Midpoint.
       vs->setPosition(Point(vsp[0] - dp[0], vsp[1] - dp[1], vsp[2] - dp[2]));
 
     if (outcome == SplitRecord::V_NOEDGE && vs->isPrincipal()) {
     }
-    if (outcome == SplitRecord::V_EDGE) {  // create edge between vs and vt
+    if (outcome == SplitRecord::V_EDGE) {  // Create edge between vs and vt.
 
       Simplex e = K.createSimplex(1);
       e->setChild(0, vs);
@@ -119,11 +119,11 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
     Simplex e = pq[dim].remove_min();
     int outcome = getNextOutcome();
 
-    // debug
+    // Debug.
     assertx(outcome == 8);
     outcome = getNextOutcome();
 
-    if (outcome == SplitRecord::E_VT) {  // map e from vs to vt
+    if (outcome == SplitRecord::E_VT) {  // Map e from vs to vt.
       vs->removeParent(e);
       vt->addParent(e);
       if (e->getChild(0) == vs) {
@@ -160,16 +160,16 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
   while (!pq[dim].empty()) {
     Simplex f = pq[dim].remove_min();
     int outcome = getNextOutcome();
-    // debug
+    // Debug.
     assertx(outcome == 7);
     outcome = getNextOutcome();
-    if (outcome == SplitRecord::F_VT) {  // map from vs to vt
+    if (outcome == SplitRecord::F_VT) {  // Map from vs to vt.
       for (auto [ei, e] : views::enumerate(f->children())) {
-        // vertex opposite to vs
+        // Vertex opposite to vs.
         Simplex voppvs = e->opp_vertex(vs);
-        // if such vertex exists, ie if e is not opp_edge(vs)
+        // If such vertex exists, i.e. if e is not opp_edge(vs).
         if (voppvs) {
-          // map e to edge adjacent to vt
+          // Map e to edge adjacent to vt.
           e->removeParent(f);
           Simplex newe = assertx(voppvs->edgeTo(vt));
           f->setChild(int(ei), newe);
@@ -229,23 +229,23 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
     assertx(pq[dim].remove_min() == vs);
     int outcome = getNextOutcome();
 
-    // debug
+    // Debug.
     assertx(outcome == 9);
     outcome = getNextOutcome();
 
     vt = K.createSimplex(0);
     const Point& vsp = vs->getPosition();
     const Point& dp = _deltap;
-    // always set vt's position
+    // Always set vt's position.
     vt->setPosition(Point(dp[0] + vsp[0], dp[1] + vsp[1], dp[2] + vsp[2]));
 
-    // if vs is at a former midpoint need to update vs as well
+    // If vs is at a former midpoint need to update vs as well.
     if (_pos_bit == 0)  // Midpoint.
       vs->setPosition(Point(vsp[0] - dp[0], vsp[1] - dp[1], vsp[2] - dp[2]));
 
     if (outcome == SplitRecord::V_NOEDGE && vs->isPrincipal()) {
     }
-    if (outcome == SplitRecord::V_EDGE) {  // create edge between vs and vt
+    if (outcome == SplitRecord::V_EDGE) {  // Create edge between vs and vt.
       Simplex e = K.createSimplex(1);
       e->setChild(0, vs);
       e->setChild(1, vt);
@@ -263,11 +263,11 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
     Simplex e = pq[dim].remove_min();
     int outcome = getNextOutcome();
 
-    // debug
+    // Debug.
     assertx(outcome == 8);
     outcome = getNextOutcome();
 
-    if (outcome == SplitRecord::E_VT) {  // map e from vs to vt
+    if (outcome == SplitRecord::E_VT) {  // Map e from vs to vt.
       vs->removeParent(e);
       vt->addParent(e);
       if (e->getChild(0) == vs) {
@@ -305,16 +305,16 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
   while (!pq[dim].empty()) {
     Simplex f = pq[dim].remove_min();
     int outcome = getNextOutcome();
-    // debug
+    // Debug.
     assertx(outcome == 7);
     outcome = getNextOutcome();
-    if (outcome == SplitRecord::F_VT) {  // map from vs to vt
+    if (outcome == SplitRecord::F_VT) {  // Map from vs to vt.
       for (auto [ei, e] : views::enumerate(f->children())) {
-        // vertex opposite to vs
+        // Vertex opposite to vs.
         Simplex voppvs = e->opp_vertex(vs);
-        // if such vertex exists, ie if e is not opp_edge(vs)
+        // If such vertex exists, i.e. if e is not opp_edge(vs).
         if (voppvs) {
-          // map e to edge adjacent to vt
+          // Map e to edge adjacent to vt.
           e->removeParent(f);
           Simplex newe = assertx(voppvs->edgeTo(vt));
           f->setChild(int(ei), newe);
@@ -375,7 +375,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
     assertx(pq[dim].remove_min() == vs);
     int outcome = getNextOutcome();
 
-    // debug
+    // Debug.
     assertx(outcome == 9);
     outcome = getNextOutcome();
 
@@ -383,16 +383,16 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
     new_simplices.push_back(vt);
     const Point& vsp = vs->getPosition();
     const Point& dp = _deltap;
-    // always set vt's position
+    // Always set vt's position.
     vt->setPosition(Point(dp[0] + vsp[0], dp[1] + vsp[1], dp[2] + vsp[2]));
 
-    // if vs is at a former midpoint need to update vs as well
+    // If vs is at a former midpoint need to update vs as well.
     if (_pos_bit == 0)  // Midpoint.
       vs->setPosition(Point(vsp[0] - dp[0], vsp[1] - dp[1], vsp[2] - dp[2]));
 
     if (outcome == SplitRecord::V_NOEDGE && vs->isPrincipal()) {
     }
-    if (outcome == SplitRecord::V_EDGE) {  // create edge between vs and vt
+    if (outcome == SplitRecord::V_EDGE) {  // Create edge between vs and vt.
 
       Simplex e = K.createSimplex(1);
       new_simplices.push_back(e);
@@ -412,11 +412,11 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
     Simplex e = pq[dim].remove_min();
     int outcome = getNextOutcome();
 
-    // debug
+    // Debug.
     assertx(outcome == 8);
     outcome = getNextOutcome();
 
-    if (outcome == SplitRecord::E_VT) {  // map e from vs to vt
+    if (outcome == SplitRecord::E_VT) {  // Map e from vs to vt.
       vs->removeParent(e);
       vt->addParent(e);
       if (e->getChild(0) == vs) {
@@ -455,16 +455,16 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
   while (!pq[dim].empty()) {
     Simplex f = pq[dim].remove_min();
     int outcome = getNextOutcome();
-    // debug
+    // Debug.
     assertx(outcome == 7);
     outcome = getNextOutcome();
-    if (outcome == SplitRecord::F_VT) {  // map from vs to vt
+    if (outcome == SplitRecord::F_VT) {  // Map from vs to vt.
       for (auto [ei, e] : views::enumerate(f->children())) {
-        // vertex opposite to vs
+        // Vertex opposite to vs.
         Simplex voppvs = e->opp_vertex(vs);
-        // if such vertex exists, ie if e is not opp_edge(vs)
+        // If such vertex exists, i.e. if e is not opp_edge(vs).
         if (voppvs) {
-          // map e to edge adjacent to vt
+          // Map e to edge adjacent to vt.
           e->removeParent(f);
           Simplex newe = assertx(voppvs->edgeTo(vt));
           f->setChild(int(ei), newe);

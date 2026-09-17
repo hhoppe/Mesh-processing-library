@@ -160,7 +160,7 @@ void test4() {
           case 1: identity_mat(A); break;
           default: assertnever("");
         }
-        if (inormalize) for_int(i, n) normalize(column(A, i));  // possibly normalize the columns
+        if (inormalize) for_int(i, n) normalize(column(A, i));  // Possibly normalize the columns.
         if (1) {
           Matrix<Real> U(m, n);
           Array<Real> S(n);

@@ -40,7 +40,7 @@ class Lls : noncopyable {
     for_int(r, _n) enter_xest_rc(r, c, ar[r]);
   }
   void enter_xest_rc(int r, int c, float val) { _x[c, r] = val; }                        // r < _n, c < _nd
-  [[nodiscard]] virtual bool solve(double* rssb = nullptr, double* rssa = nullptr) = 0;  // ret: success
+  [[nodiscard]] virtual bool solve(double* rssb = nullptr, double* rssa = nullptr) = 0;  // Returns success.
   void get_x(MatrixView<float> mat);                                                     // [_n, _nd]
   void get_x_r(int r, ArrayView<float> ar) {
     ASSERTX(ar.num() == _nd);
@@ -55,8 +55,8 @@ class Lls : noncopyable {
 
  protected:
   int _m, _n, _nd;
-  Matrix<float> _b;     // [_nd, _m]; transpose of client view
-  Matrix<float> _x;     // [_nd, _n]; transpose of client view
+  Matrix<float> _b;     // [_nd, _m]; transpose of the client view.
+  Matrix<float> _x;     // [_nd, _n]; transpose of the client view.
   bool _solved{false};  // solve() can destroy A, so check
   Lls(int m, int n, int nd);
 };
@@ -70,9 +70,9 @@ class SparseLls : public Lls {
   void enter_a_r(int r, CArrayView<float> ar) override;
   void enter_a_c(int c, CArrayView<float> ar) override;
   [[nodiscard]] bool solve(double* rssb = nullptr, double* rssa = nullptr) override;
-  void set_tolerance(float tolerance);  // default square(8e-7) * m  (because x is float) (was 1e-10f)
-  void set_max_iter(int max_iter);      // default std::numeric_limits<int>::max()
-  void set_verbose(int verb);           // default 0
+  void set_tolerance(float tolerance);  // Default square(8e-7) * m  (because x is float) (was 1e-10f).
+  void set_max_iter(int max_iter);      // Default std::numeric_limits<int>::max().
+  void set_verbose(int verb);           // Default 0.
  private:
   struct Ival {
     int _i;

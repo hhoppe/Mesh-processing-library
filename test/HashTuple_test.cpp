@@ -16,7 +16,7 @@ int main() {
       SHOW(my_hash(std::tuple(1, 3.f, true)));
       SHOW(my_hash(std::tuple(2, 2.f, true)));
     }
-    Set<size_t> set;  // verify all unique
+    Set<size_t> set;  // Verify all unique.
     assertx(set.add(my_hash(std::tuple(1, 2.f, true))));
     assertx(set.add(my_hash(std::tuple(1, 2.f, false))));
     assertx(set.add(my_hash(std::tuple(1, 3.f, true))));

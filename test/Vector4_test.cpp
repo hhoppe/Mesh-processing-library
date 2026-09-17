@@ -90,7 +90,7 @@ int main() {
     to_norm(Vector4(0.f, 1.f, 2.f, 3.f) / 255.f);
     to_norm(Vector4(100.f, 101.f, 102.f, 103.f) / 255.f);
   }
-  if (0) {  // huge numbers fail the conversion to int32_t
+  if (0) {  // Huge numbers fail the conversion to int32_t.
     to_norm(Vector4(2147483583.f, 2147483584.f, 2147483647.f, BIGFLOAT) / 255.f);
     to_norm(Vector4(-2147483580.f, -2147483582.f, -2147483647.f, -BIGFLOAT) / 255.f);
   }
@@ -98,7 +98,7 @@ int main() {
   {
     // Fails: static_assert(std::is_trivially_copyable_v<Vector4>);
 #if defined(HH_VECTOR4_SSE)
-    static_assert(std::is_trivially_copyable_v<__m128>);  // true
+    static_assert(std::is_trivially_copyable_v<__m128>);  // True.
 #endif
   }
 #endif

@@ -4,8 +4,8 @@
 // We get better read/write performance by directly calling Media Foundation, at least in Windows 7.
 // But, use of ffmpeg is convenient for its portability and quality.
 
-#define HH_VIDEO_HAVE_MF      // unless disabled below
-#define HH_VIDEO_HAVE_FFMPEG  // always as fallback
+#define HH_VIDEO_HAVE_MF      // Unless disabled below.
+#define HH_VIDEO_HAVE_FFMPEG  // Always as a fallback.
 
 #if !defined(_MSC_VER) || defined(HH_NO_WINDOWS_MEDIA_FOUNDATION)
 #undef HH_VIDEO_HAVE_MF
@@ -20,7 +20,7 @@
 #define WIN32_LEAN_AND_MEAN
 #include <Windows.h>  // required by Media Foundation; must appear before other headers.
 
-#pragma warning(disable : 5204 5246)  // for <mfapi.h>
+#pragma warning(disable : 5204 5246)  // For <mfapi.h>.
 
 #include <VersionHelpers.h>  // IsWindows8OrGreater()
 #include <codecapi.h>        // CODECAPI_AVEncMPVGOPSize, etc.
@@ -101,7 +101,7 @@ void Video::read_file(const string& filename) {
   attrib() = rvideo.attrib();
   const int nfexpect = rvideo.nframes();
   assertw(nfexpect > 0);
-  const int padframes = 2;  // because may read a different number of frames
+  const int padframes = 2;  // Because we may read a different number of frames.
   init(nfexpect + padframes, rvideo.spatial_dims());
   {
     ConsoleProgress cprogress("Vread");
@@ -124,9 +124,9 @@ void Video::read_file(const string& filename) {
 void Video::write_file(const string& filename) const {
   HH_TIMER("_write_video");
   assertx(size());
-  verify_attrib(const_cast<Video&>(*this).attrib());  // mutable
+  verify_attrib(const_cast<Video&>(*this).attrib());  // Mutable.
   const string suffix = to_lower(get_path_extension(filename));
-  if (suffix != "") const_cast<Video&>(*this).attrib().suffix = suffix;  // mutable
+  if (suffix != "") const_cast<Video&>(*this).attrib().suffix = suffix;  // Mutable.
   const bool use_nv12 = false;
   WVideo wvideo(filename, spatial_dims(), attrib(), use_nv12);
   ConsoleProgress cprogress("Vwrite");
@@ -147,7 +147,7 @@ void VideoNv12::read_file(const string& filename, Video::Attrib* pattrib) {
   if (pattrib) *pattrib = rvideo.attrib();
   const int nfexpect = rvideo.nframes();
   assertw(nfexpect > 0);
-  const int padframes = 2;  // because may read a different number of frames
+  const int padframes = 2;  // Because we may read a different number of frames.
   init(concat(V(nfexpect + padframes), rvideo.spatial_dims()));
   {
     ConsoleProgress cprogress("Vread");
@@ -192,7 +192,7 @@ class RVideo::Implementation {
   virtual ~Implementation() = default;
   [[nodiscard]] virtual string name() const = 0;
   virtual bool read(MatrixView<Pixel> frame) = 0;
-  virtual bool read_nv12(Nv12View frame) {  // default slow path
+  virtual bool read_nv12(Nv12View frame) {  // Default slow path.
     const Vec2<int> sdims = _rvideo.spatial_dims();
     assertx(frame.get_Y().dims() == sdims);
     Matrix<Pixel> tframe(frame.get_Y().dims());
@@ -200,7 +200,7 @@ class RVideo::Implementation {
     convert_Image_to_Nv12(tframe, frame);
     return true;
   }
-  virtual bool discard_frame() {  // default slow path
+  virtual bool discard_frame() {  // Default slow path.
     const Vec2<int> sdims = _rvideo.spatial_dims();
     if (_rvideo._use_nv12) {
       Nv12 nv12(sdims);
@@ -222,7 +222,7 @@ class WVideo::Implementation {
   virtual ~Implementation() = default;
   [[nodiscard]] virtual string name() const = 0;
   virtual void write(CMatrixView<Pixel> frame) = 0;
-  virtual void write_nv12(CNv12View frame) {  // default slow path
+  virtual void write_nv12(CNv12View frame) {  // Default slow path.
     assertx(product(_wvideo.spatial_dims()));
     assertx(frame.get_Y().dims() == _wvideo.spatial_dims());
     Matrix<Pixel> tframe(frame.get_Y().dims());
@@ -338,7 +338,7 @@ void WVideo::write(CNv12View frame) {
 
 // Supported Media Formats in Media Foundation
 // https://learn.microsoft.com/en-us/windows/win32/medfound/supported-media-formats-in-media-foundation
-// Containers: 3gp, asf, wma, wmv, aac, adts, avi, mp3, m4a, v4v, mov, mp4, sami, smi, wav
+// Containers: 3gp, asf, wma, wmv, aac, adts, avi, mp3, m4a, v4v, mov, mp4, sami, smi, wav.
 
 #define AS(expr) assertx(SUCCEEDED(expr))
 
@@ -350,26 +350,26 @@ class Initialize_COM_MF {
     if (s_num_video_uses++) {
       if (0) return;
     }
-    // default may be COINIT_MULTITHREADED, but VT code assumes COINIT_APARTMENTTHREADED
+    // The default may be COINIT_MULTITHREADED, but VT code assumes COINIT_APARTMENTTHREADED.
     if (0) {
       // The following could work if we could guarantee that VT initialization occurred before this call.
       const HRESULT hr = CoInitializeEx(nullptr, COINIT_MULTITHREADED);
       assertx(SUCCEEDED(hr) || hr == RPC_E_CHANGED_MODE);
     } else {
       const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-      assertx(SUCCEEDED(hr) || hr == S_FALSE);  // may equal S_FALSE if COM was previously initialized
+      assertx(SUCCEEDED(hr) || hr == S_FALSE);  // May equal S_FALSE if COM was previously initialized.
     }
-    AS(MFStartup(MF_VERSION, MFSTARTUP_FULL));  // initialize Media Foundation
+    AS(MFStartup(MF_VERSION, MFSTARTUP_FULL));  // Initialize Media Foundation.
   }
   ~Initialize_COM_MF() {
     if (--s_num_video_uses) return;
-    if (1) return;  // there may still be other users, such as Vision Tools.
+    if (1) return;  // There may still be other users, such as Vision Tools.
     AS(MFShutdown());
     CoUninitialize();
   }
 
  private:
-  static std::atomic<int> s_num_video_uses;  // only release MediaFoundation and COM when this reaches zero
+  static std::atomic<int> s_num_video_uses;  // Only release MediaFoundation and COM when this reaches zero.
 };
 
 std::atomic<int> Initialize_COM_MF::s_num_video_uses;
@@ -396,7 +396,7 @@ void retrieve_strided_BGRA(const uint8_t* pData, int stride, MatrixView<Pixel> f
   for_int(y, ny) {
     const uint8_t* ps = pData + size_t(y) * stride;
     for_int(x, nx) {
-      // BGRA to RGBA
+      // BGRA to RGBA.
       pd[0] = ps[2];
       pd[1] = ps[1];
       pd[2] = ps[0];
@@ -499,12 +499,12 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
       _rvideo._attrib.framerate = double(vnum) / double(vdenom);
       if (0) SHOW(_rvideo._attrib.framerate, duration);
       Vec3<int>& dims = _rvideo._dims;
-      dims[0] = int(_rvideo._attrib.framerate * duration + .5);  // set nframes
+      dims[0] = int(_rvideo._attrib.framerate * duration + .5);  // Set nframes.
       UINT32 tx = 0;
       UINT32 ty = 0;
       AS(MFGetAttributeSize(pType, MF_MT_FRAME_SIZE, &tx, &ty));
-      dims[1] = int(ty), dims[2] = int(tx);  // set ysize, xsize
-      _mf_ny = dims[1], _mf_nx = dims[2];    // initial settings
+      dims[1] = int(ty), dims[2] = int(tx);  // Set ysize, xsize.
+      _mf_ny = dims[1], _mf_nx = dims[2];    // Initial settings.
       UINT32 bitrate = 0;
       if (!SUCCEEDED(pType->GetUINT32(MF_MT_AVG_BITRATE, &bitrate))) bitrate = 0;
       _rvideo._attrib.bitrate = int(bitrate);
@@ -566,7 +566,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
       } else {
         if (stride == sdims[1] * 4) {
           MatrixView<Pixel> mat(reinterpret_cast<Pixel*>(const_cast<uint8_t*>(pData)), sdims);
-          for (Pixel& pixel : mat) std::swap(pixel[0], pixel[2]);  // BGRA to RGBA
+          for (Pixel& pixel : mat) std::swap(pixel[0], pixel[2]);  // BGRA to RGBA.
           convert_Image_to_Nv12(mat, nv12v);
         } else {  // slower path
           Matrix<Pixel> mat(sdims);
@@ -617,7 +617,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
   static bool supported() { return true; }
 
  private:
-  Initialize_COM_MF _init_com_mf;  // must be declared first, to be destroyed after remaining members
+  Initialize_COM_MF _init_com_mf;  // Must be declared first, to be destroyed after the remaining members.
   com_ptr<IMFByteStream> _pByteStream;
   com_ptr<IMFSourceReader> _pReader;
   bool _impl_nv12;
@@ -650,7 +650,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
     // Note that Media Foundation does not support *.avi as an output format;
     //  see: https://msdn.microsoft.com/en-us/library/dd757927(VS.85).aspx
     else if (0 && attrib.suffix == "avi")
-      videoOutputFormat = MFVideoFormat_420O;  // 8bpc planar YUV 4:2:0
+      videoOutputFormat = MFVideoFormat_420O;  // 8bpc planar YUV 4:2:0.
     else
       throw std::runtime_error("Video: encoder suffix '" + attrib.suffix + "' not recognized");
     // See Tutorial: Using the Sink Writer to Encode Video (Windows)
@@ -665,7 +665,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       AS(pAttributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, TRUE));
       // AS(pAttributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, FALSE));  // no effect
       // AS(pAttributes->SetUINT32(MF_READWRITE_DISABLE_CONVERTERS, TRUE));  // causes it to fail
-      AS(pAttributes->SetUINT32(MF_SOURCE_READER_ENABLE_VIDEO_PROCESSING, TRUE));  // no effect
+      AS(pAttributes->SetUINT32(MF_SOURCE_READER_ENABLE_VIDEO_PROCESSING, TRUE));  // No effect.
       // AS(pAttributes->SetUINT32(MF_SOURCE_READER_ENABLE_VIDEO_PROCESSING, FALSE));  // no effect
       IMFByteStream* const k_ByteStream = nullptr;
       if (FAILED(MFCreateSinkWriterFromURL(utf16_from_utf8(_wvideo._filename).c_str(), k_ByteStream,
@@ -698,7 +698,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       AS(MFSetAttributeRatio(pMediaTypeIn, MF_MT_PIXEL_ASPECT_RATIO, 1, 1));
       com_ptr<IMFAttributes> pAttributes;  // pEncodingParameters
       // IMFAttributes* const pEncodingParameters = nullptr;
-      if (0) {  // untested
+      if (0) {  // Untested.
         AS(MFCreateAttributes(&pAttributes, 10));
         if (0) {
           const unsigned force_keyframe_every_nframes = 20;
@@ -716,7 +716,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
   }
   ~Mf_WVideo_Implementation() override {
     if (_pSinkWriter) AS(_pSinkWriter->Finalize());
-    // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor
+    // Note that _init_com_mf.~Initialize_COM_MF() is called after this destructor.
   }
   [[nodiscard]] string name() const override { return "mf"; }
   void write(CMatrixView<Pixel> frame) override {
@@ -733,7 +733,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
         uint8_t* pd = pData;
         const uint8_t* ps = frame.data()->data();
         for_int(i, sdims[0] * sdims[1]) {
-          // RGBA to BGRA
+          // RGBA to BGRA.
           pd[0] = ps[2];
           pd[1] = ps[1];
           pd[2] = ps[0];
@@ -769,7 +769,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       LockIMFMediaBuffer lock(pBuffer);
       uint8_t* pData = lock();
       if (_impl_nv12) {
-        // Media Foundation MP4 encoding under Win7 may have poor quality; it is independent of this workaround
+        // Media Foundation MP4 encoding under Win7 may have poor quality; it is independent of this workaround.
         MatrixView<uint8_t> matY(pData, _wvideo.spatial_dims());
         MatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<Vec2<uint8_t>*>(pData + size_t(sdims[0]) * sdims[1]),
                                         _wvideo.spatial_dims() / 2);
@@ -778,7 +778,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       } else {
         MatrixView<Pixel> mat(reinterpret_cast<Pixel*>(pData), _wvideo.spatial_dims());
         convert_Nv12_to_Image(nv12v, mat);
-        for (Pixel& pixel : mat) std::swap(pixel[0], pixel[2]);  // RGBA to BGRA
+        for (Pixel& pixel : mat) std::swap(pixel[0], pixel[2]);  // RGBA to BGRA.
       }
     }
     AS(pBuffer->SetCurrentLength(cbBuffer));
@@ -793,13 +793,13 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
   static bool supported() { return true; }
 
  private:
-  Initialize_COM_MF _init_com_mf;  // must be declared first, to be destroyed after remaining members
+  Initialize_COM_MF _init_com_mf;  // Must be declared first, to be destroyed after the remaining members.
   com_ptr<IMFSinkWriter> _pSinkWriter;
   DWORD _streamIndex;
   UINT64 _rtDuration;
   LONGLONG _rtStart{0};
-  bool _impl_nv12;  // otherwise, Windows 7 Media Foundation shifts colors during MP4 compression!
-  // for *.wmv files, _impl_nv12 does not speed up compression -- it is always about 3x slower than MP4 in Win7.
+  bool _impl_nv12;  // Otherwise, Windows 7 Media Foundation shifts colors during MP4 compression!
+  // For *.wmv files, _impl_nv12 does not speed up compression; it is always about 3x slower than MP4 in Win7.
 };
 
 #else
@@ -833,7 +833,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
     // This prefix is necessary to get a correct frame count in the case of *.gif generated from ffmpeg.
     const string prefix = ends_with(filename, ".gif") ? " -r 60 -vsync vfr" : "";
 
-    {  // read header for dimensions and attributes (ignore video and audio data)
+    {  // Read the header for dimensions and attributes (ignore video and audio data).
       // 2>&1 works on both Unix bash shell and Windows cmd shell: https://stackoverflow.com/questions/1420965/
       // Ideally, <nul and/or </dev/null so that "vv ~/proj/fastloops/data/assembled_all_loops_uhd.mp4" does
       //  not stop responding.
@@ -862,7 +862,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
       if (ldebug) SHOW(s);
       RFile fi(s);
       Vec3<int> dims{0, 0, 0};
-      double total_bitrate = 1'000'000.;  // a default value of 1Mbps
+      double total_bitrate = 1'000'000.;  // A default value of 1 Mbps.
       double video_bitrate = -1.;
       double framerate = -1.;
       bool yuv444p = false;
@@ -1045,14 +1045,14 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
     if (0 && attrib.suffix == "mp4") ocodec = " -vcodec h264";
     if (0 && attrib.suffix == "mov") ocodec = " -vcodec h264";
     if (attrib.suffix == "avi") {
-      ocodec = " -c:v ffvhuff";  // "effectively lossless"
-      opixfmt = "yuv444p";       // lossless (not NV12 like "yuv420p")
+      ocodec = " -c:v ffvhuff";  // Effectively lossless.
+      opixfmt = "yuv444p";       // Lossless (not NV12 like "yuv420p").
       if (_wvideo._use_nv12) Warning("Using NV12 to write to a *.avi Video with yuv444p encoding");
     }
     Audio& audio = attrib.audio;
     if (audio.size()) {
       if (ldebug) SHOW("previously", audio.attrib().suffix);
-      audio.attrib().suffix = "aac";  // or "mp3"
+      audio.attrib().suffix = "aac";  // Or "mp3".
       // Create a temporary file containing the audio encoded as aac.
       _tmpfile_audio.emplace(audio.attrib().suffix);
       try {
@@ -1100,7 +1100,7 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
   static bool supported() { return ffmpeg_command_exists(); }
 
  private:
-  std::optional<TmpFile> _tmpfile_audio;  // lifespan should be longer than _pfi
+  std::optional<TmpFile> _tmpfile_audio;  // Lifespan should be longer than _pfi.
   std::optional<WFile> _pfi;
   Nv12 _frame_nv12_tmp;
   Matrix<Pixel> _frame_rgb_tmp;

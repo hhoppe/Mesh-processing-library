@@ -4,7 +4,7 @@
 
 // #define WIN32_LEAN_AND_MEAN  // not possible
 #undef NOGDI
-#define Polygon Win32_Polygon  // avoid name collision on symbol Polygon
+#define Polygon Win32_Polygon  // Avoid name collision on symbol Polygon.
 #include <Windows.h>           // required by OpenGL
 #undef Polygon
 #undef small  // <windows.h> defines 'small':  "#define small char" in ./shared/rpcndr.h
@@ -24,15 +24,15 @@ class Hw : public HwBase {
  public:
   Hw() = default;
 
-  // call anytime after init() before open():
+  // Call anytime after init() before open():
   void set_double_buffering(bool newstate) override;
   void open() override;
 
-  // call anytime after init():
+  // Call anytime after init():
   void set_window_title(string s) override;
   void beep() override;
 
-  // call after open():
+  // Call after open():
   bool suggests_stop() override;
   std::optional<Vec2<int>> get_pointer() override;
   bool get_key_modifier(EModifier modifier) override;
@@ -45,11 +45,11 @@ class Hw : public HwBase {
   void make_fullscreen(bool b) override;
   void grab_focus() override;
 
-  // call within draw_window():
+  // Call within draw_window():
   void clear_window() override;
   void hard_flush() override;
 
-  // call outside draw_window():
+  // Call outside draw_window():
   Array<string> query_open_filenames(const string& hint_filename) override;
   string query_save_filename(const string& hint_filename, bool force) override;
   void begin_draw_visible() override;
@@ -62,12 +62,12 @@ class Hw : public HwBase {
 
  private:
   MMRESULT _sk_timerID{0};
-  UINT _sk_timerResolution{0};  // Max tolerable error in timer delay (mSec)
+  UINT _sk_timerResolution{0};  // Max tolerable error in timer delay (mSec).
   bool _iconic{false};
-  bool _maximize{false};    // command-line desire
-  bool _fullscreen{false};  // command-line desire
+  bool _maximize{false};    // Command-line desire.
+  bool _fullscreen{false};  // Command-line desire.
   int _scr_bpp{24};
-  int _scr_zbufbits{24};  // was previously 16
+  int _scr_zbufbits{24};  // Was previously 16.
   int _scr_stencilbits{0};
   int _multisample{0};
   bool _extra_console_visible{false};
@@ -76,7 +76,7 @@ class Hw : public HwBase {
   HDC _hDC;
   HDC _hRenderDC;
   HGLRC _hRC;
-  MSG _msg;  // the current window-message
+  MSG _msg;  // The current window-message.
 
   bool init_aux(Array<string>& aargs) override;
   void start_hwkey() override;
@@ -86,7 +86,7 @@ class Hw : public HwBase {
   bool loop() override;
   void draw_text_internal(const Vec2<int>& yx, const string& s) override;
 
-  bool got_event();  // get event, ret: have an event ready
+  bool got_event();  // Get an event; returns whether an event is ready.
   void handle_events();
   void handle_event();
   void handle_key(int why_called, WPARAM key_data);

@@ -55,7 +55,7 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
   for_int(iter, niter) {
     Matrix<float> x(ne, m);
     {
-      // Expectation step
+      // Expectation step:
       //  x = inv(CT * C) * CT * data;   i.e. least-squares solution of C x = data;
       //  C[n][ne] = mc;  x[ne][m];  data[n][m] = transpose(mi);  x is projection of data into C.
       QrdLls lls(n, ne, m);
@@ -66,12 +66,12 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
     }
     {
       // Maximization step
-      //  C = data*xT*inv(x*xT);   i.e. least-squares solution of xT CT = dataT
+      //  C = data * xT * inv(x * xT);   i.e. least-squares solution of xT CT = dataT.
       QrdLls lls(m, ne, n);
       for_int(i, ne) lls.enter_a_c(i, x[i]);
       lls.enter_b(mi);
       if (!lls.solve()) return false;
-      lls.get_x(mo);  // use mo[ne][n] as temporary variable
+      lls.get_x(mo);  // Use mo[ne][n] as a temporary variable.
       mc = transpose(mo);
     }
   }
@@ -80,7 +80,7 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
   // evec = C*xevec;   [n][ne]=[n][ne]*[ne][ne]
   orthonormalize_columns(mc);
   Matrix<float> xt(m, ne);
-  // xt = (CT*data)T = dataT*C = mi*mc
+  // xt = (CT * data)T = dataT * C = mi * mc.
   for_int(r, m) for_int(c, ne) {
     double s = 0.;
     for_int(j, n) s += mi[r, j] * mc[j, c];
@@ -89,7 +89,7 @@ bool em_principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayV
   Matrix<float> xtpc(ne, ne);
   principal_components(xt, xtpc, eimag);
   assertx(xtpc.ysize() == ne && xtpc.xsize() == ne);
-  // mo = xevecT*CT = xtpc*CT   [ne][n] = [ne][ne]*[ne][n]
+  // mo = xevecT * CT = xtpc * CT   [ne][n] = [ne][ne] * [ne][n].
   for_int(r, ne) for_int(c, n) {
     double s = 0.;
     for_int(j, ne) s += xtpc[r, j] * mc[c, j];

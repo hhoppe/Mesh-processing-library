@@ -153,7 +153,7 @@ int main() {
     assertx(mesh.opp_boundary(e, v1) == mesh.edge(v1, v4));
     assertx(mesh.opp_boundary(e, v3) == mesh.edge(v2, v3));
   }
-  {  // all four faces should have exactly two neighbors
+  {  // All four faces should have exactly two neighbors.
     for (Face f : mesh.faces()) {
       int count = 0;
       for (Face ff : mesh.faces(f)) {
@@ -167,7 +167,7 @@ int main() {
   {
     // (5, 3, 1), (5, 2, 3), (5, 4, 2), (5, 1, 4)
     Edge e = mesh.edge(v1, v3);
-    assertx(mesh.vertex1(e) == v3);  // vertex kept
+    assertx(mesh.vertex1(e) == v3);  // Vertex kept.
     mesh.collapse_edge(e);
     // (5, 2, 3), (5, 4, 2), (5, 3, 4)
   }

@@ -482,7 +482,7 @@ GMesh geometric_merge(const GMesh& mo) {
       }
       Corner cn = mn.corner(vn, fn);
       if (mvnn.get(vn) == 1) {
-        // vertex info already copied above
+        // Vertex info already copied above.
       } else {
         mn.set_string(cn, mo.get_string(vo));
         if (1) mn.update_string(cn, "Ovi", csform(str, "%d", mo.vertex_id(vo)));
@@ -522,14 +522,14 @@ GMesh split_corners(const GMesh& mo, bool split_matbnd) {
   }
   GMesh mn;
   if (max_ovi) {
-    // artificially raise mn._vertexnum
+    // Artificially raise mn._vertexnum.
     Vertex v1 = mn.create_vertex_private(max_ovi + 1);
     Vertex v2 = mn.create_vertex_private(max_ovi + 2);
     mn.destroy_vertex(v1);
     mn.destroy_vertex(v2);
   }
   Map<Corner, Vertex> mcv;
-  Map<Vertex, Vertex> mvv;  // only if unique
+  Map<Vertex, Vertex> mvv;  // Only if unique.
   Array<char> key, val;
   for (Vertex vo : mo.ordered_vertices()) {
     Set<Face> setfovis;
@@ -562,14 +562,14 @@ GMesh split_corners(const GMesh& mo, bool split_matbnd) {
         });
       }
       Face fo = forep;
-      for (;;) {  // find f: most_clw, or frep if closed
+      for (;;) {  // Find f: most_clw, or frep if closed.
         Edge eo = mo.ccw_edge(fo, vo);
         if (sharp_vertex_edge(mo, vo, eo, split_matbnd)) break;
         fo = assertx(mo.opp_face(fo, eo));
         if (fo == forep) break;
       }
       forep = fo;
-      for (;;) {  // now go ccw
+      for (;;) {  // Now go ccw.
         assertx(setfovis.add(fo));
         mcv.enter(mo.corner(vo, fo), vn);
         Edge eo = mo.clw_edge(fo, vo);
@@ -585,7 +585,7 @@ GMesh split_corners(const GMesh& mo, bool split_matbnd) {
     for (Corner co : mo.corners(fo)) van.push(mcv.get(co));
     Face fn = mn.create_face(van);
     if (split_matbnd) {
-      // Corners attributes within new vertex may be non-unique
+      // Corner attributes within the new vertex may be non-unique.
       for (Corner co : mo.corners(fo)) {
         Corner cn = mesh.corner(mcv.get(co), fn);
         mesh.set_string(cn, mesh.get_string(co));
@@ -620,7 +620,7 @@ void do_splitmatbnd() {
 GMesh split_corners_debug(const GMesh& mo) {
   GMesh mn;
   Map<Corner, Vertex> mcv;
-  Map<Vertex, Vertex> mvv;  // only if unique
+  Map<Vertex, Vertex> mvv;  // Only if unique.
   for (Vertex vo : mo.ordered_vertices()) {
     Set<Face> setfovis;
     int ncomp = 0;
@@ -630,14 +630,14 @@ GMesh split_corners_debug(const GMesh& mo) {
       Vertex vn = mn.create_vertex();
       mn.set_point(vn, mo.point(vo));
       Face fo = forep;
-      for (;;) {  // find f: most_clw, or frep if closed
+      for (;;) {  // Find f: most_clw, or frep if closed.
         Edge eo = mo.ccw_edge(fo, vo);
         if (sharp_vertex_edge(mo, vo, eo, false)) break;
         fo = assertx(mo.opp_face(fo, eo));
         if (fo == forep) break;
       }
       forep = fo;
-      for (;;) {  // now go ccw
+      for (;;) {  // Now go ccw.
         assertx(setfovis.add(fo));
         mcv.enter(mo.corner(vo, fo), vn);
         Edge eo = mo.clw_edge(fo, vo);
@@ -941,7 +941,7 @@ void output_segment(Face f, Map<Face, int>& mfseg) {
 void do_segment() {
   HH_TIMER("_segment");
   nooutput = true;
-  Map<Face, int> mfseg;  // Face -> segment number
+  Map<Face, int> mfseg;  // Maps Face -> segment number.
   Array<Face> arepf;
   gather_segments(mfseg, arepf);
   edge_angle_stats(mfseg);
@@ -974,7 +974,7 @@ void record_segment(Face f, Map<Face, int>& mfseg) {
 
 void do_recordsegments() {
   HH_TIMER("_recordsegments");
-  Map<Face, int> mfseg;  // Face -> segment number
+  Map<Face, int> mfseg;  // Maps Face -> segment number.
   Array<Face> arepf;
   gather_segments(mfseg, arepf);
   showdf("Detected %d segments\n", arepf.num());
@@ -986,7 +986,7 @@ void do_recordsegments() {
 
 void selectively_smooth() {
   assign_normals();
-  Map<Face, int> mfseg;  // Face -> segment number
+  Map<Face, int> mfseg;  // Maps Face -> segment number.
   Array<Face> arepf;
   gather_segments(mfseg, arepf);
   showdf("Detected %d segments\n", arepf.num());
@@ -1114,14 +1114,14 @@ void do_trisubdiv() {
         hsharp += p;
       }
     }
-    if (nesharp >= 3) {  // corner: unmoved
+    if (nesharp >= 3) {  // A corner: unmoved.
       continue;
     } else if (nesharp == 2 && ne == 2) {  // boundary corner: unmoved
       continue;
     } else if (nesharp == 2) {  // crease: cubic bspline boundary
       h = hsharp + 6.f * Homogeneous(mesh.point(v));
     } else {  // interior: quartic bspline interior
-      // (if dart (nesharp == 1), treat as interior vertex)
+      // If a dart (nesharp == 1), treat as an interior vertex.
       const int n = ne;
       const float a = 5.f / 8.f - square((3.f + 2.f * std::cos(TAU / n)) / 8.f);
       const float centerw = n * (1.f - a) / a;
@@ -1141,7 +1141,7 @@ void do_trisubdiv() {
       vs[i] = menewv.get(e);
     }
     Face ff;
-    ff = mesh.create_face(vs[1], vs[2], vs[0]), mesh.set_string(ff, mesh.get_string(f));  // center
+    ff = mesh.create_face(vs[1], vs[2], vs[0]), mesh.set_string(ff, mesh.get_string(f));  // The center.
     ff = mesh.create_face(va[0], vs[0], vs[2]), mesh.set_string(ff, mesh.get_string(f));
     ff = mesh.create_face(vs[0], va[1], vs[1]), mesh.set_string(ff, mesh.get_string(f));
     ff = mesh.create_face(vs[2], vs[1], va[2]), mesh.set_string(ff, mesh.get_string(f));
@@ -1165,7 +1165,7 @@ void do_silsubdiv() {
   HH_TIMER("_silsubdiv");
   const Array arf(mesh.faces());
   // Determine which edges will be subdivided.
-  Set<Edge> subde;  // edges to subdivide
+  Set<Edge> subde;  // Edges to subdivide.
   for (Edge e : mesh.edges())
     if (sharp(e)) subde.enter(e);
   Queue<Face> queuef;
@@ -1175,7 +1175,7 @@ void do_silsubdiv() {
     int nnew = 0;
     for (Edge e : mesh.edges(f))
       if (subde.contains(e)) nnew++;
-    if (nnew != 2) continue;  // ok, no propagating changes
+    if (nnew != 2) continue;  // OK, no propagating changes.
     for (Edge e : mesh.edges(f)) {
       if (!subde.add(e)) continue;
       Face f2 = mesh.opp_face(f, e);
@@ -1188,7 +1188,7 @@ void do_silsubdiv() {
     Vertex vnew;
     bool is_sharp;
   };
-  Map<PairVV, Vb> mvv_nvb;  // -> (new vertex, is_sharp)
+  Map<PairVV, Vb> mvv_nvb;  // Maps to (new vertex, is_sharp).
   for (Edge e : subde) {
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
     if (v2 < v1) std::swap(v1, v2);
@@ -1345,7 +1345,7 @@ void do_desbrunsmooth(Args& args) {
     float sum_w = 0.f;
     nei_vi.init(0);
     nei_w.init(0);
-    for (Vertex vv : mesh.vertices(v)) {  // unsorted!
+    for (Vertex vv : mesh.vertices(v)) {  // Unsorted!
       nei_vi.push(m_vi.get(vv));
       float w;
       if (use_taubin_laplacian) {
@@ -1367,7 +1367,7 @@ void do_desbrunsmooth(Args& args) {
       sum_w += w;
     }
     assertx(sum_w);
-    if (0) {  // this makes lambda scale-dependent (bad)
+    if (0) {  // This makes lambda scale-dependent (bad).
       for_int(j, nei_vi.num()) nei_w[j] /= (4.f * sum_area);
       sum_w /= (4.f * sum_area);
     } else {  // "normalized" version from Section 5.5
@@ -1404,7 +1404,7 @@ Vertex farthest_vertex(CArrayView<Vertex> bndverts, Vertex v0) {
   return vret;
 }
 
-// finds an approximation
+// Finds an approximation.
 Vec2<Vertex> find_diameter_of_boundary_vertices() {
   Vec2<Vertex> vb(nullptr, nullptr);
   Array<Vertex> bndverts;
@@ -1622,7 +1622,7 @@ void do_poissonparam() {
 
 void do_fillholes(Args& args) {
   HH_TIMER("_fillholes");
-  const int maxnume = args.get_int();  // == maxnumv
+  const int maxnume = args.get_int();  // Equals maxnumv.
   const int write_hole = getenv_int("WRITE_HOLE", 0);
   const int hole_sharp = getenv_int("HOLE_SHARP", 0);
   Set<Edge> setbe;
@@ -1750,30 +1750,30 @@ void triangulate_quads(ETriType type) {
                       dist2(mesh.point(va[1]), mesh.point(va[3])) * square(gim_diagonal_factor));
         break;
       }
-      case ETriType::dlong: {  // Use opposite rule
+      case ETriType::dlong: {  // Use the opposite rule.
         const float gim_diagonal_factor = 1.0f;
         other_diag = (dist2(mesh.point(va[0]), mesh.point(va[2])) <=
                       dist2(mesh.point(va[1]), mesh.point(va[3])) * square(gim_diagonal_factor));
         break;
       }
-      case ETriType::alternating: {  // Use alternating diagonals
+      case ETriType::alternating: {  // Use alternating diagonals.
         const int fid = mesh.face_id(f) - 1;
         const int iy = fid / sqrt_nfaces;
         const int ix = fid - iy * sqrt_nfaces;
         other_diag = (ix + iy) % 2 == 1;
         break;
       }
-      case ETriType::xuvdiag: {  // Use X shaped diagonal pattern on [0..1, 0..1] domain
+      case ETriType::xuvdiag: {  // Use an X-shaped diagonal pattern on the [0..1, 0..1] domain.
         const int maxi = arg_max(range(4) | views::transform(uv_distance_from_center));
         other_diag = maxi == 1 || maxi == 3;
         break;
       }
-      case ETriType::duvdiag: {  // Use diamond shaped diagonal pattern on [0..1, 0..1] domain
+      case ETriType::duvdiag: {  // Use a diamond-shaped diagonal pattern on the [0..1, 0..1] domain.
         const int maxi = arg_max(range(4) | views::transform(uv_distance_from_center));
         other_diag = maxi == 0 || maxi == 2;
         break;
       }
-      case ETriType::odddiag: {  // Create odd-valence vertices
+      case ETriType::odddiag: {  // Create odd-valence vertices.
         const int fid = mesh.face_id(f) - 1;
         const int iy = fid / sqrt_nfaces;
         const int ix = fid - iy * sqrt_nfaces;
@@ -1887,8 +1887,8 @@ float try_coalesce(Edge e) {
   Frame frame;
   Vec3<float> eimag;
   principal_components(pa, frame, eimag);
-  // ratio of thickness to width
-  // width judged better than length (two adjacent skinny triangles)
+  // Ratio of thickness to width.
+  // Width judged better than length (two adjacent skinny triangles).
   return eimag[2] / eimag[1];
 }
 
@@ -1935,13 +1935,13 @@ void do_makequads(Args& args) {
     // Test co-planarity.
     const float angcos = edge_dihedral_angle_cos(mesh, e);
     const float deviation = 1.f - angcos;
-    if (deviation > p_tol) continue;  // not co-planar enough
+    if (deviation > p_tol) continue;  // Not co-planar enough.
     // Test shape of resulting quad.
     const Point& p1 = mesh.point(mesh.vertex1(e));
     const Point& p2 = mesh.point(mesh.vertex2(e));
     const Point& po1 = mesh.point(mesh.side_vertex1(e));
     const Point& po2 = mesh.point(mesh.side_vertex2(e));
-    if (dihedral_angle_cos(po1, po2, p2, p1) < 0.f) continue;  // quad not convex
+    if (dihedral_angle_cos(po1, po2, p2, p1) < 0.f) continue;  // The quad is not convex.
     const float smalloffset = 1.f;
     pqe.enter(e, deviation + smalloffset);
   }
@@ -1993,12 +1993,12 @@ void do_slowcornermerge() {
   int nmerge = 0;
   string str;
   for (Vertex v : mesh.vertices()) {
-    // get a copy s of the string for one of the corners
+    // Get a copy s of the string for one of the corners.
     s = "";
     for (Corner c : mesh.corners(v)) {
       const char* s2 = mesh.get_string(c);
       if (s2) s = s2;
-      if (1) break;  // "if (1)" to avoid warning about unreachable code
+      if (1) break;  // The "if (1)" avoids a warning about unreachable code.
     }
     for_cstring_key_value(s.c_str(), key, val, [&] {
       bool all_same = true;
@@ -2127,7 +2127,7 @@ void do_flip() {
     reverse(va);
     mesh.create_face(va);
   }
-  mesh.renumber();  // compact the vertex indices; why?
+  mesh.renumber();  // Compact the vertex indices; why?
 }
 
 void do_fixvertices() {
@@ -2148,7 +2148,7 @@ void do_fixfaces() {
     if (!mesh.is_nice(f)) arf.push(f);
   int nf = 0;
   for (Face f : arf) {
-    if (mesh.is_nice(f)) continue;  // other face may be gone now
+    if (mesh.is_nice(f)) continue;  // The other face may be gone now.
     nf++;
     mesh.destroy_face(f);
   }
@@ -2388,7 +2388,7 @@ void do_info() {
       }
       vol += dot(cross(poly[0] - centroid, poly[1] - centroid), poly[2] - centroid);
     }
-    vol /= 6.f;  // divide by factorial(ndimensions)
+    vol /= 6.f;  // Divide by factorial(ndimensions).
     if (have_all_triangles)
       showdf("Volume is %g\n", vol);
     else
@@ -2748,11 +2748,11 @@ void do_randpts(Args& args) {
   nooutput = true;
   const int npoints = args.get_int();
   const int nf = mesh.num_faces();
-  Array<Face> fface;  // Face of this index
+  Array<Face> fface;  // Face of this index.
   fface.reserve(nf);
-  Array<float> farea;  // area of face
+  Array<float> farea;  // Area of the face.
   farea.reserve(nf);
-  Array<float> fcarea;  // cumulative area
+  Array<float> fcarea;  // Cumulative area.
   fcarea.reserve(nf + 1);
   for (Face f : mesh.faces()) {
     if (!assertw(mesh.is_triangle(f))) continue;
@@ -2762,7 +2762,7 @@ void do_randpts(Args& args) {
   const float sumarea = float(sum(farea));
   showdf("Total area %g over %d faces\n", sumarea, nf);
   {
-    double area = 0.;  // for accuracy
+    double area = 0.;  // For accuracy.
     for_int(i, nf) {
       fcarea.push(float(area));
       area += farea[i] / sumarea;
@@ -2913,7 +2913,7 @@ bool norgroup_orig_sharp(Edge e) {
 //  good results (savanna:6, schooner:5)
 //  problem: model simplification may make different groups adjacent, and therefore crease is suddenly lost
 // Third idea: number smoothing groups on separate connected components independently (without coloring)
-//  good results (savanna:348, schooner:173)
+//  good results (savanna:348, schooner:173).
 void do_norgroup() {
   Map<Face, int> mapfg;
   {
@@ -3118,7 +3118,7 @@ void do_colortransf(Args& args) {
 
 void do_normaltransf(Args& args) {
   Frame frame = FrameIO::parse_frame(args.get_string());
-  assertw(is_zero(frame.p()));  // no translation
+  assertw(is_zero(frame.p()));  // No translation.
   frame.p() = Point(0.f, 0.f, 0.f);
   Vector n;
   string str;
@@ -3213,7 +3213,7 @@ void do_rmdiaguv() {
     if (mesh.is_boundary(e)) continue;
     uvs.init(0);
     for (Vertex v : mesh.vertices(e)) {
-      // arbitrarily pick one corner
+      // Arbitrarily pick one corner.
       Corner c = mesh.ccw_corner(v, e);
       Uv uv;
       assertx(mesh.parse_corner_key_vec(c, "uv", uv));
@@ -3223,7 +3223,7 @@ void do_rmdiaguv() {
   }
   showdf("removing %d diagonals\n", esplit.num());
   for (Edge e : esplit) {
-    Map<Vertex, unique_ptr<char[]>> mvs;  // often nullptr's
+    Map<Vertex, unique_ptr<char[]>> mvs;  // Often nullptr's.
     for (Face f : mesh.faces(e)) {
       for (Corner c : mesh.corners(f)) {
         Vertex v = mesh.corner_vertex(c);
@@ -3263,7 +3263,7 @@ void do_projectimage(Args& args) {
       continue;
     }
     p[1] = p[1] / p[0] / object_frame.zoom * -0.5f + 0.5f;
-    p[2] = -p[2] / p[0] / object_frame.zoom * +0.5f + 0.5f;  // negate because my image origin is at upper left
+    p[2] = -p[2] / p[0] / object_frame.zoom * +0.5f + 0.5f;  // Negate because my image origin is at upper left.
     if (1) {
       HH_SSTAT(Sx, p[1]);
       HH_SSTAT(Sy, p[2]);
@@ -3502,7 +3502,7 @@ void do_procedure(Args& args) {
   }
 }
 
-// signed distance
+// Signed distance.
 
 float signed_distance(const Point& p, Face f) {
   const Vec3<Point> triangle = mesh.triangle_points(f);
@@ -3518,11 +3518,11 @@ float signed_distance(const Point& p, Face f) {
     }
   }
   switch (nzero) {
-    case 0: {  // triangle interior
+    case 0: {  // Triangle interior.
       // == dot(get_normal(triangle), p - clp)
       return sqrt(d2) * sign(dot(get_normal_dir(triangle), p - clp));
     }
-    case 1: {  // edge
+    case 1: {  // An edge.
       Vec3<Vertex> va = mesh.triangle_vertices(f);
       Edge e = mesh.edge(va[mod3(jzero + 1)], va[mod3(jzero + 2)]);
       if (mesh.is_boundary(e)) return k_Contour_undefined;
@@ -3530,7 +3530,7 @@ float signed_distance(const Point& p, Face f) {
       const Vector nor = get_normal(triangle) + get_normal(triangle2);
       return sqrt(d2) * sign(dot(nor, p - clp));
     }
-    case 2: {  // vertex
+    case 2: {  // A vertex.
       Vec3<Vertex> va = mesh.triangle_vertices(f);
       Vertex v = va[jpos];
       if (mesh.is_boundary(v)) return k_Contour_undefined;
@@ -3579,7 +3579,7 @@ Point compute_hull_point(Vertex v, float offset) {
   // p'= p * scale + translate .   p' in range [border, border + size]
   float scale;
   Vector translate;
-  const float transf_border = 10.f;  // allow vertex to go anywhere
+  const float transf_border = 10.f;  // Allow the vertex to go anywhere.
   // const float transf_border = .25f;  // severely constrain the vertex
   // const float transf_border = 1.f;
   const float transf_size = 1.f;
@@ -3620,18 +3620,18 @@ Point compute_hull_point(Vertex v, float offset) {
     if (offset < 0.f) link_normal = -link_normal;
   }
 #if defined(HH_HAVE_SIMPLEX)
-  // Count number of constraints which are of form lfunc(x, y, z) >= d >= 0
+  // Count the number of constraints of the form lfunc(x, y, z) >= d >= 0.
   int n_m1 = int(ranges::count_if(ar_lf, [](const LinearFunc& lf) { return lf.offset > 0.f; }));
-  // Use Numerical Recipes code (converted to double precision)
-  int n = 3;                                       // number of variables (x, y, z)
-  int m1 = n_m1, m2 = ar_lf.num() - n_m1, m3 = 0;  // '<=', '>=', '==' constraints
-  int m = m1 + m2 + m3;                            // total number of constraints
+  // Use Numerical Recipes code (converted to double precision).
+  int n = 3;                                       // Number of variables (x, y, z).
+  int m1 = n_m1, m2 = ar_lf.num() - n_m1, m3 = 0;  // The '<=', '>=', '==' constraints.
+  int m = m1 + m2 + m3;                            // Total number of constraints.
   double** a = dmatrix(1, m + 2, 1, n + 1);
   int* iposv = ivector(1, m);
   int* izrov = ivector(1, n);
   int icase;
   // Maximize the linear functional: -x*link_normal[0]-y*link_normal[1]...
-  a[1][1] = 0.f;  // always
+  a[1][1] = 0.f;  // Always.
   a[1][2] = -link_normal[0];
   a[1][3] = -link_normal[1];
   a[1][4] = -link_normal[2];
@@ -3679,7 +3679,7 @@ Point compute_hull_point(Vertex v, float offset) {
     Warning("simplx: objective function is unbounded");
   } else {
     // A finite solution is found.
-    Point pnew(0.f, 0.f, 0.f);  // must be initialized to zero's.
+    Point pnew(0.f, 0.f, 0.f);  // Must be initialized to zero's.
     for_intL(i, 1, m + 1) {
       assertx(iposv[i] >= 1);
       if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i][1]);
@@ -3751,8 +3751,8 @@ void do_alignmentframe(Args& args) {
   showdf("with mesh %s:\n", filename.c_str());
   showdf("  %s\n", mesh_genus_string(nmesh).c_str());
   assertx(!cmesh.empty() && !nmesh.empty());
-  assertw(cmesh.num_vertices() == nmesh.num_vertices());  // just warn
-  assertw(cmesh.num_faces() == nmesh.num_faces());        // just warn
+  assertw(cmesh.num_vertices() == nmesh.num_vertices());  // Just warn.
+  assertw(cmesh.num_faces() == nmesh.num_faces());        // Just warn.
   const Bbox cbb{cmesh.vertices() | views::transform([&](Vertex v) { return cmesh.point(v); })};
   const Bbox nbb{nmesh.vertices() | views::transform([&](Vertex v) { return nmesh.point(v); })};
   // Point corig = cbb[0];
@@ -3780,16 +3780,16 @@ inline Point avg_cubic(const Point& p0, const Point& p1, const Point& p2) { retu
 auto smoothgim_subdiv(CMatrixView<Point> opoints) {
   int nn = opoints.ysize() - 1;
   Matrix<Point> npoints(nn * 2 + 1, nn * 2 + 1);
-  // copy old points
+  // Copy the old points.
   for_int(y, nn + 1) for_int(x, nn + 1) npoints[y * 2, x * 2] = opoints[y, x];
-  // splitting step
+  // Splitting step.
   for_int(y, nn + 1) {
     for_int(x, nn) npoints[y * 2, x * 2 + 1] = interp(npoints[y * 2, x * 2 + 0], npoints[y * 2, x * 2 + 2]);
   }
   for_int(y, nn) {
     for_int(x, nn * 2 + 1) npoints[y * 2 + 1, x] = interp(npoints[y * 2 + 0, x], npoints[y * 2 + 2, x]);
   }
-  // averaging step
+  // Averaging step.
   nn = nn * 2;
   Matrix<Point> tpoints(nn + 1, nn + 1);
   for_int(y, nn + 1) for_int(x, nn + 1) tpoints[y, x] = npoints[y, x];
@@ -3811,13 +3811,13 @@ auto smoothgim_subdiv(CMatrixView<Point> opoints) {
 
 void do_smoothgim(Args& args) {
   const int nsubdiv = args.get_int();
-  // expect opened gim
+  // Expect an opened gim.
   int nn = int(sqrt(mesh.num_vertices() + .01f)) - 1;
   assertx(square(nn + 1) == mesh.num_vertices());
   Matrix<Point> points(nn + 1, nn + 1);
-  // extract mesh points
+  // Extract mesh points.
   for_int(y, nn + 1) for_int(x, nn + 1) points[y, x] = mesh.point(mesh.id_vertex(y * (nn + 1) + x + 1));
-  // respect C2 rule at side (cut) vertices
+  // Respect the C2 rule at side (cut) vertices.
   if (1) {
     if (nn >= 4) {
       for_int(i, 2) {
@@ -3838,7 +3838,7 @@ void do_smoothgim(Args& args) {
       Warning("Gim too small to make C2");
     }
   }
-  // subdivide
+  // Subdivide.
   for_int(i, nsubdiv) {
     Matrix<Point> tpoints = smoothgim_subdiv(points);
     nn = tpoints.ysize() - 1;
@@ -3846,7 +3846,7 @@ void do_smoothgim(Args& args) {
     points.init(nn + 1, nn + 1);
     for_int(y, nn + 1) for_int(x, nn + 1) points[y, x] = tpoints[y, x];
   }
-  // recreate mesh
+  // Recreate the mesh.
   mesh.clear();
   Matrix<Vertex> vertices(nn + 1, nn + 1);
   string str;
@@ -3890,7 +3890,7 @@ void do_smoothgim(Args& args) {
 
 void do_subsamplegim(Args& args) {
   const int nsubsamp = args.get_int();
-  // expect opened gim
+  // Expect an opened gim.
   int nn = int(sqrt(mesh.num_vertices() + .01f)) - 1;
   assertx(square(nn + 1) == mesh.num_vertices());
   assertx((nn / nsubsamp) * nsubsamp == nn);
@@ -4011,7 +4011,7 @@ void do_transferkeysfrom(Args& args) {
     const Point p = mesh.point(v) * xform;
     const int i = hp.enter(p);
     if (i < arv.num()) SHOW(p, mesh.point(arv[i]) * xform, i, arv.num());
-    assertx(i == arv.num());  // no two vertices should have same position
+    assertx(i == arv.num());  // No two vertices should have the same position.
     arv.push(v);
   }
   Array<char> key, val;
@@ -4020,7 +4020,7 @@ void do_transferkeysfrom(Args& args) {
     const Point& p = omesh.point(ov);
     const int i = hp.enter(p * xform);
     if (i == arv.num()) SHOW(omesh.point(ov), omesh.vertex_id(ov));
-    assertx(i < arv.num());  // all vertex position must already be present
+    assertx(i < arv.num());  // All vertex positions must already be present.
     Vertex v = arv[i];
     movv.enter(ov, v);
     for_cstring_key_value(omesh.get_string(ov), key, val, [&] { mesh.update_string(v, key.data(), val.data()); });
@@ -4074,7 +4074,7 @@ void do_transferwidkeysfrom(Args& args) {
 // Assert that group is a convex connected component.
 // Maybe flip all faces so that most faces in the group point away from the group centroid.
 void convex_group_flip_faces(const Set<Face>& group) {
-  // compute centroid
+  // Compute the centroid.
   Homogeneous h;
   Set<Vertex> setv;
   for (Face f : group)
@@ -4111,10 +4111,10 @@ void convex_group_flip_faces(const Set<Face>& group) {
   }
 }
 
-// will clear the old mesh
+// Will clear the old mesh.
 void do_fromObj(Args& args) {
-  // build mesh from Obj input. Specify <flip> to flip face to point to
-  //  the outside of convex components
+  // Build a mesh from Obj input.  Specify <flip> to flip the face to point to
+  //  the outside of convex components.
   Array<Vector> ar_nor;
   Array<Uv> ar_uv;
   RFile fi(args.get_filename());
@@ -4174,7 +4174,7 @@ void do_fromObj(Args& args) {
         poly.push(mesh.point(vv));
         while (std::isspace(*s)) s++;
       }
-      // maybe flip face winding to match the vertex normals orientation
+      // Maybe flip the face winding to match the vertex normals orientation.
       if (have_nors && dot(fn, poly.get_normal()) < 0.f) reverse(va);
       if (mesh.legal_create_face(va)) {
         Face f = mesh.create_face(va);
@@ -4552,7 +4552,7 @@ int main(int argc, const char** argv) {
     mesh.write(std::cout);
     std::cout.flush();
   }
-  mesh.record_changes(nullptr);  // do not record mesh destruction
+  mesh.record_changes(nullptr);  // Do not record mesh destruction.
   oa3d.flush();
   if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().
   return 0;

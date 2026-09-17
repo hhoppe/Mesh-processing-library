@@ -62,7 +62,7 @@ void set_keyintr(Hw& hw) { hw.set_keyintr(); }
 
 const string k_font_name = "6x13";
 
-static Hw* g_hw;  // assumes single-window model; fine.
+static Hw* g_hw;  // Assumes single-window model; fine.
 
 Hw::Hw() {
 #if defined(HH_OGLX)
@@ -149,7 +149,7 @@ static int my_io_error_handler(Display* display) {
   dummy_use(display);
   // This handler is called when the window close button is pressed, so there is nothing unusual.
   // SHOW("X server connection is lost");
-  hh_clean_up(), exit_immediately(0);  // IE error handler is unfortunately required to exit
+  hh_clean_up(), exit_immediately(0);  // IE error handler is unfortunately required to exit.
   // Ideally, CYGWIN would send a DestroyWindow event when user clicks "X" button, but it does not seem to.
   return 0;
 }
@@ -190,9 +190,9 @@ void Hw::open() {
       Array<int> attributelist = {
           GLX_RGBA,  // (for TrueColor and DirectColor instead of PseudoColor; there is no "RGB")
           GLX_RED_SIZE,
-          8,  // could be just "1"
+          8,  // Could be just "1".
           GLX_DEPTH_SIZE,
-          24,  // could be just "1"; 24 is arbitrary
+          24,  // Could be just "1"; 24 is arbitrary.
           // Found necessary for Chrome Remote Desktop and "//third_party/mesa:GL",
           //  else ALPHA_SIZE == 0 and somehow the rendered window is mostly transparent.
           GLX_ALPHA_SIZE,
@@ -259,9 +259,9 @@ void Hw::open() {
     }
     // If glXCreateContext fails when launching client over "ssh -Y", it may be because X server
     //  was launched without "+iglx" option.
-    GLXContext share_list = nullptr;  // no shared display lists
-    Bool direct = 1;                  // direct connection to graphics system if possible
-    // Note: "It may not be possible to render to a GLX pixmap with a direct rendering context"
+    GLXContext share_list = nullptr;  // No shared display lists.
+    Bool direct = 1;                  // Direct connection to graphics system if possible.
+    // Note: "It may not be possible to render to a GLX pixmap with a direct rendering context".
     glcx = assertx(glXCreateContext(_display, visinfo, share_list, direct));
     if (_hwdebug) SHOW(glXIsDirect(_display, glcx));
     _cmap = XCreateColormap(_display, RootWindow(_display, _screen), visual, AllocNone);
@@ -333,7 +333,7 @@ void Hw::open() {
   XFree(pxsh);
   XFree(pxclasshint);
   XFree(_pwmhints), _pwmhints = nullptr;
-  XStoreName(_display, _win, _window_title.c_str());  // necessary to set window title in CYGWIN
+  XStoreName(_display, _win, _window_title.c_str());  // Necessary to set window title in CYGWIN.
   const Cursor cursor = XCreateFontCursor(_display, XC_crosshair);
   XDefineCursor(_display, _win, cursor);
   XSelectInput(_display, _win,
@@ -344,12 +344,12 @@ void Hw::open() {
                      EnterWindowMask | LeaveWindowMask | FocusChangeMask | PropertyChangeMask | VisibilityChangeMask |
                      SubstructureNotifyMask);
   if (_oglx) {
-    // should not use X font because of double-buffering problem.
+    // Should not use X font because of double-buffering problem.
     XFreeFont(_display, font_info);  // Unused here, so unload it rather than hold it for the process life.
   } else {
     _gc = XCreateGC(_display, _win, 0UL, &_gcvalues);
     XSetFont(_display, _gc, font_info->fid);
-    // avoid generating NoExpose events when doing XCopyArea()
+    // Avoid generating NoExpose events when doing XCopyArea().
     XSetGraphicsExposures(_display, _gc, 0);
     XSetBackground(_display, _gc, _pixel_background);
     XSetForeground(_display, _gc, _pixel_foreground);
@@ -399,7 +399,7 @@ void Hw::open() {
           "9x15bold");
       const string big_font_name = (
           // "12x24" // yuck
-          "-misc-fixed-medium-r-normal--20-200-75-75-c-100-iso8859-1"  // not all that large
+          "-misc-fixed-medium-r-normal--20-200-75-75-c-100-iso8859-1"  // Not all that large.
       );
       string font_name = _bigfont ? big_font_name : regular_font_name;
       XFontStruct* font_info2;
@@ -433,11 +433,11 @@ void Hw::open() {
         _font_dims = V(15 + 3, 9);  // (to be compatible with IrisGL)
       } else {
         _font_dims = V(38, 16);  // 16x38 from CourierBold20 of IrisGL fm.
-        _font_dims = V(28, 16);  // reduce line-spacing
+        _font_dims = V(28, 16);  // Reduce line-spacing.
       }
       if (_hwdebug) SHOW(_font_dims);
     }
-    if (_multisample > 1) {  // likely unnecessary because the default value for GL_MULTISAMPLE is GL_TRUE
+    if (_multisample > 1) {  // Likely unnecessary because the default value for GL_MULTISAMPLE is GL_TRUE.
       glEnable(GL_MULTISAMPLE);
       assertw(!gl_report_errors());
       if (_hwdebug) {
@@ -455,7 +455,7 @@ void Hw::open() {
   // TODO: Implement HwBase::drag_and_drop().
   int force_first_draws = 0;
 #if defined(__CYGWIN__)
-  force_first_draws = 3;  // For some unknown reason, first couple draws are corrupt on __CYGWIN__
+  force_first_draws = 3;  // For some unknown reason, first couple draws are corrupt on __CYGWIN__.
 #endif
   if (1) {
     // Avoid error message upon pressing close window button, e.g.:
@@ -486,20 +486,20 @@ void Hw::open() {
   assertw(!gl_report_errors());
 #endif
   _state = EState::uninit;
-  // Cleanup
+  // Cleanup.
   XCloseDisplay(_display);
 }
 
 bool Hw::loop() {
   for (;;) {
-    // handle all possible types of events
+    // Handle all possible types of events.
     if (_update == EUpdate::quit) return true;
     handle_events();
     if (_update == EUpdate::quit) return true;
     handle_keyintr();
     if (_update == EUpdate::quit) return true;
     if (!got_event() && !_is_keyintr) {
-      // no more events, so possibly blocked
+      // No more events, so possibly blocked.
       if (_update != EUpdate::nothing) break;
       // Later found: https://stackoverflow.com/questions/8592292/how-to-quit-the-blocking-of-xlibs-xnextevent
       fd_set fdr;
@@ -524,7 +524,7 @@ bool Hw::loop() {
       if (_watch_fd0 && FD_ISSET(0, &fdr)) input_received();
     }
   }
-  // No more events but redraw has been requested
+  // No more events but redraw has been requested.
   draw_it();
   return false;
 }
@@ -560,7 +560,7 @@ void Hw::handle_event() {
       _win_dims = V(_event.xconfigure.height, _event.xconfigure.width);
       const bool send_event = _event.xconfigure.send_event;
       if (_hwdebug) SHOW("configure", _win_pos, _win_dims, send_event, _exposed, _oglx);
-      if (send_event) return;  // WM has moved window
+      if (send_event) return;  // WM has moved window.
       if (!_exposed && _oglx) return;
       redraw_now();
       soft_discard();
@@ -602,8 +602,8 @@ void Hw::handle_event() {
       if (butnum == 4 || butnum == 5) {
         if (pressed) wheel_turn(butnum == 4 ? +1.f : -1.f);
       } else {
-        if (butnum == 8) butnum = 4;  // Back button
-        if (butnum == 9) butnum = 5;  // Forward button
+        if (butnum == 8) butnum = 4;  // Back button.
+        if (butnum == 9) butnum = 5;  // Forward button.
         button_press(butnum, pressed, V(_event.xbutton.y, _event.xbutton.x));
       }
       break;
@@ -639,7 +639,7 @@ bool Hw::suggests_stop() {
 }
 
 static void handle_alarm(int) {
-  signal(SIGALRM, handle_alarm);  // for ATT unix
+  signal(SIGALRM, handle_alarm);  // For ATT unix.
   set_keyintr(*g_hw);
 }
 
@@ -665,7 +665,7 @@ void Hw::end_hwkey() {
   ti.it_interval = tv;
   if (setitimer(ITIMER_REAL, &ti, implicit_cast<struct itimerval*>(nullptr)))
     std::cerr << "Hw: setitimer2: " << std::strerror(errno) << "\n";
-  // SIGALRM not reset to SIG_DFL just to be sure
+  // SIGALRM is not reset to SIG_DFL, just to be sure.
   // signal(SIGALRM, SIG_DFL);
 }
 
@@ -706,7 +706,7 @@ void Hw::handle_key() {
   if (_query) {
     query_keypress(s);
   } else if (key_press(s)) {
-    // client has handled key press
+    // Client has handled key press.
   } else if (s == "\033") {  // <esc> key (== uchar{27})
     quit();
   } else {
@@ -716,7 +716,7 @@ void Hw::handle_key() {
 
 void Hw::draw_it() {
   _update = EUpdate::nothing;
-  if (!_exposed) return;  // user events before X expose event
+  if (!_exposed) return;  // User events before X expose event.
   if (_hwdebug) SHOW("draw_it", _win_dims);
   if (_need_toggle_buffering) {
     _need_toggle_buffering = false;
@@ -730,14 +730,14 @@ void Hw::draw_it() {
     // 2014-12-13
     glEnable(GL_BLEND);
     // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // for non-premultiplied alpha
-    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // 2017-02-23; source is assumed to have premultiplied alpha
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // Since 2017-02-23, source is assumed to have premultiplied alpha.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();  // glLoadMatrixf(to_Matrix(Frame::identity()).const_grid_view().data());
     if (0) {
-      glOrtho(-.5, _win_dims[1] - .5, _win_dims[0] - .5, -.5, -1., 1.);  // multiplies GL_PROJECTION; reverse y
+      glOrtho(-.5, _win_dims[1] - .5, _win_dims[0] - .5, -.5, -1., 1.);  // Multiplies GL_PROJECTION; reverse y.
     } else {
-      // 2015-01-08 pixels are now centered at half-integers
-      glOrtho(0., _win_dims[1] - 0., _win_dims[0] - 0., 0., -1., 1.);  // multiplies GL_PROJECTION; reverse y
+      // Since 2015-01-08, pixels are centered at half-integers.
+      glOrtho(0., _win_dims[1] - 0., _win_dims[0] - 0., 0., -1., 1.);  // Multiplies GL_PROJECTION; reverse y.
     }
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -766,7 +766,7 @@ void Hw::draw_it() {
           SHOW("before_swap");
           sleep(1);
         }
-        if (0) glFinish();  // does not help
+        if (0) glFinish();  // Does not help.
         // 2015-02-04 cygwin new bug: Swapping the buffers causes the window to blink to background.
         glXSwapBuffers(_display, _win);
         // 2015-07-27 cygwin: "VideoViewer ~/data/image/lake.png" causes segmentation fault in line above.
@@ -842,7 +842,7 @@ void Hw::set_double_buffering(bool newstate) {
   if (_oglx) {
     if (!assertw(_state == EState::init)) return;
     _is_glx_dbuf = newstate;
-    // if !_is_glx_dbuf, do not call glXSwapBuffers(), glDrawBuffer(GL_BACK)
+    // If !_is_glx_dbuf, do not call glXSwapBuffers(), glDrawBuffer(GL_BACK).
     if (_hwdebug) SHOW(_is_glx_dbuf);
     return;
   }
@@ -929,7 +929,7 @@ void Hw::fill_polygon(CArrayView<Vec2<float>> points) {
       xpoints[i].x = int(floor(points[i][1]));
       xpoints[i].y = int(floor(points[i][0]));
     }
-    // shape is: Convex, Nonconvex, or Complex
+    // Shape is: Convex, Nonconvex, or Complex.
     XFillPolygon(_display, _draw, _gc, xpoints.data(), xpoints.num(), Convex, CoordModeOrigin);
   }
 }
@@ -988,7 +988,7 @@ void Hw::make_fullscreen(bool b) {
 #if defined(__cygwin__) || defined(__APPLE__)
   const bool use_change_property = true;
 #else
-  const bool use_change_property = false;  // Linux
+  const bool use_change_property = false;  // Linux.
 #endif
   if (use_change_property) {
     // https://stackoverflow.com/questions/9083273/x11-fullscreen-window-opengl
@@ -1006,7 +1006,7 @@ void Hw::make_fullscreen(bool b) {
       Vec0<Atom> atoms = {};  // was { None };
       XChangeProperty(_display, _win, XInternAtom(_display, "_NET_WM_STATE", False), XA_ATOM, 32, PropModeReplace,
                       reinterpret_cast<uchar*>(atoms.data()), atoms.num());
-      // cygwin ignores the fact that the property is gone above?
+      // Cygwin ignores the fact that the property is gone above?
       resize_window(bu_dims);
       bu_dims = twice(0);
     }

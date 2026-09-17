@@ -96,8 +96,8 @@ string timing_host() {
         if (!RegQueryValueExA(hkey, "ProcessorNameString", nullptr, nullptr, reinterpret_cast<uchar*>(buf.data()),
                               &len)) {
           const char* p = buf.data();     // e.g., "                   Intel(R) Xeon(TM) CPU 3.06GHz"
-          while (*p == ' ') p++;          // skip initial whitespace (optional)
-          while (!std::isdigit(*p)) p++;  // go right to CPU speed
+          while (*p == ' ') p++;          // Skip initial whitespace (optional).
+          while (!std::isdigit(*p)) p++;  // Go right to the CPU speed.
           rev = p;
           for (auto& ch : rev)
             if (ch == ' ') ch = '_';
@@ -124,7 +124,7 @@ string timing_host() {
 }
 
 string create_parallelism_string(double process_time, double real_time, int64_t num_calls) {
-  string s = "       ";  // e.g., "  x23.6".
+  string s = "       ";  // E.g., "  x23.6".
   if (process_time && real_time) {
     const bool meaningful = process_time / num_calls > .02;  // CPU times are often quantized to 16 milliseconds.
     const int ncores = std_thread_hardware_concurrency();
@@ -181,7 +181,7 @@ class Timers {
         const double sum_real_time = timer_info.sum_real_times;
         const string s_parallel = create_parallelism_string(sum_process_time, sum_real_time, stat.num());
         const int64_t n = stat.num();
-        const long long ln = n;  // because "long long" may be incompatible with int64_t in __CYGWIN__ LP64
+        const long long ln = n;  // Because "long long" may be incompatible with int64_t in __CYGWIN__ LP64.
         const string s_min = n > 1 ? sform("%8.*f", precision, stat.min()).c_str() : "        ";
         const string s_max = n > 1 ? sform("%-8.*f", precision, stat.max()).c_str() : "        ";
         show_local(" %-20.20s(%-6lld)%s:%s av=%9.*f   sum=%9.*f%s %9.*f\n",  //
@@ -202,7 +202,7 @@ class Timers {
     double sum_process_times{0.};
     double sum_real_times{0.};
   };
-  std::vector<TimerInfo> _vec_timer_info;  // in order encountered at runtime; avoid dependency on Array.h
+  std::vector<TimerInfo> _vec_timer_info;  // In order encountered at runtime; avoid dependency on Array.h.
   bool _have_some_mult{false};
 };
 
@@ -259,7 +259,7 @@ void Timer::terminate() {
 
 #if defined(_WIN32)
 static inline double to_seconds(const FILETIME& ft) {
-  const double low_to_sec = 100e-9;  // 100 nanoseconds
+  const double low_to_sec = 100e-9;  // 100 nanoseconds.
   const double high_to_sec = low_to_sec * 4'294'967'296.0;
   return ft.dwLowDateTime * low_to_sec + ft.dwHighDateTime * high_to_sec;
 }

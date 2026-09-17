@@ -365,7 +365,7 @@ using copy_const_t =
 
 // *** Constants.
 
-constexpr float BIGFLOAT = 1e30f;                // note: different from FLT_MAX or (INFINITY == HUGE_VALF)
+constexpr float BIGFLOAT = 1e30f;                // Note: different from FLT_MAX or (INFINITY == HUGE_VALF).
 constexpr float TAU = 6.2831853071795864769f;    // Mathematica: N[2 Pi, 20]; see https://tauday.com/
 constexpr double D_TAU = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see https://tauday.com/
 // #undef PI  // instead, use TAU / 2
@@ -426,7 +426,7 @@ extern int g_unoptimized_zero;
 // Always abort; omit warning about any subsequent unreachable code.
 #define assertnever_ret(...) (hh::g_unoptimized_zero ? void() : hh::details::assertnever_aux((__VA_ARGS__), HH_FL))
 
-// if !expr, exit program (abort); otherwise return expr.
+// If !expr, exit the program (abort); otherwise return expr.
 #define assertx(...) hh::details::assertx_aux((__VA_ARGS__), "assertx(" #__VA_ARGS__ ")" HH_FL)
 
 // If !expr, throw std::runtime_error exception; otherwise return expr.
@@ -636,7 +636,7 @@ void hh_clean_up();
 [[nodiscard]] std::wstring utf16_from_utf8(const std::string& str);
 #endif
 
-// e.g. SHOW(type_name<T>()); await C++26 reflection.
+// E.g. SHOW(type_name<T>()); await C++26 reflection.
 template <typename T> [[nodiscard]] string type_name();
 template <typename T> [[nodiscard]] string type_name(const T&) { return type_name<T>(); }
 
@@ -954,11 +954,11 @@ template <typename C> class stream_range {
 template <typename C> stream_range(const C&) -> stream_range<C>;
 
 constexpr float interp(float v1, float v2, float f) {
-  return f * v1 + (1.f - f) * v2;  // or v2 + (v1 - v2) * f
+  return f * v1 + (1.f - f) * v2;  // Equivalently, v2 + (v1 - v2) * f.
 }
 
 constexpr double interp(double v1, double v2, double f) {
-  return f * v1 + (1. - f) * v2;  // or v2 + (v1 - v2) * f
+  return f * v1 + (1. - f) * v2;  // Equivalently, v2 + (v1 - v2) * f.
 }
 
 constexpr uint8_t clamp_to_uint8(int v) {

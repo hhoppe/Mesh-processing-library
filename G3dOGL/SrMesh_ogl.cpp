@@ -87,7 +87,7 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
     }
     const SrAVertex* v1n;
     const SrAVertex* v2n;
-    SrAFace* fn;  // next neighboring face
+    SrAFace* fn;  // Next neighboring face.
 #if defined(SR_SW_CULLING)
     int sw_culling_3bits = (vertices[0]->visible << 0) | (vertices[1]->visible << 1) | (vertices[2]->visible << 2);
     if (!sw_culling_3bits) continue;
@@ -194,7 +194,7 @@ int SrMesh::ogl_render_striplines() {
   if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
   ASSERTX(verify_all_faces_visited());
   int ntstrips = 0;
-  // doesn't need to be all that fast, so not carefully optimized.
+  // Doesn't need to be all that fast, so not carefully optimized.
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
   for (SrAFace* ff : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
     SrAFace* const f = ff;       // Current face.
@@ -413,14 +413,14 @@ int SrMesh::ogl_render_tvclines() {
     const int matid = f->matid;
     if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;
     const int matidv = matid ^ k_Face_visited_mask;  // Material id visited.
-    // index j of Corner c within current face
+    // Index j of Corner c within current face.
     int j = 0;
     SrAFace* fnext;
     int jnext;
     int cache_time_next;
     glBegin(GL_LINE_STRIP);
-    for (;;) {    // form one strip
-      for (;;) {  // form ring(s) while having no fnext
+    for (;;) {    // Form one strip.
+      for (;;) {  // Form ring(s) while having no fnext.
         f->matid = matidv;
         SrAVertex* v0 = f->vertices[j];
         SrAVertex* v1 = f->vertices[mod3(j + 1)];
@@ -449,7 +449,7 @@ int SrMesh::ogl_render_tvclines() {
           goto GOTO_STRIP_RESTART_FROM_SCRATCH;  // "continue" on outermost loop
         }
       }
-      for (;;) {  // form ring(s) while having fnext
+      for (;;) {  // Form ring(s) while having fnext.
         f->matid = matidv;
         SrAVertex* v0 = f->vertices[j];
         SrAVertex* v1 = f->vertices[mod3(j + 1)];
@@ -528,19 +528,19 @@ void SrMesh::ogl_render_faces_tvc(bool unlit_texture) {
       glColor4ubv(_ogl_mat_byte_rgba[rmatid].data());
     }
 #endif
-    int j = 0;  // index j of corner within current face f
+    int j = 0;  // Index j of corner within current face f.
     SrAFace* fnext;
     int jnext;
     int cache_time_next;
     // NOTE: Measuring vertex caching on indexed strips gives slightly
     //  fewer cache misses than measuring on indexed triangles.
-    SrAVertex* v0 = f->vertices[0];  // next to Corner c
+    SrAVertex* v0 = f->vertices[0];  // Next to Corner c.
     SrAVertex* v1 = f->vertices[1];
     if (v0->cached_time < cache_time) v0->cached_time = (cache_time++) + k_cache_size;
     if (v1->cached_time < cache_time) v1->cached_time = (cache_time++) + k_cache_size;
     SrAVertex* v2 = f->vertices[2];
-    for (;;) {    // form one strip
-      for (;;) {  // form ring(s) while having no fnext
+    for (;;) {    // Form one strip.
+      for (;;) {  // Form ring(s) while having no fnext.
         f->matid = matidv;
         ASSERTX(v0 == f->vertices[mod3(j + 0)]);
         ASSERTX(v1 == f->vertices[mod3(j + 1)]);
@@ -574,7 +574,7 @@ void SrMesh::ogl_render_faces_tvc(bool unlit_texture) {
           goto GOTO_STRIP_RESTART_FROM_SCRATCH;  // "continue" on outermost loop
         }
       }
-      for (;;) {  // form ring(s) while having fnext
+      for (;;) {  // Form ring(s) while having fnext.
         f->matid = matidv;
         ASSERTX(v0 == f->vertices[mod3(j + 0)]);
         ASSERTX(v1 == f->vertices[mod3(j + 1)]);

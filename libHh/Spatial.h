@@ -20,16 +20,16 @@ class BSpatialSearch;
 }
 
 // Spatial data structure for efficient queries like "closest_elements" or "find_elements_intersecting_ray".
-class Spatial : noncopyable {  // abstract class
+class Spatial : noncopyable {  // An abstract class.
  public:
-  static constexpr int k_max_gn = 1023;  // 10 bits per coordinate
+  static constexpr int k_max_gn = 1023;  // 10 bits per coordinate.
   explicit Spatial(int gn) : _gn(gn), _gni(1.f / assertx(gn)) { assertx(_gn > 0 && _gn <= k_max_gn); }
   virtual ~Spatial() = default;
   virtual void clear() = 0;
 
  protected:
   friend details::BSpatialSearch;
-  const int _gn;     // grid size
+  const int _gn;     // The grid size.
   const float _gni;  // 1.f / _gn
 
   using Ind = Vec3<int>;
@@ -53,15 +53,15 @@ class Spatial : noncopyable {  // abstract class
   [[nodiscard]] int encode(const Ind& ci) const { return (ci[0] << 20) | (ci[1] << 10) | ci[2]; }  // k_max_gn implied
   [[nodiscard]] Ind decode(int en) const;
 
-  // for BSpatialSearch:
+  // For BSpatialSearch:
   // Add elements from cell ci to priority queue with priority equal to distance from pcenter squared.
   // May use set to avoid duplication.
   virtual void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const = 0;
 
-  // Refine distance estimate of first entry in pq (optional)
+  // Refine the distance estimate of the first entry in pq (optional).
   virtual void pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const { dummy_use(pq, pcenter); }
 
-  virtual Univ pq_id(Univ pqe) const = 0;  // given pq entry, return id
+  virtual Univ pq_id(Univ pqe) const = 0;  // Given a pq entry, return the id.
 };
 
 namespace details {
@@ -72,9 +72,9 @@ class BPointSpatial : public Spatial {
   ~BPointSpatial() override { BPointSpatial::clear(); }
   void clear() override;
   // id != 0
-  void enter(Univ id, const Point* pp);   // note: pp not copied, no ownership taken
-  void remove(Univ id, const Point* pp);  // must exist, else die
-  void shrink_to_fit();                   // often just fragments memory
+  void enter(Univ id, const Point* pp);   // Note: pp is not copied; no ownership is taken.
+  void remove(Univ id, const Point* pp);  // Must exist, else die.
+  void shrink_to_fit();                   // Often just fragments memory.
 
  private:
   void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
@@ -83,7 +83,7 @@ class BPointSpatial : public Spatial {
     Univ id;
     const Point* p;
   };
-  Map<int, Array<Node>> _map;  // encoded cube index -> Array
+  Map<int, Array<Node>> _map;  // Encoded cube index -> Array.
 };
 
 }  // namespace details
@@ -108,7 +108,7 @@ class IPointSpatial : public Spatial {
   [[nodiscard]] Univ pq_id(Univ pqe) const override;
 
   const Point* _pp;
-  Map<int, Array<int>> _map;  // encoded cube index -> Array of point indices
+  Map<int, Array<int>> _map;  // Encoded cube index -> Array of point indices.
 };
 
 // Spatial data structure for more general objects.
@@ -132,7 +132,7 @@ class ObjectSpatial : public Spatial {
   template <typename Func = bool(Univ)> void search_segment(const Point& p1, const Point& p2, Func ftest) const;
 
  private:
-  Map<int, Array<Univ>> _map;  // encoded cube index -> vector
+  Map<int, Array<Univ>> _map;  // Encoded cube index -> vector.
 
   void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
   void pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const override;
@@ -143,7 +143,7 @@ namespace details {
 
 class BSpatialSearch : noncopyable {
  public:
-  // pmaxdis is only a request, you may get objects that lie farther
+  // The pmaxdis is only a request; you may get objects that lie farther.
   explicit BSpatialSearch(const Spatial* pspatial, const Point& p, float maxdis = 10.f);
   ~BSpatialSearch();
   struct Result {
@@ -166,12 +166,12 @@ class BSpatialSearch : noncopyable {
   const Spatial& _spatial;
   const Point _pcenter;
   float _maxdis;
-  Pqueue<Univ> _pq;    // pq of entries by distance
-  Vec2<Ind> _ssi;      // search space indices (extents)
-  float _disbv2{0.f};  // distance to search space boundary
-  int _axis;           // axis to expand next
-  int _dir;            // direction in which to expand next (0, 1)
-  Set<Univ> _setevis;  // may be used by add_cell()
+  Pqueue<Univ> _pq;    // The pq of entries by distance.
+  Vec2<Ind> _ssi;      // Search space indices (extents).
+  float _disbv2{0.f};  // Distance to the search space boundary.
+  int _axis;           // Axis to expand next.
+  int _dir;            // Direction in which to expand next (0, 1).
+  Set<Univ> _setevis;  // May be used by add_cell().
   int _ncellsv{0};
   int _nelemsv{0};
 
@@ -189,7 +189,7 @@ template <typename T> class SpatialSearch : public details::BSpatialSearch {
       : BSpatialSearch(pspatial, pp, pmaxdis) {}
   struct Result {
     T id;
-    float d2;  // Squared distance
+    float d2;  // Squared distance.
   };
   // Single-pass iteration in order of increasing distance: "for (const auto [id, d2] : ss) ...".
   // The bindings are by value because operator*() returns a prvalue Result (the Univ id is converted).

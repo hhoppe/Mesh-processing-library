@@ -22,7 +22,7 @@ extern string statefile;
 
 namespace {
 
-constexpr int k_max_object = 1024;  // should be >= objects::MAX
+constexpr int k_max_object = 1024;  // Should be >= objects::MAX.
 
 const FlagMask fflag_invisible = Mesh::allocate_Face_flag();
 // const string k_default_geometry = "700x700+0+0";
@@ -47,21 +47,21 @@ struct DerivedHw : Hw {
 
 DerivedHw hw;
 
-// per object attributes
-bool cullface;            // cull using polygon normal
-int culledge;             // cull using edge normals (3 states)
-bool reverse_cull;        // reverse all cull tests
-bool highlight_vertices;  // draw segment end points
-bool show_sharp;          // show only sharp edges
+// Per-object attributes.
+bool cullface;            // Cull using the polygon normal.
+int culledge;             // Cull using edge normals (3 states).
+bool reverse_cull;        // Reverse all cull tests.
+bool highlight_vertices;  // Draw segment end points.
+bool show_sharp;          // Show only sharp edges.
 
-bool quickmode;  // draw quick segments
-int quicki;      // draw every quicki'th segment
-bool butquick;   // do quickmode when button is pressed
-bool hlrmode;    // hidden line removal
-bool buthlr;     // draw hlr when button is not pressed
-bool nohash;     // do not share vertex geometry
+bool quickmode;  // Draw quick segments.
+int quicki;      // Draw every quicki'th segment.
+bool butquick;   // Do quickmode when the button is pressed.
+bool hlrmode;    // Hidden line removal.
+bool buthlr;     // Draw hlr when the button is not pressed.
+bool nohash;     // Do not share vertex geometry.
 bool datastat;
-bool fisheye;  // fisheye view mode
+bool fisheye;  // Fisheye view mode.
 bool silhouette;
 float hither;
 bool is_yonder;
@@ -73,26 +73,26 @@ void (*fbutp)(int butnum, bool pressed, bool shift, const Vec2<float>& yx);
 void (*fwheel)(float v);
 void (*fdraw)();
 
-bool is_window;      // window is open and drawable
-Vec2<int> win_dims;  // window dimensions
+bool is_window;      // The window is open and drawable.
+Vec2<int> win_dims;  // Window dimensions.
 Frame tcami;
-bool lquickmode;  // is quickmode active now?
-bool lhlrmode;    // is hlr active now?
+bool lquickmode;  // Is quickmode active now?
+bool lhlrmode;    // Is hlr active now?
 int button_active;
-Vec2<int> center_yx;  // half of dimensions
+Vec2<int> center_yx;  // Half of the dimensions.
 float tzs1, tzs2;
 float tzp1, tzp2;
 float tclip1, tclip2;
 float trclip1, trclip2;
-int frame_index = 0;  // current frame number
-Frame tcur;           // current transform: object -> viewing
-Point conor;          // point to use in computing normal culling
-bool want_plot;       // user wants postscript plot
+int frame_index = 0;  // Current frame number.
+Frame tcur;           // Current transform: object -> viewing.
+Point conor;          // Point to use in computing normal culling.
+bool want_plot;       // The user wants a postscript plot.
 string psfile;
-unique_ptr<Postscript> postscript;  // currently drawing postscript
+unique_ptr<Postscript> postscript;  // Currently drawing postscript.
 HiddenLineRemoval hlr;
 bool dbuffer;
-float thicksharp = 5.f;  // for postscript output (0.f=none, 1.f=normal)
+float thicksharp = 5.f;  // For postscript output (0.f = none, 1.f = normal).
 float thicknormal = 1.f;
 
 struct coord {
@@ -101,16 +101,16 @@ struct coord {
     count = 0;
     p = ppp;
   }
-  int count;            // num of references to this
-  int frame;            // frame number it was last transformed
-  ConditionCode ccode;  // clipping plane condition codes
-  Point p;              // point in object frame
-  Point pt;             // point transformed to view frame
-  Point pp;             // point projected onto screen
+  int count;            // Number of references to this.
+  int frame;            // Frame number it was last transformed.
+  ConditionCode ccode;  // Clipping plane condition codes.
+  Point p;              // Point in the object frame.
+  Point pt;             // Point transformed to the view frame.
+  Point pp;             // Point projected onto the screen.
 };
 
 struct segment {
-  mutable int frame;  // frame number it was last drawn
+  mutable int frame;  // Frame number it was last drawn.
   coord* c1;
   coord* c2;
 };
@@ -128,7 +128,7 @@ struct equal_segment {
 struct Node : noncopyable {
   virtual ~Node() = default;
   enum class EType { polygon, line, linenor, point, pointnor };
-  EType _type;  // faster than virtual function or dynamic_cast() or hh::dynamic_exact_cast(), and avoids RTTI
+  EType _type;  // Faster than a virtual function, dynamic_cast(), or hh::dynamic_exact_cast(); avoids RTTI.
  protected:
   explicit Node(EType type) : _type(type) {}
 };
@@ -147,7 +147,7 @@ struct NodeLine : Node {
 
 struct NodeLineNor : NodeLine {
   NodeLineNor(segment* ps, const Vector& n1, const Vector& n2) : NodeLine(ps, EType::linenor), nor(n1, n2) {}
-  Vec2<Vector> nor;  // normal at each vertex
+  Vec2<Vector> nor;  // Normal at each vertex.
 };
 
 struct NodePoint : Node {
@@ -183,14 +183,14 @@ class GxObject {
  private:
   bool _opened{false};
   Array<unique_ptr<Node>> _arn;
-  HashPoint _hp;                 // Point -> hp_index
-  Array<unique_ptr<coord>> _ac;  // hp_index -> coord*  (not Array<coord> as resizing would invalidate pointers)
+  HashPoint _hp;                 // Maps Point -> hp_index.
+  Array<unique_ptr<coord>> _ac;  // Maps hp_index -> coord*  (not Array<coord>, as resizing would invalidate pointers).
   Set<segment, hash_segment, equal_segment> _hs;
-  Array<unique_ptr<Node>> _arnc;  // list of current elements being added
-  static bool s_idraw;            // draw elements as they are added
+  Array<unique_ptr<Node>> _arnc;  // List of current elements being added.
+  static bool s_idraw;            // Draw elements as they are added.
   static int s_nuvertices;
   static int s_nusegments;
-  coord* add_coord(const Point& p);  // search _hp + _ac for coord*
+  coord* add_coord(const Point& p);  // Search _hp + _ac for coord*.
   segment* add_segment(coord* c1, coord* c2);
   void append(unique_ptr<Node> n);
 };
@@ -218,7 +218,7 @@ class GxObjects {
  private:
   int _imin{k_max_object};
   int _imax{0};
-  // if _link[i], is a link to GxObject _link[i]
+  // If _link[i], it is a link to GxObject _link[i].
   Vec<int, k_max_object> _link;
   Array<unique_ptr<GxObject>> _ob;
   int _segn{-1};
@@ -341,7 +341,7 @@ bool clip_side(coord* c1, const coord* c2, int axis, float val) {
   const float s1 = c1->pt[0] + val * c1->pt[axis];
   const float s2 = c2->pt[0] + val * c2->pt[axis];
   if ((s1 <= 0.f && s2 <= 0.f) || (s1 >= 0.f && s2 >= 0.f)) {
-    return true;  // numerical problem
+    return true;  // A numerical problem.
   } else {
     c1->pt = interp(c1->pt, c2->pt, s2 / (s2 - s1));
     transf2(c1);
@@ -367,7 +367,7 @@ bool clip2(coord* c, const coord* c2) {
     cc = c->ccode;
   }
   if (cc & cc2) return true;
-  if (cc) return true;  // numerical problem
+  if (cc) return true;  // A numerical problem.
   return false;
 }
 
@@ -380,7 +380,7 @@ void draw_point(coord* c) {
   transf(c);
   if (c->ccode) return;
   if (lhlrmode && !hlr.draw_point(hlr_point_from_coord(c))) return;
-  float c1s0 = center_yx[1] + c->pp[1] * tzs1;  // no need for + .5f because center_yx already centered
+  float c1s0 = center_yx[1] + c->pp[1] * tzs1;  // No need for + .5f because center_yx is already centered.
   const float c1s1 = center_yx[0] + c->pp[2] * tzs2;
   hw.draw_point(V(c1s1, c1s0));
   if (highlight_vertices) {
@@ -392,7 +392,7 @@ void draw_point(coord* c) {
   if (postscript) postscript->point(.5f - tzp1 * c->pp[1], .5f + tzp2 * c->pp[2]);
 }
 
-void draw_segment(coord* c1, coord* c2);  // forward declaration
+void draw_segment(coord* c1, coord* c2);  // Forward declaration.
 
 void draw_fisheye(const coord* c1, const coord* c2) {
   assertx(quicki > 0);
@@ -492,7 +492,7 @@ void fast_draw_seg(coord* c1, coord* c2) {
     if (cc1 && clip2(c1, c2)) return;
     if (cc2 && clip2(c2, c1)) return;
   }
-  float c1s0 = center_yx[1] + c1->pp[1] * tzs1;  // no need for + .5f because center_yx is correctly centered
+  float c1s0 = center_yx[1] + c1->pp[1] * tzs1;  // No need for + .5f because center_yx is correctly centered.
   const float c1s1 = center_yx[0] + c1->pp[2] * tzs2;
   float c2s0 = center_yx[1] + c2->pp[1] * tzs1;
   const float c2s1 = center_yx[0] + c2->pp[2] * tzs2;
@@ -569,7 +569,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
 }
 
 void enter_hidden_polygon(Polygon& poly, int and_codes, int or_codes) {
-  // If completely on one side of a clipping plane, reject
+  // If completely on one side of a clipping plane, reject.
   if (and_codes) return;
   // If not all vertices are beyond hither, do clipping
   // don't have to worry at all about yonder plane!
@@ -623,7 +623,7 @@ void enter_hidden_polygons(CArrayView<unique_ptr<Node>> arn) {
           transf(cc);
           and_codes &= cc->ccode;
           or_codes |= cc->ccode;
-          poly.push(cc->pt);  // viewing frame coordinates
+          poly.push(cc->pt);  // Viewing frame coordinates.
         }
         if (!assertw(cc == cfirst)) return;
       }
@@ -646,7 +646,7 @@ void mesh_init(GMesh& mesh) {
 void mesh_transform(GMesh& mesh) {
   for (Vertex v : mesh.vertices()) {
     coord& cc = v_coord(v);
-    cc.frame = -1;  // force transformation
+    cc.frame = -1;  // Force the transformation.
     transf(&cc);
   }
 }
@@ -671,7 +671,7 @@ void enter_mesh_hidden_polygons(GMesh& mesh) {
       const coord& cc = v_coord(v);
       and_codes &= cc.ccode;
       or_codes |= cc.ccode;
-      poly.push(cc.pt);  // viewing frame coordinates
+      poly.push(cc.pt);  // Viewing frame coordinates.
     }
     enter_hidden_polygon(poly, and_codes, or_codes);
   }
@@ -720,7 +720,7 @@ void hlr_draw_seg(const Point& p1, const Point& p2) {
   for_int(i, 2) {
     co[i].ccode = 0;
     co[i].pp = Point(pa[i][0], (pa[i][1] - .5f) / tzp1, (pa[i][2] - .5f) / tzp2);
-    // faked this part to get fisheye to work
+    // Faked this part to get fisheye to work.
     const float a = hither * 1.001f;
     co[i].pt = Point(a, co[i].pp[1] * a, co[i].pp[2] * a);
   }
@@ -806,7 +806,7 @@ void GxObject::add(const A3dElem& el) {
         n->ars.push(add_segment(cl, cc));
         cl = cc;
       }
-      n->repc = cl;  // pick an arbitrary vertex for now
+      n->repc = cl;  // Pick an arbitrary vertex for now.
       append(std::move(n));
       break;
     }
@@ -868,7 +868,7 @@ void GxObject::close() {
   assertx(_opened);
   _opened = false;
   if (datastat) SHOW(s_nuvertices, s_nusegments);
-  // assign repc vertices
+  // Assign repc vertices.
   for_int(i, _arnc.num()) {
     Node* un = _arnc[i].get();
     if (un->_type == Node::EType::polygon) {
@@ -934,7 +934,7 @@ void GxObjects::open(int segn) {
   _segn = segn;
   assertx(_link.ok(segn));
   _link[_segn] = 0;
-  if (!_ob[_segn]) {  // create GxObject
+  if (!_ob[_segn]) {  // Create a GxObject.
     _imin = min(_imin, _segn);
     _imax = max(_imax, _segn);
     _ob[_segn] = make_unique<GxObject>();
@@ -1055,7 +1055,7 @@ void HB::set_yonder(float y) {
 }
 
 void HB::set_current_object(int obn) {
-  dummy_use(obn);  // no lighting feature in g3dX
+  dummy_use(obn);  // No lighting feature in g3dX.
 }
 
 void HB::update_seg(int segn, const Frame& frame, bool vis) {
@@ -1148,7 +1148,7 @@ bool HB::special_keypress(char ch) {
       if (hw.query(V(30, 2), "Stateg3d:", s)) g3d::statefile = s;
       break;
     }
-    case '\r':  // <enter>/<ret> key (== uchar{13} == 'M' - 64)
+    case '\r':  // The <enter>/<ret> key (== uchar{13} == 'M' - 64).
     case '\n':  // G3d -key $'\n'
       hw.make_fullscreen(!hw.is_fullscreen());
       break;

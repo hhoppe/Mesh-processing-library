@@ -460,9 +460,9 @@ template <int D, typename T> constexpr void nested_list_retrieve(auto&& grid, ne
     for_int(i, n) grid[i] = l.begin()[i];
   } else {
     if constexpr (requires { grid.dim(0); })
-      assertx(grid.dim(0) == n);  // Here grid is a GridView<D, T>.
+      assertx(grid.dim(0) == n);  // Here, grid is a GridView<D, T>.
     else
-      assertx(grid.num() == n);  // Here grid is a Vec<slice, d0>, whose elements are nested Vec.
+      assertx(grid.num() == n);  // Here, grid is a Vec<slice, d0>, whose elements are nested Vec.
     for_int(i, n) nested_list_retrieve<D - 1, T>(grid[i], l.begin()[i]);
   }
 }

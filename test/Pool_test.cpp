@@ -33,9 +33,9 @@ class A {
 int main() {
   {
     A* pa = new A[10];
-    delete[] pa;  // should call global "delete"!
+    delete[] pa;  // Should call global "delete"!
     pa = nullptr;
-    delete[] pa;  // should call nothing!
+    delete[] pa;  // Should call nothing!
   }
   {
     SHOW("make_unique");

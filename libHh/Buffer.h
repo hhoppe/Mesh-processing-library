@@ -16,19 +16,19 @@ namespace hh {
 
 class Buffer : noncopyable {
  public:
-  [[nodiscard]] bool eof() const { return _eof; }  // end of file
-  [[nodiscard]] bool err() const { return _err; }  // error in system call
+  [[nodiscard]] bool eof() const { return _eof; }  // End of file.
+  [[nodiscard]] bool err() const { return _err; }  // Error in a system call.
  protected:
   explicit Buffer(int fd) : _fd(fd) { assertx(_fd >= 0); }
-  int _fd;  // file descriptor associated
+  int _fd;  // The associated file descriptor.
   Array<char> _ar;
-  int _beg{0};  // index of first element in _ar[]
-  int _n{0};    // num of elements in buffer (_beg + _n <= _ar.num())
+  int _beg{0};  // Index of the first element in _ar[].
+  int _n{0};    // Number of elements in the buffer (_beg + _n <= _ar.num()).
   bool _eof{false};
   bool _err{false};
 
-  void shift();   // shift data to beginning of buffer
-  void expand();  // increase buffer size
+  void shift();   // Shift data to the beginning of the buffer.
+  void expand();  // Increase the buffer size.
 };
 
 class RBuffer : public Buffer {
@@ -36,14 +36,14 @@ class RBuffer : public Buffer {
   explicit RBuffer(int fd);
   enum class ERefill { no, yes, other };
   [[nodiscard]] ERefill refill();
-  void extract(int n);  // have read n bytes
+  void extract(int n);  // Have read n bytes.
   [[nodiscard]] int num() const { return _n; }
   [[nodiscard]] size_t size() const { return num(); }
   [[nodiscard]] char operator[](int bi) const;
   [[nodiscard]] bool has_line() const;
-  // next dies if len not sufficient, includes '\n', ret success
+  // The following function dies if len is not sufficient; string str includes '\n'; returns success.
   [[nodiscard]] bool extract_line(string& str);
-  [[nodiscard]] char get_char(int bi) const;  // same as operator[]
+  [[nodiscard]] char get_char(int bi) const;  // Same as operator[].
   [[nodiscard]] int get_int(int bi) const;
   [[nodiscard]] short get_short(int bi) const;
   [[nodiscard]] float get_float(int bi) const;

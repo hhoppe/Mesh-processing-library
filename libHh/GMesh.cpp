@@ -160,7 +160,7 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
   kb = _s, kl = nch;
   if (_s[nch] != '=') {
     assertx(_s[nch] == 0 || _s[nch] == ' ');
-    vb = kb + kl, vl = 0;  // null string ""
+    vb = kb + kl, vl = 0;  // A null string "".
     _s += nch;
     if (_s[0] == ' ') _s++;
     return true;
@@ -243,7 +243,7 @@ const char* GMesh::corner_key(string& str, Corner c, const char* key) const {
 }
 
 string GMesh::string_update(const string& s, const char* key, const char* val) {
-  // inefficient (seldom used)
+  // Inefficient (seldom used).
   unique_ptr<char[]> ss = s != "" ? make_unique_c_string(s.c_str()) : nullptr;
   update_string_ptr(ss, key, val);
   string s_new = ss ? ss.get() : "";
@@ -257,14 +257,14 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
   size_t vall;
   dummy_init(vall);
   if (val) vall = strlen(val);
-  const char* sso = ss.get();  // may be nullptr
-  int nkeys2 = 0;              // may equal 2 if > 2 keys
+  const char* sso = ss.get();  // May be nullptr.
+  int nkeys2 = 0;              // May equal 2 if > 2 keys.
   const char* fkb = nullptr;
   int fvl = 0;
-  const char* frb = nullptr;  // remainder of string after matching key
+  const char* frb = nullptr;  // Remainder of the string after the matching key.
   for_cstring_key_value_ptr(sso, [&](const char* kb, int kl, const char* vb, int vl) {
     nkeys2++;
-    if (fkb && !frb) {  // found remainder of string; parsed enough.
+    if (fkb && !frb) {  // Found remainder of string; parsed enough.
       frb = kb;
       if (!k_debug) return true;
     }
@@ -276,7 +276,7 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
     }
     return false;
   });
-  if (!fkb && !val) return;  // no change
+  if (!fkb && !val) return;  // No change.
   size_t ssol;
   dummy_init(ssol);
   if (sso) ssol = strlen(sso);
@@ -290,11 +290,11 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
   }
   unique_ptr<char[]> arnew;
   char* s0;
-  if (newl == 0) {  // new string is null (""), so clear it
+  if (newl == 0) {  // The new string is null (""), so clear it.
     ss = nullptr;
     return;
   } else if (sso && newl <= ssol) {  // new string fits, so copy in-place
-    s0 = ss.get();                   // "char*" whereas sso is "const char*"
+    s0 = ss.get();                   // A "char*" whereas sso is "const char*".
   } else {                           // string needs to grow
     arnew = make_unique<char[]>(newl + 1);
     s0 = arnew.get();
@@ -302,9 +302,9 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
   char* s = s0;
   ASSERTX(s);
   if (fkb) {
-    ASSERTX(sso);  // logic implies it
+    ASSERTX(sso);  // Logic implies it.
     if (fkb > sso) {
-      if (s != sso) std::memcpy(s, sso, fkb - sso - 1);  // does not write '\0'
+      if (s != sso) std::memcpy(s, sso, fkb - sso - 1);  // Does not write '\0'.
       s += fkb - sso - 1;
     }
   } else {
@@ -326,7 +326,7 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
   }
   if (frb) {
     if (s > s0) *s++ = ' ';
-    const size_t frbl = strlen(frb);  // frb may be partially overwritten by next std::memmove()
+    const size_t frbl = strlen(frb);  // Here, frb may be partially overwritten by the next std::memmove().
     if (s != frb) std::memmove(s, frb, frbl);
     s += frbl;
   }
@@ -608,7 +608,7 @@ void GMesh::write_face(WA3dStream& oa3d, A3dElem& el, const A3dVertexColor& col,
   el.init(A3dElem::EType::polygon);
   A3dVertexColor fcol = col;
   A3dColor fcold = col.d;
-  parse_key_vec(get_string(f), "rgb", fcold);  // else unmodified
+  parse_key_vec(get_string(f), "rgb", fcold);  // Else unmodified.
   for (Corner c : corners(f)) {
     Vertex v = corner_vertex(c);
     Vector nor(0.f, 0.f, 0.f);
@@ -631,7 +631,7 @@ Vertex GMesh::create_vertex_private(int id) {
   return Mesh::create_vertex_private(id);
 }
 
-// Override Mesh members
+// Override Mesh members.
 void GMesh::destroy_vertex(Vertex v) {
   if (_os) *_os << "DVertex " << vertex_id(v) << '\n';
   Mesh::destroy_vertex(v);
@@ -658,13 +658,13 @@ void GMesh::collapse_edge_vertex(Edge e, Vertex vs) {
   _os = nullptr;
   Vertex vt = opp_vertex(vs, e);
   const int ids = vertex_id(vs), idt = vertex_id(vt);
-  // Compute geometry for unified vertex (vs)
+  // Compute the geometry for the unified vertex (vs).
   const int isbs = is_boundary(vs), isbt = is_boundary(vt), sumb = isbs + isbt;
   const Point p = sumb == 0 || sumb == 2 ? Point(interp(point(vs), point(vt))) : isbs ? point(vs) : point(vt);
   Set<Vertex> vsharp;
   for (Edge ee : edges(vt))
     if (ee != e && flags(ee).flag(eflag_sharp)) vsharp.enter(opp_vertex(vt, ee));
-  Mesh::collapse_edge_vertex(e, vs);  // vs is kept
+  Mesh::collapse_edge_vertex(e, vs);  // Here, vs is kept.
   // e = nullptr;  // now undefined
   set_point(vs, p);  // (_os == nullptr)
   for (Vertex v : vsharp) {
@@ -672,7 +672,7 @@ void GMesh::collapse_edge_vertex(Edge e, Vertex vs) {
     if (!is_boundary(ee)) flags(ee).flag(eflag_sharp) = true;
   }
   for (Edge ee : edges(vs)) {
-    // test (vs, vo1), (vs, vo2) to remove eflag_sharp if now boundary
+    // Test (vs, vo1), (vs, vo2) to remove eflag_sharp if now boundary.
     if (is_boundary(ee) && flags(ee).flag(eflag_sharp)) flags(ee).flag(eflag_sharp) = false;
   }
   if (tos) {
@@ -723,7 +723,7 @@ Vertex GMesh::split_edge(Edge e, int id) {
   Face f1 = face1(e), f2 = face2(e);
   Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e);
   const bool flag_e = flags(e).flag(eflag_sharp);
-  auto fstring1 = make_unique_c_string(get_string(f1));  // often nullptr
+  auto fstring1 = make_unique_c_string(get_string(f1));  // Often nullptr.
   auto fstring2 = f2 ? make_unique_c_string(get_string(f2)) : nullptr;
   Vertex vn = Mesh::split_edge(e, id);
   flags(edge(v1, vn)).flag(eflag_sharp) = flag_e;
@@ -785,7 +785,7 @@ void GMesh::merge_vertices(Vertex vs, Vertex vt) {
 }
 
 Vertex GMesh::center_split_face(Face f) {
-  auto fstring = make_unique_c_string(get_string(f));  // often nullptr
+  auto fstring = make_unique_c_string(get_string(f));  // Often nullptr.
   Map<Vertex, string> mvs;
   for (Corner c : corners(f)) {
     Vertex v = corner_vertex(c);
@@ -839,7 +839,7 @@ Vertex GMesh::center_split_face(Face f) {
 }
 
 Edge GMesh::split_face(Face f, Vertex v1, Vertex v2) {
-  auto fstring = make_unique_c_string(get_string(f));  // often nullptr
+  auto fstring = make_unique_c_string(get_string(f));  // Often nullptr.
   Map<Vertex, unique_ptr<char[]>> mvs;
   for (Corner c : corners(f)) {
     Vertex v = corner_vertex(c);
@@ -853,7 +853,7 @@ Edge GMesh::split_face(Face f, Vertex v1, Vertex v2) {
     for (Face ff : faces(en)) {
       for (Corner cc : corners(ff)) {
         Vertex vv = corner_vertex(cc);
-        set_string(cc, mvs.retrieve(vv).get());  // could be nullptr
+        set_string(cc, mvs.retrieve(vv).get());  // Could be nullptr.
       }
     }
   }
@@ -871,7 +871,7 @@ Face GMesh::coalesce_faces(Edge e) {
 }
 
 Vertex GMesh::insert_vertex_on_edge(Edge e) {
-  // lose strings
+  // Lose strings.
   Vertex v1 = vertex1(e), v2 = vertex2(e);
   Vertex vn = Mesh::insert_vertex_on_edge(e);
   set_point(vn, interp(point(v1), point(v2)));
@@ -879,7 +879,7 @@ Vertex GMesh::insert_vertex_on_edge(Edge e) {
 }
 
 Edge GMesh::remove_vertex_between_edges(Vertex vr) {
-  // lose strings
+  // Lose strings.
   return Mesh::remove_vertex_between_edges(vr);
 }
 

@@ -22,7 +22,7 @@ void try_it(const string& stest) {
   // This test is broken.  We cannot assume that csh, sh, or cmd are in the user's path.
   for_int(method, 2) {  // csh, sh, cmd
     if (0) SHOW(method);
-    string s1 = quote_arg_for_sh(stest);  // stronger than quote_arg_for_shell()
+    string s1 = quote_arg_for_sh(stest);  // Stronger than quote_arg_for_shell().
     if (0) SHOW(s1);
     if (0) {
       const string s2 = "echo " + s1 + " >" + tmpf;
@@ -98,7 +98,7 @@ void test_spawn() {
   }
   {
     const string arcands = R"(abcdefgh       `~!@#$%^&*()-_=+[{]}\|;:'"",<.>/?)";  // double '"' frequency
-    for_int(itry, 10) {                                                            // tried up to 10'000
+    for_int(itry, 10) {                                                            // Tried up to 10'000.
       const int len = 20;
       string str(len, ' ');
       for_int(i, len) str[i] = arcands[Random::G.get_unsigned(narrow_cast<unsigned>(arcands.size()))];
@@ -113,7 +113,7 @@ void test_spawn2() {
 #define E(str)  \
   s = str;      \
   SHOW("*", s); \
-  SHOW(_spawnvp(P_WAIT, shell0, V(shell, "-c", s, nullptr).data()))  // or "-vc"
+  SHOW(_spawnvp(P_WAIT, shell0, V(shell, "-c", s, nullptr).data()))  // Or "-vc".
   // echo 'a'\''b' // a'b
   // csh -c 'echo '\''a'\''\'\'''\''b'\''' // a'b
   // sh -c  'echo '\''a'\''\'\'''\''b'\''' // a'b
@@ -144,13 +144,13 @@ void test_spawn2() {
     E(R"('echo '\''a'\''\'\'''\''b'\''')");  // 'echo        Unmatched '.
     E(R"('echo \''a'\''\'\'''\''b'\''')");   // 'echo        Unmatched '.
     E(R"('echo \'a\'\\\'\'b\'')");           // 'echo        Unmatched '.
-    // Try using double-quotes with "\"" for inner double quotes
+    // Try using double-quotes with "\"" for inner double quotes.
     E(R"("echo "\""a b"\""")");  // echo "a b"       a b
     //  echo\ \"a\ b\"
     E(R"("echo"\\" "\\""\""a"\\" b"\\""\\"")");  // echo\ \"a\ b\\   echo "a b\: Command not found.
   }
   if (1) {
-    // cygwin sh does not use windows crt, so has its own scheme for parsing command
+    // Cygwin sh does not use windows crt, so has its own scheme for parsing command.
     shell = "sh";
     shell0 = shell;
     SHOW("**", shell, shell0);
@@ -170,9 +170,9 @@ void test_spawn2() {
     E(R"('echo '\''a'\''\'\'''\''b'\''')");  // echo a'\''b'      a\b   unexpected
     E(R"('echo \''a'\''\'\'''\''b'\''')");   // echo 'a'\''b'     a'b   enexpected; works
     E(R"('echo \'a\'\\\'\'b\'')");           // echo 'a'\''b'     a'b   unexpected; works
-    // Try using double-quotes with "\"" for inner double quotes
+    // Try using double-quotes with "\"" for inner double quotes.
     E(R"("echo "\""a b"\""")");  // echo a    a    unexpected
-    // Instead backslash inner double quotes
+    // Instead backslash inner double quotes.
     E(R"("echo \"a b\"")");  // echo "a b"       a b     works
     E(R"("echo \"a b\"")");  // echo "a b"       a b     works  (just backslash inner double-quotes)
     E(R"("echo '\"'")");     // echo '"'         "       works
@@ -234,7 +234,7 @@ void func4() {
   };
   struct SS {
     SS() {
-      // see if _s1 and _s2 are destructed; yes they are.
+      // See if _s1 and _s2 are destructed; yes they are.
       _s1._s = "s1";
       _s2._s = "s2";
       func2();
@@ -259,8 +259,8 @@ void test_exceptions() {
     SHOW("catch4", ex.what());
   }
   if (0) {
-    throw std::runtime_error("err2");  // exercise my_terminate() or my_top_level_exception_filter()
-                                       // instead use "HTest -exception"
+    throw std::runtime_error("err2");  // Exercise my_terminate() or my_top_level_exception_filter().
+    // Instead use "HTest -exception".
   }
 }
 
@@ -375,7 +375,7 @@ int main() {
     Warning("A is chronologically earliest");
     Warning("z is chronologically last");
   }
-  {  // test SHOW
+  {  // Test SHOW.
     {
       Array<int> ar;
       for_int(i, 8) ar.push(i);
@@ -423,7 +423,7 @@ int main() {
     SHOW(first_of(2, 0));
   }
   {
-    // raw string literal examples
+    // Raw string literal examples.
     string s0 = R"(new literal\t string)";
     string s1 = R"(line 1
 line2)";
@@ -489,7 +489,7 @@ line2)";
   {
     SHOW(type_name<sum_type_t<float>>());
     SHOW(type_name<sum_type_t<double>>());
-    SHOW(type_name<sum_type_t<signed char>>());  // sign of regular char is platform-dependent
+    SHOW(type_name<sum_type_t<signed char>>());  // Sign of regular char is platform-dependent.
     SHOW(type_name<sum_type_t<uchar>>());
     SHOW(type_name<sum_type_t<uint8_t>>());
     SHOW(type_name<sum_type_t<short>>());

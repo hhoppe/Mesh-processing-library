@@ -97,7 +97,7 @@ int main() {
     SHOW(rms(ar));
   }
   {
-    int a[5] = {10, 11, 12, 13, 14};  // test C-array
+    int a[5] = {10, 11, 12, 13, 14};  // Test C-array.
     SHOW(CArrayView<int>(a));
     SHOW(CArrayView(a));
     CArrayView<int> ar(a);
@@ -149,7 +149,7 @@ int main() {
   }
   if (0) {
     Array<int> ar(2, -1);
-    SHOW(ar[2]);  // out-of-bounds error
+    SHOW(ar[2]);  // Out-of-bounds error.
   }
   {
     using Array3 = Vec3<Array<int>>;

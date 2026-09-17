@@ -34,37 +34,37 @@
 namespace hh {
 
 // Contour2D/Contour3DMesh/Contour3D compute a piecewise linear approximation to the zeroset of a scalar function:
-//   - surface triangle mesh in the unit cube   (Contour3DMesh)
-//   - surface triangle stream in the unit cube (Contour3D)
-//   - curve polyline stream in the unit square (Contour2D)
+//   - surface triangle mesh in the unit cube   (Contour3DMesh).
+//   - surface triangle stream in the unit cube (Contour3D).
+//   - curve polyline stream in the unit square (Contour2D).
 
 // TODO: Improve efficiency/generality:
 // - use 64-bit encoding to allow larger grid sizes.
 // - perhaps distinguish  Set<unsigned> cubes_visited and  Map<unsigned, Node>  cube_vertices? and edge_vertices too?
 // - somehow remove _en from Node?
-// - somehow remove mapsucc
-// - Contour2D: directly extract joined polylines; no need to check degen
+// - somehow remove mapsucc.
+// - Contour2D: directly extract joined polylines; no need to check degeneracy.
 
-constexpr float k_Contour_undefined = 1e31f;  // represents undefined distance, to introduce surface boundaries
+constexpr float k_Contour_undefined = 1e31f;  // Represents undefined distance, to introduce surface boundaries.
 
 // Protected content in this class just factors functions common to Contour2D, Contour3DMesh, and Contour3D.
 template <int D, typename VertexData = Vec0<int>> class ContourBase {
  public:
-  void set_ostream(std::ostream* os) { _os = os; }  // for summary text output; may be set to nullptr
-  void set_vertex_tolerance(float tol) {            // if nonzero, do binary search; tol is absolute distance in domain
+  void set_ostream(std::ostream* os) { _os = os; }  // For summary text output; may be set to nullptr.
+  void set_vertex_tolerance(float tol) {            // If nonzero, do binary search; tol is absolute domain distance.
     _vertex_tol = tol;
-    _vertex_tol = getenv_float("CONTOUR_VERTEX_TOL", _vertex_tol, true);  // override
+    _vertex_tol = getenv_float("CONTOUR_VERTEX_TOL", _vertex_tol, true);  // Override.
   }
 
  protected:
   static constexpr float k_not_yet_evaled = BIGFLOAT;
-  using DPoint = Vec<float, D>;  // domain point
-  using IPoint = Vec<int, D>;    // grid point
+  using DPoint = Vec<float, D>;  // A domain point.
+  using IPoint = Vec<int, D>;    // A grid point.
   static_assert(D == 2 || D == 3);
-  static constexpr int k_max_gn = D == 3 ? 1024 : 65536;  // bits/coordinate == 10 for 3D, 16 for 2D (max 32 bits)
+  static constexpr int k_max_gn = D == 3 ? 1024 : 65536;  // Bits/coordinate == 10 for 3D, 16 for 2D (max 32 bits).
   explicit ContourBase(int gridn_) : _gn(gridn_), _gni(1.f / gridn_) {
     assertx(_gn > 0);
-    assertx(_gn < k_max_gn);  // must leave room for [0 ... _gn] inclusive
+    assertx(_gn < k_max_gn);  // Must leave room for [0 ... _gn] inclusive.
     set_vertex_tolerance(_vertex_tol);
   }
   ~ContourBase() {
@@ -81,7 +81,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
   int _gn;
   float _gni;  // 1.f / _gn
   std::ostream* _os{&std::cerr};
-  float _vertex_tol{0.f};  // note: 0.f is special: infinite tolerance
+  float _vertex_tol{0.f};  // Note: 0.f is special: infinite tolerance.
   // Model: the domain [0.f, 1.f] ^ D is partitioned into _gn ^ D cubes.
   // These cubes are indexed by nodes with indices [0, _gn - 1].
   // The cube vertices are indexed by nodes with indices [0, _gn].  See get_point().
@@ -89,11 +89,11 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
   struct Node : VertexData {
     explicit Node(unsigned pen) : _en(pen) {}
     enum class ECubestate { nothing, queued, visited };
-    unsigned _en;                                // encoded vertex index
-    ECubestate _cubestate{ECubestate::nothing};  // cube info
-    float _val{k_not_yet_evaled};                // vertex value
-    DPoint _p;                                   // vertex point position in grid
-                                                 // Note that for 3D, base class contains Vec3<Vertex> _verts.
+    unsigned _en;                                // The encoded vertex index.
+    ECubestate _cubestate{ECubestate::nothing};  // Cube info.
+    float _val{k_not_yet_evaled};                // The vertex value.
+    DPoint _p;                                   // The vertex point position in the grid.
+    // Note that for 3D, base class contains Vec3<Vertex> _verts.
   };
   struct hash_Node {
     size_t operator()(const Node& n) const { return n._en; }
@@ -104,7 +104,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
   Set<Node, hash_Node, equal_Node> _m;
   // (std::unordered_set<> : References and pointers to key stored in the container are only
   //   invalidated by erasing that element.  So it's OK to keep pointers to Node* even as more are added.)
-  Queue<unsigned> _queue;  // cubes queued to be visited
+  Queue<unsigned> _queue;  // Cubes queued to be visited.
   int _ncvisited{0};
   int _ncundef{0};
   int _ncnothing{0};
@@ -140,7 +140,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
       for (;;) {
         ASSERTX(v0 >= 0.f && v1 < 0.f && f0 < f1);
         float b1 = v0 / (v0 - v1);
-        b1 = clamp(b1, .05f, .95f);  // guarantee quick convergence
+        b1 = clamp(b1, .05f, .95f);  // Guarantee quick convergence.
         fm = f0 * (1.f - b1) + f1 * b1;
         pm = interp(p1, p0, b1);
         const float vm = eval(pm);
@@ -161,7 +161,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
     }
     if (avoid_degen) {
       // const float fs = _gn > 500 ? .05f : _gn > 100 ? .01f : .001f;
-      const float fs = 2e-5f * _gn;  // sufficient precision for HashFloat with default nignorebits == 8
+      const float fs = 2e-5f * _gn;  // Sufficient precision for HashFloat with default nignorebits == 8.
       if (fm < fs) {
         _nedegen++;
         pm = interp(pn, pp, fs);
@@ -176,7 +176,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
 
 // *** Contour3D
 
-struct Contour3D_NoBorder {  // special type to indicate that no border output is desired
+struct Contour3D_NoBorder {  // A special type to indicate that no border output is desired.
   float operator()(CArrayView<Vec3<float>>) const {
     assertnever_ret("");
     return 0.f;
@@ -188,7 +188,7 @@ struct VertexData3DMesh {
 };
 
 template <typename VertexData = Vec0<int>,
-          typename Derived = void,  // for contour_cube()
+          typename Derived = void,  // For contour_cube().
           typename Eval = float(const Vec3<float>&), typename Border = Contour3D_NoBorder>
 class Contour3DBase : public ContourBase<3, VertexData> {
  protected:
@@ -215,9 +215,9 @@ class Contour3DBase : public ContourBase<3, VertexData> {
 
  public:
   explicit Contour3DBase(int gn, Eval eval, Border border) : base(gn), _eval(eval), _border(border) {}
-  // ret number of new cubes visited: 0 = revisit_cube, 1 = no_surf, > 1 = new
+  // Returns the number of new cubes visited: 0 = revisit_cube, 1 = no_surface, > 1 = new.
   int march_from(const DPoint& startp) { return march_from_i(startp); }
-  // call march_from() on all cells near startp; ret num new cubes visited
+  // Call march_from() on all cells near startp; returns the number of new cubes visited.
   int march_near(const DPoint& startp) { return march_near_i(startp); }
 
  protected:
@@ -268,7 +268,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
     {
       const unsigned en = encode(cc);
       bool is_new;
-      Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));  // un-const OK if not modify n->_en
+      Node* n = const_cast<Node*>(&_m.enter(Node(en), is_new));  // Un-const is OK if we do not modify n->_en.
       if (n->_cubestate == Node::ECubestate::visited) return 0;
       ASSERTX(n->_cubestate == Node::ECubestate::nothing);
       _queue.enqueue(en);
@@ -311,7 +311,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
     } else {
       derived().contour_cube(cc, na);
     }
-    for_int(d, D) for_int(i, 2) {  // push neighbors
+    for_int(d, D) for_int(i, 2) {  // Push neighbors.
       const int d1 = (d + 1) % D, d2 = (d + 2) % D;
       IPoint cd;
       cd[d] = i;
@@ -327,7 +327,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
       cd[d] = i ? 1 : -1;
       cd[d1] = cd[d2] = 0;
       const IPoint ci = cc + cd;  // Indices of node for neighboring cube.
-      // note: vmin < 0.f since 0.f is arbitrarily taken to be positive
+      // Note: vmin < 0.f since 0.f is arbitrarily taken to be positive.
       if (vmax != k_Contour_undefined && vmin < 0.f && vmax >= 0.f && cube_inbounds(ci)) {
         const unsigned en = encode(ci);
         bool is_new;
@@ -341,7 +341,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
         auto& poly = _tmp_poly;
         poly.init(0);
         for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
-          const int sw = cd[d] ^ cd[d1];  // 0 or 1
+          const int sw = cd[d] ^ cd[d1];  // 0 or 1.
           for (cd[d2] = sw; cd[d2] == 0 || cd[d2] == 1; cd[d2] += (sw ? -1 : 1)) poly.push(get_point(cc + cd));
         }
         _border(poly);
@@ -378,16 +378,16 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
     // Based on Wyvill et al.
     dummy_use(cc);
     Map<Vertex, Vertex> mapsucc;
-    for_int(d, D) for_int(v, 2) {  // examine each of 6 cube faces
+    for_int(d, D) for_int(v, 2) {  // Examine each of the 6 cube faces.
       Vec4<Node*> naf;
       {
         const int d1 = (d + 1) % D, d2 = (d + 2) % D;
         IPoint cd;
         cd[d] = v;
         int i = 0;
-        // Gather 4 cube vertices in a consistent order
+        // Gather the 4 cube vertices in a consistent order.
         for (cd[d1] = 0; cd[d1] < 2; cd[d1]++) {
-          const int sw = cd[d] ^ cd[d1];  // 0 or 1
+          const int sw = cd[d] ^ cd[d1];  // 0 or 1.
           for (cd[d2] = sw; cd[d2] == 0 || cd[d2] == 1; cd[d2] += (sw ? -1 : 1)) naf[i++] = na[cd];
         }
       }
@@ -401,9 +401,9 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
       for_int(i, 4) {
         const int i1 = mod4(i + 1), i2 = mod4(i + 2), i3 = mod4(i + 3);
         if (!(naf[i]->_val < 0.f && naf[i1]->_val >= 0.f)) continue;
-        // have start of edge
+        // Have the start of the edge.
         ASSERTX(nneg >= 1 && nneg <= 3);
-        int ie;  // end of edge
+        int ie;  // The end of the edge.
         if (nneg == 1) {
           ie = i3;
         } else if (nneg == 3) {
@@ -417,13 +417,13 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
         }
         Vertex v1 = get_vertex_onedge(naf[i1], naf[i]);
         Vertex v2 = get_vertex_onedge(naf[ie], naf[mod4(ie + 1)]);
-        mapsucc.enter(v2, v1);  // to get face order correct
+        mapsucc.enter(v2, v1);  // To get the face order correct.
       }
     }
     Vec<Vertex, 12> va;
     while (!mapsucc.empty()) {
       Vertex vf = nullptr;
-      int minvi = std::numeric_limits<int>::max();  // find min to be portable
+      int minvi = std::numeric_limits<int>::max();  // Find the min, to be portable.
       for (Vertex v : mapsucc.keys()) {
         const int vi = _pmesh->vertex_id(v);
         if (vi < minvi) {
@@ -497,7 +497,7 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
   using typename base::Node222;
   void contour_cube(const IPoint& cc, const Node222& na) {
     dummy_use(cc);
-    // do Kuhn 6-to-1 triangulation of cube
+    // Do a Kuhn 6-to-1 triangulation of the cube.
     contour_tetrahedron(V(na[0, 0, 0], na[0, 0, 1], na[1, 0, 1], na[0, 1, 0]));
     contour_tetrahedron(V(na[0, 0, 0], na[1, 0, 1], na[1, 0, 0], na[0, 1, 0]));
     contour_tetrahedron(V(na[1, 0, 1], na[1, 1, 0], na[1, 0, 0], na[0, 1, 0]));
@@ -543,7 +543,7 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
       poly[i] = this->template compute_point<true>(np->_p, nn->_p, np->_val, nn->_val, _eval);
     }
     const Vector normal = cross(poly[0], poly[1], poly[2]);
-    // swap might be unnecessary if we carefully swapped above?
+    // Swap might be unnecessary if we carefully swapped above?
     if (dot(normal, n3[0, 0]->_p - n3[0, 1]->_p) < 0.f) ranges::swap(poly[0], poly[1]);
     _contour(poly);
   }
@@ -551,7 +551,7 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
 
 // *** Contour2D
 
-struct Contour2D_NoBorder {  // special type to indicate that no border output is desired
+struct Contour2D_NoBorder {  // A special type to indicate that no border output is desired.
   float operator()(CArrayView<Vec2<float>>) const {
     if (1) assertnever("");
     return 0.f;
@@ -567,9 +567,9 @@ class Contour2D : public ContourBase<2> {
  public:
   explicit Contour2D(int gn, Eval eval = Eval(), Contour contour = Contour(), Border border = Border())
       : base(gn), _eval(eval), _contour(contour), _border(border) {}
-  // ret number of new cubes visited: 0 = revisit_cube, 1 = no_surface, >1 = new
+  // Returns the number of new cubes visited: 0 = revisit_cube, 1 = no_surface, > 1 = new.
   int march_from(const DPoint& startp) { return march_from_i(startp); }
-  // call march_from() on all cells near startp; ret num new cubes visited
+  // Call march_from() on all cells near startp; returns the number of new cubes visited.
   int march_near(const DPoint& startp) { return march_near_i(startp); }
 
  private:
@@ -663,7 +663,7 @@ class Contour2D : public ContourBase<2> {
         contour_square(na);
       }
     }
-    for_int(d, D) for_int(i, 2) {  // push neighbors
+    for_int(d, D) for_int(i, 2) {  // Push neighbors.
       const int d1 = (d + 1) % D;
       IPoint cd;
       cd[d] = i;
@@ -677,7 +677,7 @@ class Contour2D : public ContourBase<2> {
       cd[d] = i ? 1 : -1;
       cd[d1] = 0;
       const IPoint ci = cc + cd;  // Indices of node for neighboring cube.
-      // note: vmin < 0.f since 0.f is arbitrarily taken to be positive
+      // Note: vmin < 0.f since 0.f is arbitrarily taken to be positive.
       if (vmax != k_Contour_undefined && vmin < 0.f && vmax >= 0.f && cube_inbounds(ci)) {
         const unsigned en = encode(ci);
         bool is_new;

@@ -11,7 +11,7 @@ namespace hh {
 
 // On 1994-04-18, eliminated capacity to get higher order splines on creases.
 // This did not seem to make sense in conjunction with extraordinary crease vertices.
-// Also, this greatly reducing bookkeeping (msharpvv disappears)
+// Also, this greatly reduces bookkeeping (msharpvv disappears).
 
 // _mofif and _mfindex work by assuming that two faces--whose vertices are in
 // the same order and have the same ids--will be subdivided in the same order
@@ -33,13 +33,13 @@ bool debug() {
 
 // *** helper
 
-// translate Vertex from one Mesh to another Mesh
+// Translate a Vertex from one Mesh to another Mesh.
 inline Vertex trvmm(Vertex v, const Mesh& mf, const Mesh& mt) { return mt.id_vertex(mf.vertex_id(v)); }
 
-// translate Face from one Mesh to another Mesh
+// Translate a Face from one Mesh to another Mesh.
 inline Face trfmm(Face f, const Mesh& mf, const Mesh& mt) { return mt.id_face(mf.face_id(f)); }
 
-// translate Edge from one Mesh to another Mesh
+// Translate an Edge from one Mesh to another Mesh.
 // inline Edge tremm(Edge e, const Mesh& mf, const Mesh& mt) {
 //     return mt.edge(trvmm(mf.vertex1(e), mf, mt), trvmm(mf.vertex2(e), mf, mt));
 // }
@@ -66,7 +66,7 @@ bool Mvcvh::is_convolution() const {
   return ranges::all_of(values(), [](const Combvh& comb) { return is_zero(comb.h); });
 }
 
-// co=ci*this
+// co = ci * this.
 Combvh Mvcvh::compose_c(const Combvh& ci) const {
   Combvh co;
   co.h = ci.h;
@@ -74,7 +74,7 @@ Combvh Mvcvh::compose_c(const Combvh& ci) const {
     bool present;
     const Combvh& comb = retrieve(v, present);
     if (!present) {
-      // missing entry -> assume identity map
+      // Missing entry -> assume the identity map.
       co.c[v] += val;
     } else {
       co.h += comb.h * val;
@@ -84,13 +84,13 @@ Combvh Mvcvh::compose_c(const Combvh& ci) const {
   return co;
 }
 
-// this=mconv*this
+// this = mconv * this.
 void Mvcvh::compose(const Mvcvh& mconv) {
   Mvcvh nthis;
   for (const auto& [v, comb] : mconv) {
     assertx(is_zero(comb.h));
     if (!comb.c.num()) {
-      // identity assumed, keep unchanged
+      // Identity assumed; keep unchanged.
     } else if (comb.c.num() == 1) {
       Warning("Waste of space");
       assertw(comb.c[v] == 1.f);
@@ -109,7 +109,7 @@ void Mvcvh::compose(const Mvcvh& mconv) {
 
 // *** SubMesh
 
-// weight of center vertex in position vertex mask, Loop scheme
+// Weight of the center vertex in the position vertex mask, Loop scheme.
 // It is the weight that appears in the subdivision matrix,
 // not the weight used when splitting + averaging.
 static inline float subdiv_a(int n) {
@@ -118,7 +118,7 @@ static inline float subdiv_a(int n) {
 // 3, 0.4375   4, 0.515625   5, 0.579534   6, 0.625   7, 0.656826   1000, 0.765619
 
 SubMesh::SubMesh(GMesh& pmesh) : _omesh(pmesh) {
-  _m.copy(_omesh);  // vertex ids will match, flags copied
+  _m.copy(_omesh);  // Vertex ids will match; flags are copied.
   {
     bool have_quads = false, have_tris = false;
     for (Face f : _m.faces()) {
@@ -154,7 +154,7 @@ SubMesh::SubMesh(GMesh& pmesh) : _omesh(pmesh) {
   for (Vertex v : _m.vertices()) {
     Combvh comb;
     if (_isquad && _m.degree(v) == 2) {
-      // degree-2 vertex must be centroid of its neighbors.
+      // A degree-2 vertex must be the centroid of its neighbors.
       for (Vertex vo : _m.vertices(v)) {
         comb.c[trvmm(vo, _m, _omesh)] = .25f;
         Vertex vs = assertx(_m.clw_vertex(vo, v));
@@ -191,7 +191,7 @@ void SubMesh::subdivide(float cosang) {
 }
 
 void SubMesh::subdivide_n(int nsubdiv, int limit, float cosang, bool triang) {
-  // whichever is faster
+  // Whichever is faster.
   if (_allvvar) {
     Mvcvh mconv;
     for_int(i, nsubdiv) {
@@ -246,13 +246,13 @@ void SubMesh::subdivide_aux(float cosang, Mvcvh* pmconv) {
 // *** compute convolutions
 
 void SubMesh::refine(Mvcvh& mconv) {
-  // Save current mesh objects for later iteration
+  // Save the current mesh objects for later iteration.
   // Array<Vertex> arv; for (Vertex v : _m.vertices()) arv += v;
   const Array<Face> arf(_m.ordered_faces());
   const Array<Edge> are(_m.edges());
   Map<Edge, Vertex> menewv;
-  // Create new vertices and make them midpoints of old edges
-  for (Edge e : are) {  // was ForStack which went in reverse order
+  // Create new vertices and make them midpoints of old edges.
+  for (Edge e : are) {  // Was ForStack, which went in reverse order.
     Vertex v = _m.create_vertex();
     menewv.enter(e, v);
     vinfo(v).nume = (_isquad ? (_m.is_boundary(e) ? 3 : 4) : (_m.is_boundary(e) ? 4 : 6));
@@ -264,7 +264,7 @@ void SubMesh::refine(Mvcvh& mconv) {
   }
   Map<Face, Vertex> mfnewv;
   if (_isquad) {
-    for (Face f : arf) {  // was ForStack which went in reverse order
+    for (Face f : arf) {  // Was ForStack, which went in reverse order.
       Vertex v = _m.create_vertex();
       mfnewv.enter(f, v);
       vinfo(v).nume = 4;
@@ -285,7 +285,7 @@ void SubMesh::refine(Mvcvh& mconv) {
     }
     string str;
     Array<Vertex> va;
-    for (Face f : arf) {  // was ForStack which went in reverse order
+    for (Face f : arf) {  // Was ForStack, which went in reverse order.
       _m.get_vertices(f, va);
       assertx(va.num() == 4);
       Vec4<Vertex> vs;
@@ -342,7 +342,7 @@ void SubMesh::refine(Mvcvh& mconv) {
     if (has_imagen)
       for (Vertex v : _m.vertices()) _m.update_string(v, "imagen", nullptr);
   } else {
-    for (Face f : arf) {  // was ForStack which went in reverse order
+    for (Face f : arf) {  // Was ForStack, which went in reverse order.
       Vec3<Vertex> va = _m.triangle_vertices(f);
       Vec3<Vertex> vs;
       for_int(i, 3) vs[i] = menewv.get(_m.edge(va[i], va[mod3(i + 1)]));
@@ -360,18 +360,18 @@ void SubMesh::refine(Mvcvh& mconv) {
       ar.push(fn);
     }
   }
-  // Update sharp edges
+  // Update sharp edges.
   for (Edge e : are) {
     Vertex vnew = menewv.get(e);
     if (!_m.flags(e)) continue;
     _m.flags(_m.edge(vnew, _m.vertex1(e))) = _m.flags(e);
     _m.flags(_m.edge(vnew, _m.vertex2(e))) = _m.flags(e);
   }
-  // Remove old triangulation
+  // Remove the old triangulation.
   for (Face f : arf) {
     _m.destroy_face(f);
     assertx(_mforigf.remove(f));
-    _mfindex.remove(f);  // can be index 0
+    _mfindex.remove(f);  // Can be index 0.
   }
 }
 
@@ -380,12 +380,12 @@ void SubMesh::refine(Mvcvh& mconv) {
 void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
   // e.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark | Subdivfit -mf - -selective 170 -nsub 2 -outn >v.m
   //       Subdivfit -mf ~/data/mesh/cat.m -selective 40 -nsub 2 -outn >v
-  // See also Filtermesh.cpp:do_silsubdiv()
+  // See also Filtermesh.cpp:do_silsubdiv().
   assertx(!_isquad);
   // _mforigf, _mfindex, and _mofif are not supported with this scheme!
   const Array<Face> arf(_m.faces());
-  // Determine which edges will be subdivided
-  Set<Edge> subde;  // edges to subdivide
+  // Determine which edges will be subdivided.
+  Set<Edge> subde;  // Edges to subdivide.
   for (Edge e : _m.edges())
     if (sharp(e) || edge_dihedral_angle_cos(_m, e) <= cosang) subde.enter(e);
   Queue<Face> queuef;
@@ -395,14 +395,14 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
     int nnew = 0;
     for (Edge e : _m.edges(f))
       if (subde.contains(e)) nnew++;
-    if (nnew != 2) continue;  // ok, no propagating changes
+    if (nnew != 2) continue;  // OK, no propagating changes.
     for (Edge e : _m.edges(f)) {
       if (!subde.add(e)) continue;
       Face f2 = _m.opp_face(f, e);
       if (f2) queuef.enqueue(f2);
     }
   }
-  // Introduce new vertices at midpoints
+  // Introduce new vertices at midpoints.
   struct Snvf {
     Vertex vnew;
     Flags eflags;
@@ -433,7 +433,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
     comb.c[_m.vertex2(e)] = .5f;
     mconv.enter(v, std::move(comb));
   }
-  // Subdivide faces, destroys validity of flags(e)
+  // Subdivide faces; destroys validity of flags(e).
   for (Face f : arf) {
     int nnew = 0, i0 = -1;
     Vec3<Vertex> va = _m.triangle_vertices(f);
@@ -466,7 +466,7 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
       _m.flags(_m.edge(nvf.vnew, vv._v2)) = nvf.eflags;
     }
   }
-  if (1) {  // need to fix up some values
+  if (1) {  // Need to fix up some values.
     for (Vertex v : _m.vertices()) {
       int nsharpe = 0;
       for (Edge e : _m.edges(v))
@@ -493,7 +493,7 @@ void SubMesh::create_conv(Mvcvh& mconv, FVMASK fsubdivision) {
 
 namespace {
 
-// Central weight for the subdivision masks at a cone, as function of n
+// Central weight for the subdivision masks at a cone, as a function of n.
 
 constexpr auto k_table_cone_subd =
     V(0.f, 0.f, 0.f, .625f, .75f, .827254f, .875f, .905872f, .926777f, .941511f, .952254f);
@@ -519,16 +519,16 @@ void SubMesh::averaging_mask(Vertex v, Combvh& comb) const {
     ASSERTX(comb.is_combination());
     return;
   }
-  float wa;                                   // central weight
-  if (_m.flags(v).flag(GMesh::vflag_cusp)) {  // cusp vertex
-    if (nesharp >= 2) return;                 // becomes corner vertex
+  float wa;                                   // The central weight.
+  if (_m.flags(v).flag(GMesh::vflag_cusp)) {  // A cusp vertex.
+    if (nesharp >= 2) return;                 // Becomes a corner vertex.
     int nuse = ne;
     if (!assertw(nuse < k_table_cone_subd.num())) nuse = k_table_cone_subd.num() - 1;
     wa = k_table_cone_subd[nuse] * 2 - 1;
     if (_weighta) wa = _weighta * 2 - 1;
   } else if (nesharp <= 1) {  // interior or dart vertex
-    // normal case, quartic bspline surface
-    // was wa = subdiv_a(ne); after refinement, wa = subdiv_a(ne) * 2 - 1
+    // Normal case, quartic bspline surface.
+    // Was wa = subdiv_a(ne); after refinement, wa = subdiv_a(ne) * 2 - 1.
     // _s222 : mask was n / 3 --- 1 (n times); after refinement, .25
     wa = _s222 ? .25f : subdiv_a(ne) * 2 - 1;
     if (_weighta && ne != 6) wa = _weighta * 2 - 1;
@@ -548,10 +548,10 @@ void SubMesh::averaging_mask(Vertex v, Combvh& comb) const {
 }
 
 // Subdivision algorithm:
-// - if dart-ord, dart-dart, dart-ecv, or dart-corner -> smooth mask
-// - if ecv-ord or corner-ord -> special 3-5 mask
+// - if dart-ord, dart-dart, dart-ecv, or dart-corner -> smooth mask;
+// - if ecv-ord or corner-ord -> special 3-5 mask;
 // - all other cases
-//     (ord-ord, ecv-ecv, corner-corner, ecv-corner) -> crease mask
+//     (ord-ord, ecv-ecv, corner-corner, ecv-corner) -> crease mask.
 void SubMesh::crease_averaging_mask(Vertex v, Combvh& comb) const {
   assertx(!_isquad);
   int adj_dart_vertices = 0, adj_corner_vertices = 0, adj_ec_vertices = 0, svi = 0;
@@ -562,7 +562,7 @@ void SubMesh::crease_averaging_mask(Vertex v, Combvh& comb) const {
     va.push(vo);
     const int nesharp = num_sharp_edges(vo);
     if (nesharp == 0) {
-      assertnever("");  // even if _selrefine, should not occur.
+      assertnever("");  // Even if _selrefine, should not occur.
     } else if (nesharp == 1) {
       adj_dart_vertices++;
     } else if (nesharp >= 3) {
@@ -576,7 +576,7 @@ void SubMesh::crease_averaging_mask(Vertex v, Combvh& comb) const {
   const int adj_special = adj_dart_vertices + adj_corner_vertices + adj_ec_vertices;
   assertx(adj_special <= 2);
   if (adj_dart_vertices >= 1) {
-    // adjacent to single dart vertex, do smooth mask
+    // Adjacent to a single dart vertex; do smooth mask.
     const int ne = nume(v);
     const float a = _s222 ? .25f : subdiv_a(ne) * 2.f - 1.f;
     const float wa = a, wc = (1.f - wa) / ne;
@@ -587,14 +587,14 @@ void SubMesh::crease_averaging_mask(Vertex v, Combvh& comb) const {
   }
   static const bool no_special_crease = getenv_bool("SUBMESH_NO_SPECIAL_CREASE");
   if (adj_special != 1 || no_special_crease) {
-    // (1, 2, 1) mask gives cubic spline
+    // The (1, 2, 1) mask gives a cubic spline.
     comb.c[v] = .5f;
     comb.c[va[0]] = .25f;
     comb.c[va[1]] = .25f;
     return;
   }
   if (adj_ec_vertices == 1 || adj_corner_vertices == 1) {
-    // adjacent to single extraordinary crease vertex or corner
+    // Adjacent to a single extraordinary crease vertex or corner.
     comb.c[v] = .75f;
     comb.c[va[1 - svi]] = .25f;
     return;
@@ -633,8 +633,8 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
     ASSERTX(comb.is_combination());
     return;
   }
-  if (_m.flags(v).flag(GMesh::vflag_cusp)) {  // cusp
-    if (nesharp >= 2) return;                 // becomes corner vertex, held constant
+  if (_m.flags(v).flag(GMesh::vflag_cusp)) {  // A cusp.
+    if (nesharp >= 2) return;                 // Becomes a corner vertex, held constant.
     int nuse = ne;
     if (!assertw(nuse < k_table_cone_limit.num())) nuse = k_table_cone_limit.num() - 1;
     const float wa = k_table_cone_limit[nuse];
@@ -644,8 +644,8 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
     for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
     return;
   }
-  if (nesharp >= 3) return;  // corner vertex held constant
-  if (nesharp <= 1) {        // interior or dart vertex
+  if (nesharp >= 3) return;  // Corner vertex held constant.
+  if (nesharp <= 1) {        // An interior or dart vertex.
     if (_weighta && ne != 6) {
       Warning("to do?");
       return;
@@ -659,7 +659,7 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
     if (wc)
       for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
   } else if (nesharp == 2) {  // bspline curve
-    // for cubic, 1-4-1 mask
+    // For cubic, the 1-4-1 mask.
     float wa = 4.f / 6.f, wb = 1.f / 6.f, wc = 0.f;
     if (extraordinary_crease_vertex(v)) {
       wa = 3.f / 5.f;
@@ -687,7 +687,7 @@ void SubMesh::triangulate_quads(Mvcvh& mconv) {
   }
   for (Face f : Array(_m.ordered_faces())) {
     Face forig = _mforigf.remove(f);
-    _mfindex.remove(f);  // can be index 0
+    _mfindex.remove(f);  // Can be index 0.
     Vertex v = _m.center_split_face(f);
     f = nullptr;
     vinfo(v).nume = 4;

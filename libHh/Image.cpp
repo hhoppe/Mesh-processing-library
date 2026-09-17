@@ -42,7 +42,7 @@ void Image::to_bw() {
     Pixel& pixel = (*this)[yx];
     uint8_t value;
     if (0) {
-      // equivalent to 0.3086, 0.6094, 0.0820
+      // Equivalent to 0.3086, 0.6094, 0.0820.
       value = (pixel[0] * 79 + pixel[1] * 156 + pixel[2] * 21) >> 8;
     } else {
       const float gamma = 2.2f;
@@ -78,7 +78,7 @@ bool filename_is_image(const string& filename) {
 }
 
 string image_suffix_for_magic_byte(uchar c) {
-  // see also video_suffix_for_magic_byte() and audio_suffix_for_magic_byte()
+  // See also video_suffix_for_magic_byte() and audio_suffix_for_magic_byte().
   // also redundant information in k_image_filetypes
   // Documentation on prefixes for various image containers:
   // *.rgb: "\001"
@@ -106,7 +106,7 @@ string image_suffix_for_magic_byte(uchar c) {
 //----------------------------------------------------------------------------
 // *** Scaling
 
-static const int g_test_scale_accuracy = getenv_int("IMAGE_TEST_SCALE_ACCURACY");  // also in MatrixOp.h
+static const int g_test_scale_accuracy = getenv_int("IMAGE_TEST_SCALE_ACCURACY");  // Also in MatrixOp.h.
 
 void Image::scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue) {
   *this = hh::scale(*this, syx, filterbs, bordervalue, std::move(*this));
@@ -128,7 +128,7 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
   if (g_test_scale_accuracy) {
     Matrix<Vector4> matrix(image.dims());
     for_int(y, image.ysize()) for_int(x, image.xsize()) for_int(z, nz) {
-      matrix[y, x][z] = Random::G.unif();  // matrix of noise
+      matrix[y, x][z] = Random::G.unif();  // A matrix of noise.
     }
     Matrix<Vector4> omatrix(matrix);
     assertx(!bordervalue);
@@ -169,7 +169,7 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
     }
   } else if (0) {
     for_int(y, frame.ysize()) {
-      if (y % 2) buf_UV -= frame.xsize();  // reuse UV row on odd lines
+      if (y % 2) buf_UV -= frame.xsize();  // Reuse the UV row on odd lines.
       for_int(x, frame.xsize() / 2) {
         const uint8_t u = buf_UV[0], v = buf_UV[1];
         buf_P[0] = RGB_Pixel_from_YUV(buf_Y[0], u, v);  // OPT:YUV1
@@ -181,7 +181,7 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
     }
   } else if (0) {
     for_int(y, frame.ysize()) {
-      if (y % 2) buf_UV -= frame.xsize();  // reuse UV row on odd lines
+      if (y % 2) buf_UV -= frame.xsize();  // Reuse the UV row on odd lines.
       for_int(x, frame.xsize() / 2) {
         const int u = buf_UV[0], v = buf_UV[1];
         const int r0 = -16 * 298 + 409 * v + 128 - 409 * 128;  // OPT:YUV2

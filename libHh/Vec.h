@@ -112,7 +112,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   [[nodiscard]] constexpr bool in_range(const type& dims) const requires std::integral<T> {  // [c] < uU[c] for all c.
     return in_range(type::all(T{}), dims);
   }
-  // uL[c] <= [c] < uU[c] for all c.
+  // True if uL[c] <= [c] < uU[c] for all c.
   [[nodiscard]] constexpr bool in_range(const type& uL, const type& uU) const requires std::integral<T>;
   [[nodiscard]] constexpr type with(int i, T e) const& requires Copyable<T> {
     type ar(*this);
@@ -631,7 +631,7 @@ TTC G interp(const G& g1, const G& g2, const G& g3, float f1, float f2) requires
   G g; F { g[i] = static_cast<T>(f1 * g1[i] + f2 * g2[i] + (1.f - f1 - f2) * g3[i]); } return g;
 }
 TTC G interp(const G& g1, const G& g2, const G& g3, const Vec3<float>& bary) requires(!IsVec<T>) {
-  // Vec3<float> == Bary;  may have sum(bary) != 1.f
+  // Vec3<float> == Bary; the entries need not sum to one.
   G g; F { g[i] = static_cast<T>(bary[0] * g1[i] + bary[1] * g2[i] + bary[2] * g3[i]); } return g;
 }
 

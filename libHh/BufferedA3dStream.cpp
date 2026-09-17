@@ -6,7 +6,7 @@ namespace hh {
 // *** RBufferedA3dStream
 
 bool RBufferedA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& comment) {
-  // read first character.  Read past optional newlines
+  // Read the first character.  Read past optional newlines.
   {
     int i = 0;
     for (;; i++) {
@@ -38,7 +38,7 @@ bool RBufferedA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, st
 }
 
 RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
-  // Skip leading newlines
+  // Skip leading newlines.
   int i;
   for (i = 0; i < _buf.num(); i++)
     if (_buf[i] != '\n') break;
@@ -59,7 +59,7 @@ RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
       i++;
       continue;
     }
-    if (ch == k_a3d_binary_code) {  // binary record
+    if (ch == k_a3d_binary_code) {  // A binary record.
       if (i + 16 > _buf.num()) return ERecognize::partial;
       ch = narrow_cast<char>(_buf.get_short(i + 2));
       i += 16;

@@ -19,7 +19,7 @@ class Random : noncopyable {
   void seed(uint32_t seedv);
   [[nodiscard]] unsigned get_unsigned();             // [0, std::numeric_limits<unsigned>::max()]
   [[nodiscard]] uint64_t get_uint64();               // [0, std::numeric_limits<uint64_t>::max()]
-  [[nodiscard]] size_t get_size_t();                 // range depends on size_t
+  [[nodiscard]] size_t get_size_t();                 // Range depends on size_t.
   [[nodiscard]] unsigned get_unsigned(unsigned ub);  // [0, ub - 1]
   [[nodiscard]] float unif();                        // [0.f, 1.f)
   [[nodiscard]] double dunif();                      // [0., 1.)

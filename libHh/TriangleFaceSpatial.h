@@ -56,7 +56,7 @@ class TriangleFaceSpatial
       ObjectSpatial::enter(Conv<const TriangleFace*>::e(&triangleface), triangle[0], func_triangleface_in_bbox);
     }
   }
-  // clear() inherited from ObjectSpatial
+  // The clear() function is inherited from ObjectSpatial.
 
   struct SegmentResult {
     const TriangleFace* triangleface;

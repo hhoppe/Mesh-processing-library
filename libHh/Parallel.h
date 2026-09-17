@@ -13,7 +13,7 @@
 
 #if 0
 {
-  // To disable parallelism, set: OMP_NUM_THREADS=1  (admittedly a confusing variable because we do not use OpenMP)
+  // To disable parallelism, set OMP_NUM_THREADS=1.  (Admittedly a confusing variable because we do not use OpenMP.)
   parallel_for(range(n), [&](const int i) { func(i); });
 
   const int num_threads = get_max_threads();

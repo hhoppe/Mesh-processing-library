@@ -57,7 +57,7 @@ float outlierd = 0.f;
 float speedup = 0.f;
 double frdelay = 0.;
 double eldelay = 0.;
-bool toasciit = false;  // "toascii" seems to be a reserved identifier in Win32
+bool toasciit = false;  // "toascii" seems to be a reserved identifier in Win32.
 bool tobinary = false;
 int minverts = 0;
 
@@ -89,7 +89,7 @@ struct S_tess {
 } g_tess;
 
 struct S_inter {
-  Bbox<float, 3> bbox;               // global bounding box of all polygons
+  Bbox<float, 3> bbox;               // Global bounding box of all polygons.
   Array<unique_ptr<Polygon>> vpoly;  // (not Array<Polygon> as resizing would invalidate pointers)
   int nedges;
 } g_inter;
@@ -104,16 +104,16 @@ struct S_outlier {
   Array<Point> pa;
 } g_outlier;
 
-HH_STAT_NP(Slnvert);    // polyline # of vertices
-HH_STAT_NP(Sledgel);    // polyline edge length
-HH_STAT_NP(Slclosed);   // polyline closed
-HH_STAT_NP(Spnvert);    // polygon # of vertices
-HH_STAT_NP(Spedgel);    // polygon edge length
-HH_STAT_NP(Sqdiagl);    // quad diagonal length
-HH_STAT_NP(Sparea);     // polygon area
-HH_STAT_NP(Splanar);    // polygon planarity (0=planar)
-HH_STAT_NP(Sptnor);     // point, existence of normal
-Bbox<float, 3> g_bbox;  // box extent
+HH_STAT_NP(Slnvert);    // Polyline number of vertices.
+HH_STAT_NP(Sledgel);    // Polyline edge length.
+HH_STAT_NP(Slclosed);   // Polyline closed.
+HH_STAT_NP(Spnvert);    // Polygon number of vertices.
+HH_STAT_NP(Spedgel);    // Polygon edge length.
+HH_STAT_NP(Sqdiagl);    // Quad diagonal length.
+HH_STAT_NP(Sparea);     // Polygon area.
+HH_STAT_NP(Splanar);    // Polygon planarity (0 = planar).
+HH_STAT_NP(Sptnor);     // Point, existence of a normal.
+Bbox<float, 3> g_bbox;  // Box extent.
 float fsplit;           // fsplit=split; { fsplit*=speedup; }
 Vec2<float> colorheight;
 A3dVertexColor input_color;
@@ -226,12 +226,12 @@ void compute_stats(const A3dElem& el) {
   }
 }
 
-// output element
+// Output the element.
 void output_element(const A3dElem& el) {
   if (!nooutput) oa3d.write(el);
 }
 
-// split element and output statistics
+// Split the element and output statistics.
 void pass3(const A3dElem& el) {
   static int nelem = 0;
   if (split && nelem++ >= split) {
@@ -248,7 +248,7 @@ void pass3(const A3dElem& el) {
   delay_element();
 }
 
-// maybe tessellate element
+// Maybe tessellate the element.
 void pass2(const A3dElem& el) {
   if (!tessellate || el.type() != A3dElem::EType::polygon) {
     pass3(el);
@@ -283,7 +283,7 @@ void pass2(const A3dElem& el) {
   g_tess.ntria += nt * nt;
 }
 
-// maybe triangulate element
+// Maybe triangulate the element.
 void pass1(const A3dElem& el) {
   if (!triangulate || el.type() != A3dElem::EType::polygon) {
     pass2(el);
@@ -304,7 +304,7 @@ void pass1(const A3dElem& el) {
           std::is_neq(compare(el[i].c.s, el[0].c.s)) || el[i].c.g != el[0].c.g)
         break;
     }
-    if (i == el.num()) {  // they all match
+    if (i == el.num()) {  // They all match.
       for_int(j, 3) el2[j] = el[j];
       pass2(el2);
       for_int(j, 3) el2[j] = el[(j + 2) % 4];
@@ -330,7 +330,7 @@ void show_normals(const A3dElem& el) {
   if (el.num() < 2) {
     c = 1.;
   } else {
-    // el is not necessarily Type::polygon
+    // Here, el is not necessarily Type::polygon.
     Array<Point> pa;
     for_int(i, el.num()) pa.push(el[i].p);
     const Point pavg = mean(pa);
@@ -360,11 +360,11 @@ bool compute_mindis(const Point& p) {
   if (!SPp) SPp = make_unique<PointSpatial<int>>(30);
   SpatialSearch<int> ss(SPp.get(), p, mindis);  // Look no farther than mindis.
   if (!ranges::empty(ss) && (*ss.begin()).d2 < square(mindis)) return true;
-  SPp->enter(pn++, new Point(p));  // never deleted
+  SPp->enter(pn++, new Point(p));  // Never deleted.
   return false;
 }
 
-// process element
+// Process the element.
 bool loop(A3dElem& el) {
   if (el.type() == A3dElem::EType::endfile) return true;
   const bool polyg = el.type() == A3dElem::EType::polygon;
@@ -533,7 +533,7 @@ bool loop(A3dElem& el) {
     el.get_polygon(*npoly);
     g_inter.bbox.union_with(Bbox{*npoly});
     g_inter.vpoly.push(std::move(npoly));
-    return false;  // new: only output intersection edges
+    return false;  // New: only output intersection edges.
   }
   if (tolines && polyg) {
     A3dElem el2(A3dElem::EType::polyline, el.binary(), 2);
@@ -588,12 +588,12 @@ void compute_intersect() {
 
 void join_lines() {
   const bool directed_joined_lines = !getenv_bool("UNDIRECTED_LINES");
-  joinlines = false;  // note that loop() is called below!
+  joinlines = false;  // Note that loop() is called below!
   A3dElem el;
   Graph<int>& graph = *g_join.graph;
-  Set<int> candv;  // candidate vertices
+  Set<int> candv;  // Candidate vertices.
   if (!directed_joined_lines) {
-    // for undirected search, candidate vertices are ones with odd degree
+    // For undirected search, candidate vertices are ones with odd degree.
     graph_symmetric_closure(graph);
     for (const int v : graph.vertices()) {
       assertx(graph.out_degree(v) > 0);
@@ -631,7 +631,7 @@ void join_lines() {
       loop(el);
     }
   } else {
-    // for directed search, candidate vertices are ones with no in_edges
+    // For directed search, candidate vertices are ones with no in_edges.
     Graph<int> opp_graph;
     for (const int v : graph.vertices()) opp_graph.enter(v);
     for (const int v1 : graph.vertices())
@@ -702,7 +702,7 @@ void compute_outlier() {
     }
   }
   showdf("found %d/%d outliers\n", num_outliers, g_outlier.pa.num());
-  outliern = 0;  // note that loop() is called below!
+  outliern = 0;  // Note that loop() is called below!
   A3dElem el;
   for_int(i, g_outlier.pa.num()) {
     if (ar_is_outlier[i]) continue;

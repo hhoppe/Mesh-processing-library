@@ -62,13 +62,13 @@ bool tried_input = false;
 string statefile;
 string caption;
 string keystring;
-Array<string> g_aargs1;    // not including argv0
-extern string g_filename;  // used in G3dOGL.cpp
+Array<string> g_aargs1;    // Not including argv0.
+extern string g_filename;  // Used in G3dOGL.cpp.
 string g_filename;
 bool ob1_updated = false;
-float anglethresh = -1.f;  // no angle threshold set
+float anglethresh = -1.f;  // No angle threshold set.
 bool lod_mode = false;
-float lod_level = 1.f;  // used to be default 0.f
+float lod_level = 1.f;  // Used to be default 0.f.
 float override_frametime = 0.f;
 Point rec_point;
 
@@ -157,7 +157,7 @@ void objects::copy(int obf, int obt) {
 
 objects g_obs;
 
-// hook from HB
+// A hook from HB.
 void UpdateOb1Bbox(const Bbox<float, 3>& bbox) {
   assertx(!g_obs[1].defined());
   g_obs[1].enter_point(Point(bbox[0][0], bbox[0][1], bbox[0][2]));
@@ -207,7 +207,7 @@ bool try_finding_it(const string& name) {
   // string com = "s3dname -s " + quote_arg_for_shell(name) + " <" + s_nul + " |";
   const string com = "s3dname -s " + quote_arg_for_shell(name) + " |";
   try {
-    RFile fi(com);  // may throw
+    RFile fi(com);  // May throw.
     string line;
     if (!my_getline(fi(), line) || line == "") {
       if (k_debug) std::cerr << "(s3dname did not function)\n";
@@ -286,7 +286,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(anglethresh, "angle : sharp dihedral angle");
   args.other_args_ok();
   if (!args.parse_and_extract(g_aargs1) || !hb_success) return 0;
-  g_aargs1.shift();  // ignore argv0
+  g_aargs1.shift();  // Ignore argv0.
   if (hither >= 0.f) {
     auto_hither = false;
     HB::set_hither(hither);
@@ -328,9 +328,9 @@ int main(int argc, const char** argv) {
     const string filenametail = get_path_tail(g_filename);
     HB::set_window_title(title != "" ? title : sform("G3D %.80s", filenametail.c_str()));
   }
-  // always jump to good viewpoint
+  // Always jump to a good viewpoint.
   if (contains(keystring, 'j') || statefile == "none") {
-    // do nothing
+    // Do nothing.
   } else if (statefile != "noname.s3d") {
     keystring += ",";
   } else if (!contains(keystring, 'j')) {

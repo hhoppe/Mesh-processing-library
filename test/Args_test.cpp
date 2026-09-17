@@ -22,7 +22,7 @@ void phase1(int argc, const char** argv) {
   ParseArgs args(argc, argv);
   bool flag = false, flap = false, flac = false;
   int val1 = 0, val2 = 0;
-  float fa[2] = {0.f, 0.f};  // test C-array
+  float fa[2] = {0.f, 0.f};  // Test C-array.
   Vec2<float> fb{0.f, 0.f};
   Vec2<float> fc{0.f, 0.f};
   HH_ARGSF(flag, ": enable flag");

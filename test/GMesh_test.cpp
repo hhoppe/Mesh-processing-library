@@ -75,7 +75,7 @@ int main() {
     SHOW(GMesh::string_update(s2, "sharp", ""));
     SHOW(GMesh::string_update(s3, "uv", "(3 4)"));
     SHOW(GMesh::string_update(s3, "uv", ""));
-    assertx(GMesh::string_update(s3, "uv", nullptr) == "");  // not == nullptr
+    assertx(GMesh::string_update(s3, "uv", nullptr) == "");  // Not == nullptr.
     SHOW(GMesh::string_update(s3, "sharp", ""));
   }
   {

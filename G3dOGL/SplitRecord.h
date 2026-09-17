@@ -27,30 +27,30 @@ class SplitRecord {
   int getNextOutcome() { return _outcome[_outcome_index++]; }
   void applySplit(SimplicialComplex& K);
 
-  // apply split and capture info for geomorphs
+  // Apply the split and capture info for geomorphs.
   void applyGMSplit(SimplicialComplex& K);
 
-  // apply split and capture info for compression
+  // Apply the split and capture info for compression.
   void applyCmpSplit(SimplicialComplex& K);
 
   void applyUnify(SimplicialComplex& K) const;
 
-  // access
+  // Access.
   [[nodiscard]] CArrayView<AreaData> getAreas() { return _area; }
   [[nodiscard]] int getVs() const { return _vsid; }
   [[nodiscard]] int getVt() const { return _vtid; }
   [[nodiscard]] int vsp() const { return _pos_bit; }
   [[nodiscard]] const Point& getDeltap() const { return _deltap; }
 
-  // meaningful after applyGMSplit
+  // Meaningful after applyGMSplit.
   [[nodiscard]] const std::vector<Simplex>& getNewFacets() const { return new_facets; }
-  // meaningful after applyCmpSplit
+  // Meaningful after applyCmpSplit.
   [[nodiscard]] const std::vector<Simplex>& getNewSimplices() const { return new_simplices; }
 
   // Note that "Array<int> _outcome" below takes the union of the following enum values.
-  enum { V_NOEDGE, V_EDGE };         // vertex outcomes
-  enum { E_VS, E_VT, E_VSVT, E_F };  // edge outcomes
-  enum { F_VS, F_VT, F_VSVT };       // face outcomes
+  enum { V_NOEDGE, V_EDGE };         // Vertex outcomes.
+  enum { E_VS, E_VT, E_VSVT, E_F };  // Edge outcomes.
+  enum { F_VS, F_VT, F_VSVT };       // Face outcomes.
 
   struct MaterialData {
     int dim;
@@ -70,7 +70,7 @@ class SplitRecord {
   std::vector<Simplex> new_facets;
   std::vector<Simplex> new_simplices;
 
-  // auxiliary variables
+  // Auxiliary variables.
   int _outcome_index;
   int _material_index;
 };

@@ -47,15 +47,15 @@ class Video : public Grid<3, Pixel> {
   [[nodiscard]] int xsize() const { return dim(2); }
   [[nodiscard]] const Attrib& attrib() const { return _attrib; }
   [[nodiscard]] Attrib& attrib() { return _attrib; }
-  void read_file(const string& filename);         // filename may be "-" for std::cin;  may throw std::runtime_error.
-  void write_file(const string& filename) const;  // filename may be "-" for std::cout; may throw std::runtime_error.
+  void read_file(const string& filename);         // The name may be "-" for std::cin; may throw std::runtime_error.
+  void write_file(const string& filename) const;  // The name may be "-" for std::cout; may throw std::runtime_error.
 
   // Misc:
   void scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue = nullptr);
   struct Attrib {
-    string suffix;         // e.g. "mp4"; "" if unknown; to identify format of read_file("-") and write_file("-").
-    double framerate{0.};  // frames / sec.
-    int bitrate{0};        // bits / sec.
+    string suffix;         // E.g. "mp4"; "" if unknown; to identify format of read_file("-") and write_file("-").
+    double framerate{0.};  // Frames per second.
+    int bitrate{0};        // Bits per second.
     Audio audio;
   };
   friend void swap(Video& l, Video& r) noexcept;
@@ -124,7 +124,7 @@ class VideoNv12View {
   [[nodiscard]] CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
 
  private:
-  GridView<3, uint8_t> _grid_Y;         // Luminance
+  GridView<3, uint8_t> _grid_Y;         // Luminance.
   GridView<3, Vec2<uint8_t>> _grid_UV;  // Chroma at half the spatial resolution.
 };
 

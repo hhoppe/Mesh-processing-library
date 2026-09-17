@@ -26,20 +26,20 @@ namespace hh {
 
 // *** Angles
 
-// ret: cos of signed angle away from "flatness" (== exterior angle)
-// range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate)
+// Returns the cosine of the signed angle away from "flatness" (== the exterior angle).
+// Range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate).
 [[nodiscard]] float dihedral_angle_cos(const Point& p1, const Point& p2, const Point& po1, const Point& po2);
 
 // Return angle from -TAU / 2 to TAU / 2 (negative is concave), or -10.f if degeneracy.
 // (== exterior angle)  (cos(signed_dihedral_angle()) == dihedral_angle_cos()).
 [[nodiscard]] float signed_dihedral_angle(const Point& p1, const Point& p2, const Point& po1, const Point& po2);
 
-// Compute solid angle at p surrounded by ordered loop pa[]
-// range 0 .. TAU * 2
+// Compute the solid angle at p surrounded by the ordered loop pa[].
+// The range is 0 .. TAU * 2.
 [[nodiscard]] float solid_angle(const Point& p, CArrayView<Point> pa);
 
-// ret: cos of signed angle away from "flatness" (== exterior angle)
-// range -1..1  (or -2 if an edge is degenerate)
+// Returns the cosine of the signed angle away from "flatness" (== the exterior angle).
+// The range is -1 .. 1  (or -2 if an edge is degenerate).
 [[nodiscard]] float angle_cos(const Point& p1, const Point& p2, const Point& p3);
 
 // *** Frames and Euler angles

@@ -26,8 +26,8 @@ enum class ERecognize { parse_error, no, partial, yes };
 [[nodiscard]] Frame parse_frame(const string& s);
 
 // Write Frame objects to std::stream or WBuffer.
-[[nodiscard]] bool write(std::ostream& os, const ObjectFrame& object_frame);  // ret is_success
-[[nodiscard]] bool write(WBuffer& b, const ObjectFrame& object_frame);        // ret is_success
+[[nodiscard]] bool write(std::ostream& os, const ObjectFrame& object_frame);  // Returns success.
+[[nodiscard]] bool write(WBuffer& b, const ObjectFrame& object_frame);        // Returns success.
 [[nodiscard]] string create_string(const ObjectFrame& object_frame);
 
 // Detect special frames.

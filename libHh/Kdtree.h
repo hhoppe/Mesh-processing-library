@@ -26,18 +26,18 @@ template <typename T, int D> class Kdtree : noncopyable {
   void allow_duplication(float fsize) {
     if (!getenv("KD_FSIZE")) _fsize = fsize;
   }
-  // bb0 and bb1 are copied internally
+  // The arguments bb0 and bb1 are copied internally.
   void enter(const T& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) requires Copyable<T> {
     enter_i(id, bb0, bb1);
   }
   void enter(T&& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) { enter_i(std::move(id), bb0, bb1); }
-  // search is reentrant (for HiddenLineRemoval).
+  // The search is reentrant (for HiddenLineRemoval).
   // Start searching at loc (default _root) for objects whose bb intersect the one given.
   // For each object found, call cbfunc with id, bb, and current location in the tree.
   //  cbfunc may modify the bb by shrinking it.
   enum class ECallbackReturn { nothing, bbshrunk, stop };
   using CBloc = int;
-  // ret: was_stopped
+  // Returns: was_stopped.
   template <typename Func = ECallbackReturn(const T& id, Vec<float, D>& bb0, Vec<float, D>& bb1, CBloc floc)>
   bool search(Vec<float, D>& bb0, Vec<float, D>& bb1, Func cbfunc, CBloc loc = 0) const {
     return search_i(bb0, bb1, cbfunc, loc);
@@ -45,18 +45,18 @@ template <typename T, int D> class Kdtree : noncopyable {
   void print() const requires Copyable<T> { rec_print((!_arnode.num() ? -1 : 0), 0); }
 
  private:
-  const int _maxlevel;  // maximum # of subdivision on each axis
-  float _fsize{0.f};    // ok to duplicate if average edge length < _fsize
+  const int _maxlevel;  // The maximum number of subdivisions on each axis.
+  float _fsize{0.f};    // OK to duplicate if average edge length < _fsize.
   struct Entry {
     T _id;
-    SGrid<float, 2, D> _bb{};  // bounding box on entry
+    SGrid<float, 2, D> _bb{};  // The bounding box on entry.
   };
   struct Node {
     int _axis;  // 0 .. D - 1
     float _val;
-    Stack<int> _stackei{};  // Entry indices
-    int _l{-1};             // lower-valued subtree
-    int _h{-1};             // higher-valued subtree
+    Stack<int> _stackei{};  // The entry indices.
+    int _l{-1};             // The lower-valued subtree.
+    int _h{-1};             // The higher-valued subtree.
   };
   Array<Entry> _arentry;
   Array<Node> _arnode;
@@ -114,8 +114,8 @@ template <typename T, int D> class Kdtree : noncopyable {
       }
       const bool want_l = e._bb[0][axis] <= val;
       const bool want_h = e._bb[1][axis] >= val;
-      if (want_l && want_h) {                         // single recursion
-        if (!_fsize || avgel >= inc * _fsize) break;  // small enough
+      if (want_l && want_h) {                         // Single recursion.
+        if (!_fsize || avgel >= inc * _fsize) break;  // Small enough.
         {
           Vec<float, D> naval = aval;
           naval[axis] -= inc;
@@ -144,14 +144,14 @@ template <typename T, int D> class Kdtree : noncopyable {
     if (!_arnode.num()) return false;
     int nelemvis = 0;
     const bool ret = rec_search(ni, ni, bb0, bb1, cbfunc, nelemvis);
-    if (0) {  // not threadsafe
+    if (0) {  // Not thread-safe.
       static const bool b_stats = getenv_bool("KD_STATS");
       static Stat SKDsearchnel("SKDsearchnel", b_stats);
       if (b_stats) SKDsearchnel.enter(nelemvis);
     }
     return ret;
   }
-  // nlca == lowest common ancestor
+  // Here, nlca is the lowest common ancestor.
   template <typename Func>
   bool rec_search(int ni, int nlca, Vec<float, D>& bb0, Vec<float, D>& bb1, Func cbfunc, int& nelemvis) const {
     for (;;) {
@@ -175,9 +175,9 @@ template <typename T, int D> class Kdtree : noncopyable {
       const float val = n._val;
       const bool want_l = n._l >= 0 && bb0[axis] < val;
       const bool want_h = n._h >= 0 && bb1[axis] > val;
-      if (want_l && want_h) {  // single recursion
+      if (want_l && want_h) {  // Single recursion.
         if (rec_search(n._h, nlca, bb0, bb1, cbfunc, nelemvis)) return true;
-        if (!(bb0[axis] < val)) return false;  // test again because bb may have changed
+        if (!(bb0[axis] < val)) return false;  // Test again because bb may have changed.
         ni = n._l;
       } else if (want_l) {
         if (nlca == ni) nlca = n._l;

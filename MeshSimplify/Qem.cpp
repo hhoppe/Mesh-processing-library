@@ -151,7 +151,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     T d = -(p0[0] * nor[0] + p0[1] * nor[1] + p0[2] * nor[2]);
     {
       T* pa = _a.data();
-      for_int(i, ngeom) {  // note: only traverse first ngeom rows
+      for_int(i, ngeom) {  // Note: only traverse the first ngeom rows.
         for_intL(j, i, ngeom) { *pa++ = nor[i] * nor[j]; }
         pa += nattrib;
       }
@@ -193,7 +193,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     // Row 3 of right-hand-side is kept zero.
     if (!lls.solve()) {
       Warning("set_distance_hh99: lls.solve() failed");
-      // geometric component ok, set qem to zero for scalars
+      // Geometric component OK; set qem to zero for scalars.
       for_int(si, nattrib) {
         {
           T* pa = _a.data();
@@ -249,10 +249,10 @@ template <typename T, int n> float Qem<T, n>::evaluate(const float* p) const {
   return float(sum);
 }
 
-// minp unchanged if unsuccessful !
+// Note: minp is unchanged if unsuccessful!
 template <typename T, int n> bool Qem<T, n>::compute_minp(float* minp) const {
   // minp = - A^-1 b        or     A * minp = -b
-  static SvdDoubleLls lls(n, n, 1);  // not threadsafe!
+  static SvdDoubleLls lls(n, n, 1);  // Not thread-safe!
   lls.clear();
   {
     const T* pa = _a.data();
@@ -272,7 +272,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp(float* minp) const {
   return true;
 }
 
-// minp unchanged if unsuccessful !
+// Note: minp is unchanged if unsuccessful!
 template <typename T, int n> bool Qem<T, n>::compute_minp_constr_first(float* minp, int nfixed) const {
   const int nf = nfixed;
   assertx(nf > 0 && nf < n);
@@ -306,7 +306,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_first(float* mi
   return true;
 }
 
-// minp unchanged if unsuccessful !
+// Note: minp is unchanged if unsuccessful!
 template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp, const float* lf) const {
   // Constraint: lf[0 .. n - 1] * x + lf[n] == 0
   //  here special case of constraint A' * x == b'
@@ -347,7 +347,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
     {
       const Vector vlf(lf[0], lf[1], lf[2]);
       voa[0] = orthogonal_vector(vlf);
-      // instead of normalizing, could just scale max(abs) to 1.
+      // Instead of normalizing, could just scale max(abs) to 1.
       assertx(voa[0].normalize());
       voa[1] = cross(voa[0], vlf);
       assertx(voa[1].normalize());
@@ -360,14 +360,14 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
   lls.clear();
   for_int(i, n - 1) {
     for_int(j, n) {
-      // row i of Z^T times column j of A
+      // Row i of Z^T times column j of A.
       double v = 0.;
       for_int(k, n) v += zt[i, k] * a[k, j];
       lls.enter_a_rc(i, j, float(v));
     }
   }
   for_int(i, n - 1) {
-    // row i of Z^T times -b
+    // Row i of Z^T times -b.
     double v = 0.;
     for_int(k, n) v += -zt[i, k] * _b[k];
     lls.enter_b_rc(i, 0, float(v));
@@ -379,7 +379,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
   return true;
 }
 
-// minp unchanged if unsuccessful !
+// Note: minp is unchanged if unsuccessful!
 template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, const float* lf) const {
   const int ngeom = 3, nattrib = n - ngeom;
   assertx(nattrib >= 0);
@@ -399,7 +399,7 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
   if (!c.ysize()) c.init(ngeom, ngeom);
   static Matrix<double> b;
   if (!b.ysize() && nattrib) b.init(ngeom, nattrib);
-  double alinv;  // 1.0 / al
+  double alinv;  // Equals 1.0 / al.
   {
     const T* pa = _a.data();
     for_int(i, ngeom) {
@@ -435,19 +435,19 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
   lls.clear();
   for_int(i, ngeom) {
     for_int(j, ngeom) {
-      // enter C - B * B^T / al
+      // Enter C - B * B^T / al.
       double x = 0.;
       for_int(k, nattrib) x += b[i, k] * b[j, k];
       lls.enter_a_rc(i, j, float(c[i, j] - alinv * x));
     }
-    // enter b1 - B * b2 / al
+    // Enter b1 - B * b2 / al.
     double x = 0.;
     for_int(k, nattrib) x += b[i, k] * -_b[ngeom + k];
     lls.enter_b_rc(i, 0, float(-_b[i] - alinv * x));
     lls.enter_a_rc(ngeom, i, lf[i]);
     lls.enter_a_rc(i, ngeom, lf[i]);
   }
-  // enter -d_v
+  // Enter -d_v.
   lls.enter_b_rc(ngeom, 0, -lf[n]);
   if (!lls.solve()) return false;
   for_int(i, ngeom) minp[i] = lls.get_x_rc(i, 0);
@@ -459,7 +459,7 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
   return true;
 }
 
-// minp unchanged if unsuccessful !
+// Note: minp is unchanged if unsuccessful!
 template <typename T, int n>
 bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> minp) const {
   assertx(ar_q[0] == this);
@@ -468,7 +468,7 @@ bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> m
   const int ngeom = 3, nattrib = n - ngeom;
   assertx(nattrib >= 0);
   const int msize = ngeom + nattrib * nw;
-  // cache previous size
+  // Cache the previous size.
   static unique_ptr<SvdDoubleLls> plls;
   static int psize;
   if (msize != psize) {
@@ -482,7 +482,7 @@ bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> m
   Vec<double, ngeom> vsum;
   fill(vsum, 0.);
   for_int(wi, nw) {
-    const Qem<T, n>& qem = *ar_q[wi];  // be careful never to use *this!
+    const Qem<T, n>& qem = *ar_q[wi];  // Be careful never to use *this!
     const int inc = nattrib * wi;
     {
       const T* pa = qem._a.data();
@@ -526,7 +526,7 @@ bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> m
 
 #define DEF_LAGRANGE
 
-// minp unchanged if unsuccessful !
+// Note: minp is unchanged if unsuccessful!
 template <typename T, int n>
 bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> minp, const float* lf) const {
   assertx(ar_q[0] == this);
@@ -542,7 +542,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   if (b.num() != msize) b.init(msize);
   fill(b, 0.);
   for_int(wi, nw) {
-    const Qem<T, n>& qem = *ar_q[wi];  // be careful never to use *this!
+    const Qem<T, n>& qem = *ar_q[wi];  // Be careful never to use *this!
     const int inc = nattrib * wi;
     {
       const T* pa = qem._a.data();
@@ -578,7 +578,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
 #else
   const int msize1 = msize;
 #endif
-  // cache previous size
+  // Cache the previous size.
   static unique_ptr<SvdDoubleLls> plls;
   static int psize1;
   if (msize1 != psize1) {
@@ -606,7 +606,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
     {
       Vector vlf(lf[0], lf[1], lf[2]);
       voa[0] = orthogonal_vector(vlf);
-      // instead of normalizing, could just scale max(abs) to 1.
+      // Instead of normalizing, could just scale max(abs) to 1.
       assertx(voa[0].normalize());
       voa[1] = cross(voa[0], vlf);
       assertx(voa[1].normalize());
@@ -616,14 +616,14 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   }
   for_int(i, msize - 1) {
     for_int(j, msize) {
-      // row i of Z^T times column j of A
+      // Row i of Z^T times column j of A.
       double v = 0.;
       for_int(k, msize) v += zt[i, k] * a[k, j];
       lls.enter_a_rc(i, j, v);
     }
   }
   for_int(i, msize - 1) {
-    // row i of Z^T times -b
+    // Row i of Z^T times -b.
     double v = 0.;
     for_int(k, msize) v += -zt[i, k] * b[k];
     lls.enter_b_rc(i, 0, v);

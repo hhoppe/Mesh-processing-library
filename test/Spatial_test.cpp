@@ -31,7 +31,7 @@ int main() {
     PointSpatial<int> sp(19);
     const int n = 1000;
     Array<Point> arpts;
-    arpts.reserve(n);  // prevent reallocation
+    arpts.reserve(n);  // Prevent reallocation.
     for_int(i, n) {
       Point p;
       for_int(c, 3) p[c] = .1f + .8f * Random::G.unif();

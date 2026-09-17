@@ -6,7 +6,7 @@
 
 namespace hh {
 
-class Flag;  // forward reference
+class Flag;  // Forward reference.
 
 // Mask identifying an allocated flag within a Flags structure.
 using FlagMask = unsigned;
@@ -20,7 +20,7 @@ class Flags {
   Flags() = default;
   void operator=(type flags) { _flags = flags; }
   operator type() const { return _flags; }
-  type set(type flags) { return std::exchange(_flags, flags); }  // return previous
+  type set(type flags) { return std::exchange(_flags, flags); }  // Returns the previous value.
   [[nodiscard]] Flag flag(FlagMask fmask);
   [[nodiscard]] bool flag(FlagMask fmask) const { return (_flags & fmask) != 0; }
   friend void swap(Flags& l, Flags& r) noexcept { std::swap(l._flags, r._flags); }
@@ -43,7 +43,7 @@ class Flag {
   void operator=(const Flag& flag) { *this = bool(flag); }
   Flag(const Flag&) = default;
   [[nodiscard]] operator bool() const { return (_flags._flags & _fmask) != 0; }
-  bool set(bool bset) {  // return previous
+  bool set(bool bset) {  // Returns the previous value.
     const bool t = *this;
     *this = bset;
     return t;

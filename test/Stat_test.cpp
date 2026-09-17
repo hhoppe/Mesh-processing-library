@@ -5,7 +5,7 @@
 #include "libHh/Vec.h"
 using namespace hh;
 
-// Optionally, run with:  rm -f Stat.Stat_test; STAT_FILES=1 Stat_test; cat Stat.Stat_test
+// Optionally, run with:  rm -f Stat.Stat_test; STAT_FILES=1 Stat_test; cat Stat.Stat_test.
 
 int main() {
   {
@@ -35,13 +35,13 @@ int main() {
     for_int(i, 100) Ssquare.enter(i);
   }
   {
-    float values[] = {2.f, 4.f, 4.f, 5.f, 4.f};  // test C-array
+    float values[] = {2.f, 4.f, 4.f, 5.f, 4.f};  // Test C-array.
     SHOW(CArrayView(values));
     for (float v : values) SHOW(v);
     HH_RSTAT(Svalues, CArrayView(values));
   }
   {
-    const float values[] = {2.f, 4.f, 4.f, 5.f, 4.f};  // test C-array
+    const float values[] = {2.f, 4.f, 4.f, 5.f, 4.f};  // Test C-array.
     for (float v : values) SHOW(v);
     HH_RSTAT(Svalues, values);
   }

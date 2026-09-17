@@ -4,7 +4,7 @@
 
 #include <atomic>
 
-#if defined(GL_VERSION)  // OpenGL
+#if defined(GL_VERSION)  // OpenGL.
 #if defined(_WIN32)
 #include "GL/glext.h"  // possibly use local file because Windows does not come with it.
 #else                  // Unix
@@ -29,24 +29,24 @@ namespace hh {
 class HwBase : noncopyable {
  public:
   HwBase() = default;
-  bool init(Array<string>& aargs) { return init_aux(aargs); }  // ret: success
+  bool init(Array<string>& aargs) { return init_aux(aargs); }  // Returns success.
 
   // Callbacks:
-  virtual bool key_press(string s) = 0;                                          // ret: handled
-  virtual void button_press(int butnum, bool pressed, const Vec2<int>& yx) = 0;  // 1=L, 2=M, 3=R, 4=B, 5=F
+  virtual bool key_press(string s) = 0;                                          // Returns true if handled.
+  virtual void button_press(int butnum, bool pressed, const Vec2<int>& yx) = 0;  // 1 = L, 2 = M, 3 = R, 4 = B, 5 = F.
   virtual void wheel_turn(float v) { dummy_use(v); }                             // abs(v) == 1.f for one click turn
-  virtual void draw_window(const Vec2<int>& dims) = 0;  // must late-call clear_window() before drawing
+  virtual void draw_window(const Vec2<int>& dims) = 0;  // Must late-call clear_window() before drawing.
   virtual void drag_and_drop(CArrayView<string> filenames) { dummy_use(filenames); }
   virtual void input_received() {}
 
-  // call after init() but before open():
+  // Call after init() but before open():
   void set_default_background(string s) { assertx(_state == EState::init), _default_background = std::move(s); }
   void set_default_foreground(string s) { assertx(_state == EState::init), _default_foreground = std::move(s); }
   void set_default_geometry(string s) { assertx(_state == EState::init), _default_geometry = std::move(s); }
   virtual void set_double_buffering(bool newstate) = 0;  // (also allowed after open() in libHwX without HH_OGLX)
 
-  // call anytime after init():
-  virtual void set_window_title(string s) = 0;  // set text for window title bar
+  // Call anytime after init():
+  virtual void set_window_title(string s) = 0;  // Set text for window title bar.
   virtual void beep() = 0;
   void watch_fd0(bool b) { assertx(_state != EState::uninit), _watch_fd0 = b; }
   void redraw_later();
@@ -54,8 +54,8 @@ class HwBase : noncopyable {
   void quit() { _update = EUpdate::quit; }
   virtual void open() = 0;
 
-  // call after open():
-  virtual bool suggests_stop() = 0;  // ret: Hw requests program to stop drawing
+  // Call after open():
+  virtual bool suggests_stop() = 0;  // Returns true if Hw requests the program to stop drawing.
   virtual std::optional<Vec2<int>> get_pointer() = 0;
   enum class EModifier { shift, control, alt };
   virtual bool get_key_modifier(EModifier modifier) = 0;
@@ -68,20 +68,20 @@ class HwBase : noncopyable {
                  const Pixel& back_color = Pixel::black(), bool wrap = true);
   virtual void fill_polygon(CArrayView<Vec2<float>> points) = 0;  // (y, x) order; polygon assumed convex
   void fill_rectangle(const Vec2<float>& top_left, const Vec2<float>& bot_right);  // (y, x) coordinates
-  void draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2);               // coordinates in pixel units
+  void draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2);               // Coordinates in pixel units.
   void draw_point(const Vec2<float>& yx);
   [[nodiscard]] Vec2<int> window_position_yx() const { return _win_pos; }
   [[nodiscard]] virtual Vec2<int> get_max_window_dims() = 0;  // (ny, nx)
-  virtual void resize_window(const Vec2<int>& yx) = 0;        // resize to new width and height
+  virtual void resize_window(const Vec2<int>& yx) = 0;        // Resize to new width and height.
   [[nodiscard]] virtual bool is_fullscreen() = 0;
-  virtual void make_fullscreen(bool b) = 0;  // make the window fullscreen if b
+  virtual void make_fullscreen(bool b) = 0;  // Make the window fullscreen if b.
   virtual void grab_focus() {}
 
-  // call within draw_window():
+  // Call within draw_window():
   virtual void clear_window() = 0;
-  void process_keystring(string& keystring);  // makes calls to key_press() and clears keystring
+  void process_keystring(string& keystring);  // Makes calls to key_press() and clears keystring.
 
-  // query user for values; ret: true with <enter>, false with <esc>.
+  // Query the user for values; returns true with <enter>, false with <esc>.
   [[nodiscard]] bool query(const Vec2<int>& yx, string prompt, string& buffer);
   [[nodiscard]] bool query(const Vec2<int>& yx, string prompt, float& f);
   [[nodiscard]] bool query(const Vec2<int>& yx, string prompt, int& i);
@@ -92,10 +92,10 @@ class HwBase : noncopyable {
   [[nodiscard]] bool is_offscreen() const { return _offscreen != ""; }  // -offscreen
 
   // buffering:
-  virtual void hard_flush() = 0;          // synchronize screen
-  virtual void begin_draw_visible() = 0;  // force update to visible buffer
+  virtual void hard_flush() = 0;          // Synchronize screen.
+  virtual void begin_draw_visible() = 0;  // Force update to visible buffer.
   virtual void end_draw_visible() = 0;
-  virtual void wake_up() {}  // called from an asynchronous client thread to force redraw
+  virtual void wake_up() {}  // Called from an asynchronous client thread to force redraw.
 
   // clipboard:
   virtual bool copy_image_to_clipboard(const Image&) {
@@ -111,7 +111,7 @@ class HwBase : noncopyable {
   virtual ~HwBase() = default;
 
  private:
-  friend class Hw;  // grant access to Hw but not to any DerivedHw
+  friend class Hw;  // Grant access to Hw but not to any DerivedHw.
   string _default_background{"white"};
   string _default_foreground{"black"};
   string _default_geometry{"200x200+100+0"};
@@ -125,8 +125,8 @@ class HwBase : noncopyable {
   bool _gotevent{false};
   Array<Vec2<Vec2<float>>> _ar_seg;  // {{y1, x1}, {y2, x2}}
   Array<Vec2<float>> _ar_point;      // {y, x}
-  Vec2<int> _win_dims{0, 0};         // y, x : size of client area
-  Vec2<int> _win_pos{0, 0};          // y, x : upper-left position of client area
+  Vec2<int> _win_dims{0, 0};         // Size of the client area (y, x).
+  Vec2<int> _win_pos{0, 0};          // Upper-left position of the client area (y, x).
   bool _exposed{false};
   bool _first_draw{true};
   bool _is_glx_dbuf{false};
@@ -143,19 +143,19 @@ class HwBase : noncopyable {
   string _user_geometry;
   string _backcolor;
   string _forecolor;
-  string _offscreen;  // name of output file to render to, without any visible window
+  string _offscreen;  // Name of output file to render to, without any visible window.
 
-  bool _hidden{false};                               // render into framebuffer objects instead of a visible window
-  int _hidden_samples{0};                            // multisamples in the hidden framebuffer (0 for none)
-  Vec2<int> _hidden_dims{0, 0};                      // size of the allocated hidden framebuffers
-  Vec2<unsigned> _hidden_framebuffers{0u, 0u};       // names of the drawn and resolved framebuffers
-  Vec3<unsigned> _hidden_renderbuffers{0u, 0u, 0u};  // names of the drawn color, drawn depth, and resolved color
+  bool _hidden{false};                               // Render into framebuffer objects instead of a visible window.
+  int _hidden_samples{0};                            // Multisamples in the hidden framebuffer (0 for none).
+  Vec2<int> _hidden_dims{0, 0};                      // Size of the allocated hidden framebuffers.
+  Vec2<unsigned> _hidden_framebuffers{0u, 0u};       // Names of the drawn and resolved framebuffers.
+  Vec3<unsigned> _hidden_renderbuffers{0u, 0u, 0u};  // Names of the drawn color, drawn depth, and resolved color.
 
   bool _nosetforeground{false};
-  Pixel _color_foreground{0, 0, 0, 0};  // 24-bit foreground/drawing color
-  Pixel _color_background{0, 0, 0, 0};  // 24-bit background/clear color
+  Pixel _color_foreground{0, 0, 0, 0};  // 24-bit foreground/drawing color.
+  Pixel _color_background{0, 0, 0, 0};  // 24-bit background/clear color.
   bool _bigfont{false};
-  Vec2<int> _font_dims{0, 0};  // height, width
+  Vec2<int> _font_dims{0, 0};  // Height, width.
   int _listbase_font{-1};
 
   virtual bool init_aux(Array<string>& aargs) = 0;
@@ -163,11 +163,11 @@ class HwBase : noncopyable {
   virtual void end_hwkey() = 0;
   virtual void flush_seg() = 0;
   virtual void flush_point() = 0;
-  virtual bool loop() = 0;  // ret: should quit
+  virtual bool loop() = 0;  // Returns true if it should quit.
   virtual void draw_text_internal(const Vec2<int>& yx, const string& s) = 0;
 
-  void soft_flush();    // flush output buffers
-  void soft_discard();  // discard buffered segments and points
+  void soft_flush();    // Flush output buffers.
+  void soft_discard();  // Discard buffered segments and points.
   void query_keypress(string s);
   void handle_keyintr();
 #if defined(GL_VERSION)
@@ -188,7 +188,7 @@ Pixel parse_color(const string& scolor);
 //----------------------------------------------------------------------------
 
 inline void HwBase::redraw_later() {
-  if (0) assertx(_state != EState::uninit);  // could occur in a background thread after quit()
+  if (0) assertx(_state != EState::uninit);  // Could occur in a background thread after quit().
   // Atomic check-then-set; may run on a background thread.
   EUpdate expected = EUpdate::nothing;
   _update.compare_exchange_strong(expected, EUpdate::redrawlater);
@@ -201,7 +201,7 @@ inline void HwBase::redraw_now() {
 
 inline void HwBase::draw_text(const Vec2<int>& yx, const string& s, EStyle style, const Pixel& back_color, bool wrap) {
   if (!s.size()) return;
-  // use uchar{127} to render all non-ascii characters.
+  // Use uchar{127} to render all non-ascii characters.
   const auto func_is_nonascii = [](const string& ss) {
     return ranges::any_of(ss, [](char ch) { return !(uchar(ch) >= 32 && uchar(ch) <= 127); });
   };
@@ -265,7 +265,7 @@ inline void HwBase::draw_point(const Vec2<float>& yx) {
   if (_ar_point.num() >= 1024) flush_point();
 }
 
-// Only reads keys from _hwkey
+// Only reads keys from _hwkey.
 inline void HwBase::handle_keyintr() {
   if (!_is_keyintr) return;
   _is_keyintr = false;
@@ -292,7 +292,7 @@ inline void HwBase::handle_keyintr() {
         skip = true;
       } else if (_hwkey[0] >= '2' && _hwkey[0] <= '9') {
         _hwkey[0] -= 1;
-        _hwkey.insert(0, "\\");  // put the symbol back
+        _hwkey.insert(0, "\\");  // Put the symbol back.
         skip = true;
       } else {
         press = string(1, _hwkey[0]);
@@ -426,7 +426,7 @@ inline string HwBase::query_save_filename(const string& hint_filename, bool forc
 
 // Convert a hexadecimal digit to an integer (0..15).
 inline uint8_t parse_hexa_nibble(char ch) {
-  if (ch >= '0' && ch <= '9') {  // or std::isdigit()
+  if (ch >= '0' && ch <= '9') {  // Or std::isdigit().
     return narrow_cast<uint8_t>(ch - '0');
   } else if (ch >= 'A' && ch <= 'F') {
     return narrow_cast<uint8_t>(10 + (ch - 'A'));
@@ -475,7 +475,7 @@ inline Pixel parse_color(const string& scolor) {
 
 //----------------------------------------------------------------------------
 
-#if defined(GL_VERSION)  // OpenGL
+#if defined(GL_VERSION)  // OpenGL.
 
 // See:
 // https://open.gl/textures  really nice!
@@ -487,7 +487,7 @@ inline Pixel parse_color(const string& scolor) {
 
 // Check if there are any outstanding OpenGL errors and if so report them.
 // For debugging, sprinkle:  ASSERTX(!gl_report_errors());
-bool gl_report_errors();  // ret: true if errors (only call after init() and before open() returns)
+bool gl_report_errors();  // Returns true if errors (only call after init() and before open() returns).
 
 // Return a string containing all the supported OpenGL extensions.
 const string& gl_extensions_string();
@@ -517,7 +517,7 @@ const string& gl_extensions_string();
 #define USE_GL_EXT_MAYBE(func, type) USE_GL_EXT_MAYBE_AUX(func, type, NSGLGetProcAddress(#func))
 #endif
 
-// See ~/git/mesh_processing/G3dOGL/glext.h
+// See ~/git/mesh_processing/G3dOGL/glext.h.
 #define USE_GL_EXT(func, type)  \
   USE_GL_EXT_MAYBE(func, type); \
   assertx(func)
@@ -658,20 +658,20 @@ inline void HwBase::hidden_write_image(const string& filename) {
   glPixelStorei(GL_PACK_ALIGNMENT, 1);
   glReadPixels(0, 0, _win_dims[1], _win_dims[0], GL_RGBA, GL_UNSIGNED_BYTE, image.data());
   assertx(!gl_report_errors());
-  image.reverse_y();  // because OpenGL has image origin at lower-left
+  image.reverse_y();  // Because OpenGL has image origin at lower-left.
   image.write_file(filename);
 }
 
 inline void HwBase::draw_text_ogl(const Vec2<int>& yx, const string& s) {
   glListBase(_listbase_font);
-  USE_GL_EXT_MAYBE(glWindowPos2i, PFNGLWINDOWPOS2IPROC);  // not supported on Remote Desktop
+  USE_GL_EXT_MAYBE(glWindowPos2i, PFNGLWINDOWPOS2IPROC);  // Not supported on Remote Desktop.
   if (assertw(glWindowPos2i)) {
     const int x = yx[1], y = _win_dims[0] - yx[0] - _font_dims[0];
-    glWindowPos2i(x, y);  // reverse y; not clip-tested, so raster position valid
+    glWindowPos2i(x, y);  // Reverse y; not clip-tested, so raster position valid.
     glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
   } else {
     const int x = yx[1], y = yx[0] + _font_dims[0];
-    glRasterPos2i(x, y);  // clipped, so raster position may be invalid
+    glRasterPos2i(x, y);  // Clipped, so raster position may be invalid.
     glCallLists(narrow_cast<int>(s.size()), GL_UNSIGNED_BYTE, reinterpret_cast<const uchar*>(s.c_str()));
   }
 }

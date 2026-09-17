@@ -16,7 +16,7 @@ void Image_wic_dummy_function_to_avoid_linkage_warnings() {}
 #include <wincodecsdk.h>  // IWICMetadataBlockReader
 
 HH_REFERENCE_LIB("ole32.lib");     // CoInitializeEx() and CoCreateInstance()
-HH_REFERENCE_LIB("oleaut32.lib");  // VARIANT; odd: required from command-line cl.exe but not from msbuild.exe
+HH_REFERENCE_LIB("oleaut32.lib");  // VARIANT; odd: required from command-line cl.exe but not from msbuild.exe.
 HH_REFERENCE_LIB("shlwapi.lib");   // SHCreateMemStream()
 
 #include <cctype>  // isalnum(), toupper()
@@ -43,7 +43,7 @@ namespace hh {
 
 namespace {
 
-const std::wstring k_orientation_flag = L"/app1/ifd/{ushort=274}";  // EXIF tag for image orientation
+const std::wstring k_orientation_flag = L"/app1/ifd/{ushort=274}";  // The EXIF tag for image orientation.
 
 #define AS(expr) assertt(SUCCEEDED(expr))
 
@@ -53,9 +53,9 @@ IWICImagingFactory* wic_factory = nullptr;
 
 void wic_init() {
   if (wic_factory) return;
-  // default may be COINIT_MULTITHREADED, but VT code assumes COINIT_APARTMENTTHREADED
+  // The default may be COINIT_MULTITHREADED, but VT code assumes COINIT_APARTMENTTHREADED.
   const HRESULT hr = CoInitializeEx(nullptr, COINIT_APARTMENTTHREADED);
-  assertx(SUCCEEDED(hr) || hr == S_FALSE);  // may equal S_FALSE if COM was previously initialized
+  assertx(SUCCEEDED(hr) || hr == S_FALSE);  // May equal S_FALSE if COM was previously initialized.
   AS(CoCreateInstance(CLSID_WICImagingFactory, nullptr, CLSCTX_INPROC_SERVER, IID_PPV_ARGS(&wic_factory)));
 }
 
@@ -151,7 +151,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     std::istream& is = fi();
     std::streamsize nread = 0;
     for (; is;) {
-      const int chunk = 1024 * 1024;  // 1 MiB
+      const int chunk = 1024 * 1024;  // 1 MiB.
       // Note: size of input stream cannot be >= (1ull << 32).
       buffer.resize(assert_narrow_cast<int>(int64_t{nread} + chunk));
       is.read(reinterpret_cast<char*>(buffer.data()) + nread, chunk);
@@ -218,7 +218,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     if (suffix() == "heif" && !expected_format) set_suffix("avif");  // Just a guess.
     if (suffix() == "avif") Warning("WIC decoding of *.avif likely gives incorrect pixel values");
   }
-  ushort orientation = 1;  // default is normal orientation (range is 1..8)
+  ushort orientation = 1;  // Default is normal orientation (range is 1..8).
   {
     com_ptr<IWICBitmapFrameDecode> frame_decode;
     AS(decoder->GetFrame(0, &frame_decode));
@@ -229,7 +229,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     // double dpi_X = 0., dpi_Y = 0.; AS(frame_decode->GetResolution(&dpi_X, &dpi_Y));
     WICPixelFormatGUID pixel_format{};
     AS(frame_decode->GetPixelFormat(&pixel_format));
-    set_zsize(contains(k_pixel_formats_with_alpha, pixel_format) ? 4 : 3);  // ignore grayscale for now
+    set_zsize(contains(k_pixel_formats_with_alpha, pixel_format) ? 4 : 3);  // Ignore grayscale for now.
     {
       // https://msdn.microsoft.com/en-us/library/windows/desktop/ee719904%28v=vs.85%29.aspx
       // https://github.com/Microsoft/DirectXTex/blob/master/DirectXTex/DirectXTexWIC.cpp
@@ -239,7 +239,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
         PropVariantInit(&propvariant);
         if (SUCCEEDED(pQueryReader->GetMetadataByName(k_orientation_flag.c_str(), &propvariant)) &&
             assertw(propvariant.vt == VT_UI2)) {
-          orientation = propvariant.uiVal;  // 1..8; 1 == normal, 6 == rotate_ccw
+          orientation = propvariant.uiVal;  // Range 1..8; 1 == normal, 6 == rotate_ccw.
         }
         PropVariantClear(&propvariant);
         if (0) {
@@ -269,18 +269,18 @@ void Image::read_file_wic(const string& filename, bool bgra) {
     //   model uses an RWOP color space."
     const WICPixelFormatGUID pixel_format2 = bgra ? GUID_WICPixelFormat32bppBGRA : GUID_WICPixelFormat32bppRGBA;
     AS(converter->Initialize(frame_decode, pixel_format2, WICBitmapDitherTypeNone,
-                             nullptr,                    // specify a particular palette
-                             0.f,                        // alpha threshold
-                             WICBitmapPaletteTypeCustom  // or WICBitmapPaletteTypeMedianCut
+                             nullptr,                    // Specify a particular palette.
+                             0.f,                        // Alpha threshold.
+                             WICBitmapPaletteTypeCustom  // Or WICBitmapPaletteTypeMedianCut.
                              ));
     // Optionally reinterpret the converter as a bitmap source (which it already is).
     //  com_ptr<IWICBitmapSource> bitmap_source; AS(pConverter->QueryInterface(IID_PPV_ARGS(&bitmap_source)));
-    if (1) {  // verify the pixel format
+    if (1) {  // Verify the pixel format.
       WICPixelFormatGUID pixel_format3;
       AS(converter->GetPixelFormat(&pixel_format3));
       assertx(pixel_format3 == pixel_format2);
     }
-    {  // fast direct decoding into my data structure
+    {  // Fast direct decoding into my data structure.
       const unsigned stride = xsize() * sizeof(Pixel);
       const unsigned buffer_size = assert_narrow_cast<unsigned>(size() * sizeof(Pixel));
       // For some unknown reason, this next line fails intermittently on CONFIG=w32 for
@@ -309,7 +309,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
       bool flipv;
     };
     static constexpr auto ar = to_Vec<S>({
-        {0, false, false},  // dummy entry for value == 0
+        {0, false, false},  // Dummy entry for value == 0.
         {0, false, false},
         {0, true, false},
         {180, false, false},
@@ -345,7 +345,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   }
   if (!container_format)
     throw std::runtime_error("Image: unrecognized suffix '" + suf + "' when writing '" + filename + "'");
-  const_cast<Image&>(*this).set_suffix(suf);  // mutable
+  const_cast<Image&>(*this).set_suffix(suf);  // Mutable.
   const string& orig_filename = attrib().orig_filename;
   bool have_metadata = container_format == &GUID_ContainerFormatJpeg && orig_filename != "";
   if (have_metadata) {
@@ -359,7 +359,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   const bool write_through_memory =
       file_requires_pipe(filename) ||
       (have_metadata && canonical_pathname(get_path_absolute(filename)) == canonical_pathname(orig_filename));
-  my_HGLOBAL hMem;  // gets defined if write_through_memory
+  my_HGLOBAL hMem;  // Gets defined if write_through_memory.
   com_ptr<IStream> output_stream;
   if (write_through_memory) {
     // https://github.com/sumatrapdfreader/sumatrapdf/blob/master/src/utils/WinUtil.cpp
@@ -394,18 +394,18 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   {
     com_ptr<IWICBitmapFrameEncode> frame_encode;
     {
-      IPropertyBag2* property_bag;  // auto freed
+      IPropertyBag2* property_bag;  // Auto freed.
       AS(encoder->CreateNewFrame(&frame_encode, &property_bag));
       // Encoder options: https://learn.microsoft.com/en-us/windows/win32/wic/-wic-creating-encoder
       if (container_format == &GUID_ContainerFormatJpeg) {
-        const int quality = getenv_int("JPG_QUALITY", 95, true);  // 0--100 (default 75)
+        const int quality = getenv_int("JPG_QUALITY", 95, true);  // 0--100 (default 75).
         assertx(quality > 0 && quality <= 100);
         PROPBAG2 option{};
         option.pstrName = const_cast<wchar_t*>(L"ImageQuality");
         VARIANT variant;
         VariantInit(&variant);
         variant.vt = VT_R4;
-        variant.fltVal = quality / 100.f;  // range [0., 1.]
+        variant.fltVal = quality / 100.f;  // Range [0., 1.].
         // The compression rate is verified to be similar to that of libjpeg for quality = 50, 95, 100.
         AS(property_bag->Write(1, &option, &variant));
         VariantClear(&variant);
@@ -442,7 +442,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
           if (assertw(SUCCEEDED(frame_encode->GetMetadataQueryWriter(&pQueryWriter)))) {
             PROPVARIANT propvariant;
             PropVariantInit(&propvariant);
-            propvariant.vt = VT_UI2, propvariant.uiVal = 1;  // reset to default orientation
+            propvariant.vt = VT_UI2, propvariant.uiVal = 1;  // Reset to the default orientation.
             AS(pQueryWriter->SetMetadataByName(k_orientation_flag.c_str(), &propvariant));
             PropVariantClear(&propvariant);
           }
@@ -480,7 +480,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     const HRESULT hr = output_stream->Commit(STGC_DEFAULT);
     assertx(hr == S_OK || hr == E_NOTIMPL);
   }
-  encoder.reset();  // early Release just to be safe
+  encoder.reset();  // Early Release just to be safe.
   if (write_through_memory) {
     WFile fi(filename);
     const size_t size = assertx(GlobalSize(assertx(hMem)));

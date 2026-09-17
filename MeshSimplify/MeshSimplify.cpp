@@ -272,7 +272,7 @@ Array<WedgeInfo> gwinfo;  // Indexed by c_wedge_id; gwinfo[0] is not used!
 
 Array<unique_ptr<BQemT>> gwq;  // Is empty() if !minqem || qemlocal; indexed by c_wedge_id.
 
-HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_wedge_id);  // wedge id's of mesh corners.
+HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_wedge_id);  // Wedge id's of mesh corners.
 
 inline WedgeInfo& c_winfo(Corner c) { return gwinfo[c_wedge_id(c)]; }
 
@@ -301,7 +301,7 @@ struct NewMeshNei : noncopyable {
   Array<int> ar_vdisc;             // Sharp edges, indices into va[].
   Array<Vec3<Corner>> ar_corners;  // 3 corners for each face (third is center).
 
-  Array<P2WedgeInfo> ar_p2wi;  // winfo of outside ar_corners.
+  Array<P2WedgeInfo> ar_p2wi;  // The winfo of outside ar_corners.
 
   Array<int> ar_nwid;     // For each new corner, new fake wedge id.
   Array<int> ar_rwid_v1;  // For each nwid, would-be real wid on v1.
@@ -314,7 +314,7 @@ struct NewMeshNei : noncopyable {
   Array<int> ar_eptv;            // For ar_epts[], index in va of sharp edge.
 
   Array<BQemT*> ar_wq;  // qem for each nwid (new'ed); not unique_ptr<BQemT> because
-                        //  DQem<T>::compute_minp*() recasts arg type from BQem<T>::compute_minp*().
+  //  DQem<T>::compute_minp*() recasts arg type from BQem<T>::compute_minp*().
 };
 
 // Parameterization of face points on would-be neighborhood.
@@ -525,7 +525,7 @@ int tvc_ncachemiss = 0;
 // Result of a possible edge collapse.
 enum EResult { R_success, R_dih, R_illegal, R_NUM };
 
-// Forward definition
+// Forward definition.
 void get_tvc_cost_edir(Edge e, float& tvccost, bool& edir);
 
 // *** Functions
@@ -1703,7 +1703,7 @@ void perhaps_initialize() {
     showdf("Original mesh is likely grid of %dx%d\n", grid_dims[1], grid_dims[0]);
     showdf("Grid boundaries_first=%d\n", boundaries_first);
     // Assertions.
-    {  // verify that diagonals run the right way
+    {  // Verify that diagonals run the right way.
       // Look for vertex at grid[1, 1].
       Vertex v = mesh.id_vertex(boundaries_first ? 2 * grid_dims[1] + 2 * (grid_dims[0] - 2) + 1 : grid_dims[1] + 2);
       assertx(mesh.edge(mesh.id_vertex(1), v));
@@ -1827,7 +1827,7 @@ float compute_spring(const NewMeshNei& nn) {
   }
   // Spring as a function of #points and #faces?
   // From looking at many examples of Meshfit, had roughly #f / #p == 7--40 before spring was set below 1e-2f .
-  // Let frac = np / nf
+  // Let frac = np / nf.
   //  spring = frac < 4 ? 1e-2f : frac < 8 ? 1e-4f : 1e-8f;
   float spring = np < nf * 4 ? 1e-2f : np < nf * 8 ? 1e-4f : 1e-8f;
   // Variable spring constants tends to produce patches of large faces, which gives poor behavior for selective
@@ -2160,8 +2160,8 @@ bool gather_nn(Edge e, NewMeshNei& nn) {
   // Gather ar_nwid, ar_rwid.
   if (!gather_nn_2(e, nn)) return false;
   if (minqem) return true;            // 2024-05-30
-  Vec2<bool> eoretire{false, false};  // (v1, vo{1,2}) no longer sharp
-  bool eretire{false};                // (v1, v2) was sharp and no adjacent crease
+  Vec2<bool> eoretire{false, false};  // Here, (v1, vo{1,2}) is no longer sharp.
+  bool eretire{false};                // Here, (v1, v2) was sharp and there is no adjacent crease.
   // Gather eoretire, eretire.
   {
     const int nc = nn.ar_corners.num();
@@ -2365,7 +2365,7 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
     // -> expect 47*7*50*1.9 == ~31255 out of 81500 cycles (38% of local_fit)
     //  observed it is about 40% of cycles in local_fit.
     for_int(i, nf) {
-      // 37--46 instr/loop (+ delays) when '-O'
+      // 37-46 instructions per loop (+ delays) when '-O'.
       ar_d2[i] = square(lb_dist_point_bbox(p, ar_bbox[i]));
     }
     float min_d2 = BIGFLOAT;
@@ -3092,14 +3092,14 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   }
   // Use Numerical Recipes code (converted to double precision).
   int n = 3;                                       // Number of variables (x, y, z).
-  int m1 = n_m1, m2 = ar_lf.num() - n_m1, m3 = 0;  // Number of '<=', '>=', '==' constraints
+  int m1 = n_m1, m2 = ar_lf.num() - n_m1, m3 = 0;  // Number of '<=', '>=', '==' constraints.
   int m = m1 + m2 + m3;                            // Total number of constraints.
   double** a = dmatrix(1, m + 2, 1, n + 1);
   int* iposv = ivector(1, m);
   int* izrov = ivector(1, n);
   int icase;
   // Maximize the linear functional: -x*link_normal[0]-y*link_normal[1]...
-  a[1][1] = 0.f;  // always
+  a[1][1] = 0.f;  // Always.
   a[1][2] = -link_normal[0];
   a[1][3] = -link_normal[1];
   a[1][4] = -link_normal[2];
@@ -3816,7 +3816,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       } else if (v2nse >= 1) {
         if (ii > 0 && !minii1) continue;
       } else if (minqem) {
-        // do consider all 3 ii's and pick best one.
+        // Do consider all 3 ii's and pick the best one.
       } else {
         if (ii != 1 && !miniiall && !nominii1 && !minii2) continue;
       }
@@ -3836,13 +3836,13 @@ EcolResult try_ecol(Edge e, bool commit) {
       }
     }
     if (strict_sharp >= 2) {  // Chart-compliant.
-      assertx(ii != 1);       // 0 or 2
+      assertx(ii != 1);       // 0 or 2.
       Vertex tv1 = v1, tv2 = v2;
       if (ii == 0) std::swap(tv1, tv2);
-      // tv1 is kept, tv2 is lost
+      // Here, tv1 is kept and tv2 is lost.
       const bool ok = [&] {
         for (Face f : mesh.faces(e)) {
-          Vertex vv = mesh.opp_vertex(e, f);  // side_vertex1|2
+          Vertex vv = mesh.opp_vertex(e, f);  // Either side_vertex1 or side_vertex2.
           Face fc = mesh.opp_face(f, mesh.edge(tv2, vv));
           // If (v2, vv) is boundary, ecol should be disallowed.
           if (!fc) return false;  // From lambda.
@@ -3888,7 +3888,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       if (!ok) continue;
     }
     Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
-    Array<WedgeInfo> ar_wi;  // indexed by nn.ar_nwid.
+    Array<WedgeInfo> ar_wi;  // Indexed by nn.ar_nwid.
     update_initial_wi(e, nn, ii, ar_wi);
     if (hull) {
       if (!compute_hull_point(e, nn, newp)) continue;
@@ -4277,7 +4277,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   if (tvcfac) tvc_update_cache(e);
   if (original_indices != "") ar_vt_indices.push(mesh.vertex_id(vt));
   // ***DO IT
-  mesh.collapse_edge_vertex(e, vs);  // vs kept
+  mesh.collapse_edge_vertex(e, vs);  // Here, vs is kept.
   mesh.set_point(vs, min_p);
   replace_wi(nn, min_ar_wi, ar_rwid);
   v_desn(vs) = new_desn;
@@ -4291,7 +4291,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       for_int(i, ar_rwid.num()) gwq[ar_rwid[i]]->copy(*nn.ar_wq[i]);
     }
   }
-  // sanity checks
+  // Sanity checks.
   if (k_debug) {
     if (minaps) check_ccw(vs);
     {
@@ -4877,7 +4877,7 @@ int main(int argc, const char** argv) {
   // where
   //  40000 is the number of points to sample on the surface
   //  20000 is the maximum number of faces to keep in the PM representation
-  //  500 is the number of faces of the base mesh in the PM rep
+  //  500 is the number of faces of the base mesh in the PM representation.
 
   ParseArgs args(argc, argv);
   HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:");

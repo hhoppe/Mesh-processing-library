@@ -20,15 +20,15 @@ class Polygon : public PArray<Point, 4> {
   Polygon& operator=(const Polygon& p) = default;
   Polygon& operator=(Polygon&& p) noexcept = default;
   using base::base;                             // Inherit constructors.
-  [[nodiscard]] Vector get_normal_dir() const;  // non-normalized normal
-  [[nodiscard]] Vector get_normal() const;      // user should check !is_zero()
+  [[nodiscard]] Vector get_normal_dir() const;  // A non-normalized normal.
+  [[nodiscard]] Vector get_normal() const;      // The user should check !is_zero().
   [[nodiscard]] float get_planec(const Vector& pnor) const;
   [[nodiscard]] float get_tolerance(const Vector& pnor, float d) const;
   [[nodiscard]] float get_area() const;
   // The polygon centroid can be obtained as mean(polygon) using RangeOp.
-  // Finds intersection of polygon with halfspace in +hn direction
-  bool intersect_hyperplane(const Point& hp, const Vector& hn);  // ret: is_modified
-  bool intersect_bbox(const Bbox<float, 3>& bbox);               // ret: is_modified
+  // Finds the intersection of the polygon with the halfspace in the +hn direction.
+  bool intersect_hyperplane(const Point& hp, const Vector& hn);  // Returns true if modified.
+  bool intersect_bbox(const Bbox<float, 3>& bbox);               // Returns true if modified.
   [[nodiscard]] std::optional<Point> intersect_segment(const Point& p1, const Point& p2) const;
   [[nodiscard]] std::optional<Point> intersect_line(const Point& p, const Vector& v) const;
   // Intersect with plane defined by (plane_normal, plane_d, plane_tol); report intersection as array of points pa.

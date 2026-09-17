@@ -64,7 +64,7 @@ int main() {
     assertx(!setpoints.remove(Point(4.f, 5.f, 6.f)));
     assertx(setpoints.contains(Point(1.f, 2.f, 3.f)));
     assertx(!setpoints.contains(Point(4.f, 5.f, 6.f)));
-    assertx(!setpoints.add(Point(1.f, 2.f, 3.000001f)));  // same because hash only considers x coordinate
+    assertx(!setpoints.add(Point(1.f, 2.f, 3.000001f)));  // Same because hash only considers x coordinate.
   }
   {
     Set<Point, std::hash<Vec3<float>>> setpoints;
@@ -80,7 +80,7 @@ int main() {
     assertx(!setpoints.remove(Point(4.f, 5.f, 6.f)));
     assertx(setpoints.contains(Point(1.f, 2.f, 3.f)));
     assertx(!setpoints.contains(Point(4.f, 5.f, 6.f)));
-    assertx(setpoints.add(Point(1.f, 2.f, 3.000001f)));  // hash considers all coordinates
+    assertx(setpoints.add(Point(1.f, 2.f, 3.000001f)));  // Hash considers all coordinates.
   }
   {
     Set<int> s;

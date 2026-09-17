@@ -20,11 +20,11 @@ float circum_radius(const Point& p0, const Point& p1, const Point& p2) {
   return float(a * b * c * .25 / my_sqrt(d2));
 }
 
-// From Coxeter "Intro to Geometry, Second ed.", page 12, equation  1.531
+// From Coxeter "Intro to Geometry, Second ed.", page 12, equation  1.531.
 float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
   // r = d / s
   // d = sqrt(s * (s - a) * (s - b) * (s -c))
-  // s = (a + b + c) / 2
+  // s = (a + b + c) / 2.
   using Precision = double;
   const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
   const Precision s = (a + b + c) * .5f;
@@ -61,7 +61,7 @@ float dihedral_angle_cos(const Point& p1, const Point& p2, const Point& po1, con
 float signed_dihedral_angle(const Point& p1, const Point& p2, const Point& po1, const Point& po2) {
   const Vector ves1 = cross(p1, p2, po1);
   const Vector ves2 = cross(p1, po2, p2);
-  // no need to normalize since we obtain both fcos and fsin
+  // No need to normalize since we obtain both fcos and fsin.
   const float fcos = dot(ves1, ves2);
   const Vector vcross = cross(ves1, ves2);
   float fsin = mag(vcross);
@@ -104,7 +104,7 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
       sum_ang += ang;
     }
   } else {
-    // Can correctly handle duplicate points in loop
+    // Can correctly handle duplicate points in the loop.
     Point pp = pa[0];
     Vector vp;
     dummy_init(vp);
@@ -126,7 +126,7 @@ float solid_angle(const Point& p, CArrayView<Point> pa) {
       Vector top = pc - p;
       if (!assertw(top.normalize())) return 0.f;
       if (have_prior) {
-        // project onto sphere tangent vectors at topp
+        // Project onto sphere tangent vectors at topp.
         Vector v1 = project_orthogonally(vp, topp);
         if (!assertw(v1.normalize())) return 0.f;
         Vector v2 = project_orthogonally(vc, topp);
@@ -271,7 +271,7 @@ void frame_aim_at(Frame& frame, const Vector& v) {
 
 Frame make_level(const Frame& frame) {
   Frame frame_new = frame;
-  static const bool world_zxy = getenv_bool("WORLD_ZXY");  // z forward, -x left, -y up
+  static const bool world_zxy = getenv_bool("WORLD_ZXY");  // With z forward, -x left, -y up.
   const Frame from_zxy =
       Frame(Vector(0.f, 0.f, 1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, -1.f, 0.f), Point(0.f, 0.f, 0.f));
   if (world_zxy) frame_new *= ~from_zxy;
@@ -287,7 +287,7 @@ Frame make_level(const Frame& frame) {
 
 Frame make_horiz(const Frame& frame) {
   Frame frame_new = frame;
-  static const bool world_zxy = getenv_bool("WORLD_ZXY");  // z forward, -x left, -y up
+  static const bool world_zxy = getenv_bool("WORLD_ZXY");  // With z forward, -x left, -y up.
   const Frame from_zxy =
       Frame(Vector(0.f, 0.f, 1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, -1.f, 0.f), Point(0.f, 0.f, 0.f));
   if (world_zxy) frame_new *= ~from_zxy;
@@ -363,8 +363,8 @@ float signed_volume(const Point& p1, const Point& p2, const Point& p3, const Poi
 Uv lonlat_from_sph(const Point& sph) {
   // We assume: lon=0 at +Y, lon=.25 at -X, lat=0 at -Z.
   // We place lat=0 at -Z because the OpenGL Uv coordinate origin is at the image lower-left.
-  const float lon = snap_coordinate(std::atan2(sph[0], -sph[1]) / TAU + .5f);  // azimuth; phi.
-  const float lat = snap_coordinate(std::asin(sph[2]) / (TAU / 2) + .5f);      // zenith; theta.
+  const float lon = snap_coordinate(std::atan2(sph[0], -sph[1]) / TAU + .5f);  // Azimuth; phi.
+  const float lat = snap_coordinate(std::asin(sph[2]) / (TAU / 2) + .5f);      // Zenith; theta.
   return Uv(lon, lat);
 }
 

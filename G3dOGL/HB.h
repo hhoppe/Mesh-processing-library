@@ -20,21 +20,21 @@ namespace HB {
 // Screen coordinate system is (y = 0, x = 0) top left to (y = 1, x = 1) bottom right.
 // Hither and yonder planes may be 0.f (disabled).
 
-// ret: success
+// Returns success.
 bool init(Array<string>& aargs,
-          bool (*pfkeyp)(const string& s),  // ret: handled
+          bool (*pfkeyp)(const string& s),  // Returns true if handled.
           void (*pfbutp)(int butnum, bool pressed, bool shift, const Vec2<float>& yx), void (*pfwheel)(float v),
           void (*pfdraw)());
 
-// call after init() and before open():
+// Call after init() and before open():
 void set_window_title(string s);
 void open();
 
-// call after init():
+// Call after init():
 void watch_fd0(void (*pfinpu)());
 
-// call after open():
-void quit();  // user requests open() to return
+// Call after open():
+void quit();  // The user requests open() to return.
 void redraw_later();
 void redraw_now();
 Vec2<int> get_extents();
@@ -44,11 +44,11 @@ float get_hither();
 float get_yonder();
 void set_hither(float h);
 void set_yonder(float y);
-void set_current_object(int obn);  // hook for lighting specific.
+void set_current_object(int obn);  // A hook for lighting specifics.
 void update_seg(int segn, const Frame& frame, bool vis);
 void draw_space();
-bool special_keypress(char ch);  // ret: recognized
-string show_info();              // info line state string
+bool special_keypress(char ch);  // Returns true if recognized.
+string show_info();              // Info line state string.
 
 struct VdcResult {
   float zs;
@@ -57,7 +57,7 @@ struct VdcResult {
 VdcResult vdc_from_world(const Point& pi);
 
 void draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2);
-Vec2<int> get_font_dims();  // height, width
+Vec2<int> get_font_dims();  // Height, width.
 void draw_text(const Vec2<float>& yx, const string& s);
 void draw_row_col_text(const Vec2<int>& yx, const string& s);
 void clear_segment(int segn);

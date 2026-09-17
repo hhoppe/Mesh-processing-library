@@ -16,7 +16,7 @@
   image2.set_zsize(4);
   Pixel& pixel = image[y, x];
   uint8_t c = image[y, x][z];
-  // ysize() == #rows, xsize() == #columns, zsize() == #channels.
+  // Here, ysize() == #rows, xsize() == #columns, zsize() == #channels.
   // Valid values for zsize(): 1: grayscale image: Red == Green == Blue  (Alpha is undefined);
   //                           3: RGB image  (default)  (Alpha is undefined);
   //                           4: RGBA image.
@@ -57,8 +57,8 @@ class Image : public Matrix<Pixel> {
   [[nodiscard]] Attrib& attrib() { return _attrib; }
   void set_zsize(int n);
   [[nodiscard]] int zsize() const { return HH_ASSUME(attrib().zsize <= 4), attrib().zsize; }
-  void set_suffix(string suffix) { attrib().suffix = std::move(suffix); }  // e.g. "jpg"; for writing '-'.
-  [[nodiscard]] const string& suffix() const { return attrib().suffix; }   // e.g. "rgb"; used for reading '-'.
+  void set_suffix(string suffix) { attrib().suffix = std::move(suffix); }  // E.g. "jpg"; for writing '-'.
+  [[nodiscard]] const string& suffix() const { return attrib().suffix; }   // E.g. "rgb"; used for reading '-'.
   void set_silent_io_progress(bool b) { _silent_io_progress = b; }
   // Filename may be "-" for std::cin;  may throw std::runtime_error.
   void read_file(const string& filename) { read_file_i(filename, false); }
@@ -73,7 +73,7 @@ class Image : public Matrix<Pixel> {
   void scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue = nullptr);
   struct Attrib {
     int zsize{3};            // Number of components per pixel; must be either 1, 3, or 4.
-    string suffix;           // e.g. "rgb"; "" if unknown; to identify format of read_file("-") and write_file("-").
+    string suffix;           // E.g. "rgb"; "" if unknown; to identify format of read_file("-") and write_file("-").
    private:                  // Reserved for Image class internals.
     Array<uchar> exif_data;  // Zero length if absent; could also be implemented easily as string.
     string orig_filename;    // For Image_wic, upon writing image, it can reopen source file to copy metadata.
@@ -283,7 +283,7 @@ void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* borderv
 #define HH_NO_IMAGE_LIBS
 #endif
 
-#if !defined(HH_NO_IMAGE_WIC) && defined(_MSC_VER)  // mingw doesn't recognize <wincodecsdk.h>.
+#if !defined(HH_NO_IMAGE_WIC) && defined(_MSC_VER)  // MinGW doesn't recognize <wincodecsdk.h>.
 #define HH_IMAGE_HAVE_WIC
 #endif
 

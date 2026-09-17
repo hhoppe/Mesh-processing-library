@@ -59,7 +59,7 @@ namespace {
 // - Inlining FifoVertexCache::access() using defined(FAST_FIFO) did not improve performance significantly.
 
 // This number could be set according to the flexible vertex format size.
-constexpr int k_bytes_per_vertex = 32;  // default position + normal + uv
+constexpr int k_bytes_per_vertex = 32;  // Default position + normal + uv.
 
 // This assumes D3D limit of 64 Ki vertices.
 constexpr int k_bytes_per_vindex = 2;
@@ -73,25 +73,25 @@ constexpr int k_strip_restart_nvindices = 1;
 // Cache type must be set explicitly on the command line.
 VertexCache::EType cache_type = VertexCache::EType::notype;
 
-int cache_size = 16;              // default size is 16-entry cache
-bool favor_spiral = true;         // only used by greedy_stripify
-bool color_corners = false;       // color corners according to cache misses
-bool color_fmiss = false;         // color faces according to cache misses
-bool color_forder = false;        // color faces according to rendering order
-bool old_strip_order = false;     // obsolete old way of indexing strips
-bool reorder_vertices = false;    // reorder vertices according to first use
-bool duplicate_vertices = false;  // strict linear read order
-bool nooutput = false;            // if 1, do no write out final reordered mesh
-int verb = 1;                     // verbosity level of output
+int cache_size = 16;              // Default size is a 16-entry cache.
+bool favor_spiral = true;         // Only used by greedy_stripify.
+bool color_corners = false;       // Color corners according to cache misses.
+bool color_fmiss = false;         // Color faces according to cache misses.
+bool color_forder = false;        // Color faces according to rendering order.
+bool old_strip_order = false;     // Obsolete old way of indexing strips.
+bool reorder_vertices = false;    // Reorder vertices according to first use.
+bool duplicate_vertices = false;  // Strict linear read order.
+bool nooutput = false;            // If 1, do not write out the final reordered mesh.
+int verb = 1;                     // Verbosity level of output.
 
 // Override the variable k used in lookahead simulation.
 const int simulate_nf = getenv_int("SIMULATE_NF");
 
-// Global data structures
+// Global data structures.
 
 GMesh mesh;
-Array<int> ar_verts;   // [3*mesh.num_faces()] -> 1..num_vertices()
-Array<Face> ar_faces;  // [mesh.num_faces()] -> original Face
+Array<int> ar_verts;   // Maps [3 * mesh.num_faces()] -> 1..num_vertices().
+Array<Face> ar_faces;  // Maps [mesh.num_faces()] -> original Face.
 string gfilename;
 
 // This data is only used by "-diff_corners" to compare cache misses
@@ -116,7 +116,7 @@ void show_rate(Timer& timer) {
 void face_vertices_neighbors(Face f, Array<Vertex>& va, Array<Face>& fa) {
   mesh.get_vertices(f, va);
   fa.init(0);
-  for (Vertex v : va) fa.push(mesh.opp_face(v, f));  // may be zero
+  for (Vertex v : va) fa.push(mesh.opp_face(v, f));  // May be zero.
 }
 
 // Record the visit of a face into the global data structure.
@@ -217,11 +217,11 @@ void extract_mesh() {
 // Use the two (modified) global arrays to reorder the faces in GMesh.
 void replace_mesh() {
   HH_PTIMER("_replace_mesh");
-  if (0) {  // simplest version
+  if (0) {  // The simplest version.
     assertx(!color_forder && !color_fmiss && !color_corners);
     assertx(reorder_vertices);
     GMesh nmesh;
-    Map<int, int> movivi;  // 1..num_vertices() --> 1..num_vertices()
+    Map<int, int> movivi;  // Maps 1..num_vertices() --> 1..num_vertices().
     for_int(vi, mesh.num_vertices()) nmesh.create_vertex();
     Vec3<Vertex> va;
     for_int(fi, mesh.num_faces()) {
@@ -243,7 +243,7 @@ void replace_mesh() {
     assertx(!color_forder && !color_fmiss && !color_corners);
     assertx(reorder_vertices);
     GMesh nmesh;
-    Map<int, int> movivi;  // 1..num_vertices() --> 1..num_vertices()
+    Map<int, int> movivi;  // Maps 1..num_vertices() --> 1..num_vertices().
     const int allowed_num_verts = 2 * mesh.num_vertices();
     auto up_vcache = VertexCache::make(cache_type, 1 + allowed_num_verts, cache_size);
     VertexCache& vcache = *up_vcache;
@@ -268,7 +268,7 @@ void replace_mesh() {
     mesh.copy(nmesh);
     return;
   }
-  Map<int, int> movivi;  // 1..num_vertices() --> 1..num_vertices()
+  Map<int, int> movivi;  // Maps 1..num_vertices() --> 1..num_vertices().
   if (reorder_vertices) {
     for_int(fi, mesh.num_faces()) {
       for_int(j, 3) {
@@ -303,7 +303,7 @@ void replace_mesh() {
       nmesh.set_string(cn, mesh.get_string(c));
     }
   }
-  for (Edge e : mesh.edges()) assertx(!mesh.get_string(e));  // not handled at present
+  for (Edge e : mesh.edges()) assertx(!mesh.get_string(e));  // Not handled at present.
   mesh.copy(nmesh);
   if (color_forder) {
     for (Face f : mesh.faces())
@@ -404,7 +404,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
     const char* mat_string = mesh.get_string(ar_faces[fi]);
     if (!same_string(last_mat_string, mat_string)) {
       last_mat_string = mat_string;
-      // force new strip at mat boundary
+      // Force a new strip at a mat boundary.
       fill(ovid, -1);
     }
     int j = 3;
@@ -421,7 +421,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
         }
       }
     }
-    if (j == 3) {  // not face-face connected
+    if (j == 3) {  // Not face-face connected.
       if (debug) std::cerr << " H";
       nstrips++;
       if (fi) nverts += k_strip_restart_nvindices;
@@ -434,7 +434,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
     } else if (j == sum_expected_j - expected_j) {
       if (debug) std::cerr << ":";
       nverts += 2;
-      // expected_j stays the same:  LRLR*R*LRLR
+      // Here, expected_j stays the same:  LRLR*R*LRLR.
     } else {
       if (debug) std::cerr << "*";
       if (0) Warning("Strip turns on itself");
@@ -476,7 +476,7 @@ void do_strip_analyze() {
   showdf("Strip analysis\n");
   int nverts, nstrips;
   analyze_strips(nverts, nstrips);
-  // number of vertices transferred
+  // Number of vertices transferred.
   const int nvt = nverts - (nstrips - 1) * k_strip_restart_nvindices;
   showdf("nverts_transf=%d     %5.1f%%  v/t=%5.3f  v/v=%5.3f\n",  //
          nvt, float(nvt) / ar_verts.num() * 100.f, float(nvt) / mesh.num_faces(), float(nvt) / mesh.num_vertices());
@@ -524,7 +524,7 @@ void do_fixup_indices() {
     // # cs=16     nmiss=42920   20.6%  v/t=0.618  v/v=1.232
     // # Vertex_indices: nstrips=6600, nverts=95781, vi/t=1.474
     // # Bandwidth: vertices 19.77 b/t, indices 2.95 b/t, Total 22.72 b/t
-    Vertex ov1 = nullptr;  // previous face not adjacent
+    Vertex ov1 = nullptr;  // The previous face is not adjacent.
     bool last_clw;
     dummy_init(last_clw);
     for_int(fi, mesh.num_faces()) {
@@ -535,18 +535,18 @@ void do_fixup_indices() {
       const int ifn = !fn ? -1 : find_index(fa, fn).value_or(-1);  // -1 if next face is not adjacent.
       const int iov1 = find_index(va, ov1).value_or(-1);           // -1 if previous face is not adjacent.
       int j;
-      if (ifn >= 0) {  // have next face, so that determines order
+      if (ifn >= 0) {  // Have a next face, so that determines the order.
         j = ifn;
         if (iov1 >= 0) {
           last_clw = j != iov1;
         } else {
-          last_clw = true;  // second turn should be ccw
+          last_clw = true;  // The second turn should be ccw.
         }
       } else if (iov1 >= 0) {  // no next face, so sequential from prev
         if (last_clw) {
-          j = iov1;  // ccw turn
+          j = iov1;  // A ccw turn.
         } else {
-          j = mod3(iov1 + 2);  // clw turn
+          j = mod3(iov1 + 2);  // A clw turn.
         }
       } else {  // no next face or previous face; anything
         j = index(va, mesh.id_vertex(ar_verts[fi * 3 + 0]));
@@ -570,9 +570,9 @@ void do_fixup_indices() {
           }
         }
       }
-      if (j < 3) {  // have connection with previous face
-                    // j is OK as is
-      } else {      // no previous face, examine next face
+      if (j < 3) {  // Have a connection with the previous face.
+        // Here, j is OK as is.
+      } else {  // no previous face, examine next face
         Face fn = fi < mesh.num_faces() - 1 ? ar_faces[fi + 1] : nullptr;
         const int ifn = !fn ? -1 : find_index(fa, fn).value_or(-1);  // -1 if next face is not adjacent.
         if (ifn >= 0) {
@@ -627,11 +627,11 @@ const int random_initial_face = getenv_int("RANDOM_INITIAL_FACE");
 //  it is removed from l_unp_nnei and no longer appears on any list.
 
 struct FaceEList {
-  Face f;            // pointer back to containing face
-  EListNode el_uco;  // within unvisited components
-  EListNode el_unp;  // unprocessed within current component
+  Face f;            // Pointer back to the containing face.
+  EListNode el_uco;  // Within unvisited components.
+  EListNode el_unp;  // Unprocessed within the current component.
 };
-HH_SACABLE(FaceEList);  // EListNode requires its constructor
+HH_SACABLE(FaceEList);  // EListNode requires its constructor.
 
 // Associate the above linked_list nodes with each mesh face.
 HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, FaceEList, f_elist);
@@ -639,7 +639,7 @@ HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, FaceEList, f_elist);
 // Associate an integer with each mesh face:
 //  == std::numeric_limits<int>::max() if the face has already been (globally) processed.
 //  == MeshStatus::_sim_num if the face has been visited in the current
-//     lookahead simulation
+//     lookahead simulation.
 HH_SAC_ALLOCATE_FUNC(Mesh::MFace, int, f_sim_num);
 
 // Only one MeshStatus object may be defined at any time,
@@ -652,7 +652,7 @@ class MeshStatus {
   // Global state:
   void process(Face f);
   bool processed(Face f) const;
-  int face_nnei(Face f) const;  // number of unprocessed neighbors
+  int face_nnei(Face f) const;  // Number of unprocessed neighbors.
   Face find_initial_face();
   Corner find_initial_corner(const VertexCache& vcache);
 
@@ -662,10 +662,10 @@ class MeshStatus {
   void sim_visit_face(Face f);
 
  private:
-  Vec4<EList> _l_unp_nnei;           // unprocessed faces with 0..3 unpr. neighbors
-  EList _l_uco;                      // faces within unvisited components
-  int _sim_num{0};                   // simulation number
-  bool initialize_next_component();  // ret: true=success, false=no_more
+  Vec4<EList> _l_unp_nnei;           // Unprocessed faces with 0..3 unprocessed neighbors.
+  EList _l_uco;                      // Faces within unvisited components.
+  int _sim_num{0};                   // The simulation number.
+  bool initialize_next_component();  // Returns true on success, false if no more.
 };
 
 inline bool MeshStatus::processed(Face f) const {
@@ -747,7 +747,7 @@ bool MeshStatus::initialize_next_component() {
     for (;;) {
       for (Face f2 : mesh.faces(f)) {
         if (!same_string(mesh.get_string(f), mesh.get_string(f2))) continue;
-        if (f_elist(f2).el_unp.linked()) continue;  // already added in component
+        if (f_elist(f2).el_unp.linked()) continue;  // Already added in the component.
         queue.enqueue(f2);
         f_elist(f2).el_uco.unlink();
         f_elist(f2).el_unp.link_before(l_c.delim());
@@ -790,7 +790,7 @@ Face MeshStatus::find_initial_face() {
 //  to the left corner as the algorithm crosses the edge to visit the face.
 Corner MeshStatus::find_initial_corner(const VertexCache& vcache) {
   Set<Face> setf;
-  {  // unprocessed faces adjacent to verts in cache
+  {  // Unprocessed faces adjacent to verts in the cache.
     auto up_vci = vcache.make_iterator();
     VertexCache::Iter& vci = *up_vci;
     for (;;) {
@@ -811,7 +811,7 @@ Corner MeshStatus::find_initial_corner(const VertexCache& vcache) {
     if (nvcached > max_nvcached ||
         (nvcached == max_nvcached &&
          (nnei = face_nnei(f), nnei < min_nnei ||
-                                   // to get reproducible reordering
+                                   // To get reproducible reordering.
                                    (nnei == min_nnei && mesh.face_id(f) < mesh.face_id(best_f))))) {
       best_f = f;
       max_nvcached = nvcached;
@@ -845,7 +845,7 @@ Corner MeshStatus::find_initial_corner(const VertexCache& vcache) {
     Corner cc = mesh.ccw_corner(c0);
     if (!cc || processed(mesh.corner_face(cc))) c0 = mesh.clw_face_corner(c0);
   }
-  // The second face to visit will be ccw turn; fintnei == mesh.ccw_corner(c0)
+  // The second face to visit will be a ccw turn; fintnei == mesh.ccw_corner(c0).
   return c0;
 }
 
@@ -853,7 +853,7 @@ Corner MeshStatus::find_initial_corner(const VertexCache& vcache) {
 
 void do_greedy_stripify() {
   HH_TIMER("_greedy_stripify");
-  old_strip_order = true;  // never got around to fixing this.
+  old_strip_order = true;  // Never got around to fixing this.
   ar_verts.init(0);
   ar_faces.init(0);
   MeshStatus ms;
@@ -885,7 +885,7 @@ void do_greedy_stripify() {
       f = fa[i];
       ASSERTX(f && !ms.processed(f));
       face_vertices_neighbors(f, va, fa);
-      int j;  // location of new vertex on f
+      int j;  // Location of the new vertex on f.
       if (va[0] == v2) {
         j = 2;
         ASSERTX(va[1] == v1);
@@ -898,7 +898,7 @@ void do_greedy_stripify() {
       }
       if (0) {
       } else if (!favor_spiral && Random::G.get_unsigned(2) && fa[mod3(j + 2)] &&
-                 !ms.processed(fa[mod3(j + 2)])) {  // ccw
+                 !ms.processed(fa[mod3(j + 2)])) {  // Ccw.
         vo = v1;
         v1 = va[j];
         i = mod3(j + 2);
@@ -911,7 +911,7 @@ void do_greedy_stripify() {
         v1 = va[j];
         i = mod3(j + 2);
       } else {
-        if (0) {  // old way: output new vert first
+        if (0) {  // Old way: output the new vert first.
           std::swap(v1, v2);
           vo = va[j];
           i = 3;
@@ -935,7 +935,7 @@ int find_next_face(CArrayView<Face> fa, const MeshStatus& ms) {
   dummy_init(min_min_next_nnei);
   for_int(i, 3) {
     if (!fa[i]) continue;
-    if (ms.processed(fa[i])) continue;  // already visited
+    if (ms.processed(fa[i])) continue;  // Already visited.
     const int nnei = ms.face_nnei(fa[i]);
     assertx(nnei < 3);
     int min_next_nnei = std::numeric_limits<int>::max();
@@ -944,7 +944,7 @@ int find_next_face(CArrayView<Face> fa, const MeshStatus& ms) {
       const int next_nnei = ms.face_nnei(ff);
       if (next_nnei >= 0 && next_nnei < min_next_nnei) min_next_nnei = next_nnei;
     }
-    if (min_next_nnei == std::numeric_limits<int>::max()) min_next_nnei = -1;  // the best
+    if (min_next_nnei == std::numeric_limits<int>::max()) min_next_nnei = -1;  // The best.
     if (nnei < min_nnei) {
       ret = i;
       min_nnei = nnei;
@@ -974,7 +974,7 @@ void do_sgi_stripify() {
     Vertex v1 = va[mod3(i + 1)];
     Vertex v2 = va[mod3(i + 2)];
     int len = 0;
-    bool last_clw = true;  // so that second turn is expected ccw
+    bool last_clw = true;  // So that the second turn is expected ccw.
     for (;;) {
       // Have f={vo, v1, v2} and next face opposite vo == va[i], unless i == 3.
       ASSERTX(i == 3 || va[i] == vo);
@@ -986,7 +986,7 @@ void do_sgi_stripify() {
       ASSERTX(f && !ms.processed(f));
       ms.process(f);
       face_vertices_neighbors(f, va, fa);
-      int j;  // location of new vertex on f
+      int j;  // Location of the new vertex on f.
       if (va[0] == v2) {
         j = 2;
         ASSERTX(va[1] == v1);
@@ -1010,7 +1010,7 @@ void do_sgi_stripify() {
         last_clw = false;
       } else {  // i == 3
         ASSERTX(i == 3);
-        if (last_clw) {  // pretend there would be a ccw turn
+        if (last_clw) {  // Pretend there would be a ccw turn.
           vo = v1;
           v1 = va[j];
         } else {  // pretend there would be a clw turn
@@ -1044,10 +1044,10 @@ void simulate5(int nfcontinue, MeshStatus& ms, Corner oc, int ostripnf, const Qu
   vcache.copy(ovcache);
   Corner c = oc;
   Face f = mesh.corner_face(c);
-  int nfvis = 0;  // number of faces visited
+  int nfvis = 0;  // Number of faces visited.
   int ngood = 0;  // # vertex references which hit vcache
   ASSERTX(!ms.sim_face_visited(f));
-  int nfevent = nfcontinue;  // next face event
+  int nfevent = nfcontinue;  // The next face event.
   for (;;) {
     if (nfvis == nfevent) {
       if (nfvis == maxnf) break;
@@ -1125,7 +1125,7 @@ void do_meshify5() {
   const int initial_best_nfcont = (cache_type == VertexCache::EType::fifo  ? cache_size / 2
                                    : cache_type == VertexCache::EType::lru ? cache_size / 2
                                                                            : (assertnever(""), 0));
-  int best_nfcont;  // this is the variable i_min in the paper
+  int best_nfcont;  // This is the variable i_min in the paper.
   dummy_init(best_nfcont);
   for (;;) {
     if (!c) {
@@ -1171,7 +1171,7 @@ void do_meshify5() {
       float value0;
       simulate5(0, ms, c, stripnf, qnextc, vcache, tvcache, maxnf, value0);
       nsim++;
-      // empirically, does not seem beneficial:
+      // Empirically, does not seem beneficial:
       if (0 && best_nfcont > 1) --best_nfcont;
       if (best_nfcont >= maxnf) best_nfcont = maxnf - 1;
       simulate5(best_nfcont, ms, c, stripnf, qnextc, vcache, tvcache, maxnf, max_value);
@@ -1198,7 +1198,7 @@ void do_meshify5() {
     HH_SSTAT(Snsim, nsim);
     if (verb >= 3) showf("best_nfcont=%d max_value=%.2f\n", best_nfcont, max_value);
     if (brestart) {
-      c = nullptr;  // force restart
+      c = nullptr;  // Force a restart.
       continue;
     }
     ms.process(mesh.corner_face(c));
@@ -1247,8 +1247,8 @@ void do_meshify8() {
   GOTO_STRIP_RESTART_FROM_SCRATCH:
     c = ms.find_initial_corner(vcache);
     if (!c) break;
-    for (;;) {    // form one strip
-      for (;;) {  // form ring(s) while having no cnext
+    for (;;) {    // Form one strip.
+      for (;;) {  // Form ring(s) while having no cnext.
         ms.process(mesh.corner_face(c));
         record_face(c, vcache);
         Corner cint = mesh.ccw_corner(c);
@@ -1260,15 +1260,15 @@ void do_meshify8() {
           if (fextnei) {
             cnext = cext;
             locnext = 0;
-            break;  // finish current ring in next loop
+            break;  // Finish the current ring in the next loop.
           }
         } else if (fextnei) {
           c = cext;
         } else {
-          goto GOTO_STRIP_RESTART_FROM_SCRATCH;  // "continue" on outermost loop
+          goto GOTO_STRIP_RESTART_FROM_SCRATCH;  // A "continue" on the outermost loop.
         }
       }
-      for (;;) {  // form ring(s) while having cnext
+      for (;;) {  // Form ring(s) while having cnext.
         if (verb == 1) cprogress.update(float(ar_faces.num()) / mesh.num_faces());
         ms.process(mesh.corner_face(c));
         const int nmiss = record_face(c, vcache);
@@ -1314,8 +1314,8 @@ void do_meshify9() {
   auto up_vcache = VertexCache::make(cache_type, 1 + mesh.num_vertices(), cache_size);
   VertexCache& vcache = *up_vcache;
   Corner cnext = nullptr;
-  Queue<Corner> cnexta;  // second resort for cnext
-  int locnext = 0;       // dont_care (only care if cnext != 0)
+  Queue<Corner> cnexta;  // Second resort for cnext.
+  int locnext = 0;       // Value dont_care (only care if cnext != 0).
   Corner c;
   const int desiredloc = simulate_nf ? simulate_nf : cache_size - 9;
   Timer timer("_meshify9");
@@ -1335,15 +1335,15 @@ void do_meshify9() {
           nf++;
           cc = cn;
         }
-        if (locnext + (nf - 1) > desiredloc) {  // restart desired
+        if (locnext + (nf - 1) > desiredloc) {  // Restart desired.
           for (;;) {
             if (!ms.processed(mesh.corner_face(cnext))) {
               c = cnext;
               cnext = nullptr;
-              break;  // restart now!
+              break;  // Restart now!
             }
             cnext = nullptr;
-            if (cnexta.empty()) break;  // keep growing strip
+            if (cnexta.empty()) break;  // Keep growing the strip.
             cnext = cnexta.dequeue();
           }
         }
@@ -1374,8 +1374,8 @@ void do_meshify9() {
           c = cnext;
           cnext = nullptr;
           for (;;) {
-            if (c && !ms.processed(mesh.corner_face(c))) break;        // restart now!
-            if (cnexta.empty()) goto GOTO_STRIP_RESTART_FROM_SCRATCH;  // "continue" on outermost loop
+            if (c && !ms.processed(mesh.corner_face(c))) break;        // Restart now!
+            if (cnexta.empty()) goto GOTO_STRIP_RESTART_FROM_SCRATCH;  // A "continue" on the outermost loop.
             c = cnexta.dequeue();
           }
         }
@@ -1413,8 +1413,8 @@ void do_meshify10() {
   auto up_vcache = VertexCache::make(cache_type, 1 + mesh.num_vertices(), cache_size);
   VertexCache& vcache = *up_vcache;
   Corner cnext = nullptr;
-  Queue<Corner> cnexta;  // second resort for cnext
-  int locnext = 0;       // dont_care (only care if cnext != 0)
+  Queue<Corner> cnexta;  // Second resort for cnext.
+  int locnext = 0;       // Value dont_care (only care if cnext != 0).
   Corner c;
   const int desiredloc = simulate_nf ? simulate_nf : cache_size - 9;
   Timer timer("_meshify10");
@@ -1435,16 +1435,16 @@ void do_meshify10() {
           nf++;
           cc = cn;
         }
-        if (locnext + (nf - 1) > desiredloc) {  // restart desired
+        if (locnext + (nf - 1) > desiredloc) {  // Restart desired.
           for (;;) {
             if (!ms.processed(mesh.corner_face(cnext))) {
               c = cnext;
               cnext = nullptr;
               try_starting_earlier(ms, c);
-              break;  // restart now!
+              break;  // Restart now!
             }
             cnext = nullptr;
-            if (cnexta.empty()) break;  // keep growing strip
+            if (cnexta.empty()) break;  // Keep growing the strip.
             cnext = cnexta.dequeue();
           }
         }
@@ -1477,7 +1477,7 @@ void do_meshify10() {
           for (;;) {
             if (c && !ms.processed(mesh.corner_face(c))) {
               try_starting_earlier(ms, c);
-              break;  // restart now!
+              break;  // Restart now!
             }
             if (cnexta.empty()) goto GOTO_STRIP_RESTART_FROM_SCRATCH;
             c = cnexta.dequeue();

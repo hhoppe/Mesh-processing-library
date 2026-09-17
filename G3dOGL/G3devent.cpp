@@ -21,7 +21,7 @@ bool keylock;
 void save_state() {
   ExpandStateFilename();
   try {
-    WFile fi(statefile);  // may throw
+    WFile fi(statefile);  // May throw.
     const Frame frame_not_a_frame = FrameIO::get_not_a_frame();
     for (int i = 0; i <= g_obs.last; i++) {
       const bool is_vis = g_obs[i].visible() || (g_obs.first == 1 && i == 0);
@@ -40,7 +40,7 @@ void save_state() {
 void read_state() {
   ExpandStateFilename();
   try {
-    RFile fi(statefile);  // may throw
+    RFile fi(statefile);  // May throw.
     string line;
     while (fi().peek() >= 0) {
       if (fi().peek() == '#') {
@@ -136,7 +136,7 @@ void all_reset() {
   assertw(HB::special_keypress('Z'));
 }
 
-// turn viewing direction toward world point (zeroes the roll)
+// Turn viewing direction toward world point (zeroes the roll).
 void aim_towards(const Point& p) { frame_aim_at(g_obs[obview].tm(), p - g_obs[obview].t().p()); }
 
 void enter_aim() {
@@ -148,8 +148,8 @@ void enter_aim() {
   assertx(vf.normalize());
   Vector vt = vaim;
   assertx(vt.normalize());
-  Quaternion rot(vf, vt);  // get twice the angle!
-  rot = pow(rot, .5f);     // divide angle in half
+  Quaternion rot(vf, vt);  // Get twice the angle!
+  rot = pow(rot, .5f);     // Divide angle in half.
   Frame& frame = g_obs[obview].tm();
   const Point pt = frame.p();
   frame.p() = Point(0.f, 0.f, 0.f);
@@ -171,7 +171,7 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
   const Vec2<int> win_dims = HB::get_extents();
   // must be this close (4 pixel radius)
   // for all vertices in that range, pick closest one
-  // select first object for which this is true
+  // select the first object for which this is true.
   const float maxd = 5 * 1.42f / max(win_dims);
   float minz = BIGFLOAT;
   for (int obn = g_obs.first; obn <= g_obs.last; obn++) {
@@ -198,7 +198,7 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
   const Vec2<int> win_dims = HB::get_extents();
   // must be this close (3 pixels)
   // for all vertices in that range, pick closest one
-  // select first object for which this is true
+  // select the first object for which this is true.
   static const bool prune_backfacing = getenv_bool("PRUNE_BACKFACING");
   const float maxd = 3.f / max(win_dims);
   float minz = BIGFLOAT;
@@ -516,7 +516,7 @@ void write_mesh(GMesh& mesh) {
   const string filename = g_aargs1[cob - 1];
   showf("overwriting %s...\n", filename.c_str());
   try {
-    WFile fi(filename);  // may throw
+    WFile fi(filename);  // May throw.
     mesh.write(fi());
     SHOW("...mesh written");
   } catch (std::runtime_error& ex) {
@@ -540,7 +540,7 @@ void set_recpoint() {
     if (!selected_face) {
       if (!mode_centroid) {
         rec_point = Point(0.f, 0.f, 0.f);
-        mode_centroid = true;  // turn on mode
+        mode_centroid = true;  // Turn on mode.
       } else {
         HB::beep();
       }
@@ -630,7 +630,7 @@ D       device prefix           D ?     list device commands
 
 void select_frel() {
   Frame& frel = selected.frel;
-  float f1 = -1.f, f2 = -1.f;  // best axis correlation
+  float f1 = -1.f, f2 = -1.f;  // Best axis correlation.
   int oax1 = -1, oax2 = -1, vax1 = -1, vax2 = -1, sign1 = 0, sign2 = 0;
   Frame frame_cob = g_obs[cob].t();
   Frame frame_view = g_obs[obview].t();
@@ -782,7 +782,7 @@ bool KeyPressed(const string& ps) {
   bool understood = true;
   switch (ch) {
     case 0:
-      // previously processed
+      // Previously processed.
       break;
     case 'o':
       object_mode = !object_mode;
@@ -903,7 +903,7 @@ bool KeyPressed(const string& ps) {
       HB::draw_row_col_text(V(3, 0), "G3d C++");
       break;
     case 'a':
-      // prefix code
+      // Prefix code.
       break;
     case 'C':
       mode_centroid = !mode_centroid;
@@ -960,7 +960,7 @@ bool KeyPressed(const string& ps) {
       if (spacekill) HB::quit();
       break;
     case 'w':
-      // prefix code
+      // Prefix code.
       break;
     case 'W':
       obview = 0;
@@ -973,7 +973,7 @@ bool KeyPressed(const string& ps) {
       if (ob_prev()) HB::redraw_now();
       break;
     case 'D':
-      // prefix code
+      // Prefix code.
       break;
     case 'u':
       g_obs[cob].set_vis(!g_obs[cob].visible());
@@ -995,7 +995,7 @@ bool KeyPressed(const string& ps) {
       break;
     case '{': asynchronousinput = !asynchronousinput; break;
     case '$': expo = !expo; break;
-    case 'L' - 64:  // C-l  (== uchar{12})
+    case 'L' - 64:  // C-l  (== uchar{12}).
       reinit();
       break;
     case 'G': geomorph = !geomorph; break;
@@ -1012,7 +1012,7 @@ bool KeyPressed(const string& ps) {
     case 'X':
       if (!mode_centroid) {
         rec_point = Point(0.f, 0.f, 0.f);
-        mode_centroid = true;  // turn off mode
+        mode_centroid = true;  // Turn off mode.
       } else {
         HB::beep();
       }

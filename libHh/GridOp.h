@@ -147,7 +147,7 @@ template <int D, typename T>
 Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& dU, Vec<Bndrule, D> bndrules,
                 const T* bordervalue) {
   for_int(i, D) {
-    if (bndrules[i] == Bndrule::undefined) assertx(dL[i] >= 0 && dU[i] >= 0);  // no negative crop
+    if (bndrules[i] == Bndrule::undefined) assertx(dL[i] >= 0 && dU[i] >= 0);  // No negative crop.
     if (bndrules[i] == Bndrule::border) assertx(bordervalue);
     if (grid.size() == 0)
       assertx(bndrules[i] != Bndrule::reflected && bndrules[i] != Bndrule::periodic &&
@@ -159,8 +159,8 @@ Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& 
     if (0) newdims = ntimes<D>(0);
   }
   Grid<D, T> newgrid(newdims);
-  if (dL.in_range(grid.dims()) && dU.in_range(grid.dims())) {  // faster path: no negative crop
-    if (is_zero(dL.with(0, 0)) && is_zero(dU.with(0, 0))) {    // crop only in dim0
+  if (dL.in_range(grid.dims()) && dU.in_range(grid.dims())) {  // Faster path: no negative crop.
+    if (is_zero(dL.with(0, 0)) && is_zero(dU.with(0, 0))) {    // Crop only in dim0.
       if (0) {
         newgrid = grid.slice(dL[0], grid.dim(0) - dU[0]);
       } else {
@@ -188,11 +188,11 @@ Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& 
 template <int D, typename U, typename T>
 Grid<D, T> assemble(CGridView<D, U> grids, const T& background, const Vec<Alignment, D>& align) {
   static_assert(std::is_base_of_v<CGridView<D, T>, U>);
-  Vec<Array<int>, D> max_sizes;  // max size of each slice [d = 0 .. D - 1][0 .. grids.dim(d)]
+  Vec<Array<int>, D> max_sizes;  // Maximum size of each slice [d = 0 .. D - 1][0 .. grids.dim(d)].
   for_int(d, D) max_sizes[d].init(grids.dim(d), 0);
   for (const auto& u : range(grids.dims()))
     for_int(d, D) max_sizes[d][u[d]] = max(max_sizes[d][u[d]], grids[u].dim(d));
-  Vec<Array<int>, D> locs;  // start locations on each axis; [d = 0 .. D - 1][0 .. grids.dim(d)]
+  Vec<Array<int>, D> locs;  // Start locations on each axis; [d = 0 .. D - 1][0 .. grids.dim(d)].
   for_int(d, D) {
     int tot = 0;
     for_int(j, grids.dim(d)) {
@@ -325,15 +325,15 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
   const Vec<int, D>& dims = grid.dims();
   // TODO: Always process a coherent swath of the last dimension together for better cache performance.
   const int cx = grid.dim(d);
-  if (cx == 1) return;  // inverse convolution is identity
+  if (cx == 1) return;  // The inverse convolution is the identity.
   const size_t stride = grid_stride(dims, d);
   const Vec<int, D> rows = grid.dims().with(d, 1);
-  parallel_for_coords(rows, [&](const Vec<int, D>& urow) {  // nice
-    // Preprocess (inverse convolution L U x = z)
+  parallel_for_coords(rows, [&](const Vec<int, D>& urow) {  // Nice.
+    // Preprocess (inverse convolution L U x = z).
     StridedArrayView<T> rowv(&grid[urow], cx, stride);
-    // Forward pass: L y = z
+    // Forward pass: L y = z.
     if (0) rowv[0] = rowv[0];  // NOLINT(misc-redundant-expression): just copy first element
-    for_intL(x, 1, min(cx - lastspecial, lu.Llower.num()))  // special initial elements
+    for_intL(x, 1, min(cx - lastspecial, lu.Llower.num()))  // Special initial elements.
         rowv[x] = rowv[x] - lu.Llower[x] * rowv[x - 1];
     const float cfast = lu.Llower.last();
     if (lu.Llower.num() < cx - lastspecial) {
@@ -342,16 +342,16 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
         rowv[x] = vprev = rowv[x] - cfast * vprev;  // OPT:ic1
       }
     }
-    if (lastspecial && cx > 1) {  // last element may be dense combination
+    if (lastspecial && cx > 1) {  // The last element may be a dense combination.
       T& lastv = rowv[cx - 1];
       lastv -= lu.LlastrowPen[min(cx - 1, lu.LlastrowPen.num() - 1)] * rowv[cx - 2];
       for_int(x, min(cx - 2, lu.Llastrow.num())) lastv -= lu.Llastrow[x] * rowv[x];
     }
-    // Backward pass: U x = y
+    // Backward pass: U x = y.
     {
-      T& lastv = rowv[cx - 1];  // scale last element by special value
+      T& lastv = rowv[cx - 1];  // Scale the last element by a special value.
       lastv *= lu.UidiagLast[min(cx - 1, lu.UidiagLast.num() - 1)];
-      if (lastspecial && cx > 1) {  // penultimate element may be special
+      if (lastspecial && cx > 1) {  // The penultimate element may be special.
         rowv[cx - 2] = lu.Uidiag[min(cx - 2, lu.Uidiag.num() - 1)] *
                        (rowv[cx - 2] - lu.UlastcolPen[min(cx - 1, lu.UlastcolPen.num() - 1)] * lastv);
       }
@@ -363,7 +363,7 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
       for (int x = cx - 2 - lastspecial; x >= low; --x)
         rowv[x] = vprev = cfast1 * (rowv[x] - cfast2 * vprev);  // OPT:ic2
     }
-    for (int x = min(lu.Uidiag.num() - 2, cx - 2 - lastspecial); x >= 0; --x) {  // special initial elements
+    for (int x = min(lu.Uidiag.num() - 2, cx - 2 - lastspecial); x >= 0; --x) {  // Special initial elements.
       rowv[x] = lu.Uidiag[x] * (rowv[x] - lu.Uupper * rowv[x + 1]);
       if (lastspecial) rowv[x] -= lu.Uidiag[x] * lu.Ulastcol[x] * rowv[cx - 1];
     }
@@ -384,7 +384,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
   const size_t stride = grid_stride(dims, d);
   // SHOW(dims, cx, nx, nk, ndims, stride);
   // SHOW(ar_pixelindex0); SHOW(mat_weights); SHOW(grid);
-  assertx(stride == grid_stride(ndims, d));  // same stride in new grid (other dims unchanged)
+  assertx(stride == grid_stride(ndims, d));  // Same stride in the new grid (other dims unchanged).
   int ioutmin = 0;
   while (ioutmin < nx && ar_pixelindex0[ioutmin] < 0) ++ioutmin;
   int ioutmax = nx;
@@ -414,7 +414,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
   if (ngrid.size() * 20 < k_parallel_thresh) {
     for_coords(ndims, func);
   } else if (0) {
-    parallel_for_coords(ndims, func);  // not so slow
+    parallel_for_coords(ndims, func);  // Not so slow.
   } else {
     // timing test using:
     // Filterimage ~/data/image/lake.png -tile 10 10 -scaleu 2 | imgv
@@ -440,9 +440,9 @@ Grid<D, T> scale_d(CGridView<D, T> grid, int d, int nx, const FilterBnd& filterb
   Array<int> ar_pixelindex0;
   Matrix<float> mat_weights;
   filterb.setup_kernel_weights(cx, nx, primal, ar_pixelindex0, mat_weights);
-  if (is_magnify) {  // resampling/magnification
+  if (is_magnify) {  // Resampling or magnification.
     if (filterb.filter().has_inv_convolution()) {
-      if (grid.data() != gr.data()) gr = grid;  // else directly modify temporary input buffer
+      if (grid.data() != gr.data()) gr = grid;  // Else directly modify the temporary input buffer.
       details::inverse_convolution_d(gr, filterb, d);
       return details::evaluate_kernel_d(gr, d, ar_pixelindex0, mat_weights, filterb.bndrule(), bordervalue);
     } else {
@@ -480,17 +480,17 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
     assertx(ndims == dims);
     const bool no_constrained_optimization = getenv_bool("IMAGE_NO_CONSTRAINED_OPTIMIZATION");
     Grid<D, T> ogrid;
-    if (!no_constrained_optimization) ogrid = grid;  // backup of original grid
-    gr = grid;                                       // no-op if gr.data() == grid.data()
+    if (!no_constrained_optimization) ogrid = grid;  // A backup of the original grid.
+    gr = grid;                                       // A no-op if gr.data() == grid.data().
     inverse_convolution(gr, filterbs);
-    for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // shrink range
+    for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // Shrink the range.
     if (!no_constrained_optimization) {
       // Slow implementation: no parallelism, no fast interior, no precomputed grid of weights.
       Vec<Bndrule, D> bndrules;
       for_int(d, D) bndrules[d] = filterbs[d].bndrule();
       for (T& e : ogrid) e = T{.5f} + (e - T{.5f}) * expand_value_range;
       for (T& e : gr) e = general_clamp(e, T{0.f}, T{1.f});
-      for_int(iter, 5) {  // 10 Gauss-Seidel iterations a tiny bit better; 100 no different
+      for_int(iter, 5) {  // 10 Gauss-Seidel iterations are a tiny bit better; 100 are no different.
         for (const auto& u : range(dims)) {
           // if (gr[u] == 0.f || gr[u] == 1.f) continue;  // constrained forever at limit, if T is scalar
           T newv = ogrid[u];
@@ -527,7 +527,7 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
     for (Tup& t : tups) {
       if (1 && t.dim == D - 1) {
         const float adjust = 2.f;
-        if (t.scaling < 1.f) t.scaling /= adjust;  // encourage earlier minification of last dimension
+        if (t.scaling < 1.f) t.scaling /= adjust;  // Encourage earlier minification of the last dimension.
         if (t.scaling > 1.f) t.scaling *= adjust;  // encourage later magnification of last dimension;
       }
     }
@@ -542,7 +542,7 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
   }
   assertx(gridref.data() == gr.data());
   if (njustspline)
-    for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // expand rage
+    for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // Expand the range.
   return std::move(gr);
 }
 
@@ -676,17 +676,17 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
   const Vec<int, D>& dims = grid.dims();
   const int nx = dims[d];
   const int nk = kernel.num(), r = (nk - 1) / 2;
-  assertx(r * 2 + 1 == nk);  // kernel must have odd size to be symmetric about each sample
+  assertx(r * 2 + 1 == nk);  // The kernel must have odd size to be symmetric about each sample.
   const size_t stride = grid_stride(dims, d);
   // SHOW(dims, nx, nk, stride); SHOW(kernel);
-  assertx(abs(sum(kernel) - 1.) < 1e-6);  // kernel is expected to have unit integral
+  assertx(abs(sum(kernel) - 1.) < 1e-6);  // The kernel is expected to have unit integral.
   const int ishift = 16, fac = 1 << ishift, fach = 1 << (ishift - 1);
   Array<int> kerneli;
   {
-    kerneli = convert<int>(kernel * float(fac) + .5f);  // (all >= 0.f so no need for floor())
+    kerneli = convert<int>(kernel * float(fac) + .5f);  // All >= 0.f, so there is no need for floor().
     const int excess = narrow_cast<int>(sum(kerneli) - fac);
-    assertx(abs(excess) <= nk);  // sanity check
-    kerneli[r] -= excess;        // adjust center weight to make the quantized sum correct
+    assertx(abs(excess) <= nk);  // A sanity check.
+    kerneli[r] -= excess;        // Adjust the center weight to make the quantized sum correct.
   }
   Grid<D, Pixel> ngrid(dims);
   const int ioutmin = min(r, nx);

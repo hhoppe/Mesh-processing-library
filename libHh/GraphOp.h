@@ -75,7 +75,7 @@ template <typename T> struct MstResult {
 };
 
 // Returns [gnew, is_connected] where gnew is the minimum spanning tree of undirectedg under the cost metric fdist.
-// Implementation: Kruskal's algorithm, O(e log(e))  (Prim's algorithm is recommended when e=~n^2, see below.)
+// Implementation: Kruskal's algorithm, O(e log(e)).  (Prim's is recommended when e is O(n^2); see below.)
 template <typename T, typename Func = float(const T&, const T&)>
 [[nodiscard]] auto graph_mst(const Graph<T>& undirectedg, Func fdist) -> MstResult<T> {
   MstResult<T> result;
@@ -155,8 +155,8 @@ template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(in
 // Returns an empty graph if not connected.
 [[nodiscard]] inline Graph<int> try_emst(float thresh, CArrayView<Point> pa, const PointSpatial<int>& sp) {
   Graph<int> gnew;
-  Array<bool> inset(pa.num(), false);  // vertices already added to mst
-  Array<int> closest(pa.num());        // for !inset[i], closest inset[] so far
+  Array<bool> inset(pa.num(), false);  // The vertices already added to the mst.
+  Array<int> closest(pa.num());        // For !inset[i], the closest inset[] so far.
   for_int(i, pa.num()) gnew.enter(i);
   HPqueue<int> pq;
   pq.enter(0, 0.f);

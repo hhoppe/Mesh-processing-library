@@ -83,7 +83,7 @@ int main(int argc, const char** argv) {
   args.parse();
   const string filename = args.get_filename();
   if (args.num()) args.problem("expect a single argument");
-  // nullptr: no_security;  nullptr: no_copy_attribute_from_existing_fhandle.
+  // Here, nullptr: no_security;  nullptr: no_copy_attribute_from_existing_fhandle.
   HANDLE h_file = CreateFileW(utf16_from_utf8(filename).c_str(), GENERIC_READ, FILE_SHARE_READ, nullptr, OPEN_EXISTING,
                               FILE_FLAG_RANDOM_ACCESS, nullptr);
   assertx(h_file != INVALID_HANDLE_VALUE);
@@ -99,7 +99,7 @@ int main(int argc, const char** argv) {
     assertx(CloseHandle(h_file));
     return 0;
   }
-  // nullptr: no_security;  0, 0: map_whole_file;  nullptr: no_name.
+  // Here, nullptr: no_security;  0, 0: map_whole_file;  nullptr: no_name.
   HANDLE h_fmapping = CreateFileMapping(h_file, nullptr, PAGE_READONLY, 0, 0, nullptr);
   assertx(h_fmapping != nullptr);
   HH_ASSUME(h_fmapping);

@@ -72,7 +72,7 @@ const LUfactorization g_periodic_omoms_lu_factorization =
 
 //----------------------------------------------------------------------------
 
-// Filter kernels
+// Filter kernels.
 
 inline double sinc_abs(double x) {
   // Sinc[x], but assuming here that x >= 0.
@@ -80,7 +80,7 @@ inline double sinc_abs(double x) {
   return x < 1e-9 ? 1. : std::sin(x) / x;
 }
 
-// normalized sinc function
+// The normalized sinc function.
 inline double sinc_norm_abs(double x) {
   // SincNorm[x], but assuming here that x >= 0.
   ASSERTX(x >= 0.);
@@ -121,7 +121,7 @@ struct Filter_box final : Filter {
   }
   static double sfunc(double x) {
     // Discontinuous functions must be treated specially to create half-open intervals.
-    return x < -.5 ? 0. : x < .5 ? 1. : 0.;  // 1 over interval [-.5, .5)
+    return x < -.5 ? 0. : x < .5 ? 1. : 0.;  // Value 1 over the interval [-.5, .5).
   }
 };
 
@@ -173,7 +173,7 @@ struct Filter_mitchell final : Filter {
   }
 };
 
-struct Filter_keys final : Filter {  // also known as Catmull-Rom spline
+struct Filter_keys final : Filter {  // Also known as the Catmull-Rom spline.
   using type = Filter_keys;
   Filter_keys() : Filter("keys", sfunc, 2.) {}
   static double sfunc(double x) {
@@ -190,7 +190,7 @@ struct Filter_keys final : Filter {  // also known as Catmull-Rom spline
   }
 };
 
-struct Filter_spline final : Filter {  // cubic B-spline
+struct Filter_spline final : Filter {  // A cubic B-spline.
   using type = Filter_spline;
   Filter_spline() : Filter("spline", sfunc, 2.) { _has_inv_convolution = true; }
   static double sfunc(double x) {
@@ -208,7 +208,7 @@ struct Filter_spline final : Filter {  // cubic B-spline
   }
 };
 
-struct Filter_omoms final : Filter {  // cubic OMOMS
+struct Filter_omoms final : Filter {  // A cubic OMOMS.
   using type = Filter_omoms;
   Filter_omoms() : Filter("omoms", sfunc, 2.) {
     _has_inv_convolution = true;
@@ -257,7 +257,7 @@ struct Filter_gaussian final : Filter {
     _is_partition_of_unity = false;  // 0.93503:1.06497  av=1  sd=0.0459422
   }
   static double sfunc(double x) {
-    const double r = 1.25;  // corresponding to 3 standard deviations
+    const double r = 1.25;  // Corresponding to 3 standard deviations.
     const double sdv = r / 3.;
     // r == 1.25 corresponds to kernel that is as-close-as-possible to partition of unity:
     //   0.93503:1.06497     av=1           sd=0.0459424
@@ -381,7 +381,7 @@ void FilterBnd::setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar
     if (0 && k_debug) {
       const bool discontinuous = filter().is_discontinuous();
       const double thresh = is_magnify ? (filter().name() == "gaussian" ? .1 : 1e-5) : (discontinuous ? 1. : .2);
-      if (abs(sum - 1.) > thresh)  // e.g. fails for "quadratic" cx=2 nx=3 x=1
+      if (abs(sum - 1.) > thresh)  // E.g. fails for "quadratic" cx = 2, nx = 3, x = 1.
         assertnever(SSHOW(cx, nx, filter().name(), nk, x, sum, mat_weights));
     }
     mat_weights[x] /= float(sum);

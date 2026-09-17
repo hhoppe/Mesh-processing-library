@@ -26,7 +26,7 @@ class ISimplex : noncopyable {
   friend class SimplicialComplex;
   static constexpr int MAX_DIM = 2;
 
-  // 0-dim simplex has _child[0] which is ignored
+  // 0-dim simplex has _child[0] which is ignored.
   ISimplex(int dim, int id) : _dim(dim), _id(id) { for_int(i, _dim + 1) _child[i] = nullptr; }
 
   void setChild(int num, Simplex child);
@@ -59,7 +59,7 @@ class ISimplex : noncopyable {
   // 0-simplices
   Simplex edgeTo(Simplex opp_v);
 
-  // attribute mod and access function
+  // Attribute mod and access function.
   void setPosition(const Point& pos) { assertx(_dim == 0), _position = pos; }
   void setVAttribute(int va) { _vattribute = va; }
   void setArea(float area) { _area = area; }
@@ -76,13 +76,13 @@ class ISimplex : noncopyable {
     return _flags;
   }
 
-  // predicates
+  // Predicates.
   [[nodiscard]] bool hasColor() const { return _vattribute >= 0; }
   [[nodiscard]] bool isPrincipal() const { return _parent.empty(); }
   [[nodiscard]] bool is_boundary() const { return _parent.size() == 1; }
   [[nodiscard]] bool isManifold() const { return _parent.size() == 2; }
 
-  // for gemorph
+  // For geomorph.
   [[nodiscard]] const char* get_string() const { return _string.get(); }
   void set_string(const char* s) { _string = make_unique_c_string(s); }
   void update_string(const char* key, const char* val) { GMesh::update_string_ptr(_string, key, val); }
@@ -90,16 +90,16 @@ class ISimplex : noncopyable {
   HH_POOL_ALLOCATION(ISimplex);
 
  private:
-  int _dim;                          // dimension of the simplex
-  int _id;                           // simplex id
-  Vec<Simplex, MAX_DIM + 1> _child;  // simplices it contains
-  std::vector<Simplex> _parent;      // simplices it belongs to
-  // Attributes
+  int _dim;                          // Dimension of the simplex.
+  int _id;                           // Simplex id.
+  Vec<Simplex, MAX_DIM + 1> _child;  // Simplices it contains.
+  std::vector<Simplex> _parent;      // Simplices it belongs to.
+  // Attributes.
   Flags _flags;
-  Point _position;      // simplices of dimension 0 only
-  int _vattribute{-1};  // visual attributes
+  Point _position;      // Simplices of dimension 0 only.
+  int _vattribute{-1};  // Visual attributes.
   float _area{0.f};
-  // for geomorph
+  // For geomorph.
   unique_ptr<char[]> _string;
 };
 
@@ -120,7 +120,7 @@ class SimplicialComplex : noncopyable {
   void write(std::ostream& os) const;
   void readQHull(std::istream& is);
 
-  // modification functions
+  // Modification functions.
   Simplex createSimplex(int dim);
   Simplex createSimplex(int dim, int id);
   void destroySimplex(Simplex s, int area_test = 0);
@@ -128,7 +128,7 @@ class SimplicialComplex : noncopyable {
   void copy(const SimplicialComplex& orig);
   void skeleton(int dim);
 
-  // access (const) functions
+  // Access (const) functions.
   [[nodiscard]] int num(int dim) const { return _simplices[dim].num(); }
   [[nodiscard]] int getMaxId(int dim) const { return _free_sid[dim]; }
   [[nodiscard]] bool valid(Simplex s) const;
@@ -147,9 +147,9 @@ class SimplicialComplex : noncopyable {
 
   // static constexpr FlagMask ALL = ~0u, SHARP = 1;  // flags
 
- private:                              // functions
-  void readLine(const char* str);      // connectivity
-  void attrReadLine(const char* str);  // attributes
+ private:                              // Functions.
+  void readLine(const char* str);      // Connectivity.
+  void attrReadLine(const char* str);  // Attributes.
   bool equal(Simplex s1, Simplex s2) const;
   bool eq1simp(Simplex s1, Simplex s2) const;
   bool eq2simp(Simplex s1, Simplex s2) const;
@@ -170,7 +170,7 @@ class SimplicialComplex : noncopyable {
     Container _simplices;
   };
 
-  // one array per dimension
+  // One array per dimension.
   Vec<Map<int, Simplex>, MAX_DIM + 1> _simplices;
   Array<string> _material_strings;
   Vec<int, MAX_DIM + 1> _free_sid;
@@ -187,7 +187,7 @@ inline Simplex ISimplex::opp_vertex(Simplex v1) {
   assertx(getDim() == 1);
   if (_child[0] == v1) return _child[1];
   if (_child[1] == v1) return _child[0];
-  // no opposite to v1 on this edge
+  // No opposite to v1 on this edge.
   return nullptr;
 }
 
@@ -195,7 +195,7 @@ inline Simplex ISimplex::opp_edge(Simplex v1) const {
   assertx(getDim() == 2);
   for (Simplex edge : children())
     if (edge->_child[0] != v1 && edge->_child[1] != v1) return edge;
-  // no opposite to v1 on this face
+  // No opposite to v1 on this face.
   return nullptr;
 }
 

@@ -41,7 +41,7 @@ class ConsoleProgress : noncopyable {
   static bool set_all_silent(bool v) { return std::exchange(silent_instance(), v); }
 
  private:
-  std::atomic<int> _last_val{-1};  // -1 if not yet printed
+  std::atomic<int> _last_val{-1};  // -1 if not yet printed.
   string _task_name;
   bool _silent;
   void update_i(float f);
@@ -80,7 +80,7 @@ inline void ConsoleProgress::update_i(float f) {
   //    my emacs shell is modified to have "\r" delete backwards to the line beginning.
   const int val = clamp(int(f * 100.f), 0, 99);
   if (val <= _last_val) return;
-  {  // synchronize in case multiple threads are updating the object or using ConsoleProgress
+  {  // Synchronize in case multiple threads are updating the object or using ConsoleProgress.
     std::scoped_lock lock(global_mutex_instance());
     if (!(val <= _last_val)) {
       const int old_val = _last_val.exchange(val);
@@ -88,7 +88,7 @@ inline void ConsoleProgress::update_i(float f) {
       if (_task_name != "") {
         if (old_val >= 0) {
           if (0) {
-            str += "\r";  // bad because it could erase shell prompt
+            str += "\r";  // Bad because it could erase the shell prompt.
           } else {
             const int n = narrow_cast<int>(_task_name.size()) + 6;
             str.append(n, '\b');
@@ -102,7 +102,7 @@ inline void ConsoleProgress::update_i(float f) {
           str += "\b\b\b";
         str += sform("%02d%%", val);
       }
-      std::cerr << str << std::flush;  // write atomically so "prog1.exe | prog2.exe" is OK.
+      std::cerr << str << std::flush;  // Write atomically so that "prog1.exe | prog2.exe" is OK.
     }
   }
 }
@@ -110,7 +110,7 @@ inline void ConsoleProgress::update_i(float f) {
 inline void ConsoleProgress::clear() {
   if (_silent) return;
   if (_last_val < 0) return;
-  {  // synchronize in case multiple threads are using ConsoleProgress
+  {  // Synchronize in case multiple threads are using ConsoleProgress.
     std::scoped_lock lock(global_mutex_instance());
     if (!(_last_val < 0)) {
       _last_val = -1;

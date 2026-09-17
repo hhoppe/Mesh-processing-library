@@ -76,21 +76,21 @@ struct PmFace {
   PmFaceAttrib attrib;
 };
 
-// optimize: use pointers in PmFace::wedges and W_Edge::vertex
+// Optimize: use pointers in PmFace::wedges and W_Edge::vertex.
 // However, this requires arrays that don't reallocate.
 // So either reserve, or use versatile Win32 memory allocation.
 
-// Wedge mesh: faces -> wedges -> vertices
+// Wedge mesh: faces -> wedges -> vertices.
 class WMesh {
  public:
-  void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
+  void read(std::istream& is, const PMeshInfo& pminfo);  // Must be empty.
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
   void write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) const;
   [[nodiscard]] GMesh extract_gmesh(const PMeshInfo& pminfo) const;
   void ok() const;
   [[nodiscard]] Vec3<int> face_vertices(int f) const;
   [[nodiscard]] Vec3<Point> face_points(int f) const;
-  [[nodiscard]] int get_jvf(int v, int f) const;  // get index of vertex v in face f
+  [[nodiscard]] int get_jvf(int v, int f) const;  // Get the index of vertex v in face f.
   [[nodiscard]] int get_wvf(int v, int f) const;
   [[nodiscard]] Array<int> gather_someface() const;  // Returns mapping: vertex index -> index of some adjacent face.
 
@@ -108,9 +108,9 @@ struct Vsplit {
   void ok() const;
   [[nodiscard]] bool adds_two_faces() const;
   // This format provides these limits:
-  // - maximum number of faces: 1ull << 32
-  // - maximum vertex valence:  1u << 16
-  // - maximum number of materials: 1u << 16
+  // - maximum number of faces: 1ull << 32.
+  // - maximum vertex valence:  1u << 16.
+  // - maximum number of materials: 1u << 16.
 
   // ** Encoding of vertices vs, vl, vr:
   // Face flclw is the face just CLW of vl from vs.
@@ -132,7 +132,7 @@ struct Vsplit {
     B_LRMASK = 0x0003,
     B_ABOVE = 0x0000,
     B_BELOW = 0x0001,
-    B_NEW = 0x0002,  // must be on separate bit.
+    B_NEW = 0x0002,  // Must be on a separate bit.
   };
   enum EMask : unsigned {
     VSINDEX_SHIFT = 0,
@@ -216,11 +216,11 @@ struct Vsplit {
   // for ii == 1: vad_large = new_vt - new_i,  vad_small = new_i - old_vs
   //    where new_i=interp(new_vt, new_vs)
   PmVertexAttribD vad_large;
-  PmVertexAttribD vad_small;  // is zero if "MeshSimplify -nofitgeom"
+  PmVertexAttribD vad_small;  // Is zero if "MeshSimplify -nofitgeom".
 
   // ** Wedge attribute deltas (size 1--6)
   Array<PmWedgeAttribD> ar_wad;
-  // Order: [(wvtfl, wvsfl), [(wvtfr, wvsfr)], wvlfl, [wvrfr]]
+  // Order: [(wvtfl, wvsfl), [(wvtfr, wvsfr)], wvlfl, [wvrfr]].
 
   // ** Residual information:
   float resid_uni;
@@ -230,7 +230,7 @@ struct Vsplit {
 
 // For each face, what are its 3 neighbors?
 struct PmFaceNeighbors {
-  Vec3<int> faces;  // faces[i] is across edge opposite of wedges[i].  < 0 if no neighbor.
+  Vec3<int> faces;  // Here, faces[i] is across the edge opposite wedges[i].  < 0 if no neighbor.
 };
 
 // Wedge mesh augmented with adjacency information.
@@ -241,29 +241,29 @@ class AWMesh : public WMesh {
   struct VV_range;
 
  public:
-  void read(std::istream& is, const PMeshInfo& pminfo);  // must be empty
+  void read(std::istream& is, const PMeshInfo& pminfo);  // Must be empty.
   void write(std::ostream& os, const PMeshInfo& pminfo) const;
   void ok() const;
 
-  // Rendering: common code and data
-  static constexpr int k_Face_visited_mask = 1 << 30;  // high bit of matid
-  int _cur_frame_mask{0};                              // 0 or k_Face_visited_mask
+  // Rendering: common code and data.
+  static constexpr int k_Face_visited_mask = 1 << 30;  // The high bit of matid.
+  int _cur_frame_mask{0};                              // 0 or k_Face_visited_mask.
 
-  // Rendering using OpenGL
+  // Rendering using OpenGL.
   void ogl_render_faces_individually(const PMeshInfo& pminfo, int use_texture);
   void ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture);
   void ogl_render_edges();
 
-  Array<PmFaceNeighbors> _fnei;  // must be same size as _faces!
+  Array<PmFaceNeighbors> _fnei;  // Must be the same size as _faces!
 
   // Sentinel for an absent face or wedge; every negative entry in _fnei equals this value.
   static constexpr int k_undefined = k_debug ? std::numeric_limits<int>::min() : -1;
 
-  [[nodiscard]] int most_clw_face(int v, int f) const;  // negative if v is interior vertex
-  [[nodiscard]] int most_ccw_face(int v, int f) const;  // negative if v is interior vertex
+  [[nodiscard]] int most_clw_face(int v, int f) const;  // Negative if v is an interior vertex.
+  [[nodiscard]] int most_ccw_face(int v, int f) const;  // Negative if v is an interior vertex.
   [[nodiscard]] bool is_boundary(int v, int f) const;
   [[nodiscard]] VF_range ccw_faces(int v, int f) const { return VF_range(*this, v, f); }
-  [[nodiscard]] VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // range over [vv, ff].
+  [[nodiscard]] VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // Range over [vv, ff].
   // Split the edge between _faces[f].wedges[j] and _faces[f].wedges[mod3(j + 1)] with interp(v1, v2, frac1).
   void split_edge(int f, int j, float frac1);
 
@@ -271,8 +271,8 @@ class AWMesh : public WMesh {
   void construct_adjacency();
   void apply_vsplit_ancestry(Ancestry* ancestry, int vs, bool isr, int onumwedges, int code, int wvlfl, int wvrfr,
                              int wvsfl, int wvsfr, int wvtfl, int wvtfr);
-  // Rendering using OpenGL
-  Array<Pixel> _ogl_mat_byte_rgba;  // size is _materials.num()
+  // Rendering using OpenGL.
+  Array<Pixel> _ogl_mat_byte_rgba;  // Size is _materials.num().
   void ogl_process_materials();
 
   struct VF_sentinel {
@@ -377,7 +377,7 @@ class AWMesh : public WMesh {
   void apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry* ancestry = nullptr);
   void undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo);
   // Default operator=() and copy_constructor are safe.
- public:  // hidden
+ public:  // Hidden.
   void apply_vsplit_private(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry* ancestry = nullptr);
 };
 
@@ -400,11 +400,11 @@ class PMesh : noncopyable {
  public:
   PMesh();
   PMesh(AWMesh&& awmesh, const PMeshInfo& pminfo);
-  // non-progressive read
-  void read(std::istream& is);  // die unless empty
+  // A non-progressive read.
+  void read(std::istream& is);  // Die unless empty.
   void write(std::ostream& os) const;
-  void truncate_beyond(PMeshIter& pmi);  // remove all vsplits beyond iterator
-  void truncate_prior(PMeshIter& pmi);   // advance base mesh
+  void truncate_beyond(PMeshIter& pmi);  // Remove all vsplits beyond the iterator.
+  void truncate_prior(PMeshIter& pmi);   // Advance the base mesh.
  public:
   friend class PMeshRStream;
   AWMesh _base_mesh;
@@ -422,46 +422,46 @@ class PMesh : noncopyable {
 // Can be either:
 //  - read from an existing PMesh, or
 //  - read from an input stream, or
-//  - read from an input stream and archived to a PMesh
+//  - read from an input stream and archived to a PMesh.
 class PMeshRStream : noncopyable {
  public:
   explicit PMeshRStream(const PMesh& pm);
   explicit PMeshRStream(std::istream& is, PMesh* ppm_construct = nullptr);
   ~PMeshRStream();
-  void read_base_mesh(AWMesh* bmesh = nullptr);  // always call this first!
+  void read_base_mesh(AWMesh* bmesh = nullptr);  // Always call this first!
   [[nodiscard]] const AWMesh& base_mesh();
   [[nodiscard]] bool is_reversible() const { return !!_pm; }
   const Vsplit* next_vsplit();
-  const Vsplit* prev_vsplit();                     // die if !is_reversible()
-  [[nodiscard]] const Vsplit* peek_next_vsplit();  // peek without using it
+  const Vsplit* prev_vsplit();                     // Die if !is_reversible().
+  [[nodiscard]] const Vsplit* peek_next_vsplit();  // Peek without using it.
   PMeshInfo _info;
 
  private:
   friend PMeshIter;
-  friend PMesh;             // for PMesh::truncate_*()
-  std::istream* _is;        // may be nullptr
-  PMesh* _pm;               // may be nullptr
-  int _vspliti{-1};         // def if _pm, next to read from _pm->_vsplits; -1 before base_mesh is read
-  Vsplit _tmp_vspl;         // def if !_pm
-  bool _vspl_ready{false};  // def if !_pm, true if _vspl is only peeked
-  AWMesh _lbase_mesh;       // used to store basemesh if !_pm
+  friend PMesh;             // For PMesh::truncate_*().
+  std::istream* _is;        // May be nullptr.
+  PMesh* _pm;               // May be nullptr.
+  int _vspliti{-1};         // Defined if _pm; next to read from _pm->_vsplits; -1 before base_mesh is read.
+  Vsplit _tmp_vspl;         // Defined if !_pm.
+  bool _vspl_ready{false};  // Defined if !_pm; true if _vspl is only peeked.
+  AWMesh _lbase_mesh;       // Used to store the base mesh if !_pm.
 };
 
-// Progressive mesh iterator (is a AWMesh!)
+// Progressive mesh iterator (is an AWMesh!).
 class PMeshIter : public AWMesh {
  public:
   explicit PMeshIter(PMeshRStream& pmrs);
-  bool next() { return next_ancestry(nullptr); }  // ret: success
-  bool prev();                                    // ret: success; die if !_pmrs.is_reversible()
-  bool goto_nvertices(int nv) { return goto_nvertices_ancestry(nv, nullptr); }  // ret: success
-  bool goto_nfaces(int nf) { return goto_nfaces_ancestry(nf, nullptr); }        // within +- 1, favor 0 or -1
+  bool next() { return next_ancestry(nullptr); }  // Returns success.
+  bool prev();                                    // Returns success; die if !_pmrs.is_reversible().
+  bool goto_nvertices(int nv) { return goto_nvertices_ancestry(nv, nullptr); }  // Returns success.
+  bool goto_nfaces(int nf) { return goto_nfaces_ancestry(nf, nullptr); }        // Within +- 1, favor 0 or -1.
   [[nodiscard]] PMeshRStream& rstream() { return _pmrs; }
   [[nodiscard]] const PMeshRStream& rstream() const { return _pmrs; }
   [[nodiscard]] GMesh extract_gmesh() const { return AWMesh::extract_gmesh(rstream()._info); }
 
  private:
   friend class Geomorph;
-  friend PMesh;  // for PMesh::truncate_*()
+  friend PMesh;  // For PMesh::truncate_*().
   PMeshRStream& _pmrs;
   bool next_ancestry(Ancestry* ancestry);
   bool goto_nvertices_ancestry(int nvertices, Ancestry* ancestry);
@@ -500,10 +500,10 @@ class Geomorph : public WMesh {
   // Ret: was_able_to_go_all_the_way; die if !empty
   [[nodiscard]] bool construct_next(PMeshIter& pmi, int nvsplits);
   // Same up to nvertices
-  // Ret: success
+  // Returns success.
   bool construct_goto_nvertices(PMeshIter& pmi, int nvertices);
   // Same up to nfaces (or nfaces - 1)
-  // Ret: success
+  // Returns success.
   bool construct_goto_nfaces(PMeshIter& pmi, int nfaces);
 
   // ** Evaluation:

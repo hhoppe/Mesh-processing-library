@@ -8,7 +8,7 @@
 #include "libHh/GridOp.h"    // crop()
 #include "libHh/StringOp.h"  // get_path_extension()
 
-#define HH_AUDIO_HAVE_FFMPEG  // always as fallback
+#define HH_AUDIO_HAVE_FFMPEG  // Always as a fallback.
 
 namespace hh {
 
@@ -22,8 +22,8 @@ struct WavHeader {
   uint32_t ChunkSize;
   Vec4<char> Format{'W', 'A', 'V', 'E'};
   Vec4<char> Subcheck1ID{'f', 'm', 't', ' '};
-  uint32_t Subchunk1Size{16};  // for PCM
-  uint16_t AudioFormat{3};     // 1 == PCM, 3 == float
+  uint32_t Subchunk1Size{16};  // For PCM.
+  uint16_t AudioFormat{3};     // 1 == PCM, 3 == float.
   uint16_t NumChannels;
   uint32_t SampleRate;
   uint32_t ByteRate;
@@ -111,7 +111,7 @@ void Audio::read_file(const string& pfilename) {
 #if defined(HH_AUDIO_HAVE_FFMPEG)
     if (!ffmpeg_command_exists()) throw std::runtime_error("Cannot find ffmpeg program to read audio content");
     const bool expect_exact_num_samples = attrib().suffix == "wav";
-    {  // read header for attributes
+    {  // Read the header for attributes.
       string command = "ffmpeg -nostdin -i " + quote_arg_for_shell(filename) + " -vn -an 2>&1 |";
       if (ldebug) SHOW(command);
       RFile fi(command);
@@ -201,9 +201,9 @@ void Audio::read_file(const string& pfilename) {
       attrib().samplerate = audio_samplerate;
       attrib().bitrate = int(audio_bitrate + .5);
     }
-    {  // read data
+    {  // Read the data.
       if (ldebug) SHOW(diagnostic_string());
-      // f32be is Big Endian which is standard network order (also s16be == int16_t and u8be == uint8_t)
+      // Here, f32be is Big Endian, which is standard network order (also s16be == int16_t and u8be == uint8_t).
       string command = ("ffmpeg -v panic -nostdin -i " + quote_arg_for_shell(filename) +
                         " -f f32be -acodec pcm_f32be" + sform(" -af atrim=end_sample=%d", nsamples()) + " - |");
       if (ldebug) SHOW(command);
@@ -222,7 +222,7 @@ void Audio::read_file(const string& pfilename) {
           // This may be due to older ffmpeg failing to recognize "atrim".
           throw std::runtime_error("ffmpeg is unable to read audio samples in file '" + filename + "'");
         } else {
-          *this = crop(*this, twice(0), V(0, nsamples() - nread));  // remove unused samples
+          *this = crop(*this, twice(0), V(0, nsamples() - nread));  // Remove unused samples.
         }
       }
       // special_reduce_dim0(nread);
@@ -244,7 +244,7 @@ void Audio::write_file(const string& pfilename) const {
     const_cast<Audio&>(*this).attrib().bitrate = 256'000;  // mutable
   }
   if (attrib().suffix == "")
-    const_cast<Audio&>(*this).attrib().suffix = to_lower(get_path_extension(filename));  // mutable
+    const_cast<Audio&>(*this).attrib().suffix = to_lower(get_path_extension(filename));  // Mutable.
   if (attrib().suffix == "")
     throw std::runtime_error("Audio '" + filename + "': no filename suffix specified for writing");
   std::optional<TmpFile> tmpfile;
@@ -286,8 +286,8 @@ void Audio::write_file(const string& pfilename) const {
     {
       string codec;
       if (attrib().suffix == "wav") {
-        if (0) codec = " -acodec pcm_s16le";  // ffmpeg default int16_t encoding for *.wav container
-        if (1) codec = " -acodec pcm_f32le";  // lossless float representation
+        if (0) codec = " -acodec pcm_s16le";  // The ffmpeg default int16_t encoding for the *.wav container.
+        if (1) codec = " -acodec pcm_f32le";  // A lossless float representation.
       }
       string command = ("| ffmpeg -v panic -f f32be" +
                         sform(" -ar %g -ac %d -i - -ab %d", attrib().samplerate, nchannels(), attrib().bitrate) +

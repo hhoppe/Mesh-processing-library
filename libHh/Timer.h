@@ -42,19 +42,19 @@ namespace hh {
 class Timer : noncopyable {
  public:
   enum class EMode { normal, diagnostic, abbrev, summary, possibly, noprint, always };
-  // normal:          showdf() every time
-  // diagnostic:      showf() every time
-  // abbrev:          showf() first time
-  // summary:         only print in summary
-  // possibly:        never print, do not keep stats (except if SHOW_TIMES)
-  // noprint:         never print, do not keep stats
-  // always:          showdf() every time even if SHOW_TIMES == -1
+  // normal:          showdf() every time.
+  // diagnostic:      showf() every time.
+  // abbrev:          showf() first time.
+  // summary:         only print in summary.
+  // possibly:        never print, do not keep stats (except if SHOW_TIMES).
+  // noprint:         never print, do not keep stats.
+  // always:          showdf() every time even if SHOW_TIMES == -1.
 
   // If a name is given in the constructor, the timer is automatically started.
   // Otherwise, mode is overridden to EMode::noprint and the timer is not started.
   explicit Timer(string name_ = "", EMode mode = EMode::normal);
   ~Timer() { terminate(); }
-  void terminate();  // finish the timer earlier than its end of scope
+  void terminate();  // Finish the timer earlier than its end of scope.
   void stop();
   void start();
   // For the following, the timer must be stopped.

@@ -10,7 +10,7 @@ namespace hh {
 // Precomputed cos() and sin() functions over integer divisions of TAU.
 class Trig {
  public:
-  // compute cos(i * TAU / j)
+  // Compute cos(i * TAU / j).
   [[nodiscard]] static float cos(int i, int j) {
     Table& table = cos_table_instance();
     if (!table[1, 0]) init();
@@ -19,7 +19,7 @@ class Trig {
     const float v = j < k_size ? table[j, ia] : std::cos(ia * TAU / j);
     return v;
   }
-  // compute sin(i * TAU / j)
+  // Compute sin(i * TAU / j).
   [[nodiscard]] static float sin(int i, int j) {
     Table& table = sin_table_instance();
     if (!table[1, 0]) init();

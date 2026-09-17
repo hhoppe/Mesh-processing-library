@@ -298,7 +298,7 @@ Pixel get_color(const DomainFace& domain_face, Uv uv) {
 Point spheremap_2slerp0(const Point& pa, const Point& pb, const Point& pc, const Bary& b) {
   ASSERTX(b.is_convex());
   const float b12 = b[1] + b[2];
-  const float srev = b12 != 0.f ? b[1] / b12 : 0.f;  // == 1.f - s
+  const float srev = b12 != 0.f ? b[1] / b12 : 0.f;  // Equals 1.f - s.
   const Point pd = slerp(pb, pc, srev);
   return slerp(pd, pa, b12);
 }

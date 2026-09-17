@@ -11,7 +11,7 @@ using namespace hh;
 
 namespace g3d {
 
-constexpr float k_globe_radius = .65f;  // radius on screen (max = 1)
+constexpr float k_globe_radius = .65f;  // Radius on screen (max = 1).
 
 static int screenrate;
 static HH_STAT_NP(Sipf);
@@ -133,7 +133,7 @@ static void act_globe(const Vec2<float>& yxi, const Vec2<float>& yxi_d) {
   Vector vold = ratemode == ERatemode::move ? vori : vori - Vector(0.f, yxi[1] - yxi_d[1], yxi[0] - yxi_d[0]);
   to_spherical(vold);
   to_spherical(vnew);
-  Quaternion q(vold, vnew);  // twice rotation from vold to vnew
+  Quaternion q(vold, vnew);  // Twice rotation from vold to vnew.
   if (ratemode == ERatemode::move) q = pow(q, fchange);
   Applyq(to_Frame(q));
 }
@@ -151,7 +151,7 @@ static void get_lod(float flevel, int last, int& obi, float& finterp) {
   }
 }
 
-// Note: also called from G3dOGL
+// Note: also called from G3dOGL.
 void update_lod() {
   if (!lod_mode) return;
   const float flevel = min(lod_level, 1.f);
@@ -211,7 +211,7 @@ static void handle_sliders(bool show, float yq) {
       HB::draw_row_col_text(V(1, 21), "#Faces");
       HB::draw_row_col_text(V(2, 22), sform("%d", nfaces));
       const float xleft = .05f, yline = .004f;
-      {  // current level
+      {  // Current level.
         const float lod = clamp(lod_level, 0.f, 1.f);
         float x1 = xleft + .01f, x2 = xleft + .05f;
         const float y1 = (1.1f - lod) / 1.2f - .002f;
@@ -221,7 +221,7 @@ static void handle_sliders(bool show, float yq) {
         HB::draw_segment(V(y1, x1), V(y2, x1));
         HB::draw_segment(V(y1, x2), V(y2, x2));
       }
-      {  // slider
+      {  // Slider.
         const float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
         float x1 = xleft + .02f, x2 = xleft + .04f, xm = xleft + .03f;
         HB::draw_segment(V(y1 + yd, x1), V(y1, xm));
@@ -233,7 +233,7 @@ static void handle_sliders(bool show, float yq) {
         HB::draw_segment(V(y1, xm), V(y2, xm));
       }
       const int n = g_obs.last;
-      for_int(i, n + 1) {  // intervals
+      for_int(i, n + 1) {  // Intervals.
         const float y = (1.1f - float(i) / n) / 1.2f;
         HB::draw_segment(V(y, xleft + .023f), V(y, xleft + .037f));
       }
@@ -249,7 +249,7 @@ static void handle_sliders(bool show, float yq) {
 
 void Dolly(const Vec2<float>& yxq) {
   Vector v(yxq[0] * ddistance, 0.f, 0.f);
-  if (0) v[1] = yxq[1] * ddistance;  // control y too (no)
+  if (0) v[1] = yxq[1] * ddistance;  // Control y too (no).
   if (cob != obview) {
     float d = (viewmode ? dist(tview.p(), Point(0.f, 0.f, 0.f))
                         : dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t()));
@@ -295,8 +295,8 @@ static void act_button1(const Vec2<float>& yxq) {
 
 static void act_button2(const Vec2<float>& pyxq) {
   Vec2<float> yxq = pyxq;
-  if (selected.shift) {  // rotation x
-    yxq[0] *= -1.f;      // since moving to shift key
+  if (selected.shift) {  // Rotation x.
+    yxq[0] *= -1.f;      // Since moving to shift key.
     if (cob != obview) yxq[0] *= -1.f;
     Applyq(Frame::rotation(0, yxq[0]));
   } else {  // pan
@@ -305,7 +305,7 @@ static void act_button2(const Vec2<float>& pyxq) {
 }
 
 static void act_button3(const Vec2<float>& yxq) {
-  if (selected.shift) {  // zoom
+  if (selected.shift) {  // Zoom.
     const float a = std::exp(-yxq[0]);
     zoom *= a;
     if (object_mode && cob != obview) {
@@ -390,7 +390,7 @@ static void act_flight() {
     if (!viewmode && !button_active) yxf = min(max(*pointer, twice(0.f)), twice(1.f));
   // Convert from (0..1)screen to (-1..1)math.
   yxf = (2.f * yxf - twice(1.f)) * V(-1.f, 1.f);
-  // following coded adapted from g3dfly.c
+  // The following code is adapted from g3dfly.c.
   const float speed = .7f;
   const float fturn = abs(speed) > .1f ? .8f / pow(abs(speed), .7f) : .3f;
   Frame& obframe = g_obs[cob].tm();
@@ -424,8 +424,8 @@ static void act_flight() {
 static void act_auto() {
   const bool osizemode = sizemode;
   sizemode = false;
-  // default at 60fps is fchange=.016667 ddistance=1, so rotation of .016667 / TAU * 360 = 0.954929896 degree/frame
-  const float fudge = 1. / 0.954929896;  // desire 1 degree/frame at 60fps -> 360 frames == 6 sec for one rotation
+  // Default at 60fps is fchange=.016667 ddistance=1, so rotation of .016667 / TAU * 360 = 0.954929896 degree/frame.
+  const float fudge = 1. / 0.954929896;  // Desire 1 degree/frame at 60fps -> 360 frames == 6 sec for one rotation.
   float ch = fchange * ddistance * fudge;
 
   if (timingtest_nframes) {
@@ -467,7 +467,7 @@ static void act_auto() {
 static void act_bobble() {
   // Make the tview frame origin (e.g. left eye offset) orbit about the yz plane (perpendicular to view direction).
   const int axis = 0;                                                 // +X is forward
-  const float bobble_speed = getenv_float("G3D_BOBBLE_SPEED", 1.0f);  // cycles per second
+  const float bobble_speed = getenv_float("G3D_BOBBLE_SPEED", 1.0f);  // Cycles per second.
   const float angle = TAU * bobble_speed * fchange;
   tview.p() = tview.p() * Frame::rotation(axis, angle);
 }
@@ -587,9 +587,9 @@ static void set_viewing() {
   const bool is_view = !tview.is_ident();
   if (auto_level) g_obs[obview].tm() = make_level(g_obs[obview].t());
   // while (obview && !g_obs[obview].visible()) --obview;
-  Frame tpos = g_obs[obview].t();  // original frame
+  Frame tpos = g_obs[obview].t();  // Original frame.
   // =~FrameMakeStdDir()
-  Frame thead = tpos;  // view dir., after view offset, before aim
+  Frame thead = tpos;  // View dir., after view offset, before aim.
   static const bool g3d_radar = getenv_bool("G3D_RADAR");
   if (g3d_radar && is_view && auto_level)  // auto_level radar view
     thead = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f), tpos.p());
@@ -598,7 +598,7 @@ static void set_viewing() {
   float vzoom = zoom;
   if (is_view) {
     const float g3d_view_zoom = getenv_float("G3D_VIEW_ZOOM", 0.f);  // 2017-02-21
-    if (g3d_view_zoom) vzoom = g3d_view_zoom;                        // was 0.2f
+    if (g3d_view_zoom) vzoom = g3d_view_zoom;                        // Was 0.2f.
   }
   // HB::set_camera(tpos, zoom, frame_camera, vzoom);
   HB::set_camera(g_obs[0].t(), zoom, frame_camera, vzoom);
@@ -609,8 +609,8 @@ static void set_viewing() {
     const int firstobn = g_obs.first == 0 && (is_view || obview != 0) ? 0 : 1;
     for (int obn = firstobn; obn <= g_obs.last; obn++)
       gbb.union_with(g_obs[obn].bbox().transform(g_obs[obn].t() * frame_camera_inv));
-    float minx = gbb[0][0];          // could be negative
-    if (minx > 0.f) minx *= .9999f;  // for -key ojo on zero-height data.
+    float minx = gbb[0][0];          // Could be negative.
+    if (minx > 0.f) minx *= .9999f;  // For -key ojo on zero-height data.
     const float diam = gbb.max_side();
     // float thresh = diam*1e-4;
     const float thresh = diam * 2e-3f;  // Made larger for OpenGL glPolygonOffsetEXT().
@@ -736,14 +736,14 @@ void Draw() {
       cob += backwards ? -1 : +1;
       if (cob > g_obs.last) {
         if (mirror_loop) {
-          cob = g_obs.last;  // repeat the last object a second time
+          cob = g_obs.last;  // Repeat the last object a second time.
           backwards = true;
         } else {
           cob = 1;
         }
       } else if (cob < 1) {
         if (mirror_loop) {
-          cob = 1;  // repeat the first object a second time
+          cob = 1;  // Repeat the first object a second time.
           backwards = false;
         } else {
           cob = g_obs.last;

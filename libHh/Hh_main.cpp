@@ -237,7 +237,7 @@ string get_header_info() {
   // Number of cores: std_thread_hardware_concurrency().
   string config;
 #if defined(__clang__)
-  // string __clang_version__ is longer and has space(s).
+  // The string __clang_version__ is longer and has space(s).
   config += sform("clang%d.%d.%d", __clang_major__, __clang_minor__, __clang_patchlevel__);
 #elif defined(_MSC_VER)
   config += sform("msc%d", _MSC_VER);

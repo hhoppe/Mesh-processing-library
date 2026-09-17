@@ -51,7 +51,7 @@ Frame operator*(const Frame& frame1, const Frame& frame2) {
 }
 
 bool invert(const Frame& frame, Frame& frame_inv) {
-  // &frame == &frame_inv is ok
+  // Here, &frame == &frame_inv is OK.
   SGrid<float, 4, 4> m = to_Matrix(frame);
   if (!invert(m.const_grid_view(), m.grid_view())) return false;
   frame_inv = to_Frame(m.const_grid_view());
@@ -171,7 +171,7 @@ Bary bary_of_vector(const Vec3<Point>& triangle, const Vector& vec) {
   const Vector vn = normalized(vec);
   const Vector fnor = normalized(cross(v1, v2));
   const Vector vortho = cross(fnor, vn);
-  assertx(is_unit(vortho));  // vector must be in plane of triangle.
+  assertx(is_unit(vortho));  // The vector must be in the plane of the triangle.
   const float x1 = dot(v1, vn);
   const float x2 = dot(v2, vn);
   const float y1 = dot(v1, vortho);

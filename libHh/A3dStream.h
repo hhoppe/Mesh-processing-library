@@ -30,9 +30,9 @@ struct A3dVertexColor {
   constexpr explicit A3dVertexColor(const Pixel& pixel)
       : A3dVertexColor(A3dColor(pixel[0] / 255.f, pixel[1] / 255.f, pixel[2] / 255.f)) {}
   constexpr A3dVertexColor(A3dColor pd, A3dColor ps, A3dColor pg) : d(pd), s(ps), g(pg) {}
-  A3dColor d;  // diffuse
-  A3dColor s;  // specular
-  A3dColor g;  // g[0] is Phong coefficient; other channels unused
+  A3dColor d;  // Diffuse.
+  A3dColor s;  // Specular.
+  A3dColor g;  // Here, g[0] is the Phong coefficient; other channels are unused.
 };
 
 struct A3dVertex {
@@ -59,10 +59,10 @@ class A3dElem {
     endfile = 'q',
     editobject = 'O',
   };
-  // also reserved: 'v', 'E', 'n', 'd', 's', 'g'
+  // Also reserved: 'v', 'E', 'n', 'd', 's', 'g'.
   A3dElem() = default;
-  explicit A3dElem(EType type, bool binary = false, int nv = 0) { init(type, binary, nv); }  // allocates AND init()
-  // both A3dElem(..., nv) and init() allocate and initialize for nv
+  explicit A3dElem(EType type, bool binary = false, int nv = 0) { init(type, binary, nv); }  // Allocates AND init().
+  // Both A3dElem(..., nv) and init(..., nv) allocate and initialize for nv vertices.
   void init(EType type, bool binary = false, int nv = 0);
   void update(EType type, bool binary = false);  // polygon<>polyline<>point
   [[nodiscard]] EType type() const { return _type; }
@@ -80,11 +80,11 @@ class A3dElem {
   [[nodiscard]] auto& operator[](this auto&& self, int i) { return self._v[i]; }
 
   // For EType::polygon:
-  [[nodiscard]] Vector pnormal() const;  // may be degenerate (zero)!
+  [[nodiscard]] Vector pnormal() const;  // May be degenerate (zero)!
   void get_polygon(Polygon& poly) const;
 
   // For TComment:
-  void set_comment(string str);  // str may start with ' '
+  void set_comment(string str);  // Here, str may start with ' '.
   [[nodiscard]] const string& comment() const;
 
   // For command_type():
@@ -93,9 +93,9 @@ class A3dElem {
  private:
   EType _type{EType::polygon};
   bool _binary{false};
-  PArray<A3dVertex, 8> _v;  // for EType::polygon, EType::polyline, EType::point
-  string _comment;          // for EType::comment
-  Vec3<float> _f;           // for comamnd_type()
+  PArray<A3dVertex, 8> _v;  // For EType::polygon, EType::polyline, EType::point.
+  string _comment;          // For EType::comment.
+  Vec3<float> _f;           // For command_type().
   void push_i(const A3dVertex& vertex) {
     assertx(_type == EType::polygon || _type == EType::polyline || _type == EType::point);
     if (_type == EType::point) assertx(!num());
@@ -129,14 +129,14 @@ class RA3dStream : noncopyable {
   virtual ~RA3dStream() = default;
 
  protected:
-  virtual bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) = 0;  // ret success
+  virtual bool read_line(bool& binary, char& type, Vec3<float>& f, string& comment) = 0;  // Returns success.
 
  private:
   A3dVertexColor _curcol{A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f)};
   void set_current_color(char ctype, const Vec3<float>& f);
 };
 
-class RSA3dStream : public RA3dStream {  // Read from stream
+class RSA3dStream : public RA3dStream {  // Read from a stream.
  public:
   explicit RSA3dStream(std::istream& pis) : _is(pis) {}
   [[nodiscard]] std::istream& is() { return _is; }
@@ -151,7 +151,7 @@ class RSA3dStream : public RA3dStream {  // Read from stream
 class WA3dStream : noncopyable {
  public:
   void write(const A3dElem& el);
-  void write_comment(const string& str);  // can contain newlines
+  void write_comment(const string& str);  // String str may contain newlines.
   void write_end_object(bool binary = false, float f0 = 1.f, float f1 = 1.f);
   void write_clear_object(bool binary = false, float f0 = 1.f, float f1 = 0.f);
   void write_end_frame(bool binary = false);
@@ -164,14 +164,14 @@ class WA3dStream : noncopyable {
   virtual void blank_line() = 0;
 
  private:
-  bool _first{true};  // first write
+  bool _first{true};  // The first write.
   A3dVertexColor _curcol;
-  bool _force_choice_binary;  // force choice one way or the other
-  bool _choice_binary;        // which way is forced
-  bool _pblank{false};        // previous element left a blank line
+  bool _force_choice_binary;  // Force the choice one way or the other.
+  bool _choice_binary;        // Which way is forced.
+  bool _pblank{false};        // The previous element left a blank line.
 };
 
-class WSA3dStream : public WA3dStream {  // Write to stream
+class WSA3dStream : public WA3dStream {  // Write to a stream.
  public:
   explicit WSA3dStream(std::ostream& pos) : _os(pos) {}
   ~WSA3dStream() override { WSA3dStream::flush(); }

@@ -12,7 +12,7 @@ HH_ALLOCATE_POOL(Polygon);
 
 Vector Polygon::get_normal_dir() const {
   const auto& self = *this;
-  if (num() == 3) return cross(self[0], self[1], self[2]);  // short-cut
+  if (num() == 3) return cross(self[0], self[1], self[2]);  // A short-cut.
   assertx(num() >= 3);
   Vector nor{};
   for_intL(i, 1, num() - 1) nor += cross(self[0], self[i], self[i + 1]);
@@ -123,7 +123,7 @@ int cmp_inter(const Point& p1, const Point& p2, const Vector& vint) {
 
 Vector get_vint(const Vector& polynor, const Vector& planenor) {
   Vector vint = cross(polynor, planenor);
-  // was 'if (!...) return', then was assertx
+  // Was 'if (!...) return', then was assertx.
   if (!vint.normalize()) vint[0] = 1.f;
   vector_standard_direction(vint);
   return vint;
@@ -133,7 +133,7 @@ Vector get_vint(const Vector& polynor, const Vector& planenor) {
 
 void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_normal, float plane_d, float plane_tol,
                               Array<Point>& pa) const {
-  // See example use in Filtera3d.cpp:compute_intersect()
+  // See example use in Filtera3d.cpp:compute_intersect().
   assertx(num() >= 3);
   const auto& self = *this;
   PArray<float, 8> sa(num());
@@ -143,7 +143,7 @@ void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_nor
     sa[i] = sc;
   }
   float sp = 0.f;
-  // make points lying in plane fall off to the side using propagation
+  // Make points lying in the plane fall off to the side using propagation.
   {
     int i0 = 0;
     for_int(i, 2 * num()) {
@@ -155,7 +155,7 @@ void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_nor
     }
   }
   pa.init(0);
-  if (!sp) return;  // polygon lies in plane
+  if (!sp) return;  // The polygon lies in the plane.
   for_int(i, num()) {
     assertx(sa[i]);
     const int i0 = i;
@@ -209,7 +209,7 @@ Array<Point> intersect_poly_poly(const Polygon& p1, const Polygon& p2) {
     if (in != wasin) {
       pa.push(*cp);
       const unsigned pn = pa.num();  // Unsigned to avoid -Werror=strict-overflow.
-      if (!in && std::is_eq(compare(pa[pn - 2], pa[pn - 1], 1e-6f))) pa.sub(2);  // remove zero-length segment
+      if (!in && std::is_eq(compare(pa[pn - 2], pa[pn - 1], 1e-6f))) pa.sub(2);  // Remove the zero-length segment.
     }
     wasin = in;
   }

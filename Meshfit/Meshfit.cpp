@@ -51,11 +51,11 @@ auto gather_vertex_ring(const GMesh& mesh, Vertex v) {
 auto gather_edge_ring(const GMesh& mesh, Edge e) {
   Array<const Point*> wa;
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-  // current Mesh implementation boundary Edge direction
+  // Current Mesh implementation boundary Edge direction.
   if (mesh.is_boundary(e)) assertx(mesh.most_clw_vertex(v2) != v1);
-  Vertex cv = v2;  // current vertex for rotation
+  Vertex cv = v2;  // Current vertex for rotation.
   if (!mesh.is_boundary(e) && mesh.is_boundary(v1)) cv = v1;
-  Vertex ov = mesh.opp_vertex(cv, e);  // other vertex of rotation (v1 or v2)
+  Vertex ov = mesh.opp_vertex(cv, e);  // Other vertex of rotation (v1 or v2).
   Vertex w = mesh.most_clw_vertex(cv);
   if (w == ov) w = mesh.clw_vertex(cv, w), assertx(!mesh.is_boundary(cv));
   Vertex wf = assertx(w);
@@ -109,7 +109,7 @@ class DataPts {
   void ok() const;
   Array<Point> co;
   Array<Face> cmf;
-  Array<Point> clp;  // clp[i] only defined if cmf[i]
+  Array<Point> clp;  // Here, clp[i] is only defined if cmf[i].
 };
 
 using SetInt = Set<int>;
@@ -123,7 +123,7 @@ float spring = 0.f;
 float spbf = 1.f;
 float dihfac = 0.f;
 float dihpower = 3.f;
-int restrictfproject = 0;  // 0=never, 1=first_iter, 2=always
+int restrictfproject = 0;  // 0 = never, 1 = first_iter, 2 = always.
 float fliter = 1.f;
 float crep = 1e-5f;
 float crbf = 3.f;
@@ -133,8 +133,8 @@ int verb = 1;
 float feswaasym = .01f;
 
 WSA3dStream oa3d{std::cout};
-const int sdebug = getenv_int("MESHFIT_DEBUG");  // 0, 1, or 2
-Frame xform;                                     // original mesh + pts -> mesh + pts in unit cube
+const int sdebug = getenv_int("MESHFIT_DEBUG");  // 0, 1, or 2.
+Frame xform;                                     // Original mesh + pts -> mesh + pts in the unit cube.
 Frame xform_inverse;
 enum EOperation { OP_ecol, OP_espl, OP_eswa, OP_NUM };
 const Vec<string, OP_NUM> op_name = {"ecol", "espl", "eswa"};
@@ -147,8 +147,8 @@ struct S_op_stat {
   int notswaps;
 } op_stat;
 
-constexpr float k_gim_diagonal_factor = 1.0f;  // was 1.1f
-constexpr bool k_simp96 = true;                // improvements
+constexpr float k_gim_diagonal_factor = 1.0f;  // Was 1.1f.
+constexpr bool k_simp96 = true;                // Improvements.
 constexpr float k_mincos = -1.f / 3.f;         // acos(109.471) == tetrahedron angle
 constexpr auto k_spring_sched = V(1e-2f, 1e-3f, 1e-4f, 1e-8f);
 constexpr int k_max_gfit_iter = 30;
@@ -228,7 +228,7 @@ Vertex edge_face_opp_vertex(Edge e, Face f) {
 
 float edge_dihedral_energy(const Point& p1, const Point& p2, const Point& ps1, const Point& ps2) {
   const float angcos = dihedral_angle_cos(p1, p2, ps1, ps2);
-  // ang is the unsigned angle away from planarity (range 0 .. TAU / 2)
+  // Here, ang is the unsigned angle away from planarity (range 0 .. TAU / 2).
   const float ang = angcos < -1.f ? TAU / 2 : std::acos(angcos);
   HH_SSTAT(Sang, ang);
   return pow(ang, dihpower) * dihfac;
@@ -299,7 +299,7 @@ void point_change_face(int i, Face newf) {
   if (newf) f_setpts(newf).enter(i);
 }
 
-// Make face's points project nowhere and remove from pt
+// Make the face's points project nowhere and remove them from pt.
 void remove_face(Face f) {
   const Set<int>& set = f_setpts(f);
   while (!set.empty()) point_change_face(set.get_one(), nullptr);
@@ -399,7 +399,7 @@ void global_project_aux() {
       Array<Face> ar_face(pt.co.num());
       Array<Point> ar_clp(pt.co.num());
       parallel_for(range(pt.co.num()), [&](const int i) {
-        Face hint_f = pt.cmf[i];  // different semantics now
+        Face hint_f = pt.cmf[i];  // Different semantics now.
         const auto [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
         ar_face[i] = f;
         ar_clp[i] = clp;
@@ -508,8 +508,8 @@ void do_filename(Args& args) {
 
 void perhaps_initialize() {
   assertx(pt.co.num() && !mesh.empty());
-  assertw(spring > 0);    // just warn user
-  if (pt.cmf[0]) return;  // already initialized
+  assertw(spring > 0);    // Just warn the user.
+  if (pt.cmf[0]) return;  // Already initialized.
   compute_xform();
   initial_projection();
 }
@@ -542,7 +542,7 @@ void global_fit() {
   if (verb >= 2) showf("GlobalFit: about to solve a %dx%d Lls system\n", m, n);
   SparseLls lls(m, n, 3);
   lls.set_max_iter(200);
-  // Add point constraints
+  // Add point constraints.
   for_int(i, pt.co.num()) {
     Face cmf = assertx(pt.cmf[i]);
     const Vec3<Vertex> va = mesh.triangle_vertices(cmf);
@@ -551,7 +551,7 @@ void global_fit() {
     for_int(j, 3) lls.enter_a_rc(i, mvi.get(va[j]), bary[j]);
     lls.enter_b_r(i, pt.co[i]);
   }
-  // Add spring constraints
+  // Add spring constraints.
   if (spring) {
     const float sqrtit = sqrt(spring), sqrtbt = sqrt(spring * spbf);
     Vector vzero(0.f, 0.f, 0.f);
@@ -565,11 +565,11 @@ void global_fit() {
     }
     assertx(ri == lls.num_rows());
   }
-  // Suggest current solution
+  // Suggest the current solution.
   for_int(i, n) lls.enter_xest_r(i, mesh.point(gva[i]));
-  // Solve
+  // Solve.
   assertx(lls.solve());
-  // Update solution
+  // Update the solution.
   for_int(i, n) {
     Point p;
     lls.get_x_r(i, p);
@@ -584,7 +584,7 @@ void do_gfit(Args& args) {
   assertw(!dihfac);
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning gfit, %d iterations, spr=%g\n", niter, spring);
-  // constant simplicial complex
+  // Constant simplicial complex.
   double etot = show_energies(verb >= 2 ? "init   " : "");
   int i;
   for (i = 0; !niter || i < niter;) {
@@ -630,9 +630,9 @@ void do_fgfit(Args& args) {
   if (verb >= 1) showdf("Beginning fgfit, %d iterations, spr=%g dihfac=%g\n", niter, spring, dihfac);
   // Evaluation objective for nonlinear optimization.
   struct EvalGrad {
-    Map<Vertex, int> _mvi;  // vertex -> index in _x
-    Array<Vertex> _iv;      // index -> mesh vertex
-    Array<double> _x;       // linearized unknown vertex coordinates
+    Map<Vertex, int> _mvi;  // Maps vertex -> index in _x.
+    Array<Vertex> _iv;      // Maps index -> mesh vertex.
+    Array<double> _x;       // Linearized unknown vertex coordinates.
     int _iter{0};
     int _niter;
     double _etot{0.};
@@ -667,7 +667,7 @@ void do_fgfit(Args& args) {
         global_project();
       }
     }
-    double feval(ArrayView<double> ret_grad) {  // evaluate function and its gradient
+    double feval(ArrayView<double> ret_grad) {  // Evaluate the function and its gradient.
       assertx(ret_grad.num() == _iv.num() * 3);
       HH_STIMER("__feval");
       // Only for the first iteration (because the mesh varies wildly),
@@ -686,7 +686,7 @@ void do_fgfit(Args& args) {
       if (0) assertw(echange < 0.);
       // Compute gradient.
       fill(ret_grad, 0.);
-      // D edis
+      // D edis.
       Array<Vertex> va;
       for_int(i, pt.co.num()) {
         mesh.get_vertices(pt.cmf[i], va);
@@ -704,7 +704,7 @@ void do_fgfit(Args& args) {
           for_int(c, 3) ret_grad[vi * 3 + c] += vd[c];
         }
       }
-      // D espr
+      // D espr.
       if (spring) {
         for (Vertex v : mesh.vertices()) {
           bool present;
@@ -758,9 +758,9 @@ class UPointLls {
   explicit UPointLls(Point& p) : _p(p) {}
   void enter_spring(const Point& pother, float sqrt_tension);
   // Constraint between point pdata and the point on triangle (p, p1, p2)
-  // with barycentric coordinates (1-param1-param2, param1, param2)
+  // with barycentric coordinates (1-param1-param2, param1, param2).
   void enter_projection(const Point& pdata, const Point& p1, const Point& p2, float param1, float param2);
-  void solve(double* prss0, double* prss1);  // updates point p!
+  void solve(double* prss0, double* prss1);  // Updates point p!
  private:
   Point& _p;
   Vec3<double> _vUtU{0., 0., 0.};
@@ -822,7 +822,7 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
     for (;;) {
       const int tmini = arg_min(ar_d2);
       const float tmind2 = ar_d2[tmini];
-      if (tmind2 == BIGFLOAT) break;  // ok, no more triangles to consider
+      if (tmind2 == BIGFLOAT) break;  // OK, no more triangles to consider.
       if (tmind2 >= mind2) break;
       ar_d2[tmini] = BIGFLOAT;
       Face f = ar_faces[tmini];
@@ -851,11 +851,11 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
 //  * Return:
 // newp: the final fitted position
 // rss0: energy after first projection (true)
-// rss1: energy after final refit, before final reprojection (over-estimate)
+// rss1: energy after final refit, before final reprojection (over-estimate).
 void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, Point& newp, double& prss0,
                double& prss1) {
   const int nw = wa.num();
-  assertx(nw > 1 && niter > 0);  // at least one face
+  assertx(nw > 1 && niter > 0);  // At least one face.
   const bool closed = wa[0] == wa[nw - 1];
   const float sqrtit = sqrt(spring), sqrtbt = sqrt(spring * spbf);
   double rss1;
@@ -882,7 +882,7 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
       for (;;) {
         const int tmini = arg_min(ar_d2);
         const float tmind2 = ar_d2[tmini];
-        if (tmind2 == BIGFLOAT) break;  // ok, no more triangles to consider
+        if (tmind2 == BIGFLOAT) break;  // OK, no more triangles to consider.
         if (tmind2 >= mind2) break;
         ar_d2[tmini] = BIGFLOAT;
         const auto [d2, bary, _] = project_point_triangle(p, newp, *wa[tmini], *wa[tmini + 1]);
@@ -926,7 +926,7 @@ void fit_ring(Vertex v, int niter) {
   double rss0, rss1;
   local_fit(ar_pts, wa, niter, newp, rss0, rss1);
   const float mina = min_local_dihedral(wa, newp);
-  if (mina < k_mincos && mina < minb) return;  // change disallowed
+  if (mina < k_mincos && mina < minb) return;  // Change disallowed.
   mesh.set_point(v, newp);
   reproject_locally(ar_pts, ar_faces);
 }
@@ -953,18 +953,18 @@ void do_lfit(Args& args) {
 }
 
 void do_four1split() {
-  // Currently loses edge flags and face strings
+  // Currently loses edge flags and face strings.
   perhaps_initialize();
   HH_TIMER("_four1split");
   const Array<Face> arf(mesh.faces());
-  Map<Edge, Vertex> menewv;  // old Edge -> Vertex
-  // Create new vertices and compute their positions
+  Map<Edge, Vertex> menewv;  // Maps old Edge -> Vertex.
+  // Create new vertices and compute their positions.
   for (Edge e : Array(mesh.edges())) {
     Vertex v = mesh.create_vertex();
     menewv.enter(e, v);
     mesh.set_point(v, interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e))));
   }
-  // Subdivide faces and update projections
+  // Subdivide faces and update projections.
   Array<Vertex> va;
   Vec3<Vertex> vs;
   for (Face f : arf) {
@@ -1015,13 +1015,13 @@ void do_pclp() {
 }
 
 void do_record() {
-  // xform not undone!
+  // Here, xform is not undone!
   mesh.record_changes(&std::cout);
   nooutput = true;
 }
 
 void do_spawn(Args& args) {
-  // xform not undone!
+  // Here, xform is not undone!
   file_spawn.emplace(args.get_filename());
   mesh.write((*file_spawn)());
   mesh.record_changes(&(*file_spawn)());
@@ -1044,12 +1044,12 @@ int vertex_num_sharp_edges(Vertex v) {
 
 EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   HH_STIMER("__try_ecol");
-  if (!mesh.nice_edge_collapse(e)) return R_illegal;  // not a legal move
+  if (!mesh.nice_edge_collapse(e)) return R_illegal;  // Not a legal move.
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);
-  // Also see additional restrictions on minii below based on eflag_sharp
+  // Also see additional restrictions on minii below, based on eflag_sharp.
   if (!k_simp96) {
-    // ignore sharp edges
+    // Ignore sharp edges.
   } else if (!edge_sharp(e)) {
     if (vertex_num_sharp_edges(v1) >= 1 && vertex_num_sharp_edges(v2) >= 1) {
       if (verb >= 2) Warning("Edge collapse would offend sharp edges (a)");
@@ -1095,7 +1095,7 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   for_int(ii, 3) {
     if (k_simp96) {
       // Added these tests to prevent boundary/crease migration inwards
-      //  and to prevent corner migration
+      //  and to prevent corner migration.
       if (!edge_sharp(e)) {
         if (vertex_num_sharp_edges(v1) >= 1 && ii < 2) continue;
         if (vertex_num_sharp_edges(v2) >= 1 && ii > 0) continue;
@@ -1107,13 +1107,13 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
     Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
     if (k_simp96) {
       const float mina = min_local_dihedral(wa, newp);
-      if (mina < k_mincos && mina < minb) continue;  // change disallowed
+      if (mina < k_mincos && mina < minb) continue;  // Change disallowed.
     }
     double rss0, rss1;
     local_fit(ar_pts, wa, 1, newp, rss0, rss1);
     {
       const float mina = min_local_dihedral(wa, newp);
-      if (mina < k_mincos && mina < minb) continue;  // change disallowed
+      if (mina < k_mincos && mina < minb) continue;  // Change disallowed.
     }
     if (rss1 < minrss1) {
       minrss1 = rss1;
@@ -1121,20 +1121,20 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
       minp = newp;
     }
   }
-  if (minii < 0) return R_dih;  // no dihedrally admissible configuration
-  // Then, explore ni iterations from that chosen starting point
+  if (minii < 0) return R_dih;  // No dihedrally admissible configuration.
+  // Then, explore ni iterations from that chosen starting point.
   const float w1 = minii * .5f;
   if (ni) {
     double rss0;
     local_fit(ar_pts, wa, ni, minp, rss0, minrss1);
     const float mina = min_local_dihedral(wa, minp);
-    if (mina < k_mincos && mina < minb) return R_dih;  // change disallowed
+    if (mina < k_mincos && mina < minb) return R_dih;  // Change disallowed.
   }
   const double drss = minrss1 - rssf - (nbvb == 2 ? crbf : 1) * double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("ecol:", rssf, minrss1, drss);
-  if (drss >= 0.) return R_energy;  // energy function does not decrease
-  // ALL SYSTEMS GO
+  if (drss >= 0.) return R_energy;  // The energy function does not decrease.
+  // ALL SYSTEMS GO.
   HH_SSTAT(Sminii, minii == 1);
   HH_STIMER("__doecol");
   if (k_simp96) {
@@ -1154,8 +1154,8 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
     for (Edge ee : mesh.edges(v)) ecand.remove(ee);
   remove_face(f1);
   if (f2) remove_face(f2);
-  mesh.collapse_edge(e);  // v1 kept
-  // add about 12 to 16 edges
+  mesh.collapse_edge(e);  // Here, v1 is kept.
+  // Add about 12 to 16 edges.
   for (Edge ee : mesh.edges(v1)) ecand.add(ee);
   for (Face f : mesh.faces(v1)) ecand.add(mesh.opp_edge(v1, f));
   if (sdebug >= 2) assertx(mesh.is_nice());
@@ -1167,7 +1167,7 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
 
 EResult try_espl(Edge e, int ni, int nri, float& edrss) {
   HH_STIMER("__try_espl");
-  // always legal
+  // Always legal.
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);
   Array<const Point*> wa{&mesh.point(v2), &mesh.point(vo1), &mesh.point(v1)};
@@ -1181,21 +1181,21 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
   double rss0, rss1;
   local_fit(ar_pts, wa, (ni ? ni : 1), newp, rss0, rss1);
   const float mina = min_local_dihedral(wa, newp);
-  if (mina < k_mincos && mina < minb) return R_dih;  // change disallowed
+  if (mina < k_mincos && mina < minb) return R_dih;  // Change disallowed.
   const double drss = rss1 - rssf + (vo2 ? 1.f : crbf) * double(crep);
   edrss = float(drss);
   if (verb >= 4) SHOW("espl:", rssf, rss1, drss);
-  if (drss >= 0.) return R_energy;  // energy function does not decrease
-  // ALL SYSTEMS GO
+  if (drss >= 0.) return R_energy;  // The energy function does not decrease.
+  // ALL SYSTEMS GO.
   HH_STIMER("__doespl");
   for (Face f : mesh.faces(e))
-    for (Edge ee : mesh.edges(f))  // one duplication
+    for (Edge ee : mesh.edges(f))  // One duplication.
       ecand.remove(ee);
   Vertex v = mesh.split_edge(e);
   mesh.set_point(v, newp);
-  // add 8 edges (5 if boundary)
+  // Add 8 edges (5 if boundary).
   for (Face f : mesh.faces(v))
-    for (Edge ee : mesh.edges(f))  // four duplications
+    for (Edge ee : mesh.edges(f))  // Four duplications.
       ecand.add(ee);
   // Since ar_pts project onto f1 + f2 (which are still there), it is easy to update the projections:
   fit_ring(v, 2);
@@ -1239,7 +1239,7 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
   double rss0, rss1;
   local_fit(ar_pts, wa, (ni ? ni : 1), newp, rss0, rss1);
   const float mina = min_local_dihedral(wa, newp);
-  if (mina < k_mincos && mina < minb) return R_dih;  // change disallowed
+  if (mina < k_mincos && mina < minb) return R_dih;  // Change disallowed.
   const double drss = rss1 - rssf + crep * feswaasym;
   edrss = float(drss);
   if (verb >= 4) SHOW("eswa:", rssf, rss1, drss);
@@ -1247,23 +1247,23 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
   const char* finfo1 = mesh.get_string(f1);
   const char* finfo2 = mesh.get_string(f2);
   if (!k_simp96) {
-    // ignore face strings
+    // Ignore face strings.
   } else if (!finfo1 && !finfo2) {
-    // ok, no face info to worry about
+    // OK, no face info to worry about.
   } else if (finfo1 && finfo2 && !strcmp(finfo1, finfo2)) {
-    // ok, they match
+    // OK, they match.
   } else {
     if (verb >= 2) Warning("Edge swap would lose face info");
     return R_illegal;
   }
-  // ALL SYSTEMS GO
+  // ALL SYSTEMS GO.
   HH_STIMER("__doeswa");
   ecand.remove(e);
   remove_face(f1);
   remove_face(f2);
   Edge enew = assertx(mesh.swap_edge(e));
   mesh.set_point(vo1, newp);
-  // add about 9 edges
+  // Add about 9 edges.
   ecand.add(mesh.edge(vo2, v1));
   ecand.add(mesh.edge(vo2, v2));
   for (Edge ee : mesh.edges(vo1)) ecand.add(ee);
@@ -1285,7 +1285,7 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
 
 EResult try_eswa(Edge e, int ni, int nri, float& edrss) {
   HH_STIMER("__try_eswa");
-  if (!mesh.legal_edge_swap(e)) return R_illegal;  // not legal move
+  if (!mesh.legal_edge_swap(e)) return R_illegal;  // Not a legal move.
   if (k_simp96 && edge_sharp(e)) {
     if (verb >= 2) Warning("Not swapping sharp edges");
     return R_illegal;
@@ -1293,11 +1293,11 @@ EResult try_eswa(Edge e, int ni, int nri, float& edrss) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   Face f1 = mesh.face1(e), f2 = mesh.face2(e);
   Vertex vo1 = mesh.side_vertex1(e), vo2 = mesh.side_vertex2(e);
-  // Compare angles immediately before and after swap
+  // Compare angles immediately before and after the swap.
   const float minb = edge_dihedral_angle_cos(mesh, e);
   const float mina = dihedral_angle_cos(mesh.point(vo1), mesh.point(vo2), mesh.point(v1), mesh.point(v2));
   if (mina < k_mincos && mina < minb) return R_dih;
-  // Will try both cases, but randomly select which one to try first
+  // Will try both cases, but randomly select which one to try first.
   EResult result;
   if (Random::G.get_unsigned(2)) {
     result = check_half_eswa(e, vo1, v1, vo2, v2, f2, f1, ni, nri, edrss);
@@ -1349,7 +1349,7 @@ void do_stoc() {
       op = OP_ecol;
       result = try_op(e, op, edrss);
     }
-    // do not try edge_splits under zippysimplify
+    // Do not try edge_splits under zippysimplify.
     if (result != R_success && fliter) {
       op = OP_espl;
       result = try_op(e, op, edrss);

@@ -22,18 +22,18 @@ class ScGeomorph : noncopyable {
 
   SimplicialComplex K;
 
-  // positions
+  // Positions.
   Array<Point> vold;
   Array<Point> vnew;
 
-  // areas
+  // Areas.
   Map<Simplex, float> anew;
   Map<Simplex, float> aold;
 
-  // materials
+  // Materials.
   Map<Simplex, int> mold;
 
-  // normals
+  // Normals.
   Array<Vector> nold;
   Array<Vector> nnew;
 

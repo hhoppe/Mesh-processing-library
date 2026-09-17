@@ -91,8 +91,8 @@ void do_nostdin() {}
 void do_create(Args& args) {
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx > 0 && ny > 0);
-  image.init(V(ny, nx), gcolor);  // white by default
-                                  // image.set_suffix() is left unspecified
+  image.init(V(ny, nx), gcolor);  // White by default.
+  // The image.set_suffix() is left unspecified.
 }
 
 // Remove quantization kinks.
@@ -101,7 +101,7 @@ inline float get_pixel_value(const Vec2<int>& yx) {
   return !rg_elev ? image[yx][0] : image[yx][0] * 256.f + image[yx][1];
 }
 
-// returns 0.f .. 255.f  or 0.f .. 16383.f
+// Returns 0.f .. 255.f  or 0.f .. 16383.f.
 float get_filtered_pixel_value(const Vec2<int>& yxc) {
   assertx(image.zsize() == (1 + 2 * (rg_elev ? 1 : 0)));
   const float valc = get_pixel_value(yxc);
@@ -253,7 +253,7 @@ void do_tomesh() {
   mesh.write(std::cout);
   std::cout.flush();
   nooutput = true;
-  if (0) exit(0);  // avoid GMesh::~GMesh for speed
+  if (0) exit(0);  // Avoid GMesh::~GMesh for speed.
 }
 
 void do_tofloats(Args& args) {
@@ -600,12 +600,12 @@ void do_tops() {
   assertx(image.zsize() == 1 || image.zsize() == 3);
   const int cy = image.ysize(), cx = image.xsize(), cz = image.zsize();
   const bool is_jpg = image.suffix() == "jpg";
-  // 6inch square centered on page at 4.25, 5.5in
+  // A 6-inch square centered on the page at 4.25, 5.5 inches.
   int x1, x2, y1, y2;
   {
     const float aspectx = cx > cy ? 1.f : float(cx) / cy;
     const float aspecty = cy > cx ? 1.f : float(cy) / cx;
-    const float radius = 3.f;  // 3 inches
+    const float radius = 3.f;  // 3 inches.
     x1 = int(4.25f * 72.f - aspectx * radius * 72.f + .5f);
     x2 = int(4.25f * 72.f + aspectx * radius * 72.f + .5f);
     y1 = int(5.50f * 72.f - aspecty * radius * 72.f + .5f);
@@ -642,7 +642,7 @@ void do_tops() {
     std::cout << sform(" /Decode [0 1 0 1 0 1]\n");
     // std::cout << sform(" /ImageMatrix [%d 0 0 %d 0 0]\n", cx, cy);
     std::cout << sform(" /ImageMatrix [%d 0 0 %d 0 %d]\n", cx, -cy, cy);
-    // could use /ASCII85Decode instead
+    // Could use /ASCII85Decode instead.
     std::cout << sform(" /DataSource currentfile /ASCIIHexDecode filter\n");
     std::cout << sform("   <</Relax 1>> /DCTDecode filter\n");
     std::cout << sform(">>\n");
@@ -727,10 +727,10 @@ void do_rotate(Args& args) {
   if (ang == iang && my_mod(iang, 90) == 0 && abs(iang) <= 270) {
     image = rotate_ccw(image, iang);
   } else {
-    // backward map from new image to old image (but y, x reversed)
+    // Backward map from the new image to the old image (but y, x reversed).
     const Frame frame_rotation = Frame::rotation(2, -rad_from_deg(ang));
     Frame frame;
-    if (0) {  // anisometric rotation if image is rectangle rather than square!
+    if (0) {  // Anisometric rotation if the image is a rectangle rather than a square!
       frame = frame_rotation;
     } else {  // rigid rotation
       const float vmin = float(min(image.dims()));
@@ -781,14 +781,14 @@ void do_blur(Args& args) {
   //  old  (_blur:                  32.00  x8.0     32.83)
   //  new  (_blur:                   0.50  x7.2      0.54)
   HH_TIMER("_blur");
-  const float sdv_pixels = args.get_float();  // 1sdv in pixels
+  const float sdv_pixels = args.get_float();  // One sdv, in pixels.
   const float nsvd = 2.5f;
-  const int r = int(nsvd * sdv_pixels + .5f);  // window radius
-  Array<float> ar_gauss(2 * r + 1);            // cached Gaussian weights
+  const int r = int(nsvd * sdv_pixels + .5f);  // Window radius.
+  Array<float> ar_gauss(2 * r + 1);            // Cached Gaussian weights.
   for_int(i, 2 * r + 1) ar_gauss[i] = gaussian(float(i) - r, sdv_pixels);
   // SHOW(ar_gauss);
   if (0) {
-    {  // normalize the 1D weights such that 2D tensor sums to 1 over discrete 2D window
+    {  // Normalize the 1D weights so that the 2D tensor sums to 1 over the discrete 2D window.
       double sum = 0.;
       for_intL(dy, -r, r + 1) for_intL(dx, -r, r + 1) sum += ar_gauss[dy + r] * ar_gauss[dx + r];
       for_int(i, 2 * r + 1) {
@@ -858,7 +858,7 @@ void apply_assemble_operations(Grid<2, Pixel>& im, const Vec2<int>& yx, const Ve
 void assemble_images(CMatrixView<Image> images) {
   for (const auto& yx : range(images.dims())) assertx(images[yx].zsize() == images[0, 0].zsize());
   image.init(V(0, 0));
-  image.set_zsize(images[0, 0].zsize());  // attributes copied outside this function
+  image.set_zsize(images[0, 0].zsize());  // Attributes are copied outside this function.
   image = assemble(images, gcolor);
 }
 
@@ -949,7 +949,7 @@ void do_invideo(Args& args) {
     if (!wvideo) wvideo.emplace("-", image.dims(), rvideo.attrib());
     wvideo->write(image);
   }
-  while (args.num()) args.get_string();  // discard already parsed arguments
+  while (args.num()) args.get_string();  // Discard already parsed arguments.
   nooutput = true;
 }
 
@@ -1075,7 +1075,7 @@ void do_undoalpha() {
     // Composite any transparent color above current gcolor.  Assume premultiplied alpha.
     parallel_for_coords({.cycles_per_elem = 30}, image.dims(), [&](const Vec2<int>& yx) {
       for_int(z, 3) {
-        // C_new = C_f * alpha_f + C_b * alpha_b * (1 - alpha_f)
+        // C_new = C_f * alpha_f + C_b * alpha_b * (1 - alpha_f).
         image[yx][z] = clamp_to_uint8(int(image[yx][z] + (1.f - image[yx][3] / 255.f) * gcolor[z]));
       }
     });
@@ -1161,7 +1161,7 @@ template <int D> void quad_pullpush(GridView<D, Pixel> grid) {
       hgrid[hu][3] = 0;
     }
   }
-  quad_pullpush(hgrid);  // recursive call
+  quad_pullpush(hgrid);  // A recursive call.
   ASSERTX(count_undef(hgrid) == 0);
   for (const auto& hu : range(hgrid.dims())) {
     for (const auto& ud : range(ntimes<D>(2))) {
@@ -1170,14 +1170,14 @@ template <int D> void quad_pullpush(GridView<D, Pixel> grid) {
       Pixel& pixel = grid[u];
       if (pixel[3]) continue;
       pixel = hgrid[hu];
-      ASSERTX(pixel[3] != 0);  // now defined
+      ASSERTX(pixel[3] != 0);  // Now defined.
     }
   }
 }
 
 // Filterimage ~/data/image/texture256.input.png -color 255 0 0 255 -info -quadpullpush -info | imgv
 void do_quadpullpush() {
-  assertx(image.zsize() == 3);  // no alpha
+  assertx(image.zsize() == 3);  // No alpha.
   for (const auto& yx : range(image.dims())) {
     const bool is_undef = rgb_equal(image[yx], gcolor) ^ g_not;
     image[yx][3] = is_undef ? 0 : 255;
@@ -1185,7 +1185,7 @@ void do_quadpullpush() {
   const int64_t num_undef = count_undef(image);
   showf("quadpullpush: filling in %d undefined pixels\n", assert_narrow_cast<int>(num_undef));
   quad_pullpush(image);
-  assertx(count_undef(image) == 0);  // optional
+  assertx(count_undef(image) == 0);  // Optional.
 }
 
 // *** softpullpush
@@ -1214,16 +1214,16 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
   }
   const bool primal = false;
   if (grid.size() == 1) {
-    assertx(grid[ntimes<D>(0)][3] > 0.f);  // at least one defined value in grid
+    assertx(grid[ntimes<D>(0)][3] > 0.f);  // At least one defined value in the grid.
     return;
   }
   const Vector4 vzero(0.f);
   const Vec<int, D> dims = grid.dims();
   const Vec<int, D> hdims = (dims + 1) / 2;
-  Grid<D, Vector4> hgrid;  // half-resolution grid
-  {                        // pull step
-    // clamp weights prior to downscaling
-    for (const auto& u : range(dims)) grid[u] *= 1.f / max(grid[u][3], 1.f);  // make weight at most 1.f
+  Grid<D, Vector4> hgrid;  // Half-resolution grid.
+  {                        // Pull step.
+    // Clamp weights prior to downscaling.
+    for (const auto& u : range(dims)) grid[u] *= 1.f / max(grid[u][3], 1.f);  // Make the weight at most 1.f.
     if (!primal) {
       // - This dual structure is better than original lumigraph pull-push when used over power-of-two grids
       //    because it doesn't shift the content off the right/bottom boundaries at coarse levels.
@@ -1235,8 +1235,8 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       //  the upscaling "triangle" kernel (with alternating weights (3 / 4, 1 / 4) and (1 / 4, 3 / 4)).
       // It introduces a little bit of undesirable ringing.  "box" has no ringing but inferior.
       const auto downscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));
-      hgrid = scale(grid2, hdims, downscaling_kernel, &vzero);  // spatially downscale
-      const float adjust_weight = pow(2.f, float(D));           // somewhat arbitrary
+      hgrid = scale(grid2, hdims, downscaling_kernel, &vzero);  // Spatially downscale.
+      const float adjust_weight = pow(2.f, float(D));           // Somewhat arbitrary.
       for (auto& e : hgrid) e *= adjust_weight;
     } else {
       // - Somehow the coarse-scale content is getting shifted right/bottom unlike in the original Lumigraph
@@ -1246,11 +1246,11 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
           crop(grid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Bndrule::border), &vzero);
       assertx(grid2.dims() % 2 == ntimes<D>(1));
       const auto downscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));
-      hgrid = scale_primal(grid2, (grid2.dims() - 1) / 2 + 1, downscaling_kernel, &vzero);  // spatially downscale
+      hgrid = scale_primal(grid2, (grid2.dims() - 1) / 2 + 1, downscaling_kernel, &vzero);  // Spatially downscale.
       if (0) SHOW(grid.dims(), grid2.dims(), hgrid.dims(), hdims, hgrid.dims() - hdims);
       if (hgrid.size() >= grid.size() || 0)
-        hgrid = crop(hgrid, ntimes<D>(0), hgrid.dims() - hdims);  // optionally crop extra
-      const float adjust_weight = .5f * pow(2.f, float(D));       // somewhat arbitrary
+        hgrid = crop(hgrid, ntimes<D>(0), hgrid.dims() - hdims);  // Optionally crop extra.
+      const float adjust_weight = .5f * pow(2.f, float(D));       // Somewhat arbitrary.
       for (auto& e : hgrid) e *= adjust_weight;
     }
   }
@@ -1260,28 +1260,28 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
   if (0) as_image(just_alpha(hgrid)).write_file(sform("hgridw.%03dx%03d.png", hgrid.xsize(), hgrid.ysize()));
 #endif
   new_pullpush(hgrid);
-  {  // push step
-    // clamp weights prior to upscaling
-    for (const auto& u : range(hdims)) hgrid[u] *= 1.f / max(hgrid[u][3], 1.f);  // make weight at most 1.f
+  {  // Push step.
+    // Clamp weights prior to upscaling.
+    for (const auto& u : range(hdims)) hgrid[u] *= 1.f / max(hgrid[u][3], 1.f);  // Make the weight at most 1.f.
     Grid<D, Vector4> gridu;
     if (!primal) {
       const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));  // bilinear
       // This bilinear prolongation has weights (3/4, 1/4) and (1/4, 3/4) on alternating entries.
-      gridu = scale(hgrid, hdims * 2, upscaling_kernel, &vzero);  // spatially upscale
-      gridu = crop(gridu, ntimes<D>(0), dims % 2);                // crop any extra expanded dimensions
+      gridu = scale(hgrid, hdims * 2, upscaling_kernel, &vzero);  // Spatially upscale.
+      gridu = crop(gridu, ntimes<D>(0), dims % 2);                // Crop any extra expanded dimensions.
     } else {
       const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));  // bilinear
-      // expand if original dimension was even
+      // Expand if the original dimension was even.
       const Grid<D, Vector4> grid2 =
           crop(hgrid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Bndrule::border), &vzero);
-      gridu = scale(grid2, (grid2.dims() - 1) * 2 + 1, upscaling_kernel, &vzero);  // spatially upscale
+      gridu = scale(grid2, (grid2.dims() - 1) * 2 + 1, upscaling_kernel, &vzero);  // Spatially upscale.
       if (0) SHOW(hgrid.dims(), grid2.dims(), gridu.dims(), grid.dims(), gridu.dims() - grid.dims());
-      gridu = crop(gridu, ntimes<D>(0), gridu.dims() - grid.dims());  // crop any extra
+      gridu = crop(gridu, ntimes<D>(0), gridu.dims() - grid.dims());  // Crop any extra.
     }
     assertx(gridu.dims() == grid.dims());
     for (const auto& u : range(dims)) {
       // composite grid over gridu == upsample(hgrid)
-      // C_new = C_f + (1 - alpha_f) * C_b
+      // C_new = C_f + (1 - alpha_f) * C_b.
       const float w = grid[u][3];
       grid[u] = grid[u] + (1.f - w) * gridu[u];
     }
@@ -1325,10 +1325,10 @@ void do_voronoidilate() {
   }
   showf("voronoidilate: filling in %d undefined pixels\n", num_undef);
   euclidean_distance_map(mvec);
-  // Fill in unfilled pixels
+  // Fill in unfilled pixels.
   for (const auto& yx : range(image.dims())) {
     if (is_zero(mvec[yx])) continue;
-    assertx(mvec[yx][0] < image.ysize());  // no more large (undefined) values
+    assertx(mvec[yx][0] < image.ysize());  // No more large (undefined) values.
     HH_SSTAT(Svoronoidist, mag<float>(mvec[yx]));
     image[yx] = image[yx + mvec[yx]];
   }
@@ -1343,7 +1343,7 @@ void do_featureoffsets() {
   }
   euclidean_distance_map(mvec);
   for (const auto& yx : range(image.dims())) {
-    assertx(mvec[yx][0] < image.ysize());  // no more large (undefined) values
+    assertx(mvec[yx][0] < image.ysize());  // No more large (undefined) values.
     HH_SSTAT(Svoronoidist, mag<float>(mvec[yx]));
     if (1) {
       for_int(c, 2) {
@@ -1372,7 +1372,7 @@ void do_featureoffsets() {
 }
 
 void do_normalizenor() {
-  assertx(image.zsize() == 3);  // no alpha
+  assertx(image.zsize() == 3);  // No alpha.
   for (const auto& yx : range(image.dims())) {
     Pixel& pixel = image[yx];
     Vector v = convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f;
@@ -1384,7 +1384,7 @@ void do_normalizenor() {
 void do_shadenor(Args& args) {
   Vector lightdir;
   for_int(c, 3) lightdir[c] = args.get_float();
-  assertx(image.zsize() == 3);  // no alpha
+  assertx(image.zsize() == 3);  // No alpha.
   const bool twolights = getenv_bool("G3D_TWOLIGHTS");
   for (const auto& yx : range(image.dims())) {
     Pixel& pixel = image[yx];
@@ -1402,11 +1402,11 @@ void do_shadenor(Args& args) {
 
 void do_shadefancy(Args& args) {
   const Frame frame = FrameIO::parse_frame(args.get_string());
-  assertx(image.zsize() == 3);  // no alpha
-  Array<Vector> ld;             // direction
-  Array<Vector> lc;             // color
-  Array<float> li;              // intensity
-  Array<float> ls;              // specularity
+  assertx(image.zsize() == 3);  // No alpha.
+  Array<Vector> ld;             // Direction.
+  Array<Vector> lc;             // Color.
+  Array<float> li;              // Intensity.
+  Array<float> ls;              // Specularity.
   // G3dOGL: const Vector lightdireye(-1.f, -.6f, .3f);
   ld.push(Vector(-1.f, -.6f, +.3f));
   lc.push(Vector(1.f, 1.f, 1.f));
@@ -1640,7 +1640,7 @@ void do_cycle(Args& args) {
   assertx(ncycle > 0);
   // const int low = 40, high = 190, offset = low, vrange = high - low;
   const int low = 0, high = 255, offset = low, vrange = high - low;
-  // use "-cycle 5" to see all the detail.
+  // Use "-cycle 5" to see all the detail.
   const int term = vrange / ncycle;
   for (const auto& yx : range(image.dims()))
     for_int(z, image.zsize()) image[yx][z] = uint8_t(offset + (image[yx][z] % ncycle) * term);
@@ -1664,9 +1664,9 @@ void do_composite(Args& args) {
 #define E(x)    \
   ops.push(#x); \
   const int Op_##x = ops.num() - 1
-  E(blend);  // weight
+  E(blend);  // Weight.
   E(special);
-  E(shlomo);  // weight
+  E(shlomo);  // Weight.
   E(min);
   E(max);
   E(sub);
@@ -1682,7 +1682,7 @@ void do_composite(Args& args) {
       const float vf = image[yx][z] / 255.f;
       const float vb = background_image[yx][z] / 255.f;
       float vr;
-      // cannot use "switch (op)" because Op_* are not compile-time constants.
+      // Cannot use "switch (op)" because Op_* are not compile-time constants.
       if (0) {
       } else if (op == Op_blend) {
         vr = vf * weight + vb * (1 - weight);
@@ -1693,7 +1693,7 @@ void do_composite(Args& args) {
       } else if (op == Op_shlomo) {
         // Shlomo formula:
         // f * lambda - f * lambda * m + b + lambda * m - lambda * b;
-        //  m is mask from blue channel f_blue
+        //  m is the mask from the blue channel f_blue.
         const float lambda = weight;
         const float vm = image[yx][2] / 255.f;
         vr = vf * lambda - vf * lambda * vm + vb + lambda * vm - lambda * vb;
@@ -1717,19 +1717,19 @@ void do_genpattern(Args& args) {
   const string pattern = args.get_string();
   for (const auto& yx : range(image.dims())) {
     const int y = yx[0], x = yx[1];
-    const char* s = pattern.c_str();  // inefficient re-parsing but OK.
+    const char* s = pattern.c_str();  // Inefficient re-parsing but OK.
     float v;
-    if (*s == 'B') {  // examine bilinear reconstruction for PL image
+    if (*s == 'B') {  // Examine bilinear reconstruction for a PL image.
       s++;
       const float xf = float(x) / (image.xsize() - 1.f);
       const float yf = float(y) / (image.ysize() - 1.f);
       switch (*s++) {
-        case 'd': {  // diagonal, black at (0, 0), (1, 1)
+        case 'd': {  // Diagonal, black at (0, 0), (1, 1).
           const float vA = 0.f, vB = 1.f, vC = 0.f, vD = 1.f;
           v = (1 - yf) * ((1 - xf) * vA + xf * vB) + (yf) * ((1 - xf) * vD + xf * vC);
           break;
         }
-        case '3': {  // only one white corner
+        case '3': {  // Only one white corner.
           const float vA = 1.f, vB = 0.f, vC = 0.f, vD = 0.f;
           v = (1 - yf) * ((1 - xf) * vA + xf * vB) + (yf) * ((1 - xf) * vD + xf * vC);
           break;
@@ -1741,10 +1741,10 @@ void do_genpattern(Args& args) {
       switch (*s++) {
         case 'x': r = float(x) / (image.xsize() - 1.f); break;
         case 'y': r = float(y) / (image.ysize() - 1.f); break;
-        case 'd':  // diagonal
+        case 'd':  // Diagonal.
           r = float(x + y) / (image.xsize() - 1.f + image.ysize() - 1.f);
           break;
-        case '2': {  // 20-degree diagonal
+        case '2': {  // A 20-degree diagonal.
           const float ang = 20.f * (TAU / 360);
           auto vrot = V(std::cos(ang), std::sin(ang));
           r = dot(V(y, x), vrot) / dot(convert<float>(image.dims() - 1), vrot);
@@ -1758,22 +1758,22 @@ void do_genpattern(Args& args) {
         }
         default: assertnever("error parsing genpattern name");
       }
-      while (*s == 'h') {  // hat
+      while (*s == 'h') {  // A hat.
         s++;
         r = r <= .5f ? r * 2.f : 1.f - (r - .5f) * 2.f;
       }
       switch (*s++) {
-        case 's':  // step
+        case 's':  // A step.
           v = r < .5f ? 0.f : 1.f;
           break;
-        case 'l':  // linear
+        case 'l':  // Linear.
           v = r;
           break;
-        case 'q':  // some quadratic
+        case 'q':  // Some quadratic.
           v = square(r);
           break;
-        case 'c':  // some cubic
-          // cubic is symmetric and has zero 1st derivatives at 0 and 1
+        case 'c':  // Some cubic.
+          // Cubic is symmetric and has zero first derivatives at 0 and 1.
           v = -2.f * r * r * r + 3.f * r * r;
           break;
         default: assertnever("error parsing genpattern name2");
@@ -1811,7 +1811,7 @@ void do_homogenize(Args& args) {
                                                : std::cos((x + 0.5) * k * (D_TAU / 2) / image.dim(c)));
     }
   }
-  if (image.zsize() < 4) {  // version without alpha-channel cropping
+  if (image.zsize() < 4) {  // Version without alpha-channel cropping.
     for_int(c, 2) for_int(k, n) normalize(table[c][k]);
     // The rms of 1, where x is in the range [0, 1], is 1 (whereas sdv is 0).
     // The rms of cos(k * x * TAU / 2) is 1 / sqrt(2) if k > 0,   or 1 if k == 0.
@@ -1822,7 +1822,7 @@ void do_homogenize(Args& args) {
       // TODO: Parallelize by allocating Matrix ar per-thread, and then summing them.
       for (const auto& yx : range(image.dims()))
         for_int(ky, n) for_int(kx, n) ar[ky, kx] += table[0][ky, yx[0]] * table[1][kx, yx[1]] * image[yx][z];
-      ar[0, 0] = 0.0;  // do not project out the DC term
+      ar[0, 0] = 0.0;  // Do not project out the DC term.
       parallel_for_coords({.cycles_per_elem = uint64_t(n * n) * 4}, image.dims(), [&](const Vec2<int>& yx) {
         const double oldval = image[yx][z];
         double fitval = 0.;
@@ -1834,7 +1834,7 @@ void do_homogenize(Args& args) {
   } else {  // version with alpha-channel cropping
     const bool modify_unselected_too = getenv_bool("MODIFY_UNSELECTED_TOO");
     for (const auto& yx : range(image.dims()))
-      assertx(image[yx][3] == 0 || image[yx][3] == 255);  // no fractional alpha values
+      assertx(image[yx][3] == 0 || image[yx][3] == 255);  // No fractional alpha values.
     // Derivation:
     //  We have  v = B * x  where rows of B are non-orthogonal,  bb = B * B^T
     //  Assume B^T = Q * R,  where columns of Q are orthogonal.
@@ -1855,14 +1855,14 @@ void do_homogenize(Args& args) {
     Matrix<double> bb(V(n2, n2), 0.);  // B * B^T
     {
       // TODO: Parallelize by allocating bb (and arw) per-thread, and then summing the bb.
-      Array<double> arw(n2);  // column of matrix B
+      Array<double> arw(n2);  // Column of matrix B.
       for (const auto& yx : range(image.dims())) {
         if (!image[yx][3]) continue;
         for_int(ky, n) for_int(kx, n) arw[ky * n + kx] = table[0][ky, yx[0]] * table[1][kx, yx[1]];
-        for_int(i, n2) for_int(j, i + 1) bb[i, j] += arw[i] * arw[j];  // sum into lower triangular matrix
+        for_int(i, n2) for_int(j, i + 1) bb[i, j] += arw[i] * arw[j];  // Sum into the lower triangular matrix.
       }
     }
-    for_int(i, n2) for_intL(j, i + 1, n2) bb[i, j] = bb[j, i];  // complete the symmetric matrix
+    for_int(i, n2) for_intL(j, i + 1, n2) bb[i, j] = bb[j, i];  // Complete the symmetric matrix.
     const Matrix<double> invbb = inverse(bb);                   // (B * B^T)^-1
     for_int(z, image.zsize()) {
       Array<double> bx(n2, 0.);  // B * x
@@ -1873,12 +1873,12 @@ void do_homogenize(Args& args) {
         for_int(ky, n) for_int(kx, n) bx[ky * n + kx] += table[0][ky, yx[0]] * table[1][kx, yx[1]] * v;
       }
       Array<double> arn = mat_mul(invbb, bx);  // (B * B^T)^-1 * B * x
-      double dc = bx[0] / bb[0, 0];            // DC term
+      double dc = bx[0] / bb[0, 0];            // The DC term.
       parallel_for_coords({.cycles_per_elem = uint64_t(n * n) * 3}, image.dims(), [&](const Vec2<int>& yx) {
         if (!image[yx][3] && !modify_unselected_too) return;
         double v = image[yx][z];
         for_int(ky, n) for_int(kx, n) v -= table[0][ky, yx[0]] * table[1][kx, yx[1]] * arn[ky * n + kx];
-        v += dc;  // reintroduce DC term
+        v += dc;  // Reintroduce the DC term.
         image[yx][z] = clamp_to_uint8(int(v + .5));
       });
     }
@@ -1901,7 +1901,7 @@ void do_superresolution(Args& args) {
   // Filterimage ~/data/image/misc/test1.png -superreso 4 | imgv
   const float fac = args.get_float();
   assertx(fac > 1.f && fac <= 32.f);
-  assertx(image.zsize() == 3);  // 3-channel RGB image
+  assertx(image.zsize() == 3);  // A 3-channel RGB image.
   const auto fb_bilinear2 = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected));
   // Precompute pixel luminance values (in range [0.f, 255.f]).
   Matrix<float> mlum(image.dims());
@@ -1926,17 +1926,17 @@ void do_superresolution(Args& args) {
     func_minmax(slum);
     // The next calls are highly unoptimized!  Ideally, the bounds checking should happen only once,
     //  and source samples should be reused between calls.
-    // 4 exact nearest pixels
+    // 4 exact nearest pixels.
     func_minmax(mlum.inside(iyx + V(0, 0), k_reflected2));
     func_minmax(mlum.inside(iyx + V(0, 1), k_reflected2));
     func_minmax(mlum.inside(iyx + V(1, 0), k_reflected2));
     func_minmax(mlum.inside(iyx + V(1, 1), k_reflected2));
-    // 4 bilinear samples
+    // 4 bilinear samples.
     func_minmax(sample_grid(mlum, fyx + V(-1.f, -1.f), fb_bilinear2));
     func_minmax(sample_grid(mlum, fyx + V(-1.f, +1.f), fb_bilinear2));
     func_minmax(sample_grid(mlum, fyx + V(+1.f, -1.f), fb_bilinear2));
     func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
-    // 8 linear samples (naively use expensive bilinear function)
+    // 8 linear samples (naively using the expensive bilinear function).
     func_minmax(sample_grid(mlum, fyx + V(-1.f, +0.f), fb_bilinear2));
     func_minmax(sample_grid(mlum, fyx + V(-1.f, +1.f), fb_bilinear2));
     func_minmax(sample_grid(mlum, fyx + V(+1.f, +0.f), fb_bilinear2));
@@ -1946,7 +1946,7 @@ void do_superresolution(Args& args) {
     func_minmax(sample_grid(mlum, fyx + V(+0.f, +1.f), fb_bilinear2));
     func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
     const float delta = lmax - lmin;
-    const float threshold = .1f * 255.f;  // 1e-20f is sharpest
+    const float threshold = .1f * 255.f;  // 1e-20f is sharpest.
     if (delta >= threshold) {
       const float lmid = (lmin + lmax) * .5f;
       const float C = 1.0f * 4.f;
@@ -1966,7 +1966,7 @@ void do_istoroidal() {
   for_int(dir, 2) {
     CMatrixView<Pixel> omatrix = image;
     Matrix<Pixel> matrix;
-    if (dir == 0) {  // Rows
+    if (dir == 0) {  // Rows.
       matrix = omatrix;
     } else {  // Columns
       matrix = transpose(omatrix);
@@ -2000,7 +2000,7 @@ void do_istoroidal() {
       else
         stat_bnd.enter(diff);
     }
-    for_intL(i1, 1, matrix.ysize() - 2) {  // compare last row against all but first, penultimate, or last
+    for_intL(i1, 1, matrix.ysize() - 2) {  // Compare the last row against all but first, penultimate, or last.
       const int i0 = matrix.ysize() - 1;
       const float diff = func_diff_rows(i1, i0);
       stat_rnd.enter(diff);
@@ -2028,7 +2028,7 @@ void do_gdtoroidal() {
     grid_orig[yx] = Vector4(image[yx]);
   });
   Multigrid<2, Vector4, MultigridPeriodicAll<2>> multigrid(image.dims());
-  if (0) {  // solve for color values
+  if (0) {  // Solve for color values.
     multigrid.initial_estimate().assign(grid_orig);
     // multigrid.set_original(grid_orig);
     multigrid.set_desired_mean(mean(grid_orig));
@@ -2060,7 +2060,7 @@ void do_gdtoroidal() {
       Vector4 vrhs{};
       for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
         auto yxn = yx + yxd;
-        if (grid_orig.ok(yxn)) continue;  // only consider neighbors across the periodic boundaries
+        if (grid_orig.ok(yxn)) continue;  // Only consider neighbors across the periodic boundaries.
         assertx(grid_orig.map_inside(yxn, bndrules));
         vrhs += grid_orig[yx] - grid_orig[yxn];
       }
@@ -2109,7 +2109,7 @@ void do_gdfill() {
   // e.g.: Filterimage ~/data/image/lake.png -setalpha 255 -color 0 0 0 0 -drawrect 30% 30% -30% -30% -gdfill | imgv
   // also:  Filterimage ~/data/image/misc/lake.masked.png -gdfill | imgv  (see ~/proj/skype/Notes.txt)
   HH_TIMER("_gdfill");
-  float screening_weight = 1e-5f;  // 0.f is fine too; 1e-4f has visible difference
+  float screening_weight = 1e-5f;  // 0.f is fine too; 1e-4f has a visible difference.
   assertx(image.zsize() == 4);
   Grid<2, Vector4> grid_orig(image.dims());
   parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) { grid_orig[yx] = Vector4(image[yx]); });
@@ -2123,7 +2123,7 @@ void do_gdfill() {
     if (masked(yx)) grid_orig[yx] = vmean;
   });
   Multigrid<2, Vector4> multigrid(image.dims());
-  if (0) {  // solve for color values
+  if (0) {  // Solve for color values.
     multigrid.initial_estimate().assign(grid_orig);
     multigrid.set_desired_mean(vmean);
     parallel_for_coords({.cycles_per_elem = 50}, image.dims(), [&](const Vec2<int>& yx) {
@@ -2151,11 +2151,11 @@ void do_gdfill() {
     });
     if (1) multigrid.set_verbose(true);
     multigrid.set_screening_weight(screening_weight);
-    multigrid.set_num_vcycles(1);  // default 5, then was 2
+    multigrid.set_num_vcycles(1);  // Default 5, then was 2.
     multigrid.solve();
     auto grid_result = multigrid.result();
     parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
-      image[yx] = grid_result[yx].pixel();  // alpha mask is overwritten with 1
+      image[yx] = grid_result[yx].pixel();  // The alpha mask is overwritten with 1.
     });
   } else {  // Instead solve for color offsets; rhs and residual are sparse.  TODO: Perhaps avoid storing residual.
     fill(multigrid.initial_estimate(), Vector4(0.f));
@@ -2178,7 +2178,7 @@ void do_gdfill() {
       image[yx] = (grid_orig[yx] + grid_result[yx]).pixel();  // (Alpha value is overwritten with 255.)
     });
   }
-  image.set_zsize(3);  // remove alpha channel
+  image.set_zsize(3);  // Remove the alpha channel.
 }
 
 void output_contour(int gridn, float contour_value) {
@@ -2186,7 +2186,7 @@ void output_contour(int gridn, float contour_value) {
   WSA3dStream wcontour(std::cout);
   // Pixels are at locations [ 0.5 / imagesize, (imagesize - .5) / imagesize ], consistent with sample_domain()
   Matrix<float> matrix(image.dims());
-  for (const auto& yx : range(image.dims())) matrix[yx] = float(image[yx][0]);  // red channel
+  for (const auto& yx : range(image.dims())) matrix[yx] = float(image[yx][0]);  // Red channel.
 
   Vec2<FilterBnd> filterbs = g_filterbs;
   if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution())
@@ -2205,8 +2205,8 @@ void output_contour(int gridn, float contour_value) {
   };
   Contour2D contour(gridn, func_eval, func_contour);
   contour.set_vertex_tolerance(.0001f);
-  for (const auto& yx : range(twice(gridn - 1)))                     // visit all contour cells
-    contour.march_from((convert<float>(yx) + 1.f) * (1.f / gridn));  // center of contour cell
+  for (const auto& yx : range(twice(gridn - 1)))                     // Visit all contour cells.
+    contour.march_from((convert<float>(yx) + 1.f) * (1.f / gridn));  // Center of the contour cell.
   nooutput = true;
 }
 
@@ -2268,7 +2268,7 @@ void do_poisson() {
     //  the gradient is taken to be the mean of gradients at the two samples.
     {
       const float scale = 1.f / vmean / max(nx, ny) * gscale;
-      const float smallw = 0.f;  // also used 1e-3f
+      const float smallw = 0.f;  // Also used 1e-3f.
       for_int(x, nx) for_int(y, ny - 1) {
         // Desire matx[y + 1, x] - matx[yx] == { (image[yx][1] + image[y + 1, x][1]) / 2 , 0 }
         float w = 1.f;
@@ -2363,7 +2363,7 @@ void do_poisson() {
       }
     }
     if (nconstraints == 2) {
-      // Fix middle point at (.5f, .5f)
+      // Fix the middle point at (.5f, .5f).
       lls.enter_a_rc(row, ((ny / 2) * nx + (nx / 2)) * 2 + 0, 1.f);
       lls.enter_b_rc(row, 0, .5f);
       row++;
@@ -2619,13 +2619,13 @@ void do_procedure(Args& args) {
     // cd ~/proj/videoloops/data/test_bfs_mask_expansion
     // Filterimage TDpoolpalms_temp_opt0_3.png -procedure test_videoloop_mask_dilation
     assertx(image.size() > 0);
-    Image image_periods("TDpoolpalms_labels_opt0_3_period.png");  // period0: 128, 128, 255; 480x272
+    Image image_periods("TDpoolpalms_labels_opt0_3_period.png");  // Period0: 128, 128, 255; 480x272.
     // Image image_periods("periods.png");  // period0: 0, 0, 0 but 480x270
     assertx(image_periods.dims() == image.dims());
     //
     const uint8_t cost_threshold = 3;  // let the mask consist of the pixels whose temporal costs is >= threshold
-    const int radius2_threshold = 4;   // dilation squared radius
-    const int radius2_max = 20;        // squared radius of maximum bread-first-search expansion
+    const int radius2_threshold = 4;   // Dilation squared radius.
+    const int radius2_max = 20;        // Squared radius of maximum breadth-first-search expansion.
     const Pixel period_zero(128, 128, 255, 255);
     {
       Image image_initial_mask(image.dims(), Pixel::white());
@@ -2634,21 +2634,21 @@ void do_procedure(Args& args) {
       });
       image_initial_mask.write_file("mask_initial.png");
     }
-    if (1) {  // check for pixels that are static (period0) but have nonzero temporal cost
+    if (1) {  // Check for pixels that are static (period0) but have nonzero temporal cost.
       for (const auto& yx : range(image.dims())) {
         if (image_periods[yx] == period_zero) HH_SSTAT(Sp0tcost, image[yx][0]);
         // # Sp0tcost:           (79313  )          0:255         av=8.1941299      sd=35.532955
       }
     }
     Matrix<Vec2<int>> mvec(image.dims());
-    {  // compute vectors to closest pixel in the mask
+    {  // Compute vectors to the closest pixel in the mask.
       const auto& undefined_dist = mvec.dims();
       parallel_for_coords({.cycles_per_elem = 8}, image.dims(), [&](const Vec2<int>& yx) {
         mvec[yx] = image[yx][0] >= cost_threshold ? V(0, 0) : undefined_dist;
       });
       euclidean_distance_map(mvec);
     }
-    {  // dilate the mask by a radius that is the square-root of radius2_threshold
+    {  // Dilate the mask by a radius that is the square root of radius2_threshold.
       Image image_dilated(image.dims());
       parallel_for_coords({.cycles_per_elem = 8}, image.dims(), [&](const Vec2<int>& yx) {
         const bool in_mask = mag2(mvec[yx]) <= radius2_threshold;
@@ -2667,12 +2667,12 @@ void do_procedure(Args& args) {
       });
       while (!queue.empty()) {
         const Vec2<int> yx = queue.dequeue();
-        if (1 && image_periods[yx] == period_zero) continue;  // do not grow from static pixels (period0)
+        if (1 && image_periods[yx] == period_zero) continue;  // Do not grow from static pixels (period0).
         for (const auto& yxd : {V(+1, 0), V(-1, 0), V(0, +1), V(0, -1)}) {
           const Vec2<int> yxn = yx + yxd;
-          if (!image.ok(yxn)) continue;                      // out-of-bounds
-          if (0 && mag2(mvec[yxn]) > radius2_max) continue;  // optional: not expand beyond this squared radius
-          if (!visited[yxn] && image_periods[yxn] == image_periods[yx]) {  // compare RGB values of period
+          if (!image.ok(yxn)) continue;                      // Out-of-bounds.
+          if (0 && mag2(mvec[yxn]) > radius2_max) continue;  // Optional: do not expand beyond this squared radius.
+          if (!visited[yxn] && image_periods[yxn] == image_periods[yx]) {  // Compare RGB values of the period.
             ASSERTX(image_periods[yxn] != period_zero);
             queue.enqueue(yxn);
             visited[yxn] = true;
@@ -2687,7 +2687,7 @@ void do_procedure(Args& args) {
       });
       image_bfs.write_file("mask_bfs.png");
     }
-    {  // Let the mask be a dilation unioned with the bfs result but limited to a maximum radius
+    {  // Let the mask be a dilation unioned with the bfs result, limited to a maximum radius.
       Image image_final(image.dims());
       parallel_for_coords({.cycles_per_elem = 8}, image.dims(), [&](const Vec2<int>& yx) {
         const int radius2 = narrow_cast<int>(mag2(mvec[yx]));
@@ -2738,7 +2738,7 @@ void do_procedure(Args& args) {
     }
     Matrix<Image> grid_thumbnails;
     {
-      int ncol = int(sqrt(image_names.num() - 1)) + 1;  // number of columns
+      int ncol = int(sqrt(image_names.num() - 1)) + 1;  // Number of columns.
       grid_thumbnails.init(V((image_names.num() - 1) / ncol + 1, ncol));
       int i = 0;
       for_coords(grid_thumbnails.dims(), [&](const Vec2<int>& yx) {
@@ -2759,7 +2759,7 @@ void do_procedure(Args& args) {
       const Pixel& pixel = image[yx];
       assertx(pixel[0] == 128);
       assertx(pixel[3] == 255);
-      int depth = pixel[1] * 256 + pixel[2];  // g * 256 + b
+      int depth = pixel[1] * 256 + pixel[2];  // Equals g * 256 + b.
       HH_SSTAT(Sdepth, depth);
       depth = min(depth, 1000);
       Vec2<float> yxf = (convert<float>(yx) + .5f) / max(convert<float>(image.dims()));
@@ -2908,11 +2908,11 @@ void do_compare(Args& args) {
   const Image image2(filename);
   const Image& image1 = image;
   assertx(same_size(image1, image2) && image1.zsize() == image2.zsize());
-  const int r = 5;                    // window radius
+  const int r = 5;                    // Window radius.
   const double sigma = 2.5;           // Number of standard deviations at edge of window.
-  Array<double> ar_gauss(2 * r + 1);  // cached Gaussian weights
+  Array<double> ar_gauss(2 * r + 1);  // Cached Gaussian weights.
   for_int(i, 2 * r + 1) ar_gauss[i] = gaussian(double(i) - r, r / sigma);
-  {  // normalize the 1D weights such that 2D tensor sums to 1 over discrete 2D window
+  {  // Normalize the 1D weights so that the 2D tensor sums to 1 over the discrete 2D window.
     double sum = 0.;
     for_intL(dy, -r, r + 1) for_intL(dx, -r, r + 1) sum += ar_gauss[dy + r] * ar_gauss[dx + r];
     for_int(i, 2 * r + 1) {
@@ -3072,7 +3072,7 @@ auto RGB_from_LAB(CMatrixView<Vector4> mat_LAB) {
 auto convert_image_mat(CMatrixView<Pixel> im) {
   Matrix<Vector4> mat(im.dims());
   parallel_for_coords({.cycles_per_elem = 5}, im.dims(), [&](const Vec2<int>& yx) {
-    mat[yx] = to_Vector4_raw(im[yx]);  // range [0.f, 255.f]
+    mat[yx] = to_Vector4_raw(im[yx]);  // Range [0.f, 255.f].
   });
   return mat;
 }
@@ -3089,19 +3089,19 @@ auto convert_mat_image(CMatrixView<Vector4> mat) {
 auto downsample_image(CMatrixView<Vector4> mat_F) {
   assertx(mat_F.dims() % 2 == V(0, 0));
   Matrix<Vector4> mat_C(mat_F.dims() / 2);
-  // downsampling weights: (-3 -9 29 111 111 29 -9 -3) / 256
+  // Downsampling weights: (-3 -9 29 111 111 29 -9 -3) / 256.
   const int kn = 8;
   Array<float> fkernel(kn);
   fkernel[0] = fkernel[7] = -3.f / 256.f;
   fkernel[1] = fkernel[6] = -9.f / 256.f;
   fkernel[2] = fkernel[5] = 29.f / 256.f;
   fkernel[3] = fkernel[4] = 111.f / 256.f;
-  if (0) {  // box filter
+  if (0) {  // A box filter.
     fill(fkernel, 0.f);
     fkernel[3] = fkernel[4] = 1.f;
   }
 
-  if (0) {  // slow implementation
+  if (0) {  // A slow implementation.
     parallel_for_coords({.cycles_per_elem = uint64_t(kn * kn) * 10}, mat_C.dims(), [&](const Vec2<int>& yx) {
       const Vec2<int> yxf0 = yx * 2 - kn / 2 + 1;
       Vector4 sum{};
@@ -3112,7 +3112,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
     });
   } else {  // faster: first downsample horizontally, then vertically
     // Possible optimization: lift boundary testing outside of loops.
-    Matrix<Vector4> mtmp(mat_F.dims() / V(1, 2));  // non-square
+    Matrix<Vector4> mtmp(mat_F.dims() / V(1, 2));  // Non-square.
     parallel_for_coords({.cycles_per_elem = uint64_t(kn) * 8}, mtmp.dims(), [&](const Vec2<int>& yx) {
       const int xf0 = yx[1] * 2 - kn / 2 + 1;
       Vector4 sum{};
@@ -3132,14 +3132,14 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
 // Upsample by one level, creating finer image from coarser image.
 auto upsample_image(CMatrixView<Vector4> mat_C) {
   Matrix<Vector4> mat_F(mat_C.dims() * 2);
-  // upsampling weights: (-9 111 29 -3) / 128  and (-3 29 111 -9) / 128  on alternating pixels
+  // Upsampling weights: (-9 111 29 -3) / 128  and (-3 29 111 -9) / 128  on alternating pixels.
   const int kn = 4;
   Array<float> fkernel(kn);
   fkernel[0] = -9.f / 128.f;
   fkernel[1] = 111.f / 128.f;
   fkernel[2] = 29.f / 128.f;
   fkernel[3] = -3.f / 128.f;
-  if (0) {  // box filter
+  if (0) {  // A box filter.
     fill(fkernel, 0.f);
     fkernel[1] = 1.f;
   }
@@ -3167,7 +3167,7 @@ Array<float> compute_window_weights() {
   for_int(x, fwindow.num()) fwindow[x] = gaussian(float(x) - window_radius, window_sdv);
   float vsum = float(sum(fwindow));
   if (0) SHOW(vsum);
-  fwindow /= vsum;  // normalize the 1D window weights
+  fwindow /= vsum;  // Normalize the 1D window weights.
   if (0) SHOW(fwindow);
   return fwindow;
 }
@@ -3193,9 +3193,9 @@ TransferResult structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixVie
   Matrix<Vector4> mat_out(mat_s.dims()), mat_zscore;
   if (save_zscore) mat_zscore.init(mat_s.dims());
   Vector4 minsvar(0.f);  // min structural variance; > 0.f to avoid negative sqrt and division by zero.
-  if (1) {               // to remove blocking noise in jpg-compressed image
+  if (1) {               // To remove blocking noise in a jpg-compressed image.
     if (!use_lab) minsvar = Vector4(square(5.f));
-    // LAB luminance has wider range
+    // LAB luminance has a wider range.
     if (use_lab) minsvar = Vector4(V(square(200.f), square(40.f), square(40.f), square(40.f)));
   }
   const bool optimized = true;
@@ -3225,8 +3225,8 @@ TransferResult structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixVie
     }
     // HH_ATIMER("___rest");
     for_int(x, mat_s.xsize()) {
-      Vector4 ssum{}, ssum2{};  // structure sum and sum squared
-      Vector4 csum{}, csum2{};  // color sum and sum squared
+      Vector4 ssum{}, ssum2{};  // Structure sum and sum squared.
+      Vector4 csum{}, csum2{};  // Color sum and sum squared.
       if (!optimized) {
         // Gather window statistics in structure image (downsampled fine image).
         for_int(iy, window_diam) for_int(ix, window_diam) {
@@ -3329,7 +3329,7 @@ TransferResult structure_transfer_rank(CMatrixView<Vector4> mat_s0, CMatrixView<
 
 TransferResult structure_transfer(CMatrixView<Vector4> mat_s, CMatrixView<Vector4> mat_c, bool save_zscore) {
   HH_TIMER("__structure_transfer");
-  if (getenv_bool("USE_RANK_TRANSFER")) {  // results in grain artifacts
+  if (getenv_bool("USE_RANK_TRANSFER")) {  // Results in grain artifacts.
     return structure_transfer_rank(mat_s, mat_c, save_zscore);
   } else if (getenv_bool("USE_NO_TRANSFER")) {  // results in ghosting
     return {Matrix<Vector4>(mat_c), save_zscore ? Matrix<Vector4>(mat_c.dims(), Vector4(0.f)) : Matrix<Vector4>()};
@@ -3351,7 +3351,7 @@ void do_pyramid(Args& args) {
   HH_TIMER("_pyramid");
   string root_name = ffilename;
   assertx(contains(root_name, '.'));
-  root_name.erase(root_name.find('.'));  // unlike get_path_root(), remove multiple extensions
+  root_name.erase(root_name.find('.'));  // Unlike get_path_root(), remove multiple extensions.
   const Image& imagec = image;
   const Image imagef(ffilename);
   const int sizeratio = imagef.ysize() / imagec.ysize();
@@ -3387,8 +3387,8 @@ void do_pyramid(Args& args) {
     output_image(mat_xfer, sform("%s.xfer.png", root_name.c_str()));
   }
   // Iteratively upsample and blend the difference image.
-  const int iskipfinest = 1;                 // since will be unmodified
-  if (getenv_bool("USE_LINEAR_BLENDING")) {  // results in blurring
+  const int iskipfinest = 1;                 // Since it will be unmodified.
+  if (getenv_bool("USE_LINEAR_BLENDING")) {  // Results in blurring.
     for_intL(l, lc + 1, lf - iskipfinest + 1) {
       Matrix<Vector4> mat_tmp = upsample_image(mat_xfer);
       float alpha = (float(lf) - float(l)) / (float(lf) - float(lc));
@@ -3447,7 +3447,7 @@ void do_resamplemesh(Args& args) {
     filterbs = inverse_convolution(imagev, filterbs);
   string str;
   for (Vertex v : mesh.vertices()) {
-    Point p = mesh.point(v);  // in range [0, 1]
+    Point p = mesh.point(v);  // In the range [0, 1].
     Vector4 vec4 = sample_domain(imagev, V(p[1], p[0]), filterbs);
     vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
     mesh.update_string(v, "rgb", csform_vec(str, V(vec4[0], vec4[1], vec4[2])));

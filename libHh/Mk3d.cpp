@@ -52,7 +52,7 @@ void Mk3d::end_polygon() {
     end_polyline();
   } else {
     output_poly();
-    _el.init(A3dElem::EType::polygon);  // clear it
+    _el.init(A3dElem::EType::polygon);  // Clear it.
   }
 }
 
@@ -89,7 +89,7 @@ void Mk3d::end_point() {
 
 void Mk3d::output_poly() {
   assertx(_el.num() >= 3);
-  assertx(_el.type() == A3dElem::EType::polygon);  // optional
+  assertx(_el.type() == A3dElem::EType::polygon);  // Optional.
   _os.write(_el);
   _total_polygons++;
   _total_vertices += _el.num();
@@ -98,7 +98,7 @@ void Mk3d::output_poly() {
 
 void Mk3d::flip_poly() {
   const int n = _el.num();
-  for_intL(i, 1, (n - 1) / 2 + 1) ranges::swap(_el[i], _el[n - i]);  // slightly different from reverse()
+  for_intL(i, 1, (n - 1) / 2 + 1) ranges::swap(_el[i], _el[n - i]);  // Slightly different from reverse().
   for_int(i, n) _el[i].n = -_el[i].n;
 }
 

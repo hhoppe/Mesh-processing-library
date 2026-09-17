@@ -44,7 +44,7 @@ class Mk3d : noncopyable {
   void begin_force_flip(bool b) { _stack_force_flip.push(_force_flip), _force_flip = b; }
   void end_force_flip() { _force_flip = _stack_force_flip.pop(); }
   void end_polygon();
-  void end_2polygon();  // two-sided polygon
+  void end_2polygon();  // A two-sided polygon.
   void end_polyline();
   void end_point();
 
@@ -70,13 +70,13 @@ class Mk3d : noncopyable {
   void flip_poly();
 };
 
-struct MkSave {  // save and restore the current geometric transform
+struct MkSave {  // Save and restore the current geometric transform.
   MkSave(Mk3d& mk) : _mk(mk) { _mk.push(); }
   ~MkSave() { _mk.pop(); }
   Mk3d& _mk;
 };
 
-struct MkSaveColor {  // save and restore the current color transform
+struct MkSaveColor {  // Save and restore the current color transform.
   MkSaveColor(Mk3d& mk) : _mk(mk) { _mk.push_color(); }
   ~MkSaveColor() { _mk.pop_color(); }
   Mk3d& _mk;

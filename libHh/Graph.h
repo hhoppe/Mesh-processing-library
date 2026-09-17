@@ -39,11 +39,11 @@ template <typename T> class Graph : noncopyable {
   bool remove(T v);  // Must have 0 out_degree, ret: was_there.
   // Enter an edge.
   void enter(T v1, T v2) { ASSERTXX(!contains(v1, v2)), _m.get(v1).push(v2); }
-  // Enter an undirected edge.
-  void enter_undirected(T v1, T v2) { enter(v1, v2), enter(v2, v1); }                     // v1 & v2 present; new edge
-  [[nodiscard]] bool contains(T v1, T v2) const { return hh::contains(_m.get(v1), v2); }  // O(n) slow
-  bool remove(T v1, T v2) { return _m.get(v1).remove_unordered(v2); }                     // O(n) , ret: was_there
-  bool remove_undirected(T v1, T v2);                                                     // O(n) , ret: was_there
+  // Enter an undirected edge; v1 and v2 must be present and the edge must be new.
+  void enter_undirected(T v1, T v2) { enter(v1, v2), enter(v2, v1); }
+  [[nodiscard]] bool contains(T v1, T v2) const { return hh::contains(_m.get(v1), v2); }  // O(n), slow.
+  bool remove(T v1, T v2) { return _m.get(v1).remove_unordered(v2); }                     // O(n); returns was_there.
+  bool remove_undirected(T v1, T v2);                                                     // O(n); returns was_there.
   [[nodiscard]] int out_degree(T v) const { return _m.get(v).num(); }
   void add(const Graph<T>& g);
   [[nodiscard]] vertices_range vertices() const { return _m.keys(); }

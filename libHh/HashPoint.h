@@ -19,7 +19,7 @@ class HashPoint {
   explicit HashPoint(int nignorebits = 8, float small = 1e-4f) {
     for_int(c, 3) _hf[c] = make_unique<HashFloat>(nignorebits, small);
   }
-  // p is copied, ret: index (first is 0)
+  // The point p is copied; returns its index (the first is 0).
   [[nodiscard]] int enter(const Point& p) {
     Point pp;
     for_int(c, 3) pp[c] = _hf[c]->enter(p[c]);
@@ -28,7 +28,7 @@ class HashPoint {
     if (is_new) _index++;
     return index;
   }
-  // more robust pre-pass
+  // A more robust pre-pass.
   void pre_consider(const Point& p) { for_int(c, 3) _hf[c]->pre_consider(p[c]); }
 
  private:
@@ -45,7 +45,7 @@ class HashPoint {
     bool operator()(const Point& p1, const Point& p2) const { return p1 == p2; }
   };
   Map<Point, int, hash_Point, equal_Point> _mpi;
-  int _index{0};  // current index, assigned to next new point
+  int _index{0};  // The current index, assigned to the next new point.
 };
 
 }  // namespace hh

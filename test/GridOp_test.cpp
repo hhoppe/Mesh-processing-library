@@ -16,14 +16,14 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
   Array<const Filter*> filters;  // not: "gaussian", "preprocess", "justspline", "justomoms"
   for (const string s : {"impulse", "box", "triangle", "quadratic", "mitchell", "keys", "spline", "omoms"})
     filters.push(&Filter::get(s));
-  {  // inverse convolution is partition-of-unity
+  {  // Inverse convolution is partition-of-unity.
     Grid<D, float> grid(dims, 1.f);
     inverse_convolution(grid, ntimes<D>(FilterBnd(Filter::get("spline"), Bndrule::reflected)));
     // SHOW(grid);
     assertx(abs(min(grid) - 1.f) < 1e-6f);
     assertx(abs(max(grid) - 1.f) < 1e-6f);
   }
-  {  // inverse convolution has unit integral
+  {  // Inverse convolution has unit integral.
     Grid<D, float> grid(dims, 0.f);
     Vec<int, D> p;
     for_int(c, D) p[c] = min(c, dims[c] - 1);  // e.g. V(0, 1, 2) for D == 3
@@ -34,7 +34,7 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
     assertx(abs(sum(grid) - 1.f) < 1e-6f);
     // SHOW(Stat(grid));
   }
-  {  // rescaling of unity-valued grid reproduces unity-valued grid
+  {  // Rescaling of unity-valued grid reproduces unity-valued grid.
     const Grid<D, float> grid(dims, 1.f);
     // not: Bndrule::border
     for (const Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped}) {
@@ -48,7 +48,7 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
       }
     }
   }
-  {  // random samples of unity field all reproduce unity
+  {  // Random samples of unity field all reproduce unity.
     for (const Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic}) {
       for (const string filter_name : {"spline", "omoms"}) {
         const Filter& filter = Filter::get(filter_name);
@@ -63,13 +63,13 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
       }
     }
   }
-  if (product(dims) <= 30) {  // interpolating filters do interpolate
+  if (product(dims) <= 30) {  // Interpolating filters do interpolate.
     Grid<D, float> ogrid(dims);
     for (float& e : ogrid) e = Random::G.unif();
     if (0) SHOW(ogrid);
     for (const Filter* pfilter : filters) {
       const Filter& ofilter = *pfilter;
-      if (ofilter.is_impulse()) continue;         // cannot be used in sample_domain()
+      if (ofilter.is_impulse()) continue;         // Cannot be used in sample_domain().
       if (!ofilter.is_interpolating()) continue;  // (skip mitchell)
       for (const Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::reflected101}) {
         Grid<D, float> grid(ogrid);
@@ -105,7 +105,7 @@ int main() {
                       V(3, 3), twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected))));
     exit(0);
   }
-  {  // most basic experiment
+  {  // Most basic experiment.
     const int D = 2;
     const Grid<D, float> grid(V(2, 2), 1.f);
     const Grid<D, float> gridn =
@@ -124,7 +124,7 @@ int main() {
     test(V(2, 1, 5, 3), V(1, 2, 1, 4));
     SHOW("end test");
   }
-  {  // scaling of Grid<2, T> matches scaling of Matrix<2, T>; no longer applicable
+  {  // Scaling of Grid<2, T> matches scaling of Matrix<2, T>; no longer applicable.
     const int cy = 13, cx = 17;
     const int ny = 16, nx = 11;
     Matrix<float> mat(cy, cx);
@@ -179,7 +179,7 @@ int main() {
         for_int(i, n) {
           const double x = ((i + .5) / n - .5) * 2. * radius * (1 - 1e-10);
           sum += func(x);
-          if (i) assertx(abs(x - xo) < .01);  // verify that the function is continuous
+          if (i) assertx(abs(x - xo) < .01);  // Verify that the function is continuous.
           xo = x;
         }
         sum = sum / double(n) * (2. * radius);
@@ -198,7 +198,7 @@ int main() {
           // For same Stat sd results between CONFIG=win (debug) and others (release).
           const float float_sum = float(sum);
           stat.enter(float_sum);
-          assertw(abs(sum - 1.) < (is_partition_of_unity ? 1e-5 : .07));  // gaussian needs .07
+          assertw(abs(sum - 1.) < (is_partition_of_unity ? 1e-5 : .07));  // Gaussian needs .07.
         }
         if (1) SHOW(stat);
       }

@@ -6,14 +6,14 @@
 
 #if 0
 {
-  // 400 Hz tone for 3 s at 48 kHz sampling in stereo
+  // 400 Hz tone for 3 s at 48 kHz sampling in stereo.
   const double freq = 400., duration = 3., samplerate = 48'000.;
   const int nchannels = 2;
   const int nsamples = int(duration * samplerate + .5);
   Audio audio(V(nchannels, nsamples));
   audio.attrib().samplerate = samplerate;
   for_int(i, audio.nsamples()) for_int(ch, audio.nchannels()) {
-    float t = i / samplerate;  // time in seconds
+    float t = i / samplerate;  // Time in seconds.
     audio(ch, i) = std::sin(t * freq * TAU);
   }
   audio.attrib().bitrate = 256'000;  // 256 kbps
@@ -46,15 +46,15 @@ class Audio : public Grid<2, float> {
   [[nodiscard]] int nchannels() const { return base::dim(0); }
   [[nodiscard]] int nsamples() const { return base::dim(1); }
   [[nodiscard]] auto& attrib(this auto&& self) { return self._attrib; }
-  void read_file(const string& filename);         // filename may be "-" for std::cin;  may throw std::runtime_error
-  void write_file(const string& filename) const;  // filename may be "-" for std::cout; may throw std::runtime_error
+  void read_file(const string& filename);         // The name may be "-" for std::cin; may throw std::runtime_error.
+  void write_file(const string& filename) const;  // The name may be "-" for std::cout; may throw std::runtime_error.
   [[nodiscard]] string diagnostic_string() const;
 
   // Misc:
   struct Attrib {
-    string suffix;          // e.g. "wav"; "" if unknown; to identify format of read_file("-") and write_file("-")
-    double samplerate{0.};  // samples / sec (Hz)
-    int bitrate{0};         // bits / sec
+    string suffix;          // E.g. "wav"; "" if unknown; to identify format of read_file("-") and write_file("-").
+    double samplerate{0.};  // Samples per second (Hz).
+    int bitrate{0};         // Bits per second.
   };
   friend void swap(Audio& l, Audio& r) noexcept;
 
@@ -70,7 +70,7 @@ class Audio : public Grid<2, float> {
 
 //----------------------------------------------------------------------------
 
-// Shared for implementation in Video.cpp
+// Shared for the implementation in Video.cpp.
 [[nodiscard]] bool ffmpeg_command_exists();
 
 }  // namespace hh

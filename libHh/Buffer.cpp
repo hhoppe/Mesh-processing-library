@@ -37,7 +37,7 @@ void Buffer::shift() {
 }
 
 void Buffer::expand() {
-  assertw(!_beg);  // not necessary, current implementation
+  assertw(!_beg);  // Not necessary in the current implementation.
   _ar.resize(assert_narrow_cast<int>(!_ar.num() ? k_initial_size : int64_t{_ar.num()} * 2));
 }
 
@@ -47,11 +47,11 @@ void Buffer::expand() {
 #if defined(BUFFER_USE_WIN32_THREAD)
 
 extern HANDLE g_buf_event_data_available;
-HANDLE g_buf_event_data_available;  // manual-reset; used in libHwWindows/Hw.cpp
+HANDLE g_buf_event_data_available;  // Manual-reset; used in libHwWindows/Hw.cpp.
 
 namespace {
 
-HANDLE buf_event_data_copied;  // auto-reset
+HANDLE buf_event_data_copied;  // Auto-reset.
 Vec<char, 2048> buf_buffer;
 int buf_buffern;
 int buf_fd;
@@ -95,15 +95,15 @@ RBuffer::RBuffer(int fd) : Buffer(fd) {
       buf_fd = HH_POSIX(dup)(_fd);
       assertx(buf_fd != _fd);
       assertx(!HH_POSIX(close)(_fd));
-      // Create a dummy open file so fd0 is not reused
+      // Create a dummy open file so fd0 is not reused.
       assertx(HH_POSIX(open)("NUL", O_RDONLY) == 0);  // (never freed)
     }
     // Only one RBuffer on fd 0 allowed.
     assertx(!g_buf_event_data_available);
     assertx(!buf_event_data_copied);
-    // manual-reset; initial state non-signaled.
+    // Manual-reset; initial state non-signaled.
     g_buf_event_data_available = CreateEvent(nullptr, TRUE, FALSE, nullptr);
-    // auto-reset; initial state non-signaled.
+    // Auto-reset; initial state non-signaled.
     buf_event_data_copied = CreateEvent(nullptr, FALSE, FALSE, nullptr);
     HANDLE thread = CreateThread(nullptr, 0, buf_thread_func, nullptr, 0, nullptr);
     assertx(thread);
@@ -111,7 +111,7 @@ RBuffer::RBuffer(int fd) : Buffer(fd) {
 #endif  // defined(BUFFER_USE_WIN32_THREAD)
 }
 
-// if buffer is full, shift() || expand()
+// If the buffer is full, shift() || expand().
 RBuffer::ERefill RBuffer::refill() {
   assertx(!eof() && !err());
   if (_beg + _n == _ar.num() && _beg)
@@ -155,7 +155,7 @@ RBuffer::ERefill RBuffer::refill() {
   for (;;) {
     nread = HH_POSIX(read)(_fd, _ar.data() + _beg + _n, ntoread);
     if (nread < 0) {
-      if (errno == EINTR) continue;  // for ATT UNIX (hpux)
+      if (errno == EINTR) continue;  // For ATT UNIX (hpux).
       if (errno == EWOULDBLOCK || (EAGAIN != EWOULDBLOCK && errno == EAGAIN)) return ERefill::no;
     }
     if (nread < 0) {
@@ -173,25 +173,25 @@ RBuffer::ERefill RBuffer::refill() {
   return ERefill::yes;
 }
 
-// have read n bytes
+// Have read n bytes.
 void RBuffer::extract(int n) {
   assertx(n && n <= _n);
   _n -= n;
   _beg += n;
   if (!_n) _beg = 0;
-  if (0 && _beg & 0x3) shift();  // safest but inefficient
+  if (0 && _beg & 0x3) shift();  // Safest but inefficient.
 }
 
 bool RBuffer::has_line() const { return contains(_ar.slice(_beg, _beg + _n), '\n'); }
 
 bool RBuffer::extract_line(string& str) {
-  const char* par = _ar.data() + _beg;  // optimization
+  const char* par = _ar.data() + _beg;  // An optimization.
   int i = 0;
   for (; i < _n; i++)
     if (par[i] == '\n') break;
-  if (i == _n) return false;  // no complete line yet
-  str.assign(par, i);         // skip trailing '\n'
-  extract(i + 1);             // including trailing '\n'
+  if (i == _n) return false;  // No complete line yet.
+  str.assign(par, i);         // Skip trailing '\n'.
+  extract(i + 1);             // Including trailing '\n'.
   if (remove_at_end(str, "\r")) {
     static const bool ignore_dos_eol = getenv_bool("IGNORE_DOS_EOL");
     if (!ignore_dos_eol) Warning("RBuffer: stripping out control-M from DOS file");
@@ -216,7 +216,7 @@ void RBuffer::wait_for_input() {
 //----------------------------------------------------------------------------
 // *** WBuffer
 
-// no alignment problem to worry about since buffer is never word-accessed (at least not by user)
+// No alignment problem to worry about since the buffer is never word-accessed (at least not by the user).
 WBuffer::EFlush WBuffer::flush(int nb) {
   int nwritten;
   if (!nb) nb = _n;
@@ -238,7 +238,7 @@ WBuffer::EFlush WBuffer::flush(int nb) {
   }
 }
 
-// if full, shift() || expand()
+// If full, shift() || expand().
 void WBuffer::put(const void* buf, int nbytes) {
   assertx(!eof() && !err());
   if (_beg + _n + nbytes > _ar.num() && _beg) shift();

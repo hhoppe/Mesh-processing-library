@@ -242,7 +242,7 @@ int main() {
     for_int(i, 100) for_int(j, 100) {
       const size_t h = my_hash(V(i, j));
       // SHOW(i, j, h);
-      assertx(set.add(h));  // all 10'000 are unique
+      assertx(set.add(h));  // All 10'000 are unique.
     }
   }
   {

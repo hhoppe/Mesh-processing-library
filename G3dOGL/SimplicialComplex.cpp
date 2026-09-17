@@ -12,8 +12,8 @@ namespace hh {
 
 namespace {
 
-constexpr float k_tolerance = 1e-6f;     // scalar attribute equality tolerance
-constexpr float k_undefined = BIGFLOAT;  // undefined scalar attributes
+constexpr float k_tolerance = 1e-6f;     // Scalar attribute equality tolerance.
+constexpr float k_undefined = BIGFLOAT;  // Undefined scalar attributes.
 HH_STAT(Sarea_dropped);
 HH_STAT(Sarea_moved);
 
@@ -46,12 +46,12 @@ PArray<Simplex, 20> ISimplex::get_star() const {
   for (Simplex ss : s->getParents()) simplices.push(ss);
   if (s->getDim() == 0) {
     const int index = simplices.num();
-    // for each edge
+    // For each edge.
     for_intL(i, 1, index) {
-      // add in faces
+      // Add in faces.
       for (Simplex f : simplices[i]->getParents()) {
         bool found = false;
-        // only, if not already there
+        // Only if not already there.
         for_intL(j, index, simplices.num()) {
           if (f == simplices[j]) {
             found = true;
@@ -150,7 +150,7 @@ void SimplicialComplex::ok() const {
                     << " " << si->getId() << ") of which it is a parent.\n";
         }
       }
-      // check for duplicates
+      // Check for duplicates.
       int num_identical = 0;
       for (Simplex p1 : si->getParents()) {
         for (Simplex p2 : si->getParents()) {
@@ -174,14 +174,14 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
   assertx(s->getDim() == 0);
 
   res.clear();
-  // commented primarily for unify record reasons
+  // commented primarily for unify record reasons.
   // res._material_strings = _material_strings;
 
-  // note: it cycles through lower dimension parents first
+  // Note: it cycles through lower-dimension parents first.
   for (Simplex curr : s->get_star()) {
     Simplex news;
 
-    // create a copy of current simplex in resulting simplicial complex
+    // Create a copy of current simplex in resulting simplicial complex.
     news = assertx(res.createSimplex(curr->getDim(), curr->getId()));
     if (news->getDim() == 0) news->setPosition(s->getPosition());
     news->setVAttribute(curr->getVAttribute());
@@ -190,19 +190,19 @@ void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
 
     for (auto [ci, c] : views::enumerate(curr->children())) {
       Simplex res_child = res.getSimplex(c->getDim(), c->getId());
-      // note some children might not be ancestors of s
+      // Note that some children might not be ancestors of s.
       if (!res_child) {
-        // if so, first create them
+        // If so, first create them.
         res_child = res.createSimplex(c->getDim(), c->getId());
         if (c->getDim() == 0) res_child->setPosition(c->getPosition());
         res_child->setVAttribute(c->getVAttribute());
         res_child->_flags = c->_flags;
         res_child->_area = c->_area;
 
-        // update child pointers (all must exist)
+        // Update child pointers (all must exist).
         for (auto [cci, cc] : views::enumerate(c->children())) {
           Simplex res_childchild = res.getSimplex(cc->getDim(), cc->getId());
-          assertx(res_childchild);  // all must exist
+          assertx(res_childchild);  // All must exist.
           res_child->setChild(int(cci), res_childchild);
           res_childchild->addParent(res_child);
         }
@@ -222,21 +222,21 @@ void SimplicialComplex::scUnion(const SimplicialComplex& s1, const SimplicialCom
     for (Simplex s2_s : s2.simplices_dim(i)) {
       Simplex res_news = res.getSimplex(s2_s->getDim(), s2_s->getId());
 
-      // create it if it doesn't exist in res
+      // Create it if it doesn't exist in res.
       if (!res_news) {
         res_news = res.createSimplex(s2_s->getDim(), s2_s->getId());
         if (res_news->getDim() == 0) res_news->setPosition(s2_s->getPosition());
         res_news->setVAttribute(s2_s->getVAttribute());
         res_news->_flags = s2_s->_flags;
         res_news->_area = s2_s->_area;
-        // update its links
+        // Update its links.
         for (auto [s2_ci, s2_c] : views::enumerate(s2_s->children())) {
           Simplex res_child = res.getSimplex(s2_c->getDim(), s2_c->getId());
-          assertx(res_child);  // all children must exist
+          assertx(res_child);  // All children must exist.
 
           res_news->setChild(int(s2_ci), res_child);
 
-          // update p
+          // Update p.
           res_child->addParent(res_news);
         }
       }
@@ -256,16 +256,16 @@ void SimplicialComplex::destroySimplex(Simplex s, int area_test) {
   assertx(valid(s));
   if (area_test) assertx(s->getArea() == 0.f);
 
-  // remove all references from its children
+  // Remove all references from its children.
   for (Simplex c : s->children())
     if (c) vec_remove_ordered(c->_parent, s);
 
   Stack<Simplex> todel;
-  // find all parents to be removed
+  // Find all parents to be removed.
   for (Simplex p : s->getParents())
     if (p) todel.push(p);
 
-  // destroy parents!
+  // Destroy parents!
   while (!todel.empty()) {
     Simplex del = todel.pop();
     destroySimplex(del);
@@ -330,9 +330,9 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
   Simplex both = vs->edgeTo(vt);
   Stack<Simplex> check_principal;
 
-  // propagate material
+  // Propagate material.
   if (both) {
-    // new principal edges
+    // New principal edges.
     for (Simplex s : both->get_star()) {
       if (s == both) continue;
 
@@ -341,7 +341,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
         if (c->getParents().size() == 1) c->setVAttribute(s->getVAttribute());
     }
 
-    // new principal verts
+    // New principal verts.
     if (vs->getParents().size() == 1) vs->setVAttribute(both->getVAttribute());
   }
 
@@ -365,21 +365,21 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
     }
 
     if (both) {
-      // distribute area
+      // Distribute area.
       for (Simplex spx : both->get_star()) {
-        // consider only principal simplices
+        // Consider only principal simplices.
         if (!spx->isPrincipal()) continue;
 
         bool area_given = false;
         bool drop_area = false;
 
-        // give it's area to manifold adjacent component
+        // Give its area to the manifold adjacent component.
         for (Simplex c : spx->children()) {
           if (c == both) continue;
 
           if (c->isManifold()) {
             Simplex spx_adj = nullptr;
-            // find adjacent component
+            // Find adjacent component.
             for (Simplex p : c->getParents()) {
               if (p != spx) {
                 spx_adj = p;
@@ -398,27 +398,27 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
 
           // if all children are boundary the ancestor will be a
           // a principal simplex and we can give its area away
-          // to the ancestor
+          // to the ancestor.
           if (!c->is_boundary()) {
-            // otherwise drop the area
+            // Otherwise drop the area.
             drop_area = true;
             Sarea_dropped.enter(spx->getArea());
             spx->setArea(0.f);
           }
         }
 
-        // if area should not be dropped and is not given away
+        // If area should not be dropped and is not given away.
         if (!drop_area && !area_given) {
           assertx(spx->getDim() == 1 || spx->getDim() == 2);
 
           Simplex spx_adj = nullptr;
           if (spx->getDim() == 2) {
-            // facet
+            // Facet.
             spx_adj = spx->opp_edge(vt);
           }
 
           if (spx->getDim() == 1) {
-            // vert
+            // Vert.
             spx_adj = vs;
           }
 
@@ -447,7 +447,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
   if (both) destroySimplex(both, propagate_area);
   // both = nullptr;  // now undefined
 
-  // remap all references of vt to vs in simplices adjacent to vt.
+  // Remap all references of vt to vs in simplices adjacent to vt.
   Vec<std::vector<Simplex>, MAX_DIM + 1> worklist;
   for (Simplex s : vs->get_star())
     if (s != vs) worklist[s->getDim()].push_back(s);
@@ -455,23 +455,23 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
   Vec<Stack<Simplex>, MAX_DIM + 2> affected_spx;
   replace(vt, vs, affected_spx[1]);
 
-  // remove vt
+  // Remove vt.
   vt->_parent.clear();
   destroySimplex(vt, propagate_area);
   // vt = nullptr;  // now undefined
 
   assertx(Sarea_moved.sum() <= Sarea_dropped.sum());
 
-  // remove duplicate simplices
+  // Remove duplicate simplices.
   int dim = 1;
   while (!affected_spx[dim].empty()) {
     Simplex vs_new_ancestor = affected_spx[dim].pop();
-    for (Simplex vs_ancestor : worklist[dim]) {  // was ForStack which went in reverse order
+    for (Simplex vs_ancestor : worklist[dim]) {  // Was ForStack, which went in reverse order.
       assertx(vs_ancestor->getDim() == vs_new_ancestor->getDim());
       assertx(vs_new_ancestor != vs_ancestor);
 
       if (eq1simp(vs_new_ancestor, vs_ancestor)) {
-        // remove duplicate
+        // Remove duplicate.
         if (propagate_area) {
           if (vs_new_ancestor->isPrincipal() && vs_ancestor->isPrincipal()) {
             Sarea_dropped.enter(vs_new_ancestor->getArea());
@@ -504,7 +504,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
   dim = 2;
   while (!affected_spx[dim].empty()) {
     Simplex vs_new_ancestor = affected_spx[dim].pop();
-    for (Simplex vs_ancestor : worklist[dim]) {  // was ForStack which went in reverse order
+    for (Simplex vs_ancestor : worklist[dim]) {  // Was ForStack, which went in reverse order.
       assertx(vs_ancestor->getDim() == vs_new_ancestor->getDim());
       assertx(vs_new_ancestor != vs_ancestor);
 
@@ -512,7 +512,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
         replace(vs_new_ancestor, vs_ancestor, affected_spx[dim + 1]);
         if (dim + 1 == 3) assertx(affected_spx[3].empty());
 
-        // remove duplicate
+        // Remove duplicate.
         if (propagate_area) {
           Sarea_dropped.enter(vs_new_ancestor->getArea());
           Sarea_moved.enter(vs_new_ancestor->getArea());
@@ -527,7 +527,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
     }
   }
 
-  // distribute vt area if any
+  // Distribute vt area if any.
   if (propagate_area && cmp_area != 0.f) {
     for (Simplex s : vs->get_star())
       if (s->isPrincipal()) {
@@ -547,7 +547,7 @@ void SimplicialComplex::unify(Simplex vs, Simplex vt, int propagate_area) {
 }
 
 void SimplicialComplex::replace(Simplex src, Simplex tgt, Stack<Simplex>& affected_parents) {
-  // remove references from children
+  // Remove references from children.
   for (auto [ci, c_ref] : views::enumerate(src->children())) {
     const Simplex c = c_ref;  // Copy, because the next line assigns through the aliased `c_ref`.
     if (!c) continue;
@@ -556,7 +556,7 @@ void SimplicialComplex::replace(Simplex src, Simplex tgt, Stack<Simplex>& affect
   }
 
   // replace references from parents
-  // and add reference to parent from tgt
+  // and add a reference to the parent from tgt.
   for (Simplex p : src->getParents()) {
     if (!p) continue;
     for (auto [ci, c] : views::enumerate(p->children()))
@@ -568,7 +568,7 @@ void SimplicialComplex::replace(Simplex src, Simplex tgt, Stack<Simplex>& affect
 }
 
 void SimplicialComplex::write(std::ostream& os) const {
-  // dump materials
+  // Dump materials.
 
   if (_material_strings.num()) {
     os << "[Attributes]\n";
@@ -576,7 +576,7 @@ void SimplicialComplex::write(std::ostream& os) const {
     os << "[EndAttributes]\n";
   }
 
-  // dump simplicial complex
+  // Dump simplicial complex.
   for_int(dim, MAX_DIM + 1) {
     for (Simplex s : this->ordered_simplices_dim(dim)) {
       os << "Simplex " << dim << " " << s->getId() << "  ";
@@ -584,11 +584,11 @@ void SimplicialComplex::write(std::ostream& os) const {
         Point pos = s->getPosition();
         os << " " << pos[0] << " " << pos[1] << " " << pos[2];
       } else {  // dim != 0
-        // iterate over children
+        // Iterate over children.
         for (Simplex c : s->children()) os << " " << c->getId();
       }
 
-      // print vattributes
+      // Print vattributes.
       string out;
       if (s->get_string()) {
         if (!out.empty()) out += " ";
@@ -618,9 +618,9 @@ void SimplicialComplex::read(std::istream& is) {
   for (;;) {
     if (!my_getline(is, line)) break;
     if (line == "") continue;
-    if (line == "#") break;        // done parsing simplex, before vsplit records
-    if (line[0] == '#') continue;  // skip comment
-    // if attribute change state and read next line
+    if (line == "#") break;        // Done parsing simplex, before vsplit records.
+    if (line[0] == '#') continue;  // Skip comment.
+    // If attribute change state and read next line.
     if (starts_with(line, "[Attributes]")) {
       parse_line = &SimplicialComplex::attrReadLine;
       continue;
@@ -651,26 +651,26 @@ void SimplicialComplex::readLine(const char* str) {
   if (const char* s = after_prefix(sline, "Simplex ")) {
     const int dim = int_from_chars(s), sid = int_from_chars(s);
     Simplex sd = assertx(createSimplex(dim, sid));
-    // read and update children pointers
+    // Read and update children pointers.
     if (dim == 0) {
-      // read position
+      // Read position.
       Point pos;
       for_int(i, 3) pos[i] = float_from_chars(s);
       sd->setPosition(pos);
     } else {  // dim != 0
-      // read connectivity
+      // Read connectivity.
       for_int(i, dim + 1) {
         const int child = int_from_chars(s);
         Simplex spxChild = assertx(getSimplex(dim - 1, child));
         sd->setChild(i, spxChild);
       }
-      // Update children's parent pointers
+      // Update children's parent pointers.
       for (Simplex c : sd->children()) c->addParent(sd);
     }
     while (std::isspace(*s)) s++;
     assert_no_more_chars(s);
 
-    // read in vattributes
+    // Read in vattributes.
     sd->set_string(va_field);
 
     string str2;
@@ -710,7 +710,7 @@ void SimplicialComplex::readQHull(std::istream& is) {
 
   assertx(num(1) == 0);
 
-  // verts might not be numbered in order
+  // Verts might not be numbered in order.
   Map<int, Simplex> id2vtx;
   int verts;
   {
@@ -723,7 +723,7 @@ void SimplicialComplex::readQHull(std::istream& is) {
     assertx(i == verts);
   }
 
-  // for all facets for triangulation
+  // For all facets for triangulation.
   string line;
   for_int(i, n) {
     if (!my_getline(is, line)) break;
@@ -741,7 +741,7 @@ void SimplicialComplex::readQHull(std::istream& is) {
         Simplex vt = id2vtx.get(v[k]);
         assertx(vs && vt);
 
-        // if there isn't already an edge, create one
+        // If there isn't already an edge, create one.
         if (!vs->edgeTo(vt)) {
           Simplex e = createSimplex(1);
           assertx(e);
@@ -762,13 +762,13 @@ void SimplicialComplex::attrReadLine(char* sline) {
   if (sline[0] == '#') return;
   if (const char* s = after_prefix(sline, "Simplex ")) {
     const int dim = int_from_chars(s), sid = int_from_chars(s);
-    // update position for 0-simplices
+    // Update position for 0-simplices.
     if (dim == 0) {
       Point pos;
       for_int(i, 3) pos[i] = float_from_chars(s);
       getSimplex(dim, sid)->setPosition(pos);
     }
-    // read and update color for 0,1,2-simp
+    // Read and update color for 0,1,2-simp.
     if (*s) {
       Point rgb;
       for_int(i, 3) rgb[i] = float_from_chars(s);
@@ -780,7 +780,7 @@ void SimplicialComplex::attrReadLine(char* sline) {
 #endif
 
 std::weak_ordering SimplicialComplex::compare_normal(const GMesh& mesh, Corner c1, Corner c2) {
-  // if nothing to compare
+  // If nothing to compare.
   assertx(c1 && c2);
   Vector n1, n2;
   assertx(parse_key_vec(mesh.get_string(c1), "normal", n1));
@@ -800,17 +800,17 @@ void SimplicialComplex::readGMesh(std::istream& is) {
     s0 = createSimplex(0, mesh.vertex_id(v));
     v2s0.enter(v, s0);
     // no children
-    // parent updated later when its created
+    // parent updated later when it is created.
     s0->setPosition(mesh.point(v));
 
-    // compute normals
+    // Compute normals.
     const Vnors vnors(mesh, v);
 
     for (Corner c : mesh.corners(v)) {
       Vector nor = vnors.get_nor(mesh.corner_face(c));
 
       // Normalize normals if necessary.
-      assertx(nor[0] != k_undefined);  // normals always present
+      assertx(nor[0] != k_undefined);  // Normals always present.
       // Always renormalize normal.
       if (!nor.normalize()) {
         Warning("Normal is zero, setting arbitrarily to (1, 0, 0)");
@@ -824,11 +824,11 @@ void SimplicialComplex::readGMesh(std::istream& is) {
   for (Edge e : mesh.edges()) {
     s1 = createSimplex(1);
     e2s1.enter(e, s1);
-    // update children
+    // Update children.
     s1->setChild(0, v2s0.get(mesh.vertex1(e)));
     s1->setChild(1, v2s0.get(mesh.vertex2(e)));
 
-    // update parent of the children
+    // Update parent of the children.
     s1->getChild(0)->addParent(s1);
     s1->getChild(1)->addParent(s1);
   }
@@ -837,7 +837,7 @@ void SimplicialComplex::readGMesh(std::istream& is) {
   for (Face f : mesh.faces()) {
     s2 = createSimplex(2, mesh.face_id(f));
     mfs.enter(f, s2);
-    // update children
+    // Update children.
     int ind = 0;
     for (Edge e : mesh.edges(f)) {
       assertx(ind < 3);
@@ -845,14 +845,14 @@ void SimplicialComplex::readGMesh(std::istream& is) {
       ind++;
     }
 
-    // update parent of the children
+    // Update parent of the children.
     for (Simplex c : s2->children()) c->addParent(s2);
   }
 
   {
     // If attrid keys present in input file, use them, else add new ones after the maximum found.
     // This is useful if output of simplification is re-simplified.
-    // See identical code in MeshSimplify.cpp
+    // See identical code in MeshSimplify.cpp.
     Set<string> hashstring;
     Map<Simplex, const string*> mssrep;
     for (Face f : mesh.faces()) {
@@ -869,7 +869,7 @@ void SimplicialComplex::readGMesh(std::istream& is) {
       const int attrid = to_int(smat);
       assertx(attrid >= 0);
       _material_strings.access(attrid);
-      assertx(_material_strings[attrid] == "");  // no duplicate attrid's
+      assertx(_material_strings[attrid] == "");  // No duplicate attrid's.
       _material_strings[attrid] = srep;
       msrepattrid.enter(&srep, attrid);
     }
@@ -878,7 +878,7 @@ void SimplicialComplex::readGMesh(std::istream& is) {
     const int nfirst = msrepattrid.num();
     // string str;
     for (const string& srep : hashstring) {
-      if (GMesh::string_has_key(srep.c_str(), "attrid")) continue;  // handled above
+      if (GMesh::string_has_key(srep.c_str(), "attrid")) continue;  // Handled above.
       const int attrid = _material_strings.add(1);
       _material_strings[attrid] = GMesh::string_update(srep, "attrid", csform(str, "%d", attrid));
       msrepattrid.enter(&srep, attrid);

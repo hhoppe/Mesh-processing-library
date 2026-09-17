@@ -6,7 +6,7 @@
 
 namespace hh {
 
-// Does string contain a character? (subsumed by general contains() function in RangeOp.h)
+// Does a string contain a character?  (Subsumed by the general contains() function in RangeOp.h.)
 // inline bool contains(const string& str, char ch) {
 //     return str.find(ch) != string::npos;
 // }

@@ -29,7 +29,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
 
   // go around in one direction averaging normals
   // of adjacent facets with same normal group
-  // the orientation is given by ordering of va and vb
+  // the orientation is given by the ordering of va and vb.
 
   Simplex va = verts[i_vs];
   Simplex vb = verts[mod3(i_vs + 1)];
@@ -48,7 +48,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
   Simplex fct = corner_fct;
   bool done = false;
   while (e->isManifold()) {
-    // find other facet around e
+    // Find other facet around e.
     for (Simplex f : e->getParents()) {
       if (f != fct) {
         fct = f;
@@ -57,7 +57,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
     }
 
     // if the new fct is the corner_fct made a full circle
-    // nothing left to do
+    // nothing left to do.
     if (fct == corner_fct) {
       done = true;
       break;
@@ -66,7 +66,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
     // Simplex verts[3];
     verts = fct->vertices();
 
-    // skip degenerate facets
+    // Skip degenerate facets.
     if (skip_degenerate && degenerate(verts)) {
       if (vold[va->getId()] == vold[vb->getId()]) {
         Simplex tmp = vb;
@@ -78,7 +78,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
         }
         va = tmp;
       } else {
-        // if va is degenerate one change it
+        // If va is degenerate one change it.
         bool change = false;
         for_int(i, 3) {
           if (verts[i] == va) continue;
@@ -90,7 +90,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
           }
         }
 
-        // if vb is degenerate one change it
+        // If vb is degenerate one change it.
         for_int(i, 3) {
           if (verts[i] == vb) continue;
 
@@ -102,19 +102,19 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
         }
       }
     } else {  // regular facet
-      // if new facet does not have same smoothing group
+      // If new facet does not have same smoothing group.
       if (s_norgroup[fct->getVAttribute()] != ngroup) break;
 
       const int i_va = index(verts, va);
       if (verts[mod3(i_va + 1)] == vb) {
         // va still before vb
         // inconsistent with previous fct
-        // flip normal
+        // flip the normal.
         avg_norm -= fct_pnor[fct->getId()];
         vb = verts[mod3(i_va + 2)];
       } else {
         // va after vb in the order
-        // consistent with previous fct
+        // consistent with the previous fct.
         avg_norm += fct_pnor[fct->getId()];
         vb = verts[mod3(i_va + 1)];
       }
@@ -127,7 +127,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
   if (!done) {
     // go around in other direction averaging normals
     // of adjacent facets with same normal group
-    // the orientation is given by ordering of va and vb
+    // the orientation is given by the ordering of va and vb.
     va = verts[mod3(i_vs + 2)];
     vb = verts[i_vs];
 
@@ -144,7 +144,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
     fct = corner_fct;
 
     while (e->isManifold()) {
-      // find other facet around e
+      // Find other facet around e.
       for (Simplex f : e->getParents()) {
         if (f != fct) {
           fct = f;
@@ -152,13 +152,13 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
         }
       }
 
-      // cannot make a full circle this way
+      // Cannot make a full circle this way.
       assertx(fct != corner_fct);
 
       // Simplex verts[3];
       verts = fct->vertices();
 
-      // skip degenerate facets
+      // Skip degenerate facets.
       if (skip_degenerate && degenerate(verts)) {
         if (vold[va->getId()] == vold[vb->getId()]) {
           Simplex tmp = va;
@@ -170,7 +170,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
           }
           vb = tmp;
         } else {
-          // if va is degenerate one change it
+          // If va is degenerate one change it.
           bool change = false;
           for_int(i, 3) {
             if (verts[i] == va) continue;
@@ -182,7 +182,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
             }
           }
 
-          // if vb is degenerate one change it
+          // If vb is degenerate one change it.
           for_int(i, 3) {
             if (verts[i] == vb) continue;
 
@@ -194,19 +194,19 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
           }
         }
       } else {
-        // if new facet does not have same smoothing group
+        // If new facet does not have same smoothing group.
         if (s_norgroup[fct->getVAttribute()] != ngroup) break;
 
         const int i_va = index(verts, va);
         if (verts[mod3(i_va + 1)] == vb) {
           // va still before vb
           // inconsistent with previous fct
-          // flip normal
+          // flip the normal.
           avg_norm -= fct_pnor[fct->getId()];
           va = verts[mod3(i_va + 2)];
         } else {
           // va after vb in the order
-          // consistent with previous fct
+          // consistent with the previous fct.
           avg_norm += fct_pnor[fct->getId()];
           va = verts[mod3(i_va + 1)];
         }
@@ -227,7 +227,7 @@ void ScGeomorph::read(std::istream& is) {
   vnew.init(K.getMaxId(0));
   fct_pnor.init(K.getMaxId(2));
   // 3 verts per each face
-  // will use face and vert id for indexing
+  // will use face and vert id for indexing.
   nold.init(K.getMaxId(2) * 3);
   nnew.init(K.getMaxId(2) * 3);
   s_norgroup.init(K.materialNum());
@@ -238,27 +238,27 @@ void ScGeomorph::read(std::istream& is) {
     s_norgroup[attrid] = to_int(assertx(GMesh::string_key(str, s, "norgroup")));
   }
 
-  // verts
+  // Verts.
   for (Simplex v : K.simplices_dim(0)) {
-    // new pos
+    // New pos.
     vnew[v->getId()] = v->getPosition();
 
-    // old pos
+    // Old pos.
     Point& opos = vold[v->getId()];
     assertx(parse_key_vec(v->get_string(), "Opos", opos));
 
-    // old area
+    // Old area.
     const char* soa = GMesh::string_key(str, v->get_string(), "Oarea");
     if (soa) {
       const float area = to_float(soa);
       aold.enter(v, area);
 
-      // old material
+      // Old material.
       const int attrid = to_int(assertx(GMesh::string_key(str, v->get_string(), "Omat")));
       mold.enter(v, attrid);
     }
 
-    // new area
+    // New area.
     if (v->isPrincipal()) {
       if (0) {
         const char* sna = assertx(GMesh::string_key(str, v->get_string(), "Narea"));
@@ -270,19 +270,19 @@ void ScGeomorph::read(std::istream& is) {
     }
   }
 
-  // edges
+  // Edges.
   for (Simplex e : K.simplices_dim(1)) {
-    // old area
+    // Old area.
     const char* soa = GMesh::string_key(str, e->get_string(), "Oarea");
     if (soa) {
       const float area = to_float(soa);
       aold.enter(e, area);
 
-      // old material
+      // Old material.
       const int attrid = to_int(assertx(GMesh::string_key(str, e->get_string(), "Omat")));
       mold.enter(e, attrid);
     }
-    // new area
+    // New area.
     if (e->isPrincipal()) {
       if (0) {
         const char* sna = assertx(GMesh::string_key(str, e->get_string(), "Narea"));
@@ -294,7 +294,7 @@ void ScGeomorph::read(std::istream& is) {
     }
   }
 
-  // facets for corner normals
+  // Facets for corner normals.
   for (Simplex f : K.simplices_dim(2)) {
     const Vec3<Simplex> v = f->vertices();
 
@@ -305,7 +305,7 @@ void ScGeomorph::read(std::istream& is) {
   }
 
   // corner normals
-  // new normals
+  // new normals.
   for (Simplex f : K.simplices_dim(2)) {
     const Vec3<Simplex> v = f->vertices();
     fct_pnor[f->getId()] = ok_normalized(cross(v[0]->getPosition(), v[1]->getPosition(), v[2]->getPosition()));
@@ -318,11 +318,11 @@ void ScGeomorph::read(std::istream& is) {
 }
 
 // Interpolate between old and new using alpha parameter.
-void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // alpha == 1.f is new;  alpha == 0.f is old
-  // verts
+void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // Alpha == 1.f is new;  alpha == 0.f is old.
+  // Verts.
   for (Simplex v : K.simplices_dim(0)) v->setPosition(interp(vnew[v->getId()], vold[v->getId()], alpha));
 
-  // area
+  // Area.
   for (const auto& [s, narea] : anew) {
     assertx(s->isPrincipal());
     float oarea = 0.f;
@@ -331,14 +331,14 @@ void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // alpha 
   }
 
   for (const auto& [s, oarea] : aold) {
-    // handled by anew
+    // Handled by anew.
     if (!s->isPrincipal()) {
       s->setArea((1.f - alpha) * oarea);
       s->setVAttribute(mold.get(s));
     }
   }
 
-  // normals
+  // Normals.
   assertx(corner_nors.num() >= nnew.num());
   for_int(i, nnew.num()) {
     const Vector& on = nold[i];

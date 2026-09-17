@@ -11,12 +11,12 @@
 using namespace hh;
 
 int main() {
-  if (0) {  // timing test
+  if (0) {  // Timing test.
     Map<int, int> m;
     SHOW(m.num());
-    for_int(i, 1'000'000) m.enter(i, 1);  // now this is somewhat slow (4.5sec) in Debug under VC2012!
+    for_int(i, 1'000'000) m.enter(i, 1);  // Now this is somewhat slow (4.5sec) in Debug under VC2012!
     SHOW("after end");
-    m.clear();  // slow with _ITERATOR_DEBUG_LEVEL == 2 (in Debug) under VC2010!
+    m.clear();  // Slow with _ITERATOR_DEBUG_LEVEL == 2 (in Debug) under VC2010!
     SHOW("after clear");
   }
   {

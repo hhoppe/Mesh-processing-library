@@ -33,7 +33,7 @@ void read_pms() {
       pmeshes[bx, by].read(fi());
     }
   }
-  // Other assertions
+  // Other assertions.
   for_int(bx, blockx) {
     for_int(by, blocky) {
       const PMesh& pmxy = pmeshes[bx, by];
@@ -64,7 +64,7 @@ int compute_nvi(int bx, int by, int vi) {
     y = vi - (3 * blocks);
   }
   if (0) {
-    // old scheme.
+    // Old scheme.
     if (0)
       ASSERTX((blocky + 1) * (blockx * blocks + 1) + (blockx + 1) * ((blocky * (blocks - 1))) ==
               2 * blockx * blocky * blocks + blocks * (blockx + blocky) - blockx * blocky + 1);
@@ -77,7 +77,7 @@ int compute_nvi(int bx, int by, int vi) {
       assertnever("");
     }
   } else {
-    // new scheme that numbers outer boundary first.
+    // New scheme that numbers the outer boundary first.
     if (0)
       ASSERTX(((blockx * blocks + 1) * 2 + (blocky * blocks - 1) * 2 + (blocky - 1) * (blockx * blocks - 1) +
                (blockx - 1) * (blocky * (blocks - 1))) ==
@@ -107,7 +107,7 @@ void do_stitch() {
   read_pms();
   // First, construct stitched base mesh.
   AWMesh& bmesh = pmesh._base_mesh;
-  Matrix<int> m_basematid;  // [bx, by] -> first matid in base mesh
+  Matrix<int> m_basematid;  // Maps [bx, by] -> first matid in the base mesh.
   m_basematid.init(blockx, blocky);
   assertx(!bmesh._materials.num());
   string str;
@@ -129,12 +129,12 @@ void do_stitch() {
       }
     }
   }
-  Matrix<Array<int>> f_renumber;  // [bx, by][old_face_id] -> new_face_id
+  Matrix<Array<int>> f_renumber;  // Maps [bx, by][old_face_id] -> new_face_id.
   f_renumber.init(blockx, blocky);
   // Vertices of stitched base mesh are numbered as:
-  // - first, (blocky + 1) rows of length (blockx * blocks + 1)
-  // - next, (blockx + 1) broken columns of length (blocky * (blocks - 1))
-  // - finally, internal vertices of blocks
+  // - first, (blocky + 1) rows of length (blockx * blocks + 1);
+  // - next, (blockx + 1) broken columns of length (blocky * (blocks - 1));
+  // - finally, internal vertices of blocks.
   const int tot_bnd_vertices = (blocky + 1) * (blockx * blocks + 1) + (blockx + 1) * (blocky * (blocks - 1));
   bmesh._vertices.init(tot_bnd_vertices);
   bmesh._wedges.init(tot_bnd_vertices);
@@ -154,7 +154,7 @@ void do_stitch() {
         for_int(j, 3) {
           const int vi = bmeshxy._faces[fi].wedges[j];
           int nvi;
-          if (vi >= 4 * blocks) {  // vertex internal to block
+          if (vi >= 4 * blocks) {  // A vertex internal to the block.
             nvi = vertex_offset + vi - (4 * blocks);
           } else {  // vertex on block boundary
             nvi = compute_nvi(bx, by, vi);
@@ -162,7 +162,7 @@ void do_stitch() {
           bmesh._faces[nfi].wedges[j] = nvi;
           // Next are inefficient (done many times!). ok for now.
           bmesh._vertices[nvi].attrib = bmeshxy._vertices[vi].attrib;
-          // copy *one* of the normals
+          // Copy *one* of the normals.
           //  (will have different normals at stitch boundary, so this is inexact!)
           bmesh._wedges[nvi].attrib = bmeshxy._wedges[vi].attrib;
         }
@@ -172,7 +172,7 @@ void do_stitch() {
   }
   for_int(vi, bmesh._vertices.num()) bmesh._wedges[vi].vertex = vi;
   // Initialize some fields.
-  pmesh._info = pmeshes[0, 0]._info;  // including _has_*
+  pmesh._info = pmeshes[0, 0]._info;  // Including _has_*.
   pmesh._info._full_bbox.clear();
   pmesh._vsplits.init(0);
   // Finally, collect together all vertex split records.
@@ -191,7 +191,7 @@ void do_stitch() {
       }
       assertx(pmxy_nfaces == pmxy._info._full_nfaces);
       pmesh._info._full_bbox.union_with(pmxy._info._full_bbox);
-      if (1) {  // optional (save memory)
+      if (1) {  // Optional (saves memory).
         f_renumber[bx, by].init(0);
         pmeshes[bx, by]._base_mesh._vertices.clear();
         pmeshes[bx, by]._base_mesh._wedges.clear();

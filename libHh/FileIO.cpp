@@ -314,7 +314,7 @@ RFile::RFile(string filename) {
     _file = my_popen(original_filename.substr(0, original_filename.size() - 1), mode);  // No quoting at all.
   } else if (ends_with(filename, ".gz") || ends_with(filename, ".Z")) {
     _file_ispipe = true;
-    _file = my_popen(V<string>("gzip", "-d", "-c", filename), mode);  // gzip supports .Z (replacement for zcat).
+    _file = my_popen(V<string>("gzip", "-d", "-c", filename), mode);  // Gzip supports .Z (replacement for zcat).
   } else if (filename == "-") {
     // assertw(!HH_POSIX(isatty)(0));
     _file_isstd = true;
@@ -939,11 +939,11 @@ int my_pclose(FILE* file) { return pclose(file); }
 #else  // defined(_WIN32)
 
 // Adapt popen() to use sh/csh if possible (rather than cmd) so that
-// - it works within UNC directories
-// - it uses '#!' convention for sh/bash/csh/perl scripts
+// - it works within UNC directories;
+// - it uses the '#!' convention for sh/bash/csh/perl scripts.
 // Inspired from:
 // - MSDN "_pipe() example BeepFilter.Cpp"
-// - popen.c in vc98/crt/src
+// - popen.c in vc98/crt/src.
 // - MSDN "Creating a Child Process with Redirected Input and Output"
 
 // One cannot use any of the following characters in a file name: \ / ? : * " > < |.

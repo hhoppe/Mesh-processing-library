@@ -14,13 +14,13 @@ namespace hh {
 class HashFloat : noncopyable {
  public:
   explicit HashFloat(int nignorebits = 8, float small = 1e-4f);
-  [[nodiscard]] float enter(float f);  // ret: filtered value
-  void pre_consider(float f);          // more robust pre-pass
+  [[nodiscard]] float enter(float f);  // Returns the filtered value.
+  void pre_consider(float f);          // A more robust pre-pass.
  private:
-  Map<uint32_t, float> _m;  // encoded float bucket -> float rep
-  int _nignorebits;         // num of least significant bits to ignore in floating-poing representation
-  float _small;             // numbers with abs < small are grouped at 0
-  float _factor;            // used to access prev and next buckets
+  Map<uint32_t, float> _m;  // Encoded float bucket -> float representative.
+  int _nignorebits;         // Number of least significant bits to ignore in the floating-point representation.
+  float _small;             // Numbers with absolute value < _small are grouped at 0.
+  float _factor;            // Used to access the previous and next buckets.
   float _recip;             // 1 / _factor
   [[nodiscard]] uint32_t encode(float f) const;
 };

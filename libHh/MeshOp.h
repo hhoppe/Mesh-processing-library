@@ -31,7 +31,7 @@ namespace hh {
 // Return statistics on number of faces in each gather_component() group.
 [[nodiscard]] Stat mesh_stat_components(const Mesh& mesh);
 
-// Return genus value (accounting for number of components and boundaries)
+// Return the genus value (accounting for the number of components and boundaries).
 [[nodiscard]] float mesh_genus(const Mesh& mesh);
 
 // Return string giving basic topological characteristics of mesh.
@@ -41,8 +41,8 @@ namespace hh {
 // Return: success (may fail if some edges already exist).
 [[nodiscard]] bool triangulate_face(GMesh& mesh, Face f);
 
-// ret: cos of signed angle away from "flatness" (== exterior angle)
-// range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate).
+// Returns the cosine of the signed angle away from "flatness" (== the exterior angle).
+// Range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate).
 // For non-triangles, looks at average of immediate neighbors on either side.
 [[nodiscard]] float edge_dihedral_angle_cos(const GMesh& mesh, Edge e);
 

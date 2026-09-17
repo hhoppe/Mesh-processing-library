@@ -46,65 +46,65 @@ using namespace hh;
 
 namespace {
 
-// necessary
+// Necessary.
 string rootname;
 string what = "m";
 float samplingd = 0.f;
 int gridsize = 0;
 
-// optional
+// Optional.
 float unsigneddis = 0.f;
 int prop = 2;
-int usenormals = 0;  // 1=use them in optimization, 2=skip opt+use to orient, 3=use_exactly
+int usenormals = 0;  // 1 = use them in optimization, 2 = skip opt and use to orient, 3 = use_exactly.
 int maxkintp = 20;
 int minkintp = 4;
 
 int num;            // # data points
-bool is_3D;         // is it a 3D problem (vs. 2D)
-int minora;         // minor axis: 1 in 2D, 2 in 3D
-bool have_normals;  // data contains normal information
+bool is_3D;         // Is it a 3D problem (vs. 2D)?
+int minora;         // Minor axis: 1 in 2D, 2 in 3D.
+bool have_normals;  // The data contains normal information.
 
-string g_header;  // header to place at top of output files
-Frame xform;      // original pts -> pts in unit cube
+string g_header;  // Header to place at the top of output files.
+Frame xform;      // Original pts -> pts in the unit cube.
 Frame xform_inverse;
 
-std::optional<PointSpatial<int>> SPp;   // spatial partition on co
-std::optional<PointSpatial<int>> SPpc;  // spatial partition on pcorg
-std::optional<Graph<int>> gpcpseudo;    // Riemannian on pc centers (based on co)
-std::optional<Graph<int>> gpcpath;      // path of orientation propagation
+std::optional<PointSpatial<int>> SPp;   // Spatial partition on co.
+std::optional<PointSpatial<int>> SPpc;  // Spatial partition on pcorg.
+std::optional<Graph<int>> gpcpseudo;    // Riemannian on pc centers (based on co).
+std::optional<Graph<int>> gpcpath;      // Path of orientation propagation.
 
 Map<Mk3d*, unique_ptr<WFile>> g_map_mk3d_wfile;
 
 GMesh mesh;
-std::optional<Stat> pScorr;  // correlation in orientation propagation
+std::optional<Stat> pScorr;  // Correlation in orientation propagation.
 
-unique_ptr<Mk3d> iod;  // lines: co[i] to pcorg[i]
-unique_ptr<Mk3d> iob;  // unoriented pc boxes (volumes)
-unique_ptr<Mk3d> iou;  // unoriented tangent planes (polygons)
-unique_ptr<Mk3d> iof;  // flat tangent subspaces (polyline)
-unique_ptr<Mk3d> iog;  // pseudograph over pcorg
-unique_ptr<Mk3d> iop;  // orientation propagation path
-unique_ptr<Mk3d> ioo;  // oriented tangent planes
-unique_ptr<Mk3d> ioh;  // iog with normals
-unique_ptr<Mk3d> iol;  // projections co[i] to nearest tp
-unique_ptr<Mk3d> ioc;  // visited marching cubes
-unique_ptr<Mk3d> iom;  // final mesh (not a3d!), a3d curve if !is_3D
+unique_ptr<Mk3d> iod;  // Lines: co[i] to pcorg[i].
+unique_ptr<Mk3d> iob;  // Unoriented pc boxes (volumes).
+unique_ptr<Mk3d> iou;  // Unoriented tangent planes (polygons).
+unique_ptr<Mk3d> iof;  // Flat tangent subspaces (polyline).
+unique_ptr<Mk3d> iog;  // Pseudograph over pcorg.
+unique_ptr<Mk3d> iop;  // Orientation propagation path.
+unique_ptr<Mk3d> ioo;  // Oriented tangent planes.
+unique_ptr<Mk3d> ioh;  // Here, iog with normals.
+unique_ptr<Mk3d> iol;  // Projections co[i] to the nearest tp.
+unique_ptr<Mk3d> ioc;  // Visited marching cubes.
+unique_ptr<Mk3d> iom;  // Final mesh (not a3d!), a3d curve if !is_3D.
 
-Array<Point> co;    // data points
-Array<Vector> nor;  // normal at point (is_zero() if none)
-// The following are allocated after points have been read in
-Array<Point> pcorg;    // origins of tangent planes
-Array<Vector> pcnor;   // normals of tangent planes
-Array<bool> pciso;     // tangent plane has been oriented
-Array<Frame> pctrans;  // defined if ioo
+Array<Point> co;    // Data points.
+Array<Vector> nor;  // Normal at the point (is_zero() if none).
+// The following are allocated after points have been read in.
+Array<Point> pcorg;    // Origins of tangent planes.
+Array<Vector> pcnor;   // Normals of tangent planes.
+Array<bool> pciso;     // The tangent plane has been oriented.
+Array<Frame> pctrans;  // Defined if ioo.
 
 void close_mk(unique_ptr<Mk3d>& pmk) {
   if (!pmk) return;
   auto pfi = assertx(g_map_mk3d_wfile.remove(pmk.get()));
   WSA3dStream* oa3d = down_cast<WSA3dStream*>(&pmk->oa3d());
-  pmk = nullptr;  // destruct Mk3d
-  delete oa3d;    // destruct WSA3dStream
-  pfi = nullptr;  // destruct WFile
+  pmk = nullptr;  // Destruct Mk3d.
+  delete oa3d;    // Destruct WSA3dStream.
+  pfi = nullptr;  // Destruct WFile.
 }
 
 void process_read() {
@@ -141,12 +141,12 @@ void compute_xform() {
   assertx(co.num() == num);
   const Bbox bbox{co};
   xform = bbox.get_frame_to_small_cube();
-  if (!is_3D) xform.p()[0] = 0.f;  // preserve x == 0
+  if (!is_3D) xform.p()[0] = 0.f;  // Preserve x == 0.
   const float xform_scale = xform[0, 0];
   showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   xform_inverse = ~xform;
   for_int(i, num) co[i] *= xform;
-  // nor[] is unchanged
+  // Here, nor[] is unchanged.
   samplingd *= xform_scale;
   unsigneddis *= xform_scale;
 }
@@ -157,7 +157,7 @@ unique_ptr<Mk3d> process_arg(char ch) {
   auto pfi = make_unique<WFile>(rootname != "" ? sform("%s.%c", rootname.c_str(), ch) : "-");
   WFile& fi = *pfi;
   if (rootname != "") fi() << g_header;
-  WSA3dStream* oa3d = new WSA3dStream(fi());  // deallocated by "delete oa3d" in close_mk()
+  WSA3dStream* oa3d = new WSA3dStream(fi());  // Deallocated by "delete oa3d" in close_mk().
   auto pmk = make_unique<Mk3d>(*oa3d);
   pmk->oa3d().write_comment(sform(" Output of option '%c'", ch));
   pmk->oa3d().flush();
@@ -196,7 +196,7 @@ void draw_pc_extent(Mk3d& mk) {
   const MkSave mk_save(mk);
   mk.scale(2);
   Mklib mklib(mk);
-  // frame is defined in terms of principal frame!
+  // The frame is defined in terms of the principal frame!
   if (is_3D) {
     mklib.cubeO();
   } else {
@@ -254,7 +254,7 @@ void print_principal(const Frame& frame) {
 
 void process_principal() {
   HH_TIMER("_principal");
-  // Statistics in reverse order of printout
+  // Statistics in reverse order of printout.
   HH_STAT(Sr21);
   HH_STAT(Sr20);
   HH_STAT(Sr10);
@@ -304,11 +304,11 @@ float pc_corr(int i, int j) {
   float vdot, corr;
   switch (prop) {
     case 0:
-      corr = 1.f;  // any path is ok
+      corr = 1.f;  // Any path is OK.
       break;
     case 1:
       if (i == num) {
-        corr = 0.f;  // single exterior link
+        corr = 0.f;  // A single exterior link.
       } else {
         corr = dist2(pcorg[i], pcorg[j]);
       }
@@ -319,7 +319,7 @@ float pc_corr(int i, int j) {
           assertx(!is_zero(nor[j]));
           vdot = dot(nor[j], pcnor[j]);
         } else {
-          vdot = 1.f;  // single exterior link
+          vdot = 1.f;  // A single exterior link.
         }
       } else {
         vdot = dot(pcnor[i], pcnor[j]);
@@ -345,16 +345,16 @@ float pc_dot(int i, int j) {
 }
 
 void add_exterior_orientation(const Set<int>& nodes) {
-  // vertex num is a pseudo-node used for outside orientation
+  // Vertex num is a pseudo-node used for outside orientation.
   gpcpseudo->enter(num);
   if (have_normals) {
-    // add pseudo-edges from "exterior" to points with normals
+    // Add pseudo-edges from "exterior" to points with normals.
     for (const int i : nodes) {
       if (is_zero(nor[i])) continue;
       gpcpseudo->enter_undirected(i, num);
     }
   } else {
-    // add 1 pseudo-edge to point with largest z value
+    // Add 1 pseudo-edge to the point with the largest z value.
     float maxz = -BIGFLOAT;
     int maxi = -1;
     for (const int i : nodes) {
@@ -392,7 +392,7 @@ void propagate_along_path(int i) {
   if (i < num) assertx(pciso[i]);
   for (const int j : gpcpath->edges(i)) {
     assertx(j >= 0 && j <= num);
-    if (j == num || pciso[j]) continue;  // immediate caller
+    if (j == num || pciso[j]) continue;  // The immediate caller.
     const float corr = pc_dot(i, j);
     pScorr->enter(abs(corr));
     if (corr < 0.f) pcnor[j] = -pcnor[j];
@@ -408,7 +408,7 @@ void orient_set(const Set<int>& nodes) {
   gpcpath.emplace();
   {
     HH_TIMER("__graphmst");
-    // must be connected here!
+    // Must be connected here!
     auto [graph, is_connected] = graph_mst<int>(*gpcpseudo, pc_corr);
     assertx(is_connected);
     *gpcpath = std::move(graph);
@@ -429,7 +429,7 @@ void draw_oriented_tps() {
   for_int(i, num) {
     Frame& frame = pctrans[i];
     if (dot(frame.v(minora), pcnor[i]) < 0.f) {
-      // flip 2 of the axes to keep right hand rule
+      // Flip 2 of the axes to keep the right-hand rule.
       frame.v(minora) = -frame.v(minora);
       frame.v(0) = -frame.v(0);
     }
@@ -521,7 +521,7 @@ void orient_tp() {
 float compute_unsigned(const Point& p, Point& proj) {
   SpatialSearch<int> ss(&*SPp, p);
   Homogeneous h;
-  const int k = 1;  // make a parameter?
+  const int k = 1;  // Make a parameter?
   for (const auto [pi, unused_d2] : ss | truncate(k)) h += co[pi];
   proj = to_Point(h / float(k));
   return dist(p, proj) - unsigneddis;
@@ -544,12 +544,12 @@ float compute_signed(const Point& p, Point& proj) {
       proj[2] >= 1.f)
     return k_Contour_undefined;
   if (1) {
-    // check that projected point is close to a data point
+    // Check that the projected point is close to a data point.
     SpatialSearch<int> ss(&*SPp, proj);
     if ((*ss.begin()).d2 > square(samplingd)) return k_Contour_undefined;
   }
   if (prop) {
-    // check that grid point is close to a data point
+    // Check that the grid point is close to a data point.
     SpatialSearch<int> ss(&*SPp, p);
     const float d2 = (*ss.begin()).d2;
     const float grid_diagonal2 = square(1.f / gridsize) * 3.f;
@@ -630,7 +630,7 @@ struct output_contour2D {
   }
 };
 
-template <typename Contour> void contour_3D(Contour& contour) {  // with or without border
+template <typename Contour> void contour_3D(Contour& contour) {  // With or without a border.
   contour.set_ostream(&std::cout);
   if (unsigneddis) {
     Point p = co[0];
@@ -646,7 +646,7 @@ template <typename Contour> void contour_3D(Contour& contour) {  // with or with
   }
 }
 
-template <typename Contour> void contour_2D(Contour& contour) {  // with or without border
+template <typename Contour> void contour_2D(Contour& contour) {  // With or without a border.
   contour.set_ostream(&std::cout);
   assertx(!pcorg[0][0]);
   if (unsigneddis) {
@@ -686,7 +686,7 @@ void process_contour() {
       contour_2D(contour);
     }
   }
-  // iom closed back in main
+  // Here, iom is closed back in main().
   close_mk(ioc);
   close_mk(iol);
 }

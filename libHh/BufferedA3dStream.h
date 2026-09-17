@@ -9,7 +9,7 @@ namespace hh {
 
 // Read/write an A3dStream using a RBuffer/WBuffer.
 
-class RBufferedA3dStream : public RA3dStream {  // Read from RBuffer
+class RBufferedA3dStream : public RA3dStream {  // Read from an RBuffer.
  public:
   explicit RBufferedA3dStream(RBuffer& b) : _buf(b) {}
   enum class ERecognize { parse_error, no, partial, yes };
@@ -20,7 +20,7 @@ class RBufferedA3dStream : public RA3dStream {  // Read from RBuffer
   [[nodiscard]] bool read_line(bool& binary, char& ctype, Vec3<float>& f, string& comment) override;
 };
 
-class WBufferedA3dStream : public WA3dStream {  // Write to WBuffer
+class WBufferedA3dStream : public WA3dStream {  // Write to a WBuffer.
  public:
   explicit WBufferedA3dStream(WBuffer& b) : _buf(b) {}
   ~WBufferedA3dStream() override { flush(); }

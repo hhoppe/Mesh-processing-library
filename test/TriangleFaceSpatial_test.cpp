@@ -9,7 +9,7 @@ using namespace hh;
 namespace {
 
 void test2(int gridn) {
-  const int np = 30;  // was 100
+  const int np = 30;  // Was 100.
   Array<TriangleFace> trianglefaces;
   trianglefaces.reserve(np);
   for_int(i, np) {

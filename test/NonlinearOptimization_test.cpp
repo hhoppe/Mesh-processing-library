@@ -12,14 +12,14 @@ double feval(ArrayView<double> ret_grad) {
   assertx(ret_grad.num() == g_x.num());
   double f;
   switch (g_func) {
-    case 0: {  // f : R -> R :  x -> square(x - .5) + sin(x) * .1
+    case 0: {  // Here, f : R -> R :  x -> square(x - .5) + sin(x) * .1.
       assertx(g_x.num() == 1);
       const double x = g_x[0];
       f = square(x - .5) + std::sin(x) * .1;
       ret_grad[0] = 2. * (x - .5) + std::cos(x) * .1;
       break;
     }
-    case 1: {  // f : R^2 -> R :  (x, y) -> (x - .3) ^ 2 + (y - .4) ^ 2
+    case 1: {  // Here, f : R^2 -> R :  (x, y) -> (x - .3) ^ 2 + (y - .4) ^ 2.
       assertx(g_x.num() == 2);
       const double x0 = g_x[0], x1 = g_x[1];
       f = square(x0 - .3) + square(x1 - .4);
@@ -27,7 +27,7 @@ double feval(ArrayView<double> ret_grad) {
       ret_grad[1] = 2. * (x1 - .4);
       break;
     }
-    case 2: {  // f : R^3 -> R
+    case 2: {  // Here, f : R^3 -> R.
       assertx(g_x.num() == 3);
       const double x = g_x[0], y = g_x[1], z = g_x[2];
       f = square(x - .3) + square(y - .4) + square(z - .7) + std::sin(x) + std::cos(y);
@@ -37,7 +37,7 @@ double feval(ArrayView<double> ret_grad) {
     default: assertnever("");
   }
   if (0) {
-    // was %18.12g but then get differences between different CONFIG
+    // Was %18.12g but then get differences between different CONFIG.
     string s_x;
     for_int(i, g_x.num()) s_x += sform("%s %11.5g", (i ? "," : ""), g_x[i]);
     showf("x=(%s) f=%11.5g mag(g)=%11.3g)\n", s_x.c_str(), f, mag(ret_grad));

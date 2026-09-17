@@ -14,15 +14,15 @@ class Quaternion {
  public:
   Quaternion() { zero(); }
   Quaternion(const Quaternion& q) = default;
-  explicit Quaternion(const Frame& frame);  // mapping from Frame::identity() to frame; origin frame.p() is ignored.
+  explicit Quaternion(const Frame& frame);  // Mapping from Frame::identity() to frame; origin frame.p() is ignored.
   explicit Quaternion(const Vector& axis, float angle);
-  explicit Quaternion(const Vector& vf, const Vector& vt);  // resulting quaternion is 2 times rotation from vf to vt!
+  explicit Quaternion(const Vector& vf, const Vector& vt);  // Resulting quaternion is 2 times rotation from vf to vt!
   Quaternion& operator=(const Quaternion&) = default;
   void zero() { _c[0] = _c[1] = _c[2] = 0.f, _c[3] = 1.f; }
-  // extraction
+  // Extraction.
   void angle_axis(float& angle, Vector& axis) const;
   [[nodiscard]] float angle() const;
-  [[nodiscard]] Vector axis() const;  // axis will be zero vector if angle == 0
+  [[nodiscard]] Vector axis() const;  // The axis will be the zero vector if angle == 0.
   [[nodiscard]] bool is_unit() const;
   friend Quaternion operator*(const Quaternion& q1, const Quaternion& q2);
   friend Quaternion inverse(const Quaternion& qi);
@@ -38,7 +38,7 @@ class Quaternion {
                              float t);
   friend std::ostream& operator<<(std::ostream& os, const Quaternion& q);
 
- public:  // discouraged
+ public:  // Discouraged.
   [[nodiscard]] auto& access_private(this auto&& self) { return self._c; }
 
  private:
@@ -56,13 +56,13 @@ Quaternion inverse(const Quaternion& qi);
 inline Quaternion& operator*=(Quaternion& q1, const Quaternion& q2) { return q1 = q1 * q2; }
 Frame to_Frame(const Quaternion& q);  // Frame origin is set to zero!
 Quaternion pow(const Quaternion& qi, float e);
-Frame pow(const Frame& frame, float e);  // Power of Frame
+Frame pow(const Frame& frame, float e);  // Power of a Frame.
 Vector log(const Quaternion& q);         // ? log(Quaternion) == ?what type.   a Vector? vo[3] == 0!
-Quaternion exp(const Vector& v);         // ? meaning of exponentiation
+Quaternion exp(const Vector& v);         // Questionable meaning of exponentiation.
 
 // NOTE:    pow(qi, e) == slerp(Quaternion(Vector(0.f, 0.f, 0.f), 0.f), qi, e) == exp(log(qi) * e)
-// spherical linear interpolation of unit quaternion.
-// t:[0..1] slerp(0) == q0, slerp(1) == q1
+// Spherical linear interpolation of a unit quaternion.
+// t:[0..1] slerp(0) == q0, slerp(1) == q1.
 Quaternion slerp(const Quaternion& q0, const Quaternion& q1, float t);
 
 // Spherical cubic interpolation of unit quaternion;  t:[0..1]  squad(0) = q0, squad(1) = q1,
@@ -76,7 +76,7 @@ std::ostream& operator<<(std::ostream& os, const Quaternion& q);
 
 //----------------------------------------------------------------------------
 
-// Frame origin frame.p() is ignored
+// The Frame origin frame.p() is ignored.
 inline Quaternion::Quaternion(const Frame& frame) {
   const float tr = frame[0, 0] + frame[1, 1] + frame[2, 2];
   float s;
@@ -100,7 +100,7 @@ inline Quaternion::Quaternion(const Frame& frame) {
     _c[j] = (frame[i, j] + frame[j, i]) * s;
     _c[k] = (frame[i, k] + frame[k, i]) * s;
   }
-  normalize();  // optional; just to be sure
+  normalize();  // Optional; just to be sure.
 }
 
 inline Quaternion::Quaternion(const Vector& axis, float angle) {
@@ -246,7 +246,7 @@ inline Vector Quaternion::axis() const {
   Quaternion q;
   ASSERTXX(q0.is_unit() && q1.is_unit());
   cosom = dot(q0, q1);
-  if (1 + cosom < 1e-6f) {  // ends nearly opposite
+  if (1 + cosom < 1e-6f) {  // The ends are nearly opposite.
     q[0] = -q0[1];
     q[1] = q0[0];
     q[2] = -q0[3];
@@ -265,7 +265,7 @@ inline Vector Quaternion::axis() const {
     sclq = std::sin(t * omega) / sinom;
     for_int(i, 4) q[i] = sclp * q0[i] + sclq * q1[i];
   }
-  q.normalize();  // just to make sure
+  q.normalize();  // Just to make sure.
   return q;
 }
 
@@ -283,7 +283,7 @@ inline Vector Quaternion::axis() const {
 }
 
 inline std::ostream& operator<<(std::ostream& os, const Quaternion& q) {
-  if (0) ASSERTXX(q.is_unit());  // coefficients may have been rounded, e.g. in Quaternion_test.cpp
+  if (0) ASSERTXX(q.is_unit());  // Coefficients may have been rounded, e.g. in Quaternion_test.cpp.
   return os << "Quaternion(" << q[0] << ", " << q[1] << ", " << q[2] << ", " << q[3] << ")";
 }
 

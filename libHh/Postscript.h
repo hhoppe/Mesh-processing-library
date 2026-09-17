@@ -22,24 +22,24 @@ class Postscript : noncopyable {
     set_state(EState::line);
     _os << sform("wline%s setlinewidth\n", _curw == 1.f ? "" : sform(" %g mul", _curw).c_str());
   }
-  void flush_write(const string& s) { set_state(EState::undef), _os << s; }  // include linefeeds in s
+  void flush_write(const string& s) { set_state(EState::undef), _os << s; }  // Include linefeeds in s.
  private:
   static constexpr int k_max = 15000;
   std::ostream& _os;
   int _nxpix;
   int _nypix;
-  enum class EState { undef, point, line } _state{EState::undef};  // state for line width
+  enum class EState { undef, point, line } _state{EState::undef};  // State for the line width.
   int _bbx0{std::numeric_limits<int>::max()};
   int _bbx1{std::numeric_limits<int>::min()};
   int _bby0{std::numeric_limits<int>::max()};
   int _bby1{std::numeric_limits<int>::min()};
-  float _curw{0.f};  // current line width
+  float _curw{0.f};  // The current line width.
   Frame _ctm;
-  int _opx, _opy;  // old pen position if LINE
+  int _opx, _opy;  // The old pen position if LINE.
 
   void init() {
     const bool landscape = _nxpix > _nypix;
-    // this format actually conforms to PS-Adobe-3.0
+    // This format actually conforms to PS-Adobe-3.0.
     _os << "%!PS-Adobe-2.0 EPSF-1.2\n";
     _os << "%%Orientation: " << (landscape ? "Landscape\n" : "Portrait\n");
     _os << "%%DocumentFonts:\n";
@@ -50,7 +50,7 @@ class Postscript : noncopyable {
     // (10.5 - 7.8) / 2 * 72 + 15 == 112 + 7.8 * 72 == 674
     if (_nxpix == _nypix)
       _os << "%%BoundingBox: 20 112 582 674\n";
-    else  // not optimal?
+    else  // Not optimal?
       _os << "%%BoundingBox: 20 15 582 771\n";
     _os << "%%EndComments\n";
     _os << "%%BeginPreview: 16 16 1 16\n";
@@ -119,7 +119,7 @@ class Postscript : noncopyable {
     }
     _os << "%TightBoundingBox: " << sform("%d %d  %d %d\n", _bbx0, _bby0, _bbx1, _bby1);
   }
-  // xp, yp in range 0..1; converted internally to x, y in range -1 to 1
+  // Here, xp, yp are in the range 0..1, converted internally to x, y in the range -1 to 1.
   void line_i(float x1p, float y1p, float x2p, float y2p) {
     float x1 = x1p * 2.f - 1.f, y1 = y1p * 2.f - 1.f;
     float x2 = x2p * 2.f - 1.f, y2 = y2p * 2.f - 1.f;

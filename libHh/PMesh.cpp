@@ -116,11 +116,11 @@ void sub_noreflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAt
 }
 
 void sub_reflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAttribD& ad) {
-  // note: may have abase == a -> not really const
+  // Note: may have abase == a -> not really const.
   const Vector& n = abase.normal;
   const Vector& d = ad.dnormal;
   // dr == -d + 2 * dot(d, n) * n
-  // an = n + dr
+  // an = n + dr.
   a.normal = -d + ((2.f) * dot(d, n) + 1.f) * n;
   a.rgb = abase.rgb - ad.drgb;
   a.uv = abase.uv - ad.duv;
@@ -476,7 +476,7 @@ void Vsplit::ok() const {
 
 int Vsplit::expected_wad_num(const PMeshInfo& pminfo) const {
   if (pminfo._has_wad2) return 2;
-  // optimize: construct static const lookup table on (S_MASK | T_MASK).
+  // Optimize: construct a static const lookup table on (S_MASK | T_MASK).
   int nwa = 0;
   if (1) {
     const bool nt = !(code & T_LSAME);
@@ -546,16 +546,16 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   const bool isl = true;
   const bool isr = vspl.vlr_offset1 > 1;
   // Allocate space for new faces now, since ar_pwedges points into _faces array.
-  _faces.add(isr ? 2 : 1), _fnei.add(isr ? 2 : 1);  // !remember _fnei
+  _faces.add(isr ? 2 : 1), _fnei.add(isr ? 2 : 1);  // Here, !remember _fnei.
   // Get vertices, faces, and wedges in neighborhood.
   int vs;
   const unsigned code = vspl.code;
   const int ii = (code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
   const int vs_index = (code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
-  int flccw, flclw;                // either (not both) may be k_undefined
-  int frccw, frclw;                // either (or both) may be k_undefined
-  int wlccw, wlclw, wrccw, wrclw;  // == k_undefined if faces do not exist
-  int jlccw, jlclw, jrccw, jrclw;  // only defined if faces exist
+  int flccw, flclw;                // Either (not both) may be k_undefined.
+  int frccw, frclw;                // Either (or both) may be k_undefined.
+  int wlccw, wlclw, wrccw, wrclw;  // Equals k_undefined if faces do not exist.
+  int jlccw, jlclw, jrccw, jrclw;  // Only defined if faces exist.
   dummy_init(jlccw, jlclw, jrccw, jrclw);
   if (k_debug) jlccw = jlclw = jrccw = jrclw = std::numeric_limits<int>::max();
   PArray<int*, 10> ar_pwedges;
@@ -631,7 +631,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   ASSERTX(frclw < 0 || jrclw == get_jvf(vs, frclw));
   // Add a new vertex.
   const int vt = _vertices.add(1);
-  // Check equivalence of wedges across (vs, vl) and (vs, vr)
+  // Check equivalence of wedges across (vs, vl) and (vs, vr).
 #if defined(HH_DEBUG)
   {
     const bool thru_l = isl && (code & Vsplit::S_LSAME) && (code & Vsplit::T_LSAME);
@@ -655,31 +655,31 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
 #endif
   // Save current number of wedges if ancestry.
   int onumwedges;
-  dummy_init(onumwedges);  // defined if ancestry
+  dummy_init(onumwedges);  // Defined if ancestry.
   if (k_debug) onumwedges = std::numeric_limits<int>::max();
   if (ancestry) onumwedges = _wedges.num();
   // First un-share wedges around vt (may be gap on top).  May modify wlclw and wrccw!
   int wnl = k_undefined, wnr = k_undefined;
   int iil = 0, iir = ar_pwedges.num() - 1;
-  if (isl && wlclw == wlccw) {  // first go clw.
+  if (isl && wlclw == wlccw) {  // First go clw.
     if (1) {
       wnl = _wedges.add(1);
       _wedges[wnl].vertex = vt;
       _wedges[wnl].attrib = _wedges[wlccw].attrib;
     }
-    wlclw = wnl;  // has been changed
+    wlclw = wnl;  // Has been changed.
     ASSERTX(*ar_pwedges[iil] == wlccw);
     for (;;) {
       *ar_pwedges[iil] = wnl;
       iil++;
       if (iil > iir) {
-        wrccw = wnl;  // has been changed
+        wrccw = wnl;  // Has been changed.
         break;
       }
       if (*ar_pwedges[iil] != wlccw) break;
     }
   }
-  if (isr && wrccw == wrclw) {  // now go ccw from other side.
+  if (isr && wrccw == wrclw) {  // Now go ccw from the other side.
     if (wrclw == wlccw && wnl >= 0) {
       wnr = wnl;
     } else {
@@ -687,19 +687,19 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
       _wedges[wnr].vertex = vt;
       _wedges[wnr].attrib = _wedges[wrclw].attrib;
     }
-    wrccw = wnr;  // has been changed
+    wrccw = wnr;  // Has been changed.
     ASSERTX(*ar_pwedges[iir] == wrclw);
     for (;;) {
       *ar_pwedges[iir] = wnr;
       --iir;
       if (iir < iil) {
-        if (iir < 0) wlclw = wnr;  // has been changed
+        if (iir < 0) wlclw = wnr;  // Has been changed.
         break;
       }
       if (*ar_pwedges[iir] != wrclw) break;
     }
   }
-  // Add other new wedges and record wedge ancestries
+  // Add other new wedges and record wedge ancestries.
   int wvtfl, wvtfr;
   if (!isr) {
     wvtfr = k_undefined;
@@ -860,7 +860,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
     _faces[fl].wedges[2] = wvlfl;
     if (flccw >= 0) _fnei[flccw].faces[mod3(jlccw + 2)] = fl;
     if (flclw >= 0) _fnei[flclw].faces[mod3(jlclw + 1)] = fl;
-    // could use L_MASK instead of ii for prediction instead.
+    // Could use L_MASK instead of ii for prediction.
     _faces[fl].attrib.matid =
         (((code & Vsplit::FLN_MASK) ? vspl.fl_matid : _faces[face_prediction(flclw, flccw, ii)].attrib.matid) |
          _cur_frame_mask);
@@ -930,8 +930,8 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
     goto GOTO_VSPLIT_WAD2;
   }
   if (isr) {
-    awvtfr = _wedges[wvtfr].attrib;  // backup for isr
-    awvsfr = _wedges[wvsfr].attrib;  // backup for isr
+    awvtfr = _wedges[wvtfr].attrib;  // A backup for isr.
+    awvsfr = _wedges[wvsfr].attrib;  // A backup for isr.
   }
   if (isl) {
     const bool nt = !(code & Vsplit::T_LSAME);
@@ -943,7 +943,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
       switch (ii) {
         case 2:
           if (ns) _wedges[wvsfl].attrib = _wedges[wvtfl].attrib;
-          // remove !ns?: test below?
+          // Remove !ns?: test below?
           add(_wedges[wvtfl].attrib, _wedges[!ns ? wvsfl : wvtfl].attrib, vspl.ar_wad[lnum++]);
           break;
         case 0:
@@ -1012,7 +1012,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   ASSERTX(!isr || (attrib_ok(_wedges[wvtfr].attrib), true));
   ASSERTX(!isr || (attrib_ok(_wedges[wvsfr].attrib), true));
   ASSERTX(!isr || (attrib_ok(_wedges[wvrfr].attrib), true));
-  // Deal with ancestry
+  // Deal with ancestry.
   if (ancestry) apply_vsplit_ancestry(ancestry, vs, isr, onumwedges, code, wvlfl, wvrfr, wvsfl, wvsfr, wvtfl, wvtfr);
   // Final check.
 #if defined(HH_DEBUG)
@@ -1030,7 +1030,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   }
 #endif
 GOTO_VSPLIT_WAD2:
-  void();  // empty statement
+  void();  // An empty statement.
 
   // ok();
 }
@@ -1120,12 +1120,12 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   ASSERTX(!isr || _wedges[wvtfr].vertex == vt);
   // Get adjacent faces and wedges on left and right.
   // really needed?
-  int flccw, flclw;  // either (not both) may be k_undefined
-  int frccw, frclw;  // either (or both) may be k_undefined
-  // Also find index of vs within those adjacent faces
-  int jlccw, jlclw, jrccw, jrclw;  // only defined if faces exist
+  int flccw, flclw;  // Either (not both) may be k_undefined.
+  int frccw, frclw;  // Either (or both) may be k_undefined.
+  // Also find the index of vs within those adjacent faces.
+  int jlccw, jlclw, jrccw, jrclw;  // Only defined if faces exist.
   dummy_init(jlccw, jlclw, jrccw, jrclw);
-  int wlccw, wlclw, wrccw, wrclw;  // k_undefined if faces does not exist
+  int wlccw, wlclw, wrccw, wrclw;  // Equals k_undefined if faces do not exist.
   if (isl) {
     flccw = _fnei[fl].faces[1];
     flclw = _fnei[fl].faces[0];
@@ -1210,7 +1210,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
     for (;;) {
       *pwwl = wlccw;
       if (ffl == ffr) {
-        ffl = ffr = k_undefined;  // all wedges seen
+        ffl = ffr = k_undefined;  // All wedges seen.
         break;
       }
       ffl = _fnei[ffl].faces[mod3(jjl + 2)];
@@ -1220,14 +1220,14 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
       if (*pwwl != wlclw) break;
     }
   }
-  if (ffr >= 0 && thru_r) {  // now go ccw from other side
+  if (ffr >= 0 && thru_r) {  // Now go ccw from the other side.
     int* pw = &_faces[ffr].wedges[jjr];
     ASSERTX(*pw == wrccw);
     ASSERTX(wrclw >= 0);
     for (;;) {
       *pw = wrclw;
       if (ffr == ffl) {
-        ffl = ffr = k_undefined;  // all wedges seen
+        ffl = ffr = k_undefined;  // All wedges seen.
         break;
       }
       ffr = _fnei[ffr].faces[mod3(jjr + 1)];
@@ -1270,7 +1270,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
           interp(va_m, va_s, va_t, 0.5f);
           sub(va_s, va_m, vspl.vad_small);
         } else {
-          // slightly faster
+          // Slightly faster.
           sub(va_s, va_t, vspl.vad_large);
           sub(va_s, va_s, vspl.vad_small);
         }
@@ -1309,7 +1309,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
           if (0) {
             interp(wa, _wedges[wvsfl].attrib, _wedges[wvtfl].attrib, 0.5f);
           } else {
-            // faster because avoid normalization of interp()
+            // Faster because it avoids normalization of interp().
             const int lnum = 0;
             const PmWedgeAttribD& wad = vspl.ar_wad[lnum];
             sub_noreflect(wa, _wedges[wvtfl].attrib, wad);
@@ -1355,11 +1355,11 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   ASSERTX(wrclw < 0 || (attrib_ok(_wedges[wrclw].attrib), true));
 GOTO_UNDO_WAD2:
   // Remove faces.
-  _faces.resize(fl), _fnei.resize(fl);  // remove 1 or 2, !remember _fnei
+  _faces.resize(fl), _fnei.resize(fl);  // Remove 1 or 2; !remember _fnei.
   // Remove vertex.
-  _vertices.sub(1);  // remove 1 vertex (vt)
+  _vertices.sub(1);  // Remove 1 vertex (vt).
   // Remove wedges.
-  // optimize: construct static const lookup table on (S_MASK | T_MASK)
+  // Optimize: construct a static const lookup table on (S_MASK | T_MASK).
   const bool was_wnl = isl && (code & Vsplit::T_LSAME) && (code & Vsplit::S_LSAME);
   const bool was_wnr =
       isr && (code & Vsplit::T_RSAME) && (code & Vsplit::S_RSAME) && !(was_wnl && (code & Vsplit::T_CSAME));
@@ -1373,7 +1373,7 @@ GOTO_UNDO_WAD2:
                    int(was_wnol) + int(was_wnor));
 #if defined(HH_DEBUG)
   {
-    // nwr == 0 possible when ws == LSAME | CSAME and wt == CSAME | RSAME
+    // Here, nwr == 0 is possible when ws == LSAME | CSAME and wt == CSAME | RSAME.
     assertx(nwr >= 0 && nwr <= 6);
     // Verify count with _wedges array.
     int cur = _wedges.num();
@@ -1401,7 +1401,7 @@ void AWMesh::ok() const {
       const int ff = _fnei[f].faces[j];
       if (ff == k_undefined) continue;
       assertx(_faces.ok(ff));
-      assertx(setfnei.add(ff));  // no valence_2 vertices
+      assertx(setfnei.add(ff));  // No valence_2 vertices.
       const int v1 = _wedges[_faces[f].wedges[mod3(j + 1)]].vertex;
       const int v2 = _wedges[_faces[f].wedges[mod3(j + 2)]].vertex;
       assertx(v1 != v2);
@@ -1414,7 +1414,7 @@ void AWMesh::ok() const {
   // Check that wedges are consecutive around each vertex.
   {
     int count = 0;
-    // vertex -> most clw face (or beg of wedge (or any face))
+    // Vertex -> most clw face (or beginning of wedge (or any face)).
     Array<int> mvf(_vertices.num(), k_undefined);
     for_int(f, _faces.num()) {
       for_int(j, 3) {
@@ -1446,7 +1446,7 @@ void AWMesh::ok() const {
           wp = w;
         }
         count++;
-        f = _fnei[f].faces[mod3(j + 1)];  // go ccw
+        f = _fnei[f].faces[mod3(j + 1)];  // Go ccw.
         if (f == k_undefined || f == f0) break;
       }
     }
@@ -1492,7 +1492,7 @@ void AWMesh::split_edge(int f, int j, float frac1) {
 
 void AWMesh::construct_adjacency() {
   _fnei.init(_faces.num());
-  Map<std::pair<int, int>, int> mvv_face;  // (Vertex, Vertex) -> Face
+  Map<std::pair<int, int>, int> mvv_face;  // Maps (Vertex, Vertex) -> Face.
   for_int(f, _faces.num()) {
     for_int(j, 3) {
       const int j1 = mod3(j + 1), j2 = mod3(j + 2);
@@ -1566,9 +1566,9 @@ PMeshInfo PMesh::read_header(std::istream& is) {
     assertx(line == "PM");
     break;
   }
-  // default for version 1 compatibility
+  // Default for version 1 compatibility.
   pminfo._read_version = 1;
-  // default for version 0 compatibility
+  // Default for version 0 compatibility.
   pminfo._has_rgb = false;
   pminfo._has_uv = true;
   pminfo._has_resid = false;
@@ -1636,7 +1636,7 @@ void PMesh::truncate_beyond(PMeshIter& pmi) {
   _info._full_nwedges = pmi._wedges.num();
   _info._full_nfaces = pmi._faces.num();
   pmrs._info = _info;
-  // really, should update all PMeshRStreams which are open on PMesh.
+  // Really, should update all PMeshRStreams which are open on the PMesh.
 }
 
 void PMesh::truncate_prior(PMeshIter& pmi) {
@@ -1646,7 +1646,7 @@ void PMesh::truncate_prior(PMeshIter& pmi) {
   _info._tot_nvsplits = _vsplits.num();
   pmrs._info = _info;
   pmrs._vspliti = 0;
-  // really, should update all PMeshRStreams which are open on PMesh.
+  // Really, should update all PMeshRStreams which are open on the PMesh.
 }
 
 // *** PMeshRStream
@@ -1691,9 +1691,9 @@ const Vsplit* PMeshRStream::peek_next_vsplit() {
   assertx(_vspliti >= 0);
   if (_pm) {
     if (_vspliti < _pm->_vsplits.num()) return &_pm->_vsplits[_vspliti];
-    if (!_is) return nullptr;  // end of array
+    if (!_is) return nullptr;  // End of array.
   } else if (_vspl_ready) {
-    // have buffer record
+    // Have a buffer record.
     return &_tmp_vspl;
   }
   assertx(*_is);
@@ -1720,9 +1720,9 @@ const Vsplit* PMeshRStream::next_vsplit() {
       _vspliti++;
       return &vsplits[_vspliti - 1];
     }
-    if (!_is) return nullptr;  // end of array
+    if (!_is) return nullptr;  // End of array.
   } else if (_vspl_ready) {
-    // use up buffer record
+    // Use up the buffer record.
     _vspl_ready = false;
     return &_tmp_vspl;
   }
@@ -1744,8 +1744,8 @@ const Vsplit* PMeshRStream::next_vsplit() {
 
 const Vsplit* PMeshRStream::prev_vsplit() {
   assertx(_vspliti >= 0);
-  assertx(is_reversible());       // die if !_pm
-  if (!_vspliti) return nullptr;  // end of array
+  assertx(is_reversible());       // Die if !_pm.
+  if (!_vspliti) return nullptr;  // End of array.
   --_vspliti;
   return &_pm->_vsplits[_vspliti];
 }
@@ -1869,8 +1869,8 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
       break;
     default: assertnever("");
   }
-  // Grab final mesh
-  implicit_cast<WMesh&>(*this) = pmi;  // copy pmi::AWMesh to this->WMesh
+  // Grab the final mesh.
+  implicit_cast<WMesh&>(*this) = pmi;  // Copy pmi::AWMesh to this->WMesh.
   ASSERTX(_vertices.num() == ancestry._vancestry.num());
   ASSERTX(_wedges.num() == ancestry._wancestry.num());
   // Fill attribute arrays _vattribs and _wattribs.

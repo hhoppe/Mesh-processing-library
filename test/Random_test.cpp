@@ -12,7 +12,7 @@ int main() {
   }
   r1.seed(0);
   for_int(i, 3) SHOW(r1.get_unsigned());
-  const int num = 0 ? 10'000'000 : 1'000'000;  // 10M takes too long in debug
+  const int num = 0 ? 10'000'000 : 1'000'000;  // 10M takes too long in debug.
   {
     Stat Sgauss;
     for_int(i, num) {
@@ -24,10 +24,10 @@ int main() {
     SHOW(round_fraction_digits(Sgauss.avg(), 1e10f));
     SHOW(round_fraction_digits(Sgauss.sdv(), 1e7f));
   }
-  SHOW(0.5f);  // mean of uniform [0, 1] distribution
+  SHOW(0.5f);  // Mean of uniform [0, 1] distribution.
   SHOW(0.5f * pow(2.f, 32.f));
   SHOW(0.5f * pow(2.f, 64.f));
-  SHOW(sqrt(1.f / 12.f));  // standard deviation of uniform [0, 1] distribution
+  SHOW(sqrt(1.f / 12.f));  // Standard deviation of uniform [0, 1] distribution.
   SHOW(sqrt(1.f / 12.f) * pow(2.f, 32.f));
   SHOW(sqrt(1.f / 12.f) * pow(2.f, 64.f));
   {

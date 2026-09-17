@@ -26,12 +26,12 @@ using lapack_int = lapack::integer;
 #if defined(__CYGWIN__)
 using lapack_int = int;
 #else  // _WIN32
-using lapack_int = long;  // was defined as "integer" in f2c.h
+using lapack_int = long;  // Was defined as "integer" in f2c.h.
 #endif
 
-// Continue: cygwin or WIN32
+// Continue: cygwin or WIN32.
 
-// clapack routines in liblapack
+// The clapack routines in liblapack.
 extern "C" {
 
 // SGELSS solves overdetermined or underdetermined systems for GE matrices, using SVD.
@@ -40,7 +40,7 @@ lapack_int sgelss_(lapack_int* m, lapack_int* n, lapack_int* nrhs, float* a, lap
                    lapack_int* ldb, float* s, float* rcond, lapack_int* irank, float* work, lapack_int* lwork,
                    lapack_int* info);
 
-// same for double-precision
+// Same for double precision.
 lapack_int dgelss_(lapack_int* m, lapack_int* n, lapack_int* nrhs, double* a, lapack_int* lda, double* b,
                    lapack_int* ldb, double* s, double* rcond, lapack_int* irank, double* work, lapack_int* lwork,
                    lapack_int* info);

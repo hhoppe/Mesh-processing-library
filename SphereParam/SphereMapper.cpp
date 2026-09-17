@@ -738,7 +738,7 @@ class SphereMapper::Implementation {
   void initialize_visualizer() {
     if (!_visualizer) return;
     std::ostream& os = (*_visualizer)();
-    // Viewer frame from unitsphere.s3d
+    // Viewer frame from unitsphere.s3d.
     os << "F 0  0.577347 0.577382 -0.577363  -0.707142 0.707087 0  0.408249 0.408274 0.816517"
           "  -19.0715 -19.0767 19.0628  0.0319575\n";
     GMesh gmesh = _pmi.extract_gmesh();

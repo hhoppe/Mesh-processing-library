@@ -13,8 +13,8 @@ namespace hh {
 // Notes:
 // - Network order is Big Endian (MSB first).  That is the convention used here for all binary files.
 //
-// - Intel_x86 and VAX are Little Endian
-// - RISC is mostly Big Endian.  ARM is both.  All ARM versions of Windows run Little Endian
+// - Intel_x86 and VAX are Little Endian.
+// - RISC is mostly Big Endian.  ARM is both.  All ARM versions of Windows run Little Endian.
 
 // The Internet Protocol defines big-endian as the standard network byte order used for all numeric values in
 //  the packet headers and for many higher level protocols and file formats that are designed for use over IP.

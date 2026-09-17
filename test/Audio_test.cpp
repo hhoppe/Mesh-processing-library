@@ -8,9 +8,9 @@ using namespace hh;
 
 int main() {
   if (0) my_setenv("AUDIO_DEBUG", "1");
-  if (1) my_setenv("AUDIO_TEST_CODEC", "1");  // avoid dependency on external ffmpeg program
+  if (1) my_setenv("AUDIO_TEST_CODEC", "1");  // Avoid dependency on external ffmpeg program.
   if (1) {
-    // 400 Hz tone for 3 s at 48 kHz sampling in stereo
+    // 400 Hz tone for 3 s at 48 kHz sampling in stereo.
     const double freq = 400., duration = 3., samplerate = 48'000.;
     const int nchannels = 2;
     const int nsamples = int(duration * samplerate + .5);
@@ -21,7 +21,7 @@ int main() {
       const double t = i / samplerate;  // Time in seconds.
       float v;
       if (1) {
-        v = std::sin(float(t * freq * TAU));  // this one compresses well using *.mp3
+        v = std::sin(float(t * freq * TAU));  // This one compresses well using *.mp3.
       } else if (0) {
         const double mod_freq = 5.;  // Add a modulation frequency of 5 Hz.
         const double freq2 = freq * (1. + .3 * std::sin(t * mod_freq * TAU));

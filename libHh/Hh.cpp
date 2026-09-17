@@ -143,7 +143,7 @@ static string beautify_type_name(string s) {
   s = replace_all(s, "__int64", "int64");
   s = replace_all(s, "char const", "const char");
   // ** gcc:
-  s = replace_all(s, "std::__cxx11::", "std::");  // GNUC 5.2; e.g. std::__cx11::string
+  s = replace_all(s, "std::__cxx11::", "std::");  // GNUC 5.2; e.g. std::__cxx11::string.
   s = replace_all(s, "std::basic_string<char>", "std::string");
   s = replace_all(s, ",std::hash<int>,std::equal_to<int>>", ">");
   s = replace_all(s, ",std::hash<std::string>,std::equal_to<std::string>>", ">");
@@ -182,8 +182,8 @@ string forward_slash(const string& s) { return replace_all(s, "\\", "/"); }
 string extract_function_type_name(string s) {
   // See experiments in ~/git/hh_src/test/misc/test_compile_time_type_name.cpp
   // Maybe "clang -std=gnu++11" was required for __PRETTY_FUNCTION__ to give adorned function name.
-  s = replace_all(s, "std::__cxx11::", "std::");  // GNUC 5.2; e.g. std::__cx11::string.
-  // GOOGLE3: versioned libstdc++ or libc++
+  s = replace_all(s, "std::__cxx11::", "std::");  // GNUC 5.2; e.g. std::__cxx11::string.
+  // GOOGLE3: versioned libstdc++ or libc++.
   s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
   if (remove_at_start(s, "hh::details::TypeNameAux<")) {  // _MSC_VER
     if (!remove_at_end(s, ">::name")) assertnever(SSHOW(s));
@@ -196,7 +196,7 @@ string extract_function_type_name(string s) {
     s.erase(i);
     remove_at_end(s, " ");  // Possible space.
   } else if (remove_at_start(s, "static std::string hh::details::TypeNameAux<") ||
-             remove_at_start(s, "static string hh::details::TypeNameAux<")) {  // clang.
+             remove_at_start(s, "static string hh::details::TypeNameAux<")) {  // Clang.
     auto i = s.find(">::name() [T = ");
     if (i == string::npos) assertnever(SSHOW(s));
     s.erase(i);

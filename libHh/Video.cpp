@@ -49,7 +49,7 @@ bool filename_is_video(const string& filename) {
   return contains(k_extensions, to_lower(get_path_extension(filename)));
 }
 
-string video_suffix_for_magic_byte(uchar c) {
+std::string_view video_suffix_for_magic_byte(uchar c) {
   // See also image_suffix_for_magic_byte() and audio_suffix_for_magic_byte().
   // Documentation on prefixes for various video containers:
   //  *.mp4: "\000\000\000\030ftypmp42", "\000\000\000 ftypisom", "\000\000\000\034ftypisom"

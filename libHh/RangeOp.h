@@ -14,7 +14,7 @@ template <typename T> struct mean_type {
       !std::is_arithmetic_v<T>, T,
       std::conditional_t<std::is_floating_point_v<T>, double, std::conditional_t<sizeof(T) >= 4, double, float>>>;
 };
-template <typename T> using mean_type_t = typename mean_type<T>::type;
+template <typename T> using mean_type_t = mean_type<T>::type;
 
 // Preferred floating-point type (either float or double) used to multiply a given element type.
 template <typename T> struct factor_type {
@@ -23,7 +23,7 @@ template <typename T> struct factor_type {
   // User may override factor_type for a new type T supporting T * double.
   using type = std::conditional_t<std::is_arithmetic_v<T>, double, float>;
 };
-template <typename T> using factor_type_t = typename factor_type<T>::type;
+template <typename T> using factor_type_t = factor_type<T>::type;
 
 template <typename DesiredType, typename R>
 using mean_type_for_t = std::conditional_t<std::is_void_v<DesiredType>, mean_type_t<range_value_t<R>>, DesiredType>;

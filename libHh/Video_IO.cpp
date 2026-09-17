@@ -107,7 +107,7 @@ void Video::read_file(const string& filename) {
     ConsoleProgress cprogress("Vread");
     int f = 0;
     for (;;) {
-      if (nfexpect) cprogress.update(float(f) / (nfexpect));
+      if (nfexpect) cprogress.update(float(f) / nfexpect);
       if (f >= nframes()) break;
       if (!rvideo.read((*this)[f])) break;
       f++;
@@ -153,7 +153,7 @@ void VideoNv12::read_file(const string& filename, Video::Attrib* pattrib) {
     ConsoleProgress cprogress("Vread");
     int f = 0;
     for (;;) {
-      if (nfexpect) cprogress.update(float(f) / (nfexpect));
+      if (nfexpect) cprogress.update(float(f) / nfexpect);
       if (f >= _grid_Y.dim(0)) break;
       if (!rvideo.read((*this)[f])) break;
       f++;
@@ -235,6 +235,8 @@ class WVideo::Implementation {
   WVideo& _wvideo;
 };
 
+namespace {
+
 class Unsupported_RVideo_Implementation : public RVideo::Implementation {
  public:
   explicit Unsupported_RVideo_Implementation(RVideo& rvideo) : RVideo::Implementation(rvideo) { assertnever_ret("?"); }
@@ -256,6 +258,8 @@ class Unsupported_WVideo_Implementation : public WVideo::Implementation {
     assertnever("?");
   }
 };
+
+}  // namespace
 
 //----------------------------------------------------------------------------
 
@@ -347,6 +351,7 @@ namespace {
 class Initialize_COM_MF {
  public:
   Initialize_COM_MF() {
+    // NOLINTNEXTLINE(readability-redundant-nested-if): keep the disabled statement in its own scope.
     if (s_num_video_uses++) {
       if (0) return;
     }
@@ -919,7 +924,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
               assertx(i != string::npos);
               assertx(sscanf(line.c_str() + i, ", %lg tb%c", &framerate, &vch) == 2 && vch == 'r');
             }
-            if (line.find("yuv444p") != string::npos) yuv444p = true;
+            if (line.contains("yuv444p")) yuv444p = true;
             if (ldebug) SHOW(dims[2], dims[1], video_bitrate, framerate, yuv444p);
           }
           if (contains(line, ": Audio:") && contains(line, "kb/s")) expect_audio = true;

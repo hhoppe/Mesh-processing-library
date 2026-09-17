@@ -827,10 +827,10 @@ Array<string> Hw::query_open_filenames(const string& hint_filename) {
   {
     ofn.lStructSize = sizeof(ofn);
     ofn.hwndOwner = _hwnd;
-    ofn.lpstrFilter = (L"Video and Images\0" VIDEO_EXTS L";" IMAGE_EXTS L"\0"
-                           L"Video Files\0" VIDEO_EXTS L"\0"
-                           L"Image Files\0" IMAGE_EXTS L"\0"
-                           L"All Files (*.*)\0*.*\0");
+    ofn.lpstrFilter = L"Video and Images\0" VIDEO_EXTS L";" IMAGE_EXTS L"\0"
+                      L"Video Files\0" VIDEO_EXTS L"\0"
+                      L"Image Files\0" IMAGE_EXTS L"\0"
+                      L"All Files (*.*)\0*.*\0";
     ofn.lpstrFile = buffer.data();
     ofn.nMaxFile = buffer.num();
     ofn.Flags = OFN_EXPLORER | OFN_FILEMUSTEXIST | OFN_HIDEREADONLY | OFN_ALLOWMULTISELECT;

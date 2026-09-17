@@ -13,17 +13,18 @@ namespace {
 
 inline bool convert_bool(const string& s) { return s == "1" || s == "true"; }
 inline char convert_char(const string& s) { return s[0]; }
+// NOLINTNEXTLINE(modernize-use-string-view): the result joins a conditional chain of `string` values.
 inline string show_bool(bool b) { return b ? "true" : "false"; }
 
 inline string show_float(float f) {
   string s = make_string(f);  // Nicely Produces "0" rather than the "0.000000" of std::to_string(f).
-  if (s.find_first_of(".e") == string::npos) s += ".";
+  if (s.find_first_of(".e") == string::npos) s += '.';
   return s;
 }
 
 inline string show_double(double f) {
   string s = make_string(f);
-  if (s.find_first_of(".e") == string::npos) s += ".";
+  if (s.find_first_of(".e") == string::npos) s += '.';
   return s;
 }
 
@@ -240,16 +241,16 @@ void ParseArgs::print_help() {
                            : o.parse_func == &ParseArgs::fdouble ? show_double(static_cast<double*>(o.argp)[i])
                            : o.parse_func == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i]
                                                                  : "?");
-        if (i > 0) s_default += " ";
+        if (i > 0) s_default += ' ';
         s_default += s0;
       }
-      s_default += "]";
+      s_default += ']';
     }
     auto i = o.doc.find(':');
     const int pref = i != string::npos ? int(i) : 0;
     const int prefm1 = pref ? pref - 1 : pref;
     string s1 = o.str;
-    if (contains(o.str, '[') && !contains(o.str, ']')) s1 += "]";
+    if (contains(o.str, '[') && !contains(o.str, ']')) s1 += ']';
     s1 += sform(" %.*s", prefm1, o.doc.c_str());
     s1 = sform(" %-28s %s", s1.c_str(), o.doc.c_str() + pref);
     if (s_default != "") s1 = sform("%-84s %s", s1.c_str(), s_default.c_str());
@@ -265,17 +266,14 @@ string ParseArgs::get_executable_name() {
 
 void ParseArgs::iadd(option o) {
   if (1 && o.doc != "") {  // Enforce my "conventions" to properly distinguish flags and parameters.
-    if (o.narg > 0 || o.narg == -1) {
-      if (o.doc[0] == ':' || !contains(o.doc, ':') || o.doc[o.doc.find(':') - 1] != ' ') {
-        SHOW(o.str, o.doc);
-        Warning("Possibly inconsistent parameter option comment");
-      }
+    if ((o.narg > 0 || o.narg == -1) &&
+        (o.doc[0] == ':' || !contains(o.doc, ':') || o.doc[o.doc.find(':') - 1] != ' ')) {
+      SHOW(o.str, o.doc);
+      Warning("Possibly inconsistent parameter option comment");
     }
-    if ((!o.narg || o.narg == -2) && o.parse_func) {
-      if (o.doc[0] != ':') {
-        SHOW(o.str, o.doc);
-        Warning("Possibly inconsistent flag option comment");
-      }
+    if ((!o.narg || o.narg == -2) && o.parse_func && o.doc[0] != ':') {
+      SHOW(o.str, o.doc);
+      Warning("Possibly inconsistent flag option comment");
     }
   }
   _aroptions.push(std::move(o));

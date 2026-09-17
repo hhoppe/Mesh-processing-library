@@ -31,7 +31,7 @@ bool filename_is_audio(const string& filename) {
   return contains(k_extensions, to_lower(get_path_extension(filename)));
 }
 
-string audio_suffix_for_magic_byte(uchar c) {
+std::string_view audio_suffix_for_magic_byte(uchar c) {
   // See also image_suffix_for_magic_byte() and video_suffix_for_magic_byte().
   // Documentation on prefixes for various image containers:
   // *.wav: "RIFF"

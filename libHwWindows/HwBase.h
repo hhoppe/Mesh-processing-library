@@ -566,7 +566,7 @@ inline const string& gl_extensions_string() {
       glGetError();
     } else {
       s_string = s;
-      s_string += " ";
+      s_string += ' ';
       is_init = true;
     }
 #endif

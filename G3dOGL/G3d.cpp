@@ -293,10 +293,7 @@ int main(int argc, const char** argv) {
   }
   if (yonder >= 0.f) HB::set_yonder(yonder);
   if (eyeob) g_obs.first = 0;
-  if (g_aargs1.num() == 0) {
-    if (!g_obs[1].defined())  // Not UpdateOb1Bbox().
-      input = true;
-  }
+  if (g_aargs1.num() == 0 && !g_obs[1].defined()) input = true;  // Not UpdateOb1Bbox().
   if (contains(g_aargs1, "-")) keep_stdin_open = true;
   if (input) {
 #if !defined(_WIN32)
@@ -332,9 +329,9 @@ int main(int argc, const char** argv) {
   if (contains(keystring, 'j') || statefile == "none") {
     // Do nothing.
   } else if (statefile != "noname.s3d") {
-    keystring += ",";
+    keystring += ',';
   } else if (!contains(keystring, 'j')) {
-    keystring += "j";
+    keystring += 'j';
   }
   HB::set_current_object(cob);
   HB::open();

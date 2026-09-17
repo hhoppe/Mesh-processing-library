@@ -113,8 +113,8 @@ template <typename T> class StridedArrayView : public CStridedArrayView<T> {
   StridedArrayView(const type& a) = default;
   type& operator=(type&& a) & noexcept { return base::operator=(std::move(a)), *this; }  // For view<T>.
   using value_type = T;
-  using iterator = typename base::template Iterator<T>;
-  using const_iterator = typename base::const_iterator;
+  using iterator = base::template Iterator<T>;
+  using typename base::const_iterator;
   [[nodiscard]] T* data() noexcept { return _a; }
   [[nodiscard]] const T* data() const noexcept { return _a; }
   type& operator=(const type&) = delete;

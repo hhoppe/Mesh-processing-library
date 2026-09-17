@@ -1725,12 +1725,12 @@ void do_genpattern(Args& args) {
       switch (*s++) {
         case 'd': {  // Diagonal, black at (0, 0), (1, 1).
           const float vA = 0.f, vB = 1.f, vC = 0.f, vD = 1.f;
-          v = (1 - yf) * ((1 - xf) * vA + xf * vB) + (yf) * ((1 - xf) * vD + xf * vC);
+          v = (1 - yf) * ((1 - xf) * vA + xf * vB) + yf * ((1 - xf) * vD + xf * vC);
           break;
         }
         case '3': {  // Only one white corner.
           const float vA = 1.f, vB = 0.f, vC = 0.f, vD = 0.f;
-          v = (1 - yf) * ((1 - xf) * vA + xf * vB) + (yf) * ((1 - xf) * vD + xf * vC);
+          v = (1 - yf) * ((1 - xf) * vA + xf * vB) + yf * ((1 - xf) * vD + xf * vC);
           break;
         }
         default: assertnever("");
@@ -2276,12 +2276,12 @@ void do_poisson() {
           Warning("Interpreting zero input differences as unconstrained differences");
           w = smallw;
         }
-        lls.enter_a_rc(row, ((y + 0) * nx + (x)) * 2 + 0, -w);
-        lls.enter_a_rc(row, ((y + 1) * nx + (x)) * 2 + 0, +w);
+        lls.enter_a_rc(row, ((y + 0) * nx + x) * 2 + 0, -w);
+        lls.enter_a_rc(row, ((y + 1) * nx + x) * 2 + 0, +w);
         lls.enter_b_rc(row, 0, 0.f);
         row++;
-        lls.enter_a_rc(row, ((y + 0) * nx + (x)) * 2 + 1, -w);
-        lls.enter_a_rc(row, ((y + 1) * nx + (x)) * 2 + 1, +w);
+        lls.enter_a_rc(row, ((y + 0) * nx + x) * 2 + 1, -w);
+        lls.enter_a_rc(row, ((y + 1) * nx + x) * 2 + 1, +w);
         lls.enter_b_rc(row, 0, w * v);
         row++;
       }
@@ -2373,7 +2373,7 @@ void do_poisson() {
       const float bigf = 1e5f;
       for_int(y, 2) for_int(x, nx) {
         const int nym1 = y ? ny - 1 : 0;
-        lls.enter_a_rc(row, (nym1 * nx + (x)) * 2 + 1, bigf);
+        lls.enter_a_rc(row, (nym1 * nx + x) * 2 + 1, bigf);
         Point p = func_default_pos(V(nym1, x));
         lls.enter_b_rc(row, 0, bigf * p[1]);
         row++;
@@ -2478,8 +2478,8 @@ void do_procedure(Args& args) {
       }
     }
     Matrix<Image> images(1, 2);
-    images[0, 0] = image1;
-    images[0, 1] = image2;
+    images[0, 0] = std::move(image1);
+    images[0, 1] = std::move(image2);
     assemble_images(images);
 
   } else if (name == "benchmark") {
@@ -3042,7 +3042,7 @@ inline Vector4 RGB_from_LAB(const Vector4& pv) {
   v[3] = 255.f;
   for_int(i, 3) {
     if (v[i] > 0.0031308f)
-      v[i] = 1.055f * (pow(v[i], (1.0f / 2.4f))) - 0.055f;
+      v[i] = 1.055f * pow(v[i], 1.0f / 2.4f) - 0.055f;
     else
       v[i] *= 12.92f;
     if (1) v[i] = clamp(v[i], 0.f, 255.999f);  // HH

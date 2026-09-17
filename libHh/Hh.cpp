@@ -77,7 +77,7 @@ void show_call_stack_internal() {
     if (!verbose) {
       if (file == "" || description == "") continue;  // Omit frames lacking any debug information.
       // Note that the names may be unqualified, because libstdc++ reports the DWARF name rather than the symbol.
-      const auto matches = [&](const char* s) { return description.find(s) != string::npos; };
+      const auto matches = [&](const char* s) { return description.contains(s); };
       if (matches("my_abort_handler") || matches("my_signal_handler") || matches("my_top_level_exception_filter") ||
           matches("my_CrtDbgHook") || matches("my_new_handler") || matches("my_terminate_handler") ||
           matches("show_call_stack") || matches("assertx_aux") || matches("assertt_aux") ||

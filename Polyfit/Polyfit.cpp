@@ -75,7 +75,7 @@ float get_erep() { return crep * verts.num(); }
 
 void analyze_poly(int indent, const string& s) {
   string str;
-  for_int(i, indent) str += " ";
+  for_int(i, indent) str += ' ';
   const int nv = verts.num();
   const float edis = get_edis(), espr = get_espr(), erep = get_erep();
   const float etot = edis + espr + erep;

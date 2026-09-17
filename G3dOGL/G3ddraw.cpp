@@ -184,7 +184,7 @@ static void handle_sliders(bool show, float yq) {
     float* val = sliders[i].val;
     const float oldval = *val;
     if (val == &lod_level)
-      *val = 1.1f - (selected.yx[0]) * 1.2f;
+      *val = 1.1f - selected.yx[0] * 1.2f;
     else
       *val *= std::exp(-yq);
     if (val == &anglethresh) {
@@ -262,7 +262,7 @@ void Dolly(const Vec2<float>& yxq) {
   static const bool dolly_lod = getenv_bool("G3D_DOLLY_LOD");
   if (lod_mode && sizemode && dolly_lod) {
     const float dn = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
-    const float ratio = d / (max(dn, 1e-10f));
+    const float ratio = d / max(dn, 1e-10f);
     lod_level *= ratio;
     update_lod();
   }

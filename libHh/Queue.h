@@ -45,8 +45,8 @@ template <typename T> class Queue {
     while (!q.empty()) enqueue(q.dequeue());
   }
   using value_type = T;
-  using iterator = typename base::iterator;
-  using const_iterator = typename base::const_iterator;
+  using iterator = base::iterator;
+  using const_iterator = base::const_iterator;
   [[nodiscard]] auto begin(this auto&& self) { return self._dq.begin(); }
   [[nodiscard]] auto end(this auto&& self) { return self._dq.end(); }
 

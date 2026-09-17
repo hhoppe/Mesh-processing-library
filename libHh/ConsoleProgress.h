@@ -88,7 +88,7 @@ inline void ConsoleProgress::update_i(float f) {
       if (_task_name != "") {
         if (old_val >= 0) {
           if (0) {
-            str += "\r";  // Bad because it could erase the shell prompt.
+            str += '\r';  // Bad because it could erase the shell prompt.
           } else {
             const int n = narrow_cast<int>(_task_name.size()) + 6;
             str.append(n, '\b');
@@ -97,7 +97,7 @@ inline void ConsoleProgress::update_i(float f) {
         str += "#" + _task_name + ":" + sform("%02d%% ", val);
       } else {
         if (old_val < 0)
-          str += "#";
+          str += '#';
         else
           str += "\b\b\b";
         str += sform("%02d%%", val);
@@ -118,7 +118,7 @@ inline void ConsoleProgress::clear() {
       if (_task_name != "") {
         const int n = narrow_cast<int>(_task_name.size()) + 6;
         if (0) {
-          str += "\r";
+          str += '\r';
         } else {
           str.append(n, '\b');
         }

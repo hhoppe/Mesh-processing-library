@@ -35,9 +35,9 @@ template <typename Key, typename Value, typename Hash = std::hash<Key>, typename
 class Map {
   using type = Map<Key, Value, Hash, Equal>;
   using base = std::unordered_map<Key, Value, Hash, Equal>;
-  using value_type = typename base::value_type;
-  using biter = typename base::iterator;
-  using bciter = typename base::const_iterator;
+  using value_type = base::value_type;
+  using biter = base::iterator;
+  using bciter = base::const_iterator;
 
  public:
   // Views of the keys and values; each holds a reference to the map, like the earlier hand-written ranges.
@@ -47,8 +47,8 @@ class Map {
   using values_iterator = ranges::iterator_t<values_range>;
   using cvalues_range = decltype(views::values(std::declval<const base&>()));
   using cvalues_iterator = ranges::iterator_t<cvalues_range>;
-  using Hashf = typename base::hasher;
-  using Equalf = typename base::key_equal;
+  using Hashf = base::hasher;
+  using Equalf = base::key_equal;
   Map() = default;
   explicit Map(Hashf hashf) : _map(0, hashf) {}
   explicit Map(Hashf hashf, Equalf equalf) : _map(0, hashf, equalf) {}

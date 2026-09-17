@@ -33,13 +33,11 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
   Simplex va = verts[i_vs];
   Simplex vb = verts[mod3(i_vs + 1)];
 
-  if (skip_degenerate) {
-    if (vold[va->getId()] == vold[vb->getId()]) {
-      assertx(degenerate(verts));
-      i_vs = mod3(i_vs + 1);
-      vb = verts[mod3(i_vs + 1)];
-      va = verts[i_vs];
-    }
+  if (skip_degenerate && vold[va->getId()] == vold[vb->getId()]) {
+    assertx(degenerate(verts));
+    i_vs = mod3(i_vs + 1);
+    vb = verts[mod3(i_vs + 1)];
+    va = verts[i_vs];
   }
 
   Simplex e = va->edgeTo(vb);
@@ -125,12 +123,10 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
     va = verts[mod3(i_vs + 2)];
     vb = verts[i_vs];
 
-    if (skip_degenerate) {
-      if (vold[va->getId()] == vold[vb->getId()]) {
-        i_vs = mod3(i_vs + 2);
-        va = verts[mod3(i_vs + 2)];
-        vb = verts[i_vs];
-      }
+    if (skip_degenerate && vold[va->getId()] == vold[vb->getId()]) {
+      i_vs = mod3(i_vs + 2);
+      va = verts[mod3(i_vs + 2)];
+      vb = verts[i_vs];
     }
 
     e = va->edgeTo(vb);

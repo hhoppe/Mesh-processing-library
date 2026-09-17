@@ -2451,7 +2451,7 @@ void do_obtusesplit() {
   string str;
   while (!pqe.empty()) {
     Edge e = pqe.remove_min();
-    const bool want_split = [&]() {
+    const bool want_split = [&] {
       for (Face ff : mesh.faces(e)) {
         const Point po = mesh.point(mesh.opp_vertex(e, ff));
         const Point p1 = mesh.point(mesh.vertex1(e));
@@ -3310,7 +3310,7 @@ void do_procedure(Args& args) {
     const float segment_length = max_side * .01f;
     for (Vertex v : mesh.vertices()) {
       Vector tangent;
-      const auto output_segment = [&]() {
+      const auto output_segment = [&] {
         const Point p1 = mesh.point(v), p2 = p1 + tangent * segment_length;
         A3dElem el(A3dElem::EType::polyline);
         el.push(A3dVertex(p1, Vector(0.f, 0.f, 0.f), col));

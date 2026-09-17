@@ -954,7 +954,7 @@ const char* generate_corner_string(Corner c, string& str) {
 
 // Create vertex and corner strings representing wedge info on vertex v.
 void create_vertex_corner_strings(Vertex v, string& str) {
-  const int common_wid = [&]() {
+  const int common_wid = [&] {
     int g_wid = -1;
     for (Corner c : mesh.corners(v)) {
       const int wid = c_wedge_id(c);
@@ -1550,7 +1550,7 @@ void sample_pts() {
       eclen.push(1.00001f);
     }
     {  // For a square patch, perimeter_ratio is 4.
-      const float perimeter_ratio = mesh_elen / (my_sqrt(mesh_area));
+      const float perimeter_ratio = mesh_elen / my_sqrt(mesh_area);
       showff("perimeter_ratio=%g\n", perimeter_ratio);
     }
     const float sampling_density = (numpts + mesh.num_vertices()) / mesh_area;
@@ -2059,25 +2059,23 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
               break;
             }
           }
-        } else if (dir) {
-          if (--i < 0) {
-            if (closed) {
-              i = nf - 1;
-            } else {
-              Corner c = mesh.clw_corner(pc);
-              if (c && c_wedge_id(c) == c_wedge_id(pc)) {
-                assertx(mesh.corner_face(c) == mesh.face1(e) || mesh.corner_face(c) == mesh.face2(e));
-                Corner c2 = mesh.ccw_face_corner(c);
-                Vertex vo = mesh.corner_vertex(c2);
-                if (vo == v1)
-                  rwid_v1 = c_wedge_id(c2);
-                else if (vo == v2)
-                  rwid_v2 = c_wedge_id(c2);
-                else
-                  assertnever("");
-              }
-              break;
+        } else if (dir && --i < 0) {
+          if (closed) {
+            i = nf - 1;
+          } else {
+            Corner c = mesh.clw_corner(pc);
+            if (c && c_wedge_id(c) == c_wedge_id(pc)) {
+              assertx(mesh.corner_face(c) == mesh.face1(e) || mesh.corner_face(c) == mesh.face2(e));
+              Corner c2 = mesh.ccw_face_corner(c);
+              Vertex vo = mesh.corner_vertex(c2);
+              if (vo == v1)
+                rwid_v1 = c_wedge_id(c2);
+              else if (vo == v2)
+                rwid_v2 = c_wedge_id(c2);
+              else
+                assertnever("");
             }
+            break;
           }
         }
         const int cnwid = nn.ar_nwid[i];
@@ -3829,9 +3827,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       } else if (v2nse >= 3) {
         if (ii > 0 && !minii1) continue;
       } else {
-        if (0 && !mesh.is_boundary(e)) {
-          if (ii != 1 && !miniiall && !nominii1 && !minii2) continue;
-        }
+        if (0 && !mesh.is_boundary(e) && ii != 1 && !miniiall && !nominii1 && !minii2) continue;
         // Try all 3 ii's in order to preserve discontinuity curve corners (not just boundary curve corners).
       }
     }
@@ -3877,7 +3873,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     if (sphericalparam) {
       assertx(minii2);
       // See if new faces are all valid on sphere.
-      const bool ok = [&]() {
+      const bool ok = [&] {
         Vertex tv1 = ii == 2 ? v1 : v2;
         for_int(i, nn.va.num() - 1) {
           const Vec3<Point> triangle{v_sph(nn.va[i]), v_sph(nn.va[i + 1]), v_sph(tv1)};
@@ -3904,7 +3900,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       if (dihpenalty == BIGFLOAT) continue;
     }
     if (poszfacenormal) {
-      const bool ok = [&]() {
+      const bool ok = [&] {
         for_int(i, nn.va.num() - 1) {
           const Vec3<Point> triangle{mesh.point(nn.va[i]), mesh.point(nn.va[i + 1]), newp};
           if (get_normal_dir(triangle)[2] < 0.f) return false;

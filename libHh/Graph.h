@@ -24,10 +24,10 @@ template <typename T> class Graph : noncopyable {
   using base = Map<T, atype>;
 
  public:
-  using vertices_range = typename base::keys_range;
-  using vertex_iterator = typename base::keys_iterator;
+  using vertices_range = base::keys_range;
+  using vertex_iterator = base::keys_iterator;
   using edges_range = const atype&;
-  using edge_iterator = const typename atype::const_iterator;
+  using edge_iterator = const atype::const_iterator;
   Graph() = default;
   Graph(type&& g) noexcept { swap(*this, g); }
   type& operator=(type&& g) noexcept { return clear(), swap(*this, g), *this; }

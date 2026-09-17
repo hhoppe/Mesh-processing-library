@@ -49,7 +49,7 @@ enum class Alignment { left, center, right };
 
 // Merge a D-dimensional grid of D-dimensional grids into a single D-dimensional grid.
 //  (U must be derived from CGridView<D, T>).
-template <int D, typename U, typename T = typename U::value_type>
+template <int D, typename U, typename T = U::value_type>
 [[nodiscard]] Grid<D, T> assemble(CGridView<D, U> grids, const T& background = T{},
                                   const Vec<Alignment, D>& align = ntimes<D>(Alignment::center));
 

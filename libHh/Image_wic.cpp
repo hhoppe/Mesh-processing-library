@@ -348,12 +348,10 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   const_cast<Image&>(*this).set_suffix(suf);  // Mutable.
   const string& orig_filename = attrib().orig_filename;
   bool have_metadata = container_format == &GUID_ContainerFormatJpeg && orig_filename != "";
-  if (have_metadata) {
-    if (file_requires_pipe(orig_filename)) {
-      if (attrib().orig_suffix == suffix())
-        Warning("Image write: any EXIF metadata is lost because input image was read from pipe");
-      have_metadata = false;
-    }
+  if (have_metadata && file_requires_pipe(orig_filename)) {
+    if (attrib().orig_suffix == suffix())
+      Warning("Image write: any EXIF metadata is lost because input image was read from pipe");
+    have_metadata = false;
   }
   wic_init();
   const bool write_through_memory =

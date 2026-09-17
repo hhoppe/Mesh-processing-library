@@ -72,7 +72,7 @@ template <typename T> class CArrayView {
   // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
   // `arview = array` and `matrix[0] = matrix[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
   type& operator=(type&& a) & noexcept { return _a = a._a, _n = a._n, *this; }
-  void reinit(type a) { *this = a; }
+  void reinit(type a) { *this = std::move(a); }
   [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const noexcept { return _n; }
   [[nodiscard]] constexpr size_t size() const noexcept { return narrow_cast<size_t>(_n); }
   [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) noexcept {
@@ -140,7 +140,7 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
   // `arview = array` and `matrix[0] = matrix[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
   type& operator=(type&& a) & noexcept { return base::operator=(std::move(a)), *this; }
-  void reinit(type a) { *this = a; }
+  void reinit(type a) { *this = std::move(a); }
   void assign(base ar) requires Copyable<T>;
   using value_type = T;
   using iterator = T*;

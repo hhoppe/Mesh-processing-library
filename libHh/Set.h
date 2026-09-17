@@ -39,11 +39,11 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   using base = std::unordered_set<T, Hash, Equal>;
 
  public:
-  using Hashf = typename base::hasher;
-  using Equalf = typename base::key_equal;
+  using Hashf = base::hasher;
+  using Equalf = base::key_equal;
   using value_type = T;
-  using iterator = typename base::iterator;
-  using const_iterator = typename base::const_iterator;
+  using iterator = base::iterator;
+  using const_iterator = base::const_iterator;
   Set() = default;
   explicit Set(Hashf hashf) : _set(0, hashf) {}
   explicit Set(Hashf hashf, Equalf equalf) : _set(0, hashf, equalf) {}

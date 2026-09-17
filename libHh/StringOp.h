@@ -12,9 +12,7 @@ namespace hh {
 // }
 
 // Does string contain a substring?
-[[nodiscard]] inline bool contains(const string& str, const string& substr) {
-  return str.find(substr) != string::npos;
-}
+[[nodiscard]] inline bool contains(const string& str, const string& substr) { return str.contains(substr); }
 
 // Does string have the specified prefix string?
 [[nodiscard]] inline bool starts_with(const string& s, const string& se) {

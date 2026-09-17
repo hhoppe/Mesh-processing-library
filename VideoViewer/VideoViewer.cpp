@@ -149,6 +149,7 @@ struct Object {
   [[nodiscard]] int nframes() const { return _dims[0]; }
   [[nodiscard]] bool is_image() const { return _is_image; }
   [[nodiscard]] const Vec2<int>& spatial_dims() const { return _dims.tail<2>(); }
+  // NOLINTNEXTLINE(modernize-use-string-view): the result is concatenated with `string` and `const char*`.
   [[nodiscard]] string stype() const { return is_image() ? "image" : "video"; }
   [[nodiscard]] bool loaded() const { return _nframes_loaded == nframes(); }
   Vec3<int> _dims;  // _dims[0] is the number of frames, which is always 1 for an image
@@ -1857,8 +1858,8 @@ bool DerivedHw::key_press(string skey) {
             float ratio = -1.f;
             if (sscanf(s.c_str(), "%g:%g", &v1, &v2) == 2) {
               if (v1 > 0.f && v2 > 0.f) ratio = v1 / v2;
-            } else if (sscanf(s.c_str(), "%g", &v1) == 1) {
-              if (v1 > 0.f) ratio = v1;
+            } else if (sscanf(s.c_str(), "%g", &v1) == 1 && v1 > 0.f) {
+              ratio = v1;
             }
             if (ratio <= 0.f) throw "invalid aspect ratio";
             set_fullscreen(false);  // OK to subsequently call resize_window() below before a draw_window()?
@@ -3051,10 +3052,13 @@ const string glsl_shader_version =
 const string glsl_shader_version = "#version 330\n";  // Not supported on cygwin.
 #endif
 
+// The parentheses are not redundant here; they delimit the raw string literal provided by the included file.
+// NOLINTNEXTLINE(readability-redundant-parentheses)
 const string vertex_shader = glsl_shader_version + (
 #include "vertex_shader.glsl"
                                                    );
 
+// NOLINTNEXTLINE(readability-redundant-parentheses)
 const string fragment_shader = glsl_shader_version + (
 #include "fragment_shader.glsl"
                                                      );
@@ -4196,8 +4200,8 @@ void do_stdin(Args& args) {
   // Let do_video() or do_image() parse the "-" argument.
   const int c = std::cin.peek();
   if (c < 0) assertnever("Empty stdin");
-  const string video_suffix = video_suffix_for_magic_byte(uchar(c));
-  const string image_suffix = image_suffix_for_magic_byte(uchar(c));
+  const std::string_view video_suffix = video_suffix_for_magic_byte(uchar(c));
+  const std::string_view image_suffix = image_suffix_for_magic_byte(uchar(c));
   assertx(video_suffix == "" || image_suffix == "");
   if (video_suffix == "" && image_suffix == "") Warning("Unrecognized magic byte; assuming stdin is video");
   if (image_suffix == "")

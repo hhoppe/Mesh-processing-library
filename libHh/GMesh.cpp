@@ -440,9 +440,9 @@ void GMesh::read_line(char* sline) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
         const char* sinfo = get_sinfo(s);
         Edge e = query_edge(id_vertex(vi1), id_vertex(vi2));
-        if (!e)
+        if (!e) {
           Warning("GMesh::read_line(): Did not find edge in mesh");
-        else if (sinfo) {
+        } else if (sinfo) {
           set_string(e, sinfo);
           flags(e).flag(eflag_sharp) = string_has_key(sinfo, "sharp");
         }

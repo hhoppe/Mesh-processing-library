@@ -1028,11 +1028,9 @@ void load_texturemaps() {
     anisotropy = getenv_int("ANISOTROPY", anisotropy);
     set_anisotropy();
 
-    if (texturenormal) {
-      if (!normalmap_init()) {
-        Warning("Normal mapping unsupported -> texturenormal=false");
-        texturenormal = false;
-      }
+    if (texturenormal && !normalmap_init()) {
+      Warning("Normal mapping unsupported -> texturenormal=false");
+      texturenormal = false;
     }
 
     bool texture_elev = getenv_bool("TEXTURE_ELEV");
@@ -1071,8 +1069,8 @@ void load_texturemaps() {
                 v = 0;
               else if (x % (nl / 4) < 1)
                 v = 128;
-            } else if (level == 3) {
-              if (x < 1) v = 128;
+            } else if (level == 3 && x < 1) {
+              v = 128;
             }
             etexture[0, x] = Pixel::gray(v);
           }
@@ -3164,7 +3162,7 @@ void pm_wrap_draw(bool show) {
       const float oldval = pm_lod_level;
       switch (button_active) {
         case 1: {
-          pm_lod_level = 1.1f - (yxf[0]) * 1.2f;
+          pm_lod_level = 1.1f - yxf[0] * 1.2f;
           break;
         }
         case 2: {
@@ -3175,7 +3173,7 @@ void pm_wrap_draw(bool show) {
         }
         case 3: {
           const float factor = 5.f;
-          float val = 1.1f - (yxf[0]) * 1.2f;
+          float val = 1.1f - yxf[0] * 1.2f;
           val = max(val, 0.f);
           pm_lod_level = (std::exp(factor * val) - 1.0f) / (std::exp(factor) - 1.0f);
           break;
@@ -3244,14 +3242,12 @@ void draw_pm() {
     glShadeModel(lsmooth || pmesh._info._has_rgb ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
     update_mat_color(mesh_color);
-    if (texture_active) {
-      if (!texture_lit) {
-        glShadeModel(GL_FLAT);
-        initialize_unlit();
-        update_cur_color(mesh_color.d);
-        set_light_ambient(0.f);
-        if (texturenormal) normalmap_activate();
-      }
+    if (texture_active && !texture_lit) {
+      glShadeModel(GL_FLAT);
+      initialize_unlit();
+      update_cur_color(mesh_color.d);
+      set_light_ambient(0.f);
+      if (texturenormal) normalmap_activate();
     }
     // static const int pm_strips = getenv_int("PM_STRIPS");
     // 2002-05-28: it now always seems faster with strips and it greatly helps when Display Lists are enabled.
@@ -3440,14 +3436,12 @@ void draw_sr() {
     glShadeModel(lsmooth ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
     update_mat_color(mesh_color);
-    if (texture_active) {
-      if (!texture_lit) {
-        glShadeModel(GL_FLAT);
-        initialize_unlit();  // Disable lighting.
-        update_cur_color(mesh_color.d);
-        set_light_ambient(0.f);
-        if (texturenormal) normalmap_activate();
-      }
+    if (texture_active && !texture_lit) {
+      glShadeModel(GL_FLAT);
+      initialize_unlit();  // Disable lighting.
+      update_cur_color(mesh_color.d);
+      set_light_ambient(0.f);
+      if (texturenormal) normalmap_activate();
     }
     if (sr_no_strips) {
       Warning("SrMesh: not using strips for rendering");
@@ -4148,18 +4142,18 @@ void psc_wrap_draw(bool show) {
       const Vec2<float> yxf = HB::get_pointer().value();
       switch (button_active) {
         case 1: {
-          psc_lod_level = 1.1f - (yxf[0]) * 1.2f;
+          psc_lod_level = 1.1f - yxf[0] * 1.2f;
           break;
         }
         case 2: {
-          const float a = ((yxf[0]) - 0.5f) * -3.f;
+          const float a = (yxf[0] - 0.5f) * -3.f;
           const float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
           psc_lod_level += a2;
           break;
         }
         case 3: {
           const float factor = 5.f;
-          float val = 1.1f - (yxf[0]) * 1.2f;
+          float val = 1.1f - yxf[0] * 1.2f;
           val = max(val, 0.f);
           psc_lod_level = (std::exp(factor * val) - 1.0f) / (std::exp(factor) - 1.0f);
           break;
@@ -4440,11 +4434,11 @@ void sc_gm_wrap_draw(bool show) {
       const Vec2<float> yxf = HB::get_pointer().value();
       switch (button_active) {
         case 1: {
-          sc_gm_lod_level = 1.1f - (yxf[0]) * 1.2f;
+          sc_gm_lod_level = 1.1f - yxf[0] * 1.2f;
           break;
         }
         case 2: {
-          const float a = ((yxf[0]) - 0.5f) * -3.f;
+          const float a = (yxf[0] - 0.5f) * -3.f;
           const float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
           sc_gm_lod_level += a2;
           break;
@@ -4991,14 +4985,12 @@ void draw_ply() {
     glShadeModel(lsmooth || has_rgb ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
     update_mat_color(mesh_color);
-    if (texture_active) {
-      if (!texture_lit) {
-        glShadeModel(GL_FLAT);
-        initialize_unlit();
-        update_cur_color(mesh_color.d);
-        set_light_ambient(0.f);
-        if (texturenormal) normalmap_activate();
-      }
+    if (texture_active && !texture_lit) {
+      glShadeModel(GL_FLAT);
+      initialize_unlit();
+      update_cur_color(mesh_color.d);
+      set_light_ambient(0.f);
+      if (texturenormal) normalmap_activate();
     }
     const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
     int ntriangles = 0;

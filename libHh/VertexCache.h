@@ -286,6 +286,7 @@ class LruVertexCache : public VertexCache {
 
 //----------------------------------------------------------------------------
 
+// NOLINTNEXTLINE(modernize-use-string-view): the callers need the null-terminated c_str() for showdf().
 inline string VertexCache::type_string(EType type) {
   switch (type) {
     case EType::fifo: return "Fifo";

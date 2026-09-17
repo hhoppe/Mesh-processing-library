@@ -147,7 +147,7 @@ Array<DomainFace> get_domain_faces() {
     //   2 - 3 - 2        / 3 \      |
     //   | / | / |       1  |  2     |
     //   1 - 0 - 1        \ 0 /      |
-    const Vec4<Point> vtmp = []() {
+    const Vec4<Point> vtmp = [] {
       Vec4<Point> v{
           Vector(-1.f / sqrt(3.f), 0.f, 0.f),
           Vector(+sqrt(3.f) / 6.f, +.5f, 0.f),

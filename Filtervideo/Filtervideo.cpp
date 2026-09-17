@@ -1391,11 +1391,9 @@ void compute_looping_regions() {
           Vec2<int> yx1 = yx;
           if (++yx1[axis] == video.dim(axis)) continue;
           if (g_lp.mat_period[yx] != g_lp.mat_period[yx1]) continue;
-          if (g_lp.mat_period[yx] != 1) {
-            if (g_lp.mat_start[yx] >= g_lp.mat_start[yx1] + g_lp.mat_period[yx1] ||
-                g_lp.mat_start[yx1] >= g_lp.mat_start[yx] + g_lp.mat_period[yx])
-              continue;
-          }
+          if (g_lp.mat_period[yx] != 1 && (g_lp.mat_start[yx] >= g_lp.mat_start[yx1] + g_lp.mat_period[yx1] ||
+                                           g_lp.mat_start[yx1] >= g_lp.mat_start[yx] + g_lp.mat_period[yx]))
+            continue;
           if (small_looping_regions && g_lp.mat_activation[yx] != g_lp.mat_activation[yx1]) continue;
           uf.unify(yx, yx1);
         }

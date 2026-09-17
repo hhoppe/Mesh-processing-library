@@ -121,7 +121,7 @@ void sub_reflect(PmWedgeAttrib& a, const PmWedgeAttrib& abase, const PmWedgeAttr
   const Vector& d = ad.dnormal;
   // dr == -d + 2 * dot(d, n) * n
   // an = n + dr.
-  a.normal = -d + ((2.f) * dot(d, n) + 1.f) * n;
+  a.normal = -d + (2.f * dot(d, n) + 1.f) * n;
   a.rgb = abase.rgb - ad.drgb;
   a.uv = abase.uv - ad.duv;
 }

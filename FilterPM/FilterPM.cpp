@@ -1155,10 +1155,10 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
       }
       pmi->apply_vsplit_private(new_vspl, pmesh._info, nullptr);
     }
-    implicit_cast<AWMesh&>(*pmi) = temp_mesh;  // Since PMeshRStream is not advanced!
+    implicit_cast<AWMesh&>(*pmi) = std::move(temp_mesh);  // Since PMeshRStream is not advanced!
   }
   assertx(new_vsplits.num() == pmesh._vsplits.num());
-  pmesh._vsplits = new_vsplits;
+  pmesh._vsplits = std::move(new_vsplits);
 }
 
 void do_reorder_vspl() {

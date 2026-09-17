@@ -1305,9 +1305,7 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
     if (vlp) {
       const SrVertex* vlpt = get_vt(vlp->vspli);
       SrAVertex* vlpta = (vlpt + 0)->avertex;
-      if (vlpta && (vlpt + 1)->avertex) {
-        if (n != &vlpta->activev) vlpta->activev.relink_after(n);
-      }
+      if (vlpta && (vlpt + 1)->avertex && n != &vlpta->activev) vlpta->activev.relink_after(n);
     }
   }
   if (frccw != &_isolated_aface) {
@@ -1317,9 +1315,7 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
     if (vrp) {
       const SrVertex* vrpt = get_vt(vrp->vspli);
       SrAVertex* vrpta = (vrpt + 0)->avertex;
-      if (vrpta && (vrpt + 1)->avertex) {
-        if (n != &vrpta->activev) vrpta->activev.relink_after(n);
-      }
+      if (vrpta && (vrpt + 1)->avertex && n != &vrpta->activev) vrpta->activev.relink_after(n);
     }
   }
   {

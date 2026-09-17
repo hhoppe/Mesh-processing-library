@@ -69,7 +69,7 @@ class Video : public Grid<3, Pixel> {
 [[nodiscard]] bool filename_is_video(const string& filename);
 
 // Return predicted video suffix given first byte of file, or "" if unrecognized.
-[[nodiscard]] string video_suffix_for_magic_byte(uchar c);
+[[nodiscard]] std::string_view video_suffix_for_magic_byte(uchar c);
 
 // Video consisting of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
 class VideoNv12 : noncopyable {

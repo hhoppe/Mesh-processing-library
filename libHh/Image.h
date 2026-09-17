@@ -101,7 +101,7 @@ class Image : public Matrix<Pixel> {
 [[nodiscard]] bool filename_is_image(const string& filename);
 
 // Return predicted image suffix given first byte of file, or "" if unrecognized.
-[[nodiscard]] string image_suffix_for_magic_byte(uchar c);
+[[nodiscard]] std::string_view image_suffix_for_magic_byte(uchar c);
 
 // &image == &newimage is OK.
 [[nodiscard]] Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,

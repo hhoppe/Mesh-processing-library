@@ -739,6 +739,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
     Array<std::wstring> nargv(sargv.num());
     const bool b_client_uses_cygwin = sargv[0] == "sh";  // Special processing for cygwin crt parsing.
     const bool b_client_cmd = sargv[0] == "cmd";
+    // NOLINTNEXTLINE(readability-redundant-nested-if): keep the disabled statement in its own scope.
     if (b_client_uses_cygwin) {
       // 2015-11-20:
       // "Cygwin uses UTF-8 by default. To use a different character set, you need to set
@@ -905,8 +906,8 @@ namespace {
 template <typename Ch, typename Traits = std::char_traits<Ch>>
 struct basic_nullbuf : std::basic_streambuf<Ch, Traits> {
   using base_type = std::basic_streambuf<Ch, Traits>;
-  using int_type = typename base_type::int_type;
-  using traits_type = typename base_type::traits_type;
+  using int_type = base_type::int_type;
+  using traits_type = base_type::traits_type;
   int_type overflow(int_type c) override { return traits_type::not_eof(c); }
 };
 

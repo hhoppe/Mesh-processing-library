@@ -85,7 +85,7 @@ int main() {
     SHOW(uf2.get_label(3));
     SHOW(uf2.get_label(4));
     SHOW(uf2.get_label(5));
-    uf2 = uf;
+    uf2 = uf;  // NOLINT(performance-use-std-move): deliberately exercising the copy assignment.
     SHOW(uf2.get_label(1));
     SHOW(uf2.get_label(2));
     SHOW(uf2.get_label(3));

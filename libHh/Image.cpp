@@ -77,7 +77,7 @@ bool filename_is_image(const string& filename) {
   return contains(k_extensions, to_lower(get_path_extension(filename)));
 }
 
-string image_suffix_for_magic_byte(uchar c) {
+std::string_view image_suffix_for_magic_byte(uchar c) {
   // See also video_suffix_for_magic_byte() and audio_suffix_for_magic_byte().
   // Also, redundant with information in k_image_filetypes.
   // Documentation on prefixes for various image containers:

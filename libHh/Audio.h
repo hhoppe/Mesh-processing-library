@@ -66,7 +66,7 @@ class Audio : public Grid<2, float> {
 [[nodiscard]] bool filename_is_audio(const string& filename);
 
 // Return predicted audio suffix given first byte of file, or "" if unrecognized.
-[[nodiscard]] string audio_suffix_for_magic_byte(uchar c);
+[[nodiscard]] std::string_view audio_suffix_for_magic_byte(uchar c);
 
 //----------------------------------------------------------------------------
 

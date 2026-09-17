@@ -13,6 +13,8 @@ namespace hh {
 
 static Vec4<float> normalizef(const Vec3<float>& v) { return concat(v * .5f + .5f, V(0.f)); }
 
+namespace {
+
 class NormalMapping_ogl2 final : public NormalMapping {
  public:
   using type = NormalMapping_ogl2;
@@ -448,6 +450,8 @@ class NormalMapping_nvrc final : public NormalMapping {
     glDisable(GL_REGISTER_COMBINERS_NV);
   }
 };
+
+}  // namespace
 
 NormalMapping* NormalMapping::get() {
   static auto& normalmappings = *new Array<NormalMapping*>{

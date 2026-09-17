@@ -257,8 +257,8 @@ template <typename T> class GraphComponent : noncopyable {
   }
 
   const Graph<T>& _g;
-  typename Graph<T>::vertex_iterator _vcur;
-  typename Graph<T>::vertex_iterator _vend;
+  Graph<T>::vertex_iterator _vcur;
+  Graph<T>::vertex_iterator _vend;
   Set<T> _set;
 };
 

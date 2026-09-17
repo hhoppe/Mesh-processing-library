@@ -399,7 +399,7 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         if (!after_vsplit) return true;
         const int vi = int_from_chars(s), fi = int_from_chars(s);
         Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
-        Corner c = [&]() -> Corner {
+        Corner c = [&] -> Corner {
           for (Corner cc : mesh.corners(v))
             if (mesh.face_id(mesh.corner_face(cc)) == fi) return cc;
           return nullptr;
@@ -1277,7 +1277,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         const int vi = int_from_chars(s), fi = int_from_chars(s);
         const char* sinfo = assertx(get_sinfo(s));
         Vertex v = mesh.id_vertex(vi);
-        Corner c = [&]() {
+        Corner c = [&] {
           for (Corner cc : mesh.corners(v))
             if (mesh.face_id(mesh.corner_face(cc)) == fi) return cc;
           assertnever("");

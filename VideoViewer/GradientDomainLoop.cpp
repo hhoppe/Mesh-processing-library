@@ -245,7 +245,7 @@ template <bool have_est, bool V4>
 void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CMatrixView<int> mat_period,
                          GridView<3, Pixel> videoloop, bool b_exact) {
   using MG = MG_sample<V4>;
-  using EType = typename MG::EType;
+  using EType = MG::EType;
   const int onf = video.dim(0), ny = video.dim(1), nx = video.dim(2), nnf = videoloop.dim(0);
   assertx(same_size(video[0], videoloop[0]) && same_size(video[0], mat_start) && same_size(video[0], mat_period));
   const Vec3<int> dims(nnf, ny, nx);
@@ -454,7 +454,7 @@ template <bool V4>
 void solve_using_offsets_aux(CGridView<3, Pixel> video, CMatrixView<int> mat_start, CMatrixView<int> mat_period,
                              GridView<3, Pixel> video_offset) {
   using MG = MG_sample<V4>;
-  using EType = typename MG::EType;
+  using EType = MG::EType;
   dummy_use(MG_sample<false>::k_offset_zero, MG_sample<true>::k_offset_zero);
   const int onf = video.dim(0), ny = video.dim(1), nx = video.dim(2), nnf = video_offset.dim(0);
   assertx(same_size(video[0], video_offset[0]) && same_size(video[0], mat_start) && same_size(video[0], mat_period));

@@ -42,7 +42,7 @@ template <int D, typename T> struct nested_initializer_list {
 template <typename T> struct nested_initializer_list<0, T> {
   using type = T;
 };
-template <int D, typename T> using nested_initializer_list_t = typename nested_initializer_list<D, T>::type;
+template <int D, typename T> using nested_initializer_list_t = nested_initializer_list<D, T>::type;
 
 template <int D, typename T> inline Vec<int, D> nested_list_dims(nested_initializer_list_t<D, T> l);
 template <int D, typename T> constexpr void nested_list_retrieve(auto&& grid, nested_initializer_list_t<D, T> l);
@@ -87,7 +87,7 @@ template <int D, typename T> class CGridView {
   // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
   // `gridview = grid` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
   type& operator=(type&& g) & noexcept { return _a = g._a, _dims = g._dims, *this; }
-  void reinit(type g) { *this = g; }
+  void reinit(type g) { *this = std::move(g); }
   template <typename T2> [[nodiscard]] friend bool same_size(type g1, CGridView<D, T2> g2) {
     return g1.dims() == g2.dims();
   }
@@ -189,7 +189,7 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
   // Reseat the view.  Defined to enable movable<T> for view<T>.  The rvalue source and lvalue-only keep
   // `gridview = grid` and `grid[0] = grid[1]` ill-formed.  Use assign() to copy elements, reinit() to reseat.
   type& operator=(type&& g) & noexcept { return base::operator=(std::move(g)), *this; }
-  void reinit(type g) { *this = g; }
+  void reinit(type g) { *this = std::move(g); }
   void assign(CGridView<D, T> g) requires Copyable<T>;
   using value_type = T;
   using iterator = T*;

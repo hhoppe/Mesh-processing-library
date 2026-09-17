@@ -40,7 +40,7 @@ template <typename T>
 concept IsVec = is_vec_v<T>;
 
 // The element type obtained by peeling D levels of Vec nesting from T.
-template <int D, typename T> using sgrid_leaf_t = typename details::SGridLeaf<D, T>::type;
+template <int D, typename T> using sgrid_leaf_t = details::SGridLeaf<D, T>::type;
 
 // The grid view type (const or mutable) corresponding to an element pointer type Ptr; the analog of array_view_t.
 template <int D, typename Ptr>
@@ -318,7 +318,7 @@ template <typename T> struct SGridLeaf<0, T> {
   using type = T;
 };
 template <int D, typename T, int n> requires(D > 0) struct SGridLeaf<D, Vec<T, n>> {
-  using type = typename SGridLeaf<D - 1, T>::type;
+  using type = SGridLeaf<D - 1, T>::type;
 };
 
 template <typename T, int... ds> struct SGrid_type;
@@ -333,7 +333,7 @@ template <int D, bool has_lower_bound> class Vec_range;
 
 // Readable spelling for a nested Vec: SGrid<T, n0, n1, n2> is Vec<Vec<Vec<T, n2>, n1>, n0>.
 // It is a pure alias: no behavior differs between the two spellings.
-template <typename T, int... ds> using SGrid = typename details::SGrid_type<T, ds...>::type;
+template <typename T, int... ds> using SGrid = details::SGrid_type<T, ds...>::type;
 
 // Range of coordinates: Vec<int, D>: 0 <= [0] < uU[0], 0 <= [1] < uU[1], ..., 0 <= [D - 1] < uU[D - 1].
 //  E.g.: for (const auto& p : range(grid.dims())) grid[p] = func(p);

@@ -596,7 +596,7 @@ template <typename T> [[nodiscard]] constexpr T round_fraction_digits(T v, T fac
 }
 
 // Higher-precision type to represent the sum of a set of elements.
-template <typename T> using sum_type_t = typename details::sum_type<T>::type;
+template <typename T> using sum_type_t = details::sum_type<T>::type;
 
 // Range of integers as in Python range(start, stop):  e.g.: for (const int i : range(2, 5)) { SHOW(i); } gives 2..4 .
 template <typename T> [[nodiscard]] constexpr auto range(T start, T stop) {

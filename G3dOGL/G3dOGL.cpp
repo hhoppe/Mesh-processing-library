@@ -2427,20 +2427,17 @@ void GxObject::morph(float finterp) {  // Here, finterp == 1.f is new,   finterp
     }
   }
   if (!lsmooth || (ledges && cullbackedges && lcullface)) {
-    if (0) {
-      Polygon poly;
-      for (Face f : mesh.faces()) {
+    // We store non-normalized face normals, so we ask OpenGL to normalize them; ogl_normalize keeps
+    // update_lighting() from disabling GL_NORMALIZE again.
+    glEnable(GL_NORMALIZE);
+    ogl_normalize = true;
+    Polygon poly;
+    for (Face f : mesh.faces()) {
+      if (mesh.is_triangle(f)) {  // The common case; going through Polygon here would be twice as slow.
+        f_pnor(f) = get_normal_dir(mesh.triangle_points(f));
+      } else {
         mesh.polygon(f, poly);
-        f_pnor(f) = poly.get_normal();
-      }
-    } else {
-      Warning("GL_NORMALIZE");
-      glEnable(GL_NORMALIZE);  // Hopefully not reset anywhere.
-      ogl_normalize = true;
-      for (Face f : mesh.faces()) {
-        if (!assertw(mesh.is_triangle(f))) continue;
-        const Vec3<Point> triangle = mesh.triangle_points(f);
-        f_pnor(f) = get_normal_dir(triangle);
+        f_pnor(f) = poly.get_normal_dir();
       }
     }
   }

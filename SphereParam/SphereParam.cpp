@@ -269,11 +269,24 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
   }
 
   if (k_split_at_poles) {
-    // The splitting above leaves each pole in the interior of an edge whose two endpoints lie in the plane x = 0
-    // and straddle y = 0.  We split that edge to obtain a vertex exactly at the pole, so that
+    // The splitting above usually leaves each pole in the interior of an edge whose two endpoints lie in the plane
+    // x = 0 and straddle y = 0.  We split that edge to obtain a vertex exactly at the pole, so that
     // write_parameterized_gmesh() can assign a separate longitude to each of its corners.
     for_int(i, 2) {
       const float pole_z = i == 0 ? 1.f : -1.f;
+      const Point pole(0.f, 0.f, pole_z);
+      // However, one of those splits may instead have landed a vertex on the pole itself, in which case no edge
+      // straddles y = 0 there.  We just snap that vertex to the pole, as no further split is needed.
+      Vertex pole_vertex = nullptr;
+      for (Vertex v : mesh.vertices()) {
+        const Point sph = v_sph(v);
+        if (!(abs(sph[k_axis0]) < eps && abs(sph[k_axis1]) < eps && sph[k_axis2] * pole_z > 0.f)) continue;
+        if (!pole_vertex || dist2(sph, pole) < dist2(v_sph(pole_vertex), pole)) pole_vertex = v;
+      }
+      if (pole_vertex) {
+        v_sph(pole_vertex) = pole;  // The vertex is at the pole, up to rounding.
+        continue;
+      }
       Edge pole_edge = nullptr;
       for (Edge e : mesh.edges()) {
         const Point sph1 = v_sph(mesh.vertex1(e)), sph2 = v_sph(mesh.vertex2(e));
@@ -288,8 +301,8 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
       }
       if (!assertw(pole_edge)) continue;  // The pole does not lie in the interior of any edge.
       Vertex v = split_edge(pole_edge, k_axis1);
-      assertx(dist(v_sph(v), Point(0.f, 0.f, pole_z)) < 1e-3f);
-      v_sph(v) = Point(0.f, 0.f, pole_z);  // The split point is the pole, up to rounding.
+      assertx(dist(v_sph(v), pole) < 1e-3f);
+      v_sph(v) = pole;  // The split point is the pole, up to rounding.
     }
   }
 

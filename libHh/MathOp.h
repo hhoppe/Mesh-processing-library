@@ -12,41 +12,36 @@ class Trig {
  public:
   // Compute cos(i * TAU / j).
   [[nodiscard]] static float cos(int i, int j) {
-    Table& table = cos_table_instance();
-    if (!table[1, 0]) init();
     const int ia = abs(i);
     ASSERTX(ia < j);
-    const float v = j < k_size ? table[j, ia] : std::cos(ia * TAU / j);
-    return v;
+    return j < k_size ? tables()._cos[j, ia] : std::cos(ia * TAU / j);
   }
   // Compute sin(i * TAU / j).
   [[nodiscard]] static float sin(int i, int j) {
-    Table& table = sin_table_instance();
-    if (!table[1, 0]) init();
     const int ia = abs(i);
     ASSERTX(ia < j);
-    const float v = j < k_size ? table[j, ia] : std::sin(ia * TAU / j);
+    const float v = j < k_size ? tables()._sin[j, ia] : std::sin(ia * TAU / j);
     return i < 0 ? -v : v;
   }
 
  private:
   static constexpr int k_size = 13;
   using Table = SGrid<float, k_size, k_size - 1>;
-  static Table& cos_table_instance() {
-    static auto& t = *new Table;
-    return t;
-  }
-  static Table& sin_table_instance() {
-    static auto& t = *new Table;
-    return t;
-  }
-  static void init() {
-    for_intL(j, 1, k_size) {
-      for_int(i, j) {
-        cos_table_instance()[j, i] = std::cos(i * TAU / j);
-        sin_table_instance()[j, i] = std::sin(i * TAU / j);
+  struct Tables {
+    Table _cos, _sin;
+  };
+  static const Tables& tables() {
+    // Careful: Trig may be called by some static constructor, so we use a function-local static
+    // (thread-safe and lazily initialized) and intentionally never destroy the tables.
+    static const Tables& tables = *new Tables{[] {
+      Tables t{};
+      for_intL(j, 1, k_size) for_int(i, j) {
+        t._cos[j, i] = std::cos(i * TAU / j);
+        t._sin[j, i] = std::sin(i * TAU / j);
       }
-    }
+      return t;
+    }()};
+    return tables;
   }
 };
 

@@ -1593,9 +1593,9 @@ void mesh_init(GMesh& mesh) {
 }
 
 // inline Pixel interp_color(const Pixel& col1, const Pixel& col2, float alpha) {
-//     assertx(alpha >= 0.f && alpha <= 1.f);
-//     int ialpha1 = int(alpha * 256.f), ialpha2 = 256 - ialpha1;
-//     return interp_color(col1, col2, ialpha1, ialpha2);
+//   assertx(alpha >= 0.f && alpha <= 1.f);
+//   int ialpha1 = int(alpha * 256.f), ialpha2 = 256 - ialpha1;
+//   return interp_color(col1, col2, ialpha1, ialpha2);
 // }
 
 inline void setup_face(const GMesh& mesh, Face f) {
@@ -1744,13 +1744,11 @@ void draw_mesh(GMesh& mesh) {
       }
     }
     int ii = lquickmode ? quicki : 0;
-    // On ATI, display_list creation is unacceptably slow for
-    //  many triangle strip primitives.
+    // On ATI, display_list creation is unacceptably slow for many triangle strip primitives.
     // It is reasonably fast if given large buffers of GL_TRIANGLES.
     // Rendering performance is good except on meshes with vertex colors,
     //  where presumably the mesh connectivity is not reconstructed.
-    // On NVIDIA, display_list creation is fast for small buffers
-    //  of GL_TRIANGLE_STRIP.
+    // On NVIDIA, display_list creation is fast for small buffers of GL_TRIANGLE_STRIP.
     //
     // Set this variable for overlapped faces (lapped textures) to ensure all faces are rendered in same order and
     // with same vertex order.

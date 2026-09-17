@@ -94,8 +94,7 @@ Array<int> ar_verts;   // Maps [3 * mesh.num_faces()] -> 1..num_vertices().
 Array<Face> ar_faces;  // Maps [mesh.num_faces()] -> original Face.
 string gfilename;
 
-// This data is only used by "-diff_corners" to compare cache misses
-//  before and after reordering.
+// This data is only used by "-diff_corners" to compare cache misses before and after reordering.
 HH_SAC_ALLOCATE_FUNC(Mesh::MFace, int, f_oldfid);
 
 // *** Helper
@@ -120,8 +119,7 @@ void face_vertices_neighbors(Face f, Array<Vertex>& va, Array<Face>& fa) {
 }
 
 // Record the visit of a face into the global data structure.
-// Access the face's vertices starting at the given corner
-//  and using the cache.
+// Access the face's vertices starting at the given corner and using the cache.
 int record_face(Corner cc, VertexCache& vcache) {
   int nmiss = 0;
   for_int(j, 3) {
@@ -467,8 +465,7 @@ void do_analyze() {
          float(mesh.num_faces()) / nstrips, b_v, b_i, b_t);
 }
 
-// Analyze the badnwidth of the mesh under the traditional triangle strip
-//  framework (without vertex caching).
+// Analyze the badnwidth of the mesh under the traditional triangle strip framework (without vertex caching).
 void do_strip_analyze() {
   HH_PTIMER("_strip_analyze");
   showdf("Strip analysis\n");
@@ -501,18 +498,15 @@ void do_fanalyze() {
   do_analyze();
 }
 
-// Given an order of faces in the mesh,
-//  reorder the vertices within each face so as to fit the access pattern
+// Given an order of faces in the mesh, reorder the vertices within each face so as to fit the access pattern
 //  of an indexed triangle strip representation.
 void do_fixup_indices() {
   Array<Vertex> va;
   Array<Face> fa;
   if (old_strip_order) {
-    // Note: running this routine on the output of my meshify*() algorithms
-    //  is not recommended.
-    // Although it will generally reduce the number of vertex indices,
-    //  it will also slightly increase the number of vertex misses because
-    //  of slight changes in strip end conditions.
+    // Note: running this routine on the output of my meshify*() algorithms is not recommended.
+    // Although it will generally reduce the number of vertex indices, it will also slightly increase the number
+    //  of vertex misses because of slight changes in strip end conditions.
     // Example with bunny.lru.meshify2.m:
     //Before:
     // # cs=16     nmiss=42823   20.5%  v/t=0.616  v/v=1.229
@@ -618,9 +612,8 @@ const int random_initial_face = getenv_int("RANDOM_INITIAL_FACE");
 // Faces are exclusively in one of the 5 linked lists:
 //  MeshStatus::_l_uco and MeshStatus::_l_unp_nnei[0..3].
 // Initially, they are in the list of "unvisited components" l_uco.
-// Then, when a connected component is visited, the faces are pulled out
-//  of l_uco and into the lists of "unprocessed faces with n neighbors"
-//  l_unp_nnei where n is 0..3 .
+// Then, when a connected component is visited, the faces are pulled out of l_uco and into the lists of
+//  "unprocessed faces with n neighbors" l_unp_nnei where n is 0..3 .
 // Finally, when a face is processed (within the current component),
 //  it is removed from l_unp_nnei and no longer appears on any list.
 
@@ -636,8 +629,7 @@ HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, FaceEList, f_elist);
 
 // Associate an integer with each mesh face:
 //  == std::numeric_limits<int>::max() if the face has already been (globally) processed.
-//  == MeshStatus::_sim_num if the face has been visited in the current
-//     lookahead simulation.
+//  == MeshStatus::_sim_num if the face has been visited in the current lookahead simulation.
 HH_SAC_ALLOCATE_FUNC(Mesh::MFace, int, f_sim_num);
 
 // Only one MeshStatus object may be defined at any time, since it operates closely with the global variable mesh.
@@ -729,8 +721,7 @@ bool MeshStatus::initialize_next_component() {
   for_int(nnei, 4) assertx(_l_unp_nnei[nnei].empty());
   if (_l_uco.empty()) return false;
   // Gather faces in component containing some initial face f.
-  // Identify these faces by placing them in list l_c for now and
-  //  removing them from _l_uco.
+  // Identify these faces by placing them in list l_c for now and removing them from _l_uco.
   EList l_c;
   int numfc = 0;
   {

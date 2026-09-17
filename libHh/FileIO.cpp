@@ -63,7 +63,7 @@ HH_REFERENCE_LIB("ole32.lib");  // IFileOperation.
 //    because these libraries support user-defined reader/writer functions, which could access std::stream.
 // - G3dio.cpp to create a RBuffer directly on the POSIX file descriptor fileno(cfile());
 //   It might be possible to implement RBuffer as a custom adaptively resizable std::streambuf
-//    but we would still require access to the POSIX fd to do non-blocking IO.
+//   but we would still require access to the POSIX fd to do non-blocking IO.
 
 namespace hh {
 

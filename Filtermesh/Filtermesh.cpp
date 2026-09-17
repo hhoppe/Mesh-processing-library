@@ -503,8 +503,8 @@ bool sharp_vertex_edge(const GMesh& mo, Vertex v, Edge e, bool split_matbnd) {
   if (!f2) return true;
   if (split_matbnd) return !same_string(mo.get_string(f1), mo.get_string(f2));
   if (mo.flags(e).flag(GMesh::eflag_sharp)) return true;
-  // This may split unnecessarily, eg. based on "groups" key string!
-  //  eg. you support multiple normals per vertex, but want colors split.
+  // This may split unnecessarily, e.g. based on "groups" key string!
+  //  e.g. you support multiple normals per vertex, but want colors split.
   if (0 && !same_string(mo.get_string(f1), mo.get_string(f2))) return true;
   if (!same_string(mo.get_string(mo.corner(v, f1)), mo.get_string(mo.corner(v, f2)))) return true;
   return false;
@@ -1024,8 +1024,7 @@ bool edge_matbnd(Edge e) {
     if (!s1 && !s2) return false;
     return !s1 || !s2 || strcmp(s1, s2) != 0;
   } else {
-    // Note: material boundary is currently based solely on rgb attributes
-    //   of faces!
+    // Note: material boundary is currently based solely on rgb attributes of faces!
     if (mesh.is_boundary(e)) return false;
     Vec3<float> f1, f2;
     if (!parse_key_vec(mesh.get_string(mesh.face1(e)), "rgb", f1) ||
@@ -1251,8 +1250,7 @@ void do_silsubdiv() {
       }
     }
     if (nesharp != 2) continue;
-    // Important note: here order does not matter because newly
-    //  inserted midpoints remain midpoints.
+    // Important note: here order does not matter because newly inserted midpoints remain midpoints.
     mesh.set_point(v, to_Point(.5f * Homogeneous(mesh.point(v)) + .25f * h));
   }
 }
@@ -1269,8 +1267,7 @@ void do_taubinsmooth(Args& args) {
     mu = -0.6307f;
   } else {
     // Explicit parameters used in ICCV '95.
-    // Less shrinkage on an octahedron, but a bit less smoothing overall
-    //  as seen on cat mesh.
+    // Less shrinkage on an octahedron, but a bit less smoothing overall as seen on cat mesh.
     lambda = 0.33f;
     mu = -0.34f;
   }
@@ -4113,8 +4110,7 @@ void convex_group_flip_faces(const Set<Face>& group) {
 
 // Will clear the old mesh.
 void do_fromObj(Args& args) {
-  // Build a mesh from Obj input.  Specify <flip> to flip the face to point to
-  //  the outside of convex components.
+  // Build a mesh from Obj input.  Specify <flip> to flip the face to point to the outside of convex components.
   Array<Vector> ar_nor;
   Array<Uv> ar_uv;
   RFile fi(args.get_filename());

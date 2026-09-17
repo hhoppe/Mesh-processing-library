@@ -313,8 +313,7 @@ SrMesh::~SrMesh() {
 }
 
 bool SrMesh::vspl_legal(const SrVertex* vs) const {
-  // Warning: this function has been adapted inline in force_vsplit()
-  //  for maximum efficiency.
+  // Warning: this function has been adapted inline in force_vsplit() for maximum efficiency.
   const int vspli = vs->vspli;
   {
     // Preconditions.
@@ -334,8 +333,7 @@ bool SrMesh::vspl_legal(const SrVertex* vs) const {
 }
 
 bool SrMesh::ecol_legal(const SrVertex* vt) const {
-  // Warning: this function has been adapted inline in adapt_refinement()
-  //  for maximum efficiency.
+  // Warning: this function has been adapted inline in adapt_refinement() for maximum efficiency.
   const SrVertex* vs = vt->parent;
   const int vspli = vs->vspli;
   {
@@ -670,8 +668,7 @@ void SrMesh::compute_bspheres(CArrayView<SrVertexGeometry> vgeoms) {
       if (is_active_v(&_vertices[vi])) ar_bsphere[vi].radius = sqrt(ar_bsphere[vi].radius);
     }
   }
-  // Iterate back over vsplits to assign bounding spheres to
-  //  interior vertices.
+  // Iterate back over vsplits to assign bounding spheres to interior vertices.
   for (int vspli = _vsplits.num() - 1; vspli >= 0; --vspli) {
     const SrVertex* vt = get_vt(vspli);
     const SrVertex* vs = vt->parent;
@@ -737,8 +734,7 @@ void SrMesh::compute_nspheres(CArrayView<SrVertexGeometry> vgeoms) {
       if (is_active_v(&_vertices[vi])) ar_nsphere[vi].radius = sqrt(ar_nsphere[vi].radius);
     }
   }
-  // Iterate back over vsplits to assign bounding spheres to
-  //  interior vertices.
+  // Iterate back over vsplits to assign bounding spheres to interior vertices.
   for (int vspli = _vsplits.num() - 1; vspli >= 0; --vspli) {
     const SrVertex* vt = get_vt(vspli);
     const SrVertex* vs = vt->parent;

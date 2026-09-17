@@ -1287,7 +1287,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
     _wedges[wvtfl].attrib = _wedges[wvsfl].attrib;
     goto GOTO_UNDO_WAD2;
   }
-  //  they are currently predicted exactly.
+  // They are currently predicted exactly.
   if (isr) {
     awvtfr = _wedges[wvtfr].attrib;
     awvsfr = _wedges[wvsfr].attrib;
@@ -1806,8 +1806,7 @@ bool PMeshIter::goto_nfaces_ancestry(int nfaces, Ancestry* ancestry) {
       if (!next_ancestry(ancestry)) return false;
     }
     if (_faces.num() == nfaces - 1) {
-      // Avoid over-shooting since may not be reversible,
-      //  so peek at next vsplit and apply it if it adds only 1 face.
+      // Avoid over-shooting since may not be reversible, so peek at next vsplit and apply it if it adds only 1 face.
       const Vsplit* pvspl = _pmrs.peek_next_vsplit();
       if (pvspl && !pvspl->adds_two_faces()) {
         assertx(next_ancestry(ancestry));

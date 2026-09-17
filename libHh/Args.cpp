@@ -469,7 +469,7 @@ void ParseArgs::fversion(Args& args) {
 #endif
   str += sform(" cplusplus=%d", int(__cplusplus));
 // #if defined(__DATE__) && defined(__TIME__) // Not so useful because compilation time of this particular file.
-//     str += sform(" built=[%s %s]", __DATE__, __TIME__);
+//   str += sform(" built=[%s %s]", __DATE__, __TIME__);
 // #endif
 #if defined(__AVX2__)
   str += " AVX2";

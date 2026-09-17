@@ -124,8 +124,8 @@ class Vector4 {
     return _mm_andnot_ps(k_sign_mask, v._r);
   }
   // friend Vector4 madd(const Vector4& v1, const Vector4& v2, const Vector& v3) {  // v1 * v2 + v3.
-  //     return _mm_macc_ps(v1._r, v2._r, v3._r); } // AVX FMA4 XMM instruction vfmaddps
-  //     // Intel plans to implement FMA3 in processors using its Haswell microarchitecture, due in 2013.
+  //   return _mm_macc_ps(v1._r, v2._r, v3._r); } // AVX FMA4 XMM instruction vfmaddps
+  //   // Intel plans to implement FMA3 in processors using its Haswell microarchitecture, due in 2013.
   // }
 
  private:

@@ -33,8 +33,7 @@ namespace {
 //  - add springs on both diagonals on quads?
 
 // Notes:
-//  Could check dihedral(starbar) instead of dihedral(star)
-//   using GetEdgeRing() ->vertices
+//  Could check dihedral(starbar) instead of dihedral(star) using GetEdgeRing() ->vertices
 
 auto gather_vertex_ring(const GMesh& mesh, Vertex v) {
   Array<const Point*> wa;
@@ -1093,8 +1092,7 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   Point minp;
   for_int(ii, 3) {
     if (k_simp96) {
-      // Added these tests to prevent boundary/crease migration inwards
-      //  and to prevent corner migration.
+      // Added these tests to prevent boundary/crease migration inwards and to prevent corner migration.
       if (!edge_sharp(e)) {
         if (vertex_num_sharp_edges(v1) >= 1 && ii < 2) continue;
         if (vertex_num_sharp_edges(v2) >= 1 && ii > 0) continue;

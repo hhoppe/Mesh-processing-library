@@ -393,8 +393,7 @@ struct PMeshInfo {
   Bbox<float, 3> _full_bbox;
 };
 
-// Progressive mesh:
-//  contains a base mesh and a sequence of vertex split records.
+// Progressive mesh: contains a base mesh and a sequence of vertex split records.
 class PMesh : noncopyable {
  public:
   PMesh();
@@ -506,8 +505,7 @@ class Geomorph : public WMesh {
   bool construct_goto_nfaces(PMeshIter& pmi, int nfaces);
 
   // ** Evaluation:
-  // Modify each vertex and wedge attributes of this mesh by linearly
-  //  interpolating between attribs[0] and attribs[1].
+  // Modify each vertex and wedge attributes of this mesh by linearly interpolating between attribs[0] and attribs[1].
   // Could optimize this by:
   //  (1) creating a list of only the changing attributes  (done)
   //  (2) precomputing (attribs[1] - attribs[0])

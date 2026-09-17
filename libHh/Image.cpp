@@ -272,13 +272,15 @@ void convert_Nv12_to_Image_BGRA(CNv12View nv12v, MatrixView<Pixel> frame) {
 }
 
 void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
-  assertx(same_size(nv12v.get_Y(), frame));
+  // The local view avoids subscripting a temporary, which crashes the clang 23.1.1 lifetime analysis.
+  MatrixView<uint8_t> mat_Y = nv12v.get_Y();
+  assertx(same_size(mat_Y, frame));
   uint8_t* __restrict buf_UV = nv12v.get_UV().data()->data();
   // assertx(reinterpret_cast<uintptr_t>(nv12v.get_Y().data()) % 4 == 0);
   // assertx(reinterpret_cast<uintptr_t>(nv12v.get_UV().data()->data()) % 4 == 0);
   // Tried other optimizations too.  Note that all the implementations take about the same elapsed time.
   if (0) {
-    uint8_t* __restrict buf_Y = nv12v.get_Y().data();
+    uint8_t* __restrict buf_Y = mat_Y.data();
     for_int(y, frame.ysize()) for_int(x, frame.xsize()) { *buf_Y++ = Y_from_RGB(frame[y, x]); }
     for_int(yb, frame.ysize() / 2) {
       const int y = yb * 2;
@@ -295,7 +297,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
       }
     }
   } else if (0) {
-    uint8_t* __restrict buf_Y = nv12v.get_Y().data();
+    uint8_t* __restrict buf_Y = mat_Y.data();
     // for (const size_t i : range(frame.size())) { *buf_Y++ = Y_from_RGB(frame.flat(i)); }
     {
       const uint8_t* p = frame.data()->data();
@@ -327,7 +329,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
   } else if (1) {
     for_int(y, frame.ysize() / 2) {
       const uint8_t* __restrict buf_p0 = frame[y * 2 + 0].data()->data();
-      uint8_t* __restrict buf_y0 = nv12v.get_Y()[y * 2 + 0].data();
+      uint8_t* __restrict buf_y0 = mat_Y[y * 2 + 0].data();
       const int hnx = frame.xsize() / 2;
       for_int(x, hnx) {
         int r00 = buf_p0[0], g00 = buf_p0[1], b00 = buf_p0[2];
@@ -366,8 +368,8 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
     for_int(y, frame.ysize() / 2) {
       const uint8_t* buf_p0 = frame[y * 2 + 0].data()->data();
       const uint8_t* buf_p1 = frame[y * 2 + 1].data()->data();
-      uint8_t* buf_y0 = nv12v.get_Y()[y * 2 + 0].data();
-      uint8_t* buf_y1 = nv12v.get_Y()[y * 2 + 1].data();
+      uint8_t* buf_y0 = mat_Y[y * 2 + 0].data();
+      uint8_t* buf_y1 = mat_Y[y * 2 + 1].data();
       for_int(x, frame.xsize() / 2) {
         const uint8_t r00 = buf_p0[0], g00 = buf_p0[1], b00 = buf_p0[2];
         const uint8_t r01 = buf_p0[4], g01 = buf_p0[5], b01 = buf_p0[6];

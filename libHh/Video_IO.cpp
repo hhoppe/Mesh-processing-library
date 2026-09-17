@@ -413,21 +413,24 @@ void retrieve_strided_BGRA(const uint8_t* pData, int stride, MatrixView<Pixel> f
 }
 
 void retrieve_strided_Nv12(const uint8_t* pData, int stride, int offsetUV, Nv12View nv12v) {
-  const int ny = nv12v.get_Y().ysize(), nx = nv12v.get_Y().xsize();
+  // The local views avoid subscripting a temporary, which crashes the clang 23.1.1 lifetime analysis.
+  MatrixView<uint8_t> mat_Y = nv12v.get_Y();
+  MatrixView<Vec2<uint8_t>> mat_UV = nv12v.get_UV();
+  const int ny = mat_Y.ysize(), nx = mat_Y.xsize();
   // This is a bottleneck, so worth optimizing.
-  if (stride == nv12v.get_Y().xsize()) {
-    std::memcpy(nv12v.get_Y().data(), pData, nv12v.get_Y().size());
-    std::memcpy(nv12v.get_UV().data(), pData + offsetUV, nv12v.get_UV().size() * 2);
+  if (stride == mat_Y.xsize()) {
+    std::memcpy(mat_Y.data(), pData, mat_Y.size());
+    std::memcpy(mat_UV.data(), pData + offsetUV, mat_UV.size() * 2);
   } else if (1) {
-    for_int(y, ny) std::memcpy(nv12v.get_Y()[y].data(), pData + size_t(y) * stride, nx);
-    for_int(y, ny / 2) std::memcpy(nv12v.get_UV()[y].data(), pData + offsetUV + size_t(y) * stride, nx);
+    for_int(y, ny) std::memcpy(mat_Y[y].data(), pData + size_t(y) * stride, nx);
+    for_int(y, ny / 2) std::memcpy(mat_UV[y].data(), pData + offsetUV + size_t(y) * stride, nx);
   } else {
-    uint8_t* pd = nv12v.get_Y().data();
+    uint8_t* pd = mat_Y.data();
     for_int(y, ny) {
       const uint8_t* ps = pData + size_t(y) * stride;
       for ([[maybe_unused]] const int x : range(nx)) *pd++ = *ps++;
     }
-    pd = nv12v.get_UV().data()->data();
+    pd = mat_UV.data()->data();
     for_int(y, ny / 2) {
       const uint8_t* ps = pData + offsetUV + size_t(y) * stride;
       for ([[maybe_unused]] const int x : range(nx)) *pd++ = *ps++;

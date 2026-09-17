@@ -20,9 +20,10 @@ ifneq ($(want_plain_compiler),1)
   # New in clang 23; tolerated by earlier clang thanks to -Wno-unknown-warning-option above.
   cpedantic += -Wno-unique-object-duplication#  We never build shared libraries.
   cpedantic += -Wno-c2y-extensions#  For __COUNTER__, newly classified as a C2y extension.
-  # clang 23.1.1's lifetime-safety analysis crashes the frontend on Image.cpp and Video_IO.cpp, and
-  #  its findings here were all reviewed and found to be false positives.  It runs whenever any one
-  #  of its warnings is enabled, and -Wno-lifetime-safety (the group) does not prevent that, so
+
+  # The clang 23.1.1 lifetime-safety analysis crashes the frontend on 15 functions across the tree,
+  #  and its findings here were all reviewed and found to be false positives.  It runs whenever any
+  #  one of its warnings is enabled, and -Wno-lifetime-safety (the group) does not prevent that, so
   #  every leaf must be named.  Being warning options, these are ignored by an older clang.
   cpedantic += -Wno-lifetime-safety-cross-tu-constructor-suggestions \
     -Wno-lifetime-safety-cross-tu-misplaced-lifetimebound -Wno-lifetime-safety-cross-tu-suggestions \
@@ -34,6 +35,7 @@ ifneq ($(want_plain_compiler),1)
     -Wno-lifetime-safety-return-stack-addr -Wno-lifetime-safety-return-stack-addr-moved \
     -Wno-lifetime-safety-use-after-free -Wno-lifetime-safety-use-after-scope \
     -Wno-lifetime-safety-use-after-scope-moved
+
   # -Wno-source-uses-openmp -Wno-reserved-id-macro
   ifeq ($(is_mswin),1)
     cpedantic += -Wno-language-extension-token -Wno-nonportable-system-include-path -Wno-reserved-identifier

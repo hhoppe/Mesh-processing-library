@@ -75,13 +75,13 @@ class Mesh : noncopyable {
   void copy(const Mesh& m);  // Not a GMesh!  Carries flags (but not sac fields), hence not named operator=().
 
   // ** Raw manipulation functions, may lead to non-nice Meshes:
-  // always legal
+  // Always legal.
   Vertex create_vertex() { return create_vertex_private(_vertexnum); }
   // Die if degree(v) > 0.
   virtual void destroy_vertex(Vertex v);
   // Returns false if there are duplicate vertices or an existing edge.
   [[nodiscard]] bool legal_create_face(CArrayView<Vertex> va) const;
-  // Die if !legal_create_face().
+  // Die unless legal_create_face(...).
   Face create_face(CArrayView<Vertex> va) { return create_face_private(_facenum, va); }
   Face create_face(Vertex v1, Vertex v2, Vertex v3) { return create_face(V(v1, v2, v3)); }
   // Always legal.
@@ -90,9 +90,9 @@ class Mesh : noncopyable {
   // ** Vertex:
   [[nodiscard]] bool is_nice(Vertex v) const;
   [[nodiscard]] int degree(Vertex v) const;             // Same as the number of adjacent vertices or edges.
-  [[nodiscard]] int num_boundaries(Vertex v) const;     // 0 or 1 for a nice vertex.
-  [[nodiscard]] bool is_boundary(Vertex v) const;       // is_nice(v), degree(v) > 0
-  [[nodiscard]] Edge opp_edge(Vertex v, Face f) const;  // is_triangle(f); slow
+  [[nodiscard]] int num_boundaries(Vertex v) const;     // (Returns 0 or 1 for a nice vertex.)
+  [[nodiscard]] bool is_boundary(Vertex v) const;       // Die unless is_nice(v), degree(v) > 0.
+  [[nodiscard]] Edge opp_edge(Vertex v, Face f) const;  // Die unless is_triangle(f); slow.
   [[nodiscard]] Vertex opp_vertex(Vertex v, Edge e) const;
   // All most_clw_* and most_ccw_* functions assert is_nice(v).
   // Move about vertices adjacent to a vertex.
@@ -123,7 +123,7 @@ class Mesh : noncopyable {
   }
   [[nodiscard]] bool is_boundary(Face f) const;         // Same as having a boundary vertex.
   [[nodiscard]] Face opp_face(Face f, Edge e) const;    // Return nullptr if is_boundary(e).
-  [[nodiscard]] Face opp_face(Vertex v, Face f) const;  // is_triangle(f); ret nullptr if none
+  [[nodiscard]] Face opp_face(Vertex v, Face f) const;  // Die unless is_triangle(f); returns nullptr if none.
   // In ccw order.
   void get_vertices(Face f, Array<Vertex>& va) const;
   [[nodiscard]] Vec3<Vertex> triangle_vertices(Face f) const;
@@ -179,7 +179,7 @@ class Mesh : noncopyable {
   [[nodiscard]] Edge clw_face_edge(Corner c) const { return c->_edge; }  // (fastest)
 
   // ** Other associations:
-  // obtain edge from vertices
+  // Obtain edge from vertices.
   [[nodiscard]] Edge query_edge(Vertex v, Vertex w) const;
   [[nodiscard]] Edge edge(Vertex v, Vertex w) const { return assertx(query_edge(v, w)); }
   [[nodiscard]] Edge ordered_edge(Vertex v1, Vertex v2) const;  // Asserts that it exists; oriented.
@@ -223,7 +223,7 @@ class Mesh : noncopyable {
   [[nodiscard]] const Flags& flags(Edge e) const { return e->_flags; }
 
   // ** Triangular mesh operations (die if not triangular!):
-  // would collapse be legal?
+  // Would collapse be legal?
   [[nodiscard]] bool legal_edge_collapse(Edge e) const;
   // Would the collapse preserve a nice mesh?
   [[nodiscard]] bool nice_edge_collapse(Edge e) const;
@@ -231,25 +231,25 @@ class Mesh : noncopyable {
   [[nodiscard]] bool legal_edge_swap(Edge e) const;
 
   virtual void collapse_edge_vertex(Edge e, Vertex vs);
-  // Die if !legal_edge_collapse(e).
+  // Die unless legal_edge_collapse(e).
   // Remove f1, [f2], v2, (v2, {*}).
   // Add (v1, {**})  where {**} = {*}-{v1, vo1, vo2}.
   virtual void collapse_edge(Edge e);
-  // split_edge(e) always legal
-  // remove f1, [f2], (v1, v2)
-  // add 2/4 faces, vnew, (vnew, v1), (vnew, v2), (vnew, vo1), [(vnew, vo2)]
+  // Operation split_edge(e) is always legal.
+  // Remove f1, [f2], (v1, v2).
+  // Add 2/4 faces, vnew, (vnew, v1), (vnew, v2), (vnew, vo1), [(vnew, vo2)].
   virtual Vertex split_edge(Edge e, int vid = 0);
-  // Die if !legal_edge_swap(e).
+  // Die unless legal_edge_swap(e).
   // Remove f1, f2, (v1, v2).
   // Add 2 faces, (vo1, vo2).
   virtual Edge swap_edge(Edge e);
 
   // ** More mesh operations:
-  // vs2 can be nullptr, returns v2, leaves hole
+  // Vertex vs2 can be nullptr; returns v2; leaves hole.
   virtual Vertex split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i);
   // Replace (vt, {*}) by (vs, {*}).
   [[nodiscard]] bool legal_vertex_merge(Vertex vs, Vertex vt);
-  virtual void merge_vertices(Vertex vs, Vertex vt);  // Die if !legal.
+  virtual void merge_vertices(Vertex vs, Vertex vt);  // Die unless legal.
   // Introduce one center vertex and triangulate the face.
   virtual Vertex center_split_face(Face f);  // Always legal.
   // Introduce an edge to split the face on (v1, v2).
@@ -257,10 +257,10 @@ class Mesh : noncopyable {
   // Remove the consecutive set of edges separating two faces.
   //  (may destroy some vertices if > 1 edge shared by two faces)
   [[nodiscard]] bool legal_coalesce_faces(Edge e);
-  virtual Face coalesce_faces(Edge e);  // Die if !legal.
+  virtual Face coalesce_faces(Edge e);  // Die unless legal.
   virtual Vertex insert_vertex_on_edge(Edge e);
   virtual Edge remove_vertex_between_edges(Vertex vr);
-  // Separate the vertex into multiple vertices if it is adjacent to disconnected face rings; return new vertices.
+  // Separate the vertex into multiple vertices if it is adjacent to disconnected face rings; returns new vertices.
   virtual Array<Vertex> fix_vertex(Vertex v);
 
   // ** Mesh:
@@ -724,10 +724,11 @@ inline PArray<Face, 2> Mesh::faces(Edge e) const {
 inline Vec3<Vertex> Mesh::triangle_vertices(Face f) const {
   Vec3<Vertex> va;
   HEdge he = herep(f), he0 = he;
+  dummy_use(he0);
   va[0] = he->_vert, he = he->_next;
   va[1] = he->_vert, he = he->_next;
   va[2] = he->_vert, he = he->_next;
-  assertx(he == he0);  // is_triangle()
+  ASSERTXX(he == he0);  // Check is_triangle().
   return va;
 }
 
@@ -737,7 +738,7 @@ inline Vec3<Corner> Mesh::triangle_corners(Face f) const {
   ca[0] = he, he = he->_next;
   ca[1] = he, he = he->_next;
   ca[2] = he, he = he->_next;
-  assertx(he == ca[0]);  // is_triangle()
+  ASSERTXX(he == ca[0]);  // Check is_triangle().
   return ca;
 }
 

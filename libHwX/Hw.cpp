@@ -125,7 +125,7 @@ bool Hw::init_aux(Array<string>& aargs) {
 #endif
 
   _pwmhints = assertx(XAllocWMHints());
-  // _pwmhints->flags = 0;  // unnecessary
+  // _pwmhints->flags = 0;  // Unnecessary.
   if (iconic) {
     _pwmhints->initial_state = IconicState;
     _pwmhints->flags |= StateHint;
@@ -204,7 +204,7 @@ void Hw::open() {
         // Warning("Turning on GLX_SAMPLES_SGIS");
         assertw(_multisample == 2 || _multisample == 4 || _multisample == 8 || _multisample == 16);
         attributelist.push_array(V(GLX_SAMPLES_SGIS, _multisample));
-        // then becomes enabled by default.
+        // Then becomes enabled by default.
         // Note: inf_reality balrog has _multisample <= 8.
         // Note: may want to disable multisampling manually before drawing anti-aliased lines.  Actually,
         //  anti-aliased lines look rather poor on inf_reality (too thick); we prefer multisampled aliased lines.
@@ -392,13 +392,13 @@ void Hw::open() {
       const string regular_font_name = (
           // "9x15bold"
           // iris13 (close to IrisGL default font)
-          // "-*-iris-medium-r-normal--*-130-*-*-m-*-iso8859-1" // latest on SGI
-          // "-*-courier-*-r-*-*-*-100-*-*-*-*-*-*" // works on CYGWIN; has width=9
-          // "-*-courier-*-r-*-*-*-190-*-*-*-*-*-*" // looks like width16 on SGI
+          // "-*-iris-medium-r-normal--*-130-*-*-m-*-iso8859-1" // Latest on SGI.
+          // "-*-courier-*-r-*-*-*-100-*-*-*-*-*-*" // Works on CYGWIN; has width=9.
+          // "-*-courier-*-r-*-*-*-190-*-*-*-*-*-*" // Looks like width16 on SGI.
           // "fixed"
           "9x15bold");
       const string big_font_name = (
-          // "12x24" // yuck
+          // "12x24" // Yuck.
           "-misc-fixed-medium-r-normal--20-200-75-75-c-100-iso8859-1"  // Not all that large.
       );
       string font_name = _bigfont ? big_font_name : regular_font_name;
@@ -412,7 +412,7 @@ void Hw::open() {
       const Font id = font_info2->fid;
       const int first = font_info2->min_char_or_byte2;
       const int last = font_info2->max_char_or_byte2;
-      if (0) SHOW(first, last);  // first=0 last=255
+      if (0) SHOW(first, last);  // Shows: first=0 last=255.
       _listbase_font = assertx(glGenLists(last + 1));
       assertx(!gl_report_errors());
       glXUseXFont(id, first, last - first + 1, _listbase_font + first);
@@ -681,7 +681,7 @@ void Hw::handle_key() {
     s = buf.data();
     if (keysym >= XK_F1 && keysym <= XK_F12) {
       s = sform("<f%d>", int(keysym - XK_F1 + 1));
-    } else if (keysym >= XK_0 && keysym <= XK_9) {  // so that control-2, .. control-9 are interpreted correctly
+    } else if (keysym >= XK_0 && keysym <= XK_9) {  // So that control-2, .. control-9 are interpreted correctly.
       assertx(XK_0 == '0');
       s = sform("%c", narrow_cast<char>(keysym));
     } else {
@@ -702,7 +702,7 @@ void Hw::handle_key() {
     if (_hwdebug) SHOW(keysym, s, s.size(), convert<int>(convert<uchar>(CArrayView<char>(s.data(), s.size()))));
   }
   // (keysym >= XK_space && keysym <= XK_asciitilde)
-  if (s == "") return;  // e.g. 'shift' key
+  if (s == "") return;  // E.g. 'shift' key
   if (_query) {
     query_keypress(s);
   } else if (key_press(s)) {
@@ -729,7 +729,7 @@ void Hw::draw_it() {
   } else {
     // 2014-12-13
     glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // for non-premultiplied alpha
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);  // For non-premultiplied alpha.
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // Since 2017-02-23, source is assumed to have premultiplied alpha.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();  // glLoadMatrixf(to_Matrix(Frame::identity()).const_grid_view().data());
@@ -790,7 +790,7 @@ void Hw::draw_it() {
 #if 1 || defined(__CYGWIN__)
   // This synchronization was necessary with cygwin to avoid having GLX build a buffer of many frames of rendering.
   // 2016-03-17 this also became necessary with iglx over ssh under Unix,
-  //   e.g.: ./bin/cygwin/G3dOGL ./demos/data/cessna.orig.m -key J
+  //   E.g.: ./bin/cygwin/G3dOGL ./demos/data/cessna.orig.m -key J
   if (1) XSync(_display, 0);
 #endif
 }
@@ -965,10 +965,10 @@ void Hw::set_window_title(string ps) {
 Vec2<int> Hw::get_max_window_dims() {
   XWindowAttributes attribs;
   assertx(XGetWindowAttributes(_display, DefaultRootWindow(_display), &attribs));
-  // cygwin: ignores taskbar and returns V(1600, 2560).
+  // Cygwin: ignores taskbar and returns V(1600, 2560).
   // SHOW(attribs.x, attribs.y, attribs.height, attribs.width);
-  // SHOW(DisplayWidth(_display, _screen), DisplayHeight(_display, _screen));  // same
-  // Vec2<int> window_borders = V(55, 0);  // taskbar at bottom in Ubuntu Cinnamon
+  // SHOW(DisplayWidth(_display, _screen), DisplayHeight(_display, _screen));  // Same.
+  // Vec2<int> window_borders = V(55, 0);  // Taskbar at bottom in Ubuntu Cinnamon.
   const Vec2<int> window_borders = V(55, 0);  // Taskbar at bottom in Debian Linux Cinnamon (Window borders Albatross).
   return V(attribs.height, attribs.width) - window_borders;
 }
@@ -1003,7 +1003,7 @@ void Hw::make_fullscreen(bool b) {
                       reinterpret_cast<uchar*>(atoms.data()), atoms.num());
       // The second time this property is set with cygwin, the window size does not change.
     } else {
-      Vec0<Atom> atoms = {};  // was { None };
+      Vec0<Atom> atoms = {};  // Was: { None };
       XChangeProperty(_display, _win, XInternAtom(_display, "_NET_WM_STATE", False), XA_ATOM, 32, PropModeReplace,
                       reinterpret_cast<uchar*>(atoms.data()), atoms.num());
       // Cygwin ignores the fact that the property is gone above?
@@ -1019,8 +1019,8 @@ void Hw::make_fullscreen(bool b) {
     event.type = ClientMessage;
     event.xclient.display = _display;
     event.xclient.window = _win;
-    // event.xclient.serial        = 0;
-    // event.xclient.send_event    = True;
+    // event.xclient.serial = 0;
+    // event.xclient.send_event = True;
     event.xclient.message_type = XInternAtom(_display, "_NET_WM_STATE", False);
     event.xclient.format = 32;
     event.xclient.data.l[0] = b ? 1 : 0;  // 0 == unset, 1 == set, 2 == toggle

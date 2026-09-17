@@ -125,7 +125,7 @@ template <int D, typename Func = void(const Vec<int, D>&)> void for_coords(Vec<i
   for_coordsL(ntimes<D>(0), dims, func);
 }
 
-// *** General D.
+// *** General D
 
 template <int D, typename Func = void(const Vec<int, D>&)>
 void parallel_for_coordsL(const ParallelOptions& options, Vec<int, D> uL, Vec<int, D> uU, Func func) {
@@ -148,7 +148,7 @@ void parallel_for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func) {
   parallel_for_coordsL({}, uL, uU, func);
 }
 
-// *** D = 1.
+// *** D = 1
 
 template <typename Func = void(const Vec1<int>&)>
 void parallel_for_coordsL(const ParallelOptions& options, Vec1<int> uL, Vec1<int> uU, Func func) {
@@ -164,7 +164,7 @@ template <typename Func = void(const Vec1<int>&)> void parallel_for_coordsL(Vec1
   parallel_for_coordsL({}, uL, uU, func);
 }
 
-// *** D = 2.
+// *** D = 2
 
 template <typename Func = void(const Vec2<int>&)>
 void parallel_for_coordsL(const ParallelOptions& options, Vec2<int> uL, Vec2<int> uU, Func func) {
@@ -195,7 +195,7 @@ template <typename Func = void(const Vec2<int>&)> void parallel_for_coordsL(Vec2
   parallel_for_coordsL({}, uL, uU, func);
 }
 
-// *** D = 3.
+// *** D = 3
 
 template <typename Func = void(const Vec3<int>&)>
 void parallel_for_coordsL(const ParallelOptions& options, Vec3<int> uL, Vec3<int> uU, Func func) {
@@ -240,7 +240,7 @@ template <typename Func = void(const Vec3<int>&)> void parallel_for_coordsL(Vec3
   parallel_for_coordsL({}, uL, uU, func);
 }
 
-// *** Others.
+// *** Others
 
 template <int D, typename Func = void(const Vec<int, D>&)>
 void parallel_for_coords(const ParallelOptions& options, Vec<int, D> dims, Func func) {
@@ -276,16 +276,12 @@ void for_coordsL_raster(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, FuncRa
       const size_t i0 = d0 * dims[1];
       for_intL(d1, uL[1], uU[1]) func_raster(i0 + d1);
     }
-  } else if constexpr (D == 3) {  // speed does not increase much
+  } else if constexpr (D == 3) {  // Speed does not increase much.
     for_intL(d0, uL[0], uU[0]) for_intL(d1, uL[1], uU[1]) {
-      // "size_t ib = ravel_index_list(dims, d0, d1, uL[2]);" fails for D != 3
-      // "size_t ib = ravel_index<D>(dims, {d0, d1, uL[2]});" fails for D != 3
-      // size_t ib = ravel_index<D>(dims, V(d0, d1, uL[2]).const_view());  // .const_view() for compilation of D != 3
-      // for_int(id, uU[2] - uL[2]) func_raster(ib + id);
       const size_t i0 = (d0 * dims[1] + d1) * dims[2];
       for_intL(d2, uL[2], uU[2]) func_raster(i0 + d2);
     }
-  } else {  // this generic case is already quite fast
+  } else {  // This generic case is already quite fast.
     for (const auto& u : range(uL, uU)) func_raster(ravel_index(dims, u));
   }
 }

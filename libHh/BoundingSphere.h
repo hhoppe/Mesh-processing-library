@@ -23,8 +23,8 @@ struct BoundingSphere {
   } else {
     // (from above, d obviously cannot be zero)
     const float newradius = (bsphere1.radius + bsphere2.radius + d) * 0.5f;
-    // Here, point == interp(bsphere1.point, bsphere2.point, b1) where r1 + (1 - b1) * d == r2 + b1 * d,
-    // therefore b1 = ((r1 - r2) / d + 1) / 2.
+    // Here, point == interp(bsphere1.point, bsphere2.point, b1) where r1 + (1 - b1) * d == r2 + b1 * d.
+    // Therefore, b1 = ((r1 - r2) / d + 1) / 2.
     const float b1 = ((bsphere1.radius - bsphere2.radius) / d + 1.f) * 0.5f;
     ASSERTX(b1 >= 0.f && b1 <= 1.f);
     BoundingSphere bsphere;

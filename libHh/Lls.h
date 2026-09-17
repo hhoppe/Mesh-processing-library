@@ -16,11 +16,11 @@ class Lls : noncopyable {
   virtual ~Lls() = default;
   virtual void clear();
   // All entries will be zero unless entered as below.
-  void enter_a(CMatrixView<float> mat);                     // [_m, _n]
-  virtual void enter_a_r(int r, CArrayView<float> ar) = 0;  // r < _m, ar.num() == _n
-  virtual void enter_a_c(int c, CArrayView<float> ar) = 0;  // c < _n, ar.num() == _m
-  virtual void enter_a_rc(int r, int c, float val) = 0;     // r < _m, c < _n
-  void enter_b(CMatrixView<float> mat);                     // [_m, _nd]
+  void enter_a(CMatrixView<float> mat);                     // Dimensions [_m, _n].
+  virtual void enter_a_r(int r, CArrayView<float> ar) = 0;  // Die unless r < _m, ar.num() == _n.
+  virtual void enter_a_c(int c, CArrayView<float> ar) = 0;  // Die unless c < _n, ar.num() == _m.
+  virtual void enter_a_rc(int r, int c, float val) = 0;     // Die unless r < _m, c < _n.
+  void enter_b(CMatrixView<float> mat);                     // Dimensions [_m, _nd].
   void enter_b_r(int r, CArrayView<float> ar) {
     ASSERTX(ar.num() == _nd);
     for_int(c, _nd) enter_b_rc(r, c, ar[c]);
@@ -30,7 +30,7 @@ class Lls : noncopyable {
     for_int(r, _m) enter_b_rc(r, c, ar[r]);
   }
   void enter_b_rc(int r, int c, float val) { _b[c, r] = val; }
-  void enter_xest(CMatrixView<float> mat);  // [_n, _nd]
+  void enter_xest(CMatrixView<float> mat);  // Dimensions [_n, _nd].
   void enter_xest_r(int r, CArrayView<float> ar) {
     ASSERTX(ar.num() == _nd);
     for_int(c, _nd) enter_xest_rc(r, c, ar[c]);
@@ -39,9 +39,9 @@ class Lls : noncopyable {
     ASSERTX(ar.num() == _n);
     for_int(r, _n) enter_xest_rc(r, c, ar[r]);
   }
-  void enter_xest_rc(int r, int c, float val) { _x[c, r] = val; }                        // r < _n, c < _nd
+  void enter_xest_rc(int r, int c, float val) { _x[c, r] = val; }                        // Die unless r < _n, c < _nd.
   [[nodiscard]] virtual bool solve(double* rssb = nullptr, double* rssa = nullptr) = 0;  // Returns success.
-  void get_x(MatrixView<float> mat);                                                     // [_n, _nd]
+  void get_x(MatrixView<float> mat);                                                     // Dimensions [_n, _nd].
   void get_x_r(int r, ArrayView<float> ar) {
     ASSERTX(ar.num() == _nd);
     for_int(c, _nd) ar[c] = get_x_rc(r, c);
@@ -50,14 +50,14 @@ class Lls : noncopyable {
     ASSERTX(ar.num() == _n);
     for_int(r, _n) ar[r] = get_x_rc(r, c);
   }
-  [[nodiscard]] float get_x_rc(int r, int c) { return _x[c, r]; }  // r < _n, c < _nd
+  [[nodiscard]] float get_x_rc(int r, int c) { return _x[c, r]; }  // Die unless r < _n, c < _nd.
   [[nodiscard]] int num_rows() const { return _m; }
 
  protected:
   int _m, _n, _nd;
   Matrix<float> _b;     // [_nd, _m]; transpose of the client view.
   Matrix<float> _x;     // [_nd, _n]; transpose of the client view.
-  bool _solved{false};  // solve() can destroy A, so check
+  bool _solved{false};  // solve() can destroy A, so check.
   Lls(int m, int n, int nd);
 };
 
@@ -106,7 +106,7 @@ class FullLls : public Lls {
   [[nodiscard]] bool solve(double* rssb = nullptr, double* rssa = nullptr) override;
 
  protected:
-  Matrix<float> _a;              // [_m, _n]
+  Matrix<float> _a;              // Dimensions [_m, _n].
   virtual bool solve_aux() = 0;  // Abstract class.
  private:
   double get_rss();

@@ -38,7 +38,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
   }
   if (filterbs[0].filter().is_trivial_minify() && filterbs[1].filter().is_trivial_minify() && nmatrixp.size()) {
     if (nmatrixp.dims() * 2 == matrixp.dims()) {
-      constexpr int DS = 2, DS2 = DS * DS;  // square(DS);
+      constexpr int DS = 2, DS2 = square(DS);
       const int nx = nmatrixp.xsize();
       parallel_for(range(nmatrixp.ysize()), [&](const int y) {
         Pixel* __restrict an = nmatrixp[y].data();
@@ -54,7 +54,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
       return;
     }
     if (nmatrixp.dims() * 4 == matrixp.dims()) {
-      constexpr int DS = 4, DS2 = DS * DS;  // square(DS)
+      constexpr int DS = 4, DS2 = square(DS);
       const int nx = nmatrixp.xsize();
       parallel_for(range(nmatrixp.ysize()), [&](const int y) {
         Pixel* __restrict an = nmatrixp[y].data();

@@ -149,7 +149,7 @@ struct S_op_stat {
 
 constexpr float k_gim_diagonal_factor = 1.0f;  // Was 1.1f.
 constexpr bool k_simp96 = true;                // Improvements.
-constexpr float k_mincos = -1.f / 3.f;         // acos(109.471) == tetrahedron angle
+constexpr float k_mincos = -1.f / 3.f;         // Equals acos(109.471) == tetrahedron angle.
 constexpr auto k_spring_sched = V(1e-2f, 1e-3f, 1e-4f, 1e-8f);
 constexpr int k_max_gfit_iter = 30;
 std::optional<WFile> file_spawn;
@@ -839,10 +839,9 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
   }
 }
 
-// Fit a set of points to a ring of vertices while optimizing the center
-// vertex.  Does niter iterations of projection + refit.
-// Afterwards, should call reproject_locally() or equivalent to do final
-// reprojection and update pt projections.
+// Fit a set of points to a ring of vertices while optimizing the center vertex.
+// Does niter iterations of projection + refit.
+// Afterwards, should call reproject_locally() or equivalent to do final reprojection and update pt projections.
 //  * Given:
 // ar_pts: the set of point indices that project locally
 // wa: array of vertex positions (wa[0] == wa[nw - 1] if closed loop)
@@ -1444,8 +1443,8 @@ void do_zippysimplify() {
   //  avoid long skinny triangles, as opposed to ending with no spring energy at all.
   // Removing springs completely causes problems.
   constexpr auto k_spring_sched2 = V(1e-2f, 1e-4f);
-  // constexpr auto k_spring_sched2 = V(0.f);         // try no springs
-  // constexpr auto k_spring_sched2 = V(1e-2f, 0.f);  // try no springs at end
+  // constexpr auto k_spring_sched2 = V(0.f);         // Try no springs.
+  // constexpr auto k_spring_sched2 = V(1e-2f, 0.f);  // Try no springs at end.
   spring = k_spring_sched2[0];
   perhaps_initialize();
   for (const float spr : k_spring_sched2) {

@@ -81,7 +81,7 @@ template <int D> void test_random(Args& args) {
   for_int(c, D) dims[c] = args.get_int();
   // using FType = float;
   using FType = double;
-  // using FType = Vector4;  // must disable HH_RSTAT calls below
+  // using FType = Vector4;  // We must disable HH_RSTAT calls below.
   Grid<D, FType> grid_orig(dims);
   for (auto& e : grid_orig) e = FType{Random::G.unif()};
   Multigrid<D, FType> multigrid(dims);
@@ -324,7 +324,7 @@ int main(int argc, const char** argv) {
           const int label0 = grid_labels[y0, x0];
           const int label1 = grid_labels[y1, x1];
           if (1) vrhs += (grids[label0][y1, x1][c] - grids[label0][y0, x0][c]) * .5f;
-          if (1) vrhs += (grids[label1][y1, x1][c] - grids[label1][y0, x0][c]) * .5f;  // necessary!
+          if (1) vrhs += (grids[label1][y1, x1][c] - grids[label1][y0, x0][c]) * .5f;  // Necessary!
         };
         parallel_for(range(dims[0]), [&](const int y) {
           for_int(x, dims[1]) {

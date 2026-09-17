@@ -70,11 +70,11 @@ constexpr auto k_speeds = to_Vec({
 });
 const float k_key_zoom_fac = 2.f;                  // Spatial zoom factor for each UI keypress.
 const float k_wheel_zoom_fac = sqrt(2.f);          // Spatial zoom factor for each UI mouse wheel step.
-const Vec2<int> k_default_window_dims{576, 1024};  // was {480, 640}
+const Vec2<int> k_default_window_dims{576, 1024};  // Was {480, 640}.
 const double k_before_start = -1e9;       // Large negative number within "int" limits, to play video from first frame.
 const bool k_force_refresh = true;        // Parameter constant to force upload of texture to GPU.
 const bool k_no_text_wrap = false;        // Parameter constant to disable wrapping of text in app_draw_text.
-const int k_usual_tex_padding_width = 8;  // > 1 for better memory alignment (to be safe) and better mipmap
+const int k_usual_tex_padding_width = 8;  // > 1 for better memory alignment (to be safe) and better mipmap.
 const double k_loop_duration = 5.;        // Output loop length in seconds.
 
 class DerivedHw : public Hw {
@@ -195,7 +195,7 @@ unique_ptr<Object>& g_videoloop_ready_obj = *new unique_ptr<Object>;  // Created
 unique_ptr<Object>& g_vlp_ready_obj = *new unique_ptr<Object>;        // Created by background thread.
 double g_initial_time = 0.;                                           // Requested initial time in video (in seconds).
 double g_frametime = k_before_start;  // Continuous time in units of frame; < 0. means show first frame next.
-std::atomic<int> g_framenum{-1};      // clamp(int(floor(g_frametime)), 0, getob()._nframes_loaded - 1) or -1
+std::atomic<int> g_framenum{-1};      // clamp(int(floor(g_frametime)), 0, getob()._nframes_loaded - 1) or -1.
 Vec2<int> g_frame_dims;               // Spatial dimensions in pixels of current video or image object.
 bool g_frame_has_transparency;        // True if png image with some partially transparent pixel(s).
 bool g_refresh_texture = false;       // Image has changed since uploaded as texture.
@@ -758,7 +758,7 @@ string get_szoom() {
   Vec2<float> arzoom = get_zooms();
   if (g_fit == EFit::isotropic) arzoom = twice(min(arzoom));
   const float vzoom = sqrt(float(product(arzoom)));  // Geometric mean.
-  const bool isotropic = arzoom[0] == arzoom[1];     // was abs(arzoom[1]/arzoom[0]-1.f)<.01f;
+  const bool isotropic = arzoom[0] == arzoom[1];     // Was: abs(arzoom[1] / arzoom[0] - 1.f) < .01f;
   return sform("%s%d%%", (isotropic ? "" : "~"), int(vzoom * 100.f + .5f));
 }
 
@@ -812,7 +812,7 @@ void perform_window_zoom(float fac_zoom) {
       }
     }
     message("Zoom set to: " + get_szoom());
-  } else {  // zoom by resizing the window
+  } else {  // Zoom by resizing the window.
     Vec2<int> cur_dims = g_win_dims;
     if (g_desired_dims[0] >= 0) cur_dims = g_desired_dims;
     Vec2<int> ndims = convert<int>(convert<float>(cur_dims) * fac_zoom);
@@ -890,7 +890,7 @@ void view_externally() {
   };
   const Array<string> image_programs = {
       "irfan",
-      "c:/Program Files/IrfanView/i_view64.exe",  // difficulty: only works with backslash-delimited arg pathnames
+      "c:/Program Files/IrfanView/i_view64.exe",  // Difficulty: only works with backslash-delimited arg pathnames.
       "c:/Program Files (x86)/IrfanView/i_view32.exe",  // Same problem.
       "eog",                                            // Gnome image viewer.
       "display",                                        // ImageMagick.
@@ -1175,7 +1175,7 @@ bool DerivedHw::key_press(string skey) {
   };
   const bool is_shift = get_key_modifier(Hw::EModifier::shift);
   const bool is_control = get_key_modifier(Hw::EModifier::control);
-  // bool is_alt =     get_key_modifier(Hw::EModifier::alt);
+  // const bool is_alt = get_key_modifier(Hw::EModifier::alt);
   if (0) SHOW(skey, int(skey[0]), is_shift, is_control);
   if (g_cob >= 0 && getob().is_image()) {
     if (skey == "<left>") skey = "<prior>";
@@ -1185,9 +1185,9 @@ bool DerivedHw::key_press(string skey) {
   const int keycode = uint8_t(skey[0]);
   try {
     if (0) {
-    } else if (skey == "<f1>") {  // help
+    } else if (skey == "<f1>") {  // Help.
       return key_press("?");
-    } else if (skey == "<f2>") {  // rename file
+    } else if (skey == "<f2>") {  // Rename file.
       std::scoped_lock lock(g_mutex_obs);
       Object& ob = check_loaded_saved_object();
       const string old_filename = ob._filename;
@@ -1202,7 +1202,7 @@ bool DerivedHw::key_press(string skey) {
       ob._filename = new_filename;
       ob._orig_filename = new_filename;
       g_dir_media_filenames.invalidate();
-    } else if (skey == "<f5>") {  // reload from file
+    } else if (skey == "<f5>") {  // Reload from file.
       std::scoped_lock lock(g_mutex_obs);
       const bool reload_all = is_shift;
       for_int(obi, getobnum()) {
@@ -1231,7 +1231,7 @@ bool DerivedHw::key_press(string skey) {
           if (ob.spatial_dims() != osdims) reset_window(determine_default_window_dims(g_frame_dims));
         }
       }
-    } else if (skey == "<f7>") {  // move file
+    } else if (skey == "<f7>") {  // Move file.
       std::scoped_lock lock(g_mutex_obs);
       check_loaded_saved_object();
       const string old_filename = getob()._filename;
@@ -1256,7 +1256,7 @@ bool DerivedHw::key_press(string skey) {
         unload_current_object();
       }
       g_dir_media_filenames.invalidate();
-    } else if (skey == "<f8>") {  // copy file
+    } else if (skey == "<f8>") {  // Copy file.
       std::scoped_lock lock(g_mutex_obs);
       const Object& ob = check_saved_object();
       const string old_filename = ob._filename;
@@ -1285,9 +1285,9 @@ bool DerivedHw::key_press(string skey) {
       beep();
     } else if (keycode == 'R' - 64 && !is_shift) {  // C-r is unbound
       beep();
-    } else if (skey == "<f11>" || skey == "<enter>") {  // fullscreen <enter>/<ret>
+    } else if (skey == "<f11>" || skey == "<enter>") {  // Fullscreen <enter>/<ret>.
       return key_press("\r");
-    } else if (skey == "<left>") {  // select frame - 1
+    } else if (skey == "<left>") {  // Select frame - 1.
       if (g_cob < 0) throw "no loaded objects";
       g_playing = false;
       const double dframetime = is_shift ? 10. : 1.;
@@ -1300,7 +1300,7 @@ bool DerivedHw::key_press(string skey) {
           nframetime = getob(obi).nframes() - 1.;
       }
       set_video_frame(obi, nframetime);
-    } else if (skey == "<right>") {  // select frame + 1
+    } else if (skey == "<right>") {  // Select frame + 1.
       if (g_cob < 0) throw "no loaded objects";
       g_playing = false;
       const double dframetime = is_shift ? 10. : 1.;
@@ -1311,31 +1311,31 @@ bool DerivedHw::key_press(string skey) {
         if (g_looping == ELooping::one || g_looping == ELooping::all) nframetime = k_before_start;
       }
       set_video_frame(obi, nframetime);
-    } else if (skey == "<home>") {  // select first directory file or first video frame
+    } else if (skey == "<home>") {  // Select first directory file or first video frame.
       if (g_cob < 0) throw "no loaded objects";
       if (getob()._is_image || is_control) {  // Load first object in directory.
         std::scoped_lock lock(g_mutex_obs);
         if (!replace_with_other_object_in_directory(-std::numeric_limits<int>::max())) beep();
-      } else {  // jump to first frame in video
+      } else {  // Jump to first frame in video.
         g_playing = false;
         set_video_frame(g_cob, k_before_start);
       }
-    } else if (skey == "<end>") {  // select last directory file or last video frame
+    } else if (skey == "<end>") {  // Select last directory file or last video frame.
       if (g_cob < 0) throw "no loaded objects";
       if (getob()._is_image || is_control) {  // Load last object in directory.
         std::scoped_lock lock(g_mutex_obs);
         if (!replace_with_other_object_in_directory(+std::numeric_limits<int>::max())) beep();
-      } else {  // jump to last frame in video
+      } else {  // Jump to last frame in video.
         g_playing = false;
         set_video_frame(g_cob, getob().nframes() - 1.);
       }
-    } else if (skey == "<prior>") {  // previous object in directory
+    } else if (skey == "<prior>") {  // Previous object in directory.
       std::scoped_lock lock(g_mutex_obs);
       if (!replace_with_other_object_in_directory(-1)) beep();
-    } else if (skey == "<next>") {  // next object in directory
+    } else if (skey == "<next>") {  // Next object in directory.
       std::scoped_lock lock(g_mutex_obs);
       if (!replace_with_other_object_in_directory(+1)) beep();
-    } else if (skey == "<delete>") {  // delete file
+    } else if (skey == "<delete>") {  // Delete file.
       std::scoped_lock lock(g_mutex_obs);
       check_saved_object();
       const string old_filename = getob()._filename;
@@ -1357,7 +1357,7 @@ bool DerivedHw::key_press(string skey) {
         unload_current_object();
       }
       g_dir_media_filenames.invalidate();
-    } else if (skey == "<esc>") {  // exit, from -key "<esc>" or -hwdelay 2 -hwkey '<enter><esc>'; see also '\033'
+    } else if (skey == "<esc>") {  // Exit, from -key "<esc>" or -hwdelay 2 -hwkey '<enter><esc>'; see also '\033'.
       quit();
     } else if (skey.size() == 1 && keycode >= '1' && keycode <= '9' && is_control) {  // C-1 ... C-9: select object
       const int ob = keycode - '1';
@@ -1462,7 +1462,7 @@ bool DerivedHw::key_press(string skey) {
         case '\t': {       // <tab> == C-i (== uchar{9} == 'I' - 64), previous/next object
           if (is_shift) {  // Previous object.
             return key_press("p");
-          } else {  // next object
+          } else {  // Next object.
             return key_press("n");
           }
         }
@@ -1765,7 +1765,7 @@ bool DerivedHw::key_press(string skey) {
             g_show_grid = false;
             message("Resampled " + ob.stype());
             // if (nsdims != osdims) reset_window(determine_default_window_dims(g_frame_dims));
-          } else {  // no rotation, so crop without resampling
+          } else {  // No rotation, so crop without resampling.
             Vec2<int> yxL, yxU;
             fully_visible_image_rectangle(yxL, yxU);
             if (!ob.is_image()) {
@@ -2228,7 +2228,7 @@ bool DerivedHw::key_press(string skey) {
           message("Here is the difference video.", 6.);
           break;
         }
-        case 'M': {  // mirror: reverse the frames of a video
+        case 'M': {  // Mirror: reverse the frames of a video.
           std::scoped_lock lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           Video nvideo;
@@ -2572,7 +2572,7 @@ bool DerivedHw::key_press(string skey) {
         case '~': {  // Wait until all objects are loaded.
           break;     // Already handled.
         }
-        case '\033': {  // exit; <esc> key (== uchar{27}); see also "<esc>"
+        case '\033': {  // Exit; <esc> key (== uchar{27}); see also "<esc>".
           if (0 && getobnum() > 1 && prev_skey2 != "\033") {
             message("More than one file is open, press <esc> again to confirm quit", 10.);
           } else {
@@ -2630,7 +2630,7 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
           act_timeline(yx);
         } else if (g_use_sliders) {
           redraw_later();              // Start drag for slider.
-        } else if (g_framenum >= 0) {  // start drag, showing pixel information under cursor
+        } else if (g_framenum >= 0) {  // Start drag, showing pixel information under cursor.
           Vec2<int> prev_yxi(twice(-1));
           for (;;) {
             auto yxi = get_image_yx(convert<float>(yx) + .5f);
@@ -2844,7 +2844,7 @@ void upload_sub_texture(int level, const Vec2<int>& offset, const Vec2<int>& dim
       is_init2 = true;
       glGenBuffers(nbuf, io_buf.data());
     }
-    glEnable(GL_TEXTURE_2D);  // to be safe on AMD; see https://www.opengl.org/wiki/Common_Mistakes
+    glEnable(GL_TEXTURE_2D);  // To be safe on AMD; see https://www.opengl.org/wiki/Common_Mistakes
     {
       // Required for AMD; see https://www.opengl.org/wiki/Common_Mistakes
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -2879,7 +2879,7 @@ void upload_image_to_texture() {
     assertx(max_texture_size >= 1024);
     assertx(is_pow2(max_texture_size));
     // USE_GL_EXT_MAYBE(glMapBuffer, PFNGLMAPBUFFERPROC);
-    // supports_pbuffer = !!glMapBuffer;  // returns address on cygwin yet is not implemented
+    // supports_pbuffer = !!glMapBuffer;  // Returns address on cygwin yet is not implemented.
     supports_non_power_of_two_textures = contains(gl_extensions_string(), "GL_ARB_texture_non_power_of_two");
     supports_pbuffer = contains(gl_extensions_string(), "GL_ARB_pixel_buffer_object");
     supports_BGRA = contains(gl_extensions_string(), "GL_EXT_bgra");
@@ -2926,7 +2926,7 @@ void upload_image_to_texture() {
   if (max(desired_dims, g_tex_dims) != g_tex_dims) {
     if (g_verbose >= 1) SHOW(g_frame_dims, g_tex_active_dims, desired_dims, g_tex_dims, max(desired_dims, g_tex_dims));
     g_tex_dims = max(desired_dims, g_tex_dims);
-    // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // default 4 is good
+    // glPixelStorei(GL_UNPACK_ALIGNMENT, 1);  // Default 4 is good.
     const bool fill_all = false;
     Pixel color = k_background_color;
     if (supports_BGRA) color = color.to_BGRA();
@@ -3026,7 +3026,7 @@ void upload_image_to_texture() {
   assertx(!gl_report_errors());
 }
 
-// cygwin: OpenGL GLSL 3.00 is not supported. Supported versions are: 1.10, 1.20, 1.30, 1.00 ES, and 3.00 ES
+// Cygwin: OpenGL GLSL 3.00 is not supported. Supported versions are: 1.10, 1.20, 1.30, 1.00 ES, and 3.00 ES
 // https://github.com/mattdesl/lwjgl-basics/wiki/GLSL-Versions
 // https://en.wikipedia.org/wiki/OpenGL_Shading_Language
 // https://www.opengl.org/registry/doc/GLSLangSpec.4.50.pdf
@@ -3037,7 +3037,7 @@ void upload_image_to_texture() {
 
 #if defined(__CYGWIN__)
 const string glsl_shader_version = "#version 300 es\n";  // Works everywhere.
-// static const string glsl_shader_version = "#version 130\n";  // last non-es version supported by cygwin; also works
+// static const string glsl_shader_version = "#version 130\n";  // Last non-es version supported by cygwin; also works.
 #elif defined(__APPLE__)
 // "GLX/X11 is limited to OpenGL 2.1 on OSX" (legacy context)
 // "Apparently X11 doesn't support OpenGL higher than 2.1 on OS X.  As such I suggest you switch to GLFW."
@@ -3455,7 +3455,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
           float dval;
           if (!g_selected.control_was_pressed) {  // Pointer position determines value.
             dval = std::exp((yx[0] - g_selected.yx_last[0]) / float(-g_win_dims[0]) * .90f);
-          } else {  // pointer position determines rate of change
+          } else {  // Pointer position determines rate of change.
             dval = std::exp((yx[0] - g_selected.yx_pressed[0]) / float(-g_win_dims[0]) * .02f);
           }
           if (alt_pressed) dval = pow(dval, .2f);
@@ -3469,12 +3469,12 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
           float fac_zoom;
           if (!g_selected.control_was_pressed) {  // Pointer position determines value.
             fac_zoom = std::exp((yx[0] - g_selected.yx_last[0]) * .005f);
-          } else {  // pointer position determines rate of change
+          } else {  // Pointer position determines rate of change.
             fac_zoom = std::exp((yx[0] - g_selected.yx_pressed[0]) * .005f * .02f);
           }
           if (alt_pressed) fac_zoom = pow(fac_zoom, .2f);
           perform_zoom_at_cursor(fac_zoom, g_selected.yx_pressed);
-        } else {  // rotate
+        } else {  // Rotate.
           float vrotate = -(yx[0] - g_selected.yx_pressed[0]) * .0001f;
           if (alt_pressed) vrotate *= .1f;
           perform_window_rotation(vrotate);
@@ -3487,7 +3487,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         Vec2<float> yxd;
         if (!g_selected.control_was_pressed) {  // Pointer position determines value.
           yxd = convert<float>(yx - g_selected.yx_last);
-        } else {  // pointer position determines rate of change
+        } else {  // Pointer position determines rate of change.
           yxd = convert<float>(yx - g_selected.yx_pressed) * .02f;
         }
         if (alt_pressed) yxd *= .1f;
@@ -3946,7 +3946,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
       if (0) SHOW(pipe_api.GetConfig().m_MinPeriodSrc, pipe_api.GetConfig().m_MinPeriod);
       for (int& period : g_lp.mat_period) period = period <= 1 ? 1 : period * DT;
       for (int& start : g_lp.mat_start) start *= DT;
-    } else {  // for debugging
+    } else {  // For debugging.
 #endif
       Warning("Compiled without support for seamless video loop");
       const int start = 10, period = 70;
@@ -3972,7 +3972,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
     HH_TIMER("loop_rstat");
     HH_RSTAT(Speriod, g_lp.mat_period);
     HH_RSTAT(Sstart, g_lp.mat_start);
-    // e.g.:
+    // E.g.:
     // # Speriod:            (130560 )           1:88           av=72.804352      sd=31.987289
     // # Sstart:             (130560 )           4:56           av=28.371078      sd=15.893303
   }
@@ -3985,7 +3985,7 @@ void background_work(bool asynchronous) {
     assertx(SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_BELOW_NORMAL));
   }
 #else
-  // see https://stackoverflow.com/questions/10876342/equivalent-of-setthreadpriority-on-linux-pthreads
+  // See https://stackoverflow.com/questions/10876342/equivalent-of-setthreadpriority-on-linux-pthreads
 #endif
   if (0) my_sleep(2.);  // Test delay in video read.
   for (;;) {
@@ -4245,7 +4245,7 @@ void crop_spatial_dimensions_to_multiple(VideoNv12& onv12, int k) {
 }
 
 // Time the creation of a video loop (without the overhead of opening and updating the window).
-//  e.g.:  VideoViewer -batch_create_loop ~/proj/fastloops/data/maf_rsig00/SDstreetlight/SDstreetlight_orig.mp4 ""
+//  E.g.:  VideoViewer -batch_create_loop ~/proj/fastloops/data/maf_rsig00/SDstreetlight/SDstreetlight_orig.mp4 ""
 void do_batch_create_loop(Args& args) {
   const string input_filename = args.get_filename();
   string output_filename = args.get_string();
@@ -4309,7 +4309,7 @@ void do_batch_create_loop(Args& args) {
 }
 
 // Create a procedural video containing a moving vertical stripe.
-//  e.g.:  VideoViewer -stripe 240 720 200 60
+//  E.g.:  VideoViewer -stripe 240 720 200 60
 void do_stripe(Args& args) {
   const int nframes = args.get_int();
   const int xsize = args.get_int();
@@ -4353,7 +4353,7 @@ void do_stripe(Args& args) {
 }
 
 // Create a procedural image containing a "zonal plate".
-//  e.g.:  VideoViewer -zonal 1024 1024
+//  E.g.:  VideoViewer -zonal 1024 1024
 void do_zonal(Args& args) {
   const int xsize = args.get_int();
   const int ysize = args.get_int();
@@ -4509,7 +4509,7 @@ int main(int argc, const char** argv) {
   if (time) g_initial_time = time;
   g_through_color = parse_color(through_color);
   g_checker = checker;
-  assertx(g_cob < getobnum());  // g_cob is initialized to -1, so always true
+  assertx(g_cob < getobnum());  // g_cob is initialized to -1, so always true.
   {
     // Launch asynchronous background thread.
     std::thread th{background_work, true};
@@ -4529,7 +4529,7 @@ int main(int argc, const char** argv) {
   if (1) {
     hw.set_default_foreground("yellow");
     g_text_shadow_color = Pixel::black();
-  } else {  // does not look as nice
+  } else {  // Does not look as nice.
     hw.set_default_foreground("black");
     g_text_shadow_color = Pixel::white();
   }

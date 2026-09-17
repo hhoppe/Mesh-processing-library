@@ -234,18 +234,18 @@ const FlagMask mflag_uv = Mesh::allocate_flag();
 HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, Uv, c_uv);
 
 const Pixel k_color_invalid{0xCD, 0xAB, 0xFF, 0x00};
-bool lmcad;    // lmcolor() state
+bool lmcad;    // lmcolor() state.
 Pixel curcol;  // Current color (for lines and points).
 Color matcol;  // Material color (for polygons).
 
-// default color for polygons  (was (.9f, .6f, .4f) before 2002-01-17
+// Default color for polygons  (was (.9f, .6f, .4f) before 2002-01-17.
 // const A3dVertexColor k_default_color{A3dColor(.8f, .5f, .4f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
 const A3dVertexColor k_default_color{A3dColor(.6f, .6f, .6f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
 
 // Default color for polylines and points  (was 1.f, 1.f, 1.f,  0.f, 0.f, 0.f,  1.f, 0.f, 0.f).
 const A3dVertexColor k_default_poly_color{A3dColor(0.f, 0.f, 0.f), A3dColor(0.f, 0.f, 0.f), A3dColor(1.f, 0.f, 0.f)};
 
-// default color for mesh polygons (now defined in meshcold, meshcols, meshcolp, meshca).
+// Default color for mesh polygons (now defined in meshcold, meshcols, meshcolp, meshca).
 // const A3dVertexColor MESHCOL{A3dColor(.8f, .5f, .4f), A3dColor(.5f, .5f, .5f), A3dColor(4.f, 0.f, 0.f)};
 Color mesh_color;
 Color cusp_color;
@@ -699,7 +699,7 @@ Vec2<int> find_max_texture(GLenum internal_format, const Vec2<int>& yx_aspect, i
                  nullptr);
     int w;
     glGetTexLevelParameteriv(GL_PROXY_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-    assertx(w);  // else could set: max_yx = twice(0);
+    assertx(w);  // Else could set: max_yx = twice(0);
   }
   assertx(!gl_report_errors());
   return max_yx;
@@ -976,8 +976,8 @@ void load_texturemaps() {
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         // And must later set material color to white.
         if (1) {
-          // more expensive: apply specular highlight post texture.
-          //  (default: GL_SINGLE_COLOR)
+          // More expensive: apply specular highlight post texture.
+          // (Default: GL_SINGLE_COLOR).
           glLightModeli(GL_LIGHT_MODEL_COLOR_CONTROL, GL_SEPARATE_SPECULAR_COLOR);
           // Remember to set "-meshcols 0 0 0" if you don't want the white specular lights.
         }
@@ -999,8 +999,8 @@ void load_texturemaps() {
         // showf("Setting texture clamp mode\n");
         unsigned wrap_mode = GL_CLAMP_TO_EDGE;
         if (!contains(gl_extensions_string(), "GL_EXT_texture_edge_clamp")) {
-          // Warning("No texture_edge_clamp extension!");  // it could be due to Remote Desktop, or Apple
-          wrap_mode = GL_CLAMP;  // (obsolete; uses border texels; seems to work though)
+          // Warning("No texture_edge_clamp extension!");  // It could be due to Remote Desktop, or Apple.
+          wrap_mode = GL_CLAMP;  // (Obsolete; uses border texels; seems to work though.)
         }
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, wrap_mode);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, wrap_mode);
@@ -1095,8 +1095,8 @@ void load_texturemaps() {
         if (glGenerateMipmap) glGenerateMipmap(GL_TEXTURE_1D);  // Not supported on Remote Desktop.
         // To map it to elevation (in meters) use
         //   z = 10 x - 7995
-        // where z is the elevation and x is the horizontal index of the
-        // texture, with the leftmost pixel being centered at x = 0.
+        // where z is the elevation and x is the horizontal index of the texture, with the leftmost pixel
+        // being centered at x = 0.
         //
         // Horizontal spacing is 10m -> 16385 samples span 163'840m
         //  x = 799.5 + z * 0.10
@@ -1158,7 +1158,7 @@ void gl_init() {
   {  // Lighting.
     if (1) {
       const Vector lightdireyegl = k_lightdir_eye0 * k_eye_to_gleye;
-      glLightfv(GL_LIGHT0, GL_POSITION, concat(lightdireyegl, V(0.f)).data());  // directional; current matrix
+      glLightfv(GL_LIGHT0, GL_POSITION, concat(lightdireyegl, V(0.f)).data());  // Directional; current matrix.
       // Ambient color of light is (0, 0, 0, 1) by default  (!= scene_ambient).
       Vec4<float> color = concat(thrice(lightsource), V(1.f));
       glLightfv(GL_LIGHT0, GL_DIFFUSE, color.data());
@@ -1185,14 +1185,14 @@ void gl_init() {
     glEnable(GL_DEPTH_TEST);
     if (antialiasing) {
       glEnable(GL_POINT_SMOOTH);
-      // glDisable(GL_BLEND);  // only enable where drawing lines/points
+      // glDisable(GL_BLEND);  // Only enable where drawing lines/points.
       // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     } else {
       glDisable(GL_POINT_SMOOTH);
       // glDisable(GL_BLEND);
     }
-    // GL_NICEST looks worse for lines in SRview of scaled bunny
-    //  and makes it run much slower.  GL_FASTEST is always fast and good.
+    // GL_NICEST looks worse for lines in SRview of scaled bunny and makes it run much slower.
+    // GL_FASTEST is always fast and good.
     glHint(GL_LINE_SMOOTH_HINT, nice_rendering ? GL_NICEST : GL_FASTEST);
     glHint(GL_POINT_SMOOTH_HINT, nice_rendering ? GL_NICEST : GL_FASTEST);
     glHint(GL_PERSPECTIVE_CORRECTION_HINT, nice_rendering ? GL_NICEST : GL_FASTEST);
@@ -1230,7 +1230,7 @@ void gl_fixup() {
   set_thickness(1);
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
-  // glOrtho(-.5, win_dims[1]-.5, win_dims[0]-.5, -.5, -1., 1.);  // reverse y
+  // glOrtho(-.5, win_dims[1]-.5, win_dims[0]-.5, -.5, -1., 1.);  // Reverse y.
   glOrtho(0., win_dims[1] - 0., win_dims[0] - 0., 0., -1., 1.);  // Reverse y.
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
@@ -1260,9 +1260,9 @@ void gl_fixup() {
 
 bool setup_ob(int i) {
   // tcur = g_xobs.t[i]*tcami;
-  // my +x -> GL -z
-  // my +y -> GL -x
-  // my +z -> GL +y
+  // My +x -> GL -z.
+  // My +y -> GL -x.
+  // My +z -> GL +y.
   Frame fmodeltoworld = g_xobs.t[i];
   static const bool g3d_radar = getenv_bool("G3D_RADAR");
   if (!i && g3d_radar) {
@@ -1278,7 +1278,7 @@ bool setup_ob(int i) {
   feyetomodel = tcam * fworldtomodel;
   // Note: fpostomodel = inverse(fmodeltoworld*tposi);
   // fpostomodel = tpos*fworldtomodel;
-  // set object attributes
+  // Set object attributes.
   lshading = g_xobs.shading[i];
   lsmooth = g_xobs.smooth[i];
   ledges = g_xobs.edges[i];
@@ -1718,7 +1718,7 @@ void draw_mesh(GMesh& mesh) {
     const bool has_f_color = mesh.gflags().flag(mflag_f_colors);
     const bool has_v_color = mesh.gflags().flag(mflag_v_colors);
     const bool has_c_color = mesh.gflags().flag(mflag_c_colors);
-    // bool has_only_v_color = has_v_color && !has_c_color;
+    // const bool has_only_v_color = has_v_color && !has_c_color;
     const bool has_either_color = has_v_color || has_c_color;
     assertw(!(has_f_color && (has_v_color || has_c_color)));
     const bool smooth_shade_model = lsmooth || has_either_color;
@@ -1738,7 +1738,7 @@ void draw_mesh(GMesh& mesh) {
         set_light_ambient(0.f);
         if (texturenormal) normalmap_activate();
       }
-      if (0) {  // debug: peak at primary colors
+      if (0) {  // Debug: peek at primary colors.
         glDisable(GL_TEXTURE_2D);
         if (texturenormal) normalmap_deactivate();
       }
@@ -1752,9 +1752,8 @@ void draw_mesh(GMesh& mesh) {
     // On NVIDIA, display_list creation is fast for small buffers
     //  of GL_TRIANGLE_STRIP.
     //
-    // Set this variable for overlapped faces (lapped textures)
-    //  to ensure all faces are rendered in same order and
-    //  with same vertex order.
+    // Set this variable for overlapped faces (lapped textures) to ensure all faces are rendered in same order and
+    // with same vertex order.
     static const bool strict_mesh_order = getenv_bool("STRICT_MESH_ORDER");
     if (strict_mesh_order || (defining_dl && g_is_ati)) {
       int ntriangles = 0;
@@ -1879,8 +1878,7 @@ void draw_mesh(GMesh& mesh) {
     } else {
       int ntriangles = 0;
       for (Face f : mesh.faces()) {
-        // quicki not ideal here since it can beat against the
-        //  number of entries per list in the id_face Map.
+        // The value quicki not ideal here since it can beat against the number of entries per list in the id_face Map.
         if (ii) {
           if (!--ii)
             ii = quicki;
@@ -1902,9 +1900,9 @@ void draw_mesh(GMesh& mesh) {
           glBegin(GL_POLYGON);
         }
         render_face(mesh, f);
-        if (!ntriangles) glEnd();  // GL_POLYGON
+        if (!ntriangles) glEnd();  // GL_POLYGON.
       }
-      if (ntriangles) glEnd();  // GL_TRIANGLES
+      if (ntriangles) glEnd();  // GL_TRIANGLES.
     }
   }
   if (texture_active) {
@@ -2026,7 +2024,7 @@ void draw_mesh(GMesh& mesh) {
             break;
           }
         }
-      } else {  // for cover faces in Edge Processing project.
+      } else {  // For cover faces in Edge Processing project.
         for (Vertex v : mesh.vertices(f)) {
           for (Face ff : mesh.faces(v)) {
             if (ff == fp) {
@@ -2115,7 +2113,7 @@ void draw_all() {
       if (is_new) dlnum = assertx(glGenLists(1));
       if (!svalid_dl.contains(i)) {
         defining_dl = true;
-        // glNewList(dlnum, GL_COMPILE_AND_EXECUTE);  // bad(slow)!
+        // glNewList(dlnum, GL_COMPILE_AND_EXECUTE);  // Bad: slow!
         glNewList(dlnum, GL_COMPILE);
         initialize_lit(), initialize_unlit();  // Force state record.
       } else {
@@ -2219,8 +2217,8 @@ void process_print() {
   Image image(win_dims);
   const int nypix = win_dims[0], nxpix = win_dims[1];
   // IMAGE* image = iopen(imagefilename.c_str(), "w", RLE(1), 3, nxpix, nypix, 3);
-  // pixmode(); default 32 bit size fine, row order unimportant
-  // drawmode(); NORMALDRAW is fine
+  // pixmode(); default 32 bit size fine, row order unimportant.
+  // drawmode(); NORMALDRAW is fine.
   glPushAttrib(GL_PIXEL_MODE_BIT);
   {         // Save GL_READ_BUFFER.
     if (0)  // On 2016-09-07, disabled because we do want the most-recent rendering, which is in the backbuffer.
@@ -2340,8 +2338,7 @@ void GxObject::add(const A3dElem& el) {
     }
     case A3dElem::EType::polyline: {
       if (0 && el.num() == 2 && el[0].p == el[1].p) {
-        // because zero-length lines don't show up under GL
-        // but, confuses OpenGL display list optimizer
+        // Because zero-length lines don't show up under GL; but, confuses OpenGL display list optimizer.
         // And, why treat zero-length lines differently from 1e-10f lines?
         auto n = make_unique<NodePoint>();
         n->p = el[0].p;
@@ -2532,19 +2529,19 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   slidermode = false;
   hither = k_default_hither;
   yonder = k_default_yonder;
-  // had ambient=.25 lightsource=.75 on SGI
-  // had ambient=.60 lightsource=.75 on PC
-  // changed to high-contrast default on 2002-01-17
-  //  (The contrast of the old normal-map images was nice.)
-  // ambient = .25f; lightsource = .85f;  // before 2012-05-02
+  // Had: ambient=.25 lightsource=.75 on SGI.
+  // Had: ambient=.60 lightsource=.75 on PC.
+  // Changed to high-contrast default on 2002-01-17.
+  // (The contrast of the old normal-map images was nice.)
+  // Had: ambient = .25f; lightsource = .85f;  // Before 2012-05-02.
   ambient = .30f;      // Was .60f.
   lightsource = .65f;  // Was .75f then .72f.
   backfacec = {.15f, .5f, .15f};
   dbuffer = true;
-  Vec3<float> spherecolor = {.2f, 1.f, .2f};  // was {1.f, .2f, .2f}
+  Vec3<float> spherecolor = {.2f, 1.f, .2f};  // Was {1.f, .2f, .2f}.
   Vec3<float> meshcold = {.6f, .6f, .6f};     // Was {.8f, .5f, .4f} before 2012-05-02.
   Vec3<float> meshcols = {.5f, .5f, .5f};
-  Vec3<float> meshcolp = {4.f, 0.f, 0.f};  // 4 to match normal-map; was 5 before 2002-01-17.
+  Vec3<float> meshcolp = {4.f, 0.f, 0.f};  // Value 4 to match normal-map; was 5 before 2002-01-17.
   Vec1<float> meshcola = {1.f};
   string pm_filename;
   string sc_filename;
@@ -2676,7 +2673,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
 void HB::set_window_title(string s) { hw.set_window_title(std::move(s)); }
 
 void HB::open() {
-  // hw.set_default_background("#5987B3");  // .35 .53 .70; "hhblue" == 89, 135, 179
+  // hw.set_default_background("#5987B3");  // Equivalently: .35 .53 .70; "hhblue" == 89, 135, 179.
   hw.set_default_background("white");
   hw.set_default_foreground("black");
   hw.set_default_geometry(k_default_geometry);
@@ -2763,8 +2760,8 @@ void HB::draw_space() {
   if (movie_nframes) {
     g3d::lod_level = float(movie_frame) / (movie_nframes - 1.f);
     if (1) {
-      // disabled 2011-01-14 for terrain which became blank since no LOD
-      // re-enabled 2012-03-06 to create movie from LOD slider; added check "if (!lod_mode)" in G3ddraw.cpp
+      // Disabled 2011-01-14 for terrain which became blank since no LOD.
+      // Re-enabled 2012-03-06 to create movie from LOD slider; added check "if (!lod_mode)" in G3ddraw.cpp.
       g3d::update_lod();
     }
     // HB::segment_morph_mesh(1, g3d::lod_level);
@@ -2773,8 +2770,8 @@ void HB::draw_space() {
   // We assume that there are no graphics calls before this since the last swapbuffer.
   if (sr_mode) sr_pre_space();
 #endif
-  // There is a 12% slowdown with gcanyon_4k2k_fly2.frames when placing the ClearWindow()
-  //  before SrMesh::adapt_refinement() !
+  // There is a 12% slowdown with gcanyon_4k2k_fly2.frames when placing the ClearWindow() before
+  //  SrMesh::adapt_refinement() !
   hw.clear_window();  // Computation done before this!
   wrap_draw(false);
   if (picture && !g3d::input) {
@@ -2981,8 +2978,8 @@ bool HB::special_keypress(char ch) {
       invalidate_dls();
       hw.redraw_now();
       break;
-    case '\r':  // <enter>/<ret> key (== uchar{13} == 'M' - 64)
-    case '\n':  // G3d -key $'\n'.
+    case '\r':  // Key <enter>/<ret> (== uchar{13} == 'M' - 64); for use in: G3d -key $'\n'
+    case '\n':
       static bool g_fullscreen;
       g_fullscreen = !g_fullscreen;
       hw.make_fullscreen(g_fullscreen);
@@ -3390,8 +3387,7 @@ void sr_adapt_refinement() {
   sr_refinement_time = 0.;
   // if (sr_morph_active) hw.redraw_later();
   // NOTE: if sr_fractrav < 1.f, should somehow detect if the entire active
-  //  vertex list has been traversed over several frames without
-  //  any changes!
+  //  vertex list has been traversed over several frames without any changes!
   if (srmesh.is_still_morphing() || srmesh.is_still_adapting()) hw.redraw_later();
 }
 
@@ -3665,8 +3661,8 @@ bool sr_key_press(char ch) {
         sr_tview = Frame(Vector(0.249389f, 0.0699849f, -0.965879f), Vector(-0.0175022f, 0.997555f, 0.0677609f),
                          Vector(0.968246f, 6.13302e-06f, 0.25f), Point(-0.0890237f, 0.021173f, 1.53995f));
       // float diam = srmesh._bbox.max_side();
-      // diam == 0.823263 for teapot20.b.pm (for SIGGRAPH 97 images)
-      // sr_tview = Frame::scaling(thrice(1.f / diam)) * sr_tview;  doesn't work.
+      // Value diam == 0.823263 for teapot20.b.pm (for SIGGRAPH 97 images).
+      // sr_tview = Frame::scaling(thrice(1.f / diam)) * sr_tview;  // Doesn't work.
 
       static Frame radar_old_tview;
       static bool radar_old_edges;
@@ -3768,9 +3764,8 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
   Vec3<Simplex> verts = corner_fct->vertices();
   const int i_vs = index(verts, vs);
   avg_norm = fct_pnor[corner_fct->getId()];
-  // go around in one direction averaging normals
-  // of adjacent facets with same normal group
-  // the orientation is given by the ordering of va and vb.
+  // Go around in one direction averaging normals of adjacent facets with same normal group.
+  // The orientation is given by the ordering of va and vb.
   Simplex va = verts[i_vs];
   Simplex vb = verts[mod3(i_vs + 1)];
   Simplex e = va->edgeTo(vb);
@@ -3785,8 +3780,7 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
         break;
       }
     }
-    // if the new fct is the corner_fct made a full circle
-    // nothing left to do.
+    // If the new fct is the corner_fct made a full circle, there is nothing left to do.
     if (fct == corner_fct) {
       done = true;
       break;
@@ -3796,14 +3790,11 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
     const Vec3<Simplex> verts2 = fct->vertices();
     const int i_va = index(verts2, va);
     if (verts2[mod3(i_va + 1)] == vb) {
-      // va still before vb
-      // inconsistent with previous fct
-      // flip the normal.
+      // va is still before vb, which is inconsistent with previous fct, so flip the normal.
       avg_norm -= fct_pnor[fct->getId()];
       vb = verts2[mod3(i_va + 2)];
     } else {
-      // va after vb in the order
-      // consistent with the previous fct.
+      // va is after vb, which is consistent with the previous fct.
       avg_norm += fct_pnor[fct->getId()];
       vb = verts2[mod3(i_va + 1)];
     }
@@ -3811,9 +3802,8 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
     assertx(e);
   }
   if (!done) {
-    // go around in other direction averaging normals
-    // of adjacent facets with same normal group
-    // the orientation is given by the ordering of va and vb.
+    // Go around in other direction averaging normals of adjacent facets with same normal group.
+    // The orientation is given by the ordering of va and vb.
     va = verts[mod3(i_vs + 2)];
     vb = verts[i_vs];
     e = va->edgeTo(vb);
@@ -3835,14 +3825,11 @@ void vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_norm) {
       verts = fct->vertices();
       const int i_va = index(verts, va);
       if (verts[mod3(i_va + 1)] == vb) {
-        // va still before vb
-        // inconsistent with previous fct
-        // flip the normal.
+        // va still before vb, which is inconsistent with previous fct, so flip the normal.
         avg_norm -= fct_pnor[fct->getId()];
         va = verts[mod3(i_va + 2)];
       } else {
-        // va after vb in the order
-        // consistent with the previous fct.
+        // va after vb, which is consistent with the previous fct.
         avg_norm += fct_pnor[fct->getId()];
         va = verts[mod3(i_va + 1)];
       }
@@ -3858,8 +3845,7 @@ void read_sc(const string& filename) {
   RFile fin(filename);
   Kmesh.read(fin());
   fct_pnor.init(Kmesh.getMaxId(2));
-  // 3 verts per each face
-  // will use face and vert id for indexing.
+  // We have 3 verts per face; we will use face and vert id for indexing.
   corner_pnor.init(Kmesh.getMaxId(2) * 3);
   s_color.init(Kmesh.materialNum());
   s_norgroup.init(Kmesh.materialNum());
@@ -3884,7 +3870,7 @@ void read_sc(const string& filename) {
   for (Simplex e : Kmesh.simplices_dim(1))
     if (e->isPrincipal()) psc_principal_edges.enter(e);
   toggle_attribute(g_xobs.cullface);
-  // no bbox information yet.
+  // No bbox information yet.
   // g3d::UpdateOb1Bbox(...);
   if (g3d::g_filename == "") g3d::g_filename = filename;
   g_twosided = true;
@@ -3946,7 +3932,7 @@ void read_psc(const string& filename) {
   toggle_attribute(g_xobs.cullface);
   if (psc_lod_level != 0.f) psc_update_lod();
   slidermode = true;
-  // no bbox information yet.
+  // No bbox information yet.
   // g3d::UpdateOb1Bbox(...);
   if (g3d::g_filename == "") g3d::g_filename = filename;
   g_twosided = true;
@@ -3955,7 +3941,7 @@ void read_psc(const string& filename) {
 void psc_update_lod() {
   const int new_lod_num = int((psc_lod_list.num() - 1) * psc_lod_level * .999999f);
   // SHOW(psc_lod_level, new_lod_num, psc_lod_num);
-  // go down in complexity
+  // Go down in complexity.
   if (new_lod_num < psc_lod_num) {
     Simplex vs, vt;
     for (int i = psc_lod_num - 1; i >= new_lod_num; --i) {
@@ -4421,7 +4407,7 @@ void read_sc_gm(const string& filename) {
   assertx(sc_gm_num > 0);
   const SimplicialComplex& Kmesh2 = Gmorphs[sc_gm_num - 1].getK();
   // 3 verts per each face
-  // will use face and vert id for indexing.
+  // we will use face and vert id for indexing.
   corner_pnor.init(Kmesh2.getMaxId(2) * 3);
   s_color.init(Kmesh2.materialNum());
   s_norgroup.init(Kmesh2.materialNum());
@@ -4433,7 +4419,7 @@ void read_sc_gm(const string& filename) {
   Gmorphs[sc_gm_morph].update(sc_gm_lod_level, corner_pnor);
   toggle_attribute(g_xobs.cullface);
   slidermode = true;
-  // no bbox information yet.
+  // No bbox information yet.
   // g3d::UpdateOb1Bbox(...);
   if (g3d::g_filename == "") g3d::g_filename = filename;
   g_twosided = true;

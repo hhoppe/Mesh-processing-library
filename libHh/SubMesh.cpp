@@ -13,9 +13,8 @@ namespace hh {
 // This did not seem to make sense in conjunction with extraordinary crease vertices.
 // Also, this greatly reduces bookkeeping (msharpvv disappears).
 
-// _mofif and _mfindex work by assuming that two faces--whose vertices are in
-// the same order and have the same ids--will be subdivided in the same order
-// regardless of the mesh they belong to.
+// _mofif and _mfindex work by assuming that two faces--whose vertices are in the same order and have the
+// same ids--will be subdivided in the same order regardless of the mesh they belong to.
 // This is true because of Mesh::vertices and because of Mesh::ordered_faces().
 
 namespace {
@@ -66,7 +65,7 @@ bool Mvcvh::is_convolution() const {
   return ranges::all_of(values(), [](const Combvh& comb) { return is_zero(comb.h); });
 }
 
-// co = ci * this.
+// Compute: co = ci * this.
 Combvh Mvcvh::compose_c(const Combvh& ci) const {
   Combvh co;
   co.h = ci.h;
@@ -84,7 +83,7 @@ Combvh Mvcvh::compose_c(const Combvh& ci) const {
   return co;
 }
 
-// this = mconv * this.
+// Compute: this = mconv * this.
 void Mvcvh::compose(const Mvcvh& mconv) {
   Mvcvh nthis;
   for (const auto& [v, comb] : mconv) {
@@ -100,7 +99,7 @@ void Mvcvh::compose(const Mvcvh& mconv) {
       nthis.enter(v, std::move(ncomb));
     }
   }
-  // swap(*this, nthis) is wrong because nthis only has entries for changed vertices.
+  // Note that swap(*this, nthis) would be wrong because nthis only has entries for changed vertices.
   while (!nthis.empty()) {
     Vertex v = nthis.get_one_key();
     (*this)[v] = nthis.remove(v);
@@ -110,8 +109,7 @@ void Mvcvh::compose(const Mvcvh& mconv) {
 // *** SubMesh
 
 // Weight of the center vertex in the position vertex mask, Loop scheme.
-// It is the weight that appears in the subdivision matrix,
-// not the weight used when splitting + averaging.
+// It is the weight that appears in the subdivision matrix, not the weight used when splitting + averaging.
 static inline float subdiv_a(int n) {
   return n == 6 ? .625f : 3.f / 8.f + square((3.f + 2.f * std::cos(TAU / n)) / 8.f);
 }
@@ -378,7 +376,7 @@ void SubMesh::refine(Mvcvh& mconv) {
 // *** selectively_refine
 
 void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
-  // e.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark | Subdivfit -mf - -selective 170 -nsub 2 -outn >v.m
+  // E.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark | Subdivfit -mf - -selective 170 -nsub 2 -outn >v.m
   //       Subdivfit -mf ~/data/mesh/cat.m -selective 40 -nsub 2 -outn >v
   // See also Filtermesh.cpp:do_silsubdiv().
   assertx(!_isquad);
@@ -526,16 +524,16 @@ void SubMesh::averaging_mask(Vertex v, Combvh& comb) const {
     if (!assertw(nuse < k_table_cone_subd.num())) nuse = k_table_cone_subd.num() - 1;
     wa = k_table_cone_subd[nuse] * 2 - 1;
     if (_weighta) wa = _weighta * 2 - 1;
-  } else if (nesharp <= 1) {  // interior or dart vertex
+  } else if (nesharp <= 1) {  // Interior or dart vertex.
     // Normal case, quartic bspline surface.
     // Was wa = subdiv_a(ne); after refinement, wa = subdiv_a(ne) * 2 - 1.
     // _s222 : mask was n / 3 --- 1 (n times); after refinement, .25
     wa = _s222 ? .25f : subdiv_a(ne) * 2 - 1;
     if (_weighta && ne != 6) wa = _weighta * 2 - 1;
-  } else if (nesharp == 2) {  // on crease
+  } else if (nesharp == 2) {  // On crease.
     crease_averaging_mask(v, comb);
     return;
-  } else if (nesharp >= 3) {  // corner vertex held constant
+  } else if (nesharp >= 3) {  // Corner vertex held constant.
     return;
   } else {
     assertnever("");
@@ -650,15 +648,15 @@ void SubMesh::limit_mask(Vertex v, Combvh& comb) const {
       Warning("to do?");
       return;
     }
-    // was wa = 3 / (3 + 8 * a1); wc = 8 * a1 / (3 + 8 * a1) / ne; wb = wc;
-    // since there is no refinement here, should be the same
+    // Was: wa = 3 / (3 + 8 * a1); wc = 8 * a1 / (3 + 8 * a1) / ne; wb = wc;
+    // Since there is no refinement here, should be the same.
     // _s222 : mask is n --- 1 (n times)
     const float a = _s222 ? .5f : subdiv_a(ne);
     const float wa = 3 / (11 - 8 * a), wc = (1 - wa) / ne;
     if (wa) comb.c[v] = wa;
     if (wc)
       for (Vertex vv : _m.vertices(v)) comb.c[vv] = wc;
-  } else if (nesharp == 2) {  // bspline curve
+  } else if (nesharp == 2) {  // Bspline curve.
     // For cubic, the 1-4-1 mask.
     float wa = 4.f / 6.f, wb = 1.f / 6.f, wc = 0.f;
     if (extraordinary_crease_vertex(v)) {

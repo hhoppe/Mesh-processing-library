@@ -374,7 +374,7 @@ void do_tosrm() {
   nooutput = true;
 }
 
-// *** Modify PM.
+// *** Modify PM
 
 void do_truncate_beyond() {
   if (1) {
@@ -1162,7 +1162,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
 }
 
 void do_reorder_vspl() {
-  // e.g.: FilterPM ~/data/terrain/gcanyon_sq40.pm -reorder_vspl -compression
+  // E.g.: FilterPM ~/data/terrain/gcanyon_sq40.pm -reorder_vspl -compression
   // # DE de_dflclw: n=1596  nbits=3.0  sign=0.0  bdelta=3.7  total=6.7  (10693)
   // Encoded PMesh: 76079 bits (47.5 bits/vertex)
   //  6.7 & 1.6 & 2.5 & 0.8 & 0.0 & 35.9 & 0.0 & 0.0 & 0.0 & 47.4
@@ -1400,7 +1400,7 @@ void do_polystream() {
     const Vsplit& vspl = pmesh._vsplits[vspli];
     int vs;
     {
-      // int ii = (vspl.code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
+      // const int ii = (vspl.code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
       const int f = vspl.flclw;
       const int vs_index = (vspl.code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
       vs = pmi->_wedges[pmi->_faces[f].wedges[vs_index]].vertex;

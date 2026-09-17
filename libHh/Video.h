@@ -19,7 +19,7 @@
 
 namespace hh {
 
-class TmpFile;  // libHh/FileIO.h
+class TmpFile;  // From libHh/FileIO.h.
 
 // A Video is a 3D grid of RGB pixels, plus attributes like compression type, frame rate, and bit rate.
 class Video : public Grid<3, Pixel> {
@@ -27,7 +27,7 @@ class Video : public Grid<3, Pixel> {
 
  public:
   struct Attrib;
-  explicit Video(const Vec3<int>& dims = V(0, 0, 0)) { init(dims); }  // nframes, ysize, xsize.
+  explicit Video(const Vec3<int>& dims = V(0, 0, 0)) { init(dims); }  // Indexed as [nframes, ysize, xsize].
   explicit Video(int pnframes, const Vec2<int>& sdims) : Video(V(pnframes, sdims[0], sdims[1])) {}
   explicit Video(const Video&) = default;
   explicit Video(const base& video) : base(video.dims()) { base::assign(video); }
@@ -167,15 +167,15 @@ class RVideo {
   [[nodiscard]] const Vec2<int>& spatial_dims() const { return _dims.tail<2>(); }  // (ysize, xsize).
   [[nodiscard]] int ysize() const { return _dims[1]; }
   [[nodiscard]] int xsize() const { return _dims[2]; }
-  [[nodiscard]] bool read(MatrixView<Pixel> frame);  // frame(ysize(), xsize()).  Return false if EOF.
-  [[nodiscard]] bool read(Nv12View frame);           // Return false if EOF.
-  [[nodiscard]] bool discard_frame();                // Skip the next frame; Return success (false if EOF).
+  [[nodiscard]] bool read(MatrixView<Pixel> frame);  // Needs frame(ysize(), xsize()).  Returns false if EOF.
+  [[nodiscard]] bool read(Nv12View frame);           // Returns false if EOF.
+  [[nodiscard]] bool discard_frame();                // Skip the next frame; Return ssuccess (false if EOF).
   class Implementation;
 
  private:
   string _filename;
   bool _use_nv12;
-  Vec3<int> _dims{0, 0, 0};  // nframes, ysize, xsize.
+  Vec3<int> _dims{0, 0, 0};  // Dimensions [nframes, ysize, xsize].
   Video::Attrib _attrib;
   unique_ptr<TmpFile> _tmpfile;
   unique_ptr<Implementation> _impl;
@@ -198,7 +198,7 @@ class WVideo {
 
  private:
   string _filename;
-  Vec2<int> _sdims;  // ysize, xsize.
+  Vec2<int> _sdims;  // Spatial dimensions [ysize, xsize].
   Video::Attrib _attrib;
   bool _use_nv12;
   string _pfilename;  // Original name if pipe.

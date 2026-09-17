@@ -268,7 +268,7 @@ RVideo::RVideo(string filename, bool use_nv12) : _filename(std::move(filename)),
     if (_attrib.suffix == "")
       throw std::runtime_error(
           sform("Peeked video format (c=%d) in pipe '%s' is not recognized", c, _filename.c_str()));
-    // if (_attrib.suffix == "avi") _use_nv12 = false;  // must be done in caller
+    // if (_attrib.suffix == "avi") _use_nv12 = false;  // Must be done in caller.
     _tmpfile = make_unique<TmpFile>(_attrib.suffix, fi());
     _filename = _tmpfile->filename();
   }
@@ -540,7 +540,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
           CMatrixView<uint8_t> matY(pData, sdims);
           CMatrixView<Vec2<uint8_t>> matUV(reinterpret_cast<const Vec2<uint8_t>*>(pData + offset), sdims / 2);
           convert_Nv12_to_Image(CNv12View(matY, matUV), frame);
-        } else {  // slow path
+        } else {  // Slow path.
           Nv12 nv12(sdims);
           retrieve_strided_Nv12(pData, stride, offset, nv12);
           convert_Nv12_to_Image(nv12, frame);
@@ -568,7 +568,7 @@ class Mf_RVideo_Implementation : public RVideo::Implementation {
           MatrixView<Pixel> mat(reinterpret_cast<Pixel*>(const_cast<uint8_t*>(pData)), sdims);
           for (Pixel& pixel : mat) std::swap(pixel[0], pixel[2]);  // BGRA to RGBA.
           convert_Image_to_Nv12(mat, nv12v);
-        } else {  // slower path
+        } else {  // Slower path.
           Matrix<Pixel> mat(sdims);
           retrieve_strided_BGRA(pData, stride, mat);
           convert_Image_to_Nv12(mat, nv12v);
@@ -663,10 +663,10 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       com_ptr<IMFAttributes> pAttributes;
       AS(MFCreateAttributes(&pAttributes, 10));
       AS(pAttributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, TRUE));
-      // AS(pAttributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, FALSE));  // no effect
-      // AS(pAttributes->SetUINT32(MF_READWRITE_DISABLE_CONVERTERS, TRUE));  // causes it to fail
+      // AS(pAttributes->SetUINT32(MF_READWRITE_ENABLE_HARDWARE_TRANSFORMS, FALSE));  // No effect.
+      // AS(pAttributes->SetUINT32(MF_READWRITE_DISABLE_CONVERTERS, TRUE));  // Causes it to fail.
       AS(pAttributes->SetUINT32(MF_SOURCE_READER_ENABLE_VIDEO_PROCESSING, TRUE));  // No effect.
-      // AS(pAttributes->SetUINT32(MF_SOURCE_READER_ENABLE_VIDEO_PROCESSING, FALSE));  // no effect
+      // AS(pAttributes->SetUINT32(MF_SOURCE_READER_ENABLE_VIDEO_PROCESSING, FALSE));  // No effect.
       IMFByteStream* const k_ByteStream = nullptr;
       if (FAILED(MFCreateSinkWriterFromURL(utf16_from_utf8(_wvideo._filename).c_str(), k_ByteStream,
                                            nullptr /*pAttributes*/, &_pSinkWriter)))
@@ -696,7 +696,7 @@ class Mf_WVideo_Implementation : public WVideo::Implementation {
       AS(MFSetAttributeSize(pMediaTypeIn, MF_MT_FRAME_SIZE, _wvideo.xsize(), _wvideo.ysize()));
       AS(MFSetAttributeRatio(pMediaTypeIn, MF_MT_FRAME_RATE, iFramesPerSecond, 1));
       AS(MFSetAttributeRatio(pMediaTypeIn, MF_MT_PIXEL_ASPECT_RATIO, 1, 1));
-      com_ptr<IMFAttributes> pAttributes;  // pEncodingParameters
+      com_ptr<IMFAttributes> pAttributes;  // pEncodingParameters.
       // IMFAttributes* const pEncodingParameters = nullptr;
       if (0) {  // Untested.
         AS(MFCreateAttributes(&pAttributes, 10));
@@ -1113,7 +1113,7 @@ class Ffmpeg_WVideo_Implementation : public WVideo::Implementation {
 unique_ptr<RVideo::Implementation> RVideo::Implementation::make(RVideo& rvideo) {
   // Notes:
   // - Win7 Media Foundation: For some mp4 files, e.g. ~/data/video/fewpalms.mp4, bitrate is read as 0.
-  //   e.g.:  RVIDEO_IMPLEMENTATION=mf Filtervideo ~/data/video/fewpalms.mp4 -stat
+  //   E.g.:  RVIDEO_IMPLEMENTATION=mf Filtervideo ~/data/video/fewpalms.mp4 -stat
   string implementation = getenv_string("RVIDEO_IMPLEMENTATION");
   if (implementation == "") implementation = getenv_string("VIDEO_IMPLEMENTATION");
   if (implementation == "mf") return make_unique<Mf_RVideo_Implementation>(rvideo);
@@ -1127,7 +1127,7 @@ unique_ptr<RVideo::Implementation> RVideo::Implementation::make(RVideo& rvideo) 
 unique_ptr<WVideo::Implementation> WVideo::Implementation::make(WVideo& wvideo) {
   // Notes:
   // - Win7 Media Foundation: we can set a large bitrate on mp4, but do not see increase in file size.
-  //   e.g.: VIDEO_IMPLEMENTATION=mf Filtervideo ~/data/video/fewpalms.mp4 -info -bitrate 32.84m -info -to mp4 | Filtervideo -stat
+  //   E.g.: VIDEO_IMPLEMENTATION=mf Filtervideo ~/data/video/fewpalms.mp4 -info -bitrate 32.84m -info -to mp4 | Filtervideo -stat
   // - ffmpeg: cannot write *.wmv using VC1 codec (instead resorts to msmpeg4v3).
   string implementation = getenv_string("WVIDEO_IMPLEMENTATION");
   if (implementation == "") implementation = getenv_string("VIDEO_IMPLEMENTATION");

@@ -116,7 +116,7 @@ Array<Point> get_base_sphmap(const PMeshIter& pmi, const string& base_param_sche
   return base_sphmap;
 }
 
-// *** Mesh output.
+// *** Mesh output
 
 constexpr int k_axis0 = 0;  // Axis whose zero value defines the plane of the prime meridian.
 constexpr int k_axis1 = 1;  // Axis whose positive range defines the halfspace containing the prime meridian.
@@ -373,7 +373,7 @@ bool lonlat_face_is_inverted(const GMesh& mesh, Face f) {
 // Return true if the spherical triangle is properly oriented, seen from outside the sphere.
 bool sph_triangle_is_positive(const Vec3<Point>& sphs) { return dot(sphs[0], cross(sphs[1], sphs[2])) > 0.f; }
 
-// *** Repair of the faces that are inverted in the lon-lat uv parameterization.
+// *** Repair of the faces that are inverted in the lon-lat uv parameterization
 //
 // Such a face arises where the great-circle arc of one of its edges bows poleward by more than the face itself
 // extends in latitude, so that the third vertex falls between the arc and its straight uv chord and the linear uv
@@ -675,7 +675,7 @@ void write_original_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_mer
   write_parameterized_gmesh(gmesh, split_meridian);
 }
 
-// *** PMesh output.
+// *** PMesh output
 
 // Split the edges on faces overlapping the zero meridian, adding new vertices and triangles but no extra wedges.
 void split_awmesh_faces_along_meridian(AWMesh& awmesh) {
@@ -774,7 +774,7 @@ void write_parameterized_pm(PMeshIter pmi, CArrayView<Point> sphmap, bool split_
   pmesh.write(std::cout);
 }
 
-// *** Ply output.
+// *** Ply output
 
 // Write a *.ply mesh file, encoding the spherical parameterization as lat-lon uv coordinates on corners.
 void write_parameterized_ply(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {

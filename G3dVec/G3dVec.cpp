@@ -571,11 +571,11 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
 void enter_hidden_polygon(Polygon& poly, int and_codes, int or_codes) {
   // If completely on one side of a clipping plane, reject.
   if (and_codes) return;
-  // If not all vertices are beyond hither, do clipping
-  // don't have to worry at all about yonder plane!
+  // If not all vertices are beyond hither, do clipping.
+  // We don't have to worry at all about yonder plane!
   if (or_codes & k_code_hither) {
     const float s = 1.95f;
-    // s = 2.2;  // debug, shrink inside screen boundaries
+    // s = 2.2;  // Debug: shrink inside screen boundaries.
     poly.intersect_hyperplane(Point(hither, 0.f, 0.f), Vector(+1.f, 0.f, 0.f));
     if (!poly.num()) return;
     poly.intersect_hyperplane(Point(0.f, 0.f, 0.f), Vector(1.f, +s * tzp1, 0.f));
@@ -593,9 +593,8 @@ void enter_hidden_polygon(Polygon& poly, int and_codes, int or_codes) {
     const Point pp(-a, p[1] * a, p[2] * a);
     p = hlr_point_from_point(pp);
   }
-  // Note: polygons that are within hither/yonder are not clipped to
-  // sides of screen -> so they may extend outside (0..1) range.
-  // But, polygons completely off screen are culled.
+  // Note: polygons that are within hither/yonder are not clipped to the sides of the screen, so they may
+  // extend outside the (0..1) range. But, polygons completely off screen are culled.
   hlr.enter(poly);
 }
 

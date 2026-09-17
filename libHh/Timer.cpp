@@ -95,7 +95,7 @@ string timing_host() {
         DWORD len = DWORD(buf.size() - 2);
         if (!RegQueryValueExA(hkey, "ProcessorNameString", nullptr, nullptr, reinterpret_cast<uchar*>(buf.data()),
                               &len)) {
-          const char* p = buf.data();     // e.g., "                   Intel(R) Xeon(TM) CPU 3.06GHz"
+          const char* p = buf.data();     // E.g., "                   Intel(R) Xeon(TM) CPU 3.06GHz"
           while (*p == ' ') p++;          // Skip initial whitespace (optional).
           while (!std::isdigit(*p)) p++;  // Go right to the CPU speed.
           rev = p;

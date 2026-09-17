@@ -105,9 +105,9 @@ const float SrVsplit::sin2alpha = 0.f;
 //  SrAVertexM  g       4+6*4   == 28g  bytes
 //  Total:                      == 48n + 60m + 28g bytes
 //
-// my PMesh:
+// My PMesh:
 //  Vertex:3*4 Wedge:6*4 Face: 2*6*4 Vsplit:(3+6+6)*4   Total: 60n + 84m bytes
-// my PMesh (compressed, no wedges)
+// My PMesh (compressed, no wedges)
 //  Vertex:6*2 Face: 2*6*4 Vsplit:(2+3)*4               Total: 20n + 60m bytes
 // D3DIM PMesh:
 //  Vertex:1.2*36 Face:2*14 Vsplit:64                   Total: 64n + 64m bytes
@@ -774,7 +774,7 @@ void SrMesh::compute_nspheres(CArrayView<SrVertexGeometry> vgeoms) {
 }
 
 void SrMesh::write_srm(std::ostream& os) const {
-  assertx(num_active_faces() == _base_faces.num());  // else fully_coarsen();
+  assertx(num_active_faces() == _base_faces.num());  // Else fully_coarsen();
   // Write out sizes.
   os << "SRM\n";
   os << "base_nvertices=" << _base_vertices.num() << " base_nfaces=" << _base_faces.num()
@@ -977,7 +977,7 @@ void SrMesh::read_srm(std::istream& is) {
 }
 
 // Reject vsplit if surface orientation is away.
-//   Return 0
+//   Return false
 //    if (dot(normalized(p - eye), vnormal) > sin(alpha))
 //    if (dot(p - eye, vnormal) > 0 && square(dot(p - eye, vnormal)) > mag2(p - eye) * square(sin(alpha))
 // Reject vsplit if residual smaller than screen threshold.
@@ -989,7 +989,7 @@ void SrMesh::read_srm(std::istream& is) {
 //   So overall the Euclidean distance is preferred.
 //   Refine based on uniform and directional residual error.
 //   Assume dir_error = vspl->dir_error_mag * vs->vnormal:
-//   Return 0
+//   Return false
 //    if mag(cross(normalized(p - eye), dir_error)) < thresh * zoom * mag(p - eye)
 //    if mag2(cross(normalized(p - eye), dir_error)) < tz2 * mag2(p - eye)
 //    if dir_error_mag2 * mag2(cross(normalized(p - eye), vnormal)) < tz2 * mag2(p -eye)
@@ -1115,7 +1115,7 @@ void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
     float* gp = vm->vgrefined.point.data();
     float* ip = vm->vginc.point.data();
     // for_int(c, 6 - 3 * b_nor001) ip[c] = (gp[c] - cp[c]) * frac;
-    // faster code because possible aliasing is avoided:
+    // Faster code because possible aliasing is avoided:
     float cp0, cp1, cp2, cp3, cp4, cp5;
     if (1) {
       cp0 = cp[0];
@@ -1513,7 +1513,7 @@ void SrMesh::set_view_params(const SrViewParams& vp) {
 }
 
 void SrMesh::set_initial_view_params() {
-  assertx(num_active_faces() == _base_faces.num());  // else fully_coarsen();
+  assertx(num_active_faces() == _base_faces.num());  // Else fully_coarsen();
   _refp._eye = Point(BIGFLOAT, 0.f, 0.f);
 }
 
@@ -1616,7 +1616,7 @@ static inline unsigned lsb_mask(unsigned size) {
 }
 
 void SrMesh::adapt_refinement(int pnvtraverse) {
-  // too slow. HH_ATIMER("____adapt_ref_f");
+  // Too slow. HH_ATIMER("____adapt_ref_f");
   _ar_tobevisible.init(0);
   const uintptr_t left_child_mask = lsb_mask(sizeof(SrVertex));
   const uintptr_t left_child_result = reinterpret_cast<uintptr_t>(_quick_first_vt) & left_child_mask;
@@ -1672,9 +1672,7 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
     const SrAFace* fra = fr->aface;
     if (fra->fnei[2] != pvspl->fn[2]->aface || fra->fnei[0] != pvspl->fn[3]->aface) continue;
     // Simpler version for below that avoids geomorph coarsening:
-    // if (qcoarsen(vs)) {
-    //     EListNode* tn = n->prev(); apply_ecol(vsp, tn); n = tn;
-    // }
+    // if (qcoarsen(vs)) { EListNode* tn = n->prev(); apply_ecol(vsp, tn); n = tn; }
     const SrVertexMorph* vm = vsa->vmorph;
 #if defined(SR_NO_VSGEOM)
     rvg = &pvspl->vs_vgeom;
@@ -1691,9 +1689,9 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
       EListNode* tn = n->prev();
       apply_ecol(vsp, tn);
       n = tn;
-    } else if (big_error(rvg, pvspl)) {  // no need to coarsen
+    } else if (big_error(rvg, pvspl)) {  // No need to coarsen.
       if (vm && vm->coarsening) abort_coarsen_morphing(vs);
-    } else {  // geomorph coarsening
+    } else {  // Geomorph coarsening.
       is_modified = true;
       if (vm && vm->coarsening) {
         if (vm->time) continue;  // Still coarsen-morphing.
@@ -1855,7 +1853,7 @@ void SrMesh::update_vmorphs() {
       float* cp = va->vgeom.point.data();
       const float* ip = vm->vginc.point.data();
       // for_int(c, 6 - 3 * b_nor001) cp[c] += ip[c];
-      // faster code because possible aliasing is avoided:
+      // Faster code because possible aliasing is avoided:
       float cp0, cp1, cp2, cp3, cp4, cp5;
       if (1) {
         cp0 = cp[0];
@@ -2081,8 +2079,8 @@ void SrMesh::refine_in_best_dflclw_order() {
     --ncand;
     {
       pncands.init(0);
-      pncands.push(get_vt(vs->vspli) + 0);  // vt
-      pncands.push(get_vt(vs->vspli) + 1);  // vu
+      pncands.push(get_vt(vs->vspli) + 0);  // Vertex vt.
+      pncands.push(get_vt(vs->vspli) + 1);  // Vertex vu.
       SrVertex* vl;
       SrVertex* vr = nullptr;
       SrAFace* fa = vspl->fn[1]->aface;

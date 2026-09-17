@@ -52,11 +52,11 @@ int main() {
     SHOW("try1");
     g_func = 1;
     g_x = Array{6. / 11., 5. / 7.};
-    // NonlinearOptimization<double(ArrayView<double>)> opt(g_x, feval);  // fails
-    // NonlinearOptimization<double (*)(ArrayView<double>)> opt(g_x, feval);  // works
-    // NonlinearOptimization<double (&)(ArrayView<double>)> opt(g_x, feval);  // works
-    // NonlinearOptimization<decltype(&feval)> opt(g_x, feval);  // works
-    // NonlinearOptimization<> opt(g_x, feval);  // works
+    // NonlinearOptimization<double(ArrayView<double>)> opt(g_x, feval);  // Fails.
+    // NonlinearOptimization<double (*)(ArrayView<double>)> opt(g_x, feval);  // Works.
+    // NonlinearOptimization<double (&)(ArrayView<double>)> opt(g_x, feval);  // Works.
+    // NonlinearOptimization<decltype(&feval)> opt(g_x, feval);  // Works.
+    // NonlinearOptimization<> opt(g_x, feval);  // Works.
     NonlinearOptimization opt(g_x, feval);
     const int niter = 5;
     opt.set_max_neval(niter);

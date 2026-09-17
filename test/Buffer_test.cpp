@@ -4,8 +4,8 @@
 #include "libHh/Args.h"
 using namespace hh;
 
-// run with:
-//      Buffer_test -out 1 -bsize 23 | Buffer_test -out 0
+// Run with:
+//   Buffer_test -out 1 -bsize 23 | Buffer_test -out 0
 
 namespace {
 

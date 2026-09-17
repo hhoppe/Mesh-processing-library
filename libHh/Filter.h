@@ -19,29 +19,29 @@ class Filter : noncopyable {
   [[nodiscard]] bool is_interpolating() const { return _is_interpolating; }
   [[nodiscard]] bool is_discontinuous() const { return _is_discontinuous; }
   [[nodiscard]] bool has_inv_convolution() const { return _has_inv_convolution; }
-  [[nodiscard]] bool is_trivial_magnify() const { return _is_trivial_magnify; }  // impulse or box
-  [[nodiscard]] bool is_trivial_minify() const { return _is_trivial_minify; }    // box
+  [[nodiscard]] bool is_trivial_magnify() const { return _is_trivial_magnify; }  // For: impulse or box.
+  [[nodiscard]] bool is_trivial_minify() const { return _is_trivial_minify; }    // For: box.
   [[nodiscard]] bool is_impulse() const { return _is_impulse; }
-  [[nodiscard]] bool is_omoms() const { return _is_omoms; }            // omoms or justomoms
-  [[nodiscard]] bool is_preprocess() const { return _is_preprocess; }  // preprocess
+  [[nodiscard]] bool is_omoms() const { return _is_omoms; }            // For: omoms or justomoms.
+  [[nodiscard]] bool is_preprocess() const { return _is_preprocess; }  // For: preprocess.
   [[nodiscard]] bool is_partition_of_unity() const { return _is_partition_of_unity; }
   [[nodiscard]] bool is_unit_integral() const { return _is_unit_integral; }
 
   [[HH_NO_DANGLING]] [[nodiscard]] static const Filter& get(const string& name);
-  // impulse:     (for nearest-sample minification) (does not support func())
-  // box:         (nearest magnification), a.k.a. rectangle/rect func, top-hat, pi func, unit pulse, boxcar)
-  // triangle:    a.k.a. linear, tent, hat, triangular func
-  // quadratic:   (note: discontinuous like "box")
-  // mitchell:    somewhat blurry bicubic
-  // keys:        sharper bicubic; equivalent to Catmull-Rom spline
-  // spline:      cardinal bicubic B-spline; inverse_convolution1 + justspline
-  // omoms:       maximal-order minimal-support; inverse_convolution2 + justomoms
+  // impulse:     (for nearest-sample minification) (does not support func()).
+  // box:         (nearest magnification), a.k.a. rectangle/rect func, top-hat, pi func, unit pulse, boxcar).
+  // triangle:    a.k.a. linear, tent, hat, triangular func.
+  // quadratic:   (note: discontinuous like "box").
+  // mitchell:    somewhat blurry bicubic.
+  // keys:        sharper bicubic; equivalent to Catmull-Rom spline.
+  // spline:      cardinal bicubic B-spline; inverse_convolution1 + justspline.
+  // omoms:       maximal-order minimal-support; inverse_convolution2 + justomoms.
   // gaussian:    non-interpolating!
-  // preprocess:  cubic B-spline inverse-convolution1 preprocess
-  // justspline:  just the approximating bicubic B-spline (evaluated after inverse_convolution1)
-  // justomoms:   just the approximating OMOMS kernel     (evaluated after inverse_convolution2)
-  // lanczos6:    Lanczos filter with support [-3, 3]
-  // lanczos10:   Lanczos filter with support [-5, 5] -- best but slowest
+  // preprocess:  cubic B-spline inverse-convolution1 preprocess.
+  // justspline:  just the approximating bicubic B-spline (evaluated after inverse_convolution1).
+  // justomoms:   just the approximating OMOMS kernel     (evaluated after inverse_convolution2).
+  // lanczos6:    Lanczos filter with support [-3, 3].
+  // lanczos10:   Lanczos filter with support [-5, 5]; best but slowest.
   // hamming6:    Hamming filter with support [-3, 3].
   friend std::ostream& operator<<(std::ostream& os, const Filter& filter) {
     return os << "Filter{" << filter.name() << "}";

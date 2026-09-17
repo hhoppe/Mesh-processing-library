@@ -211,7 +211,7 @@ void Mesh::destroy_face(Face f) {
 // *** Vertex
 
 bool Mesh::is_nice(Vertex v) const {
-  // return num_boundaries(v) < 2;  // ignores 2 interior vertices touching
+  // return num_boundaries(v) < 2;  // Ignores 2 interior vertices touching.
   HEdge her = herep(v);
   if (!her) return true;
   int nhe = 0;
@@ -1151,10 +1151,10 @@ void Mesh::remove_hedge(HEdge he, Vertex v1) {
     if (e->_herep == he) e->_herep = hes;
   } else {
     --_nedges;
-    // e->herep = nullptr;     // optional
+    // e->herep = nullptr;  // Optional.
     delete e;
   }
-  // he->_edge = nullptr;         // optional
+  // he->_edge = nullptr;  // Optional.
   assertx(v1->_arhe.remove_unordered(he));  // Slow, shucks.
 }
 

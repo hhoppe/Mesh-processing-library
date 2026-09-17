@@ -293,9 +293,9 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
   if (newl == 0) {  // The new string is null (""), so clear it.
     ss = nullptr;
     return;
-  } else if (sso && newl <= ssol) {  // new string fits, so copy in-place
+  } else if (sso && newl <= ssol) {  // The new string fits, so copy in-place.
     s0 = ss.get();                   // A "char*" whereas sso is "const char*".
-  } else {                           // string needs to grow
+  } else {                           // The string needs to grow.
     arnew = make_unique<char[]>(newl + 1);
     s0 = arnew.get();
   }
@@ -665,7 +665,7 @@ void GMesh::collapse_edge_vertex(Edge e, Vertex vs) {
   for (Edge ee : edges(vt))
     if (ee != e && flags(ee).flag(eflag_sharp)) vsharp.enter(opp_vertex(vt, ee));
   Mesh::collapse_edge_vertex(e, vs);  // Here, vs is kept.
-  // e = nullptr;  // now undefined
+  // e = nullptr;  // Now undefined.
   set_point(vs, p);  // (_os == nullptr)
   for (Vertex v : vsharp) {
     Edge ee = edge(vs, v);
@@ -846,7 +846,7 @@ Edge GMesh::split_face(Face f, Vertex v1, Vertex v2) {
     if (get_string(c)) mvs.enter(v, make_unique_c_string(get_string(c)));
   }
   Edge en = Mesh::split_face(f, v1, v2);
-  // f = nullptr;  // now undefined
+  // f = nullptr;  // Now undefined.
   if (fstring)
     for (Face ff : faces(en)) set_string(ff, fstring.get());
   if (mvs.num()) {

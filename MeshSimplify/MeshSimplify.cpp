@@ -882,7 +882,7 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
 }
 
 // Given that would-be vertex v1 would have 2 incident sharp edges, and one of them is (v1, nn.va[vi]),
-// return the index of the other sharp edge.
+// returns the index of the other sharp edge.
 int other_creasevi(const NewMeshNei& nn, int vi) {
   assertx(nn.ar_vdisc.num() == 2);
   return vi == nn.ar_vdisc[0] ? nn.ar_vdisc[1] : vi == nn.ar_vdisc[1] ? nn.ar_vdisc[0] : (assertnever(""), 0);
@@ -3779,7 +3779,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         if (terrain) {
           if (is_grid_corner(v2)) continue;
         } else {
-          // new 1998-01-05 for SR_PREDICT_MATID; or should we use clw_edge? double check.
+          // 1998-01-05: introduced for SR_PREDICT_MATID; or should we use clw_edge? double check.
           // 2004-03-01: removed to allow simplification of planck400k to 2 triangles with 4 vertices tagged global.
           // 2004-07-13: reintroduced because otherwise ctfparam can crash.
           if (1 && mesh.is_boundary(mesh.ccw_edge(f1, e))) continue;
@@ -4387,7 +4387,7 @@ float get_tvc_cost(Edge e, bool edir) {
   Array<CacheEntry> ar_ce = tvc_get_e_cacheentry(e, edir);
   int nincache = 0;
   // Simulate LRU cache (even though ideally it should be FIFO).
-  // Final PM order:  { facel , facer , cached_vertices } ,
+  // Final PM order:  {facel, facer, cached_vertices},
   // so access the face corners in reverse order, looking into cached_vertices, accounting for cache misses so far.
   for_int(ii, ar_ce.num()) {
     const CacheEntry& ce = ar_ce[ar_ce.num() - 1 - ii];
@@ -4779,7 +4779,7 @@ void do_simplify() {
 }
 
 // Recompute the priority queue of edge costs,
-//   e.g. for   -mresid 1e-6f -simp  -mresid 1e-4f -rebuildpq -prog x -simp
+//   E.g. for   -mresid 1e-6f -simp  -mresid 1e-4f -rebuildpq -prog x -simp
 void do_rebuildpq() {
   if (!pqecost.num()) return;  // Note that it is not built if using parallel_optimize().
   assertx(pqecost.num() == mesh.num_edges());
@@ -4874,7 +4874,7 @@ void write_original_indices() {
 int main(int argc, const char** argv) {
   // Suggested args:
   //  MeshSimplify mesh.m -numpts 40000 -nf 20000 -simp -prog mesh.prog -nf 500 -simp >mesh.base.m
-  // where
+  // where:
   //  40000 is the number of points to sample on the surface
   //  20000 is the maximum number of faces to keep in the PM representation
   //  500 is the number of faces of the base mesh in the PM representation.

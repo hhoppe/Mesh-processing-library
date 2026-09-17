@@ -30,7 +30,7 @@ using namespace hh;
 
 namespace {
 
-Image image;  // [Y, X][0 .. 3]
+Image image;  // Dimensions [Y, X][0..3].
 
 ParseArgs* g_parseargs = nullptr;
 bool elevation = false;
@@ -187,7 +187,7 @@ void do_tomesh() {
     end_yx1 = (V(bynum, bxnum) + 1) * blocks + 1;
   }
   GMesh mesh;
-  Matrix<Vertex> verts;  // [Y, X]
+  Matrix<Vertex> verts;  // [Y, X].
   const int s = step;
   verts.init(end_yx1 - beg_yx);
   const int begy = beg_yx[0], begx = beg_yx[1];
@@ -691,8 +691,8 @@ void do_rot180() {
   image = rotate_ccw(image, 180);
 }
 
-// frame maps from destination pixel (y, x) to source pixel (y, x);
-//  both have (possibly rectangular) domain [-0.5, +0.5]^2
+// Frame maps from destination pixel (y, x) to source pixel (y, x);
+//  both source and destination have (possibly rectangular) domain [-0.5, +0.5]^2.
 void apply_frame(const Frame& frame) {
   HH_STIMER("_apply_frame");
   Vector4 vgcolor;
@@ -709,17 +709,17 @@ void apply_frame(const Frame& frame) {
 // Filterimage ~/data/image/lake.png -filter o -scaleu 2.0 >v2.png
 // Filterimage v1.png -compare v2.png
 //
-// e.g. 10 degree rotation (on anisometric rectangle!):  Filterimage ~/data/image/lake.png -filter o -gtransf "F 0  0.9848 -0.1736 0  0.1736 0.9848 0  0 0 1  0 0 0  0" | imgv
-// e.g. add 3x scale:  Filterimage ~/data/image/lake.png -boundaryrule r -cropall -100% -filter o -gtransf "F 0  0.32827 -0.05788 0  0.05788 0.32827 0  0 0 1  0 0 0  0" | imgv
+// E.g. 10 degree rotation (on anisometric rectangle!):  Filterimage ~/data/image/lake.png -filter o -gtransf "F 0  0.9848 -0.1736 0  0.1736 0.9848 0  0 0 1  0 0 0  0" | imgv
+// E.g. add 3x scale:  Filterimage ~/data/image/lake.png -boundaryrule r -cropall -100% -filter o -gtransf "F 0  0.32827 -0.05788 0  0.05788 0.32827 0  0 0 1  0 0 0  0" | imgv
 //  ca cos(10/45*atan2(1, 1)), sin(10/45*atan2(1, 1))
 void do_gtransf(Args& args) {
   const Frame frame = FrameIO::parse_frame(args.get_string());
   apply_frame(frame);
 }
 
-// e.g. 10 degree   :  Filterimage ~/data/image/lake.png -filter o -boundaryrule r -rotate 10 | imgv
+// E.g. 10 degree   :  Filterimage ~/data/image/lake.png -filter o -boundaryrule r -rotate 10 | imgv
 // 36-times repeated:  Filterimage ~/data/image/lake.png -filter o -boundaryrule r `perl -e 'binmode(STDOUT); for (1..36) { print "-rotate 10 "; }'` | imgv
-// large image      :  time Filterimage ~/data/image/rampart1.jpg -filter o -boundaryrule r `perl -e 'binmode(STDOUT); for (1..1) { print "-rotate 10 "; }'` >v.jpg && imgv v.jpg
+// Large image      :  time Filterimage ~/data/image/rampart1.jpg -filter o -boundaryrule r `perl -e 'binmode(STDOUT); for (1..1) { print "-rotate 10 "; }'` >v.jpg && imgv v.jpg
 // Filterimage ~/data/image/lake.png -filt k `perl -e 'binmode(STDOUT); for (1..20) { print "-rotate 18 "; }'` | imgv
 void do_rotate(Args& args) {
   const float ang = args.get_float();
@@ -732,7 +732,7 @@ void do_rotate(Args& args) {
     Frame frame;
     if (0) {  // Anisometric rotation if the image is a rectangle rather than a square!
       frame = frame_rotation;
-    } else {  // rigid rotation
+    } else {  // Rigid rotation.
       const float vmin = float(min(image.dims()));
       const Frame frame_scaling = Frame::scaling(V(image.ysize() / vmin, image.xsize() / vmin, 1.f));
       frame = frame_scaling * frame_rotation * ~frame_scaling;
@@ -742,7 +742,7 @@ void do_rotate(Args& args) {
 }
 
 void do_permutecolors() {
-  // drawback: considers each channel separately, so if red is all zero, it remains that way.
+  // Drawback: considers each channel separately, so if red is all zero, it remains that way.
   //   perl -e 'binmode(STDOUT); for (0..255) { printf "%03d\n", ($_ * 53) % 256; }'
   //   factors 53
   Vec<uint8_t, 256> lookup;
@@ -773,7 +773,7 @@ void do_noisegaussian(Args& args) {
 }
 
 void do_blur(Args& args) {
-  // e.g.: Filterimage ~/data/image/lake.png -blur 1 | imgv
+  // E.g.: Filterimage ~/data/image/lake.png -blur 1 | imgv
   // Filterimage ~/data/image/rampart1.jpg -info -blur 1 -info | imgv
   //  old  (_blur:                   8.74  x8.0      8.82)
   //  new  (_blur:                   0.34  x6.5      0.37)
@@ -818,8 +818,8 @@ Vec2<int> as_fit_dims;
 int as_crop_vl, as_crop_vr, as_crop_vt, as_crop_vb;
 
 void do_as_fit(Args& args) {
-  as_fit_dims[1] = args.get_int();  // nx
-  as_fit_dims[0] = args.get_int();  // ny
+  as_fit_dims[1] = args.get_int();  // Value nx.
+  as_fit_dims[0] = args.get_int();  // value ny.
 }
 
 void do_as_cropsides(Args& args) {
@@ -1093,7 +1093,7 @@ void do_readalpha(Args& args) {
   assertx(same_size(ialpha, image));
   parallel_for_coords({.cycles_per_elem = 10}, image.dims(), [&](const Vec2<int>& yx) {
     image[yx][3] = ialpha[yx][0];
-    for_int(c, 3) image[yx][c] = uint8_t(float(image[yx][c]) * image[yx][3] / 255.f + .5f);  // premultiplied alpha
+    for_int(c, 3) image[yx][c] = uint8_t(float(image[yx][c]) * image[yx][3] / 255.f + .5f);  // Premultiplied alpha.
   });
 }
 
@@ -1265,12 +1265,12 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
     for (const auto& u : range(hdims)) hgrid[u] *= 1.f / max(hgrid[u][3], 1.f);  // Make the weight at most 1.f.
     Grid<D, Vector4> gridu;
     if (!primal) {
-      const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));  // bilinear
+      const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));  // Bilinear.
       // This bilinear prolongation has weights (3/4, 1/4) and (1/4, 3/4) on alternating entries.
       gridu = scale(hgrid, hdims * 2, upscaling_kernel, &vzero);  // Spatially upscale.
       gridu = crop(gridu, ntimes<D>(0), dims % 2);                // Crop any extra expanded dimensions.
     } else {
-      const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));  // bilinear
+      const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));  // Bilinear.
       // Expand if the original dimension was even.
       const Grid<D, Vector4> grid2 =
           crop(hgrid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Bndrule::border), &vzero);
@@ -1280,7 +1280,7 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
     }
     assertx(gridu.dims() == grid.dims());
     for (const auto& u : range(dims)) {
-      // composite grid over gridu == upsample(hgrid)
+      // Composite `grid` over `gridu`, where gridu == upsample(hgrid).
       // C_new = C_f + (1 - alpha_f) * C_b.
       const float w = grid[u][3];
       grid[u] = grid[u] + (1.f - w) * gridu[u];
@@ -1336,7 +1336,7 @@ void do_voronoidilate() {
 
 void do_featureoffsets() {
   if (image.suffix() == "jpg") assertnever("euclidean_distance_map not useful on jpg image");
-  Matrix<Vec2<int>> mvec(image.dims(), image.dims());  // (mvec is initialized with large values image.dims())
+  Matrix<Vec2<int>> mvec(image.dims(), image.dims());  // (Matrix mvec is initialized with large values image.dims().)
   for (const auto& yx : range(image.dims())) {
     const bool is_undef = rgb_equal(image[yx], gcolor) ^ g_not;
     if (!is_undef) mvec[yx] = V(0, 0);
@@ -1348,9 +1348,9 @@ void do_featureoffsets() {
     if (1) {
       for_int(c, 2) {
         int i = mvec[yx][c];
-        if (1) {  // linear
+        if (1) {  // Linear.
           i = 128 + i * 12;
-        } else {  // arctan
+        } else {  // Arctan.
           float f = float(i);
           // 128 + 70 * ArcTan[f * 1]
           f = 128.f + 70.f * std::atan2(f, 1.f);
@@ -1359,7 +1359,7 @@ void do_featureoffsets() {
         assertw(i >= 0 && i <= 255);
         image[yx][c] = uint8_t(i);
       }
-    } else {  // scalar arctan
+    } else {  // Scalar arctan.
       float f = mag<float>(mvec[yx]);
       f = 0.f + 150.f * std::atan2(f, 1.f);
       const int i = int(f + .5f);
@@ -1479,8 +1479,8 @@ int face_bitangent_sign(const GMesh& mesh, Face f, string& str) {
 // Nice: https://bgolus.medium.com/generating-perfect-normal-maps-for-unity-f929e673fc57
 // - Always triangulate, to avoid quad ambiguities.
 // - Do not explicitly store tangents; assume that they are computed by the viewer using MikkTSpace.
-//    [however, this is incompatible with GLTFLoader/three.js because MikkTSpace is not implemented in JS code;
-//     instead, when not provided with tangents, three.js resorts to dFdx() as discussed below.]
+//    (However, this is incompatible with GLTFLoader/three.js because MikkTSpace is not implemented in JS code;
+//     instead, when not provided with tangents, three.js resorts to dFdx() as discussed below.)
 // - Use OpenGL X+Y+Z+ for normal map orientation.
 //    - Right-handed, positive green channel: OpenGL apps, Blender, Maya, Modo, Toolbag, Unity.
 //    - Left-handed, negative green channel: DirectX apps, 3DStudio Max, CryEngine, Source Engine, Unreal Engine.
@@ -1691,8 +1691,7 @@ void do_composite(Args& args) {
         const int bblue = background_image[yx][0] < 50;
         vr = fred && !bblue ? vf : vb;
       } else if (op == Op_shlomo) {
-        // Shlomo formula:
-        // f * lambda - f * lambda * m + b + lambda * m - lambda * b;
+        // Shlomo formula: f * lambda - f * lambda * m + b + lambda * m - lambda * b where
         //  m is the mask from the blue channel f_blue.
         const float lambda = weight;
         const float vm = image[yx][2] / 255.f;
@@ -1790,7 +1789,7 @@ void do_genpattern(Args& args) {
 //  This is handled by a clever low-memory orthogonal projection.
 void do_homogenize(Args& args) {
   HH_TIMER("_homogenize");
-  // e.g.:  Filterimage ~/data/image/lake.png -scalen 1 .5 -homogenize 4 | imgv
+  // E.g.:  Filterimage ~/data/image/lake.png -scalen 1 .5 -homogenize 4 | imgv
   //        Filterimage ~/prevproj/2010/spherestitch/Other/mattu_lowfreq/test2.png -homogenize 4 | imgv
   int n = args.get_int();
   assertx(n >= 1 || n == -1);
@@ -1815,7 +1814,7 @@ void do_homogenize(Args& args) {
     for_int(c, 2) for_int(k, n) normalize(table[c][k]);
     // The rms of 1, where x is in the range [0, 1], is 1 (whereas sdv is 0).
     // The rms of cos(k * x * TAU / 2) is 1 / sqrt(2) if k > 0,   or 1 if k == 0.
-    // The rms of x is 1 / sqrt(3)
+    // The rms of x is 1 / sqrt(3).
     // Mathematica: Sqrt[Integrate[Cos[k * x * Pi]^2, {x, 0, 1}, Assumptions -> {Integer[k]}]]
     for_int(z, image.zsize()) {
       Matrix<double> ar(V(n, n), 0.);
@@ -1831,7 +1830,7 @@ void do_homogenize(Args& args) {
         image[yx][z] = clamp_to_uint8(int(newval + .5));
       });
     }
-  } else {  // version with alpha-channel cropping
+  } else {  // Version with alpha-channel cropping.
     const bool modify_unselected_too = getenv_bool("MODIFY_UNSELECTED_TOO");
     for (const auto& yx : range(image.dims()))
       assertx(image[yx][3] == 0 || image[yx][3] == 255);  // No fractional alpha values.
@@ -2021,7 +2020,7 @@ void do_istoroidal() {
 }
 
 void do_gdtoroidal() {
-  // e.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gdtoroidal -tile 2 2 | imgv
+  // E.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gdtoroidal -tile 2 2 | imgv
   assertx(image.zsize() == 3);
   Grid<2, Vector4> grid_orig(image.dims());
   parallel_for_coords({.cycles_per_elem = 6}, image.dims(), [&](const Vec2<int>& yx) {  //
@@ -2049,7 +2048,7 @@ void do_gdtoroidal() {
     parallel_for_coords({.cycles_per_elem = 6}, image.dims(), [&](const Vec2<int>& yx) {  //
       image[yx] = grid_result[yx].pixel();
     });
-  } else {  // instead solve for color value offsets
+  } else {  // Instead solve for color value offsets.
     fill(multigrid.initial_estimate(), Vector4(0.f));
     multigrid.set_desired_mean(Vector4(0.f));
     // To create a toroidal image, we compute the sparse change in Laplacian across the periodic boundaries.
@@ -2076,7 +2075,7 @@ void do_gdtoroidal() {
 }
 
 void do_gradientsharpen(Args& args) {
-  // e.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gradientsharpen 1.5 | imgv
+  // E.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gradientsharpen 1.5 | imgv
   float gradient_sharpening = args.get_float();
   float screening_weight = 1.f;
   assertx(image.zsize() == 3);
@@ -2106,8 +2105,8 @@ void do_gradientsharpen(Args& args) {
 }
 
 void do_gdfill() {
-  // e.g.: Filterimage ~/data/image/lake.png -setalpha 255 -color 0 0 0 0 -drawrect 30% 30% -30% -30% -gdfill | imgv
-  // also:  Filterimage ~/data/image/misc/lake.masked.png -gdfill | imgv  (see ~/proj/skype/Notes.txt)
+  // E.g.: Filterimage ~/data/image/lake.png -setalpha 255 -color 0 0 0 0 -drawrect 30% 30% -30% -30% -gdfill | imgv
+  // Also:  Filterimage ~/data/image/misc/lake.masked.png -gdfill | imgv  (see ~/proj/skype/Notes.txt)
   HH_TIMER("_gdfill");
   float screening_weight = 1e-5f;  // 0.f is fine too; 1e-4f has a visible difference.
   assertx(image.zsize() == 4);
@@ -2184,7 +2183,7 @@ void do_gdfill() {
 void output_contour(int gridn, float contour_value) {
   if (!gridn) gridn = max(image.dims());
   WSA3dStream wcontour(std::cout);
-  // Pixels are at locations [ 0.5 / imagesize, (imagesize - .5) / imagesize ], consistent with sample_domain()
+  // Pixels are at locations [ 0.5 / imagesize, (imagesize - .5) / imagesize ], consistent with sample_domain().
   Matrix<float> matrix(image.dims());
   for (const auto& yx : range(image.dims())) matrix[yx] = float(image[yx][0]);  // Red channel.
 
@@ -2211,15 +2210,15 @@ void output_contour(int gridn, float contour_value) {
 }
 
 void do_contour(Args& args) {
-  // e.g.:  Filterimage ~/data/image/lake.png -contour 256 | G3d - -st imageup
-  // e.g.:  CONTOUR_VERTEX_TOL=0 Filterimage ~/data/image/lake.png -contour 8 | G3d - -st imageup
-  // e.g.:  Filterimage ~/data/image/lake.png -scaletox 16 -contour 64 | Filtera3d -joinlines | G3d - -st imageup
+  // E.g.:  Filterimage ~/data/image/lake.png -contour 256 | G3d - -st imageup
+  // E.g.:  CONTOUR_VERTEX_TOL=0 Filterimage ~/data/image/lake.png -contour 8 | G3d - -st imageup
+  // E.g.:  Filterimage ~/data/image/lake.png -scaletox 16 -contour 64 | Filtera3d -joinlines | G3d - -st imageup
   const int gridn = args.get_int();
   output_contour(gridn, 127.5f);
 }
 
 void do_mcontours(Args& args) {
-  // e.g.: Filterimage ~/data/image/lake.png -scaletox 32 -mcontours 256 10 | Filtera3d -joinlines | G3d - -st imageup
+  // E.g.: Filterimage ~/data/image/lake.png -scaletox 32 -mcontours 256 10 | Filtera3d -joinlines | G3d - -st imageup
   const int gridn = args.get_int();
   const int ncontours = args.get_int();
   for_int(i, ncontours) {
@@ -2258,7 +2257,7 @@ void do_poisson() {
         2 * (ny * (nx - 1) + nx * (ny - 1)) + conformal * 2 * (ny - 2 + conf_L) * (nx - 2 + conf_L) + nconstraints,
         ny * nx * 2, 1);
     lls.set_verbose(0);
-    // lls.set_tolerance(1e-12f);  // default 1e-10f
+    // lls.set_tolerance(1e-12f);  // Default 1e-10f
     int row = 0;
     // Approach related to [Praun et al 2000] (Lapped Textures):
     //  Create warped parameterization by aligning local frame.
@@ -2306,7 +2305,7 @@ void do_poisson() {
     }
     if (conformal) {
       if (conf_L) {
-        // L-shape: penalize wconformal * mag2(rot90(mat[y, x + 1] - mat[yx]) - (mat[y + 1, x] - mat[yx]))
+        // L-shape: penalize wconformal * mag2(rot90(mat[y, x + 1] - mat[yx]) - (mat[y + 1, x] - mat[yx])).
         const float sqrtw = my_sqrt(wconformal);
         if (iter > 0) {
           Matrix<float> matconf(ny - 1, nx - 1);
@@ -2343,8 +2342,8 @@ void do_poisson() {
           row++;
         }
       } else {
-        // +-shape: penalize wconformal * mag2(rot90(mat[y, x + 1] - mat[y, x - 1]) - (mat[y + 1, x] - mat[y - 1, x]))
-        // compared to L-shape, this looks no better, or sometimes ever slightly worse.
+        // +-shape: penalize wconformal * mag2(rot90(mat[y, x + 1] - mat[y, x - 1]) - (mat[y + 1, x] - mat[y - 1, x])).
+        // Compared to L-shape, this looks no better, or sometimes ever slightly worse.
         const float sqrtw = my_sqrt(wconformal) * 0.5f;
         for_intL(y, 1, ny - 1) for_intL(x, 1, nx - 1) {
           lls.enter_a_rc(row, ((y + 0) * nx + (x - 1)) * 2 + 0, -sqrtw);
@@ -2589,7 +2588,7 @@ void do_procedure(Args& args) {
     }
 
   } else if (name == "fix_agarwala") {
-    // streaming multigrid: fix Aseem Agarwala labels file
+    // Streaming multigrid: fix Aseem Agarwala labels file.
     // Filterimage labels.png -proc fix_agarwala >labels.fixed.png
     for (const auto& yx : range(image.dims())) {
       const int l = image[yx][0];
@@ -2623,7 +2622,7 @@ void do_procedure(Args& args) {
     // Image image_periods("periods.png");  // period0: 0, 0, 0 but 480x270
     assertx(image_periods.dims() == image.dims());
     //
-    const uint8_t cost_threshold = 3;  // let the mask consist of the pixels whose temporal costs is >= threshold
+    const uint8_t cost_threshold = 3;  // Let the mask consist of the pixels whose temporal costs is >= threshold.
     const int radius2_threshold = 4;   // Dilation squared radius.
     const int radius2_max = 20;        // Squared radius of maximum breadth-first-search expansion.
     const Pixel period_zero(128, 128, 255, 255);
@@ -2832,7 +2831,7 @@ void do_procedure(Args& args) {
       const float fperiod = float(period) / (est_num_input_frames - 1);
       Pixel pixel = k_color_ramp[clamp_to_uint8(int(fperiod * 255.f + .5f))];
       for_int(c, 3) pixel[c] = clamp_to_uint8(int(pixel[c] * (.4f + .6f * fstart)));
-      if (is_static) pixel = Pixel::gray(have_mask ? 180 : 230);  // there are so few, make them more prominent
+      if (is_static) pixel = Pixel::gray(have_mask ? 180 : 230);  // There are so few, make them more prominent.
       if (is_masked) pixel = Pixel::white();
       image[yx] = pixel;
     });
@@ -3110,7 +3109,7 @@ auto downsample_image(CMatrixView<Vector4> mat_F) {
       }
       mat_C[yx] = sum;
     });
-  } else {  // faster: first downsample horizontally, then vertically
+  } else {  // Faster: first downsample horizontally, then vertically.
     // Possible optimization: lift boundary testing outside of loops.
     Matrix<Vector4> mtmp(mat_F.dims() / V(1, 2));  // Non-square.
     parallel_for_coords({.cycles_per_elem = uint64_t(kn) * 8}, mtmp.dims(), [&](const Vec2<int>& yx) {
@@ -3235,7 +3234,7 @@ TransferResult structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixVie
           ssum += w * v;
           ssum2 += w * square(v);
         }
-        // if (0) { HH_SSTAT(Ssmean, smean[0]); HH_SSTAT(Sssdv, ssdv[0]); }  // note: LAB have broader range.
+        // if (0) { HH_SSTAT(Ssmean, smean[0]); HH_SSTAT(Sssdv, ssdv[0]); }  // Note: LAB have broader range.
         // Gather window statistics in color image (coarse image).
         for_int(iy, window_diam) for_int(ix, window_diam) {
           const Vector4 v = mat_c.inside(y - window_radius + iy, x - window_radius + ix, k_reflected);  // Pixel value.
@@ -3331,9 +3330,9 @@ TransferResult structure_transfer(CMatrixView<Vector4> mat_s, CMatrixView<Vector
   HH_TIMER("__structure_transfer");
   if (getenv_bool("USE_RANK_TRANSFER")) {  // Results in grain artifacts.
     return structure_transfer_rank(mat_s, mat_c, save_zscore);
-  } else if (getenv_bool("USE_NO_TRANSFER")) {  // results in ghosting
+  } else if (getenv_bool("USE_NO_TRANSFER")) {  // Results in ghosting.
     return {Matrix<Vector4>(mat_c), save_zscore ? Matrix<Vector4>(mat_c.dims(), Vector4(0.f)) : Matrix<Vector4>()};
-  } else {  // z-score transfer is best
+  } else {  // This z-score transfer is best.
     return structure_transfer_zscore(mat_s, mat_c, save_zscore);
   }
 }
@@ -3346,7 +3345,7 @@ void output_image(CMatrixView<Vector4> mat, const string& filename) {
 // Given the coarse-scale image (already loaded) and the fine-scale image (specified as argument),
 //  construct smooth visual transition.
 void do_pyramid(Args& args) {
-  // e.g.  (cd ~/tmp; cp -p ~/data/image/misc/city.input.{13,17}.jpg .; Filterimage city.input.13.jpg -pyramid city.input.17.jpg; ls -al)
+  // E.g.  (cd ~/tmp; cp -p ~/data/image/misc/city.input.{13,17}.jpg .; Filterimage city.input.13.jpg -pyramid city.input.17.jpg; ls -al)
   const string ffilename = args.get_filename();  // Argument is fine-scale image.
   HH_TIMER("_pyramid");
   string root_name = ffilename;

@@ -36,7 +36,7 @@ int main() {
     SHOW(round(frame_half * frame_half));
     SHOW(round(pow(frame, .5f)));
     const Quaternion qq(pow(pow(frame, .25f), 4.f));
-    // SHOW(qq);  // rounding differences
+    // SHOW(qq);  // Rounding differences.
     SHOW(qq.angle());
     SHOW(round_elements(clone(qq.axis())));
     frame = round(frame);

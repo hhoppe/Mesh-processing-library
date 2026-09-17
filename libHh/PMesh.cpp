@@ -37,7 +37,7 @@ constexpr int k_undefined = AWMesh::k_undefined;
 //
 //  PMesh:      56 bytes/vertex (smaller than WMesh and SMesh!)
 //
-// optimize:
+// Optimize:
 // - if redoing it all again, would require ii == 2 always, and remove the vad_small field.
 // - place all ar_wad in a separate array.  let PMeshIter keep pointer into it.
 // - do the same for fl_matid and fr_matid
@@ -1118,8 +1118,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   ASSERTX(!isr || _wedges[wvsfr].vertex == vs);
   ASSERTX(!isl || _wedges[wvtfl].vertex == vt);
   ASSERTX(!isr || _wedges[wvtfr].vertex == vt);
-  // Get adjacent faces and wedges on left and right.
-  // really needed?
+  // Get adjacent faces and wedges on left and right.  Really needed?
   int flccw, flclw;  // Either (not both) may be k_undefined.
   int frccw, frclw;  // Either (or both) may be k_undefined.
   // Also find the index of vs within those adjacent faces.
@@ -1843,7 +1842,7 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
   bool ret = true;
   assertx(!_vertices.num() && !_vgattribs.num() && !_wgattribs.num());
   // Initialize ancestry to current attributes (identity).
-  // optimize: could reserve final size for arrays.
+  // Optimize: could reserve final size for arrays.
   Ancestry ancestry;
   ancestry._vancestry.init(pmi._vertices.num());
   for_int(v, ancestry._vancestry.num()) ancestry._vancestry[v] = pmi._vertices[v].attrib;

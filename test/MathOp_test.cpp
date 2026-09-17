@@ -48,7 +48,7 @@ inline unsigned nanf_value(float f) {
 int main() {
   {
     assertx(INFINITY == HUGE_VALF);
-    // assertx(std::numeric_limits<float>::infinity() == HUGE_VALF);  // warning: overflow in constant arithmetic
+    // assertx(std::numeric_limits<float>::infinity() == HUGE_VALF);  // Warning: overflow in constant arithmetic.
     // assertx(std::numeric_limits<double>::infinity() == HUGE_VAL);
   }
   {

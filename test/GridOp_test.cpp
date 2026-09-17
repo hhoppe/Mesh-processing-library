@@ -26,7 +26,7 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
   {  // Inverse convolution has unit integral.
     Grid<D, float> grid(dims, 0.f);
     Vec<int, D> p;
-    for_int(c, D) p[c] = min(c, dims[c] - 1);  // e.g. V(0, 1, 2) for D == 3
+    for_int(c, D) p[c] = min(c, dims[c] - 1);  // E.g. V(0, 1, 2) for D == 3
     grid[p] = 1.f;
     // SHOW(grid);
     inverse_convolution(grid, ntimes<D>(FilterBnd(Filter::get("spline"), Bndrule::reflected)));
@@ -36,7 +36,7 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
   }
   {  // Rescaling of unity-valued grid reproduces unity-valued grid.
     const Grid<D, float> grid(dims, 1.f);
-    // not: Bndrule::border
+    // Not: Bndrule::border.
     for (const Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped}) {
       for (const Filter* pfilter : filters) {
         const Filter& filter = *pfilter;

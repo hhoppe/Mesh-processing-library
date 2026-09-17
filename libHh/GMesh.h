@@ -25,7 +25,7 @@
 
 namespace hh {
 
-// *** See documentation on MESH FILE FORMAT at the end of this file.
+// See documentation on MESH FILE FORMAT at the end of this file.
 
 class WA3dStream;
 class A3dElem;
@@ -211,10 +211,11 @@ template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec) {
 inline Vec3<Point> GMesh::triangle_points(Face f) const {
   Vec3<Point> triangle;
   HEdge he = herep(f), he0 = he;
+  dummy_use(he0);
   triangle[0] = he->_vert->_point, he = he->_next;
   triangle[1] = he->_vert->_point, he = he->_next;
   triangle[2] = he->_vert->_point, he = he->_next;
-  assertx(he == he0);  // is_triangle()
+  ASSERTXX(he == he0);  // Check is_triangle().
   return triangle;
 }
 

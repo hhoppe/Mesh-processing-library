@@ -109,7 +109,7 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
     }
     int fn = _fnei[f].faces[0];
     for (;;) {
-      // *** First iteration of loop.
+      // *** First iteration of loop
       {
         if (fn < 0 || _faces[fn].attrib.matid != matid) break;
         const int wrand = _faces[fn].wedges[0];
@@ -134,7 +134,7 @@ void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
         glNormal3fv(_wedges[w2n].attrib.normal.data());
         glVertex3fv(_vertices[_wedges[w2n].vertex].attrib.point.data());
       }
-      // *** Second iteration of loop.
+      // *** Second iteration of loop
       {
         if (fn < 0 || _faces[fn].attrib.matid != matid) break;
         const int wrand = _faces[fn].wedges[0];

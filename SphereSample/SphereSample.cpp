@@ -79,7 +79,7 @@ const Pixel k_pixel_orange{255, 153, 0, 255};
 
 constexpr Pixel k_color_zero_alpha{0, 0, 0, 0};  // For "filled" and "hole" faces.
 
-// *** General functions.
+// *** General functions
 
 inline Point bilerp(const Vec4<Point>& pa, float u, float v) { return bilerp(pa[0], pa[1], pa[2], pa[3], u, v); }
 
@@ -135,7 +135,7 @@ Frame get_rotate_frame() {
   return frame;
 }
 
-// *** Create domain.
+// *** Create domain
 
 Array<DomainFace> get_domain_faces() {
   Array<DomainFace> domain_faces;
@@ -293,7 +293,7 @@ Pixel get_color(const DomainFace& domain_face, Uv uv) {
   return is_on ? k_pixel_gray : domain_face_color;
 }
 
-// *** Spherical maps.
+// *** Spherical maps
 
 Point spheremap_2slerp0(const Point& pa, const Point& pb, const Point& pc, const Bary& b) {
   ASSERTX(b.is_convex());
@@ -429,7 +429,7 @@ Point spheremap_area_ratio(const Point& pa, const Point& pb, const Point& pc, co
   return ok_normalized(-pb + dir_isect * (2.f * dot(dir_isect, Vector(pb))));
 }
 
-// *** Maps.
+// *** Maps
 
 using TriangleSpheremap = Point (*)(const Vec3<Point>& triangle, const Bary& bary);
 
@@ -520,7 +520,7 @@ TriangleSpheremap get_map(const string& triangle_map_name) {
   assertnever("map '" + triangle_map_name + "' not found");
 }
 
-// *** domain -> sphere grid mapping.
+// *** Domain -> sphere grid mapping
 
 // Given uv coordinates within spherical quad, return a spherical triangle and barycentric coordinates within it.
 void split_quad_2tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& triangle, Bary& bary) {
@@ -1194,7 +1194,7 @@ Uv interp_f_uv(const GMesh& mesh, Face f, const Bary& bary) {
   return sum_uv;
 }
 
-// *** Inverse map.
+// *** Inverse map
 
 void internal_remesh() {
   if (is_remeshed) return;

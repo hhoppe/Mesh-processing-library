@@ -33,7 +33,7 @@ bool record_changes = false;    // The output stream of mesh changes.
 bool sel_refinement = false;    // Selective refinement is active.
 Frame view_frame;               // Used only if sel_refinement.
 float view_zoom = 0.f;          // Used only if sel_refinement.
-Frame view_iframe;              // inverse(view_frame)
+Frame view_iframe;              // Equals inverse(view_frame).
 const bool sdebug = getenv_bool("FILTERPROG_DEBUG");
 
 Array<string> pm_material_strings;
@@ -115,7 +115,7 @@ void LivingAncestor::set_descendant(int vnew, int vold) {
 
 LivingAncestor vlineage;  // Closest living ancestor relation.
 
-// *** Beginning of app functions.
+// *** Beginning of app functions
 
 void clear_vertex_corner_strings(Vertex v) {
   mesh.set_string(v, nullptr);
@@ -499,7 +499,7 @@ void write_init_vertex(Vertex v, bool write_morph) {
   assertx(u_nwid != 0);  // Impossible.
   if (u_nwid > 0 && u_owid < 0) {
     for (Corner c : mesh.corners(v)) {
-      // int nwid = c_cwedge_id(c);
+      // const int nwid = c_cwedge_id(c);
       const int owid = c_owedge_id(c);
       // Rare case in which partial sharp edge collapses into a boundary vertex.
       if (owid && owid != u_nwid) {

@@ -103,7 +103,7 @@ int main() {
     CArrayView<int> ar(a);
     SHOW(var(ar));
     SHOW(sqrt(var(ar)));
-    SHOW(rms(ar - 12));  // rms() and var() have slightly different denominators
+    SHOW(rms(ar - 12));  // Note that rms() and var() have slightly different denominators.
     SHOW(reverse(ArrayView(a)));
     SHOW(CArrayView(a));
     SHOW(sort(ArrayView(a)));
@@ -145,7 +145,7 @@ int main() {
   }
   if (0) {
     // Array<int> ar(5);
-    // ArrayView<int> arv(ar); arv = ar;        // is illegal as expected
+    // ArrayView<int> arv(ar); arv = ar;        // This is illegal as expected.
   }
   if (0) {
     Array<int> ar(2, -1);

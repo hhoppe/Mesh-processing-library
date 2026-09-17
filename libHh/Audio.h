@@ -32,7 +32,7 @@ class Audio : public Grid<2, float> {
  public:
   using value_type = float;
   struct Attrib;
-  explicit Audio(const Vec2<int>& dims = V(0, 0)) { init(dims); }  // nchannels, nsamples
+  explicit Audio(const Vec2<int>& dims = V(0, 0)) { init(dims); }  // Indexed as [nchannels, nsamples].
   explicit Audio(const Audio&) = default;
   explicit Audio(const string& filename) { read_file(filename); }
   Audio(Audio&& v) noexcept { swap(*this, v); }

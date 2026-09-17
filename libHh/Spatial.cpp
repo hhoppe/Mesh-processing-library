@@ -4,7 +4,7 @@
 namespace hh {
 
 // Given 10'000 random data points uniformly sampled over the unit cube,
-// find the closest 10 neighbors:
+// Find the closest 10 neighbors:
 // spatialtest -gridn $gridn -pn 10000
 // average time
 //      gridn   pn=10000        pn=1000
@@ -24,7 +24,7 @@ namespace hh {
 // optimal #cells/point:
 //              .1-30           .06-40
 //
-// for 100'000 data points, gridn=40, time is .03100 (still very good)
+// For 100'000 data points, gridn=40, time is .03100 (still very good)
 //                          gridn=50, time is .02583
 
 namespace details {

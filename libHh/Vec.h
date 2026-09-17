@@ -336,7 +336,7 @@ template <int D, bool has_lower_bound> class Vec_range;
 template <typename T, int... ds> using SGrid = typename details::SGrid_type<T, ds...>::type;
 
 // Range of coordinates: Vec<int, D>: 0 <= [0] < uU[0], 0 <= [1] < uU[1], ..., 0 <= [D - 1] < uU[D - 1].
-//  e.g.: for (const auto& p : range(grid.dims())) grid[p] = func(p);
+//  E.g.: for (const auto& p : range(grid.dims())) grid[p] = func(p);
 template <int D> [[nodiscard]] constexpr details::Vec_range<D, false> range(const Vec<int, D>& uU);
 
 // Range of coordinates: Vec<int, D>: uL[0] <= [0] < uU[0], ..., uL[D - 1] <= [D - 1] < uU[D - 1].
@@ -406,9 +406,9 @@ template <std::floating_point T, int n> [[nodiscard]] constexpr Vec<T, n> snap_c
 
 namespace details {
 
-// Storage for Vec.  The n == 0 specialization is a truly empty class -- not merely one with a [[no_unique_address]]
-// empty member, which compilers do not agree is eligible for the empty base optimization -- so that Vec<T, 0>, and
-// SGrid<T, ..., 0, ...>, occupies no space in a derived class.
+// Storage for Vec.  The n == 0 specialization is a truly empty class -- not merely one with a
+// [[no_unique_address]] empty member, which compilers do not agree is eligible for the empty base optimization -- so
+// that Vec<T, 0> and SGrid<T, ..., 0, ...> both occupy no space in a derived class.
 template <typename T, int n> struct VecBase {
   T _a[n];
   friend auto operator<=>(const VecBase&, const VecBase&) = default;

@@ -57,9 +57,9 @@ string video_suffix_for_magic_byte(uchar c) {
   //  *.avi: "RIFF"
   //  *.mov: "\000\000\000\030ftypqt   \a\t\000"
   //  *.webm: \0x1a\0x45\0xdf\0xa3
-  // see https://en.wikipedia.org/wiki/List_of_file_signatures
+  // See https://en.wikipedia.org/wiki/List_of_file_signatures
   switch (c) {
-    case 0: return "mp4";  // u'\x00'; or "mov"
+    case 0: return "mp4";  // u'\x00'; or "mov".
     case '0': return "wmv";
     case 'R': return "avi";
     case 'G': return "gif";

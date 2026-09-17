@@ -20,7 +20,7 @@ const string tmpf = "v.Hh_test.txt";
 void try_it(const string& stest) {
   if (0) SHOW(stest);
   // This test is broken.  We cannot assume that csh, sh, or cmd are in the user's path.
-  for_int(method, 2) {  // csh, sh, cmd
+  for_int(method, 2) {  // csh, sh, cmd.
     if (0) SHOW(method);
     string s1 = quote_arg_for_sh(stest);  // Stronger than quote_arg_for_shell().
     if (0) SHOW(s1);
@@ -97,7 +97,7 @@ void test_spawn() {
     try_it(R"(%^&*())");
   }
   {
-    const string arcands = R"(abcdefgh       `~!@#$%^&*()-_=+[{]}\|;:'"",<.>/?)";  // double '"' frequency
+    const string arcands = R"(abcdefgh       `~!@#$%^&*()-_=+[{]}\|;:'"",<.>/?)";  // Double '"' frequency.
     for_int(itry, 10) {                                                            // Tried up to 10'000.
       const int len = 20;
       string str(len, ' ');

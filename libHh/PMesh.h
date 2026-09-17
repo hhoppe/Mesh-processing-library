@@ -205,8 +205,7 @@ struct Vsplit {
   // -> do entropy coding on (ii, wl, wr, ws, wt) symbol as a whole.
 
   // ** Face attribute values (usually predicted correctly)
-  // these are defined only if {L,R}NF respectively
-  //  otherwise for now they are set to 0
+  // These are defined only if {L,R}NF respectively; otherwise for now they are set to 0.
   ushort fl_matid;
   ushort fr_matid;
 

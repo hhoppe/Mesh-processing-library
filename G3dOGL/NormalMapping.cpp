@@ -104,7 +104,7 @@ class NormalMapping_ogl2 final : public NormalMapping {
 
   void deactivate() override {
     USE_GL_EXT(glUseProgram, PFNGLUSEPROGRAMPROC);
-    glUseProgram(0);  // go back to fixed-function pipeline; see https://www.opengl.org/sdk/docs/man2/
+    glUseProgram(0);  // Go back to fixed-function pipeline; see https://www.opengl.org/sdk/docs/man2/
     // and https://stackoverflow.com/questions/13546461/what-does-gluseprogram0-do
     assertx(!gl_report_errors());
     // glDetachShader(program_id, fragment_shader_id);
@@ -254,7 +254,7 @@ class NormalMapping_frag1 final : public NormalMapping {
 };
 
 // *** ENV_DOT3 extension
-// http://www.ati.com/developer/sdk/RadeonSDK/Html/Samples/OpenGL/RadeonSimpleDOT3.html [deleted]
+// http://www.ati.com/developer/sdk/RadeonSDK/Html/Samples/OpenGL/RadeonSimpleDOT3.html [deleted].
 // The main difference between the texture_env_* extension and the combiners is
 // that the combiners replace the entire fragment pipeline, while the
 // texture_env_* extensions only extend it. So the texture_env_dot3 extension
@@ -412,7 +412,7 @@ class NormalMapping_nvrc final : public NormalMapping {
     // OUT = A * B + (1 - A) * C + D
     //     = dot(normal * vhalf) ** 4 + dot(normal * light) * color
     //
-    // replace diffuse term by ambient:
+    // Replace diffuse term by ambient:
     // glFinalCombinerInputNV(GL_VARIABLE_D_NV, GL_CONSTANT_COLOR1_NV, GL_UNSIGNED_IDENTITY_NV, GL_RGB);
   }
 

@@ -46,7 +46,7 @@ int retriangulate(GMesh& mesh, SetEdge& sete, bool recurse, Set<Vertex>* setvr, 
     for (Face f : mesh.faces(e))
       for (Edge ee : mesh.edges(f)) sete.remove(ee);
     Edge ne = mesh.swap_edge(e);
-    // e = nullptr;  // now undefined
+    // e = nullptr;  // Now undefined.
     neswapped++;
     if (fadd) fadd(mesh, ne);
     if (!recurse) continue;
@@ -382,7 +382,7 @@ Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep) {
         }
       }
       if (!v) {
-        // qc.add_to_end(queuee);  // clears queuee
+        // qc.add_to_end(queuee);  // Clears queuee.
         while (!queuee.empty()) qc.enqueue(queuee.dequeue());
       } else {
         // Rotate queuee to put v at the front.
@@ -398,7 +398,7 @@ Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep) {
     // Remove the simple boundary in qc.
     {
       Array<Vertex> va;
-      // vertex1(e) ok but slower
+      // vertex1(e) ok but slower.
       for (Edge e : qc) va.push(mesh.vertex2(e));
       Face fn = mesh.create_face(va);
       // Heuristically propagate string info from adjacent corners onto new corners.
@@ -457,8 +457,7 @@ void split_valence(GMesh& mesh, int max_valence) {
       }
     }
     if (mag2(offsetn) < 1e-8f) {
-      // Use sine weights to compute an arbitrary tangent vector.  This works well with a uniform distribution
-      // of edges.
+      // Use sine weights to compute an arbitrary tangent vector.  It works well with a uniform distribution of edges.
       Vector vec{};
       for_int(i, va.num()) vec += (mesh.point(va[i]) - mesh.point(v)) * std::sin(float(i) / va.num() * TAU);
       vs1 = va[0];
@@ -723,7 +722,7 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
               vec = -vec;
             }
           }
-        } else if (nsharpe == 2) {  // non-regular crease vertex
+        } else if (nsharpe == 2) {  // Non-regular crease vertex.
           const Vector v1 = mesh.point(av.last()) - mesh.point(av[0]);
           if (avn == 2) {  // 2, -1, -1
             vec = vp * 2.f - mesh.point(av[0]) - mesh.point(av[1]);
@@ -750,11 +749,11 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
           const Vector t1 = mesh.point(av[1]) - mesh.point(av[0]);
           for_int(i, 2) {
             Vertex vo = mesh.clw_vertex(av[i], v);
-            assertx(vo == mesh.ccw_vertex(av[1 - i], v));  // is_quad
+            assertx(vo == mesh.ccw_vertex(av[1 - i], v));  // Check is_quad.
           }
           const Vector t2 = mesh.point(mesh.clw_vertex(av[1], v)) - mesh.point(mesh.clw_vertex(av[0], v));
           vec = cross(t1, t2);
-        } else {  // interior or dart
+        } else {  // Interior or dart.
           Vector v1{}, v2{};
           for_int(i, avn) {
             const Point& p = mesh.point(av[i]);

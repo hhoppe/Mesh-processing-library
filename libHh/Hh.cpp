@@ -35,7 +35,7 @@
 #include <stacktrace>
 #endif
 
-// *** Check required language features.
+// *** Check required language features
 
 // static_assert(__cpp_explicit_this_parameter);  // C++23; not reported by _MSC_VER CL 19.44 even though supported.
 static_assert(__cpp_multidimensional_subscript);  // C++23.
@@ -136,7 +136,7 @@ static string beautify_type_name(string s) {
   s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
   // ** win:
   s = replace_all(s, "std::basic_string<char,std::char_traits<char>,std::allocator<char>>", "std::string");
-  // e.g. "class Map<class MVertex * __ptr64,float,struct std::hash<class MVertex * __ptr64>,struct std::equal_to<class MVertex * __ptr64>>"
+  // E.g. "class Map<class MVertex * __ptr64,float,struct std::hash<class MVertex * __ptr64>,struct std::equal_to<class MVertex * __ptr64>>"
   // s = replace_all(s, ",std::hash<int>,std::equal_to<int> ", "");
   s = std::regex_replace(s, std::regex(",std::hash<.*?>,std::equal_to<.*?>>"), ">");
   s = replace_all(s, "* __ptr64", "*");
@@ -295,7 +295,7 @@ bool details::assertw_aux2(const char* s) {
 
 // May return nullptr.
 void* aligned_malloc(size_t alignment, size_t size) {
-  // see https://stackoverflow.com/questions/3839922/aligned-malloc-in-gcc
+  // See https://stackoverflow.com/questions/3839922/aligned-malloc-in-gcc
 #if defined(_MSVC_STL_VERSION)  // 2024: Visual Studio still does not support std::aligned_alloc().
   return _aligned_malloc(size, alignment);
 #elif defined(__MINGW32__)  // 2024: mingw also lacks it.
@@ -447,7 +447,7 @@ static bool isafile(int fd) {
       hfinfo.ftCreationTime.dwLowDateTime == 0 && hfinfo.nFileSizeHigh == 0 && hfinfo.nFileSizeLow == 0)
     return false;
   return true;
-#else   // cygwin or Unix.
+#else   // Cygwin or Unix.
   struct stat statbuf;
   assertx(!fstat(fd, &statbuf));
   return !HH_POSIX(isatty)(fd) && !S_ISFIFO(statbuf.st_mode) && !S_ISSOCK(statbuf.st_mode);

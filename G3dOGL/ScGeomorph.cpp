@@ -27,9 +27,8 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
 
   if (skip_degenerate && degenerate(verts) == 3) skip_degenerate = false;
 
-  // go around in one direction averaging normals
-  // of adjacent facets with same normal group
-  // the orientation is given by the ordering of va and vb.
+  // Go around in one direction averaging normals of adjacent facets with same normal group.
+  // The orientation is given by the ordering of va and vb.
 
   Simplex va = verts[i_vs];
   Simplex vb = verts[mod3(i_vs + 1)];
@@ -56,8 +55,7 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
       }
     }
 
-    // if the new fct is the corner_fct made a full circle
-    // nothing left to do.
+    // If the new fct is the corner_fct made a full circle, there is nothing left to do.
     if (fct == corner_fct) {
       done = true;
       break;
@@ -101,20 +99,17 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
           }
         }
       }
-    } else {  // regular facet
+    } else {  // Regular facet.
       // If new facet does not have same smoothing group.
       if (s_norgroup[fct->getVAttribute()] != ngroup) break;
 
       const int i_va = index(verts, va);
       if (verts[mod3(i_va + 1)] == vb) {
-        // va still before vb
-        // inconsistent with previous fct
-        // flip the normal.
+        // va still before vb, which is inconsistent with previous fct, so flip the normal.
         avg_norm -= fct_pnor[fct->getId()];
         vb = verts[mod3(i_va + 2)];
       } else {
-        // va after vb in the order
-        // consistent with the previous fct.
+        // va after vb in the order, which is consistent with the previous fct.
         avg_norm += fct_pnor[fct->getId()];
         vb = verts[mod3(i_va + 1)];
       }
@@ -125,9 +120,8 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
   }
 
   if (!done) {
-    // go around in other direction averaging normals
-    // of adjacent facets with same normal group
-    // the orientation is given by the ordering of va and vb.
+    // Go around in other direction averaging normals of adjacent facets with same normal group.
+    // The orientation is given by the ordering of va and vb.
     va = verts[mod3(i_vs + 2)];
     vb = verts[i_vs];
 
@@ -199,14 +193,11 @@ void ScGeomorph::vertSmoothNormal(Simplex vs, Simplex corner_fct, Vector& avg_no
 
         const int i_va = index(verts, va);
         if (verts[mod3(i_va + 1)] == vb) {
-          // va still before vb
-          // inconsistent with previous fct
-          // flip the normal.
+          // va still before vb, which is inconsistent with previous fct, so flip the normal.
           avg_norm -= fct_pnor[fct->getId()];
           va = verts[mod3(i_va + 2)];
         } else {
-          // va after vb in the order
-          // consistent with the previous fct.
+          // va after vb in the order, which is consistent with the previous fct.
           avg_norm += fct_pnor[fct->getId()];
           va = verts[mod3(i_va + 1)];
         }
@@ -227,7 +218,7 @@ void ScGeomorph::read(std::istream& is) {
   vnew.init(K.getMaxId(0));
   fct_pnor.init(K.getMaxId(2));
   // 3 verts per each face
-  // will use face and vert id for indexing.
+  // We will use face and vert id for indexing.
   nold.init(K.getMaxId(2) * 3);
   nnew.init(K.getMaxId(2) * 3);
   s_norgroup.init(K.materialNum());
@@ -304,8 +295,8 @@ void ScGeomorph::read(std::istream& is) {
     }
   }
 
-  // corner normals
-  // new normals.
+  // Corner normals.
+  // New normals.
   for (Simplex f : K.simplices_dim(2)) {
     const Vec3<Simplex> v = f->vertices();
     fct_pnor[f->getId()] = ok_normalized(cross(v[0]->getPosition(), v[1]->getPosition(), v[2]->getPosition()));

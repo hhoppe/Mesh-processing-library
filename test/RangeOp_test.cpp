@@ -24,7 +24,7 @@ int main() {
     SHOW(dot(ar1, ar2));
     SHOW(int(min(ar1)));
     SHOW(int(max(ar1)));
-    // clang: warning: taking the absolute value of unsigned type has no effect [-Wabsolute-value].
+    // Clang: warning: taking the absolute value of unsigned type has no effect [-Wabsolute-value].
     // SHOW(int(max_abs_element(ar1)));
     SHOW(sum(ar1));
     SHOW(sum(ar2));

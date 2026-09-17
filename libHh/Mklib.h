@@ -43,7 +43,7 @@ class Mklib : noncopyable {
     mk.translate(.5f, 0, 0);
     func(n);
   }
-  // radius 1 along +x axis, calls func with +x axis normal to circle;  s = sin(TAU / 2 / n) h = cos(TAU / 2 / n);
+  // Radius 1 along +x axis, calls func with +x axis normal to circle;  s = sin(TAU / 2 / n) h = cos(TAU / 2 / n);
   //  scaled to touch at (0, -s, 0) & (0, +s, 0) and center of circle at (-h, 0, 0).
   template <typename Func = void(int)> void circle_of(Func func, int n) {
     const float a = TAU / n, h = std::cos(a * .5f);
@@ -73,7 +73,7 @@ class Mklib : noncopyable {
       mk.rotate(Mk3d::Axis::z, a);
     }
   }
-  // radius 1 along +z axis, calls func with +x axis normal to circle;
+  // Radius 1 along +z axis, calls func with +x axis normal to circle;
   //  not scaled -> center of circle @(-1, 0, 0).
   template <typename Func = void(int)> void radius_ofU(Func func, int n) {
     const float a = TAU / n;

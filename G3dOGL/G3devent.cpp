@@ -160,7 +160,7 @@ void enter_aim() {
 
 void rotate_around() { Applyq(Frame::rotation(2, TAU / 2)); }
 
-// (area is determ / 2)
+// (Area is determinant / 2.)
 float determ2d(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3) {
   return p1[0] * p2[1] - p1[1] * p2[0] + p2[0] * p3[1] - p2[1] * p3[0] + p3[0] * p1[1] - p3[1] * p1[0];
 }
@@ -169,10 +169,9 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
   std::optional<SelectedVertex> selected_vertex;
   const Vec2<float> ps = yx.rev();
   const Vec2<int> win_dims = HB::get_extents();
-  // must be this close (4 pixel radius)
-  // for all vertices in that range, pick closest one
-  // select the first object for which this is true.
+  // Must be this close (4 pixel radius).  For all vertices in that range, pick the closest one.
   const float maxd = 5 * 1.42f / max(win_dims);
+  // Select the first object for which this is true.
   float minz = BIGFLOAT;
   for (int obn = g_obs.first; obn <= g_obs.last; obn++) {
     if (!g_obs[obn].visible()) continue;
@@ -196,11 +195,10 @@ std::optional<SelectedVertex> select_vertex(const Vec2<float>& yx) {
 std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
   std::optional<SelectedEdge> selected_edge;
   const Vec2<int> win_dims = HB::get_extents();
-  // must be this close (3 pixels)
-  // for all vertices in that range, pick closest one
-  // select the first object for which this is true.
   static const bool prune_backfacing = getenv_bool("PRUNE_BACKFACING");
+  // Must be this close (3 pixels).  For all vertices in that range, pick the closest one.
   const float maxd = 3.f / max(win_dims);
+  // Select the first object for which this is true.
   float minz = BIGFLOAT;
   for (int obn = g_obs.first; obn <= g_obs.last; obn++) {
     if (!g_obs[obn].visible()) continue;

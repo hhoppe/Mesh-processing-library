@@ -234,7 +234,7 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
 }
 
 template <typename T, int n> float Qem<T, n>::evaluate(const float* p) const {
-  // evaluation = v^T * A * v + 2 * b^T * v + c
+  // evaluation = v^T * A * v + 2 * b^T * v + c.
   T sum1 = T{0}, sum2 = T{0};
   {
     const T* pa = _a.data();

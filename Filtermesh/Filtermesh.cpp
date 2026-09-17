@@ -202,7 +202,7 @@ void do_createobject(Args& args) {
       mesh.update_string(v, "uv", csform_vec(str, uv));
     }
   } else if (ob_name == "cup64") {
-    // for ravg cup sdkmesh
+    // For ravg cup sdkmesh:
     // r1 = 0.396313    y1 = 0.436485
     // r2 = 0.249999    y2 = -0.480285
     // u_min = 0.013743 u_max = 0.982733
@@ -355,7 +355,7 @@ GMesh geometric_merge(const GMesh& mo) {
   // Use bbox so that error between
   //  Vertex x 0.00502754 31.3495 30.7251
   //  Vertex x 0.00504071 31.3495 30.7251
-  // is irrelevant if the bbox is of size 200.
+  // is irrelevant if the bbox is of size 200..
   // Thus, gmerge is always more robust than do_froma3d().
   const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_small_cube();
@@ -1116,11 +1116,11 @@ void do_trisubdiv() {
     }
     if (nesharp >= 3) {  // A corner: unmoved.
       continue;
-    } else if (nesharp == 2 && ne == 2) {  // boundary corner: unmoved
+    } else if (nesharp == 2 && ne == 2) {  // A boundary corner: unmoved.
       continue;
-    } else if (nesharp == 2) {  // crease: cubic bspline boundary
+    } else if (nesharp == 2) {  // A crease: cubic bspline boundary.
       h = hsharp + 6.f * Homogeneous(mesh.point(v));
-    } else {  // interior: quartic bspline interior
+    } else {  // An interior vertex: quartic bspline interior.
       // If a dart (nesharp == 1), treat as an interior vertex.
       const int n = ne;
       const float a = 5.f / 8.f - square((3.f + 2.f * std::cos(TAU / n)) / 8.f);
@@ -1160,7 +1160,7 @@ void do_trisubdiv() {
 // *** silsubdiv
 
 void do_silsubdiv() {
-  // e.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark -silsubdiv -silsubdiv | G3d - -st cat -key De
+  // E.g.: Filtermesh ~/data/mesh/cat.m -angle 40 -mark -silsubdiv -silsubdiv | G3d - -st cat -key De
   Warning("Older (simpler) rules than in Subdivfit (SubMesh)");
   HH_TIMER("_silsubdiv");
   const Array arf(mesh.faces());
@@ -2445,7 +2445,7 @@ void do_obtusesplit() {
   const float max_elen = max(mesh.edges() | views::transform([&](Edge e) { return mesh.length(e); })) * 1.1f;
   is_sphere = false;  // ?
   // TAU / 4 would be critical point in plane for infinite recursion. actually, 1.3f seems to already cause problems.
-  constexpr float thresh_ang = rad_from_deg(135.f);  // TAU * (3.f / 8.f)
+  constexpr float thresh_ang = rad_from_deg(135.f);  // TAU * (3.f / 8.f).
   HPqueue<Edge> pqe;
   pqe.reserve(mesh.num_edges());
   for (Edge e : mesh.edges()) pqe.enter_unsorted(e, max_elen - mesh.length(e));
@@ -2735,7 +2735,7 @@ void do_volumec() { reducecrit = EReduceCriterion::volume; }
 
 void do_qemc() { reducecrit = EReduceCriterion::qem; }
 
-// *** Point sampling.
+// *** Point sampling
 
 void output_point(const Point& p, const Vector& n) {
   A3dElem el(A3dElem::EType::point, 0);
@@ -3519,7 +3519,7 @@ float signed_distance(const Point& p, Face f) {
   }
   switch (nzero) {
     case 0: {  // Triangle interior.
-      // == dot(get_normal(triangle), p - clp)
+      // == dot(get_normal(triangle), p - clp).
       return sqrt(d2) * sign(dot(get_normal_dir(triangle), p - clp));
     }
     case 1: {  // An edge.
@@ -3543,7 +3543,7 @@ float signed_distance(const Point& p, Face f) {
 }
 
 void do_signeddistcontour(Args& args) {
-  // e.g.:
+  // E.g.:
   // Filtermesh ~/data/mesh/icosahedron.m -signeddistcontour 50 | G3d - -key DmDe
   // Filtermesh -createobject torus1 -transf "`Filterframe -create_euler 18 23 37`" -triang -signeddistcontour 40 | G3d - -key DmDe
   const int grid = args.get_int();
@@ -3576,7 +3576,7 @@ Point compute_hull_point(Vertex v, float offset) {
   // Recall that all variables are expected to be >= 0, annoying!
   //  workaround: translate all variables into x, y, z > 0 octant
   // simplx: epsilon is not scale-invariant -> scale data as well.
-  // p'= p * scale + translate .   p' in range [border, border + size]
+  // p'= p * scale + translate;   p' in range [border, border + size].
   float scale;
   Vector translate;
   const float transf_border = 10.f;  // Allow the vertex to go anywhere.
@@ -3974,12 +3974,12 @@ void do_shootrays(Args& args) {
     if (mindist == BIGFLOAT) {
       Warning("No ray intersection");
       mindist = 0.f;
-      // mindist = .02f;  // for debugging
+      // const mindist = .02f;  // For debugging.
     } else {
       HH_SSTAT(Smindistc, mindist);
       HH_SSTAT(Smindisto, (mindist / xform[0, 0]));
     }
-    // Point minpint = p + nor * mindist;
+    // const Point minpint = p + nor * mindist;
     if (up_oa3d) {
       A3dElem el(A3dElem::EType::polyline, 0);
       el.push(A3dVertex(p * xform_inverse, nor, A3dVertexColor(Pixel::black())));

@@ -66,8 +66,8 @@ template <typename T> T roundtrip(T v, int digits = -1) {
   if (digits >= 0) {
     if (0) {
       assertx(ss << std::setprecision(digits));
-      // std::setprecision(std::numeric_limits<T>::digits10);      // 6 for float; 15 for double
-      // std::setprecision(std::numeric_limits<T>::max_digits10);  // 9 for float; 17 for double
+      // std::setprecision(std::numeric_limits<T>::digits10);      // 6 for float; 15 for double.
+      // std::setprecision(std::numeric_limits<T>::max_digits10);  // 9 for float; 17 for double.
     }
     auto old_precision = ss.precision(digits);
     assertx(old_precision == 6);
@@ -92,10 +92,10 @@ void test_io() {
   // 7 digits of precision are insufficient, in either sform("%.7g") or ostream << setprecision(7).
   // 8 digits are mostly sufficient; e.g. not true of numbers between 1000 and 1024.
   // 1023.9932861328125f from https://randomascii.wordpress.com/2012/02/11/they-sure-look-equal/
-  // printf("%1.8e\n", d);   // Round-trippable float, always with an exponent
-  // printf("%.9g\n", d);    // Round-trippable float, shortest possible
-  // printf("%1.16e\n", d);  // Round-trippable double, always with an exponent
-  // printf("%.17g\n", d);   // Round-trippable double, shortest possible
+  // printf("%1.8e\n", d);   // Round-trippable float, always with an exponent.
+  // printf("%.9g\n", d);    // Round-trippable float, shortest possible.
+  // printf("%1.16e\n", d);  // Round-trippable double, always with an exponent.
+  // printf("%.17g\n", d);   // Round-trippable double, shortest possible.
   for (const float f : concatenate(ar1eps, V(1023.9932861328125f), V(1023.9933471679687f),
                                    V(0.2288884f, 0.228888392f, 0.228888407f))) {
     const float f2 = roundtrip(f, 9);  // Was 7; in principle 9 is required!  (17 is sufficient for double.)

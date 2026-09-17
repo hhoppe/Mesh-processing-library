@@ -48,7 +48,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   //   and threadsafe C version in https://github.com/chokkan/liblbfgs )
   // (_m not constexpr because V() later accesses it as a const reference)
   const int _m = 6;          // Number of stored prior gradients and differences; recommended range 3..7.
-  const double _eps = 1e-6;  // mag(_g) < _eps*max(1., mag(_x)); default 1e-5 in github.com/chokkan/liblbfgs
+  const double _eps = 1e-6;  // mag(_g) < _eps*max(1., mag(_x)); default 1e-5 in github.com/chokkan/liblbfgs.
   Array<double> _g;          // The current gradient.
   Array<double> _tmp;        // Temporary storage.
   Array<double> _xinit;      // Value of _x at the start of the line search.

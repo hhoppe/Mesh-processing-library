@@ -144,7 +144,7 @@ struct SrVsplit {
 };
 
 struct SrRefineParams {
-  // Frame _framei;            // to compute screen-space projections.
+  // Frame _framei;            // To compute screen-space projections.
   int _nplanes;                // Number of view frustum planes.
   Vec<LinearFunc, 6> _planes;  // The view frustum planes.
   Point _eye;                  // The eyepoint in world coordinates (frame.p()).
@@ -177,7 +177,7 @@ class SrViewParams {
   // Yonder distance (along frame.v(0) from frame.p()).  Set < 0.f to disable.
   void set_yonder(float yonder);  // Default -1.f.
   // Screen-space tolerance is screen_thresh * min_window_diameter * 0.5f;
-  // in other words, the screen-space tolerance in pixels is
+  // In other words, the screen-space tolerance in pixels is
   //  screen_thresh * min(nxpixels, nypixels) * 0.5f.
   void set_screen_thresh(float screen_thresh);  // Default 0.f.
  private:

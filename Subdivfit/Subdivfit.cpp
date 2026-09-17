@@ -50,7 +50,7 @@ float areafac = 0.f;
 int verb = 1;
 
 std::optional<WFile> wf_record;
-constexpr float k_min_cos = -1.f / 3.f;  // acos(109.471) == tetrahedron angle
+constexpr float k_min_cos = -1.f / 3.f;  // Value acos(109.471) == tetrahedron angle.
 
 Array<Point> co;  // Points.
 GMesh gmesh;      // Current control mesh.
@@ -369,7 +369,7 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Vector, v_grad);
 
 // Test using:
 // Filtermesh ~/data/recon/new/cactus.crep1e-5.m -angle 55 -mark | Subdivfit -mf - -fi ~/data/recon/new/cactus.3337.pts -verb 3 -fgfit 60 >~/tmp/cactus.fgfit.m && G3dcmp ~/data/recon/new/cactus.nsub2.crep1e-5p.0.m ~/tmp/cactus.fgfit.m -key DmDe
-// verdict: not stable enough; often jumps out of initial minimum to worse state; use do_gfit instead.
+// Verdict: not stable enough; often jumps out of initial minimum to worse state; use do_gfit instead.
 void do_fgfit(Args& args) {
   HH_TIMER("_fgfit");
   const int niter = args.get_int();
@@ -439,12 +439,9 @@ void do_fgfit(Args& args) {
         g_force_global_project = bu_force_global_project;
       }
       if (verb >= 2) analyze_mesh(sform("it%2d/%-2d", _iter, _niter));
-      // float edis = float(get_edis()); ?
-      // float espr = float(get_espr());
-      // float earea = float(get_earea());
       {
         const double prev_etot = _etot;
-        _etot = get_etot();  // edis + espr + earea;
+        _etot = get_etot();
         if (_etot > prev_etot * 1.1) {
           showdf("Large increase in energy after it%d, so next iteration uses global projection\n", _iter);
           _desire_global_project = true;
@@ -457,7 +454,7 @@ void do_fgfit(Args& args) {
         _smesh.mesh().get_vertices(gscmf[i], va);
         assertx(va.num() == 3);
         Vector vtop = co[i] - gclp[i];
-        // this is faster than compose_c_mvcv(tricomb, comb);
+        // This is faster than compose_c_mvcv(tricomb, comb).
         for_int(j, 3) {
           float a = -2 * gbary[i][j];
           if (!a) continue;
@@ -883,8 +880,7 @@ bool try_opt(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, c
   const float anticipation = 3;
   const int maxtni = 10;
   const int minni = 6, maxni = 12;
-  // It is worthwhile investing into the fit since it may eliminate
-  // future operations.
+  // It is worthwhile investing into the fit since it may eliminate future operations.
   int ni;
   for (ni = 0; ni < maxtni; ni++) {
     optimize_local(smesh, setmv, setpts, mvcvih, rss1);
@@ -1144,7 +1140,7 @@ EResult try_eswa(Edge eg, double& edrss) {
 
 EResult try_espl(Edge eg, double& edrss) {
   // SHOW("try_espl");
-  // always legal
+  // Always legal.
   const bool is_sharp = gmesh.flags(eg).flag(GMesh::eflag_sharp);
   Vertex v1g = gmesh.vertex1(eg), v2g = gmesh.vertex2(eg);
   Vertex vo1g = gmesh.side_vertex1(eg), vo2g = gmesh.side_vertex2(eg);

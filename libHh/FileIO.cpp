@@ -220,7 +220,7 @@ class ocfstream : public std::ostream {
 
 }  // namespace
 
-// *** RFile::Implementation and WFile::Implementation.
+// *** RFile::Implementation and WFile::Implementation
 
 #if defined(IO_USE_FSTREAM)
 
@@ -288,7 +288,7 @@ class WFile::Implementation {
 #error
 #endif
 
-// *** RFile.
+// *** RFile
 
 RFile::RFile(string filename) {
   std::scoped_lock lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
@@ -363,7 +363,7 @@ RFile::~RFile() {
   }
 }
 
-// *** WFile.
+// *** WFile
 
 WFile::WFile(string filename) {
   std::scoped_lock lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
@@ -413,7 +413,7 @@ WFile::~WFile() {
   }
 }
 
-// *** Misc.
+// *** Misc
 
 bool file_exists(const string& name) {
 #if defined(_WIN32)
@@ -646,7 +646,7 @@ void TmpFile::write_to(std::ostream& os) const {
   os << fi().rdbuf() << std::flush;  // Write the temporary file into the output stream.
 }
 
-// *** Quoting.
+// *** Quoting
 
 // Notes on cygwin double-quote problem:
 //
@@ -919,7 +919,7 @@ std::ostream cnull{&null_obj};
 
 namespace {
 
-// *** my_popen(), my_pclose().
+// *** my_popen(), my_pclose()
 
 #if !defined(_WIN32)
 

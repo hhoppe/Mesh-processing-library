@@ -5,7 +5,7 @@
 //       1         2         3         4         5         6         7         8         9        10        11
 // 45678901234567890123456789012345678901234567890123456789012345678901234567890123456789012345678901234567890123456789
 
-// *** Pre-header.
+// *** Pre-header
 
 // This macro definition has no effect if `#include "libHh/Hh.h"` lies after `#include <Windows.h>`.
 #if defined(_WIN32)
@@ -38,7 +38,7 @@
 #define HH_DEBUG
 #endif
 
-// *** Standard headers.
+// *** Standard headers
 
 #include <algorithm>  // min(), max()
 #include <cmath>      // sqrt(), cos(), pow(), etc.
@@ -56,11 +56,11 @@
 #include <tuple>      // tuple
 #include <utility>    // swap(), forward(), move(), declval<>, pair<>, index_sequence<>
 
-// *** Variadic macros.
+// *** Variadic macros
 
 #include "libHh/VariadicMacros.h"  // HH_MAP_REDUCE()
 
-// *** Language portability.
+// *** Language portability
 
 #define HH_EAT_SEMICOLON static_assert(true)  // Redundant declaration to swallow subsequent semicolon.
 
@@ -81,7 +81,7 @@
 #endif
 
 #if defined(_MSC_VER) && !defined(HH_NO_LIB_REFERENCES)
-#define HH_REFERENCE_LIB(libstring) HH_PRAGMA(comment(lib, libstring))  // e.g.: HH_REFERENCE_LIB("user32.lib");
+#define HH_REFERENCE_LIB(libstring) HH_PRAGMA(comment(lib, libstring))  // E.g.: HH_REFERENCE_LIB("user32.lib");
 #else
 #define HH_REFERENCE_LIB(libstring) HH_EAT_SEMICOLON
 #endif
@@ -182,13 +182,14 @@ constexpr bool k_sanitize = false;
 // NOLINTNEXTLINE(misc-redundant-expression): both macros may be zero.
 static_assert(k_sanitize || !(HH_HAS_ASAN || HH_HAS_TSAN), "Sanitizer active but HH_SANITIZE undefined.");
 
-// *** Syntactic sugar.
+// *** Syntactic sugar
 
 #define for_int(index, stop) for ([[maybe_unused]] const int index : hh::range<int>(stop))
 #define for_intL(index, start, stop) for ([[maybe_unused]] const int index : hh::range<int>(start, stop))
 
-// *** Check for identifier conflicts.
+// *** Check for identifier conflicts
 
+// Test using:
 // make cppinc='-DTEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE=1 -D_HAS_STD_BYTE=0' -C ~/git/hh_src -j12 both
 // (We use "_HAS_STD_BYTE=0" to overcome WIN32 name collision on "byte" between <urlmon.h> and std.)
 #if defined(TEST_IF_MY_IDENTIFIERS_CONFLICT_WITH_STD_NAMESPACE)
@@ -270,17 +271,17 @@ namespace hh {}
 using namespace hh;
 #endif
 
-// *** Ensure hh::details::hh_init() is called.
+// *** Ensure hh::details::hh_init() is called
 
 #if !defined(HH_NO_HH_INIT)
 #include "libHh/Hh_init.h"  // NOLINT(misc-header-include-cycle): it includes Hh.h to be self-contained.
 #endif
 
-// *** Begin namespace.
+// *** Begin namespace
 
 namespace hh {
 
-// *** Import some standard C++ names into the hh namespace.
+// *** Import some standard C++ names into the hh namespace
 
 // Common types:
 using std::make_unique;
@@ -322,18 +323,18 @@ namespace ranges = std::ranges;
 template <typename R> using range_value_t = ranges::range_value_t<R>;
 namespace views = std::views;
 
-// *** Useful type abbreviations.
+// *** Useful type abbreviations
 
 using uchar = unsigned char;
 using ushort = unsigned short;
 
-// *** Forward declaration of implementation details.
+// *** Forward declaration of implementation details
 
 namespace details {
 template <typename T> struct sum_type;
 }  // namespace details
 
-// *** Generalized casting.
+// *** Generalized casting
 
 // For use in upcasting to a base class, converting nullptr, or declaring type in ternary operand.
 template <typename Dest>
@@ -363,14 +364,14 @@ template <typename From, typename U>
 using copy_const_t =
     std::conditional_t<std::is_const_v<std::remove_pointer_t<std::remove_reference_t<From>>>, const U, U>;
 
-// *** Constants.
+// *** Constants
 
 constexpr float BIGFLOAT = 1e30f;                // Note: different from FLT_MAX or (INFINITY == HUGE_VALF).
 constexpr float TAU = 6.2831853071795864769f;    // Mathematica: N[2 Pi, 20]; see https://tauday.com/
 constexpr double D_TAU = 6.2831853071795864769;  // Mathematica: N[2 Pi, 20]; see https://tauday.com/
-// #undef PI  // instead, use TAU / 2
+// #undef PI  // Instead, use TAU / 2.
 
-// *** Concepts.
+// *** Concepts
 
 // Type that behaves like a number; specialize for any custom scalar type.
 template <typename T> inline constexpr bool is_numeric_v = std::is_arithmetic_v<T>;
@@ -399,12 +400,12 @@ inline constexpr bool enable_cloneable =
 template <typename T>
 concept cloneable = std::constructible_from<T, const T&> && enable_cloneable<T>;
 
-// *** Utility classes.
+// *** Utility classes
 
 // Derive from this class to disable copy constructor and copy assignment.
 struct noncopyable;
 
-// *** Assertions, warnings, errors, debug.
+// *** Assertions, warnings, errors, debug
 
 #if defined(HH_DEBUG)
 constexpr bool k_debug = true;  // Convenience variable to avoid introducing "#if defined(HH_DEBUG)".
@@ -454,7 +455,7 @@ extern int g_unoptimized_zero;
 #define HH_CHECK_BOUNDS(i, n) (void(0))
 #endif
 
-// *** Output functions.
+// *** Output functions
 
 #if 0
 {
@@ -534,7 +535,7 @@ template <typename T> constexpr bool has_ostream_eol_v = has_ostream_eol_aux_v<s
   std::ostream& operator<<(std::ostream& os, const __VA_ARGS__& c) { return os << hh::stream_range(c); } \
   HH_EAT_SEMICOLON
 
-// *** Inline definitions.
+// *** Inline definitions
 
 // Avoid warnings of unused variables.
 template <typename... A> constexpr void dummy_use(const A&...) {}
@@ -620,7 +621,7 @@ template <typename T> [[nodiscard]] std::decay_t<T> clone(T&& v) {
   return std::decay_t<T>(std::forward<T>(v));  // The cast is necessary for an explicit copy constructor.
 }
 
-// *** Functions defined in Hh.cpp.
+// *** Functions defined in Hh.cpp
 
 // Register a function to be called by hh_clean_up(); used by timers, statistics, and warnings.
 void hh_at_clean_up(void (*function)());
@@ -747,7 +748,7 @@ void show_call_stack();
 // For Unix _exit(code).
 [[noreturn]] void exit_immediately(int code);
 
-// *** Hh_main.cpp.
+// *** Hh_main.cpp
 
 // Return absolute time, in secs (accuracy at least ~.001).
 [[nodiscard]] double get_precise_time();

@@ -26,7 +26,7 @@ HH_INITIALIZE_POOL(Combvh);
 class Mvcvh : public Map<Vertex, Combvh> {
  public:
   [[nodiscard]] bool is_convolution() const;               // Check that the combination is affine.
-  [[nodiscard]] Combvh compose_c(const Combvh& ci) const;  // co = ci * this
+  [[nodiscard]] Combvh compose_c(const Combvh& ci) const;  // Returns co = ci * this.
   // Compose two maps to produce one; die unless mconv.is_convolution().
   void compose(const Mvcvh& mconv);  // this = mconv * this
 };

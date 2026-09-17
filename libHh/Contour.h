@@ -336,7 +336,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
           n2->_cubestate = Node::ECubestate::queued;
           _queue.enqueue(en);
         }
-      } else if (!b_no_border) {  // output boundary
+      } else if (!b_no_border) {  // Output boundary.
         cd[d] = i;
         auto& poly = _tmp_poly;
         poly.init(0);
@@ -686,7 +686,7 @@ class Contour2D : public ContourBase<2> {
           n->_cubestate = Node::ECubestate::queued;
           _queue.enqueue(en);
         }
-      } else if (!b_no_border) {  // output boundary
+      } else if (!b_no_border) {  // Output boundary.
         cd[d] = i;
         auto& poly = _tmp_poly;
         poly.init(0);

@@ -159,7 +159,7 @@ template <typename T> [[nodiscard]] Image as_image(CMatrixView<T> matrix) {
   return image;
 }
 
-// *** Conversions between YUV and RGB color spaces.
+// *** Conversions between YUV and RGB color spaces
 
 // Image consisting of an 8-bit luminance matrix and a 2*8-bit chroma matrix at half spatial resolution.
 class Nv12 {
@@ -268,7 +268,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v);
 
 void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue, Nv12View new_nv12);
 
-// *** Image IO.
+// *** Image IO
 
 #if 0  // Omitting WIC may allow writing image domains larger than 4 GiB.
 #define HH_NO_IMAGE_WIC

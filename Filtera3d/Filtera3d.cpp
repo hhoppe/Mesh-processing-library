@@ -90,7 +90,7 @@ struct S_tess {
 
 struct S_inter {
   Bbox<float, 3> bbox;               // Global bounding box of all polygons.
-  Array<unique_ptr<Polygon>> vpoly;  // (not Array<Polygon> as resizing would invalidate pointers)
+  Array<unique_ptr<Polygon>> vpoly;  // (Not Array<Polygon> as resizing would invalidate pointers.)
   int nedges;
 } g_inter;
 
@@ -114,7 +114,7 @@ HH_STAT_NP(Sparea);     // Polygon area.
 HH_STAT_NP(Splanar);    // Polygon planarity (0 = planar).
 HH_STAT_NP(Sptnor);     // Point, existence of a normal.
 Bbox<float, 3> g_bbox;  // Box extent.
-float fsplit;           // fsplit=split; { fsplit*=speedup; }
+float fsplit;           // Initialized from `split`, then scaled by speedup.
 Vec2<float> colorheight;
 A3dVertexColor input_color;
 
@@ -460,7 +460,7 @@ bool loop(A3dElem& el) {
         ar_p[i] = el[i].p + disp * fac;
       }
       for_int(i, el.num()) el[i].p = ar_p[i];
-      // unnecessary: if (closed) el[el.num() - 1].p = el[0].p;
+      // Unnecessary: if (closed) el[el.num() - 1].p = el[0].p;
     }
   }
   for_int(i, el.num()) {
@@ -555,7 +555,7 @@ bool loop(A3dElem& el) {
 using KD = Kdtree<Polygon*, 3>;
 
 void compute_intersect() {
-  // e.g.:  Filtermesh ~/data/mesh/peedy.orig.m -toa | Filtera3d -inter | G3dOGL ~/data/mesh/peedy.orig.m -input -key NN
+  // E.g.:  Filtermesh ~/data/mesh/peedy.orig.m -toa | Filtera3d -inter | G3dOGL ~/data/mesh/peedy.orig.m -input -key NN
   if (!g_inter.vpoly.num()) return;
   const Frame xform = g_inter.bbox.get_frame_to_cube();
   KD kd(8);

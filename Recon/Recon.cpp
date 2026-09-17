@@ -269,7 +269,7 @@ void process_principal() {
     if (ioo) pctrans[i] = frame;
     Snei.enter(n);
     const float len0 = mag(frame.v(0)), len1 = mag(frame.v(1)), len2 = mag(frame.v(2));
-    assertx(len2 > 0.f);  // principal_components() should do this
+    assertx(len2 > 0.f);  // The function principal_components() should do this
     Slen0.enter(len0);
     Slen1.enter(len1);
     Slen2.enter(len2);
@@ -754,7 +754,7 @@ int main(int argc, const char** argv) {
   // We close iom here so that the mesh comes after everything else in the file.
   if (iom && is_3D) {
     for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform_inverse);
-    // mesh.write(assertx(dynamic_cast<WSA3dStream*>(&iom->oa3d()))->os());  // note: would require RTTI
+    // mesh.write(assertx(dynamic_cast<WSA3dStream*>(&iom->oa3d()))->os());  // Note: would require RTTI.
     mesh.write(down_cast<WSA3dStream*>(&iom->oa3d())->os());
   }
   close_mk(iom);

@@ -6,7 +6,7 @@
 
 namespace hh {
 
-// e.g.:  unroll<6>([&](int j) { _a[j] = min(l._a[j], r._a[j]); });
+// E.g.:  unroll<6>([&](int j) { _a[j] = min(l._a[j], r._a[j]); });
 template <int n, typename Func> constexpr void unroll(Func func) {
   [&]<int... Is>(std::integer_sequence<int, Is...>) { (func(Is), ...); }(std::make_integer_sequence<int, n>());
 }

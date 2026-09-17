@@ -31,7 +31,7 @@ int main() {
     SHOW(ar.num());
     ar[0] = nullptr;
     SHOW("after 0 reset");
-    // Array<unique_ptr<A>> ar2; ar2 = ar;  // compile error as expected
+    // Array<unique_ptr<A>> ar2; ar2 = ar;  // Compile error as expected.
     ar.clear();
     SHOW(ar.num());
   }

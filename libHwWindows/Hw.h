@@ -2,10 +2,10 @@
 #ifndef MESH_PROCESSING_LIBHWWINDOWS_HW_H_
 #define MESH_PROCESSING_LIBHWWINDOWS_HW_H_
 
-// #define WIN32_LEAN_AND_MEAN  // not possible
+// #define WIN32_LEAN_AND_MEAN  // Not possible.
 #undef NOGDI
 #define Polygon Win32_Polygon  // Avoid name collision on symbol Polygon.
-#include <Windows.h>           // required by OpenGL
+#include <Windows.h>           // Required by OpenGL.
 #undef Polygon
 #undef small  // <windows.h> defines 'small':  "#define small char" in ./shared/rpcndr.h
 

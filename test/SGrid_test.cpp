@@ -84,7 +84,7 @@ int main() {
   }
   {
     SHOW(sizeof(Vec<int, 0>));
-    // SHOW(sizeof(SGrid<int>));  // too few template arguments
+    // SHOW(sizeof(SGrid<int>));  // Too few template arguments.
     SHOW(sizeof(SGrid<int, 0>));
     SHOW(sizeof(SGrid<int, 1>));
     SHOW(sizeof(SGrid<int, 2>));

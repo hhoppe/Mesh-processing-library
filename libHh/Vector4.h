@@ -196,7 +196,7 @@ class Vector4 {
     return estimate;
   }
 
-#else   // neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON)
+#else   // Neither defined(HH_VECTOR4_SSE) nor defined(HH_VECTOR4_NEON).
   Vector4(float x, float y, float z, float w) { _c[0] = x, _c[1] = y, _c[2] = z, _c[3] = w; }
   void load_unaligned(const float* pSrc) { for_int(c, 4) _c[c] = pSrc[c]; }
   void store_unaligned(float* pDst) const { for_int(c, 4) pDst[c] = _c[c]; }
@@ -286,7 +286,7 @@ inline Vector4 interp(const Vector4& v1, const Vector4& v2, float f1 = .5f) { re
 // _mm_cvtepu8_epi32 : expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1)
 
 inline Vector4 to_Vector4_raw(const Vec4<uint8_t>& p) {
-  // avoids a shuffle, unlike _mm_set1_epi32(*reinterpret_cast<const int*>(p))
+  // Avoids a shuffle, unlike _mm_set1_epi32(*reinterpret_cast<const int*>(p)).
   const __m128i in = _mm_castps_si128(_mm_load_ss(reinterpret_cast<const float*>(p.data())));
   const __m128i t1 = _mm_cvtepu8_epi32(in);  // Expand 4 unsigned 8-bit to 4 unsigned 32-bit (SSE4.1).
   const __m128 t2 = _mm_cvtepi32_ps(t1);     // Convert four signed 32-bit to floats.

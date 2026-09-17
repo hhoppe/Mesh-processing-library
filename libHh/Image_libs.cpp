@@ -376,12 +376,10 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
 
   // Step 5: Start decompressor:
   jpeg_start_decompress(&cinfo);
-  // We can ignore the return value since suspension is not possible
-  // with the stdio data source.
-  // We may need to do some setup of our own at this point before reading
-  // the data.  After jpeg_start_decompress() we have the correct scaled
-  // output image dimensions available, as well as the output colormap
-  // if we asked for color quantization.
+  // We can ignore the return value since suspension is not possible with the stdio data source.
+  // We may need to do some setup of our own at this point before reading the data.
+  // After jpeg_start_decompress() we have the correct scaled output image dimensions available, as well as the
+  // output colormap if we asked for color quantization.
   image.init(V(int(cinfo.output_height), int(cinfo.output_width)));
   image.set_zsize(cinfo.output_components);
 
@@ -391,10 +389,9 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
   while (cinfo.output_scanline < cinfo.output_height) {
     cprogress.update(float(cinfo.output_scanline) / cinfo.output_height);
     const int y = cinfo.output_scanline;
-    // jpeg_read_scanlines expects an array of pointers to scanlines.
-    // Here the array is only one element long, but you could ask for
-    // more than one scanline at a time if that is more convenient.
-    JSAMPROW row_pointer[1];  // pointer to JSAMPLE row[s]
+    // jpeg_read_scanlines expects an array of pointers to scanlines.  Here the array is only one element long,
+    // but you could ask for more than one scanline at a time if that is more convenient.
+    JSAMPROW row_pointer[1];  // Pointer to JSAMPLE row[s].
     row_pointer[0] = row.data();
     assertt(jpeg_read_scanlines(&cinfo, row_pointer, 1) == 1);
     const uchar* p = row.data();
@@ -438,12 +435,12 @@ void ImageLibs::read_jpg(Image& image, FILE* file) {
 #if 0
 
 struct jpeg_marker_struct {
-  jpeg_saved_marker_ptr next;  // next in list, or nullptr
-  UINT8 marker;                // marker code: JPEG_COM, or JPEG_APP0 + n
-  unsigned original_length;    // # bytes of data in the file
-  unsigned data_length;        // # bytes of data saved at data[]
-  JOCTET FAR* data;            // the data contained in the marker
-  // the marker length word is not counted in data_length or original_length
+  jpeg_saved_marker_ptr next;  // Next in list, or nullptr.
+  UINT8 marker;                // Marker code: JPEG_COM, or JPEG_APP0 + n.
+  unsigned original_length;    // Number of bytes of data in the file
+  unsigned data_length;        // Number of bytes of data saved at data[].
+  JOCTET FAR* data;            // The data contained in the marker.
+  // The marker length word is not counted in data_length or original_length.
 };
 
 // Control saving of COM and APPn markers into marker_list.
@@ -564,10 +561,10 @@ void ImageLibs::write_jpg(const Image& image, FILE* file) {
     const int y = cinfo.next_scanline;
     uchar* p = row.data();
     for_int(x, image.xsize()) for_int(z, image.zsize()) { *p++ = image[y, x][z]; }
-    // jpeg_write_scanlines expects an array of pointers to scanlines.
+    // The function jpeg_write_scanlines expects an array of pointers to scanlines.
     // Here the array is only one element long, but you could pass
     // more than one scanline at a time if that is more convenient.
-    JSAMPROW row_pointer[1];  // pointer to JSAMPLE row[s]
+    JSAMPROW row_pointer[1];  // Pointer to JSAMPLE row[s].
     row_pointer[0] = row.data();
     assertt(jpeg_write_scanlines(&cinfo, row_pointer, 1) == 1);
   }
@@ -758,19 +755,19 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
         assertt(i < bufsize);
         c = buf[i++];
         // showf("at %d: (0, %d)\n", i - 2, c);
-        // cannot be "switch (c)" because of embedded "break"
+        // We cannot use "switch (c)" because of the embedded for-loop break.
         if (c == 0) {  // End of row.
           assertw(x == image.xsize());
           x = 0;
           y++;
-        } else if (c == 1) {  // end of image
+        } else if (c == 1) {  // End of image.
           // SHOW(y, x);
           assertw(x == 0 && y == image.ysize());
           assertw(i == bufsize);
           break;
-        } else if (c == 2) {  // move to (+dx, +dy)
+        } else if (c == 2) {  // Move to (+dx, +dy).
           assertt(false);     // Not implemented.
-        } else {              // use next c pixels literally
+        } else {              // Use next c pixels literally.
           const int count = int(c);
           for_int(j, count) {
             assertt(i < bufsize);
@@ -790,7 +787,7 @@ void ImageLibs::read_bmp(Image& image, FILE* file) {
             if (0) assertw(c == 0);  // Does not seem true?
           }
         }
-      } else {  // repeat pixel c times
+      } else {  // Repeat pixel c times.
         const int count = int(c);
         assertt(i < bufsize);
         c = buf[i++];
@@ -859,7 +856,7 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
           buf.push(uchar(count));
           buf.push(image[yy, x][0]);
           x += count - 1;
-        } else {  // sequence of literal pixels
+        } else {  // Sequence of literal pixels.
           count = 3;
           for_intL(xx, x + 3, image.xsize()) {
             if (xx + 2 < image.xsize() && image[yy, xx + 1][0] == image[yy, xx][0] &&
@@ -999,11 +996,11 @@ void ImageLibs::read_png(Image& image, FILE* file) {
   png_infop info_ptr = assertt(png_create_info_struct(png_ptr));
   png_infop end_info = assertt(png_create_info_struct(png_ptr));
   png_init_io(png_ptr, file);
-  // tell the library if we have already read any bytes from header
+  // Tell the library if we have already read any bytes from header:
   // png_set_sig_bytes(png_ptr, 0);
-  // callback to handle user chunk data
+  // Callback to handle user chunk data:
   // png_set_read_user_chunk_fn(png_ptr, user_chunk_ptr, read_chunk_callback);
-  // callback used to control a progress meter.
+  // Callback used to control a progress meter:
   // png_set_read_status_fn(png_ptr, read_row_callback);
 
   if (0) {                                                // High-level read.
@@ -1022,7 +1019,7 @@ void ImageLibs::read_png(Image& image, FILE* file) {
     assertt(color_type != PNG_COLOR_TYPE_PALETTE);
     image.init(V(height, width));
     image.set_zsize(ncomp);
-    png_bytep* row_pointers;  // [height]
+    png_bytep* row_pointers;  // Indexed as [height].
     row_pointers = png_get_rows(png_ptr, info_ptr);
     parallel_for(range(image.ysize()), [&](const int y) {
       const uchar* buf = row_pointers[y];
@@ -1033,7 +1030,7 @@ void ImageLibs::read_png(Image& image, FILE* file) {
         if (ncomp < 4) pixel[3] = 255;
       }
     });
-  } else {  // lower-level read, directly into image.
+  } else {  // Lower-level read, directly into image.
     png_read_info(png_ptr, info_ptr);
     if (0) {
       // png_get_pHYs(png_ptr, info_ptr, &res_x, &res_y, &unit_type);
@@ -1150,10 +1147,10 @@ void ImageLibs::write_png(const Image& image, FILE* file) {
     png_set_rows(png_ptr, info_ptr, row_pointers.data());
     const int png_transforms = 0;
     png_write_png(png_ptr, info_ptr, png_transforms, nullptr);
-  } else {  // low-level write
+  } else {  // Low-level write.
     png_write_info(png_ptr, info_ptr);
     // png_set_filler(png_ptr, 0, PNG_FILLER_AFTER);
-    //  but no way to provide GRAY data with RGBA fill, so pack each row
+    //  but no way to provide GRAY data with RGBA fill, so pack each row.
     ConsoleProgress cprogress("Iwrite", image._silent_io_progress);
     Array<uchar> buffer(image.xsize() * image.zsize());
     for_int(y, image.ysize()) {

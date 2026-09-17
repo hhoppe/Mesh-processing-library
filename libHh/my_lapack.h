@@ -10,7 +10,7 @@
 #include <lapack.h>
 using lapack_int = lapack::integer;
 
-#elif !(defined(_WIN32) || defined(__CYGWIN__))  // unix
+#elif !(defined(_WIN32) || defined(__CYGWIN__))  // Unix.
 
 #if defined(__GNUC__) && !defined(__clang__)
 #pragma GCC diagnostic push
@@ -21,7 +21,7 @@ using lapack_int = lapack::integer;
 #pragma GCC diagnostic pop
 #endif
 
-#else  // cygwin or WIN32
+#else  // Cygwin or WIN32.
 
 #if defined(__CYGWIN__)
 using lapack_int = int;

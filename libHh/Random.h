@@ -17,14 +17,14 @@ class Random : noncopyable {
   explicit Random(uint32_t seedv = 0);
   ~Random();
   void seed(uint32_t seedv);
-  [[nodiscard]] unsigned get_unsigned();             // [0, std::numeric_limits<unsigned>::max()]
-  [[nodiscard]] uint64_t get_uint64();               // [0, std::numeric_limits<uint64_t>::max()]
-  [[nodiscard]] size_t get_size_t();                 // Range depends on size_t.
-  [[nodiscard]] unsigned get_unsigned(unsigned ub);  // [0, ub - 1]
-  [[nodiscard]] float unif();                        // [0.f, 1.f)
-  [[nodiscard]] double dunif();                      // [0., 1.)
-  [[nodiscard]] float gauss();                       // avg = 0.f, sdv = 1.f
-  [[nodiscard]] double dgauss();                     // avg = 0.,  sdv = 1.
+  [[nodiscard]] unsigned get_unsigned();             // Returns range [0, std::numeric_limits<unsigned>::max()].
+  [[nodiscard]] uint64_t get_uint64();               // Returns range [0, std::numeric_limits<uint64_t>::max()].
+  [[nodiscard]] size_t get_size_t();                 // Returns full range of size_t.
+  [[nodiscard]] unsigned get_unsigned(unsigned ub);  // Returns range [0, ub - 1].
+  [[nodiscard]] float unif();                        // Returns range [0.f, 1.f).
+  [[nodiscard]] double dunif();                      // Returns range [0., 1.).
+  [[nodiscard]] float gauss();                       // Returns samples with avg = 0.f, sdv = 1.f
+  [[nodiscard]] double dgauss();                     // Returns samples with avg = 0.,  sdv = 1.
   void discard(uint64_t count);
   using result_type = uint32_t;
   [[nodiscard]] result_type operator()();

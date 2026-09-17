@@ -272,7 +272,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
             float w = 1.f;
             if (!transform_filter_radial) {  // Normal tensor-product of kernels.
               for_int(c, 2) w *= float(kernels[c](dst_dyx[c]));
-            } else {  // single kernel based on radial distance
+            } else {  // Single kernel based on radial distance.
               w = float(kernels[0](mag(dst_dyx)));
             }
             // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, bndrules, bordervalue));
@@ -310,7 +310,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
             float w = 1.f;
             if (!transform_filter_radial) {  // Normal tensor-product of kernels.
               for_int(c, 2) w *= float(kernels[c](sample_offset[c]));
-            } else {  // single kernel based on radial distance
+            } else {  // Single kernel based on radial distance.
               w = float(kernels[0](mag(sample_offset)));
             }
             const Vec2<float> p = (convert<float>(yx) + .5f + sample_offset) / convert<float>(nm.dims());  // [0, 1]^2

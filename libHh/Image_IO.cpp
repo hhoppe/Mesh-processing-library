@@ -177,7 +177,7 @@ void Image::write_file_ffmpeg(const string& pfilename, bool bgra) const {
 void Image::read_file_i(const string& filename, bool bgra) {
   {
     // Problem of reading correct JPG image orientation based on EXIF image tag:
-    // e.g. vv ~/data/image/jpg/20151225_160800_exif_rotated.jpg
+    // E.g. vv ~/data/image/jpg/20151225_160800_exif_rotated.jpg
     // - WIC: getting orientation information seems a bit complex.
     //    Maybe: https://msdn.microsoft.com/en-us/library/windows/desktop/ee719904%28v=vs.85%29.aspx
     // - libjpeg: does not itself parse the EXIF tags.

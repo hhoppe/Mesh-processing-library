@@ -153,7 +153,7 @@ class Pool : noncopyable {
   }
 
  private:
-  static constexpr int k_pagesize = 16 * 1024;  // could refer to getpagesize();
+  static constexpr int k_pagesize = 16 * 1024;  // We could refer to getpagesize().
   static constexpr int k_malloc_overhead = 64;  // High just to be safe; a multiple of 16; was 32.
   static constexpr int k_chunksize = k_pagesize - k_malloc_overhead;
   const int sdebug = getenv_int("POOL_DEBUG");  // 0, 1, 2, or 3; may be uninitialized in constructor() and init().

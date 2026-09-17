@@ -362,7 +362,7 @@ class Multigrid : noncopyable {
       for_int(iter, niter) {
         if (0 || (grid_rhs.size() * 10 < k_parallel_thresh && 1)) {  // A simple sequential version.
           for_int(y, ny) for_int(x, nx) func_update(y, x);
-        } else {  // two-stage row-based synchronization to preserve determinism
+        } else {  // Two-stage row-based synchronization to preserve determinism.
           int nthreads = get_max_threads();
           const int sync_rows = 1;  // Rows per chunk to omit in the first pass to avoid synchronization issues.
           const int ychunk = max((ny - 1) / nthreads + 1, sync_rows * 2);
@@ -479,7 +479,7 @@ class Multigrid : noncopyable {
           } else {
             for (const auto& u : range(dims)) func_update(u);
           }
-        } else if (1 && D >= 2 && D <= 4) {  // even-odd parallelism on one axis; hypercolumns on the other dims; fast
+        } else if (1 && D >= 2 && D <= 4) {  // Even-odd parallelism on one axis; hypercolumns on other dims; fast.
           assertx(D <= 4);                   // Large D would make block_dims too small.
           const int overlap = 0;             // Amount to extend each slab side to obtain overlapping Gauss-Seidel.
           const Vec<int, D> voverlap = ntimes<D>(overlap);
@@ -534,7 +534,7 @@ class Multigrid : noncopyable {
             parallel_for(range((num_slabs + 1) / 2), func_relax_slab);
           }
           if (local_iter) break;
-        } else {  // parallelism across dim0 blocks; two-stage synchronization to preserve determinism
+        } else {  // Parallelism across dim0 blocks; two-stage synchronization to preserve determinism.
           int nthreads = get_max_threads();
           const int sync_rows = 1;  // Rows per chunk to omit in the first pass to avoid synchronization issues.
           int dim0 = dims[0], d0chunk = max((dims[0] - 1) / nthreads + 1, sync_rows * 2);

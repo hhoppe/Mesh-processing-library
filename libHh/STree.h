@@ -34,7 +34,7 @@ template <typename T, typename Less = std::less<T>> requires Copyable<T> class S
     const auto [it, is_new] = _s.insert(e);
     return is_new;
   }
-  [[nodiscard]] const T& retrieve(const T& e) const {  // or ret=T{}
+  [[nodiscard]] const T& retrieve(const T& e) const {  // Else returns T{}.
     auto it = _s.find(e);
     return it != end() ? *it : def();
   }

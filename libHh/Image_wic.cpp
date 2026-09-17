@@ -222,7 +222,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
   {
     com_ptr<IWICBitmapFrameDecode> frame_decode;
     AS(decoder->GetFrame(0, &frame_decode));
-    // HOW(RefCount(frame_decode));  // note: it is 2 because also referenced by decoder
+    // SHOW(RefCount(frame_decode));  // Note: it is 2 because also referenced by decoder.
     unsigned width = 0, height = 0;
     AS(frame_decode->GetSize(&width, &height));
     init(V(int(height), int(width)));
@@ -329,7 +329,7 @@ void Image::read_file_wic(const string& filename, bool bgra) {
 
 void Image::write_file_wic(const string& filename, bool bgra) const {
   string suf;
-  // previously had: if (suffix() == "" && file_requires_pipe(filename)) suf = "bmp";
+  // Previously had: if (suffix() == "" && file_requires_pipe(filename)) suf = "bmp";
   if (suf == "") suf = to_lower(get_path_extension(filename));
   if (suf == "") suf = suffix();
   if (suf == "") throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");
@@ -371,7 +371,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
     AS(wic_factory->CreateStream(&output_wic_stream));
     if (FAILED(output_wic_stream->InitializeFromFilename(utf16_from_utf8(filename).c_str(), GENERIC_WRITE)))
       throw std::runtime_error("Could not write image to file '" + filename + "'");
-    // output_stream = output_wic_stream;  // worked but fragile
+    // output_stream = output_wic_stream;  // Worked but fragile.
     AS(output_wic_stream->QueryInterface(IID_PPV_ARGS(&output_stream)));
   }
   assertx(output_stream);

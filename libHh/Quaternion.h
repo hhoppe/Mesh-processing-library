@@ -9,7 +9,7 @@ namespace hh {
 
 // A quaternion is a 4D algebraic representation.
 // Unit quaternions represent the rotation group SO(3) and thus represent orientations and rotations of objects in 3D,
-//  e.g. a transformation from one orthogonal Frame to another (with the same handedness and ignoring origins).
+//  E.g. a transformation from one orthogonal Frame to another (with the same handedness and ignoring origins).
 class Quaternion {
  public:
   Quaternion() { zero(); }
@@ -61,11 +61,10 @@ Vector log(const Quaternion& q);         // ? log(Quaternion) == ?what type.   a
 Quaternion exp(const Vector& v);         // Questionable meaning of exponentiation.
 
 // NOTE:    pow(qi, e) == slerp(Quaternion(Vector(0.f, 0.f, 0.f), 0.f), qi, e) == exp(log(qi) * e)
-// Spherical linear interpolation of a unit quaternion.
-// t:[0..1] slerp(0) == q0, slerp(1) == q1.
+// Spherical linear interpolation of a unit quaternion; t:[0..1]; slerp(0) == q0; slerp(1) == q1.
 Quaternion slerp(const Quaternion& q0, const Quaternion& q1, float t);
 
-// Spherical cubic interpolation of unit quaternion;  t:[0..1]  squad(0) = q0, squad(1) = q1,
+// Spherical cubic interpolation of unit quaternion; t:[0..1]  squad(0) = q0, squad(1) = q1,
 //  a and b are intermediate quaternions to form Bezier-like curve.
 Quaternion squad(const Quaternion& q0, const Quaternion& a, const Quaternion& b, const Quaternion& q1, float t);
 
@@ -254,11 +253,11 @@ inline Vector Quaternion::axis() const {
     sclp = std::sin((.5f - t) * (TAU / 2));
     sclq = std::sin(t * (TAU / 2));
     for_int(i, 3) q[i] = sclp * q0[i] + sclq * q[i];
-  } else if (1 - cosom < 1e-6f) {  // ends very close
+  } else if (1 - cosom < 1e-6f) {  // Ends very close.
     sclp = 1.f - t;
     sclq = t;
     for_int(i, 4) q[i] = sclp * q0[i] + sclq * q1[i];
-  } else {  // usual case
+  } else {  // Usual case.
     omega = my_acos(cosom);
     sinom = std::sin(omega);
     sclp = std::sin((1.f - t) * omega) / sinom;

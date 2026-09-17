@@ -260,7 +260,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
     Multigrid<3, EType, MultigridPeriodicTemporally> multigrid(dims);
     if (0) {  // Simpler, slightly slower code.
       HH_TIMER("__setup_rhs");
-      // speedup: for each f, stream rows: extract Matrix<EType> and compute difference values on edges
+      // Speedup: for each f, stream rows: extract Matrix<EType> and compute difference values on edges.
       const auto func_stitch = [](CGridView<3, Pixel> video2, CMatrixView<Pixel> videofi0, const EType& pix0, int fi0,
                                   int fi1, int y0, int x0, int y1, int x1, int zz, EType& vrhs) {
         const EType t = MG::get(videofi0[y1, x1], zz) - pix0;
@@ -272,7 +272,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         MatrixView<EType> mest = multigrid.initial_estimate()[f];
         const int fm1 = f > 0 ? f - 1 : nnf - 1;
         const int fp1 = f < nnf - 1 ? f + 1 : 0;
-        // const int max_xwidth = 10'000;  // because data fits in L2 cache, it is detrimental to break it up
+        // const int max_xwidth = 10'000;  // Because data fits in L2 cache, it is detrimental to break it up.
         // for_2D_swaths(y, ny, x, nx, max_xwidth) {
         for_int(y, ny) for_int(x, nx) {
           const int fi = grid_frameif[y, x];
@@ -317,7 +317,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         const int fp1 = f < nnf - 1 ? f + 1 : 0;
         Array<EType> apix0(nx), apix1(nx), asy0(nx), asy1(nx), asx(nx + 1);
         asx[0] = asx[nx] = EType{0};
-        const int xwidth = 0 ? 600 : 100'000;  // breaking up into swaths is actually detrimental
+        const int xwidth = 0 ? 600 : 100'000;  // Breaking up into swaths is actually detrimental.
         for (BoundedIntervals bi(nx, xwidth); *bi; ++bi) {
           const int xl = bi.l(), xu = bi.u();
           for_intL(x, xl, min(xu + 1, nx)) {
@@ -336,7 +336,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
               asx[xl] = .5f * (MG::get(video[fi1, y, xl], z) - MG::get(video[fi1, y, xl - 1], z) +
                                MG::get(video[fi2, y, xl], z) - MG::get(video[fi2, y, xl - 1], z));
             }
-            for_intL(x, xl, xu) {  // apix1[x] has [y1, x]; asx[xl] has [y, xl] - [y, xl - 1]
+            for_intL(x, xl, xu) {  // apix1[x] has [y1, x]; asx[xl] has [y, xl] - [y, xl - 1].
               const int x1 = x + 1;
               const int fi = grid_frameif[y, x];
               if (x1 < nx) {
@@ -788,7 +788,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
               (Vector4(pixel) + Vector4(hvideo_offset[f / DT, y / DS, x / DS]) - k_vec_zero_offset).pixel();
         }
       });
-    } else if (video.size()) {  // faster version of above, for RGB representation
+    } else if (video.size()) {  // Faster version of above, for RGB representation.
       HH_TIMER("__recon2");
       Matrix<float> hmat_deltatime = compute_deltatime(hmat_period, nnf);
       Queue<Matrix<Pixel>> queue_frames;
@@ -1266,7 +1266,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
                     CVideoNv12View video_nv12, CMatrixView<int> mat_start, CMatrixView<int> mat_period,
                     GdLoopScheme scheme, int nnf, WVideo* pwvideo, GridView<3, Pixel> videoloop,
                     VideoNv12View videoloop_nv12, int num_loops) {
-  const Vec3<int> odims = videodims;  // original (input) dimensions;
+  const Vec3<int> odims = videodims;  // Original (input) dimensions.
   Vec2<int> sdims = odims.tail<2>();  // Spatial dimensions (for both input and loop).
   assertx(product(sdims));
   const int onf = odims[0];  // Number of input frames.
@@ -1329,7 +1329,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
             if (videoloop_nv12.size()) convert_Image_to_Nv12(sframe, videoloop_nv12[f]);
           }
         }
-      } else {  // use Nv12 (YUV) representation
+      } else {  // Use Nv12 (YUV) representation.
         VideoNv12 tvideo;
         if (!video_nv12.size()) {
           tvideo.read_file(video_filename);
@@ -1346,7 +1346,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
                 const int fi = grid_framei[f, y, x];
                 frame.get_Y()[y, x] = ivideo.get_Y()[fi, y, x];
                 const int hy = y / 2, hx = x / 2;
-                frame.get_UV()[hy, hx] = ivideo.get_UV()[fi, hy, hx];  // if (hy * 2 == y && hx * 2 == x)
+                frame.get_UV()[hy, hx] = ivideo.get_UV()[fi, hy, hx];  // If (hy * 2 == y && hx * 2 == x).
               }
             });
             if (pwvideo) pwvideo->write(sframe);
@@ -1370,8 +1370,8 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
       const bool use_halfres = !b_exact;
       if (!use_halfres) {
         compute_gdloop_aux1<false>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
-      } else {  // reduce resolution on two spatial dimensions by a factor two
-        // "box" is fastest; previously "spline" and "triangle"
+      } else {  // Reduce resolution on two spatial dimensions by a factor two.
+        // "box" is fastest; previously "spline" and "triangle".
         const FilterBnd filterb(Filter::get("box"), Bndrule::reflected);
         const bool debug = false;
         Timer timer_gdloop1("_gdloop1");
@@ -1401,7 +1401,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         if (debug) write_video(videoloop, "videoloop.mp4");
         if (1) {  // Visually excellent, but actual rms numbers are poor.
           compute_gdloop_fast_relax(videoloop, video, mat_start_highres, mat_period_highres);
-        } else if (1) {  // rms numbers are better, but still not as good as GdLoopScheme::fast
+        } else if (1) {  // The rms numbers are better, but still not as good as GdLoopScheme::fast.
           compute_gdloop_aux1<true>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
         } else {
           // Just keep low-frequency video.

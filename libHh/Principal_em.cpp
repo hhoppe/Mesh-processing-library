@@ -26,11 +26,11 @@ static void unused_orthonormalize_rows(MatrixView<float> m) {
   for_int(y, m.ysize()) {
     for_int(y2, y) {
       double ddot = 0.;
-      for_int(x, m.xsize()) ddot += m[y, x] * m[y2, x];  // or: = dot(m[y], m[y2])
+      for_int(x, m.xsize()) ddot += m[y, x] * m[y2, x];  // Or: = dot(m[y], m[y2]).
       const float fdot = float(ddot);
       for_int(x, m.xsize()) m[y, x] -= m[y2, x] * fdot;
     }
-    // or: normalize(m[y])
+    // Or: normalize(m[y]).
     double mag2 = 0.;
     for_int(x, m.xsize()) mag2 += square(m[y, x]);
     const float fac = 1.f / assertx(float(sqrt(mag2)));

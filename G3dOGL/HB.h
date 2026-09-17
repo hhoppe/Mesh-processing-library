@@ -52,7 +52,7 @@ string show_info();              // Info line state string.
 
 struct VdcResult {
   float zs;
-  std::optional<Vec2<float>> xys;  // in_front ? (xs, ys) : {}.
+  std::optional<Vec2<float>> xys;  // Encodes: in_front ? (xs, ys) : {}.
 };
 VdcResult vdc_from_world(const Point& pi);
 

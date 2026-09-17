@@ -416,7 +416,7 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
   } else if (0) {
     parallel_for_coords(ndims, func);  // Not so slow.
   } else {
-    // timing test using:
+    // Timing test using:
     // Filterimage ~/data/image/lake.png -tile 10 10 -scaleu 2 | imgv
     // Filterimage ~/data/image/lake.png -tile 4 4 -info `perl -e 'binmode(STDOUT); for (1..10) { print " -scaleu 2 -scaleu .5"; }'` | imgv
     for_coordsL(ntimes<D>(0).with(d, 0), ndims.with(d, ioutmin), func);
@@ -448,7 +448,7 @@ Grid<D, T> scale_d(CGridView<D, T> grid, int d, int nx, const FilterBnd& filterb
     } else {
       return details::evaluate_kernel_d(grid, d, ar_pixelindex0, mat_weights, filterb.bndrule(), bordervalue);
     }
-  } else {  // minification
+  } else {  // Minification.
     gr = details::evaluate_kernel_d(grid, d, ar_pixelindex0, mat_weights, filterb.bndrule(), bordervalue);
     if (filterb.filter().has_inv_convolution()) details::inverse_convolution_d(gr, filterb, d);
     return std::move(gr);
@@ -492,7 +492,7 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
       for (T& e : gr) e = general_clamp(e, T{0.f}, T{1.f});
       for_int(iter, 5) {  // 10 Gauss-Seidel iterations are a tiny bit better; 100 are no different.
         for (const auto& u : range(dims)) {
-          // if (gr[u] == 0.f || gr[u] == 1.f) continue;  // constrained forever at limit, if T is scalar
+          // if (gr[u] == 0.f || gr[u] == 1.f) continue;  // Constrained forever at limit, if T is scalar.
           T newv = ogrid[u];
           float wcenter = 0.f;
           for (const auto& ud : range(ntimes<D>(-1), ntimes<D>(+2))) {  // [-1, 0, +1]^D
@@ -528,7 +528,7 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
       if (1 && t.dim == D - 1) {
         const float adjust = 2.f;
         if (t.scaling < 1.f) t.scaling /= adjust;  // Encourage earlier minification of the last dimension.
-        if (t.scaling > 1.f) t.scaling *= adjust;  // encourage later magnification of last dimension;
+        if (t.scaling > 1.f) t.scaling *= adjust;  // Encourage later magnification of last dimension.
       }
     }
     return tups[0].scaling < tups[1].scaling;
@@ -714,7 +714,7 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
   if (0) {
     for_coords(dims, func);
   } else {
-    // timing test using:
+    // Timing test using:
     // Filterimage ~/data/image/lake.png -tile 10 10 -info -blur 1 -info | imgv
     // Filterimage ~/data/image/lake.png -tile 2 2 -info `perl -e 'binmode(STDOUT); for (1..10) { print " -blur 1"; }'` -info | imgv
     for_coordsL(ntimes<D>(0).with(d, 0), dims.with(d, ioutmin), func);

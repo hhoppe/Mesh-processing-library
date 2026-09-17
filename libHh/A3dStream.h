@@ -64,7 +64,7 @@ class A3dElem {
   explicit A3dElem(EType type, bool binary = false, int nv = 0) { init(type, binary, nv); }  // Allocates AND init().
   // Both A3dElem(..., nv) and init(..., nv) allocate and initialize for nv vertices.
   void init(EType type, bool binary = false, int nv = 0);
-  void update(EType type, bool binary = false);  // polygon<>polyline<>point
+  void update(EType type, bool binary = false);  // Change between polygon, polyline, and point.
   [[nodiscard]] EType type() const { return _type; }
   void set_binary(bool b) { _binary = b; }
   [[nodiscard]] bool binary() const { return _binary; }

@@ -719,7 +719,7 @@ class SphereMapper::Implementation {
     return accurate_stretch_for_spherical_triangle(pd, ps);
   }
 
-  // *** Visualizer.
+  // *** Visualizer
 
   WFile* _visualizer{nullptr};  // (Never deleted if !_options.wait_on_visualizer.)
   int _visualizer_nsplits_since_end_frame{0};

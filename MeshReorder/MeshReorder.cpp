@@ -385,10 +385,8 @@ int analyze_mesh(int cs) {
 
 void analyze_strips(int& pnverts, int& pnstrips) {
   const bool debug = false;
-  // oldway: vertices to reuse in next face are in vid[1..2]
-  //          expected_j: 2, 0, 2, 0, ...
-  // newway: vertices reused from prev face are in vid[0..1]
-  //          expected_j: 1, 2, 1, 2, ...
+  // Old way: vertices to reuse in next face are in vid[1..2]; expected_j: 2, 0, 2, 0, ...
+  // New way: vertices reused from prev face are in vid[0..1]; expected_j: 1, 2, 1, 2, ...
   const bool oldway = old_strip_order;
   // Assumption: turn face1-face2-face3 is expected to be ccw.
   const int first_expected_j = oldway ? 2 : 1;
@@ -542,13 +540,13 @@ void do_fixup_indices() {
         } else {
           last_clw = true;  // The second turn should be ccw.
         }
-      } else if (iov1 >= 0) {  // no next face, so sequential from prev
+      } else if (iov1 >= 0) {  // No next face, so sequential from prev.
         if (last_clw) {
           j = iov1;  // A ccw turn.
         } else {
           j = mod3(iov1 + 2);  // A clw turn.
         }
-      } else {  // no next face or previous face; anything
+      } else {  // No next face or previous face; anything.
         j = index(va, mesh.id_vertex(ar_verts[fi * 3 + 0]));
       }
       for_int(k, 3) ar_verts[fi * 3 + k] = mesh.vertex_id(va[mod3(j + k)]);
@@ -572,12 +570,12 @@ void do_fixup_indices() {
       }
       if (j < 3) {  // Have a connection with the previous face.
         // Here, j is OK as is.
-      } else {  // no previous face, examine next face
+      } else {  // No previous face, examine next face.
         Face fn = fi < mesh.num_faces() - 1 ? ar_faces[fi + 1] : nullptr;
         const int ifn = !fn ? -1 : find_index(fa, fn).value_or(-1);  // -1 if next face is not adjacent.
         if (ifn >= 0) {
           j = ifn;
-        } else {  // no next face; anything goes
+        } else {  // No next face; anything goes.
           j = index(va, mesh.id_vertex(ar_verts[fi * 3 + 0]));
         }
       }
@@ -618,7 +616,7 @@ void do_randomize_faces() {
 const int random_initial_face = getenv_int("RANDOM_INITIAL_FACE");
 
 // Faces are exclusively in one of the 5 linked lists:
-//  MeshStatus::_l_uco and MeshStatus::_l_unp_nnei[0..3]
+//  MeshStatus::_l_uco and MeshStatus::_l_unp_nnei[0..3].
 // Initially, they are in the list of "unvisited components" l_uco.
 // Then, when a connected component is visited, the faces are pulled out
 //  of l_uco and into the lists of "unprocessed faces with n neighbors"
@@ -642,8 +640,7 @@ HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, FaceEList, f_elist);
 //     lookahead simulation.
 HH_SAC_ALLOCATE_FUNC(Mesh::MFace, int, f_sim_num);
 
-// Only one MeshStatus object may be defined at any time,
-// since it operates closely with the global variable mesh.
+// Only one MeshStatus object may be defined at any time, since it operates closely with the global variable mesh.
 class MeshStatus {
  public:
   MeshStatus();
@@ -669,11 +666,9 @@ class MeshStatus {
 };
 
 inline bool MeshStatus::processed(Face f) const {
-  // Cannot do ASSERTX(!f_elist(f).el_uco.linked())
-  // because this may be a neighboring face (as in face_nnei()) which
+  // Cannot do ASSERTX(!f_elist(f).el_uco.linked()) because this may be a neighboring face (as in face_nnei()) which
   // is in l_uco (due to a material boundary).
-  // But in this case this function declares the face as processed,
-  // which is OK.
+  // But in this case this function declares the face as processed, which is OK.
   return !f_elist(f).el_unp.linked();
 }
 
@@ -719,7 +714,7 @@ void MeshStatus::sim_init() {
 }
 
 inline bool MeshStatus::sim_face_visited(Face f) const {
-  // face is visited either in current lookahead simulation (== _sim_num)
+  // Face is visited either in current lookahead simulation (== _sim_num)
   //  or is globally visited (== std::numeric_limits<int>::max()).
   return f_sim_num(f) >= _sim_num;
 }
@@ -902,11 +897,11 @@ void do_greedy_stripify() {
         vo = v1;
         v1 = va[j];
         i = mod3(j + 2);
-      } else if (fa[mod3(j + 1)] && !ms.processed(fa[mod3(j + 1)])) {  // clw
+      } else if (fa[mod3(j + 1)] && !ms.processed(fa[mod3(j + 1)])) {  // Clw.
         vo = v2;
         v2 = va[j];
         i = mod3(j + 1);
-      } else if (fa[mod3(j + 2)] && !ms.processed(fa[mod3(j + 2)])) {  // ccw
+      } else if (fa[mod3(j + 2)] && !ms.processed(fa[mod3(j + 2)])) {  // Ccw.
         vo = v1;
         v1 = va[j];
         i = mod3(j + 2);
@@ -915,7 +910,7 @@ void do_greedy_stripify() {
           std::swap(v1, v2);
           vo = va[j];
           i = 3;
-        } else {  // new way: reuse {v2, v1} first
+        } else {  // New way: reuse {v2, v1} first.
           vo = v2;
           v2 = va[j];
           i = 3;
@@ -926,7 +921,7 @@ void do_greedy_stripify() {
   }
 }
 
-// *** SGI stripify  (implements the greedy "tomesh.c" algorithm from SGI).
+// *** SGI stripify  (implements the greedy "tomesh.c" algorithm from SGI)
 
 int find_next_face(CArrayView<Face> fa, const MeshStatus& ms) {
   // Assumes that current face has been removed from pqfnnei.
@@ -1000,11 +995,11 @@ void do_sgi_stripify() {
       i = find_next_face(fa, ms);
       if (i == j) {
         assertnever("cannot go back to previous face");
-      } else if (i == mod3(j + 1)) {  // clw turn
+      } else if (i == mod3(j + 1)) {  // Clw turn.
         vo = v2;
         v2 = va[j];
         last_clw = true;
-      } else if (i == mod3(j + 2)) {  // ccw turn
+      } else if (i == mod3(j + 2)) {  // Ccw turn.
         vo = v1;
         v1 = va[j];
         last_clw = false;
@@ -1013,7 +1008,7 @@ void do_sgi_stripify() {
         if (last_clw) {  // Pretend there would be a ccw turn.
           vo = v1;
           v1 = va[j];
-        } else {  // pretend there would be a clw turn
+        } else {  // Pretend there would be a clw turn.
           vo = v2;
           v2 = va[j];
         }
@@ -1045,7 +1040,7 @@ void simulate5(int nfcontinue, MeshStatus& ms, Corner oc, int ostripnf, const Qu
   Corner c = oc;
   Face f = mesh.corner_face(c);
   int nfvis = 0;  // Number of faces visited.
-  int ngood = 0;  // # vertex references which hit vcache
+  int ngood = 0;  // Number of vertex references which hit vcache.
   ASSERTX(!ms.sim_face_visited(f));
   int nfevent = nfcontinue;  // The next face event.
   for (;;) {
@@ -1095,7 +1090,7 @@ void simulate5(int nfcontinue, MeshStatus& ms, Corner oc, int ostripnf, const Qu
                (f2 = mesh.corner_face(cext), !ms.sim_face_visited(f2))) {
       c = cext;
       f = f2;
-    } else {  // strip cannot continue
+    } else {  // Strip cannot continue.
       nfevent = nfvis;
     }
   }
@@ -1167,7 +1162,7 @@ void do_meshify5() {
     bool brestart;
     float max_value;
     for (;;) {
-      // not needed: if (qnextc.empty()) { brestart = false; break; }
+      // Not needed: if (qnextc.empty()) { brestart = false; break; }
       float value0;
       simulate5(0, ms, c, stripnf, qnextc, vcache, tvcache, maxnf, value0);
       nsim++;
@@ -1221,7 +1216,7 @@ void do_meshify5() {
     } else if (fextnei) {
       c = cext;
     } else {
-      c = nullptr;  // strip cannot continue;
+      c = nullptr;  // Strip cannot continue.
     }
   }
   cprogress.clear();
@@ -1370,7 +1365,7 @@ void do_meshify9() {
         } else if (fextnei) {
           c = cext;
           break;
-        } else {  // restart forced
+        } else {  // Restart forced.
           c = cnext;
           cnext = nullptr;
           for (;;) {
@@ -1471,7 +1466,7 @@ void do_meshify10() {
         } else if (fextnei) {
           c = cext;
           break;
-        } else {  // restart forced
+        } else {  // Restart forced.
           c = cnext;
           cnext = nullptr;
           for (;;) {

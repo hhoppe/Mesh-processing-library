@@ -50,7 +50,7 @@ class Spatial : noncopyable {  // An abstract class.
     return p;
   }
   [[nodiscard]] Bbox<float, 3> bbox_of_indices(const Ind& ci) const;
-  [[nodiscard]] int encode(const Ind& ci) const { return (ci[0] << 20) | (ci[1] << 10) | ci[2]; }  // k_max_gn implied
+  [[nodiscard]] int encode(const Ind& ci) const { return (ci[0] << 20) | (ci[1] << 10) | ci[2]; }  // k_max_gn implied.
   [[nodiscard]] Ind decode(int en) const;
 
   // For BSpatialSearch:
@@ -71,7 +71,7 @@ class BPointSpatial : public Spatial {
   explicit BPointSpatial(int gn) : Spatial(gn) {}
   ~BPointSpatial() override { BPointSpatial::clear(); }
   void clear() override;
-  // id != 0
+  // Die unless id != 0.
   void enter(Univ id, const Point* pp);   // Note: pp is not copied; no ownership is taken.
   void remove(Univ id, const Point* pp);  // Must exist, else die.
   void shrink_to_fit();                   // Often just fragments memory.
@@ -120,7 +120,7 @@ class ObjectSpatial : public Spatial {
   void clear() override {
     for (auto& cell : _map.values()) HH_SSTAT(Sospcelln, cell.num());
   }
-  // id != 0
+  // Die unless id != 0.
   // Enter an object that comes with a containment function: the function returns true if the object lies
   // within a given bounding box.  A starting point is also given.
   template <typename Func = bool(const Bbox<float, 3>&)> void enter(Univ id, const Point& startp, Func fcontains);

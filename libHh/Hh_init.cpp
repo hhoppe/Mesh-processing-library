@@ -33,7 +33,7 @@ void possibly_sleep() {
     my_sleep(60.);
     // Give myself time to enter in a different window:
     //  vsjitdebugger -p `ps | grep FilterPM | perl -ane 'print "$F[0]\n"; last;'`
-    // or open Visual Studio and then Debug -> Attach to Process.
+    // Or, open Visual Studio and then Debug -> Attach to Process.
   }
 }
 #endif

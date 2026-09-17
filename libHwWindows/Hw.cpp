@@ -139,7 +139,7 @@ bool Hw::init_aux(Array<string>& aargs) {
     assertx(!func(PROCESS_PER_MONITOR_DPI_AWARE));
     assertx(FreeLibrary(hModule));
 #else
-    // assertx(SetProcessDPIAware());  // this older API is available; should be in user32.lib but not found
+    // assertx(SetProcessDPIAware());  // This older API is available; should be in user32.lib but not found.
 #endif
   }
   set_window_title(_argv0);
@@ -436,7 +436,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       int wheel_motion = HIWORD(wParam);
       if (wheel_motion >= (1 << 15)) wheel_motion = wheel_motion - (1 << 16);
       if (_hwdebug) SHOW("WM_MOUSEWHEEL", wheel_motion);
-      wheel_turn(wheel_motion / 120.f);  // wheel_motion == 120 for one click turn
+      wheel_turn(wheel_motion / 120.f);  // wheel_motion == 120 for one click turn.
       return 0;
     }
     case WM_DROPFILES: {
@@ -480,12 +480,12 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       return 0;
     }
       // case WM_DPICHANGED:
-      // do nothing currently.
+      // Do nothing currently.
       // break;
     default:
       void();
       // Unrecognized message, pass through.
-  }  // end switch
+  }  // End switch.
   // If got here, didn't handle the message, so pass on to default handler.
   return DefWindowProcW(_hwnd, iMsg, wParam, lParam);
 }
@@ -517,7 +517,7 @@ void CALLBACK callbackSimuKey(UINT id, UINT msg, DWORD_PTR userData, DWORD_PTR d
 }
 
 void Hw::start_hwkey() {
-  // *** TURN-ON timer (periodic) ***
+  // ** Turn-on timer (periodic) **
   UINT timer_delay;    // How long b/w timer events (mSec).
   TIMECAPS time_caps;  // Timer capabilities.
   // Check what resolution, etc the timer supports.
@@ -535,7 +535,7 @@ void Hw::start_hwkey() {
 }
 
 void Hw::end_hwkey() {
-  // *** TURN-OFF timer (periodic) ***
+  // ** Turn-off timer (periodic) **
   if (_sk_timerID) {
     assertx(timeKillEvent(_sk_timerID) == TIMERR_NOERROR);
     _sk_timerID = 0;
@@ -589,7 +589,7 @@ void Hw::handle_key(int why_called, WPARAM key_data) {
       // Client has handled key press.
     } else if (s == "\033") {  // <esc> key ( == uchar{27})
       quit();
-    } else if (s == "~") {  // toggle console window
+    } else if (s == "~") {  // Toggle console window.
       if (!win_started_from_console()) {
         _extra_console_visible = !_extra_console_visible;
         const int show_flag = 0 ? SW_SHOWNORMAL : SW_SHOWNOACTIVATE;
@@ -612,7 +612,7 @@ void Hw::draw_it() {
   } else {
     // 2014-12-13
     glEnable(GL_BLEND);
-    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   // for non-premultiplied alpha
+    // glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);   // For non-premultiplied alpha.
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);  // Since 2017-02-23, source is assumed to have premultiplied alpha.
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();  // glLoadMatrixf(to_Matrix(Frame::identity()).const_grid_view().data());
@@ -746,7 +746,7 @@ void Hw::resize_window(const Vec2<int>& yx) {
   assertx(AdjustWindowRect(&rect, WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS, 0));
   const int width = rect.right - rect.left;
   const int height = rect.bottom - rect.top;
-  // or consider MoveWindow().
+  // Or consider MoveWindow().
   // https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowpos
   int new_top = 0, new_left = 0;  // Unused unless force_move.
   bool force_move = false;
@@ -784,7 +784,7 @@ void Hw::make_fullscreen(bool b) {
       SetWindowPos(_hwnd, HWND_TOP, mi.rcMonitor.left, mi.rcMonitor.top, mi.rcMonitor.right - mi.rcMonitor.left,
                    mi.rcMonitor.bottom - mi.rcMonitor.top, SWP_NOOWNERZORDER | SWP_FRAMECHANGED);
     }
-  } else {  // come back from full screen
+  } else {  // Come back from full screen.
     SetWindowLong(_hwnd, GWL_STYLE, style | WS_OVERLAPPEDWINDOW);
     SetWindowPlacement(_hwnd, &g_wp_prev);
     SetWindowPos(_hwnd, nullptr, 0, 0, 0, 0,
@@ -848,7 +848,7 @@ Array<string> Hw::query_open_filenames(const string& hint_filename) {
   if (ofn.nFileOffset == 0 || buffer[ofn.nFileOffset - 1]) {  // Single file.
     filenames.reserve(1);
     filenames.push(get_canonical_path(utf8_from_utf16(buffer.data())));
-  } else {  // multiple files
+  } else {  // Multiple files.
     const string directory = get_canonical_path(utf8_from_utf16(buffer.data()));
     for (wchar_t* p = &buffer[int(directory.size() + 1)]; *p;) {
       if (0) SHOW(directory, utf8_from_utf16(p));
@@ -1165,7 +1165,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     }
     if (_multisample != orig_multisample) showf("Hw: had to downgrade to multisample=%d\n", _multisample);
 
-    // assertx(wglMakeCurrent(_hRenderDC, 0));  // release
+    // assertx(wglMakeCurrent(_hRenderDC, 0));
     // assertx(wglDeleteContext(_hRC)); _hRC = 0;
 
     // Set the pixelFormat.
@@ -1244,7 +1244,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   {
     TEXTMETRIC tm;
     assertx(GetTextMetrics(_hRenderDC, &tm));
-    // assertw(tm.tmPitchAndFamily&TMPF_FIXED_PITCH);  // somehow false
+    // assertw(tm.tmPitchAndFamily&TMPF_FIXED_PITCH);  // Somehow false.
     assertw(tm.tmPitchAndFamily & TMPF_TRUETYPE);
     _font_dims = convert<int>(V(tm.tmHeight, tm.tmAveCharWidth));
     if (_hwdebug) SHOW(_font_dims);
@@ -1255,8 +1255,8 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   //  We are making images of glyphs 0 through 255, and the display list numbering starts at 1000 (arbitrary choice).
   _listbase_font = 1000;  // Arbitrary value.
   assertw(wglUseFontBitmaps(_hRenderDC, 0, 255, _listbase_font));
-  // wglUseFontBitmapsW(_hRenderDC, 0, 65535, _listbase_font);  // would generate bitmaps for all Unicode (large)
-  // done later: glListBase(_listbase_font);
+  // wglUseFontBitmapsW(_hRenderDC, 0, 65535, _listbase_font);  // Would generate bitmaps for all Unicode (large).
+  // Done later: glListBase(_listbase_font);
   if (getenv("SWAP_INTERVAL")) {
     // Can be set to zero to go faster than monitor refresh.
     // Default is usually 1.
@@ -1376,7 +1376,7 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
           while (reinterpret_cast<uintptr_t>(p) & 3) p++;
         }
         if (0) SHOW(size, p - buf, image.dims(), bmih.biBitCount, image.zsize());
-        // e.g. fails with size=837180 p-buf=837168 image.dims()=[389, 538] bmih.biBitCount=32 image.zsize()=4
+        // E.g. fails with size=837180 p-buf=837168 image.dims()=[389, 538] bmih.biBitCount=32 image.zsize()=4
         if (0) assertx(narrow_cast<size_t>(p - buf) == size);
         if (1) assertw(abs((p - buf) - ptrdiff_t(size)) < 32);
       }

@@ -156,7 +156,7 @@ void do_stitch() {
           int nvi;
           if (vi >= 4 * blocks) {  // A vertex internal to the block.
             nvi = vertex_offset + vi - (4 * blocks);
-          } else {  // vertex on block boundary
+          } else {  // Vertex on block boundary.
             nvi = compute_nvi(bx, by, vi);
           }
           bmesh._faces[nfi].wedges[j] = nvi;

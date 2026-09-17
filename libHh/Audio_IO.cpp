@@ -241,7 +241,7 @@ void Audio::write_file(const string& pfilename) const {
   assertx(attrib().samplerate);
   if (!attrib().bitrate) {
     Warning("Setting a high audio bitrate");
-    const_cast<Audio&>(*this).attrib().bitrate = 256'000;  // mutable
+    const_cast<Audio&>(*this).attrib().bitrate = 256'000;  // Mutable.
   }
   if (attrib().suffix == "")
     const_cast<Audio&>(*this).attrib().suffix = to_lower(get_path_extension(filename));  // Mutable.

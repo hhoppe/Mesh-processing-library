@@ -283,9 +283,9 @@ static void pan(const Vec2<float>& yxq) {
 static void act_button1(const Vec2<float>& yxq) {
   if (sizemode && !(lod_mode && selected.yxpressed[1] > .2)) {
     handle_sliders(false, yxq[0]);
-  } else if (selected.shift) {  // pan
+  } else if (selected.shift) {  // Pan.
     pan(yxq);
-  } else {  // rotate
+  } else {  // Rotate.
     // Applyq(Frame::rotation(2, yxq[1]) * Frame::rotation(1, -yxq[0]));
     const Vector axis(0.f, -yxq[0], yxq[1]);
     const Quaternion q(axis, mag(yxq));
@@ -299,7 +299,7 @@ static void act_button2(const Vec2<float>& pyxq) {
     yxq[0] *= -1.f;      // Since moving to shift key.
     if (cob != obview) yxq[0] *= -1.f;
     Applyq(Frame::rotation(0, yxq[0]));
-  } else {  // pan
+  } else {  // Pan.
     pan(yxq);
   }
 }
@@ -313,7 +313,7 @@ static void act_button3(const Vec2<float>& yxq) {
       const float dnew = d / a, disp = d - dnew;
       g_obs[obview].tm() = Frame::translation(V(disp, 0.f, 0.f)) * g_obs[obview].t();
     }
-  } else {  // dolly (translation on x)
+  } else {  // Dolly (translation on x).
     Dolly(yxq);
   }
 }
@@ -333,7 +333,7 @@ static void act_button() {
   } else {
     yxi = (yx - selected.yxpressed) * 2.f;
   }
-  // i +- 0 to 1 (half-screen) to 2 (full-screen)
+  // i +- 0 to 1 (half-screen) to 2 (full-screen).
   const Vec2<float> yxi_d = yxi - selected.yxio;
   selected.yxio = yxi;
   Vec2<float> yxf;
@@ -378,7 +378,7 @@ static void act_fly() {
   if (!g3d_fly_use_frame_speed) {
     frame = pow(frame, 10.f * fchange);
   } else {
-    const float frame_rate = 32.f;  // frames / sec;
+    const float frame_rate = 32.f;  // In frames per second.
     frame = pow(frame, 10.f * (1.f / frame_rate));
   }
   Applyq(frame);
@@ -487,7 +487,7 @@ static void ellipse_config(int inst, int nlod, Frame& frame_ellipse, Frame& fram
   const float r1 = obradius * 3;
   const float r2 = obradius * 20;
   const bool object_up_y = true;
-  const int timeperiod = 12;  // seconds/revolution
+  const int timeperiod = 12;  // In seconds per revolution.
   const float ang = (cumtime / timeperiod + float(inst) / ninst) * TAU;
   Frame frame_ob_up = Frame::identity();
   {
@@ -588,10 +588,10 @@ static void set_viewing() {
   if (auto_level) g_obs[obview].tm() = make_level(g_obs[obview].t());
   // while (obview && !g_obs[obview].visible()) --obview;
   Frame tpos = g_obs[obview].t();  // Original frame.
-  // =~FrameMakeStdDir()
+  // (Similar to the old FrameMakeStdDir().)
   Frame thead = tpos;  // View dir., after view offset, before aim.
   static const bool g3d_radar = getenv_bool("G3D_RADAR");
-  if (g3d_radar && is_view && auto_level)  // auto_level radar view
+  if (g3d_radar && is_view && auto_level)  // Auto_level radar view.
     thead = Frame(Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f), tpos.p());
   if (is_view) thead = tview * thead;
   const Frame frame_camera = thead;  // Final camera transform.

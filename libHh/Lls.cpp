@@ -12,7 +12,7 @@ namespace hh {
 
 static const int sdebug = getenv_int("LLS_DEBUG");  // 0, 1, or 2.
 
-// *** Factory: select an Lls implementation based on environment overrides and problem size/sparsity.
+// *** Factory: select an Lls implementation based on environment overrides and problem size/sparsity
 
 unique_ptr<Lls> Lls::make(int m, int n, int nd, float nonzerofrac) {
   if (getenv_bool("SPARSE_LLS")) return Warning("Using SparseLls"), make_unique<SparseLls>(m, n, nd);

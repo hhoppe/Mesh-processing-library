@@ -34,7 +34,7 @@ class SphereMapper {
     HH_IGNORE(spheremapper_optim_global_iter);       // Num passes over all vertices in each global optimization.
     HH_IGNORE(spheremapper_optim_movetol);           // In global optimization, ignore vertex if mag(last_move) < tol.
     HH_IGNORE(spheremapper_optim_nv_ratio);          // Series factor on #vertices at which to globally optimize.
-    // e.g.: spheremapper_optim_movetol=.02 SphereParam ...
+    // E.g.: spheremapper_optim_movetol=.02 SphereParam ...
   };
 
   // The surface mesh is represented as a progressive mesh.  The progressive mesh iterator `pmi` must be

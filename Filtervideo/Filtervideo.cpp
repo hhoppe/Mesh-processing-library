@@ -168,7 +168,7 @@ void do_create(Args& args) {
       fill(frame, gcolor);  // White by default.
     });
   }
-  // video.set_filename() is not called, so no default file extension.
+  // The function video.set_filename() is not called, so there is no default file extension.
 }
 
 void do_readnv12(Args& args) {
@@ -191,8 +191,8 @@ int as_crop_vl, as_crop_vr, as_crop_vt, as_crop_vb;
 int as_tnframes;
 
 void do_as_fit(Args& args) {
-  as_fit_dims[1] = args.get_int();  // nx
-  as_fit_dims[0] = args.get_int();  // ny
+  as_fit_dims[1] = args.get_int();  // Value nx.
+  as_fit_dims[0] = args.get_int();  // value ny.
 }
 
 void do_as_cropsides(Args& args) {
@@ -296,7 +296,7 @@ void do_assemble(Args& args) {
     videos[yx].read_file(filenames[yx]);
     assertw(videos[yx].attrib().framerate == videos[0, 0].attrib().framerate);
     apply_assemble_operations(videos[yx], yx, videos.dims());
-  });  // we can assume that parallelism is justified
+  });  // We can assume that parallelism is justified.
   if (0)
     for (const auto& yx : range(videos.dims())) SHOW(yx, filenames[yx], videos[yx].nframes());
   ConsoleProgress::set_all_silent(prev_silent);
@@ -666,7 +666,7 @@ void do_phaseoffset(Args& args) {
   int nframes = video.nframes();
   assertx(fbeg >= 0 && fbeg < nframes);
   if (fbeg == 0) return;
-  // rotate(video, video.begin() + fbeg);  // make fbeg the new frame 0 (using old Array<Matrix<Pixel>> repr.)
+  // rotate(video, video.begin() + fbeg);  // Make fbeg the new frame 0 (using old Array<Matrix<Pixel>> repr.).
   Video nvideo(nframes, video.spatial_dims());
   nvideo.attrib() = video.attrib();
   if (nvideo.attrib().audio.size()) {
@@ -698,7 +698,7 @@ void do_tcrossfade(Args& args) {
       for_int(y, video.ysize()) for_int(x, video.xsize()) for_int(z, nz) {
         tvideo[i, y, x][z] = uint8_t((1.f - alpha) * video[fbc, y, x][z] + alpha * video[fec, y, x][z] + .5f);
       }
-    } else {  // good code with gcc
+    } else {  // Good code with gcc.
       auto videofbc = video[fbc], videofec = video[fec];
       for (const auto& yx : range(video.spatial_dims()))
         for_int(z, nz) tvideo[i][yx][z] = uint8_t((1.f - alpha) * videofbc[yx][z] + alpha * videofec[yx][z] + .5f);
@@ -772,7 +772,7 @@ void do_makeloop(Args& args) {
       for_int(f, nf) for_int(y, ny) for_int(x, nx) {
         nvideo[f, y, x][z] = clamp_to_uint8(int(multigrid.result()[f, y, x] + .5f));
       }
-    } else {  // solve for offsets instead of colors themselves
+    } else {  // Solve for offsets instead of colors themselves.
       const float screening_weight = getenv_float("SCREENING_WEIGHT", 1e-3f, true);  // Weak screening.
       using MultigridType = Multigrid<3, float, MultigridPeriodicTemporally>;
       using EType = float;
@@ -1087,6 +1087,7 @@ void do_gamma(Args& args) {
 
 constexpr bool use_activation = true;  // Setting to "false" speeds up the loading of pjo/pjr files.
 
+// Looping data structures.
 struct {
   Matrix<int> mat_static;  // Static frame.
   Matrix<int> mat_start;   // Start frame.
@@ -1098,7 +1099,7 @@ struct {
   // Per-region data.
   Array<Pixel> region_color;     // Color.
   Array<Point> region_centroid;  // Center point.
-} g_lp;                          // looping data structures
+} g_lp;
 
 void possibly_rescale_loop_parameters() {
   assertx(g_lp.mat_static.ysize() > 0);
@@ -1204,7 +1205,7 @@ void do_loadvlp(Args& args) {
     if (1) {
       g_lp.mat_static[yx] = g_lp.mat_start[yx];  // Pick any frame for now.
     } else {
-      // mat_static actually points into scaled/stretched looping video (including phase offset).
+      // Matrix mat_static actually points into scaled/stretched looping video (including phase offset).
       // The code below likely does not reproduce Loopers computation!  not debugged.
       const int looplen = 5;  // In seconds.
       const int nnf = int(looplen * video.attrib().framerate + .5);
@@ -1217,7 +1218,7 @@ void do_loadvlp(Args& args) {
       // HH_SSTAT(Snewperiod0, newperiod);
       const int newstatic = g_lp.mat_static[yx];
       const float fracstatic = float(newstatic) / newperiod;
-      // HH_SSTAT(Sfracstatic, fracstatic);  // hopefully in range [0.f, 1.f)
+      // HH_SSTAT(Sfracstatic, fracstatic);  // Hopefully in range [0.f, 1.f).
       const int start = g_lp.mat_start[yx];
       const float fracstart = (start % period) / float(period);
       const int istatic = start + int(frac(fracstatic - fracstart) * period * .999f);
@@ -1307,7 +1308,7 @@ void do_compressloop() {
         if (f > new_period) video[f][yx] = Pixel(255, 0, 255);
       } else if (b_compress_hold) {
         if (f > new_period) video[f][yx] = video[int(new_period - .5f)][yx];
-      } else {  // decompress
+      } else {  // Decompress.
         if (f > new_period) {
           const int fi = int(my_mod(float(f), new_period) + .5f);
           video[f][yx] = video[fi][yx];
@@ -1383,7 +1384,7 @@ void compute_looping_regions() {
         }
       }
       image.write_file("image_scost.png");
-    } else {  // form regions based on period equality and overlapping time intervals (and optionally activation)
+    } else {  // Form regions based on period equality and overlapping time intervals (and optionally activation).
       assertx(max(g_lp.mat_start) > 0);  // Input time intervals are lost if the video is already remapped.
       for (const auto& yx : range(video.spatial_dims())) {
         for_int(axis, 2) {
@@ -1507,7 +1508,7 @@ void internal_render_loops(int nnf, bool is_remap, Func func_dtime = NormalDelta
         const int pixtradius = mat_trad[yx];
         if (!pixtradius) {
           nvideo[f][yx] = video[fi][yx];
-        } else {        // temporal crossfading
+        } else {        // Temporal crossfading.
           int fio;      // Other frame with which to blend.
           float alpha;  // Weight of that other frame.
           if (fi - start < pixtradius) {
@@ -1579,7 +1580,7 @@ void do_render_wind(Args& args) {
   static const bool no_regions = getenv_bool("NO_REGIONS");  // Shows lack of phase coherence when done per-pixel.
   const auto func_dtime = [&](int f, const Vec2<int>& yx) -> float {
     const float ssdv = .25f;
-    Point pcentroid = g_lp.region_centroid[g_lp.mat_iregion[yx]];  // (y, x, 0.f)
+    Point pcentroid = g_lp.region_centroid[g_lp.mat_iregion[yx]];  // (y, x, 0.f).
     if (no_regions) pcentroid = Point(float(yx[0]), float(yx[1]), 0.f);
     const float deltaftime = .1f + 1.8f * gaussian(pcentroid[1] / float(video.xsize()) - f / float(nnf), ssdv);
     return deltaftime;
@@ -1636,11 +1637,11 @@ void do_render_harmonize(Args& args) {
 }
 
 // Remap into a looping video by using gradient-domain stitching.
-// e.g.: set d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloop 5sec | vidv
-// e.g.: cd ~/proj/videoloops/data/ReallyFreakinAll; VIDEOLOOP_PRECISE=1 Filtervideo -trunc_frames 215 HDgiant.mp4 -end 7sec -start -5sec -trimend -1 -loadvlp out/HDgiant_loop.vlp -gdloop 5sec -to mp4 >v1.gdloop5sec.mp4
-// e.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_PRECISE=1 Filtervideo -trunc_frames 215 HDpoolpalms.mp4 -end 7sec -start -5sec -trimend -1 -loadvlp out/HDpoolpalms_loop.vlp -gdloop 5sec -to mp4 >v.gdloop5sec.mp4
-// e.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_NO_BLEND=1 Filtervideo -trunc_frames 215 HDsquareflags3.mp4 -end 7sec -start -5sec -boundaryrule c -trimend -2 -loadvlp out/HDsquareflags3_loop.vlp -gdloop 5sec -to mp4 >v.gdloop5sec.mp4
-//  (for 4K video, 4.9 GB for input, then max of 9.8 GB; gdloop 5.3sec; write 63 sec; total 84 sec)
+// E.g.: set d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloop 5sec | vidv
+// E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll; VIDEOLOOP_PRECISE=1 Filtervideo -trunc_frames 215 HDgiant.mp4 -end 7sec -start -5sec -trimend -1 -loadvlp out/HDgiant_loop.vlp -gdloop 5sec -to mp4 >v1.gdloop5sec.mp4
+// E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_PRECISE=1 Filtervideo -trunc_frames 215 HDpoolpalms.mp4 -end 7sec -start -5sec -trimend -1 -loadvlp out/HDpoolpalms_loop.vlp -gdloop 5sec -to mp4 >v.gdloop5sec.mp4
+// E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_NO_BLEND=1 Filtervideo -trunc_frames 215 HDsquareflags3.mp4 -end 7sec -start -5sec -boundaryrule c -trimend -2 -loadvlp out/HDsquareflags3_loop.vlp -gdloop 5sec -to mp4 >v.gdloop5sec.mp4
+//  (For 4K video, 4.9 GB for input, then max of 9.8 GB; gdloop 5.3sec; write 63 sec; total 84 sec.)
 void do_gdloop(Args& args) {
   const int nnf = parse_nframes(args.get_string(), false);
   const Vec3<int> dims = max(video.dims(), video_nv12.get_Y().dims());
@@ -1664,9 +1665,9 @@ void do_gdloop(Args& args) {
 }
 
 // Remap into a looping video by using gradient-domain stitching.
-// e.g.: set d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloopfile 5sec - | vidv
+// E.g.: set d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloopfile 5sec - | vidv
 // set d=~/proj/videoloops/data/test; Filtervideo $d/seacrowd.wmv -loadvlp $d/seacrowd_loop.vlp -gdloopfile 5sec v.wmv
-//  (for 4K video, 4.9 GB for input, then max of 6.5 GB; total 85 sec) (198 sec with multistream input)
+//  (For 4K video, 4.9 GB for input, then max of 6.5 GB; total 85 sec) (198 sec with multistream input.)
 void do_gdloopfile(Args& args) {
   const int nnf = parse_nframes(args.get_string(), false);
   const string loop_filename = args.get_filename();
@@ -1686,11 +1687,11 @@ void do_gdloopfile(Args& args) {
 }
 
 // Remap into a looping video by using gradient-domain stitching.
-// e.g.: set d=~/proj/videoloops/data/test; Filtervideo -create 0 0 0 -loadvlp $d/HDbrink8_loop.vlp -gdloopstream 150  $d/HDbrink8.mp4 v.mp4 && o v.mp4
-// e.g.: set d=~/proj/videoloops/data/test; Filtervideo -create 0 0 0 -loadvlp $d/HDbrink8h_loop.vlp -gdloopstream 150  $d/HDbrink8h.mp4 v.mp4 && o v.mp4
-// e.g.: set d=~/proj/videoloops/data/test f=M4Kseacrowd.wmv; Filtervideo -create 0 0 0 -loadvlp $d/${f:r}_loop.vlp -gdloopstream 150  $d/$f v.$f:e && o v.$f:e
-// e.g.: set d=~/proj/videoloops/data/test f=HDbrink8h.mp4; Filtervideo -create 0 0 0 -loadvlp $d/${f:r}_loop.vlp -gdloopstream 150  $d/$f v.$f:e && o v.$f:e
-//  (for 4K video, 2.1 GB max; total 135 sec now with RVideo nv12 format)
+// E.g.: set d=~/proj/videoloops/data/test; Filtervideo -create 0 0 0 -loadvlp $d/HDbrink8_loop.vlp -gdloopstream 150  $d/HDbrink8.mp4 v.mp4 && o v.mp4
+// E.g.: set d=~/proj/videoloops/data/test; Filtervideo -create 0 0 0 -loadvlp $d/HDbrink8h_loop.vlp -gdloopstream 150  $d/HDbrink8h.mp4 v.mp4 && o v.mp4
+// E.g.: set d=~/proj/videoloops/data/test f=M4Kseacrowd.wmv; Filtervideo -create 0 0 0 -loadvlp $d/${f:r}_loop.vlp -gdloopstream 150  $d/$f v.$f:e && o v.$f:e
+// E.g.: set d=~/proj/videoloops/data/test f=HDbrink8h.mp4; Filtervideo -create 0 0 0 -loadvlp $d/${f:r}_loop.vlp -gdloopstream 150  $d/$f v.$f:e && o v.$f:e
+//  (For 4K video, 2.1 GB max; total 135 sec now with RVideo nv12 format.)
 void do_gdloopstream(Args& args) {
   const int nnf = parse_nframes(args.get_string(), false);
   const string video_filename = args.get_filename();
@@ -1717,13 +1718,13 @@ void do_gdloopstream(Args& args) {
 }
 
 // Analyze reconstruction error.
-// e.g.: cd ~/proj/videoloops/data/test/; Filtervideo HDbrink8h.mp4 -loadvlp HDbrink8h_loop.vlp -gdlooperr 5sec
+// E.g.: cd ~/proj/videoloops/data/test/; Filtervideo HDbrink8h.mp4 -loadvlp HDbrink8h_loop.vlp -gdlooperr 5sec
 //   precise:
 //    # Serr:               (235008000)         -47:38           av=0.051623918    rms=2.3937273
 //   fast (solve for residual):
 //    # Serr:               (235008000)         -41:44           av=-0.5756796     rms=1.457088
 //     1.5 / 256 = 0.6%
-// e.g.: cd ~/proj/videoloops/data/test/; Filtervideo HDbrink8.mp4 -loadvlp HDbrink8_loop.vlp -gdlooperr 5sec
+// E.g.: cd ~/proj/videoloops/data/test/; Filtervideo HDbrink8.mp4 -loadvlp HDbrink8_loop.vlp -gdlooperr 5sec
 void do_gdlooperr(Args& args) {
   const int nnf = parse_nframes(args.get_string(), false);
   const Vec3<int> dims = max(video.dims(), video_nv12.get_Y().dims());
@@ -1766,7 +1767,7 @@ void do_saveloopframe(Args& args) {
 
 void process_gen(Args& args) {
   HH_TIMER("_gen");
-  // see ~/proj/fiberpatterns/Notes.txt
+  // See ~/proj/fiberpatterns/Notes.txt
   // Filtervideo -create 180 1024 768 -procedure gen box_y -to mp4 -framerate 30 -bitrate 10m | vidv
   assertx(video.size());
   string name = args.get_string();
@@ -2017,7 +2018,7 @@ void do_procedure(Args& args) {
         for_int(z, nz) video[f][yx][z] = clamp_to_uint8(int(video[f][yx][z] + vdrift + .5f));
       });
     }
-  } else if (name == "loop_2") {  // loop all but first and last frames
+  } else if (name == "loop_2") {  // Loop all but first and last frames.
     assertx(video.nframes() > 2);
     g_lp.mat_start.init(video.spatial_dims());
     g_lp.mat_period.init(video.spatial_dims());

@@ -100,7 +100,7 @@ template <typename T> T Random::get_gauss() requires std::floating_point<T> {
     double acc = 0.;
     for_int(i, k_ngauss) acc += get_unif<T>();
     return T((acc - k_ngauss * .5) * gauss_factor);
-  } else if (0) {  // unfortunately, implementation-dependent
+  } else if (0) {  // Unfortunately, implementation-dependent.
     static std::normal_distribution<T> distrib(T{0}, T{1});
     return distrib(*this);
   } else if (1) {

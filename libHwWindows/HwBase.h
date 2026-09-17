@@ -6,8 +6,8 @@
 
 #if defined(GL_VERSION)  // OpenGL.
 #if defined(_WIN32)
-#include "GL/glext.h"  // possibly use local file because Windows does not come with it.
-#else                  // Unix
+#include "GL/glext.h"  // Possibly use local file because Windows does not come with it.
+#else                  // Unix.
 // #define GL_GLEXT_PROTOTYPES 1 // would obviate need for USE_GL_EXT() except to test presence of extension
 #include <GL/glext.h>
 #include <GL/glx.h>  // glXGetProcAddress()
@@ -34,7 +34,7 @@ class HwBase : noncopyable {
   // Callbacks:
   virtual bool key_press(string s) = 0;                                          // Returns true if handled.
   virtual void button_press(int butnum, bool pressed, const Vec2<int>& yx) = 0;  // 1 = L, 2 = M, 3 = R, 4 = B, 5 = F.
-  virtual void wheel_turn(float v) { dummy_use(v); }                             // abs(v) == 1.f for one click turn
+  virtual void wheel_turn(float v) { dummy_use(v); }                             // abs(v) == 1.f for one click turn.
   virtual void draw_window(const Vec2<int>& dims) = 0;  // Must late-call clear_window() before drawing.
   virtual void drag_and_drop(CArrayView<string> filenames) { dummy_use(filenames); }
   virtual void input_received() {}
@@ -91,13 +91,13 @@ class HwBase : noncopyable {
   [[nodiscard]] bool is_hidden() const { return _hidden; }              // -hidden (also implied by -offscreen)
   [[nodiscard]] bool is_offscreen() const { return _offscreen != ""; }  // -offscreen
 
-  // buffering:
+  // Buffering:
   virtual void hard_flush() = 0;          // Synchronize screen.
   virtual void begin_draw_visible() = 0;  // Force update to visible buffer.
   virtual void end_draw_visible() = 0;
   virtual void wake_up() {}  // Called from an asynchronous client thread to force redraw.
 
-  // clipboard:
+  // Clipboard:
   virtual bool copy_image_to_clipboard(const Image&) {
     Warning("clipboard not implemented");
     return false;
@@ -547,7 +547,7 @@ inline bool gl_report_errors() {
 }
 
 inline const string& gl_extensions_string() {
-  // e.g. see https://www.geeks3d.com/20100722/tips-how-to-get-the-list-of-the-opengl-extensions-with-a-core-profile/
+  // E.g. see https://www.geeks3d.com/20100722/tips-how-to-get-the-list-of-the-opengl-extensions-with-a-core-profile/
   // Remote Desktop (even on Win10):
   //  glGetString(GL_VERSION) = 1.1.0
   //  gl_extensions_string() = GL_WIN_swap_hint GL_EXT_bgra GL_EXT_paletted_texture
@@ -557,7 +557,7 @@ inline const string& gl_extensions_string() {
 #if 0
     int n;
     glGetIntegerv(GL_NUM_EXTENSIONS, &n);
-    for_int(i, n) s_string += string(glGetStringi(GL_EXTENSIONS, i)) + " ";  // glGetStringi() only in GL 3.0
+    for_int(i, n) s_string += string(glGetStringi(GL_EXTENSIONS, i)) + " ";  // glGetStringi() only in GL 3.0.
     is_init = true;
 #else
     const char* s = reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS));

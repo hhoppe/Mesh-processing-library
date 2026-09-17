@@ -92,7 +92,7 @@ extern Selected selected;
 
 // Viewing transforms.
 extern Frame tview;  // View offset.
-extern float zoom;   // tan(angle_of_view)
+extern float zoom;   // Equals tan(angle_of_view).
 
 // Statistics.
 extern bool iostat;           // Show stats on I/O.

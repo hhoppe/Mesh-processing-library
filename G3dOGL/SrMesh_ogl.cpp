@@ -140,7 +140,7 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
     // Unrolled this loop twice in order to get rid of "v1oldest" that
     //  was used to control alternating left/right strip formation.
     for (;;) {
-      // *** First iteration of loop.
+      // *** First iteration of loop
       {
         fn->matid = matidv;
         SrAVertex* const* pvrand = fn->vertices.data();
@@ -157,7 +157,7 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
         draw_vertex(v2n, use_texture);
         if (fn->matid != matid) break;
       }
-      // *** Second iteration of loop.
+      // *** Second iteration of loop
       {
         fn->matid = matidv;
         SrAVertex* const* pvrand = fn->vertices.data();

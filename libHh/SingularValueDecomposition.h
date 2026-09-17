@@ -107,17 +107,17 @@ template <typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S,
     std::swap(S[i0], S[i1]);
     swap_elements(column(U, i0), column(U, i1));
     swap_elements(column(VT, i0), column(VT, i1));
-    // swap_elements(VT[i0], VT[i1]);  // would be the case if we computed VT^T instead of VT
+    // swap_elements(VT[i0], VT[i1]);  // Would be the case if we computed VT^T instead of VT.
   }
 }
 
 // To explore in future, for rectangular array A,
-// first compute QR decomposition:  A = Q * [R; 0]  where R is square upper-triangular and Q^T * Q = I
-// then perform SVD on R:   R = W * diag(s) * V^T   (hence  W^T * R * V = diag(s))
-// then define U = Q * [W, 0; 0, I]
-// note that U^T * A * V = [W^T, 0; 0, I] * Q^T * Q * [R; 0] * V
-//                       = [W^T * R; 0] * V = [diag(s); 0]
-// therefore A = U * [diag(s); 0] * V^T  as desired.
+// first compute QR decomposition:  A = Q * [R; 0],  where R is square upper-triangular and Q^T * Q = I,
+// then perform SVD on R:   R = W * diag(s) * V^T   (hence  W^T * R * V = diag(s)),
+// then define U = Q * [W, 0; 0, I].
+// Note that U^T * A * V = [W^T, 0; 0, I] * Q^T * Q * [R; 0] * V
+//                       = [W^T * R; 0] * V = [diag(s); 0].
+// Therefore A = U * [diag(s); 0] * V^T  as desired.
 
 }  // namespace hh
 

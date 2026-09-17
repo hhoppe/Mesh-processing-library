@@ -79,7 +79,7 @@ bool filename_is_image(const string& filename) {
 
 string image_suffix_for_magic_byte(uchar c) {
   // See also video_suffix_for_magic_byte() and audio_suffix_for_magic_byte().
-  // also redundant information in k_image_filetypes
+  // Also, redundant with information in k_image_filetypes.
   // Documentation on prefixes for various image containers:
   // *.rgb: "\001"
   // *.jpg: "\377\330\377\341I\005Exif"; *.jfif: "\377\330\377\340\000\020JFIF"
@@ -92,13 +92,13 @@ string image_suffix_for_magic_byte(uchar c) {
   // *.ico: "\000\000\001" (first byte is indistinguishable from *.mp4)
   // *.avif: "\000\000\000\034"
   switch (c) {
-    case 1: return "rgb";    // u'\x01'
-    case 255: return "jpg";  // u'\xFF'
+    case 1: return "rgb";    // u'\x01'.
+    case 255: return "jpg";  // u'\xFF'.
     case 'B': return "bmp";
     case 'P': return "ppm";
-    case 137: return "png";  // u'\x89'
+    case 137: return "png";  // u'\x89'.
     case 'I': return "arw";
-    case 'v': return "exr";  // 118
+    case 'v': return "exr";  // 118.
     default: return "";
   }
 }

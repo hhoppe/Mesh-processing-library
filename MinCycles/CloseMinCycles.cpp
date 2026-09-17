@@ -23,7 +23,7 @@ namespace hh {
 // - Are we missing some obvious e_join() which could be obtained by some transitive closure?
 // - Somehow examine/maintain/traverse the topology of the active BFS front?
 //    No, the presence of topological handles depends on topology beyond the visited BFS region!
-//    e.g. wrap around the base of a "cow tail" versus around a torus.
+//    E.g. wrap around the base of a "cow tail" versus around a torus.
 // - As before, avoid testing would_be_nonseparating_cycle() when updating pq, but only when adding an edge.
 //    crucial: how to avoid replacing a cycle v_vtouch() by a non-cycle v_vtouch() with lower search radius?
 //    Maybe only test would_be_nonseparating_cycle() in that particular situation?

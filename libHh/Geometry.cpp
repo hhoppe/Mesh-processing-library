@@ -159,7 +159,7 @@ Bary bary_of_vector(const Vec3<Vec2<float>>& triangle, const Vec2<float>& vec) {
   const float y2 = dot(v2, vortho);
   const float scale = mag(vec);
   float denom = y1 * x2 - y2 * x1;
-  if (!assertw(abs(denom) > 1e-10f)) denom = sign(denom) * 1e-10f;  // sign() does not return zero.
+  if (!assertw(abs(denom) > 1e-10f)) denom = sign(denom) * 1e-10f;  // Here, sign() does not return zero.
   const float fac = scale / denom;
   const float b1 = -y2 * fac, b2 = y1 * fac;
   return Bary(-b1 - b2, b1, b2);
@@ -178,7 +178,7 @@ Bary bary_of_vector(const Vec3<Point>& triangle, const Vector& vec) {
   const float y2 = dot(v2, vortho);
   const float scale = mag(vec);
   float denom = y1 * x2 - y2 * x1;
-  if (!assertw(abs(denom) > 1e-10f)) denom = sign(denom) * 1e-10f;  // sign() does not return zero.
+  if (!assertw(abs(denom) > 1e-10f)) denom = sign(denom) * 1e-10f;  // Here, sign() does not return zero.
   const float fac = scale / denom;
   const float b1 = -y2 * fac, b2 = y1 * fac;
   return Bary(-b1 - b2, b1, b2);

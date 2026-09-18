@@ -92,7 +92,6 @@ Checks:
   - '-readability-avoid-return-with-void-value'
   - '-readability-simplify-boolean-expr'
   - '-readability-suspicious-call-argument'
-  - '-readability-non-const-parameter'
   - '-readability-redundant-casting'
   - '-readability-trailing-comma'  # Whether a braced list ends with a comma is left to clang-format.
 CheckOptions:

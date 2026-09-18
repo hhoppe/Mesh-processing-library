@@ -191,17 +191,18 @@ void ParseArgs::p(string str, string& arg, string doc) {
   iadd(option{std::move(str), 1, &ParseArgs::fstring, &arg, std::move(doc)});
 }
 
-void ParseArgs::p(string str, int* argp, int narg, string doc) {
+// For the next three functions, argp is written later, when the parsed values are stored through it.
+void ParseArgs::p(string str, int* argp, int narg, string doc) {  // NOLINT(readability-non-const-parameter)
   assertx(narg > 0);
   iadd(option{std::move(str), narg, &ParseArgs::fint, argp, std::move(doc)});
 }
 
-void ParseArgs::p(string str, float* argp, int narg, string doc) {
+void ParseArgs::p(string str, float* argp, int narg, string doc) {  // NOLINT(readability-non-const-parameter)
   assertx(narg > 0);
   iadd(option{std::move(str), narg, &ParseArgs::ffloat, argp, std::move(doc)});
 }
 
-void ParseArgs::p(string str, double* argp, int narg, string doc) {
+void ParseArgs::p(string str, double* argp, int narg, string doc) {  // NOLINT(readability-non-const-parameter)
   assertx(narg > 0);
   iadd(option{std::move(str), narg, &ParseArgs::fdouble, argp, std::move(doc)});
 }

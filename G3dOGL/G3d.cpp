@@ -231,8 +231,8 @@ void initial_statefile() {
 }  // namespace
 
 void ExpandStateFilename() {
-  if (contains(statefile, '/')) return;
-  if (contains(statefile, '\\')) return;
+  if (statefile.contains('/')) return;
+  if (statefile.contains('\\')) return;
   try_finding_it(statefile);
 }
 
@@ -326,11 +326,11 @@ int main(int argc, const char** argv) {
     HB::set_window_title(title != "" ? title : sform("G3D %.80s", filenametail.c_str()));
   }
   // Always jump to a good viewpoint.
-  if (contains(keystring, 'j') || statefile == "none") {
+  if (keystring.contains('j') || statefile == "none") {
     // Do nothing.
   } else if (statefile != "noname.s3d") {
     keystring += ',';
-  } else if (!contains(keystring, 'j')) {
+  } else if (!keystring.contains('j')) {
     keystring += 'j';
   }
   HB::set_current_object(cob);

@@ -68,7 +68,7 @@ class A3dElem {
   [[nodiscard]] EType type() const { return _type; }
   void set_binary(bool b) { _binary = b; }
   [[nodiscard]] bool binary() const { return _binary; }
-  [[nodiscard]] static bool status_type(EType type) { return contains("dsg", char(type)); }
+  [[nodiscard]] static bool status_type(EType type) { return std::string_view("dsg").contains(char(type)); }
   [[nodiscard]] static bool command_type(EType type) {
     return type == EType::endobject || type == EType::endframe || type == EType::endfile || type == EType::editobject;
   }

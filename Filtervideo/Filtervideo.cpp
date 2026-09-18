@@ -312,7 +312,7 @@ void do_assemble(Args& args) {
 
 void do_fromimages(Args& args) {
   string root_name = args.get_filename();
-  assertx(contains(root_name, '%'));  // Such as root_name.%03d.png.
+  assertx(root_name.contains('%'));  // Such as root_name.%03d.png.
   int first_named_file = startframe;
   int nframes = 0;
   {
@@ -427,7 +427,7 @@ void do_append(Args& args) {
 
 void do_toimages(Args& args) {
   string root_name = args.get_filename();
-  assertx(contains(root_name, '%'));                                            // Such as root_name.%03d.png.
+  assertx(root_name.contains('%'));                                             // Such as root_name.%03d.png.
   assertx(!file_exists(sform_nonliteral(root_name.c_str(), video.nframes())));  // The last + 1 should not exist.
   parallel_for(range(video.nframes()), [&](const int f) {
     Image image(video.spatial_dims());

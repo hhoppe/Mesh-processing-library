@@ -709,7 +709,7 @@ bool KeyPressed(const string& ps) {
   char ch = s[0];
   static char lastch;
   char thisch = ch;
-  if (keylock && !contains("-=_+xd\tc~ Di? BQ[] avV be ol ^\x03", ch)) return false;
+  if (keylock && !std::string_view("-=_+xd\tc~ Di? BQ[] avV be ol ^\x03").contains(ch)) return false;
   if (lastch == 'D') {
     if (ch == 'D') return true;
     if (HB::special_keypress(ch)) {

@@ -3349,7 +3349,7 @@ void do_pyramid(Args& args) {
   const string ffilename = args.get_filename();  // Argument is fine-scale image.
   HH_TIMER("_pyramid");
   string root_name = ffilename;
-  assertx(contains(root_name, '.'));
+  assertx(root_name.contains('.'));
   root_name.erase(root_name.find('.'));  // Unlike get_path_root(), remove multiple extensions.
   const Image& imagec = image;
   const Image imagef(ffilename);

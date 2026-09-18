@@ -53,7 +53,6 @@ HH_REFERENCE_LIB("ole32.lib");  // IFileOperation.
 #include <fstream>  // ifstream, ofstream
 #include <mutex>    // mutex, scoped_lock
 
-#include "libHh/RangeOp.h"  // contains()
 #include "libHh/StringOp.h"
 #include "libHh/Vec.h"
 
@@ -77,7 +76,7 @@ int my_pclose(FILE* file);
 
 inline bool character_requires_quoting(char ch) {
   // The `cmd` special characters include: space, "&()[]{}^=;!'+,`~".
-  return !std::isalnum(ch) && !contains(":/-@_.", ch);  // Removed "+" and ",".
+  return !std::isalnum(ch) && !std::string_view(":/-@_.").contains(ch);  // Removed "+" and ",".
 }
 
 bool string_requires_quoting(const string& s) { return ranges::any_of(s, character_requires_quoting); }
@@ -531,7 +530,7 @@ Array<string> get_directories_in_directory(const string& directory) {
 
 bool command_exists_in_path(const string& name) {
   const string s = getenv_string("PATH");
-  const char pathsep = contains(s, ';') || contains(s, '\\') ? ';' : ':';
+  const char pathsep = s.contains(';') || s.contains('\\') ? ';' : ':';
   string::size_type i = 0;
   for (;;) {
     auto j = s.find_first_of(pathsep, i);  // May equal string::npos.

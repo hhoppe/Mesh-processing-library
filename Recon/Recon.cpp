@@ -152,7 +152,7 @@ void compute_xform() {
 }
 
 unique_ptr<Mk3d> process_arg(char ch) {
-  if (!contains(what, ch)) return nullptr;
+  if (!what.contains(ch)) return nullptr;
   if (rootname == "") assertx(what.size() == 1);
   auto pfi = make_unique<WFile>(rootname != "" ? sform("%s.%c", rootname.c_str(), ch) : "-");
   WFile& fi = *pfi;

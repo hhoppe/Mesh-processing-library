@@ -4,7 +4,6 @@
 #include <cctype>  // isdigit()
 
 #include "libHh/FileIO.h"   // is_pipe(), is_url()
-#include "libHh/RangeOp.h"  // contains()
 #include "libHh/StringOp.h"
 
 namespace hh {
@@ -251,7 +250,7 @@ void ParseArgs::print_help() {
     const int pref = i != string::npos ? int(i) : 0;
     const int prefm1 = pref ? pref - 1 : pref;
     string s1 = o.str;
-    if (contains(o.str, '[') && !contains(o.str, ']')) s1 += ']';
+    if (o.str.contains('[') && !o.str.contains(']')) s1 += ']';
     s1 += sform(" %.*s", prefm1, o.doc.c_str());
     s1 = sform(" %-28s %s", s1.c_str(), o.doc.c_str() + pref);
     if (s_default != "") s1 = sform("%-84s %s", s1.c_str(), s_default.c_str());
@@ -268,7 +267,7 @@ string ParseArgs::get_executable_name() {
 void ParseArgs::iadd(option o) {
   if (1 && o.doc != "") {  // Enforce my "conventions" to properly distinguish flags and parameters.
     if ((o.narg > 0 || o.narg == -1) &&
-        (o.doc[0] == ':' || !contains(o.doc, ':') || o.doc[o.doc.find(':') - 1] != ' ')) {
+        (o.doc[0] == ':' || !o.doc.contains(':') || o.doc[o.doc.find(':') - 1] != ' ')) {
       SHOW(o.str, o.doc);
       Warning("Possibly inconsistent parameter option comment");
     }

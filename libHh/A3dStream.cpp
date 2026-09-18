@@ -180,7 +180,7 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
     return true;
   }
   const string possible_types = "PLp#ofqOvEndsg";
-  if (!contains(possible_types, ch)) assertnever(sform("read error on character '%c' (int %d)", ch, int(ch)));
+  if (!possible_types.contains(ch)) assertnever(sform("read error on character '%c' (int %d)", ch, int(ch)));
   ctype = ch;
   _is.ignore();
   if (A3dElem::EType(ctype) == A3dElem::EType::comment) {
@@ -280,7 +280,7 @@ void WA3dStream::write(const A3dElem& el) {
 
 void WA3dStream::write_comment(const string& str) {
   A3dElem el(A3dElem::EType::comment);
-  if (!contains(str, '\n')) {
+  if (!str.contains('\n')) {
     el.set_comment(str);
     write(el);
     return;

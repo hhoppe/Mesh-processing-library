@@ -2214,7 +2214,7 @@ void do_renamekey(Args& args) {
   const string s_nkey = args.get_string();
   const char* nkey = s_nkey == "" ? nullptr : s_nkey.c_str();
   string str;
-  if (contains(elems, 'v')) {
+  if (elems.contains('v')) {
     if (s_okey == "P") {
       for (Vertex v : mesh.vertices()) {
         const Point& p = mesh.point(v);
@@ -2242,19 +2242,19 @@ void do_renamekey(Args& args) {
       }
     }
   }
-  if (contains(elems, 'f')) {
+  if (elems.contains('f')) {
     for (Face f : mesh.faces()) {
       if (nkey) mesh.update_string(f, nkey, GMesh::string_key(str, mesh.get_string(f), okey));
       mesh.update_string(f, okey, nullptr);
     }
   }
-  if (contains(elems, 'e')) {
+  if (elems.contains('e')) {
     for (Edge e : mesh.edges()) {
       if (nkey) mesh.update_string(e, nkey, GMesh::string_key(str, mesh.get_string(e), okey));
       mesh.update_string(e, okey, nullptr);
     }
   }
-  if (contains(elems, 'c')) {
+  if (elems.contains('c')) {
     for (Face f : mesh.faces()) {
       for (Corner c : mesh.corners(f)) {
         if (nkey) mesh.update_string(c, nkey, GMesh::string_key(str, mesh.get_string(c), okey));
@@ -2272,13 +2272,13 @@ void do_copykey(Args& args) {
   const string s_nkey = args.get_string();
   const char* nkey = s_nkey.c_str();
   string str;
-  if (contains(elems, 'v'))
+  if (elems.contains('v'))
     for (Vertex v : mesh.vertices()) mesh.update_string(v, nkey, GMesh::string_key(str, mesh.get_string(v), okey));
-  if (contains(elems, 'f'))
+  if (elems.contains('f'))
     for (Face f : mesh.faces()) mesh.update_string(f, nkey, GMesh::string_key(str, mesh.get_string(f), okey));
-  if (contains(elems, 'e'))
+  if (elems.contains('e'))
     for (Edge e : mesh.edges()) mesh.update_string(e, nkey, GMesh::string_key(str, mesh.get_string(e), okey));
-  if (contains(elems, 'c'))
+  if (elems.contains('c'))
     for (Face f : mesh.faces())
       for (Corner c : mesh.corners(f)) mesh.update_string(c, nkey, GMesh::string_key(str, mesh.get_string(c), okey));
 }
@@ -2290,13 +2290,13 @@ void do_assignkey(Args& args) {
   const char* key = s_key.c_str();
   const string s_value = args.get_string();
   const char* value = s_value.c_str();
-  if (contains(elems, 'v'))
+  if (elems.contains('v'))
     for (Vertex v : mesh.vertices()) mesh.update_string(v, key, value);
-  if (contains(elems, 'f'))
+  if (elems.contains('f'))
     for (Face f : mesh.faces()) mesh.update_string(f, key, value);
-  if (contains(elems, 'e'))
+  if (elems.contains('e'))
     for (Edge e : mesh.edges()) mesh.update_string(e, key, value);
-  if (contains(elems, 'c'))
+  if (elems.contains('c'))
     for (Face f : mesh.faces())
       for (Corner c : mesh.corners(f)) mesh.update_string(c, key, value);
 }
@@ -4228,7 +4228,7 @@ string get_first_material_name(const string& mtl_filename) {
 
 void do_to_obj(Args& args) {
   const string mtl_filename = args.get_filename();
-  assertx(!contains(mtl_filename, '/'));  // The material file must be in the local directory.
+  assertx(!mtl_filename.contains('/'));  // The material file must be in the local directory.
 
   const auto add_unique = [&](Vertex v, const char* key, auto& array, auto& indices) {
     std::decay_t<decltype(array[0])> value;

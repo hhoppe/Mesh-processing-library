@@ -681,7 +681,7 @@ static void show_caption() {
   string s = caption;
   if (s[0] == '-') {
     loc = to_int(s);
-    if (!contains(s, ' ')) return;
+    if (!s.contains(' ')) return;
     s.erase(0, s.find(' ') + 1);
   }
   HB::draw_row_col_text(V(loc, std::numeric_limits<int>::max()), s);

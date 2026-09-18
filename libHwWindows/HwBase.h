@@ -350,7 +350,7 @@ inline void HwBase::query_keypress(string s) {
     if (get_key_modifier(EModifier::control)) {  // C-<backspace> deletes word
       if (_query_buffer != "" && _query_buffer.back() == '/') _query_buffer.pop_back();
       while (_query_buffer != "" && _query_buffer.back() == ' ') _query_buffer.pop_back();
-      while (_query_buffer != "" && !contains(" /", _query_buffer.back())) _query_buffer.pop_back();
+      while (_query_buffer != "" && !std::string_view(" /").contains(_query_buffer.back())) _query_buffer.pop_back();
     } else {
       if (_query_buffer != "") _query_buffer.pop_back();
     }

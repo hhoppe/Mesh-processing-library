@@ -122,7 +122,7 @@ auto gather_vertex_ring(const GMesh& mesh, Vertex v) {
   return va;
 }
 
-// Return smallest dihedral value in would-be mesh neighborhood around newp.
+// Returns the smallest dihedral value in the would-be mesh neighborhood around newp.
 float min_local_dihedral(const GMesh& mesh, CArrayView<Vertex> va, const Point& newp) {
   const int nw = va.num();
   assertx(nw > 1);
@@ -145,7 +145,7 @@ float min_local_dihedral(const GMesh& mesh, CArrayView<Vertex> va, const Point& 
   return min_dih;
 }
 
-// Return smallest dihedral value in mesh neighborhood around v.
+// Returns the smallest dihedral value in the mesh neighborhood around vertex v.
 float min_dihedral_about_vertex(const GMesh& mesh, Vertex v) {
   const Array<Vertex> va = gather_vertex_ring(mesh, v);
   return min_local_dihedral(mesh, va, mesh.point(v));
@@ -530,25 +530,26 @@ void get_tvc_cost_edir(Edge e, float& tvccost, bool& edir);
 
 // *** Functions
 
-// Return: two faces have same discrete attributes.  Currently based on equality of Face strings.
+// Returns true if two faces have the same discrete attributes.  This is currently based on the equality of the
+// Face strings.
 bool same_discrete(Face f1, Face f2) { return f_matid(f1) == f_matid(f2); }
 
-// Return: exists discrete attribute discontinuity across edge e.
+// Returns true if there is a discrete attribute discontinuity across edge e.
 bool edge_discrete_bnd(Edge e) {
   ASSERTX(!mesh.is_boundary(e));
   return !same_discrete(mesh.face1(e), mesh.face2(e));
 }
 
-// Return: two corners have different scalar attributes.
+// Returns true if two corners have the same scalar attributes.
 bool same_scalar(Corner c1, Corner c2) { return c_wedge_id(c1) == c_wedge_id(c2); }
 
-// Return: exists scalar attribute discontinuity at edge e near vertex v.
+// Returns true if there is a scalar attribute discontinuity at edge e near vertex v.
 bool hedge_scalar_bnd(Vertex v, Edge e) {
   ASSERTX(!mesh.is_boundary(e));
   return !same_scalar(mesh.ccw_corner(v, e), mesh.clw_corner(v, e));
 }
 
-// Return: exists scalar attribute discontinuity across edge.
+// Returns true if there is a scalar attribute discontinuity across edge e.
 bool edge_scalar_bnd(Edge e) {
   ASSERTX(!mesh.is_boundary(e));
   if (0) return hedge_scalar_bnd(mesh.vertex1(e), e) || hedge_scalar_bnd(mesh.vertex2(e), e);
@@ -556,10 +557,10 @@ bool edge_scalar_bnd(Edge e) {
   return !same_scalar(he, he2->_prev) || !same_scalar(he->_prev, he2);
 }
 
-// Return: edge is sharp.
+// Returns true if edge e is sharp.
 bool edge_sharp(Edge e) { return mesh.is_boundary(e) || edge_discrete_bnd(e) || edge_scalar_bnd(e); }
 
-// Return: number of incident sharp edges on vertex v.
+// Returns the number of sharp edges incident on vertex v.
 int vertex_num_sharpe(Vertex v) {
   int nsharpe = 0;
   for (Edge e : mesh.edges(v))
@@ -567,7 +568,7 @@ int vertex_num_sharpe(Vertex v) {
   return nsharpe;
 }
 
-// Return: vertex v has more than one wedge.
+// Returns true if vertex v has more than one wedge.
 bool vertex_has_hedge_scalar_bnd(Vertex v) {
   return ranges::any_of(mesh.edges(v), [&](Edge e) { return mesh.is_boundary(e) || hedge_scalar_bnd(v, e); });
 }
@@ -2395,7 +2396,7 @@ void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
 }
 
 // Optimize the position newp of v1 given fixed parameterizations of the face points (param).
-// Return the resulting geometric energy (before reprojection -> overestimate).
+// Returns the resulting geometric energy (before reprojection, hence an overestimate).
 double fit_geom(const NewMeshNei& nn, const Param& param, float spring, Point& newp) {
   assertx(nn.ar_corners.num());
   SSTATV2(Sfit_nf, nn.ar_corners.num());
@@ -2708,7 +2709,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
 }
 
 // Optimize the scalar attributes of wedges around v1 given fixed parameterizations of the face points (param).
-// Return the resulting scalar energy.
+// Returns the resulting scalar energy.
 double fit_color(const NewMeshNei& nn, const Param& param, ArrayView<WedgeInfo> ar_wi) {
   assertx(ar_wi.num() == nn.ar_rwid_v1.num());
   // SSTATV2(Srwid, ar_wi.num());
@@ -3003,7 +3004,7 @@ void reproject_locally(const NewMeshNei& nn, float& uni_error, float& dir_error)
   if (handle_residuals) compute_residual(ar_resid, ar_normaldist2, vnormal, uni_error, dir_error);
 }
 
-// Return: success.
+// Returns success.
 bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   if (nn.va.num() == 2) {
     Warning("hull: ignoring boundary 'corner' vertex");
@@ -3439,8 +3440,8 @@ void check_ccw(Vertex v) {
   }
 }
 
-// Return the maximum displacement of any point on the mesh surface to its corresponding point with the same
-// parametric coordinate after the collapse of the edge e at position ii (0 or 2), or return -1.0 if illegal.
+// Returns the maximum displacement of any point on the mesh surface to its corresponding point with the same
+// parametric coordinate after the collapse of the edge e at position ii (0 or 2), or -1.0 if the collapse is illegal.
 // This metric corresponds to "Appearance-preserving simplification" [Cohen et al 1998].
 // The max displacement occurs either at the removed vertex v1 or at an edge-edge crossing in the parametric domain.
 // TODO: Use 2D coordinates.
@@ -3505,7 +3506,7 @@ double evaluate_aps(Edge e, int ii) {
   return max_mag;
 }
 
-// Return: is_legal.
+// Returns true if the face fc and its neighbors fnei have a legal configuration of material ids.
 bool strict_mat_neighbors(Face fc, const Vec3<Face>& fnei) {
   assertx(fc);
   const int matfc = f_matid(fc);

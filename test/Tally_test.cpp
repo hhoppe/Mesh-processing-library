@@ -6,7 +6,7 @@ using namespace hh;
 
 namespace {
 
-// Return a z-score measuring how far the tally of values in [0, m - 1] departs from a uniform distribution.
+// Returns a z-score measuring how far the tally of values in [0, m - 1] departs from a uniform distribution.
 //
 // Pearson's statistic is X2 = sum_j (O_j - E)^2 / E, where O_j is the count of value j and E = n / m is the count
 // expected from n uniform draws.  The counts are multinomial, so X2 has exactly mean m - 1 and variance

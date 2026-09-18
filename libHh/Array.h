@@ -82,7 +82,8 @@ template <typename T> class CArrayView {
   [[nodiscard]] constexpr auto& last(this auto&& self) noexcept { return self[self.num() - 1]; }
   [[nodiscard]] constexpr bool ok(int i) const noexcept { return i >= 0 && i < _n; }
   [[nodiscard]] constexpr bool ok(const T* e) const noexcept { return ok(narrow_cast<int>(e - _a)); }
-  [[nodiscard]] bool map_inside(int& i, Bndrule bndrule) const;  // Return false if bndrule == Border and i is outside.
+  // Returns false if bndrule == Border and i is outside.
+  [[nodiscard]] bool map_inside(int& i, Bndrule bndrule) const;
   [[nodiscard]] auto& inside(this auto&& self, int i, Bndrule bndrule) {
     return assertx(self.map_inside(i, bndrule)), self[i];
   }
@@ -219,7 +220,7 @@ template <typename T> class Array : public ArrayView<T> {
     _n = n;
   }
   void access(int i);  // Allocate at least i + 1, RETAIN old values (using move if too small).
-  int add(int n) {     // Return: previous num().
+  int add(int n) {     // Returns the previous num().
     ASSERTX(n >= 0);
     const int t = _n;
     resize(_n + n);
@@ -241,8 +242,8 @@ template <typename T> class Array : public ArrayView<T> {
   void insert(int i, int n) { ASSERTX(i >= 0 && i <= _n), insert_i(i, n); }
   void erase(int i, int n) { ASSERTX(i >= 0 && n >= 0 && i + n <= _n), erase_i(i, n); }
   void erase(T* b, T* e) { erase(narrow_cast<int>(b - base::begin()), narrow_cast<int>(e - b)); }
-  bool remove_ordered(const T& e);    // Return: was there.
-  bool remove_unordered(const T& e);  // Return: was there.
+  bool remove_ordered(const T& e);    // Returns true if e was present.
+  bool remove_unordered(const T& e);  // Returns true if e was present.
   T pop() {
     ASSERTXX(_n);
     T e = std::move(_a[_n - 1]);

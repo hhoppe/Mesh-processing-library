@@ -106,7 +106,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
   [[nodiscard]] int capacity() const { return _cap; }
   void insert(int i, int n) { ASSERTX(i >= 0 && i <= _n), insert_i(i, n); }
   void erase(int i, int n) { ASSERTX(i >= 0 && n >= 0 && i + n <= _n), erase_i(i, n); }
-  bool remove_ordered(const T& e) {  // Return: was there.
+  bool remove_ordered(const T& e) {  // Returns true if e was present.
     for_int(i, _n) {
       if (_a[i] == e) {
         erase(i, 1);
@@ -115,7 +115,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
     }
     return false;
   }
-  bool remove_unordered(const T& e) {  // Return: was there.
+  bool remove_unordered(const T& e) {  // Returns true if e was present.
     for_int(i, _n) {
       if (_a[i] == e) {
         if (i < _n - 1) _a[i] = std::move(_a[_n - 1]);

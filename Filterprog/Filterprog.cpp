@@ -436,7 +436,7 @@ void read_record(std::istream& is, bool carry_old) {
   if (is) assertx(after_vsplit);
 }
 
-// Look around a vertex to see if the corners have a unique wid.  Return -1 if they don't.
+// Look around a vertex to see if its corners have a unique wid.  Returns that wid, or -1 if they don't.
 int get_unique_wid(Vertex v, bool use_old) {
   int num = 0, u_wid;
   dummy_init(u_wid);
@@ -1095,7 +1095,7 @@ void process_vsplit() {
   if (sdebug) vspl.ok();
 }
 
-// Read and parse a single line of a vsplit record.  Return: false at end_of_record.
+// Read and parse a single line of a vsplit record.  Returns false at the end of the record.
 bool parse_line2(char* sline, bool& after_vsplit) {
   // Adapted from GMesh::read_line().
   switch (sline[0]) {

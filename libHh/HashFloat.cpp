@@ -36,7 +36,7 @@ HashFloat::HashFloat(int nignorebits, float small) : _nignorebits(nignorebits), 
   _recip = 1.f / _factor;
 }
 
-// Return a key that encodes the bucket in which the value lies.
+// Returns a key that encodes the bucket in which the value lies.
 inline uint32_t HashFloat::encode(float f) const {
   if (abs(f) <= _small) {
     return k_small_key;

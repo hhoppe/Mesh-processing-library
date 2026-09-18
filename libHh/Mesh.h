@@ -122,7 +122,7 @@ class Mesh : noncopyable {
     return he->_next->_next->_next == he;
   }
   [[nodiscard]] bool is_boundary(Face f) const;         // Same as having a boundary vertex.
-  [[nodiscard]] Face opp_face(Face f, Edge e) const;    // Return nullptr if is_boundary(e).
+  [[nodiscard]] Face opp_face(Face f, Edge e) const;    // Returns nullptr if is_boundary(e).
   [[nodiscard]] Face opp_face(Vertex v, Face f) const;  // Die unless is_triangle(f); returns nullptr if none.
   // In ccw order.
   void get_vertices(Face f, Array<Vertex>& va) const;

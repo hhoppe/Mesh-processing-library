@@ -8,7 +8,7 @@
 
 namespace hh {
 
-// Return a sorted, uniquified array of values gathered from a range.  Caller can subsequently call shrink_to_fit().
+// Returns a sorted, uniquified array of the values gathered from a range.  The caller can then call shrink_to_fit().
 template <ranges::input_range R, typename Comp = std::less<>>
 [[nodiscard]] Array<range_value_t<R>> sort_unique(const R& range, Comp comp = Comp{}) {
   Array ar(range);
@@ -18,7 +18,7 @@ template <ranges::input_range R, typename Comp = std::less<>>
   return ar;
 }
 
-// Return the two closest values to the median of a list (or the same value twice if the list length is odd).
+// Returns the two values closest to the median of a list (or the same value twice if the list length is odd).
 template <ranges::input_range R> [[nodiscard]] auto median_two(const R& range) -> Vec2<range_value_t<R>> {
   Array ar(range);
   assertx(ar.num());
@@ -30,12 +30,13 @@ template <ranges::input_range R> [[nodiscard]] auto median_two(const R& range) -
   return V(val0, val1);
 }
 
-// Return the median value of a list (or the mean of the two nearest values if the list length is even).
+// Returns the median value of a list (or the mean of the two nearest values if the list length is even).
 template <ranges::input_range R> [[nodiscard]] auto median(const R& range) -> mean_type_t<range_value_t<R>> {
   return mean(median_two(range));
 }
 
-// Return the element with specified rank within range (where 0 <= rank < size(range) and rank == 0 is min element).
+// Returns the element with the specified rank within the range (where 0 <= rank < size(range) and rank == 0 is the
+// min element).
 template <ranges::input_range R> [[nodiscard]] range_value_t<R> rank_element(const R& range, int rank) {
   Array ar(range);
   assertx(ar.num());
@@ -44,7 +45,8 @@ template <ranges::input_range R> [[nodiscard]] range_value_t<R> rank_element(con
   return ar[rank];
 }
 
-// Return element with fractional ranking within range (where 0. <= rankf <= 1. and rankf == 0. is min element).
+// Returns the element with the fractional rank rankf within the range (where 0. <= rankf <= 1. and rankf == 0. is
+// the min element).
 template <ranges::input_range R> [[nodiscard]] range_value_t<R> rankf_element(const R& range, double rankf) {
   assertx(rankf >= 0. && rankf <= 1.);
   Array ar(range);

@@ -26,7 +26,7 @@ class VertexCache : noncopyable {
   class Iter : noncopyable {                                 // The ordering of vertices is undefined!
    public:
     virtual ~Iter() = default;
-    virtual int next() = 0;  // Return 0 if no more vertices.
+    virtual int next() = 0;  // Returns 0 if there are no more vertices.
    protected:
     Iter() = default;
   };

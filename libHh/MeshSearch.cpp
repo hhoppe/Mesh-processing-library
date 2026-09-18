@@ -47,7 +47,7 @@ Bary gnomonic_get_bary(const Point& p, const Vec3<Point>& triangle) {
 // search converges equally fast either way because a suboptimal choice merely costs an extra iteration.
 constexpr bool k_use_exact_spherical_dist = false;
 
-// Return the sine of a lower bound on the angular distance from the point p on the unit sphere to the spherical
+// Returns the sine of a lower bound on the angular distance from the point p on the unit sphere to the spherical
 // triangle; the bound is zero exactly when p lies within the triangle, and is tight when the closest point of the
 // triangle lies in the interior of an edge.  Where the closest point is instead a triangle vertex whose interior
 // angle is `angle`, the bound under-estimates by as much as a factor sin(angle / 2), so it is only suitable for
@@ -68,7 +68,7 @@ float sin_spherical_dist_lower_bound(const Point& p, const Vec3<Point>& triangle
   return float(max_sin_outside);
 }
 
-// Return the squared Euclidean (chordal) distance from the point p on the unit sphere to the spherical triangle, or
+// Returns the squared Euclidean (chordal) distance from the point p on the unit sphere to the spherical triangle, or
 // zero if p lies within the triangle.  The chordal distance 2 * sin(angle / 2) is monotonic in the angular distance
 // over its full range [0, TAU / 2], so it is a valid substitute for ranking, and 2 * asin(sqrt(result) / 2) recovers
 // the angle.  Unlike the lower bound above, this is correct for a point lying beyond a triangle vertex.

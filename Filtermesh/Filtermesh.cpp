@@ -1301,7 +1301,7 @@ void do_taubinsmooth(Args& args) {
 
 // *** Desbrun
 
-// Return cotangent of angle about point p1 in triangle, or BIGFLOAT if triangle is degenerate about p1.
+// Returns the cotangent of the angle about p1 in the triangle, or BIGFLOAT if the triangle is degenerate about p1.
 float cotan(const Point& p1, const Point& p2, const Point& p3) {
   const Vector v = p2 - p1, w = p3 - p1;
   // cos(ang) = dot(v, w) / (mag(v) * mag(w))
@@ -1874,7 +1874,8 @@ void do_rmcompn(Args& args) {
 
 // *** coalesce
 
-// Return BIGFLOAT if not legal.
+// Returns the thickness-to-width ratio of the two faces adjacent to edge e, or BIGFLOAT if their coalescence is
+// not legal.
 float try_coalesce(Edge e) {
   if (mesh.is_boundary(e)) return BIGFLOAT;
   if (!mesh.legal_coalesce_faces(e)) return BIGFLOAT;
@@ -2637,7 +2638,7 @@ bool vertex_is_movable_along_edge(Vertex v, Edge e) {
   }
 }
 
-// Return: {2: keep_v1, 0: keep_v2, 1: midpoint_is_ok, -1: collapse_is_not_attribute_safe}.
+// Returns 2 to keep v1, 0 to keep v2, 1 if the midpoint is OK, or -1 if the collapse is not attribute-safe.
 int ii_for_attribute_safe_edge_collapse(Edge e) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   const bool v1_is_movable = vertex_is_movable_along_edge(v1, e);

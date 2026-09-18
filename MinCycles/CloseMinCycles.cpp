@@ -106,7 +106,7 @@ void CloseMinCycles::flood_reinitialize(Vertex vseed) {
 // Given a cycle of edges described by a loop of vertices vertex_loop, close the associated topological handle by
 //  (1) duplicating each vertex along the cycle, and
 //  (2) closing each of the resulting two boundaries with a fan of triangle faces.
-// Return the cycle of new corresponding vertices (which is in reverse order from vertex_loop).
+// Returns the cycle of new corresponding vertices (which is in reverse order from vertex_loop).
 Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) {
   assertx(vertex_loop.num() >= 3);
   // First, create the new vertices by splitting the old ones, creating two mesh boundaries.

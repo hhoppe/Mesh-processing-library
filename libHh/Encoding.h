@@ -63,7 +63,7 @@ template <typename T> class Encoding : noncopyable {
     showdf("}\n");
   }
 
-  // Return sum of prob to encode binary tree.
+  // Returns the Huffman coding cost, i.e. the sum of the probabilities of the internal nodes of the binary tree.
   [[nodiscard]] float huffman_cost() const {
     Pqueue<int> pq;
     pq.reserve(_map.num());
@@ -93,7 +93,7 @@ template <typename T> class Encoding : noncopyable {
     return float(sum);
   }
 
-  // Return normalized entropy (entropy() / tot_prob).
+  // Returns the normalized entropy (entropy() / tot_prob).
   [[nodiscard]] float norm_entropy() const {
     double tot_prob = sum(_map.values());
     if (!assertw(tot_prob)) tot_prob = 1.;
@@ -181,7 +181,7 @@ class DeltaEncoding {
     _prev_sign = vsign;
   }
 
-  // Return total bits based on arithmetic coding of nbits and sign.
+  // Returns the total number of bits, based on the arithmetic coding of nbits and sign.
   // NOLINTNEXTLINE(modernize-use-nodiscard)
   int analyze(const string& s) const {
     const int total_bits = int(ceil(total_entropy()));

@@ -197,7 +197,7 @@ template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(in
   return gnew;
 }
 
-// Return statistics about graph edge lengths.  If undirected, edges stats are duplicated.
+// Returns statistics about the graph edge lengths.  If the graph is undirected, the edge stats are duplicated.
 template <typename T, typename Func = float(const T&, const T&)>
 [[nodiscard]] Stat graph_edge_stats(const Graph<T>& g, Func fdist) {
   Stat stat;

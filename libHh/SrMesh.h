@@ -223,12 +223,12 @@ class SrMesh {
   // Interface: Rendering using OpenGL:
   void ogl_render_faces_individually(bool unlit_texture);
   void ogl_render_faces_strips(bool unlit_texture);
-  int ogl_render_striplines();  // Return the number of strips.
+  int ogl_render_striplines();  // Returns the number of strips.
   void ogl_render_edges();
   void ogl_show_radii();
   void ogl_show_residuals(bool uniform_too);
   void ogl_render_faces_tvc(bool unlit_texture);
-  int ogl_render_tvclines();  // Return the number of cache misses.
+  int ogl_render_tvclines();  // Returns the number of cache misses.
 
  private:
   Bbox<float, 3> _bbox;

@@ -846,7 +846,7 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
 // wa: array of vertex positions (wa[0] == wa[nw - 1] if closed loop)
 // niter: number of iterations to do
 // newp: the initial position to use for center vertex
-//  * Return:
+//  * Returns:
 // newp: the final fitted position
 // rss0: energy after first projection (true)
 // rss1: energy after final refit, before final reprojection (over-estimate).

@@ -18,7 +18,7 @@ namespace hh {
 
 namespace {
 
-// Return spherical area of ordered triangle, in the range [0, 2 * TAU].
+// Returns the spherical area of an ordered triangle, in the range [0, 2 * TAU].
 template <typename T> T spherical_triangle_area(const Vec3<T>& pd0, const Vec3<T>& pd1, const Vec3<T>& pd2) {
   static_assert(std::is_floating_point_v<T>);
   using TT = double;
@@ -255,7 +255,7 @@ class SphereMapper::Implementation {
   // The initial edges are given as a list of normals to their supporting plane (great circle).
   // The centroid is computed using linear average and reprojection to sphere.
   // If the kernel is larger than a hemisphere, the centroid is flipped.
-  // Return nothing if the polygon is not star-shaped, i.e. if its kernel is empty.
+  // Returns std::nullopt if the polygon is not star-shaped, i.e. if its kernel is empty.
   std::optional<Point> kernel_centroid_of_spherical_polygon(CArrayView<Vector> enormals) {
     Vector center{};
     for_int(i, enormals.num()) {
@@ -328,9 +328,9 @@ class SphereMapper::Implementation {
     return edge_normals;
   }
 
-  // Return the point on the great-circle arc between _sphmap[v1] and _sphmap[v2] that is nearest the arc midpoint
+  // Returns the point on the great-circle arc between _sphmap[v1] and _sphmap[v2] that is nearest the arc midpoint
   // yet lies within the kernel of the spherical polygon formed by the 1-ring neighbors of the vertex v.
-  // If the kernel does not intersect the arc, return the arc midpoint as a fallback.
+  // If the kernel does not intersect the arc, it returns the arc midpoint as a fallback.
   [[nodiscard]] Point arc_midpoint_within_kernel(int v, int someface, int v1, int v2) const {
     const Vector x0 = normalized(_sphmap[v1] + _sphmap[v2]);  // Midpoint of the arc; possibly outside the kernel.
     const Vector dir = normalized(project_orthogonally(_sphmap[v2] - _sphmap[v1], x0));

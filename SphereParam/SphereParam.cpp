@@ -42,7 +42,7 @@ Frame get_rotate_frame(const string& rotate_s3d) {
   return frame;
 }
 
-// Return the vertices of a unit-radius tetrahedron centered at the origin.
+// Returns the vertices of a unit-radius tetrahedron centered at the origin.
 Vec4<Point> create_regular_tetrahedron() {
   // Create an initial tetrahedron with its first three vertices on the plane z = 0.
   const Vec4<Point> tetrav0 = V(Point(-1.f / sqrt(3.f), 0.f, 0.f), Point(sqrt(3.f) / 6.f, +.5f, 0.f),
@@ -340,11 +340,11 @@ bool at_a_pole(const Point& sph) { return k_split_at_poles && sph[k_axis0] == 0.
 
 bool near_prime_meridian(const Point& sph) { return abs(sph[k_axis0]) < 1e-5f && sph[k_axis1] > -1e-5f; }
 
-// Return true if the vertex needs a separate lon-lat uv on each of its corners: on the prime meridian the two sides
+// Returns true if the vertex needs a separate lon-lat uv on each of its corners: on the prime meridian the two sides
 // of the cut get the extreme longitudes, and at a pole the longitude is undefined.
 bool needs_multiple_lonlat_uv(const Point& sph) { return at_a_pole(sph) || near_prime_meridian(sph); }
 
-// Return the lon-lat uv of a corner, which differs from the uv of its vertex where needs_multiple_lonlat_uv().
+// Returns the lon-lat uv of a corner, which differs from the uv of its vertex where needs_multiple_lonlat_uv().
 Uv corner_lonlat_uv(const GMesh& mesh, Corner c) {
   Vertex v = mesh.corner_vertex(c);
   const Point& sph = v_sph(v);
@@ -372,18 +372,18 @@ Uv corner_lonlat_uv(const GMesh& mesh, Corner c) {
   return Uv(lon, lonlat[1]);
 }
 
-// Return the lon-lat uv of the three corners of a face.
+// Returns the lon-lat uv of the three corners of a face.
 Vec3<Uv> face_lonlat_uvs(const GMesh& mesh, Face f) {
   return transformed(mesh.triangle_corners(f), [&](Corner c) { return corner_lonlat_uv(mesh, c); });
 }
 
-// Return true if the face is inverted (or degenerate) in the lon-lat uv domain.
+// Returns true if the face is inverted (or degenerate) in the lon-lat uv domain.
 bool lonlat_face_is_inverted(const GMesh& mesh, Face f) {
   const Vec3<Uv> uvs = face_lonlat_uvs(mesh, f);
   return !(signed_area(uvs[0], uvs[1], uvs[2]) > 0.f);
 }
 
-// Return true if the spherical triangle is properly oriented, seen from outside the sphere.
+// Returns true if the spherical triangle is properly oriented, seen from outside the sphere.
 bool sph_triangle_is_positive(const Vec3<Point>& sphs) { return dot(sphs[0], cross(sphs[1], sphs[2])) > 0.f; }
 
 // *** Repair of the faces that are inverted in the lon-lat uv parameterization
@@ -406,21 +406,21 @@ struct Inversion {
   }
 };
 
-// Return true if `after` is an improvement over `before`.  We require a geometric decrease of the inverted area, so
+// Returns true if `after` is an improvement over `before`.  We require a geometric decrease of the inverted area, so
 // that a sequence of such improvements terminates.
 bool is_lessened(const Inversion& after, const Inversion& before) {
   if (after.num_faces != before.num_faces) return after.num_faces < before.num_faces;
   return after.area < before.area * .99f;
 }
 
-// Return the inversion, in the lon-lat domain, of the faces incident to a vertex.
+// Returns the inversion, in the lon-lat domain, of the faces incident to a vertex.
 Inversion inversion_around_vertex(const GMesh& mesh, Vertex v) {
   Inversion inversion;
   for (Face f : mesh.faces(v)) inversion.enter(face_lonlat_uvs(mesh, f));
   return inversion;
 }
 
-// Return true if splitting edge e at the point sph_m (whose lon-lat is uv_m) would lessen the inversion of its
+// Returns true if splitting edge e at the point sph_m (whose lon-lat is uv_m) would lessen the inversion of its
 // adjacent faces, without creating a face that is flipped or degenerate on the sphere.  The split modifies only the
 // faces adjacent to e, so it cannot invert any other face, and the mesh inversion therefore never increases.
 bool split_is_an_improvement(const GMesh& mesh, Edge e, const Point& sph_m, const Uv& uv_m) {
@@ -444,7 +444,7 @@ bool split_is_an_improvement(const GMesh& mesh, Edge e, const Point& sph_m, cons
 
 // Move the sph coordinate of a vertex to lessen the inversion of its incident faces in the lon-lat domain, keeping
 // those faces properly oriented on the sphere.  The move changes only the uv of the incident faces, so it cannot
-// invert any other face.  Return true if the vertex was moved.
+// invert any other face.  Returns true if the vertex was moved.
 bool relax_vertex(GMesh& mesh, Vertex v) {
   const Point sph_old = v_sph(v);
   if (needs_multiple_lonlat_uv(sph_old)) return false;  // Its uv is constrained by the cut or by the pole.

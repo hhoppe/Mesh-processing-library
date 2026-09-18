@@ -182,7 +182,7 @@ class HwBase : noncopyable {
 #endif
 };
 
-// Return Pixel given string of the form "#RRGGBB" or "#RRGGBBAA" in hexadecimal.
+// Returns the Pixel given a string of the form "#RRGGBB" or "#RRGGBBAA" in hexadecimal.
 Pixel parse_color(const string& scolor);
 
 //----------------------------------------------------------------------------
@@ -489,7 +489,7 @@ inline Pixel parse_color(const string& scolor) {
 // For debugging, sprinkle:  ASSERTX(!gl_report_errors());
 bool gl_report_errors();  // Returns true if errors (only call after init() and before open() returns).
 
-// Return a string containing all the supported OpenGL extensions.
+// Returns a string containing all the supported OpenGL extensions.
 const string& gl_extensions_string();
 
 // GCC warns on casts between incompatible function pointer types, which is inherent to the wglGetProcAddress()

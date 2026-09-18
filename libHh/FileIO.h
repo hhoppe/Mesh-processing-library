@@ -71,19 +71,20 @@ inline void assert_reached_eof(std::istream& is) {
 // Set modification time of file or directory; return: success.
 bool set_path_modification_time(const string& name, uint64_t time);
 
-// Return an unsorted list of files in a directory (prefix each by "directory + '/'" to get absolute path).
+// Returns an unsorted list of the files in a directory (prefix each by "directory + '/'" to get its full path).
 [[nodiscard]] Array<string> get_files_in_directory(const string& directory);
 
-// Return an unsorted list of directories in a directory (prefix each by "directory + '/'" to get absolute path).
+// Returns an unsorted list of the directories in a directory (prefix each by "directory + '/'" to get its full
+// path).
 [[nodiscard]] Array<string> get_directories_in_directory(const string& directory);
 
 // Check if my_sh() would find this command in the current PATH.
 [[nodiscard]] bool command_exists_in_path(const string& name);
 
-// Return: success.
+// Returns success.
 bool remove_file(const string& name);
 
-// Delete a file or directory by moving it to the Recycle Bin / Trash if possible.  Return: success.
+// Delete a file or directory by moving it to the Recycle Bin / Trash if possible.  Returns success.
 bool recycle_path(const string& pathname);
 
 // Create the name for a temporary file, and delete the file when going out of scope.
@@ -104,16 +105,16 @@ class TmpFile : noncopyable {
 // For sh/bash/cmd argument.
 [[nodiscard]] string quote_arg_for_shell(const string& s);
 
-// Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
+// Returns -1 on a spawn error, else the exit code (for wait == true) or the pid (for wait == false).
 intptr_t my_spawn(CArrayView<string> sargv, bool wait);
 
 // Run command s (already properly quoted) using shell sh or cmd, in that order.
 // (The quoting in s may be fragile if we must resort to shell cmd.)
-// Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
+// Returns -1 on a spawn error, else the exit code (for wait == true) or the pid (for wait == false).
 intptr_t my_sh(const string& command, bool wait = true);
 
 // Run command words sargv (after quoting them) using shell sh or cmd, in that order.
-// Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
+// Returns -1 on a spawn error, else the exit code (for wait == true) or the pid (for wait == false).
 intptr_t my_sh(CArrayView<string> sargv, bool wait = true);
 
 // Null output stream (which silently gobbles up all output).

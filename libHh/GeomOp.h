@@ -30,7 +30,7 @@ namespace hh {
 // Range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate).
 [[nodiscard]] float dihedral_angle_cos(const Point& p1, const Point& p2, const Point& po1, const Point& po2);
 
-// Return angle from -TAU / 2 to TAU / 2 (negative is concave), or -10.f if degeneracy.
+// Returns the angle from -TAU / 2 to TAU / 2 (negative is concave), or -10.f if degenerate.
 // (== exterior angle)  (cos(signed_dihedral_angle()) == dihedral_angle_cos()).
 [[nodiscard]] float signed_dihedral_angle(const Point& p1, const Point& p2, const Point& po1, const Point& po2);
 
@@ -56,7 +56,7 @@ namespace hh {
 // Make the three vectors of `frame` be orthogonal and unit length.
 [[nodiscard]] Frame orthonormalized(const Frame& frame);
 
-// Return orthogonalized() or orthonormalized() if nearly so.
+// Returns the frame orthonormalized() or orthogonalized() if it is nearly so, else the frame unchanged.
 [[nodiscard]] Frame normalized_frame(const Frame& frame, float tolerance = 1e-4f);
 
 // Compute Euler angles of frame.
@@ -80,28 +80,28 @@ void frame_aim_at(Frame& frame, const Vector& v);
 
 // *** Intersections
 
-// Return the intersection point of a line with a plane, or none if they are parallel.
+// Returns the intersection point of a line with a plane, or none if they are parallel.
 [[nodiscard]] std::optional<Point> intersect_line_with_plane(const Line& line, const Plane& plane);
 
-// Return the intersection point of a segment (p1, p2) with a plane, if it exists.
+// Returns the intersection point of a segment (p1, p2) with a plane, if it exists.
 [[nodiscard]] std::optional<Point> intersect_segment_with_plane(const Point& p1, const Point& p2, const Plane& plane);
 
-// Return the intersection point of a line with a triangle.
+// Returns the intersection point of a line with a triangle.
 [[nodiscard]] std::optional<Point> intersect_line_with_triangle(const Line& line, const Vec3<Point>& triangle);
 
-// Return the intersection point of a segment (p1, p2) with a triangle.
+// Returns the intersection point of a segment (p1, p2) with a triangle.
 [[nodiscard]] std::optional<Point> intersect_segment_with_triangle(const Point& p1, const Point& p2,
                                                                    const Vec3<Point>& triangle);
 
 // *** Other
 
-// Return the signed volume of a tetrahedron (positive if p4 is in the direction cross(p1, p2, p3)).
+// Returns the signed volume of a tetrahedron (positive if p4 is in the direction cross(p1, p2, p3)).
 [[nodiscard]] float signed_volume(const Point& p1, const Point& p2, const Point& p3, const Point& p4);
 
-// Return (longitude, latitude) of point on the unit sphere.
+// Returns the (longitude, latitude) of a point on the unit sphere.
 [[nodiscard]] Uv lonlat_from_sph(const Point& sph);
 
-// Return point on the unit sphere given (longitude, latitude).
+// Returns the point on the unit sphere given its (longitude, latitude).
 [[nodiscard]] Point sph_from_lonlat(const Uv& lonlat);
 
 }  // namespace hh

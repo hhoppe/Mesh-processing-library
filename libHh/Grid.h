@@ -104,7 +104,7 @@ template <int D, typename T> class CGridView {
     }
     return true;
   }
-  bool map_inside(Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {  // Return false outside Border.
+  bool map_inside(Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {  // Returns false if outside a Border.
     for_int(c, D) {
       if (!map_boundaryrule_1D(u[c], _dims[c], bndrules[c])) return false;
     }
@@ -144,7 +144,7 @@ template <int D, typename T> class CGridView {
   // For implementation of Matrix (D == 2):
   [[nodiscard]] int ysize() const requires(D == 2) { return dim(0); }
   [[nodiscard]] int xsize() const requires(D == 2) { return dim(1); }
-  // Return false if bndrule == Border and i is outside.
+  // Returns false if bndrule == Border and (y, x) is outside.
   bool map_inside(int& y, int& x, Bndrule bndrule) const requires(D == 2);
   [[nodiscard]] auto& inside(this auto&& self, int y, int x, Bndrule bndrule) requires(D == 2) {
     bool b = self.map_inside(y, x, bndrule);

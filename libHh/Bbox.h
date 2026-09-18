@@ -83,7 +83,7 @@ template <typename T, int dim> class Bbox : public Vec2<Vec<T, dim>> {
     return bbox;
   }
 
-  // Return enclosing (centered) bbox that has all sides equal.
+  // Returns the enclosing (centered) bbox that has all sides equal.
   [[nodiscard]] Bbox enclosing_hypercube() const requires std::is_floating_point_v<T> {
     const auto& self = *this;
     const PointD diagonal = self[1] - self[0];

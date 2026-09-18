@@ -9,19 +9,19 @@ namespace hh {
 
 // For these templated functions, the caller should convert<> the inputs to obtain higher precision.
 
-// Return the vector cross-product in 2D.  The signed area of a 2D triangle (origin, v1, v2) is 0.5f * cross(v1, v2).
+// Returns the vector cross-product in 2D.  The signed area of a 2D triangle (origin, v1, v2) is 0.5f * cross(v1, v2).
 template <typename T> [[nodiscard]] T cross(const Vec2<T>& v1, const Vec2<T>& v2) {
   static_assert(std::is_floating_point_v<T>);
   return v1[0] * v2[1] - v1[1] * v2[0];
 }
 
-// Return the vector cross-product in 3D.
+// Returns the vector cross-product in 3D.
 template <typename T> [[nodiscard]] Vec3<T> cross(const Vec3<T>& v1, const Vec3<T>& v2) {
   static_assert(std::is_floating_point_v<T>);
   return Vec3<T>(v1[1] * v2[2] - v1[2] * v2[1], v1[2] * v2[0] - v1[0] * v2[2], v1[0] * v2[1] - v1[1] * v2[0]);
 }
 
-// Return the Unnormalized cross-product given by three 3D points.
+// Returns the unnormalized cross-product given by three 3D points.
 template <typename T> [[nodiscard]] Vec3<T> cross(const Vec3<T>& p1, const Vec3<T>& p2, const Vec3<T>& p3) {
   return cross(p2 - p1, p3 - p1);
 }
@@ -212,7 +212,7 @@ template <typename T, int n>
 template <typename Precision = double>
 [[nodiscard]] bool spherical_triangle_is_flipped(const Vec3<Point>& triangle, float tolerance = 0.f);
 
-// Return signed area of 2D triangle (positive if counter-clockwise).
+// Returns the signed area of a 2D triangle (positive if counter-clockwise).
 template <typename Precision = double>
 [[nodiscard]] float signed_area(const Vec2<float>& p1, const Vec2<float>& p2, const Vec2<float>& p3);
 

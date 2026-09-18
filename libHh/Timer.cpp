@@ -45,7 +45,7 @@ namespace {
 
 constexpr int k_show_undefined = -10;
 
-// Return the effective number of cores (or 0 if unknown).
+// Returns the effective number of cores (or 0 if unknown).
 inline unsigned std_thread_hardware_concurrency() { return std::thread::hardware_concurrency(); }
 
 #if defined(_WIN32)

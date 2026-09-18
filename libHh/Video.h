@@ -68,7 +68,7 @@ class Video : public Grid<3, Pixel> {
 // Whether filename suffix identifies it as a video.
 [[nodiscard]] bool filename_is_video(const string& filename);
 
-// Return predicted video suffix given first byte of file, or "" if unrecognized.
+// Returns the predicted video suffix given the first byte of a file, or "" if unrecognized.
 [[nodiscard]] std::string_view video_suffix_for_magic_byte(uchar c);
 
 // Video consisting of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
@@ -169,7 +169,7 @@ class RVideo {
   [[nodiscard]] int xsize() const { return _dims[2]; }
   [[nodiscard]] bool read(MatrixView<Pixel> frame);  // Needs frame(ysize(), xsize()).  Returns false if EOF.
   [[nodiscard]] bool read(Nv12View frame);           // Returns false if EOF.
-  [[nodiscard]] bool discard_frame();                // Skip the next frame; Return ssuccess (false if EOF).
+  [[nodiscard]] bool discard_frame();                // Skips the next frame.  Returns false if EOF.
   class Implementation;
 
  private:

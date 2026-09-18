@@ -66,12 +66,12 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
     return *it;
   }
   // Omit "const T& enter(T&& e, bool& is_new)" because e could be lost if !is_new.
-  bool add(const T& e) requires Copyable<T> {  // Return: is_new.
+  bool add(const T& e) requires Copyable<T> {  // Returns true if e is new.
     const auto [_, is_new] = _set.insert(e);
     return is_new;
   }
   // Omit "bool add(T&& e)" because e could be lost if !is_new.
-  bool remove(const T& e) { return remove_i(e); }  // Return: was_found.
+  bool remove(const T& e) { return remove_i(e); }  // Returns true if e was found.
   [[nodiscard]] bool contains(const T& e) const { return _set.find(e) != end(); }
   [[nodiscard]] int num() const { return narrow_cast<int>(_set.size()); }
   [[nodiscard]] size_t size() const { return _set.size(); }

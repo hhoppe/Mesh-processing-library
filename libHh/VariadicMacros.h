@@ -8,7 +8,7 @@
 // some of these macros definitions below (very slightly), but it would decrease portability and increase the
 // number of IntelliSense issues.
 
-// Return number of arguments.
+// Returns the number of arguments.
 #define HH_NUM_ARGS(...) HH_NUM_ARGS_((__VA_ARGS__, HH_NUM_ARGS_RSEQ_N()))
 #define HH_NUM_ARGS_(tuple) HH_NUM_ARGS_B tuple
 #define HH_NUM_ARGS_RSEQ_N() 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0
@@ -17,7 +17,7 @@
 // https://stackoverflow.com/questions/9183993/msvc-variadic-macro-expansion (VC treats __VA_ARGS__ as single token)
 // https://stackoverflow.com/questions/11317474/macro-to-count-number-of-arguments   (finding comma)
 
-// Return 1 if there is more than one argument (i.e. has a comma), else 0.
+// Returns 1 if there is more than one argument (i.e. has a comma), else 0.
 #define HH_GT1_ARGS(...) HH_NUM_ARGS_((__VA_ARGS__, HH_COMMA_SEQ_N()))
 
 // This will let macros expand before/after concatenating them.  Some of this may be needed for MSVC.

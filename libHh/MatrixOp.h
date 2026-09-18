@@ -135,7 +135,7 @@ template <typename T> void diag_mat(CArrayView<T> v, MatrixView<T> mat) {
   for_int(i, v.num()) mat[i, i] = v[i];
 }
 
-// Return diagonal matrix whose elements are given by vector v.
+// Returns a diagonal matrix whose diagonal elements are given by the vector v.
 template <typename T> [[nodiscard]] Matrix<T> diag_mat(CArrayView<T> v) {
   Matrix<T> mat(twice(v.num()));
   diag_mat(v, mat);
@@ -148,14 +148,14 @@ template <typename T> void identity_mat(MatrixView<T> mat) {
   for_int(i, min(mat.dims())) { mat[i, i] = T{1}; }
 }
 
-// Return the identity matrix with dimensions dims (yx).
+// Returns the identity matrix with dimensions dims (yx).
 template <typename T> [[nodiscard]] Matrix<T> identity_mat(const Vec2<int>& dims) {
   Matrix<T> mat(dims);
   identity_mat(mat);
   return mat;
 }
 
-// Return the square identity matrix with dimensions twice(n).
+// Returns the square identity matrix with dimensions twice(n).
 template <typename T> [[nodiscard]] Matrix<T> identity_mat(int n) { return identity_mat<T>(twice(n)); }
 
 // Convert an affine 4x3 matrix to a 4x4 Matrix.

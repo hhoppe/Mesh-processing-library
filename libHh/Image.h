@@ -100,7 +100,7 @@ class Image : public Matrix<Pixel> {
 // Whether filename suffix identifies it as an image.
 [[nodiscard]] bool filename_is_image(const string& filename);
 
-// Return predicted image suffix given first byte of file, or "" if unrecognized.
+// Returns the predicted image suffix given the first byte of a file, or "" if unrecognized.
 [[nodiscard]] std::string_view image_suffix_for_magic_byte(uchar c);
 
 // &image == &newimage is OK.

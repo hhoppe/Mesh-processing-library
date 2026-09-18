@@ -25,20 +25,20 @@ namespace hh {
 // Gather all connected components (connected through Face-Edge-Face), in order of increasing size.
 [[nodiscard]] Array<Set<Face>> gather_components(const Mesh& mesh);
 
-// Return statistics on number of edges in each gather_boundary() loop.
+// Returns statistics on the number of edges in each gather_boundary() loop.
 [[nodiscard]] Stat mesh_stat_boundaries(const Mesh& mesh);
 
-// Return statistics on number of faces in each gather_component() group.
+// Returns statistics on the number of faces in each gather_component() group.
 [[nodiscard]] Stat mesh_stat_components(const Mesh& mesh);
 
-// Return the genus value (accounting for the number of components and boundaries).
+// Returns the genus value (accounting for the number of components and boundaries).
 [[nodiscard]] float mesh_genus(const Mesh& mesh);
 
-// Return string giving basic topological characteristics of mesh.
+// Returns a string giving the basic topological characteristics of the mesh.
 [[nodiscard]] string mesh_genus_string(const Mesh& mesh);
 
 // For faces with > 3 sides, find a good triangulation of the vertices.
-// Return: success (may fail if some edges already exist).
+// Returns success (the triangulation may fail if some edges already exist).
 [[nodiscard]] bool triangulate_face(GMesh& mesh, Face f);
 
 // Returns the cosine of the signed angle away from "flatness" (== the exterior angle).
@@ -46,25 +46,25 @@ namespace hh {
 // For non-triangles, looks at average of immediate neighbors on either side.
 [[nodiscard]] float edge_dihedral_angle_cos(const GMesh& mesh, Edge e);
 
-// Return angle from -TAU / 2 to TAU / 2 (negative is concave), or -10.f if degeneracy.
+// Returns the angle from -TAU / 2 to TAU / 2 (negative is concave), or -10.f if degenerate.
 // (== exterior angle)  (cos(signed_dihedral_angle()) == dihedral_angle_cos()).
 [[nodiscard]] float edge_signed_dihedral_angle(const GMesh& mesh, Edge e);
 
 // Must be a nice interior vertex.
 [[nodiscard]] float vertex_solid_angle(const GMesh& mesh, Vertex v);
 
-// Return a criterion given an edge e that is low if the edge should be collapsed.
+// Returns a criterion for the edge e that is low if the edge should be collapsed.
 // Use the product of the edge length with the smallest inscribed
 // radius of the two adjacent faces (its dimension is area).
 [[nodiscard]] float collapse_edge_inscribed_criterion(const GMesh& mesh, Edge e, int ii);
 
-// Return change in volume, but penalize bad dihedral angles.
+// Returns the change in volume, with a penalty for bad dihedral angles.
 [[nodiscard]] float collapse_edge_volume_criterion(const GMesh& mesh, Edge e);
 
-// Return memoryless QEM and penalize bad dihedral angles.
+// Returns the memoryless QEM, with a penalty for bad dihedral angles.
 [[nodiscard]] float collapse_edge_qem_criterion(const GMesh& mesh, Edge e);
 
-// Fill the one or more holes associated with the boundary loop containing erep.  Return the new multisided faces.
+// Fill the one or more holes associated with the boundary loop containing erep.  Returns the new multisided faces.
 Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep);
 
 // Apply vertex splits such that no vertex has valence > max_valence.
@@ -78,16 +78,16 @@ using EDGEF = bool (*)(const GMesh& m, Edge e);
 //  if dihedral angle cos of faces both before and after is > mincos, and if (fdoswap(e)) then
 //    call fdel(e), swap the edge, and call fadd(newedge).
 // Consider all affect edges again.
-// Return number of edges swapped.
+// Returns the number of edges swapped.
 int retriangulate_all(GMesh& mesh, float mincos, EDGEF fdoswap, EDGEF fdel = nullptr, EDGEF fadd = nullptr);
 
 // Consider only Edge e and recursively, all affected edges.  (e cannot be boundary edge!)
-// Return number of edges swapped.
+// Returns the number of edges swapped.
 int retriangulate_from_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel = nullptr,
                             EDGEF fadd = nullptr);
 
 // Consider swapping Edge e. (e cannot be boundary edge!)
-// Return number of edges swapped (0 or 1).
+// Returns the number of edges swapped (0 or 1).
 int retriangulate_one_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel = nullptr,
                            EDGEF fadd = nullptr);
 

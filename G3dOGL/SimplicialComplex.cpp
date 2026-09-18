@@ -168,8 +168,8 @@ void SimplicialComplex::ok() const {
   }
 }
 
-// Return simplicial complex representing starbar of simplex s.
-// id's of simplices in resulting SC are also meaningful in *this.
+// Returns in res the simplicial complex representing the starbar of the simplex s.
+// The ids of the simplices in the resulting complex are also meaningful in *this.
 void SimplicialComplex::starbar(Simplex s, SimplicialComplex& res) const {
   assertx(s->getDim() == 0);
 

@@ -453,7 +453,7 @@ bool file_requires_pipe(const string& name) {
   return name == "-" || ends_with(name, ".Z") || ends_with(name, ".gz") || is_pipe(name) || is_url(name);
 }
 
-// Return: 0 if error.
+// Returns the modification time, or 0 on error.
 uint64_t get_path_modification_time(const string& name) {
 #if defined(_WIN32)
   // (Gives 64-bit time, unlike _wstat32i64.)
@@ -466,7 +466,7 @@ uint64_t get_path_modification_time(const string& name) {
   return fstat.st_mtime;
 }
 
-// Return: success.
+// Returns success.
 bool set_path_modification_time(const string& name, uint64_t time) {
   // https://msdn.microsoft.com/en-us/library/4wacf567.aspx
 #if defined(_WIN32)
@@ -727,7 +727,7 @@ static string spawn_quote(const string& s, bool b_client_uses_cygwin) {
   return b_client_uses_cygwin ? cygwin_spawn_quote(s) : windows_spawn_quote(s);
 }
 
-// Return: -1 if spawn error, else exit_code (for wait_ == true) or pid (for wait_ == false).
+// Returns -1 on a spawn error, else the exit code (for wait_ == true) or the pid (for wait_ == false).
 intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
   dummy_use(spawn_quote);
   assertx(sargv.num());
@@ -837,7 +837,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
 #endif
 }
 
-// Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
+// Returns -1 on a spawn error, else the exit code (for wait == true) or the pid (for wait == false).
 intptr_t my_sh(const string& command, bool wait) {
   assertx(command != "");
   const bool debug = getenv_bool("MY_SH_DEBUG");

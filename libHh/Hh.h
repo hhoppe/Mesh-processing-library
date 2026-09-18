@@ -436,7 +436,7 @@ extern int g_unoptimized_zero;
 // If !expr, report warning once.  Returns expr.
 #define assertw(...) hh::details::assertw_aux((__VA_ARGS__), "assertw(" #__VA_ARGS__ ")" HH_FL)
 
-// Reports string expr as warning once.  Return true if this is the first time the warning is reported.
+// Reports string expr as warning once.  Returns true if this is the first time the warning is reported.
 #define Warning(...) hh::details::assertw_aux2(__VA_ARGS__ HH_FL)
 
 // ASSERTX(...):  In release build, do not evaluate the expression.
@@ -479,7 +479,7 @@ extern int g_unoptimized_zero;
 // All the *SHOW*() macros may require extra inner parentheses, e.g., SSHOW((ntimes<3>(1))).
 #define SSHOW(...) HH_PRIMITIVE_CAT((HH_SSHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
 
-// Return a string like SSHOW(...) but with more digits of floating-point precision.
+// Returns a string like SSHOW(...) but with more digits of floating-point precision.
 #define SSHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SSHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
 
 // Show current file and line number on std::cerr.
@@ -550,7 +550,7 @@ template <typename... A> constexpr void dummy_mutate(A&...) {}
 // Avoid warnings of uninitialized variables.
 template <typename... T> void dummy_init(T&... variable) { ((variable = T{}), ...); }
 
-// Return a copy of the iterator prior to advancing it; used to define the postfix operators.
+// Returns a copy of the iterator prior to advancing it; used to define the postfix operators.
 template <typename Iterator> Iterator postfix_increment(Iterator& iter) {
   const Iterator old = iter;
   return ++iter, old;
@@ -713,19 +713,20 @@ std::istream& my_getline(std::istream& is, string& line, bool dos_eol_warnings =
 // Set an environment variable; the variable is removed from the environment if value == "".
 void my_setenv(const string& name, const string& value);
 
-// Return false if environment variable is {undefined, "0", or "false"}, true if {"", "1", or "true"), else abort.
+// Returns vdefault if the environment variable `name` is not defined, false if "0" or "false", true if "", "1", or
+// "true", else aborts.
 [[nodiscard]] bool getenv_bool(const string& name, bool vdefault = false, bool warn = false);
 
-// Return vdefault if environment variable `name` is not defined, 1 if "", value if integer, else abort.
+// Returns vdefault if the environment variable `name` is not defined, 1 if "", its value if integer, else aborts.
 [[nodiscard]] int getenv_int(const string& name, int vdefault = 0, bool warn = false);
 
-// Return vdefault if environment variable `name` is not defined, value if float, else abort.
+// Returns vdefault if the environment variable `name` is not defined, its value if float, else aborts.
 [[nodiscard]] float getenv_float(const string& name, float vdefault, bool warn = false);
 
-// Return string value of environment variable `name`, or "" if not defined.
+// Returns the string value of the environment variable `name`, or vdefault if it is not defined.
 [[nodiscard]] string getenv_string(const string& name, const string& vdefault = "", bool warn = false);
 
-// Return typed value of environment variable `name`.
+// Returns the typed value of the environment variable `name`, or vdefault if it is not defined.
 template <typename T> [[nodiscard]] T getenv_type(const string& name, T vdefault, bool warn = false) {
   if constexpr (std::is_same_v<T, bool>)
     return getenv_bool(name, vdefault, warn);
@@ -750,13 +751,13 @@ void show_call_stack();
 
 // *** Hh_main.cpp
 
-// Return absolute time, in secs (accuracy at least ~.001).
+// Returns the absolute time, in seconds (with an accuracy of at least ~.001).
 [[nodiscard]] double get_precise_time();
 
-// Return absolute time, in cycle counts.
+// Returns the absolute time, in cycle counts.
 [[nodiscard]] int64_t get_precise_counter();
 
-// Return seconds/cycle.
+// Returns the number of seconds per counter cycle.
 [[nodiscard]] double get_seconds_per_counter();
 
 // Delay for some number of seconds; a nonzero tolerable delay lets the system coalesce this wakeup with others.
@@ -768,16 +769,16 @@ void my_precise_sleep(double sec);
 // Get number of bytes of available memory (min of free virtual and physical space), or 0 if unavailable.
 [[nodiscard]] size_t available_memory();
 
-// Return current directory.
+// Returns the current directory.
 [[nodiscard]] string get_current_directory();
 
-// String like "2016-02-15 18:02:28".
+// Returns a string of the form "2016-02-15 18:02:28".
 [[nodiscard]] string get_current_datetime();
 
-// Return machine name, in lowercase.
+// Returns the machine name, in lowercase.
 [[nodiscard]] string get_host_name();
 
-// String with date, time, machine, build parameters.
+// Returns a string with date, time, machine, build parameters.
 [[nodiscard]] string get_header_info();
 
 // On Windows, replace the command-line argv with a new one that contains UTF-8 encoded strings; else do nothing.

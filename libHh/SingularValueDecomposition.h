@@ -10,7 +10,7 @@ namespace hh {
 
 // Given matrix A, compute its singular value decomposition, expressing A = U * diag(S) * VT^T,
 //  where matrices U and VT have orthonormal columns.
-// Return: success.
+// Returns success.
 // Approach: one-sided Jacobi iterative algorithm,
 //  based on 1989 report by James Demmel and Kresimir Veselic, Algorithm 4.1, p32.
 // Implicitly computes the product A*A^T and then uses a sequence of Jacobi rotations to diagonalize it.

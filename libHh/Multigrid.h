@@ -287,7 +287,7 @@ class Multigrid : noncopyable {
     }
     return ngrid;
   }
-  // Return the Laplacian weight at the given grid resolution.
+  // Returns the Laplacian weight at the given grid resolution.
   float get_wL(const Vec<int, D>& gdims) {
     float h = 1.f;
     Vec<int, D> dims = _grid_rhs.dims();

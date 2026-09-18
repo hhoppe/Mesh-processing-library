@@ -59,7 +59,7 @@ using sum_type_for_t = std::conditional_t<std::is_void_v<DesiredType>, sum_type_
 //   const bool b1 = contains(r, 920);  // 19 predicate evaluations.
 //   const auto n = sum(r);             // 98.
 
-// Return a range that is iterable through const.  Some view adaptors (e.g. filter_view, which caches begin())
+// Returns a range that is iterable through const.  Some view adaptors (e.g. filter_view, which caches begin())
 // are not const-iterable; a view is cheap to copy, and the copy is iterable.  Usage: `auto&& r = iterable(range);`.
 template <ranges::input_range R> [[nodiscard]] decltype(auto) iterable(const R& range) {
   // Can we call begin()/end() on the object held by const reference?
@@ -192,7 +192,7 @@ requires std::sortable<ranges::iterator_t<R>, Comp> R sort(R&& range, Comp comp 
   return std::forward<R>(range);
 }
 
-// Return a sorted copy of the range (by default using std::less(a, b)), leaving the original unmodified.
+// Returns a sorted copy of the range (by default using std::less(a, b)), leaving the original unmodified.
 template <ranges::random_access_range R, typename Comp = std::less<>>
 requires std::sortable<ranges::iterator_t<std::decay_t<R>>, Comp>
 [[nodiscard]] auto sorted(R&& range, Comp comp = Comp{}) -> std::decay_t<R> {
@@ -503,7 +503,7 @@ template <ranges::forward_range R1, ranges::forward_range R2> struct Concatenate
 
 }  // namespace details
 
-// Return a view range that concatenates the elements of two or more ranges.
+// Returns a view range that concatenates the elements of two or more ranges.
 // C++26: replace by views::concat().
 template <ranges::forward_range R1, ranges::forward_range R2, typename... Rs>
 [[HH_NO_DANGLING]] [[nodiscard]] auto concatenate(R1&& range1, R2&& range2, Rs&&... ranges_) {
@@ -567,7 +567,7 @@ struct TruncateClosure : ranges::range_adaptor_closure<TruncateClosure> {
 
 }  // namespace details
 
-// Return a view of the first count elements of range, leaving the range advanced to just past those elements.
+// Returns a view of the first count elements of the range, leaving the range advanced to just past those elements.
 // Unlike views::take(), the underlying iterator is never incremented past the last element that is yielded, so a
 // single-pass source (e.g. SpatialSearch) remains positioned on its next unconsumed element and does no extra work.
 [[nodiscard]] constexpr auto truncate(std::ptrdiff_t count) { return details::TruncateClosure{{}, count}; }

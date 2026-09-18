@@ -2302,8 +2302,8 @@ int main(int argc, const char** argv) {
   }
   const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-  const bool from_other = contains(V<string>("-nostdin", "-create", "-readnv12", "-as_fit", "-as_cropsides",
-                                             "-as_tnframes", "-assemble", "-startframe", "-fromimages"),
+  const bool from_other = contains(V<std::string_view>("-nostdin", "-create", "-readnv12", "-as_fit", "-as_cropsides",
+                                                       "-as_tnframes", "-assemble", "-startframe", "-fromimages"),
                                    arg0);
   if (!from_other) {
     const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";

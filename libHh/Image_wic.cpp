@@ -135,7 +135,7 @@ string canonical_pathname(string s) {
 
 void Image::read_file_wic(const string& filename, bool bgra) {
   const string filename_suffix = to_lower(get_path_extension(filename));
-  if (contains(V<string>("avif", "heif"), filename_suffix)) {
+  if (contains(V<std::string_view>("avif", "heif"), filename_suffix)) {
     // WIC is providing incorrect colors when decoding; maybe it is a color space issue; resort to ffmpeg.
     read_file_ffmpeg(filename, bgra);
     return;
@@ -333,7 +333,7 @@ void Image::write_file_wic(const string& filename, bool bgra) const {
   if (suf == "") suf = to_lower(get_path_extension(filename));
   if (suf == "") suf = suffix();
   if (suf == "") throw std::runtime_error("Image '" + filename + "': no filename suffix specified for writing");
-  if (contains(V<string>("avif", "heif"), suf)) {
+  if (contains(V<std::string_view>("avif", "heif"), suf)) {
     // WIC lacks encoding for these formats, so resort to ffmpeg.
     write_file_ffmpeg(filename, bgra);
     return;

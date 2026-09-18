@@ -4833,19 +4833,19 @@ void read_ply(const string& filename) {
       assertx(iss >> dtype >> name && iss.eof());
       const int dsize = dsizes.get(dtype);
       if (element == "vertex") {
-        if (contains(V<string>("x", "y", "z"), name)) {
+        if (contains(V<std::string_view>("x", "y", "z"), name)) {
           assertx(dtype == "float");
           assertx(vnnor + vnrgb + vnuv + vnother == 0);
           vnpos++;
-        } else if (contains(V<string>("nx", "ny", "nz"), name)) {
+        } else if (contains(V<std::string_view>("nx", "ny", "nz"), name)) {
           assertx(dtype == "float");
           assertx(vnrgb + vnuv + vnother == 0);
           vnnor++;
-        } else if (contains(V<string>("red", "green", "blue", "alpha"), name)) {
+        } else if (contains(V<std::string_view>("red", "green", "blue", "alpha"), name)) {
           assertx(dsize == 1);
           assertx(vnuv + vnother == 0);
           vnrgb++;
-        } else if (contains(V<string>("s", "t"), name)) {
+        } else if (contains(V<std::string_view>("s", "t"), name)) {
           assertx(dtype == "float");
           assertx(vnother == 0);
           vnuv++;

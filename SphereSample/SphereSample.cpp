@@ -1259,7 +1259,8 @@ void do_keys(Args& args) {
   key_names = Array(keys | views::split(',') | views::transform(ranges::to<string>()));
   if (key_names.num() == 1 && key_names[0] == "") key_names.clear();
   const std::regex alphanumeric("^[a-zA-Z]+$");
-  const auto k_valid_keys = V<string>("domainp", "stretchuv", "imageuv", "sph", "ll", "domaincorner", "domainf");
+  const auto k_valid_keys =
+      V<std::string_view>("domainp", "stretchuv", "imageuv", "sph", "ll", "domaincorner", "domainf");
   for (const string& key : key_names) {
     if (!std::regex_match(key, alphanumeric) || !contains(k_valid_keys, key))
       assertnever("Error parsing: '" + keys + "': not comma-joined subset of " + make_string(k_valid_keys));
@@ -1273,7 +1274,7 @@ void do_remesh() {
 
 void do_signal(Args& args) {
   signal_ = args.get_string();
-  assertx(contains(V<string>("G", "N", "C", "T", "V"), signal_));
+  assertx(contains(V<std::string_view>("G", "N", "C", "T", "V"), signal_));
 }
 
 void do_texture_file(Args& args) {

@@ -3597,7 +3597,8 @@ int main(int argc, const char** argv) {
   const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
   const bool from_other = contains(
-      V<string>("-nostdin", "-create", "-as_fit", "-as_cropsides", "-assemble", "-fromtxt", "-invideo"), arg0);
+      V<std::string_view>("-nostdin", "-create", "-as_fit", "-as_cropsides", "-assemble", "-fromtxt", "-invideo"),
+      arg0);
   if (!from_other) {
     const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
     image.read_file(filename);

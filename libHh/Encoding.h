@@ -70,9 +70,8 @@ template <typename T> class Encoding : noncopyable {
     for (const float prob : _map.values()) pq.enter_unsorted(0, prob);
     pq.sort();
     assertw(pq.num() >= 2);
-    float sum = 0.f;
-    for (;;) {
-      if (pq.num() < 2) break;
+    double sum = 0.;
+    while (pq.num() >= 2) {
       const float prob1 = pq.min_priority();
       pq.remove_min();
       const float prob2 = pq.min_priority();
@@ -81,7 +80,7 @@ template <typename T> class Encoding : noncopyable {
       pq.enter(0, prob);
       sum += prob;
     }
-    return sum;
+    return float(sum);
   }
 
   [[nodiscard]] float entropy() const {

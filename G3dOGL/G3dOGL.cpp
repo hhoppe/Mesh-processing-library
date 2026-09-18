@@ -3055,6 +3055,7 @@ void HB::segment_morph_mesh(int segn, float finterp) {
   ledges = g_xobs.edges[segn];
   lcullface = g_xobs.cullface[segn];
   if (!lshading && ledges) lsmooth = false;  // Cheaper.
+  assertx(g_xobs[segn]._pmesh);              // LOD mode requires that each object be a mesh.
   g_xobs[segn].morph(finterp);
 }
 

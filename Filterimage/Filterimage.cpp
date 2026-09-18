@@ -709,18 +709,18 @@ void apply_frame(const Frame& frame) {
 // Filterimage ~/data/image/lake.png -filter o -scaleu 2.0 >v2.png
 // Filterimage v1.png -compare v2.png
 //
-// E.g. 10 degree rotation (on anisometric rectangle!):  Filterimage ~/data/image/lake.png -filter o -gtransf "F 0  0.9848 -0.1736 0  0.1736 0.9848 0  0 0 1  0 0 0  0" | imgv
-// E.g. add 3x scale:  Filterimage ~/data/image/lake.png -boundaryrule r -cropall -100% -filter o -gtransf "F 0  0.32827 -0.05788 0  0.05788 0.32827 0  0 0 1  0 0 0  0" | imgv
+// E.g. 10 degree rotation (on anisometric rectangle!):  Filterimage ~/data/image/lake.png -filter o -gtransf "F 0  0.9848 -0.1736 0  0.1736 0.9848 0  0 0 1  0 0 0  0" | vv
+// E.g. add 3x scale:  Filterimage ~/data/image/lake.png -boundaryrule r -cropall -100% -filter o -gtransf "F 0  0.32827 -0.05788 0  0.05788 0.32827 0  0 0 1  0 0 0  0" | vv
 //  ca cos(10/45*atan2(1, 1)), sin(10/45*atan2(1, 1))
 void do_gtransf(Args& args) {
   const Frame frame = FrameIO::parse_frame(args.get_string());
   apply_frame(frame);
 }
 
-// E.g. 10 degree   :  Filterimage ~/data/image/lake.png -filter o -boundaryrule r -rotate 10 | imgv
-// 36-times repeated:  Filterimage ~/data/image/lake.png -filter o -boundaryrule r `perl -e 'binmode(STDOUT); for (1..36) { print "-rotate 10 "; }'` | imgv
-// Large image      :  time Filterimage ~/data/image/rampart1.jpg -filter o -boundaryrule r `perl -e 'binmode(STDOUT); for (1..1) { print "-rotate 10 "; }'` >v.jpg && imgv v.jpg
-// Filterimage ~/data/image/lake.png -filt k `perl -e 'binmode(STDOUT); for (1..20) { print "-rotate 18 "; }'` | imgv
+// E.g. 10 degree   :  Filterimage ~/data/image/lake.png -filter o -boundaryrule r -rotate 10 | vv
+// 36-times repeated:  Filterimage ~/data/image/lake.png -filter o -boundaryrule r $(printf -- '-rotate 10 %.0s' {1..36}) | vv
+// Large image      :  time Filterimage ~/data/image/rampart1.jpg -filter o -boundaryrule r $(printf -- '-rotate 10 %.0s' {1..1}) >v.jpg && vv v.jpg
+// Filterimage ~/data/image/lake.png -filt k $(printf -- '-rotate 18 %.0s' {1..20}) | vv
 void do_rotate(Args& args) {
   const float ang = args.get_float();
   const int iang = int(ang);
@@ -773,11 +773,11 @@ void do_noisegaussian(Args& args) {
 }
 
 void do_blur(Args& args) {
-  // E.g.: Filterimage ~/data/image/lake.png -blur 1 | imgv
-  // Filterimage ~/data/image/rampart1.jpg -info -blur 1 -info | imgv
+  // E.g.: Filterimage ~/data/image/lake.png -blur 1 | vv
+  // Filterimage ~/data/image/rampart1.jpg -info -blur 1 -info | vv
   //  old  (_blur:                   8.74  x8.0      8.82)
   //  new  (_blur:                   0.34  x6.5      0.37)
-  // Filterimage ~/data/image/rampart1.jpg -info -blur 2 -info | imgv
+  // Filterimage ~/data/image/rampart1.jpg -info -blur 2 -info | vv
   //  old  (_blur:                  32.00  x8.0     32.83)
   //  new  (_blur:                   0.50  x7.2      0.54)
   HH_TIMER("_blur");
@@ -954,7 +954,7 @@ void do_invideo(Args& args) {
 }
 
 void do_gridcrop(Args& args) {
-  // Filterimage ~/data/image/lake.png -as_cropsides -1 -1 -1 -1 -gridcrop 3 3 20 20 | imgv
+  // Filterimage ~/data/image/lake.png -as_cropsides -1 -1 -1 -1 -gridcrop 3 3 20 20 | vv
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx >= 2 && ny >= 2);
   int sx = args.get_int(), sy = args.get_int();
@@ -1175,7 +1175,7 @@ template <int D> void quad_pullpush(GridView<D, Pixel> grid) {
   }
 }
 
-// Filterimage ~/data/image/texture256.input.png -color 255 0 0 255 -info -quadpullpush -info | imgv
+// Filterimage ~/data/image/texture256.input.png -color 255 0 0 255 -info -quadpullpush -info | vv
 void do_quadpullpush() {
   assertx(image.zsize() == 3);  // No alpha.
   for (const auto& yx : range(image.dims())) {
@@ -1789,8 +1789,8 @@ void do_genpattern(Args& args) {
 //  This is handled by a clever low-memory orthogonal projection.
 void do_homogenize(Args& args) {
   HH_TIMER("_homogenize");
-  // E.g.:  Filterimage ~/data/image/lake.png -scalen 1 .5 -homogenize 4 | imgv
-  //        Filterimage ~/prevproj/2010/spherestitch/Other/mattu_lowfreq/test2.png -homogenize 4 | imgv
+  // E.g.:  Filterimage ~/data/image/lake.png -scalen 1 .5 -homogenize 4 | vv
+  //        Filterimage ~/prevproj/2010/spherestitch/Other/mattu_lowfreq/test2.png -homogenize 4 | vv
   int n = args.get_int();
   assertx(n >= 1 || n == -1);
   bool bilinear = false;
@@ -1897,7 +1897,7 @@ inline Vector4 to_RGB(const Vector4& yiq) {
 }
 
 void do_superresolution(Args& args) {
-  // Filterimage ~/data/image/misc/test1.png -superreso 4 | imgv
+  // Filterimage ~/data/image/misc/test1.png -superreso 4 | vv
   const float fac = args.get_float();
   assertx(fac > 1.f && fac <= 32.f);
   assertx(image.zsize() == 3);  // A 3-channel RGB image.
@@ -2020,7 +2020,7 @@ void do_istoroidal() {
 }
 
 void do_gdtoroidal() {
-  // E.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gdtoroidal -tile 2 2 | imgv
+  // E.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gdtoroidal -tile 2 2 | vv
   assertx(image.zsize() == 3);
   Grid<2, Vector4> grid_orig(image.dims());
   parallel_for_coords({.cycles_per_elem = 6}, image.dims(), [&](const Vec2<int>& yx) {  //
@@ -2075,7 +2075,7 @@ void do_gdtoroidal() {
 }
 
 void do_gradientsharpen(Args& args) {
-  // E.g.: Filterimage ~/git/hh_src/test/multigrid/rampart256.png -gradientsharpen 1.5 | imgv
+  // E.g.: f=~/git/hh_src/test/multigrid/rampart256.png; Filterimage $f -gradientsharpen 1.5 | vv $f -
   float gradient_sharpening = args.get_float();
   float screening_weight = 1.f;
   assertx(image.zsize() == 3);
@@ -2105,8 +2105,8 @@ void do_gradientsharpen(Args& args) {
 }
 
 void do_gdfill() {
-  // E.g.: Filterimage ~/data/image/lake.png -setalpha 255 -color 0 0 0 0 -drawrect 30% 30% -30% -30% -gdfill | imgv
-  // Also:  Filterimage ~/data/image/misc/lake.masked.png -gdfill | imgv  (see ~/proj/skype/Notes.txt)
+  // E.g.: Filterimage ~/data/image/lake.png -setalpha 255 -color 0 0 0 0 -drawrect 30% 30% -30% -30% -gdfill | vv
+  // Also:  Filterimage ~/data/image/misc/lake.masked.png -gdfill | vv  # See ~/proj/skype/Notes.txt
   HH_TIMER("_gdfill");
   float screening_weight = 1e-5f;  // 0.f is fine too; 1e-4f has a visible difference.
   assertx(image.zsize() == 4);
@@ -2546,7 +2546,7 @@ void do_procedure(Args& args) {
     nooutput = true;
 
   } else if (name == "checkers4") {
-    // Filterimage -create 128 128 -proc checkers4 | imgv
+    // Filterimage -create 128 128 -proc checkers4 -to png | vv
     const int n = image.ysize() / 2;
     assertx(image.dims() == twice(n * 2));
     for (const auto& yxi : range(twice(2))) {
@@ -2574,7 +2574,7 @@ void do_procedure(Args& args) {
     }
 
   } else if (name == "gradchecker") {
-    // Filterimage -create 512 512 -proc gradchecker 5 -to png | imgv
+    // Filterimage -create 512 512 -proc gradchecker 5 -to png | vv
     const int gridn = args.get_int();
     assertx(gridn >= 1);
     const int size = max(image.dims());
@@ -3421,7 +3421,7 @@ void do_pyramid(Args& args) {
 // Given the color image (already loaded) and the structure image (specified as argument),
 //  perform structure transfer.
 void do_structuretransfer(Args& args) {
-  // Filterimage ~/data/image/misc/city.input.13.jpg -structuretransfer ~/data/image/misc/city.down.png | imgv
+  // Filterimage ~/data/image/misc/city.input.13.jpg -structuretransfer ~/data/image/misc/city.down.png | vv
   const string structure_filename = args.get_filename();  // Argument is structure image.
   const Image& color_image = image;
   const Image structure_image(structure_filename);
@@ -3433,7 +3433,7 @@ void do_structuretransfer(Args& args) {
   image = convert_mat_image(mat_xfer);
 }
 
-// (cd ~/prevproj/2014/morph/data/quadmesh; Filterimage image2.png -filter k -boundaryrule r -resamplemesh 128_mesh2.m | G3d - -lighta 1 -lights 0 -st imagenew)
+// (d=~/prevproj/2014/morph/data/quadmesh; Filterimage $d/image2.png -filter k -boundaryrule r -resamplemesh $d/128_mesh2.m | G3d - -lighta 1 -lights 0 -st imagenew)
 void do_resamplemesh(Args& args) {
   const string mfile = args.get_filename();
   assertx(min(image.dims()) >= 2);

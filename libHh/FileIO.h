@@ -98,21 +98,21 @@ class TmpFile : noncopyable {
   string _filename;
 };
 
-// For sh/bash/csh/tcsh argument.
+// For sh/bash argument.
 [[nodiscard]] string quote_arg_for_sh(const string& s);
 
-// For sh/bash/csh/tcsh/cmd argument.
+// For sh/bash/cmd argument.
 [[nodiscard]] string quote_arg_for_shell(const string& s);
 
 // Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
 intptr_t my_spawn(CArrayView<string> sargv, bool wait);
 
-// Run command s (already properly quoted) using shell sh or csh or cmd, in that order.
+// Run command s (already properly quoted) using shell sh or cmd, in that order.
 // (The quoting in s may be fragile if we must resort to shell cmd.)
 // Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
 intptr_t my_sh(const string& command, bool wait = true);
 
-// Run command words sargv (after quoting them) using shell sh or csh or cmd, in that order.
+// Run command words sargv (after quoting them) using shell sh or cmd, in that order.
 // Return: -1 if spawn error, else exit_code (for wait == true) or pid (for wait == false).
 intptr_t my_sh(CArrayView<string> sargv, bool wait = true);
 

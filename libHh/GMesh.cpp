@@ -350,7 +350,8 @@ void GMesh::read(std::istream& is) {
   if (debug() >= 1) ok();
 }
 
-// Get the string within the braces.  Note the side-effect on `s`!  This function is copied elsewhere too.
+// Get the string within the braces.  Note the side-effect on the argument `s_const`!
+// This function is copied elsewhere too.
 static const char* get_sinfo(const char* s_const) {
   char* s = const_cast<char*>(s_const);
   while (std::isspace(*s)) s++;

@@ -70,25 +70,25 @@ inline bool remove_at_end(string& s, const string& se) {
   return s;
 }
 
-// Return the directory of file path, like csh $file:h .
+// Return the directory of file path, like csh "$file:h" or bash "${file%/*}".
 [[nodiscard]] inline string get_path_head(const string& s) {
   auto i = s.find_last_of("/\\");
   return i == string::npos ? s : s.substr(0, i);
 }
 
-// Return the local filename of file path, like csh $file:t .
+// Return the local filename of file path, like csh "$file:t" or bash "${file##*/}".
 [[nodiscard]] inline string get_path_tail(const string& s) {
   auto i = s.find_last_of("/\\");
   return i == string::npos ? s : s.substr(i + 1);
 }
 
-// Return the root name of file path, like csh $file:r .
+// Return the root name of file path, like csh "$file:r" or bash "${f%.*}".
 [[nodiscard]] inline string get_path_root(const string& s) {
   auto i = s.rfind('.');
   return i == string::npos ? s : s.substr(0, i);
 }
 
-// Return the file extension of file path, like csh $file:e .
+// Return the file extension of file path, without the period, like csh "$file:e" or bash "${file##*.}".
 [[nodiscard]] inline string get_path_extension(const string& s) {
   auto i = s.rfind('.');
   return i == string::npos ? "" : s.substr(i + 1);

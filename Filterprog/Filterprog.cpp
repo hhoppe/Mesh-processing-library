@@ -255,7 +255,8 @@ bool should_perform_vsplit(Vertex vs) {
   return (use_silhouette && near_silhouette) || (use_area && sufficient_area);
 }
 
-// Get the string within the braces.  Note the side-effect on `s`!  This function is copied elsewhere too.
+// Get the string within the braces.  Note the side-effect on the argument `s_const`!
+// This function is copied elsewhere too.
 const char* get_sinfo(const char* s_const) {
   char* s = const_cast<char*>(s_const);
   while (std::isspace(*s)) s++;

@@ -417,8 +417,8 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
     parallel_for_coords(ndims, func);  // Not so slow.
   } else {
     // Timing test using:
-    // Filterimage ~/data/image/lake.png -tile 10 10 -scaleu 2 | imgv
-    // Filterimage ~/data/image/lake.png -tile 4 4 -info `perl -e 'binmode(STDOUT); for (1..10) { print " -scaleu 2 -scaleu .5"; }'` | imgv
+    // Filterimage ~/data/image/lake.png -tile 10 10 -scaleu 2 | vv
+    // Filterimage ~/data/image/lake.png -tile 4 4 -info $(printf -- '-scaleu 2 -scaleu .5 %.0s' {1..10}) | vv
     for_coordsL(ntimes<D>(0).with(d, 0), ndims.with(d, ioutmin), func);
     parallel_for_coordsL(ntimes<D>(0).with(d, ioutmin), ndims.with(d, ioutmax), func_interior);
     for_coordsL(ntimes<D>(0).with(d, ioutmax), ndims.with(d, nx), func);
@@ -715,8 +715,8 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
     for_coords(dims, func);
   } else {
     // Timing test using:
-    // Filterimage ~/data/image/lake.png -tile 10 10 -info -blur 1 -info | imgv
-    // Filterimage ~/data/image/lake.png -tile 2 2 -info `perl -e 'binmode(STDOUT); for (1..10) { print " -blur 1"; }'` -info | imgv
+    // Filterimage ~/data/image/lake.png -tile 10 10 -info -blur 1 -info | vv
+    // Filterimage ~/data/image/lake.png -tile 2 2 -info $(printf -- '-blur 1 %.0s' {1..10}) -info | vv
     for_coordsL(ntimes<D>(0).with(d, 0), dims.with(d, ioutmin), func);
     if (!parallel || ngrid.size() * nk * 5 < k_parallel_thresh)
       for_coordsL(ntimes<D>(0).with(d, ioutmin), dims.with(d, ioutmax), func_interior);

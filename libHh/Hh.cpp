@@ -55,7 +55,7 @@ static_assert(sizeof(uint64_t) == 8);
 static_assert(sizeof(void*) == 8);
 static_assert(sizeof(size_t) == 8);
 
-const char* g_comment_prefix_string = "# ";  // Not `string` because cannot be destroyed before Timers destruction.
+const char* g_comment_prefix_string = "# ";  // Not `string` because it cannot be destroyed before Timers destruction.
 
 int g_unoptimized_zero = 0;
 

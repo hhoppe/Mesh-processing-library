@@ -1635,8 +1635,8 @@ void do_render_harmonize(Args& args) {
 }
 
 // Remap into a looping video by using gradient-domain stitching.
-// E.g.: set d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloop 5sec | vidv
-// E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll; VIDEOLOOP_PRECISE=1 Filtervideo -trunc_frames 215 HDgiant.mp4 -end 7sec -start -5sec -trimend -1 -loadvlp out/HDgiant_loop.vlp -gdloop 5sec -to mp4 >v1.gdloop5sec.mp4
+// E.g.: d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloop 5sec | vv
+// E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_PRECISE=1 Filtervideo -trunc_frames 215 HDgiant.mp4 -end 7sec -start -5sec -trimend -1 -loadvlp out/HDgiant_loop.vlp -gdloop 5sec -to mp4 >v1.gdloop5sec.mp4
 // E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_PRECISE=1 Filtervideo -trunc_frames 215 HDpoolpalms.mp4 -end 7sec -start -5sec -trimend -1 -loadvlp out/HDpoolpalms_loop.vlp -gdloop 5sec -to mp4 >v.gdloop5sec.mp4
 // E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_NO_BLEND=1 Filtervideo -trunc_frames 215 HDsquareflags3.mp4 -end 7sec -start -5sec -boundaryrule c -trimend -2 -loadvlp out/HDsquareflags3_loop.vlp -gdloop 5sec -to mp4 >v.gdloop5sec.mp4
 //  (For 4K video, 4.9 GB for input, then max of 9.8 GB; gdloop 5.3sec; write 63 sec; total 84 sec.)
@@ -1663,8 +1663,8 @@ void do_gdloop(Args& args) {
 }
 
 // Remap into a looping video by using gradient-domain stitching.
-// E.g.: set d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloopfile 5sec - | vidv
-// set d=~/proj/videoloops/data/test; Filtervideo $d/seacrowd.wmv -loadvlp $d/seacrowd_loop.vlp -gdloopfile 5sec v.wmv
+// E.g.: d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloopfile 5sec - | vv
+// d=~/proj/videoloops/data/test; Filtervideo $d/seacrowd.wmv -loadvlp $d/seacrowd_loop.vlp -gdloopfile 5sec v.mp4
 //  (For 4K video, 4.9 GB for input, then max of 6.5 GB; total 85 sec) (198 sec with multistream input.)
 void do_gdloopfile(Args& args) {
   const int nnf = parse_nframes(args.get_string(), false);
@@ -1685,10 +1685,10 @@ void do_gdloopfile(Args& args) {
 }
 
 // Remap into a looping video by using gradient-domain stitching.
-// E.g.: set d=~/proj/videoloops/data/test; Filtervideo -create 0 0 0 -loadvlp $d/HDbrink8_loop.vlp -gdloopstream 150  $d/HDbrink8.mp4 v.mp4 && o v.mp4
-// E.g.: set d=~/proj/videoloops/data/test; Filtervideo -create 0 0 0 -loadvlp $d/HDbrink8h_loop.vlp -gdloopstream 150  $d/HDbrink8h.mp4 v.mp4 && o v.mp4
-// E.g.: set d=~/proj/videoloops/data/test f=M4Kseacrowd.wmv; Filtervideo -create 0 0 0 -loadvlp $d/${f:r}_loop.vlp -gdloopstream 150  $d/$f v.$f:e && o v.$f:e
-// E.g.: set d=~/proj/videoloops/data/test f=HDbrink8h.mp4; Filtervideo -create 0 0 0 -loadvlp $d/${f:r}_loop.vlp -gdloopstream 150  $d/$f v.$f:e && o v.$f:e
+// E.g.: d=~/proj/videoloops/data/test; Filtervideo -create 0 0 0 -loadvlp $d/HDbrink8_loop.vlp -gdloopstream 150  $d/HDbrink8.mp4 v.mp4 && vv v.mp4
+// E.g.: d=~/proj/videoloops/data/test; Filtervideo -create 0 0 0 -loadvlp $d/HDbrink8h_loop.vlp -gdloopstream 150  $d/HDbrink8h.mp4 v.mp4 && vv v.mp4
+// E.g.: d=~/proj/videoloops/data/test f=M4Kseacrowd.wmv; Filtervideo -create 0 0 0 -loadvlp $d/${f%.*}_loop.vlp -gdloopstream 150  $d/$f v.${f##*.} && vv v.${f##*.}
+// E.g.: d=~/proj/videoloops/data/test f=HDbrink8h.mp4; Filtervideo -create 0 0 0 -loadvlp $d/${f%.*}_loop.vlp -gdloopstream 150  $d/$f v.${f##*.} && vv v.${f##*.}
 //  (For 4K video, 2.1 GB max; total 135 sec now with RVideo nv12 format.)
 void do_gdloopstream(Args& args) {
   const int nnf = parse_nframes(args.get_string(), false);
@@ -1766,7 +1766,7 @@ void do_saveloopframe(Args& args) {
 void process_gen(Args& args) {
   HH_TIMER("_gen");
   // See ~/proj/fiberpatterns/Notes.txt
-  // Filtervideo -create 180 1024 768 -procedure gen box_y -to mp4 -framerate 30 -bitrate 10m | vidv
+  // Filtervideo -create 180 1024 768 -procedure gen box_y -to mp4 -framerate 30 -bitrate 10m | vv
   assertx(video.size());
   string name = args.get_string();
   int ncolors = 3;

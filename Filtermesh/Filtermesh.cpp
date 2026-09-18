@@ -3239,7 +3239,7 @@ void do_rmdiaguv() {
   }
 }
 
-// Filtermesh ~/data/simplify/bunny.orig.m -projectimage "`cat ~/data/s3d/bunny.s3d`" ~/prevproj/2002/ssp/data/projectimage/bunny.proj.png | G3d - -st bunny.s3d -lighta 1 -lights 0
+// Filtermesh ~/data/simplify/bunny.orig.m -projectimage "$(cat ~/data/s3d/bunny.s3d)" ~/prevproj/2002/ssp/data/projectimage/bunny.proj.png | G3d - -st bunny.s3d -lighta 1 -lights 0
 void do_projectimage(Args& args) {
   const string frame_string = args.get_string();
   const string image_name = args.get_filename();
@@ -3542,7 +3542,7 @@ float signed_distance(const Point& p, Face f) {
 void do_signeddistcontour(Args& args) {
   // E.g.:
   // Filtermesh ~/data/mesh/icosahedron.m -signeddistcontour 50 | G3d - -key DmDe
-  // Filtermesh -createobject torus1 -transf "`Filterframe -create_euler 18 23 37`" -triang -signeddistcontour 40 | G3d - -key DmDe
+  // Filtermesh -createobject torus1 -transf "$(Filterframe -create_euler 18 23 37)" -triang -signeddistcontour 40 | G3d - -key DmDe
   const int grid = args.get_int();
   assertx(grid >= 2);
   {
@@ -3923,7 +3923,7 @@ void do_subsamplegim(Args& args) {
   mesh.copy(nmesh);
 }
 
-// (cd ~/prevproj/2009/catwalk/data; Filtermesh manikin_ballerina_filter.ohull.nf10000.m -shootrays manikin_ballerina_filter.wids.m | G3d manikin_ballerina_filter.ohull.nf10000.m v.a3d - -key DmDe -st manikin_ballerina_filter.s3d; rm v.a3d)  # Press 'P'.
+// d=~/prevproj/2009/catwalk/data; Filtermesh $d/manikin_ballerina_filter.ohull.nf10000.m -shootrays $d/manikin_ballerina_filter.wids.m >v.m; G3dOGL v.a3d $d/manikin_ballerina_filter.ohull.nf10000.m v.m -key DmDe -st $d/manikin_ballerina_filter.s3d -key NN; rm -f v.m v.a3d  # Press 'N' or 'P'.
 void do_shootrays(Args& args) {
   const string filename = args.get_filename();
   GMesh omesh;  // Original mesh.

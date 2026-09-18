@@ -661,7 +661,7 @@ void TmpFile::write_to(std::ostream& os) const {
 // sh -c /cygdrive/c/hh/git/hh_src/bin/win/HTest\ -showargs\ \\\"ab\ c:/dummy
 //  # Arg00='"ab'
 //  # Arg01='c:/dummy'
-// (set path=(~/git/hh_src/bin/win $path:q); sh -c HTest\ -showargs\ \\\"ab\ c:/dummy)
+// (PATH="$HOME/git/hh_src/bin/win:$PATH"; sh -c HTest\ -showargs\ \\\"ab\ c:/dummy)
 //  # Arg00='"ab'
 //  # Arg01='c:/dummy'
 
@@ -681,7 +681,7 @@ string quote_arg_for_sh(const string& s) {
 string quote_arg_for_shell(const string& s) {
   // Double quotes is not as general but should work in many cases for all shells.
   if (1) return portable_simple_quote(s);
-  return quote_arg_for_sh(s);  // Correct for csh and sh.
+  return quote_arg_for_sh(s);
 }
 
 // On Win32, used to quote each argument of a spawn() command.
@@ -845,20 +845,16 @@ intptr_t my_sh(const string& command, bool wait) {
   if (debug) SHOW(command, getenv_string("PATH"));
   // SH
   if (ret < 0) ret = my_spawn(V<string>("sh", "-c", command), wait);
-  if (ret < 0 && debug) Warning("Shell 'sh' not found");
-  // CSH
-  if (ret < 0) ret = my_spawn(V<string>("csh", "-c", command), wait);
-  if (ret < 0 && debug) Warning("Shell 'csh' not found");
-  if (ret < 0) Warning("Neither 'sh' nor 'csh' shells were found; resorting to 'cmd'");
+  if (ret < 0 && debug) Warning("Shell 'sh' not found; resorting to 'cmd'");
   // CMD
   if (0 && ret < 0) SHOW(command);
 #if !defined(_WIN32)
-  if (ret < 0) Warning("Failed to find sh/csh (outside WIN32); highly odd");
+  if (ret < 0) Warning("Failed to find sh (outside WIN32); highly odd");
 #endif
   if (ret < 0)
     ret = my_spawn(V<string>("cmd", "/s/c", command), wait);  // my_spawn() adds double-quotes for /s option.
   if (ret < 0 && debug) Warning("Shell 'cmd' not found");
-  if (ret < 0) Warning("Could not spawn shell command (sh/csh/cmd)");
+  if (ret < 0) Warning("Could not spawn shell command (sh or cmd)");
   return ret;
 }
 
@@ -879,15 +875,10 @@ intptr_t my_sh(CArrayView<string> sargv, bool wait) {
     ret = my_spawn(V<string>("sh", "-c", command), wait);
     if (ret < 0 && debug) Warning("Shell 'sh' not found");
   }
-  // CSH
-  if (ret < 0) {
-    ret = my_spawn(V<string>("csh", "-c", command), wait);
-    if (ret < 0 && debug) Warning("Shell 'csh' not found");
-  }
   // CMD
-  // (cd ~/tmp; cp -p ~/bin/sys/gzip.exe .; set path=(. ~/git/mesh_processing/bin c:/windows/system32 c:/windows); Filtermesh ~/data/mesh/"complex file name.m" -stat)
+  // (cd ~/tmp; cp -p ~/bin/sys/gzip.exe .; PATH=".:$HOME/git/mesh_processing/bin:/cygdrive/c/windows/system32:/cygdrive/c/windows"; Filtermesh ~/data/mesh/"complex file name.m" -stat)
   if (ret < 0) {
-    if (1) Warning("Neither 'sh' nor 'csh' shells were found; resorting to 'cmd'");
+    if (1) Warning("Shell 'sh' was not found; resorting to 'cmd'");
     command = "";
     for_int(i, sargv.num()) {
       if (i) command += ' ';
@@ -897,7 +888,7 @@ intptr_t my_sh(CArrayView<string> sargv, bool wait) {
     ret = my_spawn(V<string>("cmd", "/s/c", command), wait);  // my_spawn() adds double-quotes for /s option.
     if (ret < 0 && debug) Warning("Shell 'cmd' not found");
   }
-  if (ret < 0) Warning("Could not spawn shell command (sh/csh/cmd)");
+  if (ret < 0) Warning("Could not spawn shell command (sh or cmd)");
   return ret;
 }
 
@@ -939,9 +930,9 @@ int my_pclose(FILE* file) { return pclose(file); }
 
 #else  // defined(_WIN32)
 
-// Adapt popen() to use sh/csh if possible (rather than cmd) so that
+// Adapt popen() to use sh if possible (rather than cmd) so that
 // - it works within UNC directories;
-// - it uses the '#!' convention for sh/bash/csh/perl scripts.
+// - it uses the '#!' convention for sh/bash/perl scripts.
 // Inspired from:
 // - MSDN "_pipe() example BeepFilter.Cpp"
 // - popen.c in vc98/crt/src.

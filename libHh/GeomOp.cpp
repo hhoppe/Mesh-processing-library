@@ -11,13 +11,13 @@ namespace hh {
 float circum_radius(const Point& p0, const Point& p1, const Point& p2) {
   using Precision = double;
   const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
-  const Precision s = (a + b + c) * .5;
+  const Precision s = (a + b + c) * Precision{.5f};
   const Precision d2 = s * (s - a) * (s - b) * (s - c);
-  if (d2 <= 0.) {
+  if (d2 <= 0.f) {
     Warning("circum_radius degenerate");
     return 1e10f;
   }
-  return float(a * b * c * .25 / my_sqrt(d2));
+  return float(a * b * c * Precision{.25f} / my_sqrt(d2));
 }
 
 // From Coxeter "Intro to Geometry, Second ed.", page 12, equation  1.531.
@@ -27,7 +27,7 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
   // s = (a + b + c) / 2.
   using Precision = double;
   const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
-  const Precision s = (a + b + c) * .5f;
+  const Precision s = (a + b + c) * Precision{.5f};
   const Precision d2 = s * (s - a) * (s - b) * (s - c);
   // A degenerate (zero-area) triangle correctly has a zero inscribed radius, so this is not worth a warning;
   // indeed Filtermesh::is_degenerate() identifies such a triangle using this very result.
@@ -39,13 +39,13 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
 float aspect_ratio(const Point& p0, const Point& p1, const Point& p2) {
   using Precision = double;
   const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
-  const Precision s = (a + b + c) * .5;
+  const Precision s = (a + b + c) * Precision{.5f};
   const Precision d2 = s * (s - a) * (s - b) * (s - c);
-  if (d2 <= 0.) {
+  if (d2 <= 0.f) {
     // Warning("aspect_ratio degenerate");
     return 1e10f;
   }
-  return float(a * b * c * .25 * s / d2);
+  return float(a * b * c * Precision{.25f} * s / d2);
 }
 
 // *** Misc

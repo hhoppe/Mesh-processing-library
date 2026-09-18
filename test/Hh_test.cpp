@@ -19,14 +19,13 @@ const string tmpf = "v.Hh_test.txt";
 
 void try_it(const string& stest) {
   if (0) SHOW(stest);
-  // This test is broken.  We cannot assume that csh, sh, or cmd are in the user's path.
-  for_int(method, 2) {  // csh, sh, cmd.
+  // This test is broken.  We cannot assume that sh or cmd are in the user's path.
+  for_int(method, 2) {  // sh, cmd.
     if (0) SHOW(method);
     string s1 = quote_arg_for_sh(stest);  // Stronger than quote_arg_for_shell().
     if (0) SHOW(s1);
     if (0) {
       const string s2 = "echo " + s1 + " >" + tmpf;
-      // Array<string> sargv = {"csh", "-c", s2};  // works always also
       // Array<string> sargv = {"sh", "-c", s2};  // fails
       // Array<string> sargv = {"bash", "-c", s2};  // fails too
 
@@ -115,40 +114,10 @@ void test_spawn2() {
   SHOW("*", s); \
   SHOW(_spawnvp(P_WAIT, shell0, V(shell, "-c", s, nullptr).data()))  // Or "-vc".
   // echo 'a'\''b' // a'b
-  // csh -c 'echo '\''a'\''\'\'''\''b'\''' // a'b
   // sh -c  'echo '\''a'\''\'\'''\''b'\''' // a'b
   const char* s;
   const char* shell;
   const char* shell0;
-  if (0) {
-    // csh parses command using double-quotes with "\"" for inner double quotes;
-    //  it does not recognize single-quotes.  (due to crt/stdargv.c : parse_cmdline())
-    shell = "csh";
-    shell0 = shell;
-    SHOW("**", shell, shell0);
-    if (0) shell0 = "sh";  // Then it behaves differently; it parses args more like cygwin bash!
-
-    E(R"(echo a b)");        // echo         null
-    E(R"('echo a b')");      // 'echo        Unmatched '.
-    E(R"("echo a b")");      // echo a b     a b
-    E(R"("echo 'a b'")");    // echo 'a b'   a b
-    E(R"('echo "a b"')");    // 'echo        Unmatched '.
-    E(R"(echo\ \'a b\')");   // Argument for -c ends in backslash.
-    E(R"(echo" "\"a b\")");  // echo "a      Unmatched ".
-    E(R"('echo \"a b\"')");  // 'echo        Unmatched '.
-    // The outer double quotes (parsed by Windows) allow backslash of inner double quotes, just like csh/tcsh.
-    E(R"("echo \\\"a b\\\"")");  // echo \"a b\"      "a b"
-    E(R"("echo \'a b\'")");      // echo \'a b\'      'a b'
-    // The outer single quotes (parsed by Windows) prefer backslash of inner single quotes (\')
-    //  whereas the inner single quotes (parsed by sh/csh) require exiting to backslash inner quote ('\'').
-    E(R"('echo '\''a'\''\'\'''\''b'\''')");  // 'echo        Unmatched '.
-    E(R"('echo \''a'\''\'\'''\''b'\''')");   // 'echo        Unmatched '.
-    E(R"('echo \'a\'\\\'\'b\'')");           // 'echo        Unmatched '.
-    // Try using double-quotes with "\"" for inner double quotes.
-    E(R"("echo "\""a b"\""")");  // echo "a b"       a b
-    //  echo\ \"a\ b\"
-    E(R"("echo"\\" "\\""\""a"\\" b"\\""\\"")");  // echo\ \"a\ b\\   echo "a b\: Command not found.
-  }
   if (1) {
     // Cygwin sh does not use windows crt, so has its own scheme for parsing command.
     shell = "sh";
@@ -162,11 +131,11 @@ void test_spawn2() {
     E(R"(echo\ \'a b\')");   // echo\            null
     E(R"(echo" "\"a b\")");  // echo \a b"       err
     E(R"('echo \"a b\"')");  // echo \"a b\"     "a b"
-    // The outer double quotes (parsed by Windows) allow backslash of inner double quotes, just like csh/tcsh.
+    // The outer double quotes (parsed by Windows) allow backslash of inner double quotes.
     E(R"("echo \\\"a b\\\"")");  // echo \"a b\"      "a b"
     E(R"("echo \'a b\'")");      // echo \'a b\'      'a b'
     // The outer single quotes (parsed by Windows) prefer backslash of inner single quotes (\')
-    //  whereas the inner single quotes (parsed by sh/csh) require exiting to backslash inner quote ('\'').
+    //  whereas the inner single quotes (parsed by sh) require exiting to backslash inner quote ('\'').
     E(R"('echo '\''a'\''\'\'''\''b'\''')");  // echo a'\''b'      a\b   unexpected
     E(R"('echo \''a'\''\'\'''\''b'\''')");   // echo 'a'\''b'     a'b   enexpected; works
     E(R"('echo \'a\'\\\'\'b\'')");           // echo 'a'\''b'     a'b   unexpected; works

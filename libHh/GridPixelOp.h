@@ -8,9 +8,7 @@
 namespace hh {
 
 // Testing:
-// foreach n (1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 40 100 1000)
-// echo $n; Filterimage -create $n $n -bound c -scaleu 1 -noo
-// end
+// for n in {1..20} 40 100 1000; do echo $n; Filterimage -create $n $n -bound c -scaleu 1 -noo; done
 
 // Rescale matrix of pixels to the sizes given by destination nmatrixp; views matrixp and nmatrixp must be distinct.
 inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue,

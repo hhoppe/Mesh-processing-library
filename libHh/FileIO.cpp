@@ -845,10 +845,11 @@ intptr_t my_sh(const string& command, bool wait) {
   if (debug) SHOW(command, getenv_string("PATH"));
   // SH
   if (ret < 0) ret = my_spawn(V<string>("sh", "-c", command), wait);
-  if (ret < 0 && debug) Warning("Shell 'sh' not found; resorting to 'cmd'");
   // CMD
   if (0 && ret < 0) SHOW(command);
-#if !defined(_WIN32)
+#if defined(_WIN32)
+  if (ret < 0) Warning("Shell 'sh' was not found; resorting to 'cmd'");
+#else
   if (ret < 0) Warning("Failed to find sh (outside WIN32); highly odd");
 #endif
   if (ret < 0)

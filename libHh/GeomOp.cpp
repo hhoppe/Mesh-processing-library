@@ -29,10 +29,9 @@ float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
   const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
   const Precision s = (a + b + c) * .5f;
   const Precision d2 = s * (s - a) * (s - b) * (s - c);
-  if (d2 <= 0.f) {
-    Warning("inscribed_radius degenerate");
-    return 0.f;
-  }
+  // A degenerate (zero-area) triangle correctly has a zero inscribed radius, so this is not worth a warning;
+  // indeed Filtermesh::is_degenerate() identifies such a triangle using this very result.
+  if (d2 <= 0.f) return 0.f;
   return float(sqrt(d2) / s);
 }
 

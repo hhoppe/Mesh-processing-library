@@ -465,7 +465,7 @@ void do_analyze() {
          float(mesh.num_faces()) / nstrips, b_v, b_i, b_t);
 }
 
-// Analyze the badnwidth of the mesh under the traditional triangle strip framework (without vertex caching).
+// Analyze the bandwidth of the mesh under the traditional triangle strip framework (without vertex caching).
 void do_strip_analyze() {
   HH_PTIMER("_strip_analyze");
   showdf("Strip analysis\n");

@@ -202,7 +202,6 @@ void Hw::open() {
       if (_is_glx_dbuf) attributelist.push(GLX_DOUBLEBUFFER);
       if (_multisample > 1) {
         // Warning("Turning on GLX_SAMPLES_SGIS");
-        assertw(_multisample == 2 || _multisample == 4 || _multisample == 8 || _multisample == 16);
         attributelist.push_array(V(GLX_SAMPLES_SGIS, _multisample));
         // Then becomes enabled by default.
         // Note: inf_reality balrog has _multisample <= 8.

@@ -82,13 +82,14 @@ inline bool remove_at_end(string& s, const string& se) {
   return i == string::npos ? s : s.substr(i + 1);
 }
 
-// Returns the root name of a file path, like csh "$file:r" or bash "${f%.*}".
+// Returns the root name of a file path, like csh "$file:r" or bash "${file%.*}".
 [[nodiscard]] inline string get_path_root(const string& s) {
   auto i = s.rfind('.');
   return i == string::npos ? s : s.substr(0, i);
 }
 
-// Returns the file extension of a file path, without the period, like csh "$file:e" or bash "${file##*.}".
+// Returns the file extension of a file path, without the period, like csh "$file:e" or bash "${file##*.}", except
+// that it returns "" if the path has no period.
 [[nodiscard]] inline string get_path_extension(const string& s) {
   auto i = s.rfind('.');
   return i == string::npos ? "" : s.substr(i + 1);

@@ -668,8 +668,8 @@ std::optional<Vec2<int>> Hw::get_pointer() {
   pt_client = pt_screen;
   assertx(ScreenToClient(_hwnd, &pt_client));
   const Vec2<int> yx = convert<int>(V(pt_client.y, pt_client.x));
-  // Return True if mouse pointer is inside window, or False if isn't
-  //  (to be consistent with X-windows -- recall that X-windows only activates window if pointer is on it).
+  // To be consistent with X-windows (which only activates a window if the pointer is on it), we could return
+  // nothing if the mouse pointer lies outside the window:
   // RECT window_rect;
   // assertx(GetWindowRect(_hwnd, &window_rect));
   // if (!PtInRect(&window_rect, pt_screen)) return {};

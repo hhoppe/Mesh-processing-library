@@ -28,7 +28,8 @@ to build less, e.g. `make -j12 Filtermesh` or `make CONFIG=mingw -j12 libHh`.
 - `CONFIG=win` defaults to a debug build (`release=0`); the others default to release.
 - Under `unix`, the compiler is Clang by default; `CC=gcc` switches to GCC.
 - `make CONFIG=all` (or `make makeall`) runs every configuration in turn.
-- `PEDANTIC=1` enables the full warning set and adds `-Werror`.
+- `PEDANTIC=1` enables the full warning set; adding `ignore_compile_warnings=0` also makes warnings
+  errors (`-Werror`, or `-WX` under MSVC).
 - Sanitizers work under `CONFIG=unix` only (mingw ships no sanitizer runtime):
   `make CONFIG=unix release=0 PEDANTIC=1 sanitize=address,undefined -j12 test`, or
   `sanitize=thread`.
@@ -82,8 +83,9 @@ Choose the configurations by what a change touches, always with `PEDANTIC=1`:
 | `make/`, portability code, or before a checkpoint tag | every configuration, all tests, and the demos |
 
 - `unix` (`.o`) and `win` (`.obj`) keep separate object files, so alternating between them
-  stays incremental. `unix`, `mingw`, and `cygwin` share `.o` files (and `win` and `clang`
-  share `.obj` files), so switching among those rebuilds everything.
+  stays incremental. `unix`, `mingw`, `cygwin`, and `clang` all share `.o` files (and the
+  `unix` and `clang` builds also share the libHh precompiled header), so switching among those
+  rebuilds everything.
 - Treat any line containing "error" or "warning" in a build log as a failure, and confirm
   that the executables were relinked (or are newer than the changed sources). A running
   program locks its `.exe` on Windows, which makes the link fail.

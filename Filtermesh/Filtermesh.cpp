@@ -3730,15 +3730,9 @@ void do_hull(Args& args) {
   for (Vertex v : mesh.vertices()) mesh.set_point(v, mapvp.get(v));
 }
 
-// Output frame to rigidly transform from one mesh to another presumably identical mesh.
-// The reason that we don't simply align the current mesh is to encourage proper usage:
-// Two *original* meshes should be aligned.  Then, the resulting alignment frame should be used to align the
-//  corresponding *processed* meshes.
-// Aligning the processed meshes to each other is likely invalid since they no longer share the same geometry.
-// Proper use:
-//  set frame="`Filtermesh oldmesh.orig.m -alignment newmesh.orig.m`"
-//  Filtermesh oldmesh.result.m -transf "`cat $frame`" >newmesh.resultcmp.m
-void do_alignmentframe(Args& args) {
+// Output the frame that maps the bounding box of the current mesh onto that of the mesh in filename.
+// With assume_related, also verify the preconditions of the proper usage documented for -alignmentframe.
+void output_alignment_frame(Args& args, bool assume_related) {
   const string filename = args.get_filename();
   const GMesh& cmesh = mesh;
   GMesh nmesh;
@@ -3748,8 +3742,10 @@ void do_alignmentframe(Args& args) {
   showdf("with mesh %s:\n", filename.c_str());
   showdf("  %s\n", mesh_genus_string(nmesh).c_str());
   assertx(!cmesh.empty() && !nmesh.empty());
-  assertw(cmesh.num_vertices() == nmesh.num_vertices());  // Just warn.
-  assertw(cmesh.num_faces() == nmesh.num_faces());        // Just warn.
+  if (assume_related) {
+    assertw(cmesh.num_vertices() == nmesh.num_vertices());
+    assertw(cmesh.num_faces() == nmesh.num_faces());
+  }
   const Bbox cbb{cmesh.vertices() | views::transform([&](Vertex v) { return cmesh.point(v); })};
   const Bbox nbb{nmesh.vertices() | views::transform([&](Vertex v) { return nmesh.point(v); })};
   // Point corig = cbb[0];
@@ -3763,7 +3759,9 @@ void do_alignmentframe(Args& args) {
     // float scale = Sscale.max();
     scale = Sscale.avg();
     showdf("Sscale.max() / Sscale.min() = %g\n", Sscale.max() / Sscale.min());
-    assertw(Sscale.max() / Sscale.min() < 1.0001f);
+    // Two meshes related by a similarity transform must have three matching per-axis ratios; otherwise the
+    // single averaged scale is only an approximation.
+    if (assume_related) assertw(Sscale.max() / Sscale.min() < 1.0001f);
   }
   const Frame frame = (Frame::translation(Point(0.f, 0.f, 0.f) - corig) * Frame::scaling(thrice(scale)) *
                        Frame::translation(norig - Point(0.f, 0.f, 0.f)));
@@ -3771,6 +3769,21 @@ void do_alignmentframe(Args& args) {
   // for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * frame);
   nooutput = true;
 }
+
+// Output frame to rigidly transform from one mesh to another presumably identical mesh.
+// The reason that we don't simply align the current mesh is to encourage proper usage:
+// Two *original* meshes should be aligned.  Then, the resulting alignment frame should be used to align the
+//  corresponding *processed* meshes.
+// Aligning the processed meshes to each other is likely invalid since they no longer share the same geometry.
+// Proper use:
+//  frame="$(Filtermesh oldmesh.orig.m -alignment newmesh.orig.m | grep -v '^#')"
+//  Filtermesh oldmesh.result.m -transf "$frame" >newmesh.resultcmp.m
+void do_alignmentframe(Args& args) { output_alignment_frame(args, true); }
+
+// Output the same frame, but for two meshes that are not expected to share any geometry, for example a
+// surface mesh and its spherical parameterization, or two different models.  The frame then simply brings
+// the two meshes to a common position and scale, e.g. to morph between them or to view them together.
+void do_bboxalignmentframe(Args& args) { output_alignment_frame(args, false); }
 
 inline Point avg_cubic(const Point& p0, const Point& p1, const Point& p2) { return p0 * .25f + p1 * .50f + p2 * .25f; }
 
@@ -4496,6 +4509,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(quantizeverts, "bits : apply quantization to each coordinate");
   HH_ARGSD(hull, "r : morphological bloat/shrink");
   HH_ARGSD(alignmentframe, "mesh : output rigid frame to align with mesh");
+  HH_ARGSD(bboxalignmentframe, "mesh : output frame to align bboxes of unrelated meshes");
   HH_ARGSD(smoothgim, "nsubdiv : tessellate bicubic gim");
   HH_ARGSD(subsamplegim, "nsubsamp : subsample a square grid");
   HH_ARGSP(raymaxdispfrac, "frac : maximum ray displacement");

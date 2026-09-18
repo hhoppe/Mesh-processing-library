@@ -52,12 +52,12 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     while (my_getline(fi(), line, false)) {
       nlines++;
       if (ldebug) SHOW(line);
-      if (contains(line, "Could not find option 'nostdin'")) {
+      if (line.contains("Could not find option 'nostdin'")) {
         Warning("Version of external program 'ffmpeg' may be too old");
         continue;
       }
-      if (contains(line, "Input #0, ")) nimages++;
-      if (contains(line, "Stream #0:0") && contains(line, ": Video: ")) {
+      if (line.contains("Input #0, ")) nimages++;
+      if (line.contains("Stream #0:0") && line.contains(": Video: ")) {
         string::size_type i = line.find(": Video: ");
         assertt(i != string::npos);
         i += strlen(": Video: ");
@@ -71,7 +71,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
           if (i == string::npos) break;
           if (sscanf(line.c_str() + i, ", %dx%d", &dims[1], &dims[0]) == 2) break;
         }
-        if (contains(line, ", rgba,")) has_alpha = true;
+        if (line.contains(", rgba,")) has_alpha = true;
       }
     }
     if (ldebug) SHOW(nlines, nimages, dims, container, has_alpha);

@@ -852,7 +852,7 @@ void display_texture_size_info() {
 
 void set_anisotropy() {
   static const bool debug = getenv_bool("OPENGL_DEBUG");
-  if (!contains(gl_extensions_string(), "GL_EXT_texture_filter_anisotropic")) {
+  if (!gl_extensions_string().contains("GL_EXT_texture_filter_anisotropic")) {
     if (debug) Warning("No anisotropic extension");
     anisotropy = 1;
     return;
@@ -901,7 +901,7 @@ void load_texturemaps() {
     remove_at_end(name, ".s3d");
     remove_at_end(name, ".m");
     remove_at_end(name, ".obj");
-    if (contains(name, ".nf")) name.erase(name.find(".nf"));
+    if (name.contains(".nf")) name.erase(name.find(".nf"));
     name = replace_all(name, "Mesh-", "Atlas-");  // Kent data.
     static constexpr auto exts = to_Vec<std::string_view>(
         {"nor.bmp", "nor.jpg", "nor.ppm", "nor.rgb", "nor.png", "bmp", "jpg", "ppm", "rgb", "png"});
@@ -918,7 +918,7 @@ void load_texturemaps() {
     }
     texturemaps.push(s);
   }
-  if (ranges::any_of(texturemaps, [](const string& name) { return contains(name, ".nor"); })) texturenormal = true;
+  if (ranges::any_of(texturemaps, [](const string& name) { return name.contains(".nor"); })) texturenormal = true;
   assertx(!g_textures.num());
   g_textures.init(texturemaps.num());
   for_int(i, texturemaps.num()) {
@@ -998,7 +998,7 @@ void load_texturemaps() {
       if (!texturescale) {
         // showf("Setting texture clamp mode\n");
         unsigned wrap_mode = GL_CLAMP_TO_EDGE;
-        if (!contains(gl_extensions_string(), "GL_EXT_texture_edge_clamp")) {
+        if (!gl_extensions_string().contains("GL_EXT_texture_edge_clamp")) {
           // Warning("No texture_edge_clamp extension!");  // It could be due to Remote Desktop, or Apple.
           wrap_mode = GL_CLAMP;  // (Obsolete; uses border texels; seems to work though.)
         }
@@ -1034,7 +1034,7 @@ void load_texturemaps() {
     }
 
     bool texture_elev = getenv_bool("TEXTURE_ELEV");
-    if (texture_elev && !contains(gl_extensions_string(), "GL_ARB_multitexture")) {
+    if (texture_elev && !gl_extensions_string().contains("GL_ARB_multitexture")) {
       Warning("GL_ARB_multitexture unsupported -> texture_elev=false");
       texture_elev = false;
     }
@@ -2746,7 +2746,7 @@ void HB::draw_space() {
     is_init = true;
     string extensions = gl_extensions_string();
     if (getenv_bool("OPENGL_DEBUG")) SHOW(extensions);
-    g_is_ati = contains(extensions, "GL_ATI_envmap_bumpmap");
+    g_is_ati = extensions.contains("GL_ATI_envmap_bumpmap");
     if (getenv_bool("OPENGL_DEBUG")) SHOW(g_is_ati);
   }
   space_init();
@@ -4369,7 +4369,7 @@ void draw_sc() {
 // ScGeomorph stuff.
 bool grab_sc_gm(std::istream& is, std::stringstream& grab_stream) {
   for (string line; my_getline(is, line);) {
-    if (starts_with(line, "[SC Geomorph]")) return true;
+    if (line.starts_with("[SC Geomorph]")) return true;
     grab_stream << line << "\n";
   }
   return false;
@@ -4785,12 +4785,12 @@ void read_ply(const string& filename) {
     } else if (line == "format binary_little_endian 1.0") {
       assertx(element == "");
       binary = true;
-    } else if (starts_with(line, "comment ")) {
+    } else if (line.starts_with("comment ")) {
       assertw(element == "");
-    } else if (starts_with(line, "obj_info ")) {  // Ignore, e.g., "obj_info 3D colored patch boundaries ".
+    } else if (line.starts_with("obj_info ")) {  // Ignore, e.g., "obj_info 3D colored patch boundaries ".
       assertw(element == "");
 
-    } else if (starts_with(line, "element ")) {
+    } else if (line.starts_with("element ")) {
       std::istringstream iss(line.substr(std::strlen("element ")));
       int count;
       assertx(iss >> element >> count && iss.eof());
@@ -4809,7 +4809,7 @@ void read_ply(const string& filename) {
       }
       num_element++;
 
-    } else if (starts_with(line, "property list ")) {
+    } else if (line.starts_with("property list ")) {
       assertx(element == "face");
       std::istringstream iss(line.substr(std::strlen("property list ")));
       string sizetype, dtype, name;
@@ -4826,7 +4826,7 @@ void read_ply(const string& filename) {
         assertnever("ply: property list not recognized");
       }
 
-    } else if (starts_with(line, "property ")) {
+    } else if (line.starts_with("property ")) {
       assertx(element != "");
       std::istringstream iss(line.substr(std::strlen("property ")));
       string dtype, name;

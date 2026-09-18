@@ -11,45 +11,29 @@ namespace hh {
 //     return str.find(ch) != string::npos;
 // }
 
-// Does string contain a substring?
-[[nodiscard]] inline bool contains(const string& str, const string& substr) { return str.contains(substr); }
-
-// Does string have the specified prefix string?
-[[nodiscard]] inline bool starts_with(const string& s, const string& se) {
-  assertx(!se.empty());
-  return !s.compare(0, se.size(), se);
-}
-
-// Does string have the specified suffix string?
-[[nodiscard]] inline bool ends_with(const string& s, const string& se) {
-  if (s.size() < se.size()) return false;
-  if (s.compare(s.size() - se.size(), se.size(), se)) return false;
+// If prefix is not at the start of s, returns false; else erases prefix from s and returns true.
+inline bool remove_at_start(string& s, std::string_view prefix) {
+  if (!s.starts_with(prefix)) return false;
+  s.erase(0, prefix.size());
   return true;
 }
 
-// If se is not at beg of s, return false; else erase se from s and return true.
-inline bool remove_at_start(string& s, const string& se) {
-  if (!starts_with(s, se)) return false;
-  s.erase(0, se.size());
-  return true;
-}
-
-// If se is not at end of s, return false; else erase se from s and return true.
-inline bool remove_at_end(string& s, const string& se) {
-  if (!ends_with(s, se)) return false;
-  s.erase(s.size() - se.size());
+// If suffix is not at the end of s, returns false; else erases suffix from s and returns true.
+inline bool remove_at_end(string& s, std::string_view suffix) {
+  if (!s.ends_with(suffix)) return false;
+  s.erase(s.size() - suffix.size());
   return true;
 }
 
 // Replace all instances of substring with the replacement substring.
-[[nodiscard]] static inline string replace_all(const string& str, const string& substring,
-                                               const string& sreplacement) {
+[[nodiscard]] static inline string replace_all(std::string_view str, std::string_view substring,
+                                               std::string_view sreplacement) {
   string result;
-  string::size_type i = 0;
+  std::string_view::size_type i = 0;
   for (;;) {
-    auto j = str.find(substring, i);
+    const auto j = str.find(substring, i);
     result += str.substr(i, j - i);
-    if (j == string::npos) break;
+    if (j == std::string_view::npos) break;
     result += sreplacement;
     i = j + substring.size();
   }

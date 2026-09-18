@@ -293,7 +293,7 @@ class WFile::Implementation {
 RFile::RFile(string filename) {
   std::scoped_lock lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
 
-  if (starts_with(filename, "https://") || starts_with(filename, "http://")) {
+  if (filename.starts_with("https://") || filename.starts_with("http://")) {
 #if defined(_WIN32) && !defined(__MINGW32__)
     // Note: opening a FILE on an in-memory buffer using fmemopen() is unavailable on Windows.
     WCHAR cache_filename[MAX_PATH];
@@ -309,10 +309,10 @@ RFile::RFile(string filename) {
   const string original_filename = filename;
   filename = get_canonical_path(filename);
   const string mode = "r";
-  if (ends_with(filename, "|")) {
+  if (filename.ends_with("|")) {
     _file_ispipe = true;
     _file = my_popen(original_filename.substr(0, original_filename.size() - 1), mode);  // No quoting at all.
-  } else if (ends_with(filename, ".gz") || ends_with(filename, ".Z")) {
+  } else if (filename.ends_with(".gz") || filename.ends_with(".Z")) {
     _file_ispipe = true;
     _file = my_popen(V<string>("gzip", "-d", "-c", filename), mode);  // Gzip supports .Z (replacement for zcat).
   } else if (filename == "-") {
@@ -371,13 +371,13 @@ WFile::WFile(string filename) {
   const string original_filename = filename;
   filename = get_canonical_path(filename);
   const string mode = "w";
-  if (starts_with(filename, "|")) {
+  if (filename.starts_with("|")) {
     _file_ispipe = true;
     _file = my_popen(original_filename.substr(1), mode);  // No quoting at all.
-  } else if (ends_with(filename, ".Z")) {
+  } else if (filename.ends_with(".Z")) {
     _file_ispipe = true;
     _file = my_popen(("compress >" + portable_simple_quote(filename)), mode);
-  } else if (ends_with(filename, ".gz")) {
+  } else if (filename.ends_with(".gz")) {
     _file_ispipe = true;
     _file = my_popen(("gzip >" + portable_simple_quote(filename)), mode);
   } else if (filename == "-") {
@@ -445,12 +445,12 @@ bool directory_exists(const string& name) {
   return false;
 }
 
-bool is_pipe(const string& name) { return starts_with(name, "|") || ends_with(name, "|"); }
+bool is_pipe(const string& name) { return name.starts_with("|") || name.ends_with("|"); }
 
-bool is_url(const string& name) { return starts_with(name, "https://") || starts_with(name, "http://"); }
+bool is_url(const string& name) { return name.starts_with("https://") || name.starts_with("http://"); }
 
 bool file_requires_pipe(const string& name) {
-  return name == "-" || ends_with(name, ".Z") || ends_with(name, ".gz") || is_pipe(name) || is_url(name);
+  return name == "-" || name.ends_with(".Z") || name.ends_with(".gz") || is_pipe(name) || is_url(name);
 }
 
 // Returns the modification time, or 0 on error.
@@ -732,7 +732,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
   dummy_use(spawn_quote);
   assertx(sargv.num());
   assertx(sargv[0] != "");
-  assertw(!contains(getenv_string("CYGWIN"), "noglob"));
+  assertw(!getenv_string("CYGWIN").contains("noglob"));
 #if defined(_WIN32)
   {
     const int mode = wait_ ? P_WAIT : P_NOWAIT;
@@ -749,7 +749,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
       // However, when launching exiftool, it reports "perl: warning: setting locale failed.".
       if (0) my_setenv("LC_ALL", "en_US.CP437");
     }
-    if (!b_client_cmd && starts_with(sargv[0], "cmd")) Warning("Unexpected cmd command");
+    if (!b_client_cmd && sargv[0].starts_with("cmd")) Warning("Unexpected cmd command");
     if (b_client_cmd && !(sargv.num() == 3 && sargv[1] == "/s/c")) {
       SHOW(sargv);
       Warning("Unexpected cmd args");

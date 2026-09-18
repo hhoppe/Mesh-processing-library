@@ -54,7 +54,7 @@ HH_REFERENCE_LIB("ole32.lib");        // PropVariantClear()
 
 #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"
-#include "libHh/StringOp.h"  // get_path_extension(), to_lower(), starts_with(), ends_with(), contains()
+#include "libHh/StringOp.h"  // get_path_extension(), to_lower()
 #include "libHh/Timer.h"
 #include "libHh/Vector4.h"
 
@@ -839,7 +839,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
     const string& filename = _rvideo._filename;
     bool expect_audio = false;
     // This prefix is necessary to get a correct frame count in the case of *.gif generated from ffmpeg.
-    const string prefix = ends_with(filename, ".gif") ? " -r 60 -vsync vfr" : "";
+    const string prefix = filename.ends_with(".gif") ? " -r 60 -vsync vfr" : "";
 
     {  // Read the header for dimensions and attributes (ignore video and audio data).
       // 2>&1 works on both Unix bash shell and Windows cmd shell: https://stackoverflow.com/questions/1420965/
@@ -885,13 +885,13 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
         nlines++;
         if (ldebug) SHOW(line);
         char vch;
-        if (contains(line, "Could not find option 'nostdin'")) {
+        if (line.contains("Could not find option 'nostdin'")) {
           Warning("Version of external program 'ffmpeg' may be too old");
           continue;
         }
         {
           auto i = line.find(", bitrate:");
-          if (i != string::npos && !starts_with(line.substr(i), ", bitrate: N/A")) {
+          if (i != string::npos && !line.substr(i).starts_with(", bitrate: N/A")) {
             assertx(sscanf(line.c_str() + i, ", bitrate: %lg kb/%c", &total_bitrate, &vch) == 2 && vch == 's');
             total_bitrate *= 1000.;
           }
@@ -900,8 +900,8 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
           rotation = to_int(matches[1]);
         } else if (std::regex_search(line, matches, pattern_rotate)) {
           rotation = to_int(matches[1]);
-        } else if (contains(line, "Stream #0:")) {
-          if (contains(line, ": Video:") && !dims[2]) {
+        } else if (line.contains("Stream #0:")) {
+          if (line.contains(": Video:") && !dims[2]) {
             for (string::size_type i = 0;;) {
               i = line.find(',', i + 1);
               assertx(i != string::npos);
@@ -930,7 +930,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
             if (line.contains("yuv444p")) yuv444p = true;
             if (ldebug) SHOW(dims[2], dims[1], video_bitrate, framerate, yuv444p);
           }
-          if (contains(line, ": Audio:") && contains(line, "kb/s")) expect_audio = true;
+          if (line.contains(": Audio:") && line.contains("kb/s")) expect_audio = true;
         }
         {
           const string::size_type i = line.rfind("frame=");
@@ -941,7 +941,7 @@ class Ffmpeg_RVideo_Implementation : public RVideo::Implementation {
       if (!dims[0]) throw std::runtime_error("found zero frames in video file '" + filename + "'");
       if (!dims[1] || !dims[2]) throw std::runtime_error("no video stream in video file '" + filename + "'");
       if (framerate < 0.) throw std::runtime_error("no framerate in video file '" + filename + "'");
-      if (ends_with(filename, ".gif") && framerate >= 21. && framerate <= 29.) framerate = 60.;
+      if (filename.ends_with(".gif") && framerate >= 21. && framerate <= 29.) framerate = 60.;
       if (video_bitrate < 0.) video_bitrate = total_bitrate;
       if (abs(rotation) == 90 || abs(rotation) == 270) std::swap(dims[1], dims[2]);
       if (ldebug) SHOW(dims, total_bitrate, video_bitrate, framerate, rotation);

@@ -6,7 +6,6 @@
 #include "libHh/RangeOp.h"  // compare(), contains()
 #include "libHh/Set.h"
 #include "libHh/Stack.h"
-#include "libHh/StringOp.h"
 
 namespace hh {
 
@@ -621,12 +620,12 @@ void SimplicialComplex::read(std::istream& is) {
     if (line == "#") break;        // Done parsing simplex, before vsplit records.
     if (line[0] == '#') continue;  // Skip comment.
     // If attribute change state and read next line.
-    if (starts_with(line, "[Attributes]")) {
+    if (line.starts_with("[Attributes]")) {
       parse_line = &SimplicialComplex::attrReadLine;
       continue;
     }
 
-    if (starts_with(line, "[EndAttributes]")) {
+    if (line.starts_with("[EndAttributes]")) {
       parse_line = &SimplicialComplex::readLine;
       continue;
     }

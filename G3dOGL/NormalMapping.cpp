@@ -5,7 +5,6 @@
 #include "Hw.h"
 #include "libHh/Array.h"
 #include "libHh/Image.h"
-#include "libHh/StringOp.h"
 
 // NORMAL_MAPPING=ogl2 G3dOGL ~/data/mesh/buddhaf.nf10000.m -key Dt  # Also: frag1 nvrc dot3.
 
@@ -161,7 +160,7 @@ class NormalMapping_frag1 final : public NormalMapping {
 
   [[nodiscard]] string name() const override { return "frag1"; }
   [[nodiscard]] bool is_supported() const override {
-    return contains(gl_extensions_string(), "GL_ARB_fragment_program");
+    return gl_extensions_string().contains("GL_ARB_fragment_program");
   }
 
   void init() override {
@@ -271,7 +270,7 @@ class NormalMapping_dot3 final : public NormalMapping {
   [[nodiscard]] string name() const override { return "dot3"; }
 
   [[nodiscard]] bool is_supported() const override {
-    if (!contains(gl_extensions_string(), "GL_ARB_texture_env_dot3")) return false;
+    if (!gl_extensions_string().contains("GL_ARB_texture_env_dot3")) return false;
     GLint max_texture_units;
     glGetIntegerv(GL_MAX_TEXTURE_UNITS_ARB, &max_texture_units);
     if (getenv_bool("OPENGL_DEBUG")) SHOW(max_texture_units);
@@ -352,7 +351,7 @@ class NormalMapping_nvrc final : public NormalMapping {
 
   [[nodiscard]] string name() const override { return "nvrc"; }
   [[nodiscard]] bool is_supported() const override {
-    return contains(gl_extensions_string(), "GL_NV_register_combiners");
+    return gl_extensions_string().contains("GL_NV_register_combiners");
   }
 
   void init() override {

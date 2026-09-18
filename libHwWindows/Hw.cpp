@@ -1024,8 +1024,8 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   _multisample = getenv_int("MULTISAMPLE", 4, true);
   // 0 = none, 2 = 2samples, 3 = 2 + 5tap(Qunicux), 4 = 4 samples, 5 = 4 + 9tap
   if (_multisample == 1) _multisample = 0;
-  if (0 && !contains(wgl_extensions, "WGL_ARB_multisample")) _multisample = 0;
-  if (_multisample && !contains(wgl_extensions, "WGL_ARB_multisample")) {
+  if (0 && !wgl_extensions.contains("WGL_ARB_multisample")) _multisample = 0;
+  if (_multisample && !wgl_extensions.contains("WGL_ARB_multisample")) {
     if (wgl_extensions == "") {
       // Likely Remote Desktop session.
     } else {
@@ -1265,7 +1265,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     assertw(wglSwapIntervalEXT);
     if (wglSwapIntervalEXT) assertw(wglSwapIntervalEXT(interval));
   }
-  if (_multisample && contains(gl_extensions_string(), "GL_NV_multisample_filter_hint")) {
+  if (_multisample && gl_extensions_string().contains("GL_NV_multisample_filter_hint")) {
     const int val = _multisample == 3 || _multisample == 5 ? GL_NICEST : GL_FASTEST;
     glHint(GL_MULTISAMPLE_FILTER_HINT_NV, val);
   }

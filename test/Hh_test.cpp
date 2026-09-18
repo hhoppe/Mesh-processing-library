@@ -10,7 +10,6 @@
 #include "libHh/Geometry.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"  // reverse(), sort()
-#include "libHh/StringOp.h"
 using namespace hh;
 
 namespace {
@@ -577,12 +576,12 @@ line2)";
     const string format = string(len, 'H') + "%d%s";  // A long format specifier.
     const string str = sform_nonliteral(format.c_str(), 123, "hello");
     assertx(str.size() == len + 3 + 5);
-    assertx(ends_with(str, "HHHHHHHHHH123hello"));
+    assertx(str.ends_with("HHHHHHHHHH123hello"));
 
     // str.resize(17);
     // ssform(str, format.c_str(), 123, "hello");
     // assertx(str.size() == len + 3 + 5);
-    // assertx(ends_with(str, "HHHHHHHHHH123hello"));
+    // assertx(str.ends_with("HHHHHHHHHH123hello"));
   }
   if (1) {
     string str;

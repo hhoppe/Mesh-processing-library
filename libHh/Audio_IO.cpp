@@ -125,16 +125,16 @@ void Audio::read_file(const string& pfilename) {
       while (my_getline(fi(), line, false)) {
         nlines++;
         if (ldebug) SHOW(line);
-        if (contains(line, "Could not find option 'nostdin'")) {
+        if (line.contains("Could not find option 'nostdin'")) {
           Warning("Version of external program 'ffmpeg' may be too old");
           continue;
         }
-        if (contains(line, "Duration:")) {
+        if (line.contains("Duration:")) {
           //  Duration: 00:00:05.00, start: 0.000000, bitrate: 32842 kb/s  (some mp4 files)
           //  Duration: 00:00:03.02, start: 0.023021, bitrate: 258 kb/s   (mp3; should be 3.0sec)
           //  Duration: 00:00:05.03, bitrate: 100505 kb/s
           //  Duration: N/A, bitrate: N/A  (invalid.mp4)
-          if (contains(line, "Duration: N/A")) throw std::runtime_error("Invalid audio in file '" + filename + "'");
+          if (line.contains("Duration: N/A")) throw std::runtime_error("Invalid audio in file '" + filename + "'");
           {
             int vh, vm, vs, vcs;
             assertx(sscanf(line.c_str(), " Duration: %d:%d:%d.%d%c", &vh, &vm, &vs, &vcs, &vch) == 5 && vch == ',');
@@ -155,7 +155,7 @@ void Audio::read_file(const string& pfilename) {
             }
           }
         }
-        if (contains(line, "Stream #0:") && contains(line, ": Audio:") && contains(line, "kb/s")) {
+        if (line.contains("Stream #0:") && line.contains(": Audio:") && line.contains("kb/s")) {
           // Stream #0:1(eng): Audio: aac (mp4a / 0x6134706D), 48000 Hz, stereo, fltp, 128 kb/s (default)
           // Stream #0:1(und): Audio: aac (mp4a / 0x6134706D), 44100 Hz, mono, fltp, 63 kb/s (default)
           // Stream #0:1(eng): Audio: pcm_s16le (sowt / 0x74776F73), 44100 Hz, mono, s16, 705 kb/s (default)
@@ -170,9 +170,9 @@ void Audio::read_file(const string& pfilename) {
           i = line.rfind(", ", i);
           assertx(i != string::npos);
           assertx(sscanf(line.c_str() + i, ", %d H%c", &audio_samplerate, &vch) == 2 && vch == 'z');
-          if (contains(line, " mono,"))
+          if (line.contains(" mono,"))
             audio_nchannels = 1;
-          else if (contains(line, " stereo,"))
+          else if (line.contains(" stereo,"))
             audio_nchannels = 2;
           i = line.find(" channels");
           if (i != string::npos) {

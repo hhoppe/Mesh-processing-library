@@ -107,7 +107,7 @@ class SphereMapper::Implementation {
     _num_fixed_vertices = _options.fix_base ? _pmi._vertices.num() : 0;
 
     const Materials& materials = _pmi._materials;
-    for_int(matid, materials.num()) _matid_is_hole.push(contains(materials.get(matid), "hole"));
+    for_int(matid, materials.num()) _matid_is_hole.push(materials.get(matid).contains("hole"));
 
     // Compute and store the surface area of the base mesh.
     for_int(f, _pmi._faces.num()) _surface_area += sqrt(area2(_pmi.face_points(f)));

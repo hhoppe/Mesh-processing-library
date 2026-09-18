@@ -231,7 +231,7 @@ void ParseArgs::print_help() {
   for (const option& o : _aroptions) {
     string s_default;
     if (o.parse_func == &ParseArgs::fquestion && _name != "") continue;
-    if (contains(o.doc, "(<unlisted>)")) continue;
+    if (o.doc.contains("(<unlisted>)")) continue;
     if (o.narg > 0) {
       s_default = "[";
       for_int(i, o.narg) {
@@ -286,10 +286,10 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
   const int ls = narrow_cast<int>(s.size());
   for (option& o : _aroptions) {
     if (!o.parse_func) continue;
-    if (starts_with(o.str, "*") && (s[0] != '-' || skip_options)) {
+    if (o.str.starts_with("*") && (s[0] != '-' || skip_options)) {
       bool allow_case_independent_wildcard = true;
       if (o.str != to_lower(o.str)) allow_case_independent_wildcard = false;
-      if (ends_with(allow_case_independent_wildcard ? to_lower(s) : s, o.str.substr(1)) &&
+      if ((allow_case_independent_wildcard ? to_lower(s) : s).ends_with(o.str.substr(1)) &&
           (!omatch || o.str.size() > omatch->str.size()))
         omatch = &o;
       continue;

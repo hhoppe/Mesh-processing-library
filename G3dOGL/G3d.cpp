@@ -308,7 +308,7 @@ int main(int argc, const char** argv) {
   }
   const auto func_try_set_gfilename = [](const string& str) {
     if (g_filename != "") return;
-    if (starts_with(str, "bboxtomesh ") || is_pipe(str) || is_url(str)) return;
+    if (str.starts_with("bboxtomesh ") || is_pipe(str) || is_url(str)) return;
     g_filename = str;
   };
   if (eyeob && g_aargs1.num() >= 2) func_try_set_gfilename(g_aargs1[1]);

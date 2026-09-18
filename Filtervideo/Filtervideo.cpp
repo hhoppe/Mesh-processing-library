@@ -1232,7 +1232,7 @@ void do_loadvlp(Args& args) {
 void do_savepj(Args& args) {
   HH_TIMER("_savepj");
   const string filename = args.get_filename();
-  assertw(contains(filename, ".pjr"));
+  assertw(filename.contains(".pjr"));
   assertx(g_lp.mat_activation.ysize() > 0);
   WFile fi(filename);
   std::ostream& os = fi();
@@ -1795,7 +1795,7 @@ void process_gen(Args& args) {
         video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
       }
     });
-  } else if (starts_with(name, "checker")) {
+  } else if (name.starts_with("checker")) {
     float speriod = 100.f;  // Was 20.f, then 50.f.
     float tperiod = 45.f;
     float sradius = .3f;
@@ -1847,7 +1847,7 @@ void process_gen(Args& args) {
         video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
       }
     });
-  } else if (starts_with(name, "slits")) {
+  } else if (name.starts_with("slits")) {
     float nsperiods = 3.f;
     float fsperiod = .25f;
     float tperiod = 18.f;
@@ -1870,7 +1870,7 @@ void process_gen(Args& args) {
         }
       }
     });
-  } else if (starts_with(name, "stars")) {
+  } else if (name.starts_with("stars")) {
     int n;           // Number of stars.
     float radius;    // In pixels.
     float velrange;  // Fraction of screen extent.

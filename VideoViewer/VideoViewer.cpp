@@ -440,7 +440,7 @@ string append_to_filename(const string& filename, const string& smodif) {
   if (file_requires_pipe(filename)) return filename;
   if (filename == "") return {};
   const string root = get_path_root(filename), ext = get_path_extension(filename);
-  if (0 && ends_with(root, smodif)) return filename;  // Possibly only add if not already present.
+  if (0 && root.ends_with(smodif)) return filename;  // Possibly only add if not already present.
   return root + smodif + (ext != "" ? ("." + ext) : "");
 }
 
@@ -513,7 +513,7 @@ Object& verify_video() {
 unique_ptr<Object> object_reading_video(string filename) {
   try {
     if (!assertw(file_requires_pipe(filename) || filename_is_video(filename))) SHOW("not video?", filename);
-    bool use_nv12 = k_prefer_nv12 && !ends_with(filename, ".avi") && !ends_with(filename, ".gif");
+    bool use_nv12 = k_prefer_nv12 && !filename.ends_with(".avi") && !filename.ends_with(".gif");
     auto prvideo = make_unique<RVideo>(filename, use_nv12);  // May throw.
     Vec3<int> dims = prvideo->dims();                        // Should allocate extra padframes?
     if (use_nv12 && !is_zero(dims.tail<2>() % 2)) {
@@ -905,7 +905,7 @@ void view_externally() {
   const bool is_image = getob().is_image();
   for (const string& program : concatenate(programs, is_image ? image_programs : video_programs)) {
     string tfilename = filename;
-    if (contains(program, "irfan") || contains(program, "i_view")) tfilename = replace_all(tfilename, "/", "\\");
+    if (program.contains("irfan") || program.contains("i_view")) tfilename = replace_all(tfilename, "/", "\\");
     // Unfortunately, quoting misbehaves and irfanview sees: ""\\"hh"\\"data"\\"image"\\"lake.png".
     if (0) SHOW(program, tfilename);
     if (!my_spawn(V(program, tfilename), true)) {
@@ -1895,18 +1895,18 @@ bool DerivedHw::key_press(string skey) {
           reverse(ob._dims.tail<2>());
           {
             string root = get_path_root(ob._filename), ext = get_path_extension(ob._filename);
-            const Array<string> ar{"_ccw", "_rot180", "_clw", ""};
+            static constexpr auto k_suffixes = to_Vec<std::string_view>({"_ccw", "_rot180", "_clw", ""});
             int cur = -1;
-            for_int(i, ar.num()) {
-              if (ends_with(root, ar[i])) {
+            for_int(i, k_suffixes.num()) {
+              if (root.ends_with(k_suffixes[i])) {
                 cur = i;
                 break;
               }
             }
             assertx(cur >= 0);
-            assertx(remove_at_end(root, ar[cur]));
+            assertx(remove_at_end(root, k_suffixes[cur]));
             cur = my_mod(cur + (rot_degrees / 90), 4);
-            ob._filename = root + ar[cur] + "." + ext;
+            ob._filename = root + string(k_suffixes[cur]) + "." + ext;
             ob._unsaved = !file_exists(ob._filename);
           }
           if (!is_fullscreen()) {
@@ -2499,7 +2499,7 @@ bool DerivedHw::key_press(string skey) {
           string line;
           if (!my_getline(fi(), line, k_no_dos_eol_warnings)) throw "cannot get GPS coords";
           // GPS Position                    : 47.584306, -122.247126
-          if (!starts_with(line, "GPS Position  ")) throw "invalid position: " + line;
+          if (!line.starts_with("GPS Position  ")) throw "invalid position: " + line;
           const size_t pos = line.find(": ");
           assertt(pos != std::string::npos);
           const string coords = replace_all(line.substr(pos + 2), ", ", "%2C+");
@@ -2881,11 +2881,11 @@ void upload_image_to_texture() {
     assertx(is_pow2(max_texture_size));
     // USE_GL_EXT_MAYBE(glMapBuffer, PFNGLMAPBUFFERPROC);
     // supports_pbuffer = !!glMapBuffer;  // Returns address on cygwin yet is not implemented.
-    supports_non_power_of_two_textures = contains(gl_extensions_string(), "GL_ARB_texture_non_power_of_two");
-    supports_pbuffer = contains(gl_extensions_string(), "GL_ARB_pixel_buffer_object");
-    supports_BGRA = contains(gl_extensions_string(), "GL_EXT_bgra");
-    supports_texture_edge_clamp = contains(gl_extensions_string(), "GL_EXT_texture_edge_clamp");
-    supports_filter_anisotropic = contains(gl_extensions_string(), "GL_EXT_texture_filter_anisotropic");
+    supports_non_power_of_two_textures = gl_extensions_string().contains("GL_ARB_texture_non_power_of_two");
+    supports_pbuffer = gl_extensions_string().contains("GL_ARB_pixel_buffer_object");
+    supports_BGRA = gl_extensions_string().contains("GL_EXT_bgra");
+    supports_texture_edge_clamp = gl_extensions_string().contains("GL_EXT_texture_edge_clamp");
+    supports_filter_anisotropic = gl_extensions_string().contains("GL_EXT_texture_filter_anisotropic");
     if (0) {  // For testing.
       supports_non_power_of_two_textures = false;
       supports_pbuffer = false;
@@ -3745,7 +3745,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         ar.push("EXIFTOOL:");
         string line;
         while (my_getline(fi(), line, k_no_dos_eol_warnings)) ar.push(" " + line);
-      } else if (1 && (ends_with(lower_filename, ".jpg") || ends_with(lower_filename, ".jpeg")) &&
+      } else if (1 && (lower_filename.ends_with(".jpg") || lower_filename.ends_with(".jpeg")) &&
                  command_exists_in_path("exif")) {
         RFile fi("exif " + quote_arg_for_shell(ob._filename) + " 2>&1 |");
         // EXIF tags in 'c:/hh/desktop/christmas_tmp/20151225_103357.jpg' ('Intel' byte order):
@@ -3759,9 +3759,9 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         ar.push("EXIF:");
         string line;
         while (my_getline(fi(), line)) {
-          if (contains(line, "-----") || line == "" || starts_with(line, "Tag   ") || starts_with(line, "EXIF tags"))
+          if (line.contains("-----") || line == "" || line.starts_with("Tag   ") || line.starts_with("EXIF tags"))
             continue;
-          if (!starts_with(line, "EXIF tags")) line = " " + line;
+          if (!line.starts_with("EXIF tags")) line = " " + line;
           ar.push(line);
         }
       }
@@ -4386,7 +4386,7 @@ void do_zonal(Args& args) {
 
 void DerivedHw::drag_and_drop(CArrayView<string> filenames) {
   if (g_verbose >= 1) SHOW(filenames);
-  if (filenames.num() == 1 && ends_with(filenames[0], ".vlp")) {
+  if (filenames.num() == 1 && filenames[0].ends_with(".vlp")) {
     do_vlp(Args{filenames[0]}.use());
   } else {
     int nread = 0;

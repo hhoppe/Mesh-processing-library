@@ -3,6 +3,8 @@
 # clang-tidy --enable-check-profile --checks='-*,bugprone-*' Filterframe/Filterframe.cpp -- -I. 1>/dev/null  # Timings.
 # clang-tidy --enable-check-profile Filterframe/Filterframe.cpp -- -I.  # Timings.
 # clang-tidy --checks='-*,modernize-use-nodiscard' Filterframe/Filterframe.cpp -- -I.
+#   To run only particular checks, start --checks with '-*', which disables all the checks listed below (including
+#   the compiler diagnostics and the static analyzer); without it, the named checks are added to the full set.
 # cd ~/git/mesh_processing; export PATH="/cygdrive/c/progra~1/LLVM/bin/:$PATH"; clang-tidy Filterimage/Filterimage.cpp -- -I.
 # ... | grep --line-buffered -E '^[^[:space:]].*:[0-9]+:[0-9]+: (warning|error|note):' | sort -u
 #
@@ -11,9 +13,9 @@
 # b 'cd ~/git/mesh_processing; exclude1="libHwWindows|" exclude2="clip.cpp|hlaunch.cpp|Filterterrain.cpp|TerrainIO.cpp|" params="-I./libHwX"; (ls **/*.cpp | grep -vE "${exclude1}precompiled_libHh"; ls ../hh_src/**/*.cpp | grep -vE "${exclude2}/test/|_old/|_other/|G3dOGL_notes|Repository|/ptc|/streamonfile") | xargs -P 24 -I {} clang-tidy --config-file="$HOME/git/mesh_processing/.clang-tidy" --quiet {} -- -I. $params |& grep -v --line-buffered -E "^[0-9]+ warnings generated"; (exit ${PIPESTATUS[1]})'
 
 Checks:
-  # Default-included: - 'clang-diagnostic-*'
+  - 'clang-diagnostic-*'  # Listed explicitly because newer clang-tidy no longer enables all default groups.
   - '-clang-diagnostic-pragma-pack'
-  # Default-included: - 'clang-analyzer-*'
+  - 'clang-analyzer-*'
   - 'bugprone-*'
   - '-bugprone-easily-swappable-parameters'
   - '-bugprone-narrowing-conversions'

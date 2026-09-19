@@ -14,8 +14,8 @@ blob5.meshopt.simplified.m 186352
 gaudipark.orig.m 4683456
 gaudipark.pm 2561536
 cessna.pm 391574
-club.pm 509405
-club.approximation_error.txt 0.0317 0.05312 0.1857 1.927
+club.pm 508276
+club.approximation_error.txt 0.0232 0.06162 0.1623 1.919
 standingblob.geomorphs 4717324
 office.nf80000.orig.m 7140990
 office.nf80000.sr.pm 2311530

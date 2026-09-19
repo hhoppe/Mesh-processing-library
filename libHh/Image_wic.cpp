@@ -125,7 +125,7 @@ class my_HGLOBAL {
 
 string canonical_pathname(string s) {
   s = get_canonical_path(s);
-  if (s.starts_with("/")) s = "C:" + s;
+  if (s.starts_with('/')) s = "C:" + s;
   if (s.size() > 2 && std::isalnum(s[0]) && s[1] == ':') s[0] = char(std::toupper(s[0]));
   if (s.size() < 3 || s[2] != '/') assertnever("unexpected pathname in " + s);
   return s;

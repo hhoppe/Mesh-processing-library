@@ -308,7 +308,7 @@ RFile::RFile(string filename) {
   const string original_filename = filename;
   filename = get_canonical_path(filename);
   const string mode = "r";
-  if (filename.ends_with("|")) {
+  if (filename.ends_with('|')) {
     _file_ispipe = true;
     _file = my_popen(original_filename.substr(0, original_filename.size() - 1), mode);  // No quoting at all.
   } else if (filename.ends_with(".gz") || filename.ends_with(".Z")) {
@@ -370,7 +370,7 @@ WFile::WFile(string filename) {
   const string original_filename = filename;
   filename = get_canonical_path(filename);
   const string mode = "w";
-  if (filename.starts_with("|")) {
+  if (filename.starts_with('|')) {
     _file_ispipe = true;
     _file = my_popen(original_filename.substr(1), mode);  // No quoting at all.
   } else if (filename.ends_with(".Z")) {
@@ -503,7 +503,7 @@ bool directory_exists(const string& name) {
   return false;
 }
 
-bool is_pipe(const string& name) { return name.starts_with("|") || name.ends_with("|"); }
+bool is_pipe(const string& name) { return name.starts_with('|') || name.ends_with('|'); }
 
 bool is_url(const string& name) { return name.starts_with("https://") || name.starts_with("http://"); }
 

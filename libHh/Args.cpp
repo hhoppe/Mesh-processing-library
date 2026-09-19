@@ -3,7 +3,7 @@
 
 #include <cctype>  // isdigit()
 
-#include "libHh/FileIO.h"   // is_pipe(), is_url()
+#include "libHh/FileIO.h"  // is_pipe(), is_url()
 #include "libHh/StringOp.h"
 
 namespace hh {
@@ -285,7 +285,7 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
   const int ls = narrow_cast<int>(s.size());
   for (option& o : _aroptions) {
     if (!o.parse_func) continue;
-    if (o.str.starts_with("*") && (s[0] != '-' || skip_options)) {
+    if (o.str.starts_with('*') && (s[0] != '-' || skip_options)) {
       bool allow_case_independent_wildcard = true;
       if (o.str != to_lower(o.str)) allow_case_independent_wildcard = false;
       if ((allow_case_independent_wildcard ? to_lower(s) : s).ends_with(o.str.substr(1)) &&

@@ -1,0 +1,146 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (c) Microsoft Corporation; see license.txt -->
+<!-- Why a face of the lon-lat parameterization can come out inverted, and how SphereParam repairs it.
+     See the lonlat_repair namespace in SphereParam.cpp. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 1230" width="880" height="1230"
+     font-family="Segoe UI, Helvetica, Arial, sans-serif">
+  <title>Inverted lon-lat faces</title>
+  <defs>
+    <marker id="tick-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#14222b"/>
+    </marker>
+    <marker id="wind-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#14222b"/>
+    </marker>
+    <marker id="wind-arrow-flip" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8"
+            orient="auto-start-reverse">
+      <path d="M 0 0 L 10 5 L 0 10 z" fill="#bc3a24"/>
+    </marker>
+  </defs>
+  <rect width="880" height="1230" fill="#f8fbfc"/>
+
+  <!-- Panel 1: in the lon-lat domain, a great-circle edge is curved. -->
+  <text x="40" y="36" font-family="Georgia, serif" font-size="21" font-weight="600" fill="#14222b">1. In the lon-lat domain, a great-circle edge is curved</text>
+  <g transform="translate(0, 50)">
+    <line x1="90" y1="61.4" x2="90" y2="330" stroke="#14222b" stroke-width="1" opacity="0.35"/>
+    <line x1="90" y1="330" x2="836" y2="330" stroke="#14222b" stroke-width="1" opacity="0.35"/>
+    <line x1="85" y1="330.0" x2="90" y2="330.0" stroke="#14222b" opacity="0.5"/><text x="82" y="334.0" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="end">68.50°</text><line x1="85" y1="276.3" x2="90" y2="276.3" stroke="#14222b" opacity="0.5"/><text x="82" y="280.3" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="end">68.55°</text><line x1="85" y1="222.6" x2="90" y2="222.6" stroke="#14222b" opacity="0.5"/><text x="82" y="226.6" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="end">68.60°</text><line x1="85" y1="168.9" x2="90" y2="168.9" stroke="#14222b" opacity="0.5"/><text x="82" y="172.9" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="end">68.65°</text><line x1="85" y1="115.2" x2="90" y2="115.2" stroke="#14222b" opacity="0.5"/><text x="82" y="119.2" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="end">68.70°</text><line x1="85" y1="61.4" x2="90" y2="61.4" stroke="#14222b" opacity="0.5"/><text x="82" y="65.4" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="end">68.75°</text>
+    <text x="90" y="352" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="middle">-23.52°</text>
+    <text x="830" y="352" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="middle">-10.43°</text>
+    <text x="460.0" y="370" font-size="12.5" fill="#14222b" opacity="0.7" text-anchor="middle">longitude (u), spanning 13.09°</text>
+    <text x="16" y="195.7" font-size="12.5" fill="#14222b" opacity="0.7" text-anchor="middle" transform="rotate(-90 16 195.7)">latitude (v), 19× exaggerated; the pole is at 90°</text>
+    <path d="M 90.0,292.7 L 93.7,289.4 L 97.3,286.1 L 101.0,282.9 L 104.6,279.6 L 108.3,276.4 L 111.9,273.2 L 115.6,270.1 L 119.3,266.9 L 122.9,263.8 L 126.6,260.7 L 130.2,257.7 L 133.9,254.7 L 137.6,251.7 L 141.2,248.7 L 144.9,245.8 L 148.6,242.8 L 152.2,239.9 L 155.9,237.1 L 159.6,234.2 L 163.3,231.4 L 166.9,228.7 L 170.6,225.9 L 174.3,223.2 L 178.0,220.5 L 181.6,217.8 L 185.3,215.1 L 189.0,212.5 L 192.7,209.9 L 196.3,207.4 L 200.0,204.8 L 203.7,202.3 L 207.4,199.8 L 211.1,197.4 L 214.7,194.9 L 218.4,192.5 L 222.1,190.1 L 225.8,187.8 L 229.5,185.5 L 233.2,183.2 L 236.9,180.9 L 240.5,178.7 L 244.2,176.4 L 247.9,174.2 L 251.6,172.1 L 255.3,169.9 L 259.0,167.8 L 262.7,165.8 L 266.4,163.7 L 270.1,161.7 L 273.8,159.7 L 277.5,157.7 L 281.2,155.8 L 284.8,153.8 L 288.5,152.0 L 292.2,150.1 L 295.9,148.3 L 299.6,146.4 L 303.3,144.7 L 307.0,142.9 L 310.7,141.2 L 314.4,139.5 L 318.1,137.8 L 321.8,136.2 L 325.5,134.5 L 329.2,132.9 L 332.9,131.4 L 336.6,129.8 L 340.3,128.3 L 344.0,126.8 L 347.8,125.4 L 351.5,124.0 L 355.2,122.6 L 358.9,121.2 L 362.6,119.8 L 366.3,118.5 L 370.0,117.2 L 373.7,116.0 L 377.4,114.7 L 381.1,113.5 L 384.8,112.3 L 388.5,111.2 L 392.2,110.0 L 395.9,108.9 L 399.7,107.9 L 403.4,106.8 L 407.1,105.8 L 410.8,104.8 L 414.5,103.8 L 418.2,102.9 L 421.9,102.0 L 425.6,101.1 L 429.3,100.3 L 433.1,99.4 L 436.8,98.6 L 440.5,97.9 L 444.2,97.1 L 447.9,96.4 L 451.6,95.7 L 455.3,95.0 L 459.0,94.4 L 462.8,93.8 L 466.5,93.2 L 470.2,92.7 L 473.9,92.1 L 477.6,91.6 L 481.3,91.2 L 485.0,90.7 L 488.8,90.3 L 492.5,89.9 L 496.2,89.5 L 499.9,89.2 L 503.6,88.9 L 507.3,88.6 L 511.1,88.4 L 514.8,88.1 L 518.5,87.9 L 522.2,87.8 L 525.9,87.6 L 529.6,87.5 L 533.4,87.4 L 537.1,87.4 L 540.8,87.3 L 544.5,87.3 L 548.2,87.3 L 551.9,87.4 L 555.7,87.5 L 559.4,87.6 L 563.1,87.7 L 566.8,87.8 L 570.5,88.0 L 574.2,88.2 L 577.9,88.5 L 581.7,88.7 L 585.4,89.0 L 589.1,89.4 L 592.8,89.7 L 596.5,90.1 L 600.2,90.5 L 604.0,90.9 L 607.7,91.4 L 611.4,91.9 L 615.1,92.4 L 618.8,92.9 L 622.5,93.5 L 626.2,94.1 L 630.0,94.7 L 633.7,95.4 L 637.4,96.0 L 641.1,96.7 L 644.8,97.5 L 648.5,98.2 L 652.2,99.0 L 655.9,99.8 L 659.7,100.7 L 663.4,101.5 L 667.1,102.4 L 670.8,103.4 L 674.5,104.3 L 678.2,105.3 L 681.9,106.3 L 685.6,107.3 L 689.3,108.4 L 693.1,109.5 L 696.8,110.6 L 700.5,111.7 L 704.2,112.9 L 707.9,114.1 L 711.6,115.3 L 715.3,116.6 L 719.0,117.9 L 722.7,119.2 L 726.4,120.5 L 730.1,121.9 L 733.8,123.2 L 737.5,124.7 L 741.2,126.1 L 745.0,127.6 L 748.7,129.1 L 752.4,130.6 L 756.1,132.1 L 759.8,133.7 L 763.5,135.3 L 767.2,137.0 L 770.9,138.6 L 774.6,140.3 L 778.3,142.0 L 782.0,143.8 L 785.7,145.5 L 789.4,147.3 L 793.1,149.1 L 796.8,151.0 L 800.5,152.9 L 804.1,154.8 L 807.8,156.7 L 811.5,158.7 L 815.2,160.7 L 818.9,162.7 L 822.6,164.7 L 826.3,166.8 L 830.0,168.9 L 90.0,292.8 Z" fill="#0a6f8a" fill-opacity="0.13" stroke="none"/>
+    <polyline points="90.0,292.7 93.7,289.4 97.3,286.1 101.0,282.9 104.6,279.6 108.3,276.4 111.9,273.2 115.6,270.1 119.3,266.9 122.9,263.8 126.6,260.7 130.2,257.7 133.9,254.7 137.6,251.7 141.2,248.7 144.9,245.8 148.6,242.8 152.2,239.9 155.9,237.1 159.6,234.2 163.3,231.4 166.9,228.7 170.6,225.9 174.3,223.2 178.0,220.5 181.6,217.8 185.3,215.1 189.0,212.5 192.7,209.9 196.3,207.4 200.0,204.8 203.7,202.3 207.4,199.8 211.1,197.4 214.7,194.9 218.4,192.5 222.1,190.1 225.8,187.8 229.5,185.5 233.2,183.2 236.9,180.9 240.5,178.7 244.2,176.4 247.9,174.2 251.6,172.1 255.3,169.9 259.0,167.8 262.7,165.8 266.4,163.7 270.1,161.7 273.8,159.7 277.5,157.7 281.2,155.8 284.8,153.8 288.5,152.0 292.2,150.1 295.9,148.3 299.6,146.4 303.3,144.7 307.0,142.9 310.7,141.2 314.4,139.5 318.1,137.8 321.8,136.2 325.5,134.5 329.2,132.9 332.9,131.4 336.6,129.8 340.3,128.3 344.0,126.8 347.8,125.4 351.5,124.0 355.2,122.6 358.9,121.2 362.6,119.8 366.3,118.5 370.0,117.2 373.7,116.0 377.4,114.7 381.1,113.5 384.8,112.3 388.5,111.2 392.2,110.0 395.9,108.9 399.7,107.9 403.4,106.8 407.1,105.8 410.8,104.8 414.5,103.8 418.2,102.9 421.9,102.0 425.6,101.1 429.3,100.3 433.1,99.4 436.8,98.6 440.5,97.9 444.2,97.1 447.9,96.4 451.6,95.7 455.3,95.0 459.0,94.4 462.8,93.8 466.5,93.2 470.2,92.7 473.9,92.1 477.6,91.6 481.3,91.2 485.0,90.7 488.8,90.3 492.5,89.9 496.2,89.5 499.9,89.2 503.6,88.9 507.3,88.6 511.1,88.4 514.8,88.1 518.5,87.9 522.2,87.8 525.9,87.6 529.6,87.5 533.4,87.4 537.1,87.4 540.8,87.3 544.5,87.3 548.2,87.3 551.9,87.4 555.7,87.5 559.4,87.6 563.1,87.7 566.8,87.8 570.5,88.0 574.2,88.2 577.9,88.5 581.7,88.7 585.4,89.0 589.1,89.4 592.8,89.7 596.5,90.1 600.2,90.5 604.0,90.9 607.7,91.4 611.4,91.9 615.1,92.4 618.8,92.9 622.5,93.5 626.2,94.1 630.0,94.7 633.7,95.4 637.4,96.0 641.1,96.7 644.8,97.5 648.5,98.2 652.2,99.0 655.9,99.8 659.7,100.7 663.4,101.5 667.1,102.4 670.8,103.4 674.5,104.3 678.2,105.3 681.9,106.3 685.6,107.3 689.3,108.4 693.1,109.5 696.8,110.6 700.5,111.7 704.2,112.9 707.9,114.1 711.6,115.3 715.3,116.6 719.0,117.9 722.7,119.2 726.4,120.5 730.1,121.9 733.8,123.2 737.5,124.7 741.2,126.1 745.0,127.6 748.7,129.1 752.4,130.6 756.1,132.1 759.8,133.7 763.5,135.3 767.2,137.0 770.9,138.6 774.6,140.3 778.3,142.0 782.0,143.8 785.7,145.5 789.4,147.3 793.1,149.1 796.8,151.0 800.5,152.9 804.1,154.8 807.8,156.7 811.5,158.7 815.2,160.7 818.9,162.7 822.6,164.7 826.3,166.8 830.0,168.9" fill="none" stroke="#0a6f8a" stroke-width="2.4" stroke-linejoin="round"/>
+    <text x="459.0" y="82.4" font-size="13" font-weight="500" fill="#0a6f8a" text-anchor="middle">great-circle arc A→C, mapped into lon-lat</text>
+    <polygon points="90.0,292.8 266.9,241.8 830.0,168.8" fill="none" stroke="#bc3a24" stroke-width="1.6" stroke-dasharray="5 4"/>
+    <line x1="90.0" y1="292.8" x2="830.0" y2="168.8" stroke="#14222b" stroke-width="2"/>
+    <text x="690.6" y="214.2" font-size="13" font-weight="500" fill="#14222b" text-anchor="middle">straight uv segment A→C</text>
+    <line x1="459.0" y1="94.4" x2="459.0" y2="231.0" stroke="#14222b" stroke-width="1" opacity="0.55" marker-start="url(#tick-arrow)" marker-end="url(#tick-arrow)"/>
+    <text x="469.0" y="166.7" font-family="Consolas, monospace" font-size="12.5" fill="#14222b" opacity="0.85">bow 0.127°</text>
+    <line x1="266.9" y1="241.8" x2="266.9" y2="263.2" stroke="#bc3a24" stroke-width="1.2"/>
+    <text x="276.9" y="283.2" font-family="Consolas, monospace" font-size="12.5" fill="#bc3a24">B is 0.020° above the segment</text>
+    <circle cx="90.0" cy="292.8" r="5" fill="#14222b"/>
+    <text x="98.0" y="312.8" font-size="14" font-weight="500" fill="#14222b">A</text>
+    <circle cx="830.0" cy="168.8" r="5" fill="#14222b"/>
+    <text x="840.0" y="164.8" font-size="14" font-weight="500" fill="#14222b">C</text>
+    <circle cx="266.9" cy="241.8" r="5.5" fill="#bc3a24"/>
+    <text x="258.9" y="231.8" font-size="14" font-weight="500" fill="#bc3a24" text-anchor="end">B</text>
+  </g>
+  <text font-size="13" fill="#5a7382">
+    <tspan x="40" y="450">Face 59335 of bunny.sphparam.m before the repair, drawn in the lon-lat (uv) domain at its real coordinates.</tspan>
+    <tspan x="40" y="468">Mapped into lon-lat, the great-circle edge A→C bows up to 0.127° poleward of the straight uv segment A→C.</tspan>
+    <tspan x="40" y="486">Vertex B lies 0.020° above the segment but 0.073° below the arc, so the triangle winds counter-clockwise on</tspan>
+    <tspan x="40" y="504">the sphere but clockwise in uv (uv area −2.01e−6).</tspan>
+  </text>
+
+  <!-- Panel 2: the same three points, two windings. -->
+  <text x="40" y="562" font-family="Georgia, serif" font-size="21" font-weight="600" fill="#14222b">2. The same three points, two windings</text>
+  <g transform="translate(0, 558)">
+    <text x="60" y="34" font-family="Consolas, monospace" font-size="12" letter-spacing="1.4" fill="#14222b" opacity="0.7">EDGES AS GREAT-CIRCLE ARCS</text>
+    <path d="M 60 170 Q 230 68 400 132" fill="none" stroke="#0a6f8a" stroke-width="2.4"/>
+    <path d="M 60 170 Q 115 150 170 150" fill="none" stroke="#0a6f8a" stroke-width="1.6"/>
+    <path d="M 170 150 Q 285 110 400 132" fill="none" stroke="#0a6f8a" stroke-width="1.6"/>
+    <circle cx="60" cy="170" r="5" fill="#14222b"/>
+    <circle cx="400" cy="132" r="5" fill="#14222b"/>
+    <circle cx="170" cy="150" r="5.5" fill="#bc3a24"/>
+    <text x="52" y="190" font-size="13.5" font-weight="500" fill="#14222b" text-anchor="end">A</text>
+    <text x="410" y="128" font-size="13.5" font-weight="500" fill="#14222b">C</text>
+    <text x="166" y="172" font-size="13.5" font-weight="500" fill="#bc3a24" text-anchor="middle">B</text>
+    <path d="M 346 78 A 16 16 0 1 0 330 94" fill="none" stroke="#14222b" stroke-width="1.6" marker-end="url(#wind-arrow)"/>
+    <text x="60" y="222" font-size="13.5" fill="#14222b">B is below the arc A→C → counter-clockwise</text>
+    <line x1="440" y1="24" x2="440" y2="226" stroke="#14222b" stroke-width="1" opacity="0.25"/>
+    <text x="480" y="34" font-family="Consolas, monospace" font-size="12" letter-spacing="1.4" fill="#14222b" opacity="0.7">EDGES AS STRAIGHT UV SEGMENTS</text>
+    <line x1="500" y1="170" x2="840" y2="132" stroke="#14222b" stroke-width="2"/>
+    <line x1="500" y1="170" x2="610" y2="150" stroke="#bc3a24" stroke-width="1.6"/>
+    <line x1="610" y1="150" x2="840" y2="132" stroke="#bc3a24" stroke-width="1.6"/>
+    <circle cx="500" cy="170" r="5" fill="#14222b"/>
+    <circle cx="840" cy="132" r="5" fill="#14222b"/>
+    <circle cx="610" cy="150" r="5.5" fill="#bc3a24"/>
+    <text x="492" y="190" font-size="13.5" font-weight="500" fill="#14222b" text-anchor="end">A</text>
+    <text x="850" y="128" font-size="13.5" font-weight="500" fill="#14222b">C</text>
+    <text x="606" y="140" font-size="13.5" font-weight="500" fill="#bc3a24" text-anchor="middle">B</text>
+    <path d="M 754 78 A 16 16 0 1 1 770 94" fill="none" stroke="#bc3a24" stroke-width="1.6" marker-end="url(#wind-arrow-flip)"/>
+    <text x="500" y="222" font-size="13.5" fill="#bc3a24">B is above the segment A→C → clockwise</text>
+  </g>
+  <text font-size="13" fill="#5a7382">
+    <tspan x="40" y="816">Schematic, not to scale.  Both halves are in the lon-lat domain and differ only in how the vertices are joined.</tspan>
+    <tspan x="40" y="834">Away from the cut and the poles the lon-lat map preserves orientation, so the triangle bounded by the</tspan>
+    <tspan x="40" y="852">great-circle arcs (left) winds as it does on the sphere, whereas texture mapping uses straight uv segments (right).</tspan>
+  </text>
+
+  <!-- Panel 3: the pole. -->
+  <text x="40" y="912" font-family="Georgia, serif" font-size="21" font-weight="600" fill="#14222b">3. The pole is the same problem, taken to its limit</text>
+  <g transform="translate(0, 912)">
+    <text x="40" y="30" font-family="Consolas, monospace" font-size="12" letter-spacing="1.4" fill="#14222b" opacity="0.7">POLE IS NOT A VERTEX</text>
+    <line x1="60" y1="56" x2="390" y2="56" stroke="#14222b" stroke-width="1" opacity="0.35" stroke-dasharray="4 4"/>
+    <text x="56" y="60" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.6" text-anchor="end">pole</text>
+    <line x1="60" y1="46" x2="60" y2="196" stroke="#14222b" stroke-width="1" opacity="0.5"/>
+    <line x1="390" y1="46" x2="390" y2="196" stroke="#14222b" stroke-width="1" opacity="0.5"/>
+    <polygon points="60,56 390,56 390,190 330,118 220,72 60,184" fill="#e7eaec" stroke="none"/>
+    <polygon points="220,72 60,184 148,192" fill="none" stroke="#14222b" stroke-width="1.5"/>
+    <polygon points="220,72 148,192 250,180" fill="none" stroke="#14222b" stroke-width="1.5"/>
+    <polygon points="220,72 250,180 330,118" fill="none" stroke="#14222b" stroke-width="1.5"/>
+    <polygon points="220,72 330,118 390,190" fill="#bc3a24" fill-opacity="0.22" stroke="#bc3a24" stroke-width="1.8"/>
+    <circle cx="220" cy="72" r="5.5" fill="#14222b"/>
+    <text x="220" y="46" font-size="12.5" fill="#14222b" text-anchor="middle">one longitude for the whole fan</text>
+    <text x="232" y="76" font-size="12" fill="#14222b">nearest vertex (v &lt; 1)</text>
+    <text x="296" y="204" font-size="13" font-weight="500" fill="#bc3a24">reversed</text>
+    <text x="60" y="212" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="middle">u = 0</text>
+    <text x="390" y="212" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="middle">u = 1</text>
+    <text x="40" y="244" font-size="13" fill="#14222b" opacity="0.8">The apex cannot lie between every pair of bases.</text>
+    <line x1="440" y1="20" x2="440" y2="248" stroke="#14222b" stroke-width="1" opacity="0.25"/>
+    <text x="480" y="30" font-family="Consolas, monospace" font-size="12" letter-spacing="1.4" fill="#14222b" opacity="0.7">POLE IS A VERTEX</text>
+    <line x1="500" y1="56" x2="830" y2="56" stroke="#14222b" stroke-width="1" opacity="0.35" stroke-dasharray="4 4"/>
+    <text x="488" y="60" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.6" text-anchor="end">pole</text>
+    <line x1="500" y1="46" x2="500" y2="196" stroke="#14222b" stroke-width="1" opacity="0.5"/>
+    <line x1="830" y1="46" x2="830" y2="196" stroke="#14222b" stroke-width="1" opacity="0.5"/>
+    <polygon points="500,56 614,56 588,192" fill="#e7eaec" stroke="none"/>
+    <polygon points="614,56 700,56 690,180" fill="#e7eaec" stroke="none"/>
+    <polygon points="700,56 830,56 770,118" fill="#e7eaec" stroke="none"/>
+    <polygon points="500,56 500,184 588,192" fill="none" stroke="#0a6f8a" stroke-width="1.8"/>
+    <polygon points="614,56 588,192 690,180" fill="none" stroke="#0a6f8a" stroke-width="1.8"/>
+    <polygon points="700,56 690,180 770,118" fill="none" stroke="#0a6f8a" stroke-width="1.8"/>
+    <polygon points="830,56 770,118 830,190" fill="none" stroke="#0a6f8a" stroke-width="1.8"/>
+    <circle cx="500" cy="56" r="4.5" fill="#0a6f8a"/>
+    <circle cx="614" cy="56" r="4.5" fill="#0a6f8a"/>
+    <circle cx="700" cy="56" r="4.5" fill="#0a6f8a"/>
+    <circle cx="830" cy="56" r="4.5" fill="#0a6f8a"/>
+    <text x="508" y="44" font-family="Consolas, monospace" font-size="11.5" fill="#0a6f8a">u₀ = 0</text>
+    <text x="614" y="44" font-family="Consolas, monospace" font-size="11.5" fill="#0a6f8a" text-anchor="middle">u₁</text>
+    <text x="700" y="44" font-family="Consolas, monospace" font-size="11.5" fill="#0a6f8a" text-anchor="middle">u₂</text>
+    <text x="822" y="44" font-family="Consolas, monospace" font-size="11.5" fill="#0a6f8a" text-anchor="end">u₃ = 1</text>
+    <text x="567" y="106" font-size="12" fill="#14222b" opacity="0.62" text-anchor="middle">gap</text>
+    <text x="668" y="102" font-size="12" fill="#14222b" opacity="0.62" text-anchor="middle">gap</text>
+    <text x="767" y="80" font-size="12" fill="#14222b" opacity="0.62" text-anchor="middle">gap</text>
+    <text x="500" y="212" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="middle">u = 0</text>
+    <text x="830" y="212" font-family="Consolas, monospace" font-size="11.5" fill="#14222b" opacity="0.7" text-anchor="middle">u = 1</text>
+    <text x="480" y="244" font-size="13" fill="#14222b" opacity="0.8">Each corner takes its own face's longitude.</text>
+  </g>
+  <text font-size="13" fill="#5a7382">
+    <tspan x="40" y="1184">Splitting the edge through the pole gives the pole its own vertex, whose corners each carry their own longitude,</tspan>
+    <tspan x="40" y="1202">from u = 0 to u = 1, like the two corners along the prime-meridian cut; the wedges between the polar faces are</tspan>
+    <tspan x="40" y="1220">left uncovered.</tspan>
+  </text>
+</svg>

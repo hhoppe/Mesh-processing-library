@@ -393,7 +393,7 @@ bool sph_triangle_is_positive(const Vec3<Point>& sphs) { return dot(sphs[0], cro
 // triangle through the three vertex lon-lat values is reversed.  (The sph parameterization remains an embedding.)
 // The whole of this repair is best-effort: it lessens the inversion, usually to zero, and never worsens it.  It is
 // self-contained below repair_inverted_lonlat_faces(), and setting k_repair_inverted_lonlat_faces to false removes
-// it from the program entirely.
+// it from the program entirely.  The file lonlat_inversion.svg in this directory illustrates the problem.
 namespace lonlat_repair {
 
 // The extent to which some set of faces is inverted in the lon-lat domain.

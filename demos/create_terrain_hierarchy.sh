@@ -54,8 +54,8 @@ for x in {0..1}; do
     Filterimage $elev -tobw -step 1 -scalez 0.000694722 -removekinks \
                 -blocks 64 -bx $x -by $y -tofloats $rl.floats 2>>$log
     echo Simplifying stitched progressive mesh $rl.stitched.pm
-    bin/PMsimplify $rl.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1 \
-                   -no_simp_bnd -ter_grid $rl.floats 2>>$log
+    bin/PMsimplify.sh $rl.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1 \
+                      -no_simp_bnd -ter_grid $rl.floats 2>>$log
     nf=`FilterPM $rl.stitched.pm -stat 2>&1 | grep 'Basemesh' | sed 's/^.*nf=//'`
     echo nf=$nf >>$log
     mv $rl{.stitched.new,.full}.pm
@@ -77,7 +77,7 @@ rm -f $r.l1t.x?.y?.pm
 
 echo Simplifying stitched progressive mesh to form $r.l2.pm
 Filterimage $elev -tobw -step 1 -scalez 0.000694722 -removekinks -tofloats $r.floats 2>>$log
-bin/PMsimplify $r.l1.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1 -ter_grid $r.floats 2>>$log
+bin/PMsimplify.sh $r.l1.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1 -ter_grid $r.floats 2>>$log
 mv $r.l1.stitched.new.pm $r.l2.pm
 rm -f $r.floats
 

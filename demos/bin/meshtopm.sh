@@ -25,13 +25,11 @@ if [[ $1 == -postprog ]]; then
   shift 2
 fi
 
-tmpd=${TEMP:-${TMPDIR:-/tmp}}
-tmpdir=$(mktemp -d "$tmpd/meshtopm.XXXXXX") || exit
+tmpdir=$(tmpd=${TEMP:-${TMPDIR:-/tmp}}; mktemp -d "$tmpd/meshtopm.XXXXXX") || exit
+[[ $OSTYPE == cygwin ]] && tmpdir=$(cygpath -m "$tmpdir")  # Native Windows programs cannot open /tmp.
 trap 'rm -rf "$tmpdir"' EXIT  # Bash also runs this trap on SIGINT.
-tmproot=$tmpdir
-[[ $OSTYPE == cygwin ]] && tmproot=$(cygpath -m "$tmpdir")  # Native Windows programs cannot open /tmp.
-tmpprog="$tmproot"/v.prog
-tmpbase="$tmproot"/v.base.m
+tmpprog="$tmpdir"/v.prog
+tmpbase="$tmpdir"/v.base.m
 
 # Replace a '-prog placeholder' in the arguments, or else append a '-prog'.
 args=("$@")

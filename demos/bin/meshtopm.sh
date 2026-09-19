@@ -1,34 +1,52 @@
 #!/bin/bash
 
-# Examples:
-#  meshtopm.sh <file.m >file.pm
-#  meshtopm.sh file.m >file.pm
-#  cat file.m | meshtopm.sh -numpts 100000 >file.numpts100000.pm
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: meshtopm.sh [-postprog 'args'] [mesh.m] [MeshSimplify_args] >mesh.pm
 
-# set -x  # Echo expanded commands.
+Simplify a mesh using MeshSimplify while recording its edge collapses, and create a progressive mesh.
+The MeshSimplify arguments are followed by '-prog tmpfile', the '-postprog' arguments, and '-simplify'.
+So a '-simplify' among the arguments pre-simplifies the mesh, truncating the finest levels of the PM.
+Alternatively, '-prog placeholder' within the arguments starts the recording at that point.
 
-# Concerns:
-# - on Mac, old version of mktemp does not support "--suffix".
-# - on Cygwin, mktemp sometimes uses /tmp even with my TMPDIR override.
-# if [[ -n $TEMP ]]; then export TMPDIR="$TEMP"; fi  # sometimes necessary to prevent Cygwin mktemp from using /tmp
-# tmpprog=$(mktemp --suffix=.prog)
-# tmpbase=$(mktemp --suffix=.base.m)
+Examples:
+meshtopm.sh <file.m >file.pm
+meshtopm.sh file.m >file.pm
+cat file.m | meshtopm.sh -numpts 100000 >file.numpts100000.pm
+meshtopm.sh file.m -nf 100000 -simplify >file.pm
+meshtopm.sh -postprog '-simplify -dihallow -rebuildpq' file.m -minqem -vsgeom >file.pm
+meshtopm.sh planck400k.orig.m -minqem -qemvolume 0 -dihallow -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -prog placeholder -simplify -rebuildpq >planck400k.pm
+END_USAGE_EXAMPLES
+
+if [[ $1 == --help ]]; then echo "$usage"; exit 0; fi
+
+postprog=()
+if [[ $1 == -postprog ]]; then
+  read -r -a postprog <<< "$2"
+  shift 2
+fi
 
 tmpd=${TEMP:-${TMPDIR:-/tmp}}
-[[ $OSTYPE == cygwin ]] && tmpd=$(cygpath -m "$tmpd")  # Native Windows programs cannot open /tmp.
-tmproot="$tmpd"/v.$$
-tmpprog="$tmproot".prog
-tmpbase="$tmproot".base.m
+tmpdir=$(mktemp -d "$tmpd/meshtopm.XXXXXX") || exit
+trap 'rm -rf "$tmpdir"' EXIT  # Bash also runs this trap on SIGINT.
+tmproot=$tmpdir
+[[ $OSTYPE == cygwin ]] && tmproot=$(cygpath -m "$tmpdir")  # Native Windows programs cannot open /tmp.
+tmpprog="$tmproot"/v.prog
+tmpbase="$tmproot"/v.base.m
 
-cleanup() {
-  rm -f "$tmpprog" "$tmpbase"
-}
+# Replace a '-prog placeholder' in the arguments, or else append a '-prog'.
+args=("$@")
+prog_args=(-prog "$tmpprog")
+for ((i = 0; i < ${#args[@]}; i++)); do
+  if [[ ${args[i]} == -prog* ]]; then
+    if [[ ${args[i + 1]} != placeholder ]]; then
+      echo "$0: expected '${args[i]} placeholder' rather than '${args[i]} ${args[i + 1]}'" >&2
+      exit 1
+    fi
+    args[i + 1]=$tmpprog
+    prog_args=()
+  fi
+done
 
-# (The trap fails when running bash within Windows emacs bash shell because cygwin bash does not detect a tty.)
-trap '{ cleanup; exit 255; }' SIGINT SIGQUIT
+MeshSimplify "${args[@]}" "${prog_args[@]}" "${postprog[@]}" -simplify >"$tmpbase" || exit
 
-MeshSimplify "$@" -prog "$tmpprog" -simplify >"$tmpbase" || { t=$?; cleanup ; exit $t; }
-
-Filterprog -fbase "$tmpbase" -fprog "$tmpprog" -pm || { t=$?; cleanup; exit $t; }
-
-cleanup
+Filterprog -fbase "$tmpbase" -fprog "$tmpprog" -pm

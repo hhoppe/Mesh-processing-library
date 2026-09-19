@@ -1321,7 +1321,8 @@ void parse_mesh() {
 // Begin recording ecol records onto PM stream.
 void do_progressive(Args& args) {
   const string filename = args.get_filename();
-  assertw(!wfile_prog);
+  // A second stream would split the ecol records and leave the PM header inconsistent with them.
+  if (wfile_prog) assertnever("A second '-prog' is not allowed");
   if (filename != "") wfile_prog.emplace(filename);
 }
 

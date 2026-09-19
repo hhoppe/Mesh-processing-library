@@ -96,6 +96,26 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
     }
     default: SHOW("Unrecognized exception code", ExceptionCode);
   }
+  if (ExceptionCode != MSFT_CPP_EXCEPT && ExceptionCode != EXCEPTION_BREAKPOINT) {
+    const EXCEPTION_RECORD& er = *ExceptionInfo->ExceptionRecord;
+    // Also report the faulting instruction as an offset within its module, which is stable across runs despite ASLR.
+    std::cerr << sform("Exception address: %p", er.ExceptionAddress);
+    HMODULE hmodule = nullptr;
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                           static_cast<LPCSTR>(er.ExceptionAddress), &hmodule)) {
+      std::array<char, MAX_PATH> module_name{};
+      GetModuleFileNameA(hmodule, module_name.data(), DWORD(module_name.size()));
+      const uintptr_t offset = reinterpret_cast<uintptr_t>(er.ExceptionAddress) - reinterpret_cast<uintptr_t>(hmodule);
+      std::cerr << sform(" (%s+0x%llx)", module_name.data(), static_cast<unsigned long long>(offset));
+    }
+    std::cerr << "\n";
+    if ((ExceptionCode == EXCEPTION_ACCESS_VIOLATION || ExceptionCode == EXCEPTION_IN_PAGE_ERROR) &&
+        er.NumberParameters >= 2) {
+      const ULONG_PTR kind = er.ExceptionInformation[0];  // 0 = read, 1 = write, 8 = execute (DEP).
+      const char* access = kind == 0 ? "read" : kind == 1 ? "write" : kind == 8 ? "execute" : "unknown access";
+      std::cerr << sform("Attempted %s at address %p\n", access, reinterpret_cast<void*>(er.ExceptionInformation[1]));
+    }
+  }
   if (errno) std::cerr << "possible error: " << std::strerror(errno) << "\n";
   show_possible_win32_error();
   // We want to report assertion errors from C++ standard library (dialog box pops up, and reach here on "Retry").

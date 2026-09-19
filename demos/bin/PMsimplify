@@ -1,30 +1,47 @@
 #!/bin/bash
 
-# Args: rootname.pm optional_args_to_MeshSimplify
-# Examples:
-#  PMsimplify v.pm       # v.pm -> v.new.pm
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: PMsimplify rootname.pm [MeshSimplify_args]    # rootname.pm -> rootname.new.pm
+
+Further simplify the base mesh of an existing progressive mesh, and create a new progressive mesh whose vsplit
+records coarsen to the new base mesh and then continue with all the vsplit records of the old progressive mesh.
+The edge collapses are recorded from the start (as the old vsplit records must continue from the old base mesh),
+so the arguments must not include '-prog'.
+
+Examples:
+PMsimplify v.pm
+PMsimplify v.pm -minqem -nf 100
+PMsimplify terrain.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1
+END_USAGE_EXAMPLES
+
+if [[ $# == 0 || $1 == --help ]]; then echo "$usage"; exit 0; fi
 
 tname() { echo "${1##*/}"; }
-hname() { echo "${1%$(tname "$1")}"; }  # or could use $(basename "$1")
 ename() { local t="$(tname "$1")"; [[ $t = *.* ]] && echo "${t##*.}" || echo ''; }
 rname() { echo "${1%.$(ename "$1")}"; }
 
 inroot="$1"; shift
 if [[ $(ename "$inroot") == gz ]]; then inroot="$(rname "$inroot")"; fi
-if [[ $(ename "$inroot") != pm ]]; then echo "$0 : first argument not *.pm" 1>&2; exit 1; fi
+if [[ $(ename "$inroot") != pm ]]; then echo "$0: first argument not *.pm" >&2; exit 1; fi
 inroot="$(rname "$inroot")"
 
+for arg in "$@"; do
+  if [[ $arg == -prog* ]]; then echo "$0: the arguments must not include '$arg'" >&2; exit 1; fi
+done
+
 outroot="$inroot.new"
-echo "Run MeshSimplify: $inroot.pm --> $outroot.pm" 1>&2
+echo "Run MeshSimplify: $inroot.pm --> $outroot.pm" >&2
 
-rm -f "$outroot.tmp" "$outroot.base.m" "$outroot.prog"
+tmpd=${TEMP:-${TMPDIR:-/tmp}}
+tmpdir=$(mktemp -d "$tmpd/PMsimplify.XXXXXX") || exit
+trap 'rm -rf "$tmpdir"' EXIT  # Bash also runs this trap on SIGINT.
+tmproot=$tmpdir
+[[ $OSTYPE == cygwin ]] && tmproot=$(cygpath -m "$tmpdir")  # Native Windows programs cannot open /tmp.
+tmpprog="$tmproot"/v.prog
+tmpbase="$tmproot"/v.base.m
 
-FilterPM "$inroot.pm" -nf 0 -outmesh >"$outroot.tmp"
+set -o pipefail
+FilterPM "$inroot.pm" -nf 0 -outmesh | MeshSimplify -prog "$tmpprog" "$@" -simplify >"$tmpbase" || exit
 
-MeshSimplify "$outroot.tmp" -prog "$outroot.prog" "$@" -simplify >"$outroot.base.m" || exit
-if true; then rm "$outroot.tmp"; fi
-Filterprog -fbase "$outroot.base.m" -fprog "$outroot.prog" -append_old_pm "$inroot.pm" -pm >"$outroot.pm" || exit
 # Not '| gzip' because it would strip out all SHOWFF() output.
-rm "$outroot.prog" "$outroot.base.m"
-
-if false; then gzip -f "$outroot.pm"; fi
+Filterprog -fbase "$tmpbase" -fprog "$tmpprog" -append_old_pm "$inroot.pm" -pm >"$outroot.pm"

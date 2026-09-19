@@ -73,7 +73,8 @@ $(create_scripts):
 	$(@)
 
 # Check that the created outputs look reasonable (see results_reference.txt).
-check:
+# If create is also a goal, wait for it to complete.
+check: | $(filter create,$(MAKECMDGOALS))
 	./check_created_outputs.sh
 
 # Just in case these are specified individually.

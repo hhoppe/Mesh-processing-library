@@ -27,13 +27,16 @@ bool use_area = false;        // A REFINE criterion.
 bool splitcorners = false;    // Split wedges (wid) into vertices in output meshes.
 string append_old_pm;         // Name of the old PM file.
 
-std::optional<RFile> pfi_prog;  // The progressive file being read.
-GMesh mesh;                     // The current mesh.
-bool record_changes = false;    // The output stream of mesh changes.
-bool sel_refinement = false;    // Selective refinement is active.
-Frame view_frame;               // Used only if sel_refinement.
-float view_zoom = 0.f;          // Used only if sel_refinement.
-Frame view_iframe;              // Equals inverse(view_frame).
+std::optional<RFile> fi_prog;  // The vsplit records (*.rprog) being read.
+GMesh mesh;                    // The current mesh.
+bool record_changes = false;   // The output stream of mesh changes.
+bool sel_refinement = false;   // Selective refinement is active.
+Frame view_frame;              // Used only if sel_refinement.
+float view_zoom = 0.f;         // Used only if sel_refinement.
+Frame view_iframe;             // Equals inverse(view_frame).
+
+// Alternatively to fi_prog, the edge collapse records (*.prog) being read in reverse.
+std::optional<ReversedLinesReader> reversed_prog;
 const bool sdebug = getenv_bool("FILTERPROG_DEBUG");
 
 Array<string> pm_material_strings;
@@ -42,6 +45,12 @@ Bbox<float, 3> pm_bbox;
 bool pm_has_wad2 = false;
 
 string g_header;
+
+// Read the next line of the sequence of vsplit records; returns false at the end of the sequence.
+bool prog_getline(string& line) {
+  if (reversed_prog) return reversed_prog->getline(line);
+  return !!my_getline((*assertx(fi_prog))(), line);
+}
 
 constexpr float k_undefined = BIGFLOAT;  // Undefined scalar attribute.
 
@@ -428,12 +437,15 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
   assertnever("Cannot parse line '" + string(sline) + "'");
 }
 
-// Read and parse a vsplit record.
-void read_record(std::istream& is, bool carry_old) {
+// Read and parse a vsplit record; returns false at the end of the sequence.
+bool read_record(bool carry_old) {
   bool after_vsplit = false;
-  for (string line; my_getline(is, line);)
-    if (!parse_line(const_cast<char*>(line.c_str()), after_vsplit, carry_old)) break;
-  if (is) assertx(after_vsplit);
+  for (string line;;) {
+    if (!prog_getline(line)) return false;
+    if (!parse_line(line.data(), after_vsplit, carry_old)) break;
+  }
+  assertx(after_vsplit);
+  return true;
 }
 
 // Look around a vertex to see if its corners have a unique wid.  Returns that wid, or -1 if they don't.
@@ -580,13 +592,12 @@ bool next_morph(int nfaces) {
     }
     gowinfo.copy_from(gcwinfo);
   }
-  RFile& fi_prog = *assertx(pfi_prog);
-  std::istream& is = fi_prog();
+  bool has_more_records;
   {
     HH_ATIMER("__read_records");
     for (;;) {  // Read a record and refine mesh.
-      read_record(is, true);
-      if (!is || mesh.num_faces() >= nfaces) break;
+      has_more_records = read_record(true);
+      if (!has_more_records || mesh.num_faces() >= nfaces) break;
     }
   }
   {
@@ -608,7 +619,7 @@ bool next_morph(int nfaces) {
     v_opos(v) = Point(k_undefined, k_undefined, k_undefined);  // Optional.
     for (Corner c : mesh.corners(v)) c_owedge_id(c) = -1;      // Optional.
   }
-  return !!is;
+  return has_more_records;
 }
 
 // Read the base mesh.
@@ -673,10 +684,22 @@ void do_fbasemesh(Args& args) {
   clear_mesh_strings();
 }
 
-// Open the PM file stream.
+// Open the stream of vsplit records, either from a file of vsplit records (*.rprog) or by reading in reverse a file
+// of edge collapse records (*.prog).
 void do_fprogressive(Args& args) {
-  assertx(!pfi_prog);
-  pfi_prog.emplace(args.get_filename());
+  assertx(!fi_prog && !reversed_prog);
+  const string filename = args.get_filename();
+  fi_prog.emplace(filename);
+  string line;
+  if (!my_getline((*fi_prog)(), line)) return;  // Empty sequence.
+  if (line == "# Beg REcol") {
+    // The file has edge collapse records, so read it in reverse.
+    fi_prog.reset();
+    reversed_prog.emplace(filename);
+  } else {
+    // The file has vsplit records; the skipped line is a comment that starts the first record.
+    assertx(line == "# End REcol");
+  }
 }
 
 // Write a sequence of morphs forming an arithmetic sequence.
@@ -722,14 +745,11 @@ void do_to(Args& args) {
 // Parse vsplit records until mesh has nfaces.
 void do_from(Args& args) {
   const int nfaces = args.get_int();
-  RFile& fi_prog = *assertx(pfi_prog);
-  std::istream& is = fi_prog();
   {
     HH_ATIMER("__skip_records");
     for (;;) {  // Read a record and refine mesh.
       if (mesh.num_faces() >= nfaces) break;
-      read_record(is, false);
-      if (!is) break;
+      if (!read_record(false)) break;
     }
   }
 }
@@ -738,15 +758,12 @@ void do_from(Args& args) {
 // sel_refinement.)
 void do_consider(Args& args) {
   const int nrecords = args.get_int();
-  RFile& fi_prog = *assertx(pfi_prog);
-  std::istream& is = fi_prog();
   int nrec = 0;
   {
     HH_ATIMER("__skip_records");
     for (;;) {  // Read a record and refine mesh.
       if (nrec >= nrecords) break;
-      read_record(is, false);
-      if (!is) break;
+      if (!read_record(false)) break;
       nrec++;
     }
   }
@@ -788,15 +805,12 @@ void do_view(Args& args) {
 // Parse vsplit records until mesh has nfaces, recording changes on stdout.
 void do_animateto(Args& args) {
   const int nfaces = args.get_int();
-  RFile& fi_prog = *assertx(pfi_prog);
-  std::istream& is = fi_prog();
   {
     write_mesh();
     record_changes = true;
     HH_ATIMER("__animate");
     for (;;) {  // Read a record and refine mesh.
-      read_record(is, false);
-      if (!is || mesh.num_faces() >= nfaces) break;
+      if (!read_record(false) || mesh.num_faces() >= nfaces) break;
     }
     record_changes = false;
   }
@@ -1185,7 +1199,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       break;
     case 'F':
       if (const char* s = after_prefix(sline, "Face ")) {
-        // NOTE: because of reverselines, face2 arrives before face1!
+        // NOTE: because the edge collapse records are read in reverse, face2 arrives before face1!
         // Note: still true with std::swap(vs, vt) and collapse_edge_vertex.
         PArray<Vertex, 3> va;
         const int fi = int_from_chars(s);
@@ -1408,22 +1422,24 @@ void do_pm_encode() {
   pmesh._vsplits.reserve(pmesh._info._tot_nvsplits);
   assertx(!pmesh._vsplits.num());
   // Parse vsplit records and encode.
-  {
-    RFile& fi_prog = *assertx(pfi_prog);
-    std::istream& is = fi_prog();
-    for (;;) {
-      vspl.resid_uni = 0.f;
-      vspl.resid_dir = 0.f;
-      bool after_vsplit = false;
-      for (string line; my_getline(is, line);)
-        if (!parse_line2(const_cast<char*>(line.c_str()), after_vsplit)) break;
-      if (!is) {
-        assertx(!after_vsplit);
+  for (;;) {
+    vspl.resid_uni = 0.f;
+    vspl.resid_dir = 0.f;
+    bool after_vsplit = false;
+    bool has_more_records = true;
+    for (string line;;) {
+      if (!prog_getline(line)) {
+        has_more_records = false;
         break;
       }
-      assertx(after_vsplit);
-      pmesh._vsplits.push(vspl);
+      if (!parse_line2(line.data(), after_vsplit)) break;
     }
+    if (!has_more_records) {
+      assertx(!after_vsplit);
+      break;
+    }
+    assertx(after_vsplit);
+    pmesh._vsplits.push(vspl);
   }
   pmesh._info._has_rgb = has_rgb;
   pmesh._info._has_uv = has_uv;
@@ -1495,7 +1511,7 @@ int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
   HH_ARGSC(HH_ARGS_INDENT "Construction of progressive mesh:");
   HH_ARGSD(fbasemesh, "file.m : base mesh");
-  HH_ARGSD(fprogressive, "file.rprog : progressive vsplit stream");
+  HH_ARGSD(fprogressive, "file.prog|file.rprog : edge collapse or vsplit records");
   HH_ARGSP(append_old_pm, "file.pm : append old vsplit sequence");
   HH_ARGSD(pm_encode, ": output PM format");
   HH_ARGSC(HH_ARGS_INDENT "Old options mostly made obsolete by FilterPM:");
@@ -1516,6 +1532,7 @@ int main(int argc, const char** argv) {
   // HH_TIMER("Filterprog");
   g_header = args.header();
   args.parse();
-  pfi_prog.reset();
+  fi_prog.reset();
+  reversed_prog.reset();
   return 0;
 }

@@ -17,16 +17,14 @@ inroot="$(rname "$inroot")"
 outroot="$inroot.new"
 echo "Run MeshSimplify: $inroot.pm --> $outroot.pm" 1>&2
 
-rm -f "$outroot.tmp" "$outroot.base.m" "$outroot.prog" "$outroot.rprog"
+rm -f "$outroot.tmp" "$outroot.base.m" "$outroot.prog"
 
 FilterPM "$inroot.pm" -nf 0 -outmesh >"$outroot.tmp"
 
 MeshSimplify "$outroot.tmp" -prog "$outroot.prog" "$@" -simplify >"$outroot.base.m" || exit
 if true; then rm "$outroot.tmp"; fi
-reverselines "$outroot.prog" >"$outroot.rprog" || exit
-if true; then rm "$outroot.prog"; fi
-Filterprog -fbase "$outroot.base.m" -fprog "$outroot.rprog" -append_old_pm "$inroot.pm" -pm >"$outroot.pm" || exit
+Filterprog -fbase "$outroot.base.m" -fprog "$outroot.prog" -append_old_pm "$inroot.pm" -pm >"$outroot.pm" || exit
 # Not '| gzip' because it would strip out all SHOWFF() output.
-rm "$outroot.rprog" "$outroot.base.m"
+rm "$outroot.prog" "$outroot.base.m"
 
 if false; then gzip -f "$outroot.pm"; fi

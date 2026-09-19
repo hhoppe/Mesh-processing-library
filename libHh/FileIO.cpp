@@ -412,6 +412,65 @@ WFile::~WFile() {
   }
 }
 
+// *** ReversedLinesReader
+
+ReversedLinesReader::ReversedLinesReader(const string& filename) : _rfile(filename) {
+  // Reject the cases in which RFile would read through a pipe (including its fallback to filename + ".gz").
+  assertx(!file_requires_pipe(filename) && file_exists(filename));
+  FILE* const file = _rfile.cfile();
+#if defined(_WIN32)
+  assertx(!_fseeki64(file, 0, SEEK_END));
+  _pos = _ftelli64(file);
+#else
+  static_assert(sizeof(off_t) == 8);
+  assertx(!fseeko(file, 0, SEEK_END));
+  _pos = ftello(file);
+#endif
+  assertx(_pos >= 0);
+  if (!_pos) {
+    _done = true;
+    return;
+  }
+  read_chunk();
+  if (_buf.back() == '\n') _buf.pop_back();  // Else the last line is unterminated.
+}
+
+void ReversedLinesReader::read_chunk() {
+  FILE* const file = _rfile.cfile();
+  constexpr int64_t k_chunk_size = 1 << 20;  // 1 MiB.
+  const int64_t chunk_size = min(_pos, k_chunk_size);
+  _pos -= chunk_size;
+  const size_t n = size_t(chunk_size);
+#if defined(_WIN32)
+  assertx(!_fseeki64(file, _pos, SEEK_SET));
+#else
+  assertx(!fseeko(file, off_t(_pos), SEEK_SET));
+#endif
+  const size_t old_size = _buf.size();
+  _buf.resize(old_size + n);
+  std::memmove(_buf.data() + n, _buf.data(), old_size);
+  assertx(fread(_buf.data(), 1, n, file) == n);
+}
+
+bool ReversedLinesReader::getline(string& line) {
+  if (_done) return false;
+  for (;;) {
+    if (const size_t i = _buf.rfind('\n'); i != string::npos) {
+      line.assign(_buf, i + 1);
+      _buf.resize(i);
+      break;
+    }
+    if (!_pos) {
+      line = _buf;
+      _done = true;
+      break;
+    }
+    read_chunk();
+  }
+  if (line.size() && line.back() == '\r') line.pop_back();
+  return true;
+}
+
 // *** Misc
 
 bool file_exists(const string& name) {

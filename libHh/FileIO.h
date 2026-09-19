@@ -43,6 +43,22 @@ class WFile : noncopyable {
   std::ostream* _os{nullptr};
 };
 
+// Read the lines of a file in reverse order, without holding the whole file in memory.
+// The file must be seekable, so "-", pipes, and compressed files are unsupported.
+class ReversedLinesReader : noncopyable {
+ public:
+  explicit ReversedLinesReader(const string& filename);
+  // Like my_getline(), omits the terminating '\n' and any preceding '\r'.  Returns false after the first line.
+  bool getline(string& line);
+
+ private:
+  RFile _rfile;       // Only its FILE* is used.
+  int64_t _pos{0};    // File offset of the start of _buf.
+  string _buf;        // File contents [_pos, _pos + _buf.size()) whose lines have not yet been returned.
+  bool _done{false};  // All lines have been returned.
+  void read_chunk();  // Prepend to _buf the file contents preceding it.
+};
+
 // Assert that we have read to the end-of-file.
 inline void assert_reached_eof(std::istream& is) {
   char ch;

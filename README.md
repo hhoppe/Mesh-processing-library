@@ -511,17 +511,14 @@ MeshSimplify demos/data/club.orig.m -prog club.prog -simplify >club.base.m
 - progressively simplifies it by examining point residual distances, while recording changes to a `*.prog` file, and
 - writes the resulting base mesh.
 
-The next step is to reverse the sequence of stored edge collapses,
-i.e. forming a progressive sequence of <em>vertex splits</em>: <a id="prog_reverselines"></a>
-```shell
-reverselines club.prog >club.rprog
-```
-
 We construct a concise <em>progressive mesh</em> by encoding the base mesh together
-with the sequence of vertex splits that exactly recover the original mesh:<a id="prog_Filterprog"></a>
+with the sequence of <em>vertex splits</em> that exactly recover the original mesh,
+obtained by reading the stored edge collapses in reverse order:<a id="prog_Filterprog"></a>
 ```shell
-Filterprog -fbase club.base.m -fprog club.rprog -pm_encode >club.pm
+Filterprog -fbase club.base.m -fprog club.prog -pm_encode >club.pm
 ```
+(The older two-step process `reverselines club.prog >club.rprog`<a id="prog_reverselines"></a>
+followed by `Filterprog ... -fprog club.rprog` is still supported.)
 
 The complete process from the original mesh to the progressive mesh is implemented by the script call
 ```shell
@@ -848,7 +845,8 @@ This is a binary representation that consists of a coarse base mesh and a sequen
 ### Edge collapse / vertex split records (`*.prog`, `*.rprog`)
 
 These are temporary text files containing verbose information for a sequence of edge collapse / vertex split records
-used by MeshSimplify / reverselines / Filterprog to create a progressive mesh.
+used by MeshSimplify / Filterprog to create a progressive mesh.
+The `*.rprog` file contains the same lines in reverse order.
 
 
 ## Libraries

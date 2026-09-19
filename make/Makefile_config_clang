@@ -22,6 +22,19 @@ $(if $(and $(LLVM_ROOT),$(call file_exists,$(LLVM_ROOT)/bin/$(CXX).exe)),,$(erro
   Install LLVM and/or set these variables in '$(MeshRoot)/Makefile_local_defs'))
 $(call prepend_PATH,$(LLVM_ROOT)/bin)
 
+# Clang has no thread or memory sanitizer for the x86_64-pc-windows-msvc target.
+ifneq ($(filter thread memory,$(subst $(comma), ,$(sanitize))),)
+  $(error CONFIG=clang has no thread or memory sanitizer; use CONFIG=unix for sanitize=$(sanitize))
+endif
+
+# Programs built with the address sanitizer load its runtime DLL from the Clang resource directory.
+# (The `sort` caveat noted above applies to the version directories.)
+ifneq ($(filter address,$(subst $(comma), ,$(sanitize))),)
+  asan_dll := $(lastword $(sort $(wildcard $(LLVM_ROOT)/lib/clang/*/lib/windows/clang_rt.asan_dynamic-x86_64.dll)))
+  $(if $(asan_dll),,$(error No ASan runtime DLL found under '$(LLVM_ROOT)/lib/clang'))
+  $(call prepend_PATH,$(call rawdir,$(asan_dll)))
+endif
+
 AR = llvm-ar
 RANLIB = llvm-ranlib
 

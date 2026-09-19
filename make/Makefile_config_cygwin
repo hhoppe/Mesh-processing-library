@@ -25,6 +25,10 @@ $(if $(is_cygwin:0=),,$(error Requesting CONFIG=cygwin but not running Make in C
 $(if $(call file_exists,/usr/bin/$(CXX)),,$(error Compiler /usr/bin/$(CXX) not found for CONFIG=$(CONFIG).))
 $(call prepend_PATH,/usr/bin)
 
+ifneq ($(sanitize:0=),)
+  $(error CONFIG=cygwin ships no sanitizer runtime; use CONFIG=unix for sanitize=$(sanitize))
+endif
+
 graphics_libs ?= -lGL -lX11 -lopengl32
 
 last_libs += -lstdc++exp#  For stacktrace.

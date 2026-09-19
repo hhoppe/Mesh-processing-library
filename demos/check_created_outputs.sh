@@ -2,8 +2,9 @@
 
 # Check that the files written into results/ by the create scripts look reasonable, using the reference values
 # in results_reference.txt.  For an image or video, each per-channel mean and standard deviation must be within 2%
-# (so a blank rendering fails); for the MeshDistance output *.approximation_error.txt, each of the geometric and
-# normal errors (dL2 nL2 dLi nLi) must be within 20%; for any other file, the size must be within 20%.
+# (so a blank rendering fails); for the MeshDistance output *.approximation_error.txt, the geometric and normal
+# rms errors (dL2 nL2) must be within 20% and the maximum errors (dLi nLi) within 50%, because a maximum depends on
+# a single worst point and so varies more across compilers; for any other file, the size must be within 20%.
 # Usage: check_created_outputs.sh [--update]
 #  --update: rewrite the reference values from the current files instead of checking them.
 
@@ -57,9 +58,14 @@ while IFS= read -r line; do
   fi
   tolerance=0.20
   if [[ $name == *.png || $name == *.bmp || $name == *.mp4 ]]; then tolerance=0.02; fi
+  if [[ $name == *.approximation_error.txt ]]; then tolerance='0.20 0.20 0.50 0.50'; fi
+  # The tolerance is a list with one entry per value, whose last entry also applies to any remaining values.
   if ! awk -v v="$values" -v r="$refs" -v t="$tolerance" 'BEGIN {
       n = split(v, va); if (n != split(r, ra)) exit 1
-      for (i = 1; i <= n; i++) if (va[i] < ra[i] * (1 - t) || va[i] > ra[i] * (1 + t)) exit 1 }'; then
+      nt = split(t, ta)
+      for (i = 1; i <= n; i++) {
+        tol = ta[i <= nt ? i : nt]
+        if (va[i] < ra[i] * (1 - tol) || va[i] > ra[i] * (1 + tol)) exit 1 } }'; then
     echo "*** results/$name: measured '$values'; reference '$refs'." >&2
     status=1
   fi

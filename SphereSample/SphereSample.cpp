@@ -1012,7 +1012,7 @@ void verify_good_sphparam(const GMesh& mesh) {
     const Vec3<Point> sphs = transformed(mesh.triangle_vertices(f), v_sph);
     const float sarea = spherical_triangle_area(sphs);
     HH_SSTAT(Ssarea, sarea);
-    if (!(sarea < TAU)) SHOW(sarea, sphs);
+    if (0 && !(sarea < TAU)) SHOW(sarea, sphs);
     assertw(sarea < TAU);                    // Else it is flipped.
     if (verbose >= 2) assertw(sarea > 0.f);  // Else it is degenerate.
     if (0 && !(sarea > 0.f)) SHOW(sarea, sphs);

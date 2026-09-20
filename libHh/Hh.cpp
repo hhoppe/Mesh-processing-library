@@ -265,6 +265,20 @@ class Warnings {
   std::unordered_map<const char*, int> _map;
 };
 
+// Returns true if the warning message matches the regular expression in the environment variable ASSERTW_IGNORE.
+bool warning_is_ignored(const string& message) {
+  static const string pattern = getenv_string("ASSERTW_IGNORE");
+  if (pattern == "") return false;
+  static const std::regex regex = [&]() {
+    try {
+      return std::regex(pattern);
+    } catch (const std::regex_error& e) {
+      assertnever("Invalid regular expression in ASSERTW_IGNORE='" + pattern + "': " + e.what());
+    }
+  }();
+  return std::regex_search(message, regex);
+}
+
 }  // namespace
 
 void hh_at_clean_up(void (*function)()) { CleanUp::register_function(function); }
@@ -284,7 +298,9 @@ bool details::assertw_aux2(const char* s) {
   static const bool warn_just_once = !getenv_bool("ASSERTW_VERBOSE");
   const int count = Warnings::increment_count(s);
   if (count > 1 && warn_just_once) return false;
-  showf("assertion warning: %s\n", details::forward_slash(s).c_str());
+  const string message = details::forward_slash(s);
+  if (warning_is_ignored(message)) return false;
+  showf("assertion warning: %s\n", message.c_str());
   static const bool assertw_abort = getenv_bool("ASSERTW_ABORT") || getenv_bool("ASSERT_ABORT");
   if (assertw_abort) {
     my_setenv("ASSERT_ABORT", "1");

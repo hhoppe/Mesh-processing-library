@@ -647,19 +647,21 @@ float dihedral_penalty(const Dihedral& dih, const NewMeshNei& nn, const Point& n
     // vertices), unless the face it replaces was already degenerate.  The dihedral test does not detect such a
     // sliver, because the rounding-dominated normal of its tiny cross product still normalizes successfully,
     // whereas the face normal and quadric later computed from other base vertices can be exactly zero.
-    // The squared magnitude of a cross product is O(scale^4).  It is computed in double, like the quadric in
-    // Qem::set_distance_hh99(), so that an exactly degenerate face gives exactly zero; in float, its rounding
-    // noise can exceed min_mag2 when the edges are long.
-    const double min_mag2 = square(square(gdiam * 1e-6));
-    const auto mag2_cross = [](const Point& p0, const Point& p1, const Point& p2) {
+    // The test thresholds sin(angle) between the two edges, by comparing the squared magnitude of their cross
+    // product against the product of their squared lengths, so that it is invariant to the size of the face; a
+    // threshold on absolute area is far too permissive for the small faces that arise late in the simplification.
+    // It is computed in double, like the quadric in Qem::set_distance_hh99(), so that an exactly degenerate face
+    // gives exactly zero; in float, its rounding noise can exceed the threshold.
+    const auto is_sliver = [](const Point& p0, const Point& p1, const Point& p2) {
       const Vec3<double> d0 = convert<double>(p0);
-      return mag2(cross(convert<double>(p1) - d0, convert<double>(p2) - d0));
+      const Vec3<double> v1 = convert<double>(p1) - d0, v2 = convert<double>(p2) - d0;
+      const double mag2_v1 = mag2(v1), mag2_v2 = mag2(v2);
+      return !mag2_v1 || !mag2_v2 || mag2(cross(v1, v2)) < square(1e-6) * mag2_v1 * mag2_v2;
     };
     bad = ranges::any_of(nn.ar_corners, [&](const Vec3<Corner>& corners) {
       const Point& p0 = mesh.point(mesh.corner_vertex(corners[0]));
       const Point& p1 = mesh.point(mesh.corner_vertex(corners[1]));
-      return (mag2_cross(p0, p1, newp) < min_mag2 &&
-              mag2_cross(p0, p1, mesh.point(mesh.corner_vertex(corners[2]))) >= min_mag2);
+      return is_sliver(p0, p1, newp) && !is_sliver(p0, p1, mesh.point(mesh.corner_vertex(corners[2])));
     });
   }
   const float penalty = dihallow ? k_bad_dih : BIGFLOAT;

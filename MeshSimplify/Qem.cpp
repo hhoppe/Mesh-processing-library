@@ -192,6 +192,9 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     lls.enter_b_r(2, CArrayView(&p2[ngeom], nattrib));
     // Row 3 of right-hand-side is kept zero.
     if (!lls.solve()) {
+      // The 4x4 matrix has determinant +-2 * area, so the solve fails only if the face is degenerate.  Such a
+      // face should not arise, because dihedral_penalty() in MeshSimplify.cpp rejects the edge collapses that
+      // would create one.
       Warning("set_distance_hh99: lls.solve() failed");
       // Geometric component OK; set qem to zero for scalars.
       for_int(si, nattrib) {

@@ -269,7 +269,7 @@ class Warnings {
 bool warning_is_ignored(const string& message) {
   static const string pattern = getenv_string("ASSERTW_IGNORE");
   if (pattern == "") return false;
-  static const std::regex regex = [&]() {
+  static const std::regex regex = [&] {
     try {
       return std::regex(pattern);
     } catch (const std::regex_error& e) {

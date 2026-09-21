@@ -647,16 +647,22 @@ float dihedral_penalty(const Dihedral& dih, const NewMeshNei& nn, const Point& n
     // vertices), unless the face it replaces was already degenerate.  The dihedral test does not detect such a
     // sliver, because the rounding-dominated normal of its tiny cross product still normalizes successfully,
     // whereas the face normal and quadric later computed from other base vertices can be exactly zero.
-    // The test thresholds sin(angle) between the two edges, by comparing the squared magnitude of their cross
-    // product against the product of their squared lengths, so that it is invariant to the size of the face; a
-    // threshold on absolute area is far too permissive for the small faces that arise late in the simplification.
+    // The test compares twice the area of the face against the square of its longest edge, so that it is
+    // invariant to the size of the face; a threshold on absolute area is far too permissive for the small faces
+    // that arise late in the simplification.  Normalizing instead by the two edges at one vertex would threshold
+    // the sine of the angle there, which is asymmetric: a needle whose apex angle is tiny has angles near a right
+    // angle at its other two vertices, so the test would depend on which vertex happened to be first.
+    // This measure is the inscribed radius of the face in units of its longest edge, to within a factor of 2 to 3,
+    // so it is the scale-free form of what inscribed_radius() returns.  The radius ratio R / r of aspect_ratio()
+    // also diverges on such a face, but at a rate that depends on its shape: as the inverse square of this measure
+    // for a flat sliver, yet only as its inverse for a needle, whose circumradius stays near half its longest edge.
     // It is computed in double, like the quadric in Qem::set_distance_hh99(), so that an exactly degenerate face
     // gives exactly zero; in float, its rounding noise can exceed the threshold.
     const auto is_sliver = [](const Point& p0, const Point& p1, const Point& p2) {
       const Vec3<double> d0 = convert<double>(p0);
       const Vec3<double> v1 = convert<double>(p1) - d0, v2 = convert<double>(p2) - d0;
-      const double mag2_v1 = mag2(v1), mag2_v2 = mag2(v2);
-      return !mag2_v1 || !mag2_v2 || mag2(cross(v1, v2)) < square(1e-6) * mag2_v1 * mag2_v2;
+      const double max_edge2 = max({mag2(v1), mag2(v2), mag2(v2 - v1)});
+      return !max_edge2 || mag2(cross(v1, v2)) < square(1e-6 * max_edge2);
     };
     bad = ranges::any_of(nn.ar_corners, [&](const Vec3<Corner>& corners) {
       const Point& p0 = mesh.point(mesh.corner_vertex(corners[0]));

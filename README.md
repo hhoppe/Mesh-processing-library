@@ -283,6 +283,16 @@ make <em>[CONFIG=<var>config</var>]</em> -j demos
 
 Note that pressing the <kbd>Esc</kbd> key closes any open program window.
 
+Setting the environment variable `DEMOS_HIDDEN=1` instead runs the viewing demos as a non-interactive
+check: no window is ever mapped, and each viewer terminates itself after a few seconds.
+
+<pre>
+DEMOS_HIDDEN=1 make <em>[CONFIG=<var>config</var>]</em> -C demos view
+</pre>
+
+This only detects crashes and assertion failures; it compares no rendered images.
+A display is still required, because only the mapping of the window is suppressed.
+
 
 ## Filter programs
 

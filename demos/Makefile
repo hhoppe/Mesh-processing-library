@@ -88,10 +88,16 @@ determine_approximation_error.sh: create_pm_club.sh
 
 # Similar to all_demos_view_results.sh (still sequential).
 # Run every demo even if some fail, and report the last failing status.
+# Export DEMOS_HIDDEN so that it also works when given as a make variable rather than in the environment.
+# Its viewers quit on their own, so bound any demo that instead hangs before its window would be created
+# (e.g. within the graphics driver) and therefore never processes its -hwkey.
+export DEMOS_HIDDEN
+view_timeout = $(if $(DEMOS_HIDDEN),timeout 300)
+
 view:
 	@status=0; \
 	for i in $(view_scripts); do \
-	  $$i || { s=$$?; echo "*** $$i exited with status $$s." >&2; status=$$s; }; \
+	  $(view_timeout) $$i || { s=$$?; echo "*** $$i exited with status $$s." >&2; status=$$s; }; \
 	done; \
 	exit $$status
 

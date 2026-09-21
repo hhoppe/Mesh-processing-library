@@ -35,3 +35,14 @@ set G3DARGS=-geom 1100x850+150+50 -bigfont
 :: For models with texture, use smaller window, depending on graphics memory.
 set TEXGEOMETRY=-geom 1000x800+100+50
 set TEXGEOMETRY=-geom 1000x800+150+50
+
+:: Setting DEMOS_HIDDEN=1 runs the view demos as a non-interactive check: no window is ever mapped, and
+:: each viewer terminates itself after a few seconds using the "\c" escape of -hwkey.  This only detects
+:: crashes and assertion failures; it compares no rendered pixels.  The Windows desktop is still required;
+:: only the display of the window is suppressed.
+set HIDDEN_ARGS=
+if defined DEMOS_HIDDEN set HIDDEN_ARGS=-hidden -hwdelay 1 -hwkey \9\c
+
+:: Extra arguments for the viewers; the geometry of %G3DARGS% is overridden by any later -geom.
+set G3DARGS=%G3DARGS% %HIDDEN_ARGS%
+set VIDEOVIEWER_ARGS=%HIDDEN_ARGS%

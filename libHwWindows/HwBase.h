@@ -90,6 +90,7 @@ class HwBase : noncopyable {
   [[nodiscard]] bool within_query() const { return _within_query; }
   [[nodiscard]] bool is_hidden() const { return _hidden; }              // -hidden (also implied by -offscreen)
   [[nodiscard]] bool is_offscreen() const { return _offscreen != ""; }  // -offscreen
+  [[nodiscard]] bool has_hwkey() const { return _hwkey != ""; }         // -hwkey (may terminate using "\c")
 
   // Buffering:
   virtual void hard_flush() = 0;          // Synchronize screen.

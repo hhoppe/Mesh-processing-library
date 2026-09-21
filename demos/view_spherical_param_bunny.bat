@@ -7,11 +7,15 @@ call bin/_initdemos.bat
 :: Filtermesh results/bunny.sphparam.m -renamekey v sph P | G3dOGL - -st data/unitsphere_ang.s3d -key DeoJ %G3DARGS%
 
 
+:: SphereParam creates its own viewer window, so omit it when hidden; the parameterization still runs.
+set VISUALIZE_ARGS=-visualize -wait_on_visualizer
+if defined DEMOS_HIDDEN set VISUALIZE_ARGS=
+
 :: Because a pipe command is run in a subshell, the syntax "call script.bat" is unnecessary (and wrong) here.
-"bin/meshtopm.bat" data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -visualize -wait_on_visualizer -nooutput >nul
+"bin/meshtopm.bat" data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - %VISUALIZE_ARGS% -nooutput >nul
 
 
-VideoViewer results/bunny.spheresample.octaflat.unrotated.normalmap.png
+VideoViewer results/bunny.spheresample.octaflat.unrotated.normalmap.png %VIDEOVIEWER_ARGS%
 
 
 echo .
@@ -21,7 +25,7 @@ echo .
 G3dOGL results/bunny.spheresample.remesh.m -st data/bunny.s3d -texturemap results/bunny.spheresample.octaflat.unrotated.normalmap.png -texturenormal 1 -key DmDe -hwkey "(DtDe)" -hwdelay 1.0 %G3DARGS%
 
 
-VideoViewer results/bunny.lonlat.unrotated.normalmap.png
+VideoViewer results/bunny.lonlat.unrotated.normalmap.png %VIDEOVIEWER_ARGS%
 
 
 echo .

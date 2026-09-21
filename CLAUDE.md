@@ -55,6 +55,9 @@ the recursive make invocations make shell subprocesses expensive. Keep it that w
   `Makefile`.
 - `test/` holds the unit tests. `make demos` builds all programs and runs `demos/`, which reads
   its inputs from `demos/data/` and writes all generated files into `demos/results/`.
+  `DEMOS_HIDDEN=1 make -C demos view` runs the viewing demos non-interactively: no window is
+  mapped and each viewer quits after a few seconds, which detects crashes, assertion failures,
+  and sanitizer reports, but compares no rendered images.
 
 ## Test
 

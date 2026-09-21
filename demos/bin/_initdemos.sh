@@ -56,3 +56,16 @@ export TEXGEOMETRY="-geom 1000x800+150+50"
 if [[ ${BASH_VERSINFO[5]} == *-apple-* ]]; then
 export TEXGEOMETRY="-geom 1000x800+0+0"
 fi
+
+# Setting DEMOS_HIDDEN=1 runs the view demos as a non-interactive check: no window is ever mapped, and
+# each viewer terminates itself after a few seconds using the "\c" escape of -hwkey.  This only detects
+# crashes, assertion failures, and sanitizer reports; it compares no rendered pixels.  A display is still
+# required (X11 or the Windows desktop); only the mapping of the window is suppressed.
+hidden_args=''
+if [[ -n $DEMOS_HIDDEN ]]; then
+  hidden_args='-hidden -hwdelay 1 -hwkey \9\c'
+fi
+
+# Extra arguments for the viewers; the geometry of $G3DARGS is overridden by any later -geom.
+export G3DARGS="$G3DARGS $hidden_args"
+export VIDEOVIEWER_ARGS="$hidden_args"

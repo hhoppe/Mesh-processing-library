@@ -5,10 +5,16 @@ source bin/_initdemos.sh
 
 # Filtermesh results/bunny.sphparam.m -renamekey v sph P | G3D_TWOLIGHTS=1 G3dOGL - -st data/unitsphere_ang.s3d -key DeoJ $G3DARGS
 
-bin/meshtopm.sh data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -visualize -wait_on_visualizer -nooutput >/dev/null
+# SphereParam creates its own viewer window, so omit it when hidden; the parameterization still runs.
+visualize_args='-visualize -wait_on_visualizer'
+if [[ -n $DEMOS_HIDDEN ]]; then
+  visualize_args=''
+fi
+
+bin/meshtopm.sh data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - $visualize_args -nooutput >/dev/null
 
 
-VideoViewer results/bunny.spheresample.octaflat.unrotated.normalmap.png
+VideoViewer results/bunny.spheresample.octaflat.unrotated.normalmap.png $VIDEOVIEWER_ARGS
 
 
 echo '.'
@@ -18,7 +24,7 @@ echo '.'
 G3dOGL results/bunny.spheresample.remesh.m -st data/bunny.s3d -texturemap results/bunny.spheresample.octaflat.unrotated.normalmap.png -texturenormal 1 -key DmDe -hwkey '(DtDe)' -hwdelay 1.0 $G3DARGS
 
 
-VideoViewer results/bunny.lonlat.unrotated.normalmap.png
+VideoViewer results/bunny.lonlat.unrotated.normalmap.png $VIDEOVIEWER_ARGS
 
 
 echo '.'

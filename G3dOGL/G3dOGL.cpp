@@ -45,6 +45,7 @@ namespace g3d {
 extern string statefile;   // To modify statefile name.
 extern float fchange;      // To get constant speed sliders.
 extern bool input;         // To detect EOF for -picture.
+extern bool killeof;       // To allow -hidden without a picture.
 extern bool output;        // To output lod changes.
 extern Frame tview;        // To let SR access view matrix.
 extern int info;           // For SR diagnostics.
@@ -2603,9 +2604,10 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   const int mesha = int(meshcola[0] * 255.f + .5f);
   assertx(mesha >= 0 && mesha <= 255);
   mesh_color.d[3] = uint8_t(mesha);
-  // Without a visible window, nothing could end the program except the completion of a picture, movie, or video.
-  if (hw.is_hidden() && !hw.is_offscreen() && !picture)
-    assertnever("Option -hidden requires -picture, -movie, or -video (or use -offscreen)");
+  // Without a visible window, the program can only end upon the completion of a picture, movie, or video,
+  // the "\c" escape in an -hwkey sequence, or -killeof.
+  if (hw.is_hidden() && !hw.is_offscreen() && !picture && !hw.has_hwkey() && !g3d::killeof)
+    assertnever("Option -hidden requires -picture, -movie, -video, -hwkey, or -killeof (or use -offscreen)");
   if (picture) nice_rendering = true;
   if (pm_filename != "") {
 #if defined(DEF_PM)

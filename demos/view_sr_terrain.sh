@@ -15,6 +15,6 @@ echo '.'
 
 export G3D_REV_AUTO=1
 
-common="-eyeob data/unit_frustum.a3d -sr_mode results/gcanyon_sq200.pm -st data/gcanyon_fly_v98.s3d -texturemap data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 -lightambient .5"
+common="-eyeob data/unit_frustum.a3d -sr_mode results/gcanyon_sq200.pm -st data/gcanyon_fly_v98.s3d -texturemap data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 -lightambient .5 $G3DARGS"
 
 G3dOGL $common -geom 800x820+150+10 -key "&O" -key ,o----J | G3dOGL $common -geom 800x820+970+10 -async -killeof -input -key Dg

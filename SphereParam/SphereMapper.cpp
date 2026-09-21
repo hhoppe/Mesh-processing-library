@@ -40,23 +40,23 @@ template <typename T> T spherical_triangle_area(const Vec3<T>& pd0, const Vec3<T
   return e;
 }
 
-inline bool vertex_is_on_sharp_edge(const AWMesh& awmesh, int v, int someface, int& vl, int& vr) {
+inline bool vertex_is_on_sharp_edge(const AWMesh& awmesh, int v, int someface, int& vsh1, int& vsh2) {
   int w_last = -1;
   for (const auto [_, ff] : awmesh.ccw_vertices(v, someface)) w_last = awmesh.get_wvf(v, ff);
-  vl = vr = -1;
+  vsh1 = vsh2 = -1;
   for (const auto [vv, ff] : awmesh.ccw_vertices(v, someface)) {
     const int w = awmesh.get_wvf(v, ff);
     if (w != w_last) {
-      if (vl < 0) {
-        vl = vv;
+      if (vsh1 < 0) {
+        vsh1 = vv;
         w_last = w;
       } else {
-        vr = vv;
+        vsh2 = vv;
         return true;
       }
     }
   }
-  assertx(vl < 0);
+  assertx(vsh1 < 0);
   return false;
 }
 
@@ -373,11 +373,11 @@ class SphereMapper::Implementation {
   void get_optimization_dir(int v, int someface, float rand1, float rand2, Vector& dir, bool& on_boundary) const {
     on_boundary = false;
     const Vector x0 = _sphmap[v];
-    if (int vl, vr; _options.respect_sharp_edges && vertex_is_on_sharp_edge(_pmi, v, someface, vl, vr)) {
+    if (int vsh1, vsh2; _options.respect_sharp_edges && vertex_is_on_sharp_edge(_pmi, v, someface, vsh1, vsh2)) {
       on_boundary = true;
-      dir = _sphmap[vr] - _sphmap[vl];
+      dir = _sphmap[vsh2] - _sphmap[vsh1];
       dir = normalized(dir - x0 * dot(x0, dir));
-      assertx(dot(cross(_sphmap[vl], _sphmap[vr]), x0) < 1e-5f);
+      assertx(dot(cross(_sphmap[vsh1], _sphmap[vsh2]), x0) < 1e-5f);
     } else if (_pmi.is_boundary(v, someface)) {
       on_boundary = true;
       const int fclw = _pmi.most_clw_face(v, someface), fccw = _pmi.most_ccw_face(v, someface);
@@ -450,8 +450,8 @@ class SphereMapper::Implementation {
 
   void optimize_vertex_split(int v, int someface) {
     HH_STIMER("_optimize_vertex_split");
-    if (int vl, vr; _options.respect_sharp_edges && vertex_is_on_sharp_edge(_pmi, v, someface, vl, vr)) {
-      _sphmap[v] = arc_midpoint_within_kernel(v, someface, vl, vr);
+    if (int vsh1, vsh2; _options.respect_sharp_edges && vertex_is_on_sharp_edge(_pmi, v, someface, vsh1, vsh2)) {
+      _sphmap[v] = arc_midpoint_within_kernel(v, someface, vsh1, vsh2);
       if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
     } else if (_pmi.is_boundary(v, someface)) {
       // Find the neighboring boundary vertices and take the midpoint of their arc.

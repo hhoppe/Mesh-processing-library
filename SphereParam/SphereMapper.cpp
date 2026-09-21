@@ -256,7 +256,7 @@ class SphereMapper::Implementation {
   // The centroid is computed using linear average and reprojection to sphere.
   // If the kernel is larger than a hemisphere, the centroid is flipped.
   // Returns std::nullopt if the polygon is not star-shaped, i.e. if its kernel is empty.
-  std::optional<Point> kernel_centroid_of_spherical_polygon(CArrayView<Vector> enormals) {
+  static std::optional<Point> kernel_centroid_of_spherical_polygon(CArrayView<Vector> enormals) {
     Vector center{};
     for_int(i, enormals.num()) {
       const Vector& enormal = enormals[i];

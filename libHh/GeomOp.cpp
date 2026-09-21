@@ -17,7 +17,7 @@ float circum_radius(const Point& p0, const Point& p1, const Point& p2) {
     Warning("circum_radius degenerate");
     return 1e10f;
   }
-  return float(a * b * c * Precision{.25f} / my_sqrt(d2));
+  return float(a * b * c * Precision{.25f} / sqrt(d2));
 }
 
 float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {

@@ -337,7 +337,13 @@ class SphereMapper::Implementation {
     float tmin = -TAU, tmax = TAU;
     for (const Vector& enormal : gather_1ring_external_edges(v, someface))
       intersect_param_circle_halfspace(x0, dir, enormal, tmin, tmax);
-    if (!assertw(tmin <= tmax)) return x0;  // The kernel does not meet the arc, so just retain the midpoint.
+    if (!assertw(tmin <= tmax)) {
+      // The kernel does not meet the arc.  Rather than ignoring the constraints and keeping the midpoint (x0),
+      // take the least infeasible point, which is the middle of the inverted interval; it minimizes the largest
+      // violation.  This seems more principled, but no improvement has been demonstrated empirically.
+      const float t = (tmin + tmax) / 2;
+      return !t ? x0 : normalized(interp_on_arc(x0, dir, t));
+    }
     const float k_pad_fraction = .01f;  // Keep some distance away from the kernel boundary, as in optimize_vertex().
     const float pad = (tmax - tmin) * k_pad_fraction;
     const float t = clamp(0.f, tmin + pad, tmax - pad);
@@ -370,11 +376,20 @@ class SphereMapper::Implementation {
     return ar_faces;
   }
 
-  void get_optimization_dir(int v, int someface, float rand1, float rand2, Vector& dir, bool& on_boundary) const {
-    on_boundary = false;
+  struct OptimizationDir {
+    Vector dir;                 // Tangent direction at the vertex, along which to perform the line search.
+    bool on_boundary;           // Whether the vertex is confined to a sharp-edge or mesh-boundary arc.
+    Vec3<double> sharp_normal;  // Unit normal of the plane of the sharp arc, or zero if not on a sharp edge.
+  };
+
+  [[nodiscard]] OptimizationDir get_optimization_dir(int v, int someface, float rand1, float rand2) const {
+    Vector dir;
+    bool on_boundary = false;
+    Vec3<double> sharp_normal{};
     const Vector x0 = _sphmap[v];
     if (int vsh1, vsh2; _options.respect_sharp_edges && vertex_is_on_sharp_edge(_pmi, v, someface, vsh1, vsh2)) {
       on_boundary = true;
+      sharp_normal = normalized(cross(convert<double>(_sphmap[vsh1]), convert<double>(_sphmap[vsh2])));
       dir = _sphmap[vsh2] - _sphmap[vsh1];
       dir = normalized(dir - x0 * dot(x0, dir));
       assertx(dot(cross(_sphmap[vsh1], _sphmap[vsh2]), x0) < 1e-5f);
@@ -391,6 +406,7 @@ class SphereMapper::Implementation {
       dir -= x0 * dot(x0, dir);
       if (!dir.normalize()) dir = normalized(Vector(x0[1], x0[2], x0[0]));  // Extremely rare case.
     }
+    return {dir, on_boundary, sharp_normal};
   }
 
   [[nodiscard]] Point optimize_vertex_rand(int v, int someface, float rand1, float rand2) const {
@@ -398,9 +414,9 @@ class SphereMapper::Implementation {
     if (v < _num_fixed_vertices) return x0;  // Hold the base vertices constant.
     auto ar_faces = get_ar_faces(v, someface);
     const auto edge_normals = gather_1ring_external_edges(v, someface);
-    Vector dir;
-    bool on_boundary;
-    get_optimization_dir(v, someface, rand1, rand2, dir, on_boundary);
+    const OptimizationDir odir = get_optimization_dir(v, someface, rand1, rand2);
+    const bool is_on_sharp_arc = mag2(odir.sharp_normal) > 0.;
+    Vector dir = odir.dir;
 
     const auto stretch_on_neighborhood = [&](float t) {
       const Point pd0 = interp_on_arc(x0, dir, t);
@@ -414,7 +430,7 @@ class SphereMapper::Implementation {
       return float(total_stretch);
     };
 
-    for_int(dir_iter, on_boundary ? 1 : 2) {
+    for_int(dir_iter, odir.on_boundary ? 1 : 2) {
       // Find valid search interval (intersect with neighborhood kernel).
       float tmin = -TAU, tmax = TAU;
       for_int(i, edge_normals.num()) intersect_param_circle_halfspace(x0, dir, edge_normals[i], tmin, tmax);
@@ -436,6 +452,13 @@ class SphereMapper::Implementation {
         if (0) Warning("Objective function increased");  // Due to k_pad_fraction or !(tmin <= 0.f && tmax >= 0.f).
       } else {
         x0 = normalized(interp_on_arc(x0, dir, tbest));
+        // Re-project onto the plane of the two sharp neighbors.  Each step keeps the vertex on its arc only to
+        // within rounding, and the error would otherwise accumulate as the vertex slides a long way along the arc
+        // over many optimizations.  The projection is in double precision and applies to few vertices.
+        if (is_on_sharp_arc) {
+          const Vec3<double> d = convert<double>(x0), n = odir.sharp_normal;
+          x0 = convert<float>(normalized(d - n * dot(d, n)));
+        }
         if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
       }
       dir = normalized(cross(x0, dir));  // Now try the perpendicular direction.

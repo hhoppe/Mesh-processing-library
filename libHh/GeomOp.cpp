@@ -10,14 +10,26 @@ namespace hh {
 // Deduced from book: Coxeter "Geometry".
 float circum_radius(const Point& p0, const Point& p1, const Point& p2) {
   using Precision = double;
-  const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
-  const Precision s = (a + b + c) * Precision{.5f};
-  const Precision d2 = s * (s - a) * (s - b) * (s - c);
-  if (d2 <= 0.f) {
-    Warning("circum_radius degenerate");
-    return 1e10f;
+  const Vec3<Precision> pp0 = convert<Precision>(p0), pp1 = convert<Precision>(p1), pp2 = convert<Precision>(p2);
+  const Precision a = dist(pp0, pp1), b = dist(pp1, pp2), c = dist(pp2, pp0);
+  if constexpr (0) {
+    // Heron: R = a * b * c / (4 * d), where d and s are as in inscribed_radius().
+    const Precision s = (a + b + c) * Precision{.5f};
+    const Precision d2 = s * (s - a) * (s - b) * (s - c);
+    if (d2 <= 0.f) {
+      Warning("circum_radius degenerate");
+      return 1e10f;
+    }
+    return float(a * b * c * Precision{.25f} / sqrt(d2));
+  } else {  // More robust numerically.
+    // R = a * b * c / (4 * area) = a * b * c / (2 * |n|), where n is the cross product of two edges.
+    const Precision magn = mag(cross(pp0, pp1, pp2));  // Equals 2 * area.
+    if (magn <= 0.f) {
+      Warning("circum_radius degenerate");
+      return 1e10f;
+    }
+    return float(a * b * c * Precision{.5f} / magn);
   }
-  return float(a * b * c * Precision{.25f} / sqrt(d2));
 }
 
 float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {

@@ -20,32 +20,48 @@ float circum_radius(const Point& p0, const Point& p1, const Point& p2) {
   return float(a * b * c * Precision{.25f} / my_sqrt(d2));
 }
 
-// From Coxeter "Intro to Geometry, Second ed.", page 12, equation  1.531.
 float inscribed_radius(const Point& p0, const Point& p1, const Point& p2) {
-  // r = d / s
-  // d = sqrt(s * (s - a) * (s - b) * (s -c))
-  // s = (a + b + c) / 2.
-  using Precision = double;
-  const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
-  const Precision s = (a + b + c) * Precision{.5f};
-  const Precision d2 = s * (s - a) * (s - b) * (s - c);
   // A degenerate (zero-area) triangle correctly has a zero inscribed radius, so this is not worth a warning;
   // indeed Filtermesh::is_degenerate() identifies such a triangle using this very result.
-  if (d2 <= 0.f) return 0.f;
-  return float(sqrt(d2) / s);
+  using Precision = double;
+  const Vec3<Precision> pp0 = convert<Precision>(p0), pp1 = convert<Precision>(p1), pp2 = convert<Precision>(p2);
+  const Precision a = dist(pp0, pp1), b = dist(pp1, pp2), c = dist(pp2, pp0);
+  if constexpr (0) {
+    // Heron: r = d / s, where d = sqrt(s * (s - a) * (s - b) * (s - c)) and s = (a + b + c) / 2.
+    const Precision s = (a + b + c) * Precision{.5f};
+    const Precision d2 = s * (s - a) * (s - b) * (s - c);
+    if (d2 <= 0.f) return 0.f;
+    return float(sqrt(d2) / s);
+  } else {  // More robust numerically.
+    // r = area / s = |n| / (a + b + c), where n is the cross product of two edges.
+    const Precision perimeter = a + b + c;
+    if (perimeter == 0.f) return 0.f;  // All three vertices coincide.
+    return float(mag(cross(pp0, pp1, pp2)) / perimeter);
+  }
 }
 
-// Should normalize to be 1.f for an equilateral triangle?
+// Returns the radius ratio R / r, where R and r are circumradius and inradius; it is 2.f for an equilateral triangle.
 float aspect_ratio(const Point& p0, const Point& p1, const Point& p2) {
   using Precision = double;
-  const Precision a = dist<Precision>(p0, p1), b = dist<Precision>(p1, p2), c = dist<Precision>(p2, p0);
+  const Vec3<Precision> pp0 = convert<Precision>(p0), pp1 = convert<Precision>(p1), pp2 = convert<Precision>(p2);
+  const Precision a = dist(pp0, pp1), b = dist(pp1, pp2), c = dist(pp2, pp0);
   const Precision s = (a + b + c) * Precision{.5f};
-  const Precision d2 = s * (s - a) * (s - b) * (s - c);
-  if (d2 <= 0.f) {
-    // Warning("aspect_ratio degenerate");
-    return 1e10f;
+  if constexpr (0) {
+    const Precision d2 = s * (s - a) * (s - b) * (s - c);  // Equals area^2.
+    if (d2 <= 0.f) {
+      // Warning("aspect_ratio degenerate");
+      return 1e10f;
+    }
+    return float(a * b * c * Precision{.25f} * s / d2);
+  } else {  // More robust numerically.
+    const Vec3<Precision> n = cross(pp0, pp1, pp2);
+    const Precision d2 = mag2(n);  // Equals 4 * area^2.
+    if (d2 <= 0.f) {
+      // Warning("aspect_ratio degenerate");
+      return 1e10f;
+    }
+    return float(a * b * c * s / d2);
   }
-  return float(a * b * c * Precision{.25f} * s / d2);
 }
 
 // *** Misc

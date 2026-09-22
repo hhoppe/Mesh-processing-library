@@ -212,9 +212,15 @@ void Hw::open() {
   if (_hwdebug) SHOW("Hw::open Cleanup");
   assertw(!gl_report_errors());
   assertx(wglMakeCurrent(_hRenderDC, nullptr));
-  assertx(wglDeleteContext(_hRC));
-  if (_hDC) assertx(ReleaseDC(_hwnd, _hDC));
-  assertx(DestroyWindow(_hwnd));
+  // For reasons unclear, the graphics driver can take 20-50 seconds to release the resources of a hidden session
+  // that has rendered many frames; the delay appears in wglDeleteContext(), or in DestroyWindow() if that call is
+  // skipped.  Our callers exit as soon as open() returns, so for a hidden session we skip the release and let the
+  // operating system reclaim the context and the window as the process terminates.
+  if (!_hidden) {
+    assertx(wglDeleteContext(_hRC));
+    if (_hDC) assertx(ReleaseDC(_hwnd, _hDC));
+    assertx(DestroyWindow(_hwnd));
+  }
 }
 
 bool Hw::loop() {

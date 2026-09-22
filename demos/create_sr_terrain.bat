@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 echo Creating original terrain mesh from elevation image.
 
@@ -12,6 +12,6 @@ echo .
 echo Simplifying terrain mesh.  (This will take several minutes.)
 echo .
 
-call bin/meshtopm.bat results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
+call meshtopm.bat results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
 
 echo Use view_sr_terrain.bat to see geomorphs on the view-dependent terrain.

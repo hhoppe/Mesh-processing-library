@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 echo 'Running phase 1 - Recon. '
 Recon <data/distcap.pts -samplingd 0.02 | Filtermesh -genus -rmcomp 100 -fillholes 30 -triangulate -genus >results/distcap.recon.m

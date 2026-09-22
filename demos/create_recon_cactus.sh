@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 echo 'Running phase 1 - Recon. '
 Recon <data/cactus.pts -samplingd 0.04 >results/cactus.recon.m

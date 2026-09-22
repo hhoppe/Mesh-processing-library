@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 echo .
 echo The left window shows instantaneous refinement, whereas the right window shows smooth geomorphs.

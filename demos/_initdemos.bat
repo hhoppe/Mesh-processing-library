@@ -15,16 +15,19 @@ if not exist results mkdir results
 if defined CONFIG set path=../bin/%CONFIG%;%path%
 
 :: Otherwise, add all possible build directories as fallback if not specified below.
-if not defined CONFIG set path=../bin;../bin/debug;../bin/win;../bin/mingw;../bin/clang;../bin/cygwin;../bin/unix;%path%
+if not defined CONFIG set path=../bin/msbuild;../bin/msbuild_debug;../bin/win;../bin/mingw;../bin/clang;../bin/cygwin;../bin/unix;%path%
 
 :: Explicitly set desired build directory here.
-:: set path=%path%
-:: set path=../bin/debug;%path%
+:: set path=../bin/msbuild;%path%
+:: set path=../bin/msbuild_debug;%path%
 :: set path=../bin/win;%path%
 :: set path=../bin/mingw;%path%
 :: set path=../bin/clang;%path%
 :: set path=../bin/cygwin;%path%
 :: set path=../bin/unix;%path%
+
+:: The scripts in ../bin (e.g., meshtopm.bat) take precedence over the executables.
+set path=../bin;%path%
 
 :: Here one can adjust the default window size and position for most demos.
 set G3DARGS=-geom 750x600

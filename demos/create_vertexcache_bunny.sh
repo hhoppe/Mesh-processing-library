@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 # MeshReorder ~/data/mesh/bunny.orig.m -fifo -analyze -color_corners 1 >v0.m
 

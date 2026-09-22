@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 # Filtermesh results/bunny.sphparam.m -renamekey v sph P | G3D_TWOLIGHTS=1 G3dOGL - -st data/unitsphere_ang.s3d -key DeoJ $G3DARGS
 
@@ -11,7 +11,7 @@ if [[ -n $DEMOS_HIDDEN ]]; then
   visualize_args=''
 fi
 
-bin/meshtopm.sh data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - $visualize_args -nooutput >/dev/null
+meshtopm data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - $visualize_args -nooutput >/dev/null
 
 
 VideoViewer results/bunny.spheresample.octaflat.unrotated.normalmap.png $VIDEOVIEWER_ARGS

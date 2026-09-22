@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 :: MeshReorder ~/data/mesh/bunny.orig.m -fifo -analyze -color_corners 1 >v0.m
 

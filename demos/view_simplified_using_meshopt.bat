@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 :: start /b G3dOGL data/blob5.orig.m -st data/blob5.s3d -key DmDe <nul
 :: G3dOGL results/blob5.meshopt.simplified.m -st data/blob5.s3d -key DmDe %G3DARGS%

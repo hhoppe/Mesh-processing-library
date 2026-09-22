@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 echo '.'
 echo 'Note that the mesh genus has been reduced from 50 to 4.'

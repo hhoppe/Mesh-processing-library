@@ -16,7 +16,7 @@ Filterprog -fbase %tmproot%.base.m -fprog %tmproot%.prog -pm
 :cleanup
 set status=%errorlevel%
 
-:: Always remove the temporary files, as does the trap in meshtopm.sh.
+:: Always remove the temporary files, as does the trap in meshtopm.
 del %tmproot:/=\%.prog %tmproot:/=\%.base.m 2>nul
 
 exit /b %status%

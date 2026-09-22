@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 echo '.'
 echo 'Press "P" and "N" to advance to the previous and next models in the reconstruction sequence.'

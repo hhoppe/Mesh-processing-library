@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 echo 'Extracting a mesh of 200000 triangles from the progressive mesh of the office model, then'
 echo ' removing its topological noise by simplifying it from genus 50 to genus 4.'

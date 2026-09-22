@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 echo 'Running phase 1 - Recon. '
 Recon <data/curve1.pts -samplingd 0.06 -grid 30 >results/curve1.recon.a3d

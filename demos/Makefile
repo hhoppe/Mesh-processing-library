@@ -1,5 +1,5 @@
 MeshRoot = ..
-orig_CONFIG := $(CONFIG)#  It may be null, in which case we use the executables created by msbuild in $(MeshRoot)/bin.
+orig_CONFIG := $(CONFIG)#  It may be null, in which case we use the executables in $(MeshRoot)/bin/msbuild.
 include $(MeshRoot)/make/Makefile_defs
 
 ifneq ($(CONFIG),all)  # For the rest of this file.
@@ -8,10 +8,12 @@ ifeq ($(orig_CONFIG),)
   # undefine CONFIG#  Recent feature of make.
   CONFIG :=
   unexport CONFIG
-  $(call assert_prepend_PATH,$(MeshRoot)/bin)
+  $(call assert_prepend_PATH,$(MeshRoot)/bin/msbuild)
 else
   $(call assert_prepend_PATH,$(MeshRoot)/bin/$(CONFIG))
 endif
+
+$(call assert_prepend_PATH,$(MeshRoot)/bin)  # The scripts (e.g., meshtopm) take precedence over the executables.
 
 $(call assert_prepend_PATH,$(MeshRoot)/demos)  # Allow running bash scripts in local directory.
 

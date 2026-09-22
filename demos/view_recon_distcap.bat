@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 echo .
 echo To take interactive control, select the upper-left window, press "o" to remove object-centric motion,

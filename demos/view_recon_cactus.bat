@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 echo .
 echo Press 'P' and 'N' to advance to the previous and next models in the reconstruction sequence.

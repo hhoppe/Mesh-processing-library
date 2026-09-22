@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 echo '.'
 echo 'The left window shows instantaneous refinement, whereas the right window shows smooth geomorphs.'

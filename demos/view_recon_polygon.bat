@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 echo .
 echo This demo shows the input points (white), the initial curve reconstructed (brown),

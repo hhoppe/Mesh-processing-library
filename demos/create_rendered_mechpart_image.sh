@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 if [[ ${BASH_VERSINFO[5]} == *-apple-* ]]; then
   # For some reason the "-offscreen" approach gives all-black on Mac.

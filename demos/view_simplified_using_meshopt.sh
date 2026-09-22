@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 # (G3dOGL data/blob5.orig.m -st data/blob5.s3d -key DmDe &)
 # G3dOGL results/blob5.meshopt.simplified.m -st data/blob5.s3d -key DmDe $G3DARGS

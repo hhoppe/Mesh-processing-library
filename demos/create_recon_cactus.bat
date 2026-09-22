@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 echo Running phase 1 - Recon. 
 Recon <data/cactus.pts -samplingd 0.04 >results/cactus.recon.m

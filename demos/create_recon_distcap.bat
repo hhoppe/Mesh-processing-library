@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 echo Running phase 1 - Recon. 
 Recon <data/distcap.pts -samplingd 0.02 | Filtermesh -genus -rmcomp 100 -fillholes 30 -triangulate -genus >results/distcap.recon.m

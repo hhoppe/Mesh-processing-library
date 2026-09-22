@@ -12,8 +12,9 @@ use vars qw/$smooth_from_normals $no_sharp_edges $debug/;
 
 binmode(STDOUT);
 
-BEGIN { push(@INC, "$ENV{HOME}/other/perl"); }
-# require("materials_lib.pl");
+# Find Materials_lib.pm (and its Materials_rgb.db) in the directory of this script.
+use FindBin;
+use lib $FindBin::Bin;
 use Materials_lib;
 
 my $k_no_smoothing = "ZZ";

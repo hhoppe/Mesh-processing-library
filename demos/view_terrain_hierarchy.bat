@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 if not exist results/gcanyon_sq129_b44.l2.pm (
   echo The file results/gcanyon_sq129_b44.l2.pm was not found.

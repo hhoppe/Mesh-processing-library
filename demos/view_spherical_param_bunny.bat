@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 :: Filtermesh results/bunny.sphparam.m -renamekey v sph P | G3dOGL - -st data/unitsphere_ang.s3d -key DeoJ %G3DARGS%
 
@@ -12,7 +12,7 @@ set VISUALIZE_ARGS=-visualize -wait_on_visualizer
 if defined DEMOS_HIDDEN set VISUALIZE_ARGS=
 
 :: Because a pipe command is run in a subshell, the syntax "call script.bat" is unnecessary (and wrong) here.
-"bin/meshtopm.bat" data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - %VISUALIZE_ARGS% -nooutput >nul
+meshtopm.bat data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - %VISUALIZE_ARGS% -nooutput >nul
 
 
 VideoViewer results/bunny.spheresample.octaflat.unrotated.normalmap.png %VIDEOVIEWER_ARGS%

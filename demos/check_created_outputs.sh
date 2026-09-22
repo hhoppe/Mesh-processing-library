@@ -9,7 +9,7 @@
 #  --update: rewrite the reference values from the current files instead of checking them.
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 update=0
 if [[ ${1-} == --update ]]; then update=1; fi

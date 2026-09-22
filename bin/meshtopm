@@ -1,7 +1,7 @@
 #!/bin/bash
 
 read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
-Usage: meshtopm.sh [-postprog 'args'] [mesh.m] [MeshSimplify_args] >mesh.pm
+Usage: meshtopm [-postprog 'args'] [mesh.m] [MeshSimplify_args] >mesh.pm
 
 Simplify a mesh using MeshSimplify while recording its edge collapses, and create a progressive mesh.
 The MeshSimplify arguments are followed by '-prog tmpfile', the '-postprog' arguments, and '-simplify'.
@@ -9,12 +9,12 @@ So a '-simplify' among the arguments pre-simplifies the mesh, truncating the fin
 Alternatively, '-prog placeholder' within the arguments starts the recording at that point.
 
 Examples:
-meshtopm.sh <file.m >file.pm
-meshtopm.sh file.m >file.pm
-cat file.m | meshtopm.sh -numpts 100000 >file.numpts100000.pm
-meshtopm.sh file.m -nf 100000 -simplify >file.pm
-meshtopm.sh -postprog '-simplify -dihallow -rebuildpq' file.m -minqem -vsgeom >file.pm
-meshtopm.sh planck400k.orig.m -minqem -qemvolume 0 -dihallow -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -prog placeholder -simplify -rebuildpq >planck400k.pm
+meshtopm <file.m >file.pm
+meshtopm file.m >file.pm
+cat file.m | meshtopm -numpts 100000 >file.numpts100000.pm
+meshtopm file.m -nf 100000 -simplify >file.pm
+meshtopm -postprog '-simplify -dihallow -rebuildpq' file.m -minqem -vsgeom >file.pm
+meshtopm planck400k.orig.m -minqem -qemvolume 0 -dihallow -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -prog placeholder -simplify -rebuildpq >planck400k.pm
 END_USAGE_EXAMPLES
 
 if [[ $1 == --help ]]; then echo "$usage"; exit 0; fi

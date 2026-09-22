@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 G3dOGL data/mechpart.recon.m -st data/mechpart.s3d -key iiJ %G3DARGS% -geometry 800x600+150+0 -hidden -video 360 results/mechpart.video.mp4
 

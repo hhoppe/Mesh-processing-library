@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 echo Running phase 1 - Recon. 
 Recon <data/curve1.pts -samplingd 0.06 -grid 30 >results/curve1.recon.a3d

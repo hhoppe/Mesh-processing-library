@@ -120,7 +120,7 @@
 "bone1"			"rgb=(.8 .8 .8)"
 "gold"			"rgb=(.7 .7 .1)"
 
-# for foothelmet (not a very nice model??)
+# for foothelmet (not a very nice model?)
 "sidepad"		"rgb=(.2 .1 .7)"
 "backpad"		"rgb=(.2 .1 .7)"
 "helmet"		"rgb=(.2 .1 .7)"
@@ -131,3 +131,6 @@
 # for dunebuggy
 "flblack"		"rgb=(.2 .2 .2)"
 "orange"		"rgb=(.9 .6 .1)"
+
+# for octaflat
+"defaultMat"            "rgb=(.7 .7 .7)"

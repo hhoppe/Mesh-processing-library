@@ -55,7 +55,7 @@ On Mac OS X, it is necessary to install
 
 Open the `mesh_processing.sln` file and build the solution
 (typically as a `"ReleaseMD - x64"` build).
-Executables are placed in `bin` or `bin/debug`.
+Executables are placed in `bin/msbuild` or `bin/msbuild_debug`,
 depending on the build configuration.
 
 
@@ -532,8 +532,9 @@ followed by `Filterprog ... -fprog club.rprog` is still supported.)
 
 The complete process from the original mesh to the progressive mesh is implemented by the script call
 ```shell
-demos/bin/meshtopm.{sh,bat} demos/data/club.orig.m >club.pm
+bin/meshtopm demos/data/club.orig.m >club.pm
 ```
+(or `bin/meshtopm.bat` under the Windows `cmd` shell).
 
 Given a progressive mesh, we can interactively traverse its continuous levels of detail:
 ```shell
@@ -578,7 +579,7 @@ Filterimage demos/data/gaudipark.png -scaletox 200 -tomesh | \
 
 Within `demos/create_sr_office`, the script call
 ```shell
-meshtopm.{sh,bat} demos/results/office.nf80000.orig.m -vsgeom >office.sr.pm
+meshtopm demos/results/office.nf80000.orig.m -vsgeom >office.sr.pm
 ```
 creates a progressive mesh in which the simplified vertices are constrained to lie
 at their original positions (`-vsgeom`).
@@ -599,7 +600,7 @@ Within `demos/create_sr_terrain.{sh,bat}`,
 Filterimage demos/data/gcanyon_elev_crop.bw.png -tobw -elevation -step 6 -scalez 0.000194522 \
     -removekinks -tomesh | \
   Filtermesh -assign_normals >gcanyon_sq200.orig.m
-demos/bin/meshtopm.{sh,bat} gcanyon_sq200.orig.m -vsgeom -terrain >gcanyon_sq200.pm
+meshtopm gcanyon_sq200.orig.m -vsgeom -terrain >gcanyon_sq200.pm
 ```
 - converts an elevation image to a smoothed terrain grid mesh, and
 - simplifies it to create a selectively refinable mesh.
@@ -685,7 +686,7 @@ so as to minimize parametric stretch from the sphere to the surface mesh.
 
 For example, within `demos/create_spherical_param_bunny`,
 ```shell
-meshtopm.{sh,bat} data/bunny.orig.m -minqem -vsgeom -dihallow | \
+meshtopm data/bunny.orig.m -minqem -vsgeom -dihallow | \
   SphereParam - -rot data/bunny.s3d >data/bunny.sphparam.m
 ```
 - creates a progressive mesh (`*.pm`) stream minimizing a quadric error metric (`qem`),

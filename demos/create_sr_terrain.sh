@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 echo 'Creating original terrain mesh from elevation image.'
 
@@ -11,6 +11,6 @@ echo '.'
 echo 'Simplifying terrain mesh.  (This will take several minutes.)'
 echo '.'
 
-bin/meshtopm.sh results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
+meshtopm results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
 
 echo 'Use view_sr_terrain.sh to see geomorphs on the view-dependent terrain.'

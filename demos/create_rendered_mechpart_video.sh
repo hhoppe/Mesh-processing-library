@@ -1,7 +1,7 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 G3dOGL data/mechpart.recon.m -st data/mechpart.s3d -key iiJ $G3DARGS -geometry 800x600+150+0 -hidden -video 360 results/mechpart.video.mp4
 

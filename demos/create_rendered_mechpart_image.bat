@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 :: G3dOGL data/mechpart.recon.m -st data/mechpart.s3d -imagename results/mechpart.image.bmp -picture %G3DARGS% -geometry 800x800+150+0
 

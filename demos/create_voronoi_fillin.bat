@@ -2,7 +2,7 @@
 setlocal
 
 cd "%~p0"
-call bin/_initdemos.bat
+call ./_initdemos.bat
 
 Filterimage data/texture.input.png -color 255 0 0 255 -voronoidilate >results/texture.output.png
 

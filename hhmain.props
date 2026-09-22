@@ -131,10 +131,10 @@
 
   <!-- Assign executable output directory based on Debug or Release: -->
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64' OR '$(Configuration)|$(Platform)'=='DebugMD|x64'">
-    <OutDir>$(ExeRoot)\bin\debug\</OutDir>
+    <OutDir>$(ExeRoot)\bin\msbuild_debug\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64' OR '$(Configuration)|$(Platform)'=='ReleaseMD|x64'">
-    <OutDir>$(ExeRoot)\bin\</OutDir>
+    <OutDir>$(ExeRoot)\bin\msbuild\</OutDir>
   </PropertyGroup>
 
   <!-- Include *.pdb and *.ilk in `Clean` operation: -->

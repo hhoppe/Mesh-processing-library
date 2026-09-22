@@ -1,11 +1,11 @@
 #!/bin/bash
 
 cd "$(dirname "${BASH_SOURCE[0]}")"
-source bin/_initdemos.sh
+source ./_initdemos.sh
 
 
 echo 'Compute a mapping from the flat octahedron to the sphere that is optimized for inverse stretch.'
-SphereSample -domain octaflat -scheme domain -egrid 128 -keys domaincorner,imageuv -mesh_sphere | Filtermesh -gmerge -removekey Ovi -cornermerge -renamekey v domaincorner global -renamekey vc imageuv uv -assign_normals -removekey sharp | bin/meshtopm.sh -minqem -qemvolume 0 -dihallow -affectpq 3 -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -strict_sharp 2 >results/v_sharp.pm
+SphereSample -domain octaflat -scheme domain -egrid 128 -keys domaincorner,imageuv -mesh_sphere | Filtermesh -gmerge -removekey Ovi -cornermerge -renamekey v domaincorner global -renamekey vc imageuv uv -assign_normals -removekey sharp | meshtopm -minqem -qemvolume 0 -dihallow -affectpq 3 -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -strict_sharp 2 >results/v_sharp.pm
 
 SphereParam results/v_sharp.pm -base coord -flatten_to_x0 -fix_base -optimize_inverse -respect_sharp_edges -keep_uv 1 >results/v.m
 
@@ -15,7 +15,7 @@ rm -f results/v_sharp.pm results/v.m
 
 
 echo 'From the original mesh data/bunny.orig.m, compute a progressive mesh, then the spherical parameterization results/bunny.sphparam.m.'
-bin/meshtopm.sh data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -rot data/bunny.s3d -split_meridian >results/bunny.sphparam.m
+meshtopm data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -rot data/bunny.s3d -split_meridian >results/bunny.sphparam.m
 
 
 echo 'Resample the bunny spherical parameterization into a remesh and an associated normal map.'
@@ -31,7 +31,7 @@ SphereSample -grid 1024 -param results/bunny.sphparam.m -signal N -write_lonlat_
 
 echo 'Create a progressive mesh by minimizing an "Appearance-preserving simplification" (APS) metric.'
 
-bin/meshtopm.sh results/bunny.sphparam.m -minaps -nominii1 -strict 2 >results/bunny.split_meridian.pm
+meshtopm results/bunny.sphparam.m -minaps -nominii1 -strict 2 >results/bunny.split_meridian.pm
 
 
 echo '.'

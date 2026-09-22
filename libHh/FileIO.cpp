@@ -935,7 +935,7 @@ intptr_t my_sh(CArrayView<string> sargv, bool wait) {
     if (ret < 0 && debug) Warning("Shell 'sh' not found");
   }
   // CMD
-  // (cd ~/tmp; cp -p ~/bin/sys/gzip.exe .; PATH=".:$HOME/git/mesh_processing/bin:/cygdrive/c/windows/system32:/cygdrive/c/windows"; Filtermesh ~/data/mesh/"complex file name.m" -stat)
+  // (cd ~/tmp; cp -p ~/bin/sys/gzip.exe .; PATH=".:$HOME/git/mesh_processing/bin/msbuild:/cygdrive/c/windows/system32:/cygdrive/c/windows"; Filtermesh ~/data/mesh/"complex file name.m" -stat)
   if (ret < 0) {
     if (1) Warning("Shell 'sh' was not found; resorting to 'cmd'");
     command = "";

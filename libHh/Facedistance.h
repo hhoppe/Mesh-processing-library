@@ -82,86 +82,70 @@ inline float lb_dist_point_bbox(const Point& p, const Bbox<float, 3>& bbox) {
 
 namespace details {
 
-// Within the triangle plane, project `proj` onto the segment (pi0, pi1).
-inline bool project_onto_seg(const Point& proj, int i, float b, const Point& pi0, const Point& pi1,
-                             TriangleProjectionResult& result, float& min_inplane_d2) {
-  if (b >= 0.f) return false;
-  const Vector vi = pi1 - pi0;
-  const float d12sq = mag2(vi);
-  const float don12 = dot(vi, proj - pi0);
-  if (don12 <= 0.f) {
-    const float in_plane_d2 = dist2(proj, pi0);
-    if (in_plane_d2 < min_inplane_d2) {
-      min_inplane_d2 = in_plane_d2;
-      result.bary[i] = 1.f;
-      result.bary[mod3(i + 1)] = 0.f;
+// Project p onto each side of the triangle; this handles a degenerate triangle (with collinear vertices).
+inline TriangleProjectionResult project_point_triangle_sides(const Point& p, const Point& p1, const Point& p2,
+                                                             const Point& p3) {
+  const Vec3<Point> triangle{p1, p2, p3};
+  TriangleProjectionResult result{BIGFLOAT, Bary(1.f, 0.f, 0.f), p1};
+  for_int(i, 3) {
+    const auto [d2, bary, clp] = project_point_segment(p, triangle[i], triangle[mod3(i + 1)]);
+    if (d2 < result.d2) {
+      result.d2 = d2;
+      result.bary[i] = bary;
+      result.bary[mod3(i + 1)] = 1.f - bary;
       result.bary[mod3(i + 2)] = 0.f;
-      result.clp = pi0;
+      result.clp = clp;
     }
-    return false;
-  } else if (don12 >= d12sq) {
-    const float in_plane_d2 = dist2(proj, pi1);
-    if (in_plane_d2 < min_inplane_d2) {
-      min_inplane_d2 = in_plane_d2;
-      result.bary[i] = 0.f;
-      result.bary[mod3(i + 1)] = 1.f;
-      result.bary[mod3(i + 2)] = 0.f;
-      result.clp = pi1;
-    }
-    return false;
-  } else {
-    const float a = don12 / d12sq;  // Note that d12sq > 0.f, else don12 == 0.f, which is detected earlier.
-    result.bary[i] = 1.f - a;
-    result.bary[mod3(i + 1)] = a;
-    result.bary[mod3(i + 2)] = 0.f;
-    result.clp = pi0 + vi * a;
-    return true;
   }
-}
-
-// The planar projection lies outside the triangle, so more work is needed.
-inline TriangleProjectionResult project_aux(const Point& p, const Point& p1, const Point& p2, const Point& p3,
-                                            const Point& proj, float b1, float b2, float b3) {
-  TriangleProjectionResult result;
-  // We must track min_in_plane_d2 because p may project onto 2 different vertices.  For triangle ABC, on line AB it
-  // may project to B, then on line AC it may project to C, then on line BC it may project inside the segment.
-  float min_inplane_d2 = BIGFLOAT;  // (Distance within the plane, from proj, not from p.)
-  bool stop = project_onto_seg(proj, 0, b3, p1, p2, result, min_inplane_d2);
-  if (!stop) {
-    stop = project_onto_seg(proj, 1, b1, p2, p3, result, min_inplane_d2);
-    if (!stop) project_onto_seg(proj, 2, b2, p3, p1, result, min_inplane_d2);
-  }
-  result.d2 = dist2(p, result.clp);
   return result;
 }
 
 }  // namespace details
 
-// Two bad cases:
-// - v2 == 0 or v3 == 0 (two points of the triangle are the same) -> ok.
-// - v2v3 * v2v3 == v2v2 * v3v3 (!area but v2 != 0 && v3 != 0) -> project on the sides.
+// The test for projection into the interior comes first, as it is the common case for nearby points.  Its
+// barycentric weights w1, w2, w3 (which sum to nn) are dot products with the in-plane edge normals cross(n, v12) and
+// cross(v13, n); the equivalent differences of products of dot products (as in the normal equations) would square the
+// conditioning of thin triangles.  A point outside is then classified against the Voronoi regions of the vertices
+// and edges, following Ericson, "Real-Time Collision Detection", 2005, section 5.1.5.
 inline TriangleProjectionResult project_point_triangle(const Point& p, const Point& p1, const Point& p2,
                                                        const Point& p3) {
-  const Vector v2 = p2 - p1, v3 = p3 - p1;
-  const float v2v2 = mag2(v2), v3v3 = mag2(v3);
-  const float v2v3 = dot(v2, v3);
-  float denom;
-  if (!v2v2 || !v3v3 || !(denom = v3v3 - v2v3 * v2v3 / v2v2)) {
-    // Triangle is degenerate, so project on its sides.  Set b1 = b2 = -1e-10f to force projection on 2 sides.
-    return details::project_aux(p, p1, p2, p3, p, -1e-10f, -1e-10f, 1.f);
+  const Vector v12 = p2 - p1, v13 = p3 - p1;
+  const Vector v1p = p - p1;
+  const Vector n = cross(v12, v13);
+  const float nn = mag2(n);
+  const float w2 = dot(v1p, cross(v13, n)), w3 = dot(v1p, cross(n, v12));
+  if (const float w1 = nn - w2 - w3; w1 >= 0.f && w2 >= 0.f && w3 >= 0.f && nn > 0.f) {
+    const float b1 = w1 / nn, b2 = w2 / nn, b3 = w3 / nn;
+    const Point clp = p1 + v12 * b2 + v13 * b3;
+    return {dist2(p, clp), Bary(b1, b2, b3), clp};
   }
-  const Vector vp = p - p1;
-  const float v2vp = dot(v2, vp), v3vp = dot(v3, vp);
-  const float b3 = (v3vp - v2v3 / v2v2 * v2vp) / denom;
-  const float b2 = (v2vp - b3 * v2v3) / v2v2;
-  const float b1 = 1.f - b2 - b3;
-  // const Point proj = interp(p1, p2, p3, b1, b2);
-  const Point proj = p1 + b2 * v2 + b3 * v3;
-  if (b1 < 0.f || b2 < 0.f || b3 < 0.f) return details::project_aux(p, p1, p2, p3, proj, b1, b2, b3);
-  // Fast common case (projection into interior):
-  const float d2 = dist2(p, proj);
-  const Bary bary = V(b1, b2, b3);
-  return {d2, bary, proj};
+  const float e1 = dot(v12, v1p), e2 = dot(v13, v1p);
+  if (e1 <= 0.f && e2 <= 0.f) return {dist2(p, p1), Bary(1.f, 0.f, 0.f), p1};
+  const Vector v2p = p - p2;
+  const float e3 = dot(v12, v2p), e4 = dot(v13, v2p);
+  if (e3 >= 0.f && e4 <= e3) return {dist2(p, p2), Bary(0.f, 1.f, 0.f), p2};
+  if (w3 <= 0.f && e1 >= 0.f && e3 <= 0.f && e1 > e3) {
+    const float a = e1 / (e1 - e3);
+    const Point clp = p1 + v12 * a;
+    return {dist2(p, clp), Bary(1.f - a, a, 0.f), clp};
+  }
+  const Vector v3p = p - p3;
+  const float e5 = dot(v12, v3p), e6 = dot(v13, v3p);
+  if (e6 >= 0.f && e5 <= e6) return {dist2(p, p3), Bary(0.f, 0.f, 1.f), p3};
+  if (w2 <= 0.f && e2 >= 0.f && e6 <= 0.f && e2 > e6) {
+    const float a = e2 / (e2 - e6);
+    const Point clp = p1 + v13 * a;
+    return {dist2(p, clp), Bary(1.f - a, 0.f, a), clp};
+  }
+  const Vector v23 = p3 - p2;
+  const float w1 = dot(v2p, cross(n, v23));
+  if (w1 <= 0.f && e4 >= e3 && e5 >= e6 && (e4 - e3) + (e5 - e6) > 0.f) {
+    const float a = (e4 - e3) / ((e4 - e3) + (e5 - e6));
+    const Point clp = p2 + v23 * a;
+    return {dist2(p, clp), Bary(0.f, 1.f - a, a), clp};
+  }
+  // The triangle is degenerate, or rounding made the region tests inconsistent.
+  return details::project_point_triangle_sides(p, p1, p2, p3);
 }
 
 inline TriangleProjectionResult project_point_triangle(const Point& p, const Vec3<Point>& triangle) {

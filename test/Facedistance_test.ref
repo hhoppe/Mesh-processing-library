@@ -221,3 +221,11 @@ v 2 3 9
 E 0 0 0
 
 specular = [0.4, 0.5, 0.6]
+cube         max closest-point error < 1e-05
+near_plane   max closest-point error < 0.0001
+offset_1000  max closest-point error < 0.002
+far_point    max closest-point error < 0.001
+sliver       max closest-point error < 0.002
+collinear    max closest-point error < 5e-06
+coincident   max closest-point error < 1e-05
+tiny         max closest-point error < 0.001

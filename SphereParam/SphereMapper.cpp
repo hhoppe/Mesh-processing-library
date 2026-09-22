@@ -98,7 +98,7 @@ class SphereMapper::Implementation {
     const int effort = _options.effort;
     initialize_param(_optim_line_search_iter, "optim_line_search_iter", V(6, 8, 10, 40, 100, 200)[effort]);
     initialize_param(_optim_vsplit_vt_iter, "optim_vsplit_vt_iter", V(1, 1, 2, 3, 5, 5)[effort]);
-    initialize_param(_optim_vsplit_nei_iter, "optim_vsplit_nei_iter", V(0, 0, 0, 3, 5, 20)[effort]);
+    initialize_param(_optim_vsplit_nei_iter, "optim_vsplit_nei_iter", V(0, 0, 1, 3, 5, 20)[effort]);
     initialize_param(_optim_global_iter, "optim_global_iter", V(1, 2, 3, 5, 8, 20)[effort]);
     initialize_param(_optim_movetol, "optim_movetol", V(1e-2f, 5e-3f, 1e-3f, 1e-3f, 5e-4f, 3e-4f)[effort]);
     initialize_param(_optim_nv_ratio, "optim_nv_ratio", V(1.7f, 1.25f, 1.2f, 1.1f, 1.05f, 1.04f)[effort]);

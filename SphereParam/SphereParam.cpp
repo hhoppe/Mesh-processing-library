@@ -205,6 +205,17 @@ Vertex split_mesh_edge(GMesh& mesh, Edge e, float frac1) {
   return v;
 }
 
+// Returns the normalized vector with its near-zero coordinates snapped to zero, e.g. to place a split point exactly
+// on a splitting plane.  Unlike snap_coordinates(), it does not snap each coordinate near +-1, because a unit vector
+// whose coordinate is within 1e-6 of 1 may still lie 1.4e-3 radians from that axis; the snap would move the point off
+// the sphere and, in the lon-lat parameterization, onto the pole.  We divide by the length rather than multiply by
+// its reciprocal (as normalized() does), so that a vector whose two other coordinates are negligible becomes exactly
+// the axis point +-1.
+Point snap_normalized(const Vector& vec) {
+  const float len = assertx(mag(vec));
+  return transformed(vec / len, [](float e) { return abs(e) < 1e-6f ? 0.f : e; });
+}
+
 void collapse_zero_param_length_edges(GMesh& mesh, Set<Vertex>& new_vertices) {
   while (!new_vertices.empty()) {
     Vertex v = new_vertices.remove_one();
@@ -238,7 +249,7 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
     const Point sph1 = v_sph(v1), sph2 = v_sph(v2);
     const float sph_frac1 = sph1[axis] / (sph1[axis] - sph2[axis]);
-    const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
+    const Point sph_new = snap_normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2);
     const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
     Vertex v = split_mesh_edge(mesh, e, frac1);
     new_vertices.enter(v);
@@ -316,7 +327,7 @@ void split_mesh_along_octa(GMesh& mesh) {
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
     const Point sph1 = v_sph(v1), sph2 = v_sph(v2);
     const float sph_frac1 = sph1[axis] / (sph1[axis] - sph2[axis]);
-    const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
+    const Point sph_new = snap_normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2);
     const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
     Vertex v = split_mesh_edge(mesh, e, frac1);
     new_vertices.enter(v);
@@ -710,7 +721,7 @@ void split_awmesh_faces_along_meridian(AWMesh& awmesh) {
             (sph1[k_axis0] < -eps && sph2[k_axis0] > eps) || (sph2[k_axis0] < -eps && sph1[k_axis0] > eps);
         if (edge_crosses_meridian) {
           const float sph_frac1 = sph1[k_axis0] / (sph1[k_axis0] - sph2[k_axis0]);
-          const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
+          const Point sph_new = snap_normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2);
           const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
           awmesh.split_edge(f, j, frac1);
           awmesh._wedges.last().attrib.uv = lonlat_from_sph(sph_new);
@@ -725,7 +736,7 @@ void split_awmesh_faces_along_meridian(AWMesh& awmesh) {
             abs(sph1[k_axis0]) < eps && abs(sph2[k_axis0]) < eps && (sph1[k_axis1] < -eps && sph2[k_axis1] > eps);
         if (edge_crosses_pole) {
           const float sph_frac1 = sph1[k_axis1] / (sph1[k_axis1] - sph2[k_axis1]);
-          const Point sph_new = snap_coordinates(normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2));
+          const Point sph_new = snap_normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2);
           const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
           awmesh.split_edge(f, j, frac1);
           awmesh._wedges.last().attrib.uv = lonlat_from_sph(sph_new);

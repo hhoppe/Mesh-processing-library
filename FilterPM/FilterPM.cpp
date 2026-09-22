@@ -1436,57 +1436,6 @@ void do_polystream() {
   nooutput = true;
 }
 
-Point sph_from_lonlat(const Uv& uv) {
-  assertx(uv[0] >= 0.f && uv[0] <= 1.f);
-  assertx(uv[1] >= 0.f && uv[1] <= 1.f);
-  const float lon = (uv[0] - .5f) * TAU;        // -TAU / 2 .. +TAU / 2.
-  const float lat = (uv[1] - .5f) * (TAU / 2);  // -TAU / 4 .. +TAU / 4.
-  // My coordinate system.
-  return Point(std::cos(lon) * std::cos(lat), std::sin(lon) * std::cos(lat), std::sin(lat));
-}
-
-// Problems that make this visualization useless:
-// - The base tetrahedron is not at all regular.
-// - Currently, the PM file does not have the final registration rotation that the .sphparam.m file does, so the
-//   normals are all wrong.
-void do_uvsphtopos() {
-  // Assumes: 1 wedge per vertex, ii == 2 everywhere.
-  assertx(pmesh._info._has_uv);
-  Array<int> array_vs;  // Maps vspli -> vs.
-  ensure_pm_loaded();
-  pmi->goto_nvertices(0);
-  for_int(vspli, pmesh._vsplits.num()) {
-    const Vsplit& vspl = pmesh._vsplits[vspli];
-    const int ii = (vspl.code & Vsplit::II_MASK) >> Vsplit::II_SHIFT;
-    assertx(ii == 2);
-    assertx(vspl.ar_wad.num() == 1);
-    const int f = vspl.flclw;
-    const int vs_index = (vspl.code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
-    const int vs = pmi->_wedges[pmi->_faces[f].wedges[vs_index]].vertex;
-    array_vs.push(vs);
-    pmi->next();
-  }
-  assertx(pmi->_wedges.num() == pmi->_vertices.num());
-  Array<Point> sphpoints(pmi->_wedges.num());
-  for_int(w, pmi->_wedges.num()) {
-    assertx(pmi->_wedges[w].vertex == w);
-    const Uv& uv = pmi->_wedges[w].attrib.uv;
-    const Point sph = sph_from_lonlat(uv);
-    sphpoints[w] = sph;
-  }
-  AWMesh& bmesh = pmesh._base_mesh;
-  for_int(w, bmesh._wedges.num()) bmesh._vertices[w].attrib.point = sphpoints[w];
-  for_int(vspli, pmesh._vsplits.num()) {
-    Vsplit& vspl = pmesh._vsplits[vspli];
-    const int vs = array_vs[vspli];
-    const int vt = pmesh._base_mesh._vertices.num() + vspli;
-    vspl.vad_large.dpoint = sphpoints[vt] - sphpoints[vs];
-    assertx(is_zero(vspl.vad_small.dpoint));
-  }
-  pmesh._info._full_bbox = Bbox{sphpoints};
-  pmesh._info._has_uv = false;  // Clear the uv coordinates.
-}
-
 }  // namespace
 
 int main(int argc, const char** argv) {
@@ -1543,7 +1492,6 @@ int main(int argc, const char** argv) {
   HH_ARGSC(HH_ARGS_INDENT "Misc:");
   HH_ARGSD(testiterate, "n : run n iterations back and forth");
   HH_ARGSD(polystream, ": for progressive hull, refine polygons");
-  HH_ARGSD(uvsphtopos, ": transfer uv longlat to sphere pos");
   HH_ARGSF(nooutput, ": do not output final PM");
 
   const string arg0 = args.num() ? args.peek_string() : "";

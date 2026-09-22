@@ -573,6 +573,7 @@ void show_all_info() {
   assertw(FrameIO::write(std::cerr, ObjectFrame{tview, -1}));
   SHOW(ddistance, expo, keep_active, mode_centroid, want_jump, obinary, keystring);
   SHOW(g_obs.first, g_obs.last, HB::get_hither(), HB::get_yonder(), obview, cob);
+  SHOW(get_header_info());
 }
 
 void show_help() {

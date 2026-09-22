@@ -97,6 +97,7 @@ view_timeout = $(if $(DEMOS_HIDDEN),timeout 300)
 view:
 	@status=0; \
 	for i in $(view_scripts); do \
+          echo '**' $$i; \
 	  $(view_timeout) $$i || { s=$$?; echo "*** $$i exited with status $$s." >&2; status=$$s; }; \
 	done; \
 	exit $$status

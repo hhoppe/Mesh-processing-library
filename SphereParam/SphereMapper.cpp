@@ -473,6 +473,7 @@ class SphereMapper::Implementation {
 
   void optimize_vertex_split(int v, int someface) {
     HH_STIMER("_optimize_vertex_split");
+    int nei_iter = _optim_vsplit_nei_iter;
     if (int vsh1, vsh2; _options.respect_sharp_edges && vertex_is_on_sharp_edge(_pmi, v, someface, vsh1, vsh2)) {
       _sphmap[v] = arc_midpoint_within_kernel(v, someface, vsh1, vsh2);
       if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
@@ -490,8 +491,11 @@ class SphereMapper::Implementation {
       } else {
         // The 1-ring polygon is not star-shaped, e.g. when two of its edges lie on a common great circle with
         // opposite orientations, so there is no point from which all its vertices are visible.  Fall back to the
-        // centroid of the 1-ring vertices; the optimize_vertex() calls below already tolerate an empty kernel.
+        // centroid of the 1-ring vertices.  That centroid may lie outside the (empty) kernel, which flips an
+        // adjacent face and leaves the vertex unable to ever move again, because each later line search finds an
+        // empty interval.  Therefore also optimize the 1-ring neighbors below, to let the kernel open up.
         Warning("Empty kernel for the 1-ring of a vertex split");
+        nei_iter = 5;  // It can be a large number because this case is rare.
         Vector centroid{};
         for (const auto [vv, unused_ff] : _pmi.ccw_vertices(v, someface)) centroid += _sphmap[vv];
         assertx(centroid.normalize());
@@ -504,7 +508,7 @@ class SphereMapper::Implementation {
     set_stretch_scaling();
     for_int(i, _optim_vsplit_vt_iter) _sphmap[v] = optimize_vertex(v, someface);
 
-    for_int(i, _optim_vsplit_nei_iter) {
+    for_int(i, nei_iter) {
       for (const auto [vv, ff] : _pmi.ccw_vertices(v, someface)) _sphmap[vv] = optimize_vertex(vv, ff);
       _sphmap[v] = optimize_vertex(v, someface);
     }

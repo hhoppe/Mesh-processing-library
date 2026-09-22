@@ -1,0 +1,16 @@
+sph_from_lonlat(Uv(0.f, 0.f)) = [0, 0, -1]
+sph_from_lonlat(Uv(.3f, 1.f)) = [0, 0, 1]
+sph_from_lonlat(Uv(0.f, .5f)) = [0, 1, 0]
+sph_from_lonlat(Uv(.25f, .5f)) = [-1, 0, 0]
+sph_from_lonlat(Uv(.5f, .5f)) = [0, -1, 0]
+sph_from_lonlat(Uv(.75f, .5f)) = [1, 0, 0]
+lonlat_from_sph(Point(0.f, 0.f, -1.f)) = [1, 0]
+lonlat_from_sph(Point(0.f, 0.f, 1.f)) = [1, 1]
+lonlat_from_sph(Point(-1.f, 0.f, 0.f)) = [0.25, 0.5]
+lonlat_from_sph(Point(0.f, -1.f, 0.f)) = [0.5, 0.5]
+lonlat_from_sph(Point(1.f, 0.f, 0.f)) = [0.75, 0.5]
+max_mag_error < 4e-7 = 1
+max_lat_error < 1e-6f = 1
+max_lon_error < 1e-6f = 1
+abs(lonlat_from_sph(sph_from_lonlat(Uv(.3f, .0004f)))[1] - .0004f) < 1e-6f = 1
+max_error < 1e-5f = 1

@@ -391,7 +391,8 @@ Uv lonlat_from_sph(const Point& sph) {
   // We assume: lon=0 at +Y, lon=.25 at -X, lat=0 at -Z.
   // We place lat=0 at -Z because the OpenGL Uv coordinate origin is at the image lower-left.
   const float lon = snap_coordinate(std::atan2(sph[0], -sph[1]) / TAU + .5f);  // Azimuth; phi.
-  const float lat = snap_coordinate(std::asin(sph[2]) / (TAU / 2) + .5f);      // Zenith; theta.
+  // Zenith; theta.  Unlike std::asin(sph[2]), atan2() retains full precision near the poles and ignores |sph|.
+  const float lat = snap_coordinate(std::atan2(sph[2], std::hypot(sph[0], sph[1])) / (TAU / 2) + .5f);
   return Uv(lon, lat);
 }
 
@@ -402,8 +403,11 @@ Point sph_from_lonlat(const Uv& lonlat) {
   const float lat = lonlat[1];
   const float ang_lon = lon * TAU;
   const float ang_lat = lat * (TAU / 2);
-  const Point sph = snap_coordinates(
-      Point(-std::sin(ang_lon) * std::sin(ang_lat), std::cos(ang_lon) * std::sin(ang_lat), -std::cos(ang_lat)));
+  Point sph(-std::sin(ang_lon) * std::sin(ang_lat), std::cos(ang_lon) * std::sin(ang_lat), -std::cos(ang_lat));
+  // We snap the near-zero coordinates to zero, and snap a coordinate to +-1 only if its two others are then zero; a
+  // unit vector whose coordinate is within 1e-6 of 1 may still lie 1.4e-3 radians from that axis.
+  for_int(c, 3) if (abs(sph[c]) < 1e-6f) sph[c] = 0.f;
+  for_int(c, 3) if (sph[mod3(c + 1)] == 0.f && sph[mod3(c + 2)] == 0.f) sph[c] = sign(sph[c]);
   return sph;
 }
 

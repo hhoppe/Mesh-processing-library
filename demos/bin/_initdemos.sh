@@ -63,7 +63,7 @@ fi
 # required (X11 or the Windows desktop); only the mapping of the window is suppressed.
 hidden_args=''
 if [[ -n $DEMOS_HIDDEN ]]; then
-  hidden_args='-hidden -hwdelay 1 -hwkey \9\c'
+  hidden_args='-hidden -hwdelay 1 -hwkey \2\c'
 fi
 
 # Extra arguments for the viewers; the geometry of $G3DARGS is overridden by any later -geom.

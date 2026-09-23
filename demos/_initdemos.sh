@@ -25,6 +25,12 @@ mkdir -p results
 # If running from a Makefile, prefer the selected CONFIG.
 if [[ -n $CONFIG ]]; then
   PATH=../bin/$CONFIG:$PATH
+  # WSL bash does not resolve Filtermesh to Filtermesh.exe, so a Windows CONFIG would silently fall back to
+  # whatever other build is on PATH.
+  if [[ $(type -P Filtermesh) != ../bin/$CONFIG/* ]]; then
+    echo "_initdemos.sh: CONFIG=$CONFIG, but Filtermesh resolves to '$(type -P Filtermesh)'." >&2
+    exit 1
+  fi
 else # Otherwise, explicitly set the desired build directory here.
   # Add all possible build directories as fallback if not specified below.
   PATH=../bin/msbuild:../bin/msbuild_debug:../bin/win:../bin/mingw:../bin/clang:../bin/cygwin:../bin/unix:$PATH

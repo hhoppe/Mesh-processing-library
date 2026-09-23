@@ -56,6 +56,9 @@ ifneq ($(sanitize:0=),)
   # Extend build_variant so that the built_ob sentinel forces a rebuild when this axis changes.
   build_variant_extra := -san_$(subst $(comma),_,$(sanitize))
 endif
+# Likewise for an overridden machine_arch (e.g. make machine_arch=-march=x86-64-v3), whose change must also
+#  rebuild the libHh precompiled header.
+build_variant_extra += $(if $(filter-out -march=native,$(machine_arch)),$(subst =,_,$(machine_arch)))
 # See HH_HAS_ASAN and __lsan in code files for behavior overrides.
 
 ccommon += -m64

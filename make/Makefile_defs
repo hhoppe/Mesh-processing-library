@@ -258,7 +258,7 @@ build_variant = $(call concat, \
   $(if $(release:0=),release,debug) \
   $(if $(wholeopt:0=),-wholeopt) \
   $(if $(PEDANTIC:0=),-pedantic) \
-  $(build_variant_extra))#  Compiler-specific axes, e.g. $(sanitize) in Makefile_base_either_gcc_or_clang.
+  $(build_variant_extra))#  Compiler-specific axes, e.g. sanitize & machine_arch in Makefile_base_either_gcc_or_clang.
 
 # Assembly listings are created only on demand, so they get their own sentinel; it is never built unless
 # some *.$(extasm) file is requested as a goal.

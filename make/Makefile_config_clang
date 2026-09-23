@@ -27,12 +27,24 @@ ifneq ($(filter thread memory,$(subst $(comma), ,$(sanitize))),)
   $(error CONFIG=clang has no thread or memory sanitizer; use CONFIG=unix for sanitize=$(sanitize))
 endif
 
-# Programs built with the address sanitizer load its runtime DLL from the Clang resource directory.
+# The sanitizer runtimes are in the Clang resource directory.
 # (The `sort` caveat noted above applies to the version directories.)
+ifneq ($(sanitize:0=),)
+  clang_rt_dir := $(call rawdir,$(lastword $(sort \
+    $(wildcard $(LLVM_ROOT)/lib/clang/*/lib/windows/clang_rt.builtins-x86_64.lib))))
+  $(if $(clang_rt_dir),,$(error No sanitizer runtimes found under '$(LLVM_ROOT)/lib/clang'))
+endif
+# Programs built with the address sanitizer load its runtime DLL, which also contains the UBSan runtime.
 ifneq ($(filter address,$(subst $(comma), ,$(sanitize))),)
-  asan_dll := $(lastword $(sort $(wildcard $(LLVM_ROOT)/lib/clang/*/lib/windows/clang_rt.asan_dynamic-x86_64.dll)))
-  $(if $(asan_dll),,$(error No ASan runtime DLL found under '$(LLVM_ROOT)/lib/clang'))
-  $(call prepend_PATH,$(call rawdir,$(asan_dll)))
+  $(if $(wildcard $(clang_rt_dir)/clang_rt.asan_dynamic-x86_64.dll),,$(error No ASan runtime DLL in '$(clang_rt_dir)'))
+  $(call prepend_PATH,$(clang_rt_dir))
+else ifneq ($(filter undefined,$(subst $(comma), ,$(sanitize))),)
+  # The driver names the standalone UBSan runtime without a path, and the linker then finds the incompatible
+  #  copy that Visual Studio ships (in MSVC/*/lib/x64), whose directory precedes the Clang resource directory.
+  ccommon += -fno-rtlib-defaultlib
+  # Clang's copy mixes C runtimes: ubsan_standalone_cxx requires the static one, yet ubsan_standalone imports
+  #  CRT functions such as _errno, which lld then resolves locally but reports as LNK4217.
+  LDFLAGS += -Wl,-ignore:4217 $(foreach s,standalone standalone_cxx,$(clang_rt_dir)/clang_rt.ubsan_$(s)-x86_64.lib)
 endif
 
 AR = llvm-ar

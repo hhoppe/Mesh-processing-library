@@ -97,7 +97,7 @@ debug:
 	env | grep -i -E 'gcc|cpath|include_path'
 
 # Location of executable used for timing test.
-rel_exe_dir = $(if $(CONFIG:win=),bin/$(CONFIG),bin)#  CONFIG=win instead uses the release exe created by msbuild.
+rel_exe_dir = $(if $(CONFIG:win=),bin/$(CONFIG),bin/msbuild)#  CONFIG=win instead uses release exe created by msbuild.
 
 timingtest: Filterimage Filtervideo
 # hhoppeg   win: expect 0.40 sec, 7.5 sec

@@ -318,17 +318,25 @@ endif
 # Invoke $< which is the first prerequisite (either $(@:%.ou=%) in ./test or $(@:%.ou=%.script) in ./progtest).
 # Note: GNU make version 3.81 cannot have an " =" at the end of the next line; strange.
 # Also, generally it appears unsafe to embed comments within a define..endef definition.
+# A failing test is marked by its %.diff file, which hcheck removes once the test passes.  If hcheck fails without
+# writing one (e.g., a missing test), a one-line %.diff is created as the marker.  The recipe itself succeeds so that
+# all tests run; cmd_diffs_summary then fails while any %.diff exists.  On failure, %.ou is kept (for ediff) but
+# backdated, so that the test reruns next time even if the cause lies outside its prerequisites.
 define cmd_hcheck
   @hcheck $< >/dev/null; status=$$?; if [[ $$status -ne 0 ]]; then echo "$@:1:1: error: hcheck $< exit $$status"; fi; \
+  if [[ $$status -ne 0 && ! -e $(@:%.ou=%.diff) ]]; then \
+    echo "hcheck $< exit $$status, without an output difference" >$(@:%.ou=%.diff); \
+  fi; \
   if [ ! -e $(@:%.ou=%.diff) ]; then \
     echo "$@"; \
   else \
-    echo "$@:1:1: error: test output differs:  ediff $(@:%.ou=%).{ref,ou}"; \
+    if [[ -e $@ ]]; then echo "$@:1:1: error: test output differs:  ediff $(@:%.ou=%).{ref,ou}"; fi; \
     if [[ `cat $(@:%.ou=%.diff) | wc -l` -le 30 ]]; then \
       cat $(@:%.ou=%.diff); \
     elif [[ -e $@ ]] && [[ `cat $@ | wc -l` -le 30 ]]; then \
       cat $@; \
     fi; \
+    if [[ -e $@ ]]; then touch -d "1988-01-01 01:01" $@; fi; \
   fi
 endef
 
@@ -349,6 +357,7 @@ define cmd_diffs_summary
       echo "* $$i"; \
       if [[ `cat $$i | wc -l` -gt 100 ]]; then echo "Long diff **"; else cat $$i; fi; \
     done; \
+    exit 1; \
   fi
 endef
 

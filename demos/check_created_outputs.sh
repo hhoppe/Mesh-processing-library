@@ -4,7 +4,8 @@
 # in results_reference.txt.  For an image or video, each per-channel mean and standard deviation must be within 2%
 # (so a blank rendering fails); for the MeshDistance output *.approximation_error.txt, the geometric and normal
 # rms errors (dL2 nL2) must be within 20% and the maximum errors (dLi nLi) within 50%, because a maximum depends on
-# a single worst point and so varies more across compilers; for any other file, the size must be within 20%.
+# a single worst point and so varies more across compilers; for any other file, the size must be within 20%, except
+# 35% for cactus.sub2limit.m (see below).
 # Usage: check_created_outputs.sh [--update]
 #  --update: rewrite the reference values from the current files instead of checking them.
 
@@ -59,6 +60,11 @@ while IFS= read -r line; do
   tolerance=0.20
   if [[ $name == *.png || $name == *.bmp || $name == *.mp4 ]]; then tolerance=0.02; fi
   if [[ $name == *.approximation_error.txt ]]; then tolerance='0.20 0.20 0.50 0.50'; fi
+  # The size of this file is proportional to the face count of the mesh fitted by Subdivfit, whose stochastic
+  # optimization reaches different face counts across configurations (e.g., 196 to 229 faces, up to +22% in size).
+  # Under the MSVC STL it even varies from run to run, because std::hash of a pointer depends on its absolute
+  # address, which ASLR randomizes, so the iteration order of Set<Vertex> and similar containers changes.
+  if [[ $name == cactus.sub2limit.m ]]; then tolerance=0.35; fi
   # The tolerance is a list with one entry per value, whose last entry also applies to any remaining values.
   if ! awk -v v="$values" -v r="$refs" -v t="$tolerance" 'BEGIN {
       n = split(v, va); if (n != split(r, ra)) exit 1

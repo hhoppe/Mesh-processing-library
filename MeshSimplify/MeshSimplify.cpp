@@ -4812,10 +4812,11 @@ void do_simplify() {
 
 // Recompute the priority queue of edge costs,
 //   E.g. for   -mresid 1e-6f -simp  -mresid 1e-4f -rebuildpq -prog x -simp
+// The removed costs need not equal k_bad_cost, e.g. if the preceding '-simplify' stopped at '-nf'.
 void do_rebuildpq() {
   if (!pqecost.num()) return;  // Note that it is not built if using parallel_optimize().
   assertx(pqecost.num() == mesh.num_edges());
-  for (Edge e : mesh.edges()) assertw(pqecost.remove(e) == k_bad_cost);
+  for (Edge e : mesh.edges()) assertx(pqecost.remove(e) >= 0.f);
   assertx(!pqecost.num());
 }
 

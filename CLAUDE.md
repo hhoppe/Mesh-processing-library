@@ -65,7 +65,7 @@ the recursive make invocations make shell subprocesses expensive. Keep it that w
 - Run all unit tests with `make -j12 test`, or a single one with
   `make -C test Array_test.ou`.
 - For each test, `bin/hcheck` runs `X_test` (or `X_test.script` when present), filters the
-  output through `bin/hcheck_aux` (which masks dates, paths, and `.exe`) into `X_test.ou`,
+  output (masking dates, paths, and `.exe`) into `X_test.ou`,
   and diffs it against `X_test.ref`, leaving `X_test.diff` on a mismatch.
 - `.ref` files are ground truth. Each test has a single `.ref`, which must match across
   `-O0` through `-O3` and every configuration.

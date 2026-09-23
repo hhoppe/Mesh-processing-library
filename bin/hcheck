@@ -1,71 +1,89 @@
 #!/bin/bash
 
-# Run a validation executable
+# Run unit tests and compare each one's output against its expected output.
+#
+# Usage: hcheck X_test[.exe|.script] ...
+#
+# For each test X_test, run X_test.script if it exists, and otherwise the executable X_test
+# (or X_test.exe).  Its combined stdout and stderr, passed through filter_output(), is written to
+# X_test.ou and compared with X_test.ref.  On a mismatch, the differences are printed and saved in
+# X_test.diff.  Failures are reported as "file:1:1: error:" lines for Emacs compilation-mode.
+#
+# The exit status is nonzero if any test is missing, exits with an error, or produces different
+# output.
 
-# set -x
-
-# Cygwin perl was not robust to "make -j" in ~/git/hh_src/test
+# The "." lets a bare test name run from the current directory.  The Windows-native perl is
+# preferred over the Cygwin one, which was not robust to "make -j".
 PATH=".:/perl/bin:/c/perl/bin:/cygdrive/c/perl/bin:$PATH"
-# echo PATH=$PATH 1>&2
+
+# Mask dates, paths, and ".exe" so that the output is comparable across runs and configurations.
+filter_output() {
+  perl -ne '
+    BEGIN { binmode(STDOUT); }
+    s@\d\d\d\d-\d\d-\d\d \d\d:\d\d:\d\d@yyyy-mm-dd hh:mm:ss@g;
+    s@(Created at .* on )(.*)( using:)@$1...$3@;
+    s@ /hh/@ C:/hh/@g;  # For cygwin.
+    s@ c:/hh/@ C:/hh/@g;  # For windows release (hmake).
+    s@\.exe@@g;
+    next if m@Running debug version@;
+    if (m@ in line \d+ of file @) { s@ of file .*$@ of file ...@; }
+    s@^(Now in) .* (at line .*)$@$1 ... $2@;
+    print;
+  '
+}
+
+# The raw output goes outside the project tree, and is removed on any exit.
+tmp=$(mktemp) || exit 1
+trap 'rm -f "$tmp"' EXIT
 
 status=0
 
-for i in "$@"; do
-  i=${i%.exe}
-  e=$i
-  if [[ $i == *.script ]]; then
-    if [[ ! -e $i ]]; then
-      echo "script $i does not exist, skipping" 1>&2
+for arg in "$@"; do
+  test=${arg%.exe}
+  exe=$test
+  if [[ $test == *.script ]]; then
+    test=${test%.script}
+    if [[ ! -e $test.script ]]; then
+      echo "Script $test.script does not exist; skipping." >&2
       status=1
       continue
     fi
-    i=${i%.script}
-  elif [[ -e "$e.script" ]]; then
-    : # all OK
-  elif [[ -x "$e" ]]; then
-    : # all OK
-  elif [[ -f "$e.exe" ]]; then
-    e="$e.exe"
-  else
-    echo "Could not find $e or $e.exe; skipping" 1>&2
-    status=1
-    continue
+  elif [[ ! -e $test.script && ! -x $exe ]]; then
+    exe=$test.exe
+    if [[ ! -f $exe ]]; then
+      echo "Could not find $test or $test.exe; skipping." >&2
+      status=1
+      continue
+    fi
   fi
-  ia="$i"; if [[ $i != /* ]]; then ia="$PWD/$i"; fi
-  ref="$i.ref" new="$i.ou" diff="$i.diff"
-  tmp=v.$$  # was tmp=~/tmp/v$$
+  abs=$test; [[ $abs == /* ]] || abs=$PWD/$test
+  ref=$test.ref new=$test.ou diff=$test.diff
   if [[ ! -e $ref ]]; then
-    echo "no output to compare to, skipping" 1>&2
+    echo "No expected output $ref; skipping." >&2
     status=1
     continue
   fi
-  if [[ -e "$i.script" ]]; then
-    if ! { "$i.script"; } >&"$tmp"; then
-      echo "$ia.script:1:1: error: test script exited with error ***" >>"$tmp"
+  # The braces make the redirection also capture the shell's own report of a crash, such as
+  # "Segmentation fault", which the shell rather than the test writes to stderr.
+  if [[ -e $test.script ]]; then
+    if ! { "$test.script"; } >&"$tmp"; then
+      echo "$abs.script:1:1: error: test script exited with error ***" >>"$tmp"
       status=1
     fi
   else
-    # http://unix.stackexchange.com/questions/53289/does-segmentation-fault-message-come-under-stderr
-    if ! { "$e"; } >&"$tmp"; then
-      echo "$ia.cpp:1:1: error: test executable exited with error ***" >>"$tmp"
+    if ! { "$exe"; } >&"$tmp"; then
+      echo "$abs.cpp:1:1: error: test executable exited with error ***" >>"$tmp"
       status=1
     fi
   fi
-  perl -S hcheck_aux <"$tmp" >"$new"
-  rm "$tmp"
-  if [[ ! -f $ref ]]; then
-    cp -p "$new" "$ref"
-  fi
-  if true; then
-    cmp -s "$new" "$ref"
-    if [[ $? != 0 ]]; then	# different
-      echo "$ia.cpp.1:1: error: test output was different:"
-      diff "$ref" "$new" | tee "$diff"
-      status=1
-    else
-      # rm "$new"
-      rm -f "$diff"
-    fi
+  filter_output <"$tmp" >"$new"
+  if cmp -s "$new" "$ref"; then
+    rm -f "$diff"
+  else
+    echo "$abs.cpp:1:1: error: test output was different:"
+    diff "$ref" "$new" | tee "$diff"
+    status=1
   fi
 done
+
 exit $status

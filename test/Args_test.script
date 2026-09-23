@@ -1,6 +1,6 @@
 #!/bin/bash
 
-f=(perl -pe 'binmode(STDOUT); s@^  [^ ]*Args_test(\.exe)?$@  Args_test@; s@Args_test\.exe@Args_test@')
+f=(perl -pe 'BEGIN { binmode(STDOUT); } s@^  [^ ]*Args_test(\.exe)?$@  Args_test@; s@Args_test\.exe@Args_test@')
 
 # pipe "|&" is only available in bash version 4; prior to that the supported equivalent is "2>&1 |"
 

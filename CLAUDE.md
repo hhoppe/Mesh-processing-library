@@ -67,6 +67,10 @@ the recursive make invocations make shell subprocesses expensive. Keep it that w
 - For each test, `bin/hcheck` runs `X_test` (or `X_test.script` when present), filters the
   output (masking dates, paths, and `.exe`) into `X_test.ou`,
   and diffs it against `X_test.ref`, leaving `X_test.diff` on a mismatch.
+- A `.diff` marks a failing test (a one-line marker if `hcheck` fails without comparing output).
+  The `test` target fails while any `.diff` exists, so an unresolved failure is reported on every
+  run, and a failing `X_test.ou` is backdated so that the test reruns. All tests still run
+  without `make -k`.
 - `.ref` files are ground truth. Each test has a single `.ref`, which must match across
   `-O0` through `-O3` and every configuration.
 - Floating-point discrepancies from vectorization or sanitizer differences are expected

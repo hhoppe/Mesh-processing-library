@@ -1467,10 +1467,13 @@ void do_pm_encode() {
       assertx(old_bmesh._vertices.num() == pmesh._info._full_nvertices);
       assertx(old_bmesh._wedges.num() == pmesh._info._full_nwedges);
       assertx(old_bmesh._faces.num() == pmesh._info._full_nfaces);
-      // Assert all materials are identical.
-      const Materials& materials = bmesh._materials;
-      assertx(old_bmesh._materials.num() == materials.num());
-      for_int(i, materials.num()) assertx(old_bmesh._materials.get(i) == materials.get(i));
+      // The new base mesh was simplified from a mesh whose faces need not use every material of the old pm, so its
+      // materials are a subset (with empty strings for the unused ones) of those still referenced by the old vsplits.
+      // Assert that each defined material is identical, and adopt the complete table of the old pm.
+      assertx(pm_material_strings.num() <= old_bmesh._materials.num());
+      for_int(i, pm_material_strings.num())
+        if (pm_material_strings[i] != "") assertx(pm_material_strings[i] == old_bmesh._materials.get(i));
+      bmesh._materials = old_bmesh._materials;
       assertx(pmrs._info._has_rgb == has_rgb);
       assertx(pmrs._info._has_uv == has_uv);
       assertx(pmrs._info._has_resid == has_resid);

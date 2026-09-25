@@ -23,7 +23,7 @@ for x in {0..3}; do
     (Filterimage $elev -tobw -elevation -step 1 -scalez 0.000694722 -removekinks \
                  -blocks 32 -bx $x -by $y -tomesh |
        Filtermesh -assign_normals >$rl.orig.m) 2>>$log
-    # SRcreate $rl -terrain -no_simp_bnd
+    # sr_create $rl -terrain -no_simp_bnd
     mesh_to_pm $rl.orig.m -vsgeom -terrain -no_simp_bnd >$rl.pm 2>>$log
     rm -f $rl.orig.m
     FilterPM $rl.pm -maxresid .30e-3 -truncate_prior >$r.l-1.x$x.y$y.pm 2>>$log

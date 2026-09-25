@@ -45,6 +45,11 @@ inline unsigned nanf_value(float f) {
 
 }  // namespace
 
+#if defined(_MSC_VER) && !defined(__clang__)
+// Under -fp:fast, the optimizer folds 0.f / float_zero to 0 rather than producing NaN.
+#pragma float_control(precise, on)
+#endif
+
 int main() {
   {
     assertx(INFINITY == HUGE_VALF);
@@ -117,7 +122,7 @@ int main() {
     func_show_float(a);
     a = create_nanf(0x003fffff);
     func_show_float(a);
-    SHOW(std::isfinite(0.f / float_zero));
+    SHOW(std::isfinite(0.f / float_zero));  // See "#pragma float_control(precise, on)" above.
   }
   {
     const int vm4mod7 = my_mod(-4, 7);

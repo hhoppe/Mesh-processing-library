@@ -20,6 +20,10 @@ extern "C" {
 #include "libHh/Image.h"
 
 #if HH_HAS_LSAN
+#if defined(__linux__)
+#include <dlfcn.h>  // dlopen()
+#include <link.h>   // dl_iterate_phdr()
+#endif
 #include <sanitizer/lsan_interface.h>
 using LeakDisabler = __lsan::ScopedDisabler;
 #else
@@ -39,6 +43,9 @@ extern "C" const char* __lsan_default_options() { return "symbolize=0:print_supp
 //  therefore reported by LeakSanitizer.  Most are one-time initialization; the entries under
 //  glCallLists() in draw_text_ogl() instead accumulate per frame and are released only when the GLX
 //  context is destroyed, which never happens because the process exits with the window still open.
+//  Under WSL, libd3d12core and libnvwgf2umx call the unversioned pthread_cond_wait(), which binds to the
+//  glibc 2.2.5 compatibility version; it allocates a 48-byte pthread_cond_t on the first wait on each
+//  condition variable and never frees it.  These suppressions match only because Hw::open() pins the modules.
 extern "C" const char* __lsan_default_suppressions() {
   return (
       ""
@@ -46,6 +53,7 @@ extern "C" const char* __lsan_default_suppressions() {
       // "leak:libGLX_mesa\n"
       "leak:libgallium\n"
       "leak:libnvwgf2umx\n"
+      "leak:libd3d12core\n"
       // "leak:*dlerror*\n"
   );
 }
@@ -177,12 +185,16 @@ void Hw::open() {
     // static const int multisample = getenv_int("GLX_MULTISAMPLE");
     _multisample = getenv_int("MULTISAMPLE", 4, true);
     // The graphics driver allocates a 64 KB aligned buffer during initialization and never releases it.
-    // LeakSanitizer reports it, and no suppression can match: the allocating frame lies in an address range
-    // that is not attributed to any module, so it appears as "<unknown module>" and neither a module nor
-    // a function pattern applies.  The only pattern that would match is the interceptor frame
+    // LeakSanitizer reported it with its allocating frame as "<unknown module>", which no module or function
+    // suppression can match.  The only pattern that would match is the interceptor frame
     // "leak:aligned_alloc", which would also hide leaks of our own Pool chunks and Sac objects,
     // both of which allocate through hh::aligned_malloc().  We find it sufficient to disable LeakSanitizer for
     // just the region below.
+    // The likely cause of the unknown module is that the driver unloads its modules during exit, before the
+    // leak scan; the pinning of modules after this region now prevents that under Linux.  Under the WSL d3d12
+    // driver and Mesa's llvmpipe and softpipe, the region was then found unnecessary (2026-09-25), and the
+    // 64 KB buffer no longer appeared at all.  The region is kept because, unlike the suppressions, it names
+    // no library: it covers the initialization allocations of any other driver and of non-Linux platforms.
     std::optional<LeakDisabler> leak_disabler(std::in_place);
     XVisualInfo* visinfo;
     const int orig_multisample = _multisample;
@@ -230,6 +242,21 @@ void Hw::open() {
     }
     if (_multisample != orig_multisample) showf("Hw: had to downgrade to multisample=%d\n", _multisample);
     leak_disabler.reset();
+#if HH_HAS_LSAN && defined(__linux__)
+    {
+      // Under WSL, libd3d12 unloads libd3d12core and libnvwgf2umx during exit, before the leak scan, so their
+      // frames would appear as "<unknown module>" and their suppressions could not match.  Pin every module
+      // loaded so far; the names are gathered first because dlopen() must not run inside dl_iterate_phdr().
+      Array<string> names;
+      dl_iterate_phdr(
+          [](dl_phdr_info* info, size_t, void* data) {
+            if (info->dlpi_name[0]) static_cast<Array<string>*>(data)->push(info->dlpi_name);
+            return 0;
+          },
+          &names);
+      for (const string& name : names) dlopen(name.c_str(), RTLD_LAZY | RTLD_NOLOAD | RTLD_NODELETE);
+    }
+#endif
     _depth = visinfo->depth;  // (number of bits in RGBA; unrelated to GLX_DEPTH_SIZE)
     _screen = visinfo->screen;
     visual = visinfo->visual;
@@ -984,7 +1011,7 @@ bool Hw::is_fullscreen() { return _is_fullscreen; }
 void Hw::make_fullscreen(bool b) {
   if (b == _is_fullscreen) return;
   _is_fullscreen = b;
-#if defined(__cygwin__) || defined(__APPLE__)
+#if defined(__CYGWIN__) || defined(__APPLE__)
   const bool use_change_property = true;
 #else
   const bool use_change_property = false;  // Linux.

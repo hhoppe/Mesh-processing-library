@@ -13,7 +13,7 @@ else
   $(call assert_prepend_PATH,$(MeshRoot)/bin/$(CONFIG))
 endif
 
-$(call assert_prepend_PATH,$(MeshRoot)/bin)  # The scripts (e.g., meshtopm) take precedence over the executables.
+$(call assert_prepend_PATH,$(MeshRoot)/bin)  # The scripts (e.g., mesh_to_pm) take precedence over the executables.
 
 $(call assert_prepend_PATH,$(MeshRoot)/demos)  # Allow running bash scripts in local directory.
 

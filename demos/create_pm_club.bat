@@ -8,7 +8,7 @@ echo From original mesh data/club.orig.m, creating progressive mesh results/club
 echo QEM simplification with volume preservation and normal-field preservation.
 echo (This will take a few minutes.)
 
-call meshtopm.bat data/club.orig.m -minqem >results/club.pm
+call mesh_to_pm.bat data/club.orig.m -minqem >results/club.pm
 
 echo .
 echo Use view_pm_club.bat to view the resulting progressive mesh.

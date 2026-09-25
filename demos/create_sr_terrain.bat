@@ -12,6 +12,6 @@ echo .
 echo Simplifying terrain mesh.  (This will take several minutes.)
 echo .
 
-call meshtopm.bat results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
+call mesh_to_pm.bat results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
 
 echo Use view_sr_terrain.bat to see geomorphs on the view-dependent terrain.

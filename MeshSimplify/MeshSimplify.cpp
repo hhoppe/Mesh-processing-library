@@ -1222,7 +1222,7 @@ void parse_mesh_wedge_identifiers() {
             if (!c || c == crep) break;
             const WedgeInfo wi2 = construct_wi(c, vnors);
             // Existing wids define the wedges, e.g. so that re-simplifying the base mesh of a progressive mesh (in
-            // PMsimplify) preserves its wedges even if wedge_materials differs from the value that created them.
+            // pm_simplify) preserves its wedges even if wedge_materials differs from the value that created them.
             const bool diff = nwidfound ? wid != assertx(to_int(mesh.corner_key(str, c, "wid")))
                                         : (wedge_materials && f_matid(mesh.corner_face(c)) != matid) ||
                                               std::is_neq(compare_wi(wi, wi2));

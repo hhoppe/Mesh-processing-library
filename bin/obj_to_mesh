@@ -2,7 +2,7 @@
 # Converts Wavefront obj ascii file to a mesh.
 
 # cd ~/tmp
-# for f in *.obj; do echo '**' $f; objtoMesh $f >$(rname $f).m; done
+# for f in *.obj; do echo '**' $f; obj_to_mesh $f >$(rname $f).m; done
 
 use strict;
 use POSIX 'strftime';

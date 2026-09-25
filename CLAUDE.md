@@ -37,7 +37,7 @@ to build less, e.g. `make -j12 Filtermesh` or `make CONFIG=mingw -j12 libHh`.
   `/mnt/c/cygwin64/bin/bash.exe -lc 'cd /hh/git/mesh_processing && make CONFIG=win -j12' </dev/null`.
 - Toolchain paths can be overridden in `Makefile_local_defs` at the repository root.
 - MSBuild places its executables in `bin/msbuild/` (`ReleaseMD - x64`) and `bin/msbuild_debug/`.
-  `bin/` itself holds only tracked scripts, such as `meshtopm`, `PMsimplify`, and `hcheck`.
+  `bin/` itself holds only tracked scripts, such as `mesh_to_pm`, `pm_simplify`, and `hcheck`.
 
 Warnings are signal, not noise. Treat every new warning as a defect to fix, in every
 configuration, not just the one you happened to build.

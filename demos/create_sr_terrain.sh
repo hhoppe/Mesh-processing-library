@@ -11,6 +11,6 @@ echo '.'
 echo 'Simplifying terrain mesh.  (This will take several minutes.)'
 echo '.'
 
-meshtopm results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
+mesh_to_pm results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
 
 echo 'Use view_sr_terrain.sh to see geomorphs on the view-dependent terrain.'

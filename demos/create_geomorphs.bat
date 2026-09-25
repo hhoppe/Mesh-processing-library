@@ -5,7 +5,7 @@ cd "%~p0"
 call ./_initdemos.bat
 
 :: This is how the file was converted from Blender via *.ply:
-::   perl ../bin/plytoMesh data/standingblob.ply | Filtermesh -genus -gmerge -genus -flip -triangulate -angle 20 -mark -genus >data/standingblob.orig.m
+::   perl ../bin/ply_to_mesh data/standingblob.ply | Filtermesh -genus -gmerge -genus -flip -triangulate -angle 20 -mark -genus >data/standingblob.orig.m
 
 FilterPM data/standingblob.pm -geom_nfaces 10 -geom_nfaces 20 -geom_nfaces 40 -geom_nfaces 80 -geom_nfaces 160 -geom_nfaces 320 -geom_nfaces 640 -geom_nfaces 1280 -geom_nfaces 2560 -geom_nfaces 5000 -geom_nfaces 10000 -geom_nfaces 20000 >results/standingblob.geomorphs
 

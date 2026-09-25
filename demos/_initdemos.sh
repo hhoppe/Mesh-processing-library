@@ -44,7 +44,7 @@ else # Otherwise, explicitly set the desired build directory here.
   :  # empty statement in case everything above is commented
 fi
 
-# The scripts in ../bin (e.g., meshtopm) take precedence over the executables.
+# The scripts in ../bin (e.g., mesh_to_pm) take precedence over the executables.
 PATH=../bin:$PATH
 
 # Allow running scripts in the current directory.

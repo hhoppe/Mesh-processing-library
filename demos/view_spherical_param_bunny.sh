@@ -11,7 +11,7 @@ if [[ -n $DEMOS_HIDDEN ]]; then
   visualize_args=''
 fi
 
-meshtopm data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - $visualize_args -nooutput >/dev/null
+mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - $visualize_args -nooutput >/dev/null
 
 
 VideoViewer results/bunny.spheresample.octaflat.unrotated.normalmap.png $VIDEOVIEWER_ARGS

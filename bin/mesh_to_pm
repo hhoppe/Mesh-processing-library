@@ -1,7 +1,7 @@
 #!/bin/bash
 
 read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
-Usage: meshtopm [-postprog 'args'] [mesh.m] [MeshSimplify_args] >mesh.pm
+Usage: mesh_to_pm [-postprog 'args'] [mesh.m] [MeshSimplify_args] >mesh.pm
 
 Simplify a mesh using MeshSimplify while recording its edge collapses, and create a progressive mesh.
 The MeshSimplify arguments are followed by '-prog tmpfile', the '-postprog' arguments, and '-simplify'.
@@ -9,12 +9,12 @@ So a '-simplify' among the arguments pre-simplifies the mesh, truncating the fin
 Alternatively, '-prog placeholder' within the arguments starts the recording at that point.
 
 Examples:
-meshtopm <file.m >file.pm
-meshtopm file.m >file.pm
-cat file.m | meshtopm -numpts 100000 >file.numpts100000.pm
-meshtopm file.m -nf 100000 -simplify >file.pm
-meshtopm -postprog '-simplify -dihallow -rebuildpq' file.m -minqem -vsgeom >file.pm
-meshtopm planck400k.orig.m -minqem -qemvolume 0 -dihallow -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -prog placeholder -simplify -rebuildpq >planck400k.pm
+mesh_to_pm <file.m >file.pm
+mesh_to_pm file.m >file.pm
+cat file.m | mesh_to_pm -numpts 100000 >file.numpts100000.pm
+mesh_to_pm file.m -nf 100000 -simplify >file.pm
+mesh_to_pm -postprog '-simplify -dihallow -rebuildpq' file.m -minqem -vsgeom >file.pm
+mesh_to_pm planck400k.orig.m -minqem -qemvolume 0 -dihallow -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -prog placeholder -simplify -rebuildpq >planck400k.pm
 END_USAGE_EXAMPLES
 
 if [[ $1 == --help ]]; then echo "$usage"; exit 0; fi
@@ -25,7 +25,7 @@ if [[ $1 == -postprog ]]; then
   shift 2
 fi
 
-tmpdir=$(tmpd=${TEMP:-${TMPDIR:-/tmp}}; mktemp -d "$tmpd/meshtopm.XXXXXX") || exit
+tmpdir=$(tmpd=${TEMP:-${TMPDIR:-/tmp}}; mktemp -d "$tmpd/mesh_to_pm.XXXXXX") || exit
 [[ $OSTYPE == cygwin ]] && tmpdir=$(cygpath -m "$tmpdir")  # Native Windows programs cannot open /tmp.
 trap 'rm -rf "$tmpdir"' EXIT  # Bash also runs this trap on SIGINT.
 tmpprog="$tmpdir"/v.prog

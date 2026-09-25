@@ -7,7 +7,7 @@ echo 'From original mesh data/club.orig.m, creating progressive mesh results/clu
 echo 'QEM simplification with volume preservation and normal-field preservation.'
 echo '(This will take a few minutes.)'
 
-meshtopm data/club.orig.m -minqem >results/club.pm
+mesh_to_pm data/club.orig.m -minqem >results/club.pm
 
 echo '.'
 echo 'Use view_pm_club.sh to view the resulting progressive mesh.'

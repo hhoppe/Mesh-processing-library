@@ -26,7 +26,7 @@ if not defined CONFIG set path=../bin/msbuild;../bin/msbuild_debug;../bin/win;..
 :: set path=../bin/cygwin;%path%
 :: set path=../bin/unix;%path%
 
-:: The scripts in ../bin (e.g., meshtopm.bat) take precedence over the executables.
+:: The scripts in ../bin (e.g., mesh_to_pm.bat) take precedence over the executables.
 set path=../bin;%path%
 
 :: Here one can adjust the default window size and position for most demos.

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
-Usage: PMsimplify rootname.pm [MeshSimplify_args]    # rootname.pm -> rootname.new.pm
+Usage: pm_simplify rootname.pm [MeshSimplify_args]    # rootname.pm -> rootname.new.pm
 
 Further simplify the base mesh of an existing progressive mesh, and create a new progressive mesh whose vsplit
 records coarsen to the new base mesh and then continue with all the vsplit records of the old progressive mesh.
@@ -9,9 +9,9 @@ The edge collapses are recorded from the start (as the old vsplit records must c
 so the arguments must not include '-prog'.
 
 Examples:
-PMsimplify v.pm
-PMsimplify v.pm -minqem -nf 100
-PMsimplify terrain.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1
+pm_simplify v.pm
+pm_simplify v.pm -minqem -nf 100
+pm_simplify terrain.stitched.pm -vsgeom -terrain -wedge_materials 0 -strict_sharp 1
 END_USAGE_EXAMPLES
 
 if [[ $# == 0 || $1 == --help ]]; then echo "$usage"; exit 0; fi
@@ -32,7 +32,7 @@ done
 outroot="$inroot.new"
 echo "Run MeshSimplify: $inroot.pm --> $outroot.pm" >&2
 
-tmpdir=$(tmpd=${TEMP:-${TMPDIR:-/tmp}}; mktemp -d "$tmpd/PMsimplify.XXXXXX") || exit
+tmpdir=$(tmpd=${TEMP:-${TMPDIR:-/tmp}}; mktemp -d "$tmpd/pm_simplify.XXXXXX") || exit
 [[ $OSTYPE == cygwin ]] && tmpdir=$(cygpath -m "$tmpdir")  # Native Windows programs cannot open /tmp.
 trap 'rm -rf "$tmpdir"' EXIT  # Bash also runs this trap on SIGINT.
 tmpprog="$tmpdir"/v.prog

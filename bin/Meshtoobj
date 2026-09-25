@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 # Takes a mesh and creates an obj file
 # Does not deal with any info on vertices, faces, or edges.
 

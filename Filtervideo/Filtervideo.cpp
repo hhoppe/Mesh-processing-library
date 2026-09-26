@@ -448,12 +448,16 @@ void do_writeframe(Args& args) {
   nooutput = true;
 }
 
-void do_info() {
-  HH_TIMER("_info");
+void do_quick_info() {
   showf("Video nf=%d w=%d h=%d fps=%g bitrate=%d suffix=%s%s\n",  //
         video.nframes(), video.xsize(), video.ysize(), video.attrib().framerate, video.attrib().bitrate,
         video.attrib().suffix == "" ? "unk" : video.attrib().suffix.c_str(),
         video.attrib().audio.size() ? (" (audio: " + video.attrib().audio.diagnostic_string() + ")").c_str() : "");
+}
+
+void do_info() {
+  HH_TIMER("_info");
+  do_quick_info();
   Array<Stat> stat_pixels;
   for_int(z, nz) stat_pixels.push(Stat(sform("Component%d", z)));
   if (0) {
@@ -2210,6 +2214,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(toimages, "root_name.%03d.png : output frame images");
   HH_ARGSD(writeframe, "frameindex : output selected frame (0 == first) as png image");
   HH_ARGSF(nooutput, ": do not output final video on stdout");
+  HH_ARGSD(quick_info, ": print video dimensions, number of frames, framerate, etc.");
   HH_ARGSD(info, ": print video statistics");
   HH_ARGSD(noaudio, ": remove any audio data");
   HH_ARGSD(frameinfo, ": print per-frame statistics");

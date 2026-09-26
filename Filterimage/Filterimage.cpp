@@ -305,9 +305,13 @@ void do_outfile(Args& args) {
   image.write_file(filename);
 }
 
-void do_info() {
+void do_quick_info() {
   showf("Image w=%d h=%d z=%d format=%s\n",  //
         image.xsize(), image.ysize(), image.zsize(), image.suffix() == "" ? "unk" : image.suffix().c_str());
+}
+
+void do_info() {
+  do_quick_info();
   Array<Stat> stat_pixels;
   for_int(z, image.zsize()) stat_pixels.push(Stat(sform("Component%d", z)));
   int na0 = 0, na255 = 0;
@@ -3475,6 +3479,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(to, "suffix : set output format (jpg, png, bmp, ppm, rgb, tif, wmp)");
   HH_ARGSD(outfile, "filename : output an intermediate image");
   HH_ARGSF(nooutput, ": do not output final image on stdout");
+  HH_ARGSD(quick_info, ": print image dimensions and format");
   HH_ARGSD(info, ": print image statistics");
   HH_ARGSD(stat, ": equivalent to '-info -nooutput'");
   HH_ARGSD(sizes, ": print 'width height'");

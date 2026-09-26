@@ -661,7 +661,7 @@ inline std::ostream& operator<<(std::ostream& os, Face f) {
   os << sform("Face{%d}=[", f->_id);
   Mesh::HEdge herep = f->_herep;
   for (Mesh::HEdge he = herep;;) {
-    os << sform("%d", he->_vert->_id);
+    os << std::to_string(he->_vert->_id);
     he = he->_next;
     if (!he || he == herep) break;
     os << ' ';

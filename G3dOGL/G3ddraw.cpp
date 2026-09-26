@@ -209,7 +209,7 @@ static void handle_sliders(bool show, float yq) {
       HB::draw_row_col_text(V(1, 10), sliders[0].name);
       HB::draw_row_col_text(V(2, 11), sform("%.3f", *sliders[0].val));
       HB::draw_row_col_text(V(1, 21), "#Faces");
-      HB::draw_row_col_text(V(2, 22), sform("%d", nfaces));
+      HB::draw_row_col_text(V(2, 22), std::to_string(nfaces));
       const float xleft = .05f, yline = .004f;
       {  // Current level.
         const float lod = clamp(lod_level, 0.f, 1.f);
@@ -547,7 +547,7 @@ static void g3d_ellipse2() {
     const auto [zs, xys] = HB::vdc_from_world(pabove);
     if (xys) {
       const auto [xs, ys] = *xys;
-      HB::draw_text(V(ys - .01f, xs), sform("%d", nfaces));
+      HB::draw_text(V(ys - .01f, xs), std::to_string(nfaces));
     } else {
       SHOW(pabove);
       SHOW(zs);

@@ -127,7 +127,7 @@ double Args::parse_double(const string& s) {
 
 void Args::problem(const string& s) {
   string mes = "Args error : " + s;
-  if (_iarg) mes += " at args[" + sform("%d", _iarg - 1) + "] == '" + _args[_iarg - 1] + "'";
+  if (_iarg) mes += " at args[" + std::to_string(_iarg - 1) + "] == '" + _args[_iarg - 1] + "'";
   assertnever(mes);
 }
 
@@ -236,7 +236,7 @@ void ParseArgs::print_help() {
       for_int(i, o.narg) {
         const string s0 = (o.parse_func == &ParseArgs::fbool     ? show_bool(static_cast<bool*>(o.argp)[i])
                            : o.parse_func == &ParseArgs::fchar   ? string(1, static_cast<char*>(o.argp)[i])
-                           : o.parse_func == &ParseArgs::fint    ? sform("%d", static_cast<int*>(o.argp)[i])
+                           : o.parse_func == &ParseArgs::fint    ? std::to_string(static_cast<int*>(o.argp)[i])
                            : o.parse_func == &ParseArgs::ffloat  ? show_float(static_cast<float*>(o.argp)[i])
                            : o.parse_func == &ParseArgs::fdouble ? show_double(static_cast<double*>(o.argp)[i])
                            : o.parse_func == &ParseArgs::fstring ? static_cast<string*>(o.argp)[i]

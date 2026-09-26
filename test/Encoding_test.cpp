@@ -24,7 +24,7 @@ int main() {
     SHOW(enc.huffman_cost());
     SHOW(enc.entropy());
     SHOW(enc.norm_entropy());
-    enc.print_top_entries("enc", 2, [](const int& i) { return sform("%d", i); });
+    enc.print_top_entries("enc", 2, [](const int& i) { return std::to_string(i); });
   }
   {
     DeltaEncoding de;

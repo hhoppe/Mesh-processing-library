@@ -1196,7 +1196,7 @@ void do_meshify5() {
     }
     stripnf++;
     if (verb == 1) cprogress.update(float(ar_faces.num()) / mesh.num_faces());
-    if (verb >= 2) status += sform("%d", nfmiss);
+    if (verb >= 2) status += std::to_string(nfmiss);
     Corner cint = mesh.ccw_corner(c);
     Corner cext = mesh.ccw_corner(mesh.clw_face_corner(c));
     const bool fintnei = cint && !ms.processed(mesh.corner_face(cint));

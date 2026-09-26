@@ -504,7 +504,7 @@ Uv encode_uv(const Uv& uv) {
   return ruv;
 }
 
-string print_int(int i) { return sform("%d", i); }
+string print_int(int i) { return std::to_string(i); }
 
 int encode_mesh(const AWMesh& mesh) {
   // Does not include fnei field!

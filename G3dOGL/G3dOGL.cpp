@@ -3192,7 +3192,7 @@ void pm_wrap_draw(bool show) {
     HB::draw_row_col_text(V(1, lmargin + 8), "#Faces");
     HB::draw_row_col_text(V(2, lmargin + 8), sform(" %d", pmi->_faces.num()));
     // HB::draw_row_col_text(V(4, 21), "#Verts");
-    // HB::draw_row_col_text(V(5, 22), sform("%d", pmi->_vertices.num()));
+    // HB::draw_row_col_text(V(5, 22), std::to_string(pmi->_vertices.num()));
     const float yline = .004f, xleft = .05f;
     {  // Current level.
       const float lod = clamp(pm_lod_level, 0.f, 1.f);
@@ -4174,27 +4174,27 @@ void psc_wrap_draw(bool show) {
     psc_orphan_nverts = psc_principal_verts.num();
     if (psc2win) {
       HB::draw_row_col_text(V(1, lmargin - 1), "#2s");
-      HB::draw_row_col_text(V(1, lmargin + 3), sform("%d", nfaces));
+      HB::draw_row_col_text(V(1, lmargin + 3), std::to_string(nfaces));
       HB::draw_row_col_text(V(2, lmargin - 1), "#1s");
-      HB::draw_row_col_text(V(2, lmargin + 3), sform("%d", psc_orphan_nedges));
+      HB::draw_row_col_text(V(2, lmargin + 3), std::to_string(psc_orphan_nedges));
       HB::draw_row_col_text(V(3, lmargin - 1), "#0s");
-      HB::draw_row_col_text(V(3, lmargin + 3), sform("%d", psc_orphan_nverts));
+      HB::draw_row_col_text(V(3, lmargin + 3), std::to_string(psc_orphan_nverts));
     } else if (psc2win1) {
       HB::draw_row_col_text(V(1, lmargin), "#2s");
-      HB::draw_row_col_text(V(1, lmargin + 4), sform("%d", nfaces));
+      HB::draw_row_col_text(V(1, lmargin + 4), std::to_string(nfaces));
       HB::draw_row_col_text(V(2, lmargin), "#1s");
-      HB::draw_row_col_text(V(2, lmargin + 4), sform("%d", psc_orphan_nedges));
+      HB::draw_row_col_text(V(2, lmargin + 4), std::to_string(psc_orphan_nedges));
       HB::draw_row_col_text(V(3, lmargin), "#0s");
-      HB::draw_row_col_text(V(3, lmargin + 4), sform("%d", psc_orphan_nverts));
+      HB::draw_row_col_text(V(3, lmargin + 4), std::to_string(psc_orphan_nverts));
     } else {
       HB::draw_row_col_text(V(1, lmargin), "LOD");
-      HB::draw_row_col_text(V(1, lmargin + 4), sform("%d", psc_lod_num));
+      HB::draw_row_col_text(V(1, lmargin + 4), std::to_string(psc_lod_num));
       HB::draw_row_col_text(V(3, lmargin), "#2s");
-      HB::draw_row_col_text(V(3, lmargin + 4), sform("%d", nfaces));
+      HB::draw_row_col_text(V(3, lmargin + 4), std::to_string(nfaces));
       HB::draw_row_col_text(V(4, lmargin), "#1s");
-      HB::draw_row_col_text(V(4, lmargin + 4), sform("%d", psc_orphan_nedges));
+      HB::draw_row_col_text(V(4, lmargin + 4), std::to_string(psc_orphan_nedges));
       HB::draw_row_col_text(V(5, lmargin), "#0s");
-      HB::draw_row_col_text(V(5, lmargin + 4), sform("%d", psc_orphan_nverts));
+      HB::draw_row_col_text(V(5, lmargin + 4), std::to_string(psc_orphan_nverts));
     }
     const float yline = .004f, xleft = .05f;
     {  // Current level.
@@ -4455,13 +4455,13 @@ void sc_gm_wrap_draw(bool show) {
     int lmargin = !bigfont() ? 7 : 3;
     if (win_dims[1] < 400 && !bigfont()) lmargin -= 3;
     HB::draw_row_col_text(V(1, lmargin), "GM#");
-    HB::draw_row_col_text(V(1, lmargin + 4), sform("%d", sc_gm_morph));
+    HB::draw_row_col_text(V(1, lmargin + 4), std::to_string(sc_gm_morph));
     HB::draw_row_col_text(V(3, lmargin), "#2s");
-    HB::draw_row_col_text(V(3, lmargin + 4), sform("%d", nfaces));
+    HB::draw_row_col_text(V(3, lmargin + 4), std::to_string(nfaces));
     HB::draw_row_col_text(V(4, lmargin), "#1s");
-    HB::draw_row_col_text(V(4, lmargin + 4), sform("%d", psc_orphan_nedges));
+    HB::draw_row_col_text(V(4, lmargin + 4), std::to_string(psc_orphan_nedges));
     HB::draw_row_col_text(V(5, lmargin), "#0s");
-    HB::draw_row_col_text(V(5, lmargin + 4), sform("%d", psc_orphan_nverts));
+    HB::draw_row_col_text(V(5, lmargin + 4), std::to_string(psc_orphan_nverts));
     const float yline = .004f, xleft = .05f;
     {  // Current level.
       const float lod = clamp(sc_gm_lod_level, 0.f, 1.f);

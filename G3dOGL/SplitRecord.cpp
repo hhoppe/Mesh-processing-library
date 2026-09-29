@@ -164,7 +164,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // Map from vs to vt.
-      for (auto [ei, e] : views::enumerate(f->children())) {
+      for (auto [ei, e] : enumerate(f->children())) {
         // Vertex opposite to vs.
         Simplex voppvs = e->opp_vertex(vs);
         // If such vertex exists, i.e. if e is not opp_edge(vs).
@@ -309,7 +309,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // Map from vs to vt.
-      for (auto [ei, e] : views::enumerate(f->children())) {
+      for (auto [ei, e] : enumerate(f->children())) {
         // Vertex opposite to vs.
         Simplex voppvs = e->opp_vertex(vs);
         // If such vertex exists, i.e. if e is not opp_edge(vs).
@@ -459,7 +459,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
     assertx(outcome == 7);
     outcome = getNextOutcome();
     if (outcome == SplitRecord::F_VT) {  // Map from vs to vt.
-      for (auto [ei, e] : views::enumerate(f->children())) {
+      for (auto [ei, e] : enumerate(f->children())) {
         // Vertex opposite to vs.
         Simplex voppvs = e->opp_vertex(vs);
         // If such vertex exists, i.e. if e is not opp_edge(vs).

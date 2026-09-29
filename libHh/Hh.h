@@ -323,6 +323,22 @@ namespace ranges = std::ranges;
 template <typename R> using range_value_t = ranges::range_value_t<R>;
 namespace views = std::views;
 
+namespace details {
+// A substitute for the C++23 std::views::enumerate, which libc++ (as of LLVM 21 and Xcode 26) still lacks.
+struct EnumerateFallback : ranges::range_adaptor_closure<EnumerateFallback> {
+  template <ranges::viewable_range R> constexpr auto operator()(R&& range) const {
+    return views::zip(views::iota(ranges::range_difference_t<R>{0}), std::forward<R>(range));
+  }
+};
+}  // namespace details
+
+// Pairs of (index, element) of a range, used as either enumerate(range) or range | enumerate.
+#if defined(__cpp_lib_ranges_enumerate)
+inline constexpr const auto& enumerate = views::enumerate;
+#else
+inline constexpr details::EnumerateFallback enumerate;
+#endif
+
 // *** Useful type abbreviations
 
 using uchar = unsigned char;

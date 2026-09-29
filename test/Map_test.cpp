@@ -144,7 +144,7 @@ int main() {
   {
     const Map<string, int> map = {{"first", 1}, {"second", 2}};
     SHOW(sort(Array(map.values())));
-    Array ar_tuple(sort(Array(map.keys())) | views::enumerate);
+    Array ar_tuple(sort(Array(map.keys())) | enumerate);
     SHOW(ar_tuple[0]);
     SHOW(ar_tuple[1]);
     const auto str = (sort(Array(map.values())) | views::transform([](int v) { return std::to_string(v); }) |

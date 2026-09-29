@@ -151,6 +151,12 @@ chars = Array<char>(3) {
   B
   C
 }
+ar = Array<int>(3) {
+  5
+  16
+  27
+}
+pairs = 0A1B2C
 mean(range(20)) = 9.5
 mean(range(20) | views::filter([](auto e) { return e != 10; })) = 9.47368
 contains(range(20), 13) = 1

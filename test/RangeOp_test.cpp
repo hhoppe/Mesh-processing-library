@@ -146,12 +146,29 @@ int main() {
   {
     Array<int> indices;
     Array<char> chars;
-    for (const auto [i, ch] : views::enumerate(string("ABC"))) {
+    for (const auto [i, ch] : enumerate(string("ABC"))) {
       indices.push(int(i));
       chars.push(ch);
     }
     SHOW(indices);
     SHOW(chars);
+  }
+  {
+    // Exercise the substitute for std::views::enumerate on all platforms, even where the standard one exists.
+    constexpr details::EnumerateFallback enumerate_fallback;
+    Array<int> ar{5, 6, 7};
+    for (auto [i, e] : ar | enumerate_fallback) e += int(i) * 10;  // The elements are references.
+    SHOW(ar);
+    using Index = std::remove_cvref_t<decltype(std::get<0>(*ranges::begin(ar | enumerate_fallback)))>;
+    static_assert(std::is_same_v<Index, ranges::range_difference_t<Array<int>>>);  // As in the standard.
+    const auto to_string = [](auto&& range) -> string {
+      string result;
+      for (auto [i, ch] : range) result += std::to_string(i) + ch;
+      return result;
+    };
+    const string pairs = to_string(enumerate_fallback(string("ABC")));
+    SHOW(pairs);
+    assertx(to_string(enumerate(string("ABC"))) == pairs);  // The standard one, where it exists.
   }
   {
     static_assert(ranges::range<Array<float>>);

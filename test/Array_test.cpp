@@ -139,8 +139,10 @@ void test_inlined_array() {
     InlinedArray<int, 3> ar1{1, 2};
     InlinedArray<int, 3> ar2{3, 4, 5, 6};
     InlinedArray<int, 3> ar3 = std::move(ar1);
+    // NOLINTNEXTLINE(bugprone-use-after-move, clang-analyzer-cplusplus.Move): it checks the moved-from state.
     SHOW(ar3, ar1.num(), ar3.capacity());
     InlinedArray<int, 3> ar4 = std::move(ar2);
+    // NOLINTNEXTLINE(bugprone-use-after-move, clang-analyzer-cplusplus.Move): it checks the moved-from state.
     SHOW(ar4, ar2.num(), ar4.capacity());
     ar4.resize(2);
     ar4.shrink_to_fit();  // Moves the elements back into the built-in storage.

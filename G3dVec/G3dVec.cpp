@@ -997,7 +997,8 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   args.other_args_ok();
   args.other_options_ok();
   args.disallow_prefixes();
-  if (!args.parse_and_extract(aargs) || !hw_success) return false;
+  if (!args.parse_and_extract(aargs)) return false;  // After showing the help for "-?".
+  if (!hw_success) exit(1);                          // Hw has reported why it could not open the display.
   return true;
 }
 

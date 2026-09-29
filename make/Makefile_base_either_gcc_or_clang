@@ -29,7 +29,8 @@ ifneq ($(want_plain_compiler),1)
   #  -Winline -Wconversion
   # (-pedantic-errors == -Werror -Wpedantic)
   # ccommon += $(if $(omit_omp:0=),,-fopenmp)#  For OpenMP.
-  ccommon += $(machine_arch) -mfpmath=sse#  Had: -ffast-math
+  # We omit "-mfpmath=sse", which is the x86-64 default (identical code for clang 21 and gcc 15) and fails on ARM.
+  ccommon += $(machine_arch)#  Had: -ffast-math
   ccommon += $(if $(PEDANTIC:0=),$(cpedantic))
   cxxall += -fno-rtti
   cxxwarnings += -Wno-strict-overflow#  Even #pragma in Grid.h does not disable this.

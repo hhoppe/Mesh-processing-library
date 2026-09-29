@@ -382,6 +382,13 @@ concept Numeric = is_numeric_v<T>;
 template <typename T>
 concept Copyable = std::is_copy_assignable_v<T>;
 
+// Type T can be hashed by Hash and compared by Equal, as required by the hash-based containers (e.g., Map, Set).
+template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
+concept Hashable = requires(const Hash& hash, const Equal& equal, const T& e) {
+  { hash(e) } -> std::convertible_to<size_t>;
+  { equal(e, e) } -> std::convertible_to<bool>;
+};
+
 // Range whose elements are readable as T (accepts proxies, conversions).
 template <typename R, typename T>
 concept input_range_to = ranges::input_range<R> && std::convertible_to<ranges::range_reference_t<R>, T>;

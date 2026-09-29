@@ -136,8 +136,8 @@ template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable
 };
 
 // Hashed priority queue allowing insertion/deletion/update.  Note: much code duplicated in PriorityQueue!
-template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>> requires Copyable<T>
-class UpdatablePriorityQueue : noncopyable {
+template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
+requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : noncopyable {
  public:
   void clear() { _ar.clear(), _m.clear(); }
   void enter(const T& e, float pri) { ASSERTX(pri >= 0.f), enter_i(e, pri); }

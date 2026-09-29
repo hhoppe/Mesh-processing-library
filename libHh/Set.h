@@ -35,7 +35,8 @@
 namespace hh {
 
 // My wrapper around std::unordered_set<>.  (typename Equal also goes by name Pred in C++ standard library).
-template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>> class Set {
+template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
+requires Hashable<T, Hash, Equal> class Set {
   using type = Set<T, Hash, Equal>;
   using base = std::unordered_set<T, Hash, Equal>;
 
@@ -159,7 +160,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
 // Hash and Equal must be consistent (as for any Set).  Unlike Set, it offers neither iteration nor references to its
 // elements.
 template <typename T, int inline_capacity, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
-class InlinedSet {
+requires Hashable<T, Hash, Equal> class InlinedSet {
   static_assert(inline_capacity > 0);
 
  public:

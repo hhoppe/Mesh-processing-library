@@ -31,3 +31,25 @@ sort(Array(set)) = Array<int>(3) {
   4
   5
 }
+set.num()=0 set.empty()=1
+e=3 is_new=1 set.num()=1
+e=1 is_new=1 set.num()=2
+e=4 is_new=1 set.num()=3
+e=1 is_new=0 set.num()=3
+e=5 is_new=1 set.num()=4
+e=9 is_new=1 set.num()=5
+e=2 is_new=1 set.num()=6
+e=6 is_new=1 set.num()=7
+e=5 is_new=0 set.num()=7
+e=3 is_new=0 set.num()=7
+set.contains(9)=1 set.contains(7)=0
+set.num()=0 set.empty()=1 set.contains(3)=0
+set.num()=1 set.contains(7)=1 set.contains(3)=0
+s=a is_new=1 set.num()=1
+s=b is_new=1 set.num()=2
+s=a is_new=0 set.num()=2
+s=c is_new=1 set.num()=3
+s=d is_new=1 set.num()=4
+s=b is_new=0 set.num()=4
+s=e is_new=1 set.num()=5
+iset.num() = 23

@@ -161,9 +161,42 @@ int main() {
     Set set(V(4, 1, 4, 5, 4, 1));
     SHOW(sort(Array(set)));
   }
+  {
+    InlinedSet<int, 4> set;
+    SHOW(set.num(), set.empty());
+    for (const int e : {3, 1, 4, 1, 5, 9, 2, 6, 5, 3}) {  // The fifth distinct element moves all into the hash Set.
+      const bool is_new = set.add(e);
+      SHOW(e, is_new, set.num());
+    }
+    SHOW(set.contains(9), set.contains(7));
+    set.clear();  // Returns to the built-in storage.
+    SHOW(set.num(), set.empty(), set.contains(3));
+    set.enter(7);
+    SHOW(set.num(), set.contains(7), set.contains(3));
+  }
+  {
+    InlinedSet<string, 3> set;
+    for (const string s : {"a", "b", "a", "c", "d", "b", "e"}) {
+      const bool is_new = set.add(s);
+      SHOW(s, is_new, set.num());
+    }
+  }
+  {  // Compare with Set, both before and after the elements move into the hash Set.
+    InlinedSet<int, 8> iset;
+    Set<int> set;
+    for_int(i, 1000) {
+      const int e = (i * 37) % 23;
+      assertx(iset.add(e) == set.add(e));
+      assertx(iset.num() == set.num());
+      for_int(j, 30) assertx(iset.contains(j) == set.contains(j));
+    }
+    SHOW(iset.num());
+  }
 }
 
 template class hh::Set<unsigned>;
 template class hh::Set<const int*>;
 template class hh::Set<Vector>;
 template class hh::Set<unique_ptr<int>>;
+template class hh::InlinedSet<unsigned, 4>;
+template class hh::InlinedSet<const int*, 2>;

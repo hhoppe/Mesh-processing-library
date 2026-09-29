@@ -73,6 +73,9 @@ drive_abspath = $(call add_drive,$(abspath $(1)))#  Use $(call drive_abspath,...
 
 ifeq ($(is_msys),1)  # Fix PATH for msys make.
   PATH := $(subst :/hh/,:/c/hh/,$(PATH))
+  # Disable the MSYS conversion of POSIX-like arguments to Windows programs, which corrupts paths such as
+  #  "-Fpd:/a/dir" into "-Fpd:A:/dir"; add_drive already provides Windows paths.
+  export MSYS2_ARG_CONV_EXCL := *
 endif
 
 # Print out useful information, if uncommented.

@@ -27,11 +27,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Each entry names its compiler package and command, and any extra make arguments.
         include:
           - name: ubuntu-clang
             os: ubuntu-26.04
+            compiler: clang
+            cxx: clang++
+          - name: ubuntu-gcc
+            os: ubuntu-26.04
+            compiler: g++
+            cxx: g++
+            make_args: CC=gcc
+          - name: ubuntu-arm-clang
+            os: ubuntu-26.04-arm
+            compiler: clang
+            cxx: clang++
+          # The oldest clang that supports the code: clang 18 lacks CTAD for alias templates (e.g., Array(...)), and
+          # clang 19 and 20 with libstdc++ 14 reject std::forward_like<decltype(self)>() in Vec::get().
+          - name: ubuntu-clang-20
+            os: ubuntu-26.04
+            compiler: clang-20
+            cxx: clang++-20
+            make_args: CXX=clang++-20
           - name: macos-clang
             os: macos-26
+            cxx: clang++
     steps:
       - uses: actions/checkout@v7
 
@@ -40,7 +60,7 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           sudo apt-get update
-          sudo apt-get install -y make clang libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev
+          sudo apt-get install -y make ${{ matrix.compiler }} libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev
 
       # XQuartz provides the X11 headers and libraries in /opt/X11, and ffmpeg provides image I/O (see README.md).
       - name: Install dependencies (macOS)
@@ -49,13 +69,15 @@ jobs:
 
       - name: Show tool versions
         run: |
-          clang++ --version
+          ${{ matrix.cxx }} --version
           make --version | sed -n 1p
 
       # The option -k reports the failures of all directories in one run.
       # The macOS /bin/bash (version 3.2) does not support '|&'.
       - name: Build and test
-        run: make -k -j"$(getconf _NPROCESSORS_ONLN)" PEDANTIC=1 ignore_compile_warnings=0 2>&1 | tee build.log
+        run: |
+          make -k -j"$(getconf _NPROCESSORS_ONLN)" ${{ matrix.make_args }} PEDANTIC=1 ignore_compile_warnings=0 2>&1 |
+            tee build.log
 
       # Warnings that -Werror does not cover (e.g., from the linker) also count as failures.
       - name: Check the log for warnings
@@ -78,3 +100,22 @@ jobs:
             test/*.diff
             test/*.ou
           if-no-files-found: ignore
+
+  # Build the Visual Studio solution (without running the unit tests, which require make and bash).
+  windows-msbuild:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      # Locate the 64-bit MSBuild of the newest Visual Studio installation.
+      - name: Build
+        shell: pwsh
+        run: |
+          $vswhere = "${env:ProgramFiles(x86)}/Microsoft Visual Studio/Installer/vswhere.exe"
+          $msbuild = & $vswhere -latest -requires Microsoft.Component.MSBuild -find 'MSBuild/**/Bin/amd64/MSBuild.exe' |
+            Select-Object -First 1
+          & $msbuild -version
+          & $msbuild mesh_processing.sln -nologo -maxCpuCount -verbosity:minimal -warnAsError `
+            -p:Configuration=ReleaseMD -p:Platform=x64
+          exit $LASTEXITCODE

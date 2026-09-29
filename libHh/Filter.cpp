@@ -103,18 +103,18 @@ inline double hamming(double x, double R) {  // a = W = 2 * R
   return x < R ? sinc_norm_abs(x) * (0.54 + 0.46 * std::cos(((D_TAU / 2) / R) * x)) : 0.;
 }
 
-struct Filter_impulse final : Filter {
-  using type = Filter_impulse;
-  Filter_impulse() : Filter("impulse", nullptr, 0.) {
+struct FilterImpulse final : Filter {
+  using type = FilterImpulse;
+  FilterImpulse() : Filter("impulse", nullptr, 0.) {
     _is_discontinuous = true;
     _is_trivial_magnify = true;
     _is_impulse = true;
   }
 };
 
-struct Filter_box final : Filter {
-  using type = Filter_box;
-  Filter_box() : Filter("box", sfunc, .5) {
+struct FilterBox final : Filter {
+  using type = FilterBox;
+  FilterBox() : Filter("box", sfunc, .5) {
     _is_discontinuous = true;
     _is_trivial_magnify = true;
     _is_trivial_minify = true;
@@ -125,18 +125,18 @@ struct Filter_box final : Filter {
   }
 };
 
-struct Filter_triangle final : Filter {
-  using type = Filter_triangle;
-  Filter_triangle() : Filter("triangle", sfunc, 1.) {}
+struct FilterTriangle final : Filter {
+  using type = FilterTriangle;
+  FilterTriangle() : Filter("triangle", sfunc, 1.) {}
   static double sfunc(double x) {
     x = abs(x);
     return x < 1. ? -x + 1. : 0.;
   }
 };
 
-struct Filter_quadratic final : Filter {
-  using type = Filter_quadratic;
-  Filter_quadratic() : Filter("quadratic", sfunc, 1.5) { _is_discontinuous = true; }
+struct FilterQuadratic final : Filter {
+  using type = FilterQuadratic;
+  FilterQuadratic() : Filter("quadratic", sfunc, 1.5) { _is_discontinuous = true; }
   static double sfunc(double x) {
     // (bspline2[x_] := With[{r = Abs[x]}, 1/8 If[r < 1 / 2, 6 - 8 r r, If[r <= 3 / 2, 9 + r (-12 + 4 r), 0]]];)
     // Use imoms2 even though it is not C0 continuous!
@@ -155,9 +155,9 @@ struct Filter_quadratic final : Filter {
   }
 };
 
-struct Filter_mitchell final : Filter {
-  using type = Filter_mitchell;
-  Filter_mitchell() : Filter("mitchell", sfunc, 2.) { _is_interpolating = false; }
+struct FilterMitchell final : Filter {
+  using type = FilterMitchell;
+  FilterMitchell() : Filter("mitchell", sfunc, 2.) { _is_interpolating = false; }
   static double sfunc(double x) {
     // mitchell[x_] := With[{r = Abs[x]}, 1 / 18 If[r < 1, 16 + r r (-36 + 21 r),
     //   If[r < 2, 32 + r (-60 + (36 - 7 r) r), 0]]];
@@ -173,9 +173,9 @@ struct Filter_mitchell final : Filter {
   }
 };
 
-struct Filter_keys final : Filter {  // Also known as the Catmull-Rom spline.
-  using type = Filter_keys;
-  Filter_keys() : Filter("keys", sfunc, 2.) {}
+struct FilterKeys final : Filter {  // Also known as the Catmull-Rom spline.
+  using type = FilterKeys;
+  FilterKeys() : Filter("keys", sfunc, 2.) {}
   static double sfunc(double x) {
     // keys[x_] := With[{r = Abs[x]}, 1 / 2 If[r < 1, 2 + r r (-5 + 3 r),
     //   If[r < 2, 4 + r (-8 + (5 - r) r), 0]]];
@@ -190,9 +190,9 @@ struct Filter_keys final : Filter {  // Also known as the Catmull-Rom spline.
   }
 };
 
-struct Filter_spline final : Filter {  // A cubic B-spline.
-  using type = Filter_spline;
-  Filter_spline() : Filter("spline", sfunc, 2.) { _has_inv_convolution = true; }
+struct FilterSpline final : Filter {  // A cubic B-spline.
+  using type = FilterSpline;
+  FilterSpline() : Filter("spline", sfunc, 2.) { _has_inv_convolution = true; }
   static double sfunc(double x) {
     // bspline3[x_] := With[{r = Abs[x]}, 1 / 6 If[r < 1, 4 + r r (-6 + 3 r),
     //   If[r <= 2, 8 + r (-12 + (6 - r) r), 0]]];
@@ -208,9 +208,9 @@ struct Filter_spline final : Filter {  // A cubic B-spline.
   }
 };
 
-struct Filter_omoms final : Filter {  // A cubic OMOMS.
-  using type = Filter_omoms;
-  Filter_omoms() : Filter("omoms", sfunc, 2.) {
+struct FilterOmoms final : Filter {  // A cubic OMOMS.
+  using type = FilterOmoms;
+  FilterOmoms() : Filter("omoms", sfunc, 2.) {
     _has_inv_convolution = true;
     _is_omoms = true;
   }
@@ -228,31 +228,31 @@ struct Filter_omoms final : Filter {  // A cubic OMOMS.
   }
 };
 
-struct Filter_preprocess final : Filter {
-  using type = Filter_preprocess;
-  Filter_preprocess() : Filter("preprocess", nullptr, 0.) {
+struct FilterPreprocess final : Filter {
+  using type = FilterPreprocess;
+  FilterPreprocess() : Filter("preprocess", nullptr, 0.) {
     _has_inv_convolution = true;
     _is_interpolating = false;
     _is_preprocess = true;
   }
 };
 
-struct Filter_justspline final : Filter {
-  using type = Filter_justspline;
-  Filter_justspline() : Filter("justspline", Filter_spline::sfunc, 2.) { _is_interpolating = false; }
+struct FilterJustSpline final : Filter {
+  using type = FilterJustSpline;
+  FilterJustSpline() : Filter("justspline", FilterSpline::sfunc, 2.) { _is_interpolating = false; }
 };
 
-struct Filter_justomoms final : Filter {
-  using type = Filter_justomoms;
-  Filter_justomoms() : Filter("justomoms", Filter_omoms::sfunc, 2.) {
+struct FilterJustOmoms final : Filter {
+  using type = FilterJustOmoms;
+  FilterJustOmoms() : Filter("justomoms", FilterOmoms::sfunc, 2.) {
     _is_interpolating = false;
     _is_omoms = true;
   }
 };
 
-struct Filter_gaussian final : Filter {
-  using type = Filter_gaussian;
-  Filter_gaussian() : Filter("gaussian", sfunc, 4.) {  // (radius == 4. is sufficiently large for good approximation)
+struct FilterGaussian final : Filter {
+  using type = FilterGaussian;
+  FilterGaussian() : Filter("gaussian", sfunc, 4.) {  // (radius == 4. is sufficiently large for good approximation)
     _is_interpolating = false;
     _is_partition_of_unity = false;  // 0.93503:1.06497  av=1  sd=0.0459422
   }
@@ -265,9 +265,9 @@ struct Filter_gaussian final : Filter {
   }
 };
 
-struct Filter_lanczos6 final : Filter {
-  using type = Filter_lanczos6;
-  Filter_lanczos6() : Filter("lanczos6", sfunc, 3.) {
+struct FilterLanczos6 final : Filter {
+  using type = FilterLanczos6;
+  FilterLanczos6() : Filter("lanczos6", sfunc, 3.) {
     _is_partition_of_unity = false;  // 0.994299:1  av=0.997055  sd=0.00200379
     _is_unit_integral = false;       // 0.997055
   }
@@ -277,9 +277,9 @@ struct Filter_lanczos6 final : Filter {
   }
 };
 
-struct Filter_lanczos10 final : Filter {
-  using type = Filter_lanczos10;
-  Filter_lanczos10() : Filter("lanczos10", sfunc, 5.) {
+struct FilterLanczos10 final : Filter {
+  using type = FilterLanczos10;
+  FilterLanczos10() : Filter("lanczos10", sfunc, 5.) {
     _is_partition_of_unity = false;  // 0.998746:1  av=0.999353  sd=0.000439056
     _is_unit_integral = false;       // 0.999353
   }
@@ -289,9 +289,9 @@ struct Filter_lanczos10 final : Filter {
   }
 };
 
-struct Filter_hamming6 final : Filter {
-  using type = Filter_hamming6;
-  Filter_hamming6() : Filter("hamming6", sfunc, 3.) {
+struct FilterHamming6 final : Filter {
+  using type = FilterHamming6;
+  FilterHamming6() : Filter("hamming6", sfunc, 3.) {
     _is_partition_of_unity = false;  // 1:1.00242  av=1.00188  sd=0.00052909
     _is_unit_integral = false;       // 1.00188
   }
@@ -308,9 +308,9 @@ const Filter& Filter::get(const string& name) {
   // Careful: Filter::get() may be called by some static constructor, so we use a function-local
   // static (thread-safe and lazily initialized) and intentionally never destroy the filters.
   static const auto& filters = *new Array<const Filter*>{
-      new Filter_impulse,   new Filter_box,      new Filter_triangle, new Filter_quadratic,  new Filter_mitchell,
-      new Filter_keys,      new Filter_spline,   new Filter_omoms,    new Filter_preprocess, new Filter_justspline,
-      new Filter_justomoms, new Filter_gaussian, new Filter_lanczos6, new Filter_lanczos10,  new Filter_hamming6,
+      new FilterImpulse,   new FilterBox,      new FilterTriangle, new FilterQuadratic,  new FilterMitchell,
+      new FilterKeys,      new FilterSpline,   new FilterOmoms,    new FilterPreprocess, new FilterJustSpline,
+      new FilterJustOmoms, new FilterGaussian, new FilterLanczos6, new FilterLanczos10,  new FilterHamming6,
   };
   assertx(filters.num());
   for (const Filter* filter : filters) {

@@ -4,8 +4,8 @@
 
 #if defined(HH_NO_VECTOR4_VECTORIZATION)
 // If so, do not enable vectorization.
-#elif defined(_M_ARM) && _M_ARM_FP >= 40 || \
-    defined(__ARM_NEON__)  // From win and clang respectively; maybe __aarch64__.
+// MSVC defines _M_ARM (32-bit) or _M_ARM64; gcc and clang define __ARM_NEON (whereas __ARM_NEON__ is Apple-only).
+#elif (defined(_M_ARM) && _M_ARM_FP >= 40) || defined(_M_ARM64) || defined(__ARM_NEON)
 #define HH_VECTOR4_NEON
 #elif (defined(_M_IX86_FP) && _M_IX86_FP >= 2) || defined(_M_X64) || defined(__SSE2__)
 // (Note that _M_IX86_FP is undefined for x64.)

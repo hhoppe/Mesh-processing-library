@@ -9,11 +9,10 @@ setlocal
 :: (The earlier timestamp used `wmic`, which is removed from current Windows.)
 set tmproot=%temp:\=/%/%~nx0_%random%
 
-MeshSimplify %* -prog %tmproot%.prog -simplify >%tmproot%.base.m || goto :cleanup
-
+:: The commands are chained rather than joined by "goto" because cmd.exe may fail to find a label in a file with
+:: LF line endings.
+MeshSimplify %* -prog %tmproot%.prog -simplify >%tmproot%.base.m && ^
 Filterprog -fbase %tmproot%.base.m -fprog %tmproot%.prog -pm
-
-:cleanup
 set status=%errorlevel%
 
 :: Always remove the temporary files, as does the trap in mesh_to_pm.

@@ -338,7 +338,13 @@ inline void Vector4::raw_to_byte4(Vec4<uint8_t>& p) const {
 inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
   Vector4 t = *this * 255.f;
   for_int(c, 4) ASSERTX(t[c] <= 2'147'480'000.f);  // see Vector4_test.h
-  uint32x4_t a = vcvtq_u32_f32(t._r);     // uint32x4_t vcvtq_u32_f32(float32x4_t a);  // VCVT.U32.F32 q0, q0 // Round.
+#if defined(__aarch64__) || defined(_M_ARM64)
+  // Round to nearest, with ties to even, like _mm_cvtps_epi32() in the SSE version.
+  uint32x4_t a = vcvtnq_u32_f32(t._r);  // uint32x4_t vcvtnq_u32_f32(float32x4_t a);  // FCVTNU Vd.4S, Vn.4S
+#else
+  // ARMv7 lacks vcvtnq_u32_f32(), and vcvtq_u32_f32() truncates; ties are rounded up rather than to even.
+  uint32x4_t a = vcvtq_u32_f32(vaddq_f32(t._r, vdupq_n_f32(.5f)));
+#endif
   uint16x4_t b = vqmovn_u32(a);           // uint16x4_t vqmovn_u32(uint32x4_t a);  // VQMOVN.I32 d0, q0 // Saturation.
   uint16x8_t c = vcombine_u16(b, b);      // uint16x8_t vcombine_u16(uint16x4_t low, uint16x4_t high);
   uint8x8_t d = vqmovn_u16(c);            // uint8x8_t vqmovn_u16(uint16x8_t a);  // VQMOVN.I16 d0, q0 // Saturation.

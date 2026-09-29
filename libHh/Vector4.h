@@ -103,7 +103,7 @@ class Vector4 {
   [[nodiscard]] friend float dot(const Vector4& v1, const Vector4& v2) {
 #if defined(HH_NO_SSE41)
     Vector4 v = v1 * v2;
-    return v[0] + v[1] + v[2] + v[3];
+    return (v[0] + v[1]) + (v[2] + v[3]);  // Same summation order as _mm_dp_ps().
 #else
     const __m128 r = _mm_dp_ps(v1._r, v2._r, 0xFF);  // SSE4.1 DPPS instruction (dot product).
     // Extracts the lower order floating point value from the parameter.
@@ -155,20 +155,26 @@ class Vector4 {
   [[nodiscard]] friend Vector4 operator+(const Vector4& l, const Vector4& r) { return vaddq_f32(l._r, r._r); }
   [[nodiscard]] friend Vector4 operator-(const Vector4& l, const Vector4& r) { return vsubq_f32(l._r, r._r); }
   [[nodiscard]] friend Vector4 operator*(const Vector4& l, const Vector4& r) { return vmulq_f32(l._r, r._r); }
+#if defined(__aarch64__) || defined(_M_ARM64)
+  // Exact (correctly rounded) division, like _mm_div_ps() in the SSE version.
+  [[nodiscard]] friend Vector4 operator/(const Vector4& l, const Vector4& r) { return vdivq_f32(l._r, r._r); }
+  [[nodiscard]] friend Vector4 operator/(const Vector4& v, float f) { return vdivq_f32(v._r, vdupq_n_f32(f)); }
+#else  // ARMv7 lacks a division instruction.
   [[nodiscard]] friend Vector4 operator/(const Vector4& l, const Vector4& r) {
     return vmulq_f32(l._r, recip(r._r)._r);
   }
+  [[nodiscard]] friend Vector4 operator/(const Vector4& v, float f) { return vmulq_n_f32(v._r, 1.f / f); }
+#endif
   [[nodiscard]] friend Vector4 operator+(const Vector4& v, float f) { return vaddq_f32(v._r, vdupq_n_f32(f)); }
   [[nodiscard]] friend Vector4 operator-(const Vector4& v, float f) { return vsubq_f32(v._r, vdupq_n_f32(f)); }
   [[nodiscard]] friend Vector4 operator*(const Vector4& v, float f) { return vmulq_n_f32(v._r, f); }
-  [[nodiscard]] friend Vector4 operator/(const Vector4& v, float f) { return vmulq_n_f32(v._r, 1.f / f); }
   void fill(float v) { _r = vdupq_n_f32(v); }  // All components set to same value.
   // Component-wise min/max.
   [[nodiscard]] friend Vector4 min(const Vector4& l, const Vector4& r) { return vminq_f32(l._r, r._r); }
   [[nodiscard]] friend Vector4 max(const Vector4& l, const Vector4& r) { return vmaxq_f32(l._r, r._r); }
   [[nodiscard]] friend float dot(const Vector4& v1, const Vector4& v2) {
     Vector4 v = v1 * v2;
-    return v[0] + v[1] + v[2] + v[3];
+    return (v[0] + v[1]) + (v[2] + v[3]);  // Same summation order as _mm_dp_ps() in the SSE version.
   }
   [[nodiscard]] friend Vector4 sqrt(const Vector4& v) {  // For use in RangeOp.h mag(), rms(), dist().
     // return vrecpeq_f32(vrsqrteq_f32(v));  // Very approximate.
@@ -213,7 +219,7 @@ class Vector4 {
   [[nodiscard]] friend Vector4 operator+(const Vector4& v, float f) { return v + Vector4(f); }
   [[nodiscard]] friend Vector4 operator-(const Vector4& v, float f) { return v - Vector4(f); }
   [[nodiscard]] friend Vector4 operator*(const Vector4& v, float f) { return v * Vector4(f); }
-  [[nodiscard]] friend Vector4 operator/(const Vector4& v, float f) { return v * (1.f / f); }
+  [[nodiscard]] friend Vector4 operator/(const Vector4& v, float f) { return v / Vector4(f); }  // Exact, like SSE.
   void fill(float v) { for_int(c, 4) _c[c] = v; }
   [[nodiscard]] friend Vector4 min(const Vector4& l, const Vector4& r) {
     return Vector4(min(l[0], r[0]), min(l[1], r[1]), min(l[2], r[2]), min(l[3], r[3]));
@@ -223,7 +229,7 @@ class Vector4 {
   }
   [[nodiscard]] friend float dot(const Vector4& v1, const Vector4& v2) {
     Vector4 v = v1 * v2;
-    return v[0] + v[1] + v[2] + v[3];
+    return (v[0] + v[1]) + (v[2] + v[3]);  // Same summation order as _mm_dp_ps() in the SSE version.
   }
 
   [[nodiscard]] friend Vector4 sqrt(const Vector4& v) {

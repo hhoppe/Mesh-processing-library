@@ -33,3 +33,7 @@ v = Vector4(0, 0.00392157, 0.00784314, 0.0117647)
 ar = [0, 1, 2, 3]
 v = Vector4(0.392157, 0.396078, 0.4, 0.403922)
 ar = [100, 101, 102, 103]
+num_div=0 num_div_scalar=0 num_mul=0 num_dot=0
+num_raw=0 num_norm=0
+convert<int>(Vector4(0.999f, 1.f, 254.999f, 255.998f).raw_pixel()) = [0, 1, 254, 255]
+convert<int>(Vector4(0.5f, -0.f, -1e-8f, 1.f + 1e-6f).pixel()) = [128, 0, 0, 255]

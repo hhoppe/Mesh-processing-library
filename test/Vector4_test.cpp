@@ -8,10 +8,8 @@
 #include "libHh/Vec.h"
 using namespace hh;
 
-// Test Neon syntax:
-// modify make/Makefile_defs_clang to override cxxall, then
-// make CONFIG=clang -C ~/git/mesh_processing/test Vector4_test.o
-//  (It checks C++ syntax, then crashes with "ARM does not support Windows COFF format".)
+// The SSE, NEON, and scalar implementations must all produce this same output; the NEON one is exercised on
+// arm64 (e.g., macOS), and the scalar one with -DHH_NO_VECTOR4_VECTORIZATION.
 
 namespace {
 
@@ -20,6 +18,53 @@ void to_norm(const Vector4& v) {
   const Pixel pixel = v.pixel();
   Vec4<int> ar = convert<int>(pixel);
   SHOW(ar);
+}
+
+// Deterministic pseudo-random floats in [-8, 8), identical on all platforms.
+struct Lcg {
+  uint32_t state = 1;
+  float operator()() {
+    state = state * 1'664'525u + 1'013'904'223u;
+    return float(int(state >> 8) - (1 << 23)) / float(1 << 20);
+  }
+};
+
+// Compare the vectorized arithmetic with scalar float arithmetic, bit for bit.
+void test_consistency() {
+  Lcg lcg;
+  int num_div = 0, num_div_scalar = 0, num_dot = 0, num_mul = 0;
+  for_int(iter, 10'000) {
+    const Vector4 a(lcg(), lcg(), lcg(), lcg());
+    Vector4 b(lcg(), lcg(), lcg(), lcg());
+    for_int(c, 4) if (b[c] == 0.f) b[c] = 1.f;
+    const float f = b[0];
+    const Vector4 quotient = a / b, quotient_scalar = a / f, product = a * b;
+    for_int(c, 4) {
+      num_div += quotient[c] != a[c] / b[c];
+      num_div_scalar += quotient_scalar[c] != a[c] / f;
+      num_mul += product[c] != a[c] * b[c];
+    }
+    // Separate statements prevent the contraction of a product and a sum into a fused multiply-add.
+    const float p0 = a[0] * b[0], p1 = a[1] * b[1], p2 = a[2] * b[2], p3 = a[3] * b[3];
+    const float expected_dot = (p0 + p1) + (p2 + p3);
+    num_dot += dot(a, b) != expected_dot;
+  }
+  SHOW(num_div, num_div_scalar, num_mul, num_dot);
+}
+
+// Conversions between floats and bytes.
+void test_conversions() {
+  int num_raw = 0, num_norm = 0;
+  for_int(i, 256) {
+    const Pixel pixel{uint8_t(i), uint8_t(255 - i), uint8_t(i / 2), uint8_t(255)};
+    num_raw += to_Vector4_raw(pixel).raw_pixel() != pixel;
+    num_norm += to_Vector4_norm(pixel).pixel() != pixel;
+  }
+  SHOW(num_raw, num_norm);
+  // raw_to_byte4() truncates.
+  SHOW(convert<int>(Vector4(0.999f, 1.f, 254.999f, 255.998f).raw_pixel()));
+  // norm_to_byte4() rounds, with the exact tie 0.5f * 255.f == 127.5f rounded to the even 128; it clamps to [0, 255].
+  SHOW(convert<int>(Vector4(0.5f, -0.f, -1e-8f, 1.f + 1e-6f).pixel()));
 }
 
 }  // namespace
@@ -90,6 +135,8 @@ int main() {
     to_norm(Vector4(0.f, 1.f, 2.f, 3.f) / 255.f);
     to_norm(Vector4(100.f, 101.f, 102.f, 103.f) / 255.f);
   }
+  test_consistency();
+  test_conversions();
   if (0) {  // Huge numbers fail the conversion to int32_t.
     to_norm(Vector4(2147483583.f, 2147483584.f, 2147483647.f, BIGFLOAT) / 255.f);
     to_norm(Vector4(-2147483580.f, -2147483582.f, -2147483647.f, -BIGFLOAT) / 255.f);

@@ -44,7 +44,7 @@ template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable
 
  private:
   using Node = details::PQ::Node<T>;
-  Array<Node, inline_capacity> _ar;
+  GeneralArray<Node, inline_capacity> _ar;
   void nmove(int n1, int n2) {
     _ar[n1]._e = std::move(_ar[n2]._e);
     _ar[n1]._pri = _ar[n2]._pri;

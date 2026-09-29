@@ -133,8 +133,8 @@ void test_inlined_array() {
     SHOW(ar2);
   }
   {
-    static_assert(std::is_same_v<InlinedArray<int, 4>, Array<int, 4>>);
-    static_assert(std::is_same_v<Array<int>, Array<int, 0>>);
+    static_assert(std::is_same_v<InlinedArray<int, 4>, GeneralArray<int, 4>>);
+    static_assert(std::is_same_v<Array<int>, GeneralArray<int, 0>>);
     // Moves from the built-in storage and from the heap, and changes of capacity across its boundary.
     InlinedArray<int, 3> ar1{1, 2};
     InlinedArray<int, 3> ar2{3, 4, 5, 6};
@@ -395,12 +395,12 @@ template class hh::ArrayView<double>;
 template class hh::ArrayView<const int*>;
 template class hh::ArrayView<unique_ptr<int>>;
 
-template class hh::Array<unsigned>;
-template class hh::Array<double>;
-template class hh::Array<const int*>;
-template class hh::Array<unique_ptr<int>>;
+template class hh::GeneralArray<unsigned>;
+template class hh::GeneralArray<double>;
+template class hh::GeneralArray<const int*>;
+template class hh::GeneralArray<unique_ptr<int>>;
 
-template class hh::Array<unsigned, 4>;
-template class hh::Array<double, 10>;
-template class hh::Array<const int*, 100>;
-template class hh::Array<unique_ptr<int>, 2>;
+template class hh::GeneralArray<unsigned, 4>;
+template class hh::GeneralArray<double, 10>;
+template class hh::GeneralArray<const int*, 100>;
+template class hh::GeneralArray<unique_ptr<int>, 2>;

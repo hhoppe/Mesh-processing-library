@@ -106,7 +106,7 @@
   </Expand>
  </Type>
 
- <Type Name="hh::Array&lt;*,*&gt;">
+ <Type Name="hh::GeneralArray&lt;*,*&gt;">
   <DisplayString>Array(num={_n})</DisplayString>
   <Expand>
    <Item Name="[num]">_n</Item>

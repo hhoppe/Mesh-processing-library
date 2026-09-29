@@ -12,17 +12,20 @@ Everything is in namespace `hh`.
 - `CArrayView<T>`: view of a contiguous range of const `T` elements (a `const T*` and a count); it can refer to a C
   array, `std::vector`, `Vec`, `Array`, `InlinedArray`, or a `Matrix` row.
 - `ArrayView<T>`: same, with modifiable elements.
-- `Array<T>`: heap-allocated resizable array, like `std::vector<T>`; `Array<T, n>` adds built-in storage for `n`
-  elements.
-- `InlinedArray<T, n>`: alias of `Array<T, n>`, whose first `n` elements use built-in storage, which avoids heap
-  allocation for small arrays.
+- `Array<T>`: heap-allocated resizable array, like `std::vector<T>`.
+- `InlinedArray<T, n>`: resizable array whose first `n` elements use built-in storage, which avoids heap allocation
+  for small arrays.
+- `GeneralArray<T, n>`: the class of which `Array<T>` (with `n == 0`) and `InlinedArray<T, n>` are aliases; code
+  names it directly only when it is generic over `n`, e.g. in a function that resizes any such array.
 
-The arrays derive from the views, so an array can be passed wherever a view is expected:
+The arrays derive from the views, so an array can be passed wherever a view is expected (solid lines show
+derivation, and dashed lines show aliases):
 ```
-CArrayView<T>               (const elements)
-└─ ArrayView<T>             (modifiable elements)
-   ├─ Array<T>
-   └─ InlinedArray<T, n>    (= Array<T, n>)
+CArrayView<T>                   (const elements)
+└─ ArrayView<T>                 (modifiable elements)
+   └─ GeneralArray<T, n>
+      ├-- Array<T>              (= GeneralArray<T, 0>)
+      └-- InlinedArray<T, n>    (= GeneralArray<T, n>)
 ```
 A function that only reads or modifies elements should take a `CArrayView<T>` or `ArrayView<T>`, so that it accepts
 any of these containers (a `Vec` also converts to them).

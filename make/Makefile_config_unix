@@ -16,6 +16,12 @@ include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_$(CC)
 # libstdc++ implements partial_ordering::equivalent as a nullptr and gives false-positive warnings,
 cpedantic += -Wno-zero-as-null-pointer-constant
 
+ifeq ($(is_mac),1)
+  # Apple Clang searches /usr/local/include (if present) as a system directory outside the SDK, and -Weverything
+  #  then warns in every translation unit that it is "unsafe for cross-compilation".
+  cpedantic += -Wno-poison-system-directories
+endif
+
 ifeq ($(CC),gcc)
   LDFLAGS += -pthread  # Necessary with gcc for std::thread in VideoViewer.cpp.
   ccommon += -pthread  # Also needed at compile time so that macro symbol _REENTRANT matches the precompiled header.

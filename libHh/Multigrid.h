@@ -180,10 +180,13 @@ class Multigrid : noncopyable {
   [[nodiscard]] bool have_orig() const { return _grid_orig.size() > 0; }
 
   static Vec<int, D> generate_interior_offsets(const Vec<int, D>& dims) {
+    // Each offset is the product of the subsequent dims.  (Using product(dims.slice(c + 1, D)) instead caused a
+    // false -Wmaybe-uninitialized from gcc 15 when it vectorized that product for AVX-512.)
     Vec<int, D> ar_interior_offsets;
-    for_int(c, D) {
-      const int o = c == D - 1 ? 1 : assert_narrow_cast<int>(product(dims.slice(c + 1, D)));
-      ar_interior_offsets[c] = o;
+    int64_t o = 1;
+    for (int c = D - 1; c >= 0; c--) {
+      ar_interior_offsets[c] = assert_narrow_cast<int>(o);
+      o *= dims[c];
     }
     return ar_interior_offsets;
   }

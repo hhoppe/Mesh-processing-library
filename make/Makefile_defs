@@ -230,10 +230,11 @@ endif
 
 dot_quoted_target = .\$$(extobj)#  This variable is cleared in ./Makefile_progs (also included in ./test/Makefile).
 make_dep ?= Makefile.dep#   This was Makefile_$(CONFIG).dep but is now independent of CONFIG.
-# We need "-march=native" to enable include of <xmmintrin.h>.
 # We need "-DMAKEFILE_DEP" for defined() in precompiled_libHh.h.
+# We omit "-march=native": it only affects the inclusion of system headers, which "-MM" excludes anyway, and on some
+#  CPUs, GCC warns about the flag itself (e.g., "'-mavx10.1' is aliased to 512 bit" on Intel Granite Rapids).
 cmd_makedep = @echo Creating $(make_dep); \
-  g++ -MM -march=native -DMAKEFILE_DEP $(CPPFLAGS) $(src_c) -std=$(CXX_STD) $(src_cpp) | \
+  g++ -MM -DMAKEFILE_DEP $(CPPFLAGS) $(src_c) -std=$(CXX_STD) $(src_cpp) | \
   perl -pe 'BEGIN { binmode(STDOUT); } s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' >$(make_dep) \
   || rm -f $(make_dep)
 

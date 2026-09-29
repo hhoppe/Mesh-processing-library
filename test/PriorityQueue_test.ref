@@ -8,3 +8,5 @@ order = Array<int>(8) {
   6
   4
 }
+sum=16394250 dist.last()=18649
+pq.num() = 22

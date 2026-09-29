@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/PriorityQueue.h"
 
-#include <random>  // default_random_engine
+#include <random>  // default_random_engine, mt19937
 
 using namespace hh;
 
@@ -242,10 +242,10 @@ void test9() {
 }
 
 void test10() {  // A PriorityQueue with built-in storage behaves identically, also beyond its inline_capacity.
-  const Array<float> pris{5.f, 1.f, 4.f, 1.5f, 9.f, 2.f, 6.f, 0.5f};
+  const Array<float> priorities{5.f, 1.f, 4.f, 1.5f, 9.f, 2.f, 6.f, 0.5f};
   PriorityQueue<int> pq0;
   PriorityQueue<int, 4> pq4;
-  for_int(i, pris.num()) pq0.enter(i, pris[i]), pq4.enter(i, pris[i]);
+  for_int(i, priorities.num()) pq0.enter(i, priorities[i]), pq4.enter(i, priorities[i]);
   Array<int> order;
   while (!pq0.empty()) {
     const int i = pq0.remove_min();
@@ -254,6 +254,102 @@ void test10() {  // A PriorityQueue with built-in storage behaves identically, a
   }
   assertx(pq4.empty());
   SHOW(order);
+}
+
+void test11() {  // Dijkstra on a grid, compared with a search that scans all the vertices for the closest one.
+  const int n = 40;
+  std::mt19937 gen(1);
+  Array<float> weights(2 * n * n);  // Edges to the right and lower neighbors; integers, so that distances are exact.
+  for (float& w : weights) w = float(1 + gen() % 1000);
+  const auto for_neighbors = [&](int v, auto func) {  // Call func(w, weight) for each neighbor w of vertex v.
+    const int y = v / n, x = v % n;
+    if (x + 1 < n) func(v + 1, weights[2 * v]);
+    if (x > 0) func(v - 1, weights[2 * (v - 1)]);
+    if (y + 1 < n) func(v + n, weights[2 * v + 1]);
+    if (y > 0) func(v - n, weights[2 * (v - n) + 1]);
+  };
+  Array<float> dist(n * n, BIGFLOAT);
+  {
+    UpdatablePriorityQueue<int> pq;
+    dist[0] = 0.f;
+    pq.enter(0, 0.f);
+    while (!pq.empty()) {
+      const float d = pq.min_priority();
+      const int v = pq.remove_min();
+      for_neighbors(v, [&](int w, float weight) {
+        if (d + weight < dist[w]) dist[w] = d + weight, pq.enter_update_if_smaller(w, d + weight);
+      });
+    }
+  }
+  Array<float> dist_scan(n * n, BIGFLOAT);
+  {
+    Array<bool> done(n * n, false);
+    dist_scan[0] = 0.f;
+    for_int(iter, n * n) {
+      int v = -1;
+      for_int(u, n * n) {
+        if (!done[u] && (v < 0 || dist_scan[u] < dist_scan[v])) v = u;
+      }
+      done[v] = true;
+      for_neighbors(v, [&](int w, float weight) { dist_scan[w] = min(dist_scan[w], dist_scan[v] + weight); });
+    }
+  }
+  assertx(dist == dist_scan);
+  int64_t sum = 0;
+  for (const float d : dist) sum += int64_t(d);
+  SHOW(sum, dist.last());
+}
+
+void test12() {  // Random operations, compared with a brute-force model of the queue.
+  std::mt19937 gen(2);
+  UpdatablePriorityQueue<int> pq;
+  Map<int, float> model;  // Element -> priority.
+  const auto model_set = [&](int e, float pri) {
+    bool is_new;
+    model.enter(e, pri, is_new) = pri;
+  };
+  for_int(op, 100'000) {
+    const int e = int(gen() % 50);
+    const float pri = float(gen() % 20);  // Frequent ties.
+    const float old_pri = model.contains(e) ? model.get(e) : -1.f;
+    switch (gen() % 6) {
+      case 0:
+        assertx(pq.enter_update(e, pri) == old_pri);
+        model_set(e, pri);
+        break;
+      case 1:
+        assertx(pq.update(e, pri) == old_pri);
+        if (old_pri >= 0.f) model_set(e, pri);
+        break;
+      case 2:
+        assertx(pq.remove(e) == old_pri);
+        if (old_pri >= 0.f) model.remove(e);
+        break;
+      case 3: {
+        const bool expected = old_pri < 0.f || pri < old_pri;
+        assertx(pq.enter_update_if_smaller(e, pri) == expected);
+        if (expected) model_set(e, pri);
+        break;
+      }
+      case 4: {
+        const bool expected = old_pri < 0.f || pri > old_pri;
+        assertx(pq.enter_update_if_greater(e, pri) == expected);
+        if (expected) model_set(e, pri);
+        break;
+      }
+      default:
+        if (!model.empty()) {
+          float min_pri = BIGFLOAT;
+          for (const float p : model.values()) min_pri = min(min_pri, p);
+          assertx(pq.min_priority() == min_pri);
+          const int emin = pq.remove_min();
+          assertx(model.remove(emin) == min_pri);  // Any element with the minimum priority is valid.
+        }
+    }
+    assertx(pq.num() == model.num());
+    assertx(pq.retrieve(e) == (model.contains(e) ? model.get(e) : -1.f));
+  }
+  SHOW(pq.num());
 }
 
 }  // namespace
@@ -269,6 +365,8 @@ int main() {
   test8();
   test9();
   test10();
+  test11();
+  test12();
 }
 
 template class hh::PriorityQueue<unsigned>;

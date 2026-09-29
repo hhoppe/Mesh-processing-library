@@ -4,6 +4,7 @@
 
 #include "libHh/Array.h"
 #include "libHh/Map.h"
+#include "libHh/Set.h"
 
 namespace hh {
 
@@ -22,7 +23,7 @@ template <typename T> struct Node {
 };
 }  // namespace details::PQ
 
-// Self-resizing priority queue.  Note: much code duplicated in UpdatablePriorityQueue!
+// Self-resizing priority queue.
 // If inline_capacity > 0, it has built-in storage for that many elements (as in InlinedArray).
 template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable {
  public:
@@ -135,235 +136,111 @@ template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable
   }
 };
 
-// Hashed priority queue allowing insertion/deletion/update.  Note: much code duplicated in PriorityQueue!
+// Priority queue whose elements can also be looked up, updated, and removed, using a hash map from each element to
+// its current priority.  An update or removal leaves the element's old node in the underlying heap, where it is
+// discarded once it reaches the top ("lazy deletion"); the top node is always current.  When the discarded nodes
+// would outnumber the current ones, the heap is rebuilt.
 template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
 requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : noncopyable {
  public:
-  void clear() { _ar.clear(), _m.clear(); }
-  void enter(const T& e, float pri) { ASSERTX(pri >= 0.f), enter_i(e, pri); }
-  void reserve(int size) { _ar.reserve(size); }
-  [[nodiscard]] int num() const { return _ar.num(); }
-  [[nodiscard]] size_t size() const { return _ar.size(); }
+  void clear() { _pq.clear(), _m.clear(); }
+  void enter(const T& e, float pri) { ASSERTX(pri >= 0.f), _m.enter(e, pri), _pq.enter(e, pri); }  // e must be new.
+  void reserve(int size) { _pq.reserve(size); }
+  [[nodiscard]] int num() const { return _m.num(); }
+  [[nodiscard]] size_t size() const { return _m.size(); }
   [[nodiscard]] bool empty() const { return !num(); }
-  [[nodiscard]] const T& min() const { return ASSERTXX(!empty()), _ar[0]._e; }
-  [[nodiscard]] float min_priority() const { return ASSERTXX(!empty()), _ar[0]._pri; }
-  T remove_min() { return ASSERTXX(!empty()), remove_min_i(); }
-  void enter_unsorted(const T& e, float pri) { ASSERTX(pri >= 0.f), _m.enter(e, num()), _ar.push(Node(e, pri)); }
-  void sort() { return sort_i(); }
-  [[nodiscard]] bool contains(const T& e) const { return _m.contains(e); }
-  [[nodiscard]] float retrieve(const T& e) const { return retrieve_i(e); }
-  float remove(const T& e) { return remove_i(e); }                                       // Ret pri or < 0.f.
-  float update(const T& e, float pri) { return ASSERTX(pri >= 0.f), update_i(e, pri); }  // Ret prevpri or < 0.f.
-  float enter_update(const T& e, float pri) { return enter_update_i(e, pri); }           // Ret prevpri or < 0.f.
-  bool enter_update_if_smaller(const T& e, float pri) { return enter_update_if_smaller_i(e, pri); }
-  bool enter_update_if_greater(const T& e, float pri) { return enter_update_if_greater_i(e, pri); }
-
- private:
-  using Node = details::PQ::Node<T>;
-  Array<Node> _ar;
-  Map<T, int, Hash, Equal> _m;  // Element -> index in array.
-  void consider_shrink() {
-    if (0 && num() < _ar.capacity() * .4f && _ar.capacity() > 100) reserve(_ar.capacity() / 2);
-  }
-  void nmove(int n1, int n2) {
-    _ar[n1] = std::move(_ar[n2]);
-    const int on2 = _m.replace(_ar[n1]._e, n1);
-    ASSERTX(on2 == n2);
-  }
-  // (cp is the priority of the current node n, which may not be up-to-date in _ar[n])
-  // After this call returns index j, if j != n, elements have been shifted,
-  // and the old element at n should be moved into its new location at j.
-  int adjust(int n, const float cp, bool up, bool down) {
-    const int orig_n = n;
-    if (up) {
-      for (;;) {
-        if (!n) break;
-        const int pn = (n - 1) / 2;
-        if (cp < _ar[pn]._pri) {
-          nmove(n, pn);
-          n = pn;
-          continue;
-        }
-        break;
-      }
-      if (n != orig_n) return n;
-    }
-    if (down) {
-      for (;;) {
-        const int ln = n * 2 + 1;  // Left child.
-        if (ln >= num()) break;    // No children.
-        const float lp = _ar[ln]._pri;
-        const int rn = n * 2 + 2;  // Right child.
-        if (rn >= num()) {         // No right child.
-          if (cp > lp) {
-            nmove(n, ln);
-            n = ln;
-            continue;
-          }
-          break;
-        }
-        const float rp = _ar[rn]._pri;
-        if (cp > lp) {
-          if (lp < rp) {
-            nmove(n, ln);
-            n = ln;
-            continue;
-          } else {
-            nmove(n, rn);
-            n = rn;
-            continue;
-          }
-        }
-        if (cp > rp) {
-          nmove(n, rn);
-          n = rn;
-          continue;
-        }
-        break;
-      }
-    }
-    return n;
-  }
-  void enter_i(const T& e, float pri) {
-    _ar.add(1);  // Leave this new node uninitialized.
-    const int j = adjust(num() - 1, pri, true, false);
-    _ar[j]._e = e;
-    _ar[j]._pri = pri;
-    _m.enter(e, j);
-  }
-  void sort_i() {
-    for (int i = (num() - 2) / 2; i >= 0; --i) {
-      T e = _ar[i]._e;
-      const float pri = _ar[i]._pri;
-      const int j = adjust(i, pri, false, true);
-      if (j != i) {
-        _ar[j]._e = e;
-        _ar[j]._pri = pri;
-        const int oi = _m.replace(e, j);
-        ASSERTX(oi == i);
-      }
-    }
-  }
-  T remove_min_i() {
-    T e = _ar[0]._e;
-    if (num() == 1) {
-      _ar.sub(1);
-      const int j = _m.remove(e);
-      ASSERTX(j == 0);
-      return e;
-    }
-    T e0 = _ar.last()._e;
-    const float pri = _ar.last()._pri;
-    _ar.sub(1);
-    {
-      const int j = _m.remove(e);
-      ASSERTX(j == 0);
-    }
-    const int j = adjust(0, pri, false, true);
-    _ar[j]._e = e0;
-    _ar[j]._pri = pri;
-    const int oi = _m.replace(e0, j);
-    ASSERTX(oi == num());
-    consider_shrink();
+  [[nodiscard]] const T& min() const { return ASSERTXX(!empty()), _pq.min(); }
+  [[nodiscard]] float min_priority() const { return ASSERTXX(!empty()), _pq.min_priority(); }
+  T remove_min() {
+    ASSERTXX(!empty());
+    T e = _pq.remove_min();
+    _m.remove(e);
+    discard_stale_top();
     return e;
   }
-  [[nodiscard]] float retrieve_i(const T& e) const {
-    bool b;
-    const int i = _m.retrieve(e, b);
-    return b ? _ar[i]._pri : -1.f;
-  }
-  float remove_i(const T& e) {
+  void enter_unsorted(const T& e, float pri) { ASSERTX(pri >= 0.f), _m.enter(e, pri), _pq.enter_unsorted(e, pri); }
+  void sort() { _pq.sort(); }
+  [[nodiscard]] bool contains(const T& e) const { return _m.contains(e); }
+  [[nodiscard]] float retrieve(const T& e) const {  // Ret pri or < 0.f.
     bool present;
-    const int i = _m.retrieve(e, present);
-    if (!present) return -1.f;
-    const float ppri = _ar[i]._pri;
-    T e0 = _ar.last()._e;
-    const float pri = _ar.last()._pri;
-    _ar.sub(1);
-    {
-      const int j = _m.remove(e);
-      ASSERTX(j == i);
-    }
-    if (i < num()) {  // If num() was 1, we have i == 0, num() == 0.
-      const int j = adjust(i, pri, true, true);
-      _ar[j]._e = e0;
-      _ar[j]._pri = pri;
-      const int oi = _m.replace(e0, j);
-      ASSERTX(oi == num());
-    }
-    consider_shrink();
-    return ppri;
+    const float pri = _m.retrieve(e, present);
+    return present ? pri : -1.f;
   }
-  float update_i(const T& e, float pri) {
+  float remove(const T& e) {  // Ret pri or < 0.f.
     bool present;
-    const int i = _m.retrieve(e, present);
+    const float pri = _m.retrieve(e, present);
     if (!present) return -1.f;
-    const float oldpri = _ar[i]._pri;
-    const int j = adjust(i, pri, true, true);
-    _ar[j]._pri = pri;
-    if (j != i) {
-      _ar[j]._e = e;
-      const int oi = _m.replace(e, j);
-      ASSERTX(oi == i);
+    _m.remove(e);
+    after_change();
+    return pri;
+  }
+  float update(const T& e, float pri) {  // Ret prevpri or < 0.f.
+    ASSERTX(pri >= 0.f);
+    const float oldpri = retrieve(e);
+    if (oldpri >= 0.f && pri != oldpri) set_priority(e, pri);
+    return oldpri;
+  }
+  float enter_update(const T& e, float pri) {  // Ret prevpri or < 0.f.
+    ASSERTX(pri >= 0.f);
+    const float oldpri = retrieve(e);
+    if (oldpri < 0.f) {
+      enter(e, pri);
+    } else if (pri != oldpri) {
+      set_priority(e, pri);
     }
     return oldpri;
   }
-  float enter_update_i(const T& e, float pri) {
+  bool enter_update_if_smaller(const T& e, float pri) {
     ASSERTX(pri >= 0.f);
-    bool present;
-    const int i = _m.retrieve(e, present);
-    if (!present) {
-      enter(e, pri);
-      return -1.f;
-    } else {
-      const float oldpri = _ar[i]._pri;
-      const int j = adjust(i, pri, true, true);
-      _ar[j]._pri = pri;
-      if (j != i) {
-        _ar[j]._e = e;
-        const int oi = _m.replace(e, j);
-        ASSERTX(oi == i);
-      }
-      return oldpri;
-    }
+    const float oldpri = retrieve(e);
+    if (oldpri < 0.f) return enter(e, pri), true;
+    if (!(pri < oldpri)) return false;
+    set_priority(e, pri);
+    return true;
   }
-  bool enter_update_if_smaller_i(const T& e, float pri) {
+  bool enter_update_if_greater(const T& e, float pri) {
     ASSERTX(pri >= 0.f);
-    bool present;
-    const int i = _m.retrieve(e, present);
-    if (!present) {
-      enter(e, pri);
-      return true;
-    } else if (pri < _ar[i]._pri) {
-      const int j = adjust(i, pri, true, false);
-      _ar[j]._pri = pri;
-      if (j != i) {
-        _ar[j]._e = e;
-        const int oi = _m.replace(e, j);
-        ASSERTX(oi == i);
-      }
-      return true;
-    }
-    return false;
+    const float oldpri = retrieve(e);
+    if (oldpri < 0.f) return enter(e, pri), true;
+    if (!(pri > oldpri)) return false;
+    set_priority(e, pri);
+    return true;
   }
-  bool enter_update_if_greater_i(const T& e, float pri) {
-    ASSERTX(pri >= 0.f);
+
+ private:
+  PriorityQueue<T> _pq;           // Nodes of current elements, plus stale nodes (never at the top).
+  Map<T, float, Hash, Equal> _m;  // Element -> current priority.
+
+  void set_priority(const T& e, float pri) {  // Element e is present.
+    _m.replace(e, pri);
+    _pq.enter(e, pri);
+    after_change();
+  }
+  void after_change() {  // Restore the invariants after an update or removal.
+    discard_stale_top();
+    if (_pq.num() > 2 * num() + 16) rebuild();
+  }
+  [[nodiscard]] bool is_current(const T& e, float pri) const {
     bool present;
-    const int i = _m.retrieve(e, present);
-    if (!present) {
-      enter(e, pri);
-      return true;
-    } else if (pri > _ar[i]._pri) {
-      const int j = adjust(i, pri, false, true);
-      _ar[j]._pri = pri;
-      if (j != i) {
-        _ar[j]._e = e;
-        const int oi = _m.replace(e, j);
-        ASSERTX(oi == i);
-      }
-      return true;
+    const float cur_pri = _m.retrieve(e, present);
+    return present && cur_pri == pri;
+  }
+  void discard_stale_top() {
+    while (!_pq.empty() && !is_current(_pq.min(), _pq.min_priority())) _pq.remove_min();
+  }
+  // Remove the stale nodes.  Popping all nodes in priority order (rather than traversing the hash map) keeps the order
+  // of equal priorities independent of the element hash values.
+  void rebuild() {
+    Array<T> elements;
+    Array<float> priorities;
+    elements.reserve(num()), priorities.reserve(num());  // At most one node remains per current element.
+    Set<T, Hash, Equal> kept;  // (A removed and re-entered element may have two current nodes.)
+    while (!_pq.empty()) {
+      const float pri = _pq.min_priority();
+      T e = _pq.remove_min();
+      if (is_current(e, pri) && kept.add(e)) elements.push(std::move(e)), priorities.push(pri);
     }
-    return false;
+    for_int(i, elements.num()) _pq.enter_unsorted(std::move(elements[i]), priorities[i]);  // Sorted order is a heap.
   }
 };
 

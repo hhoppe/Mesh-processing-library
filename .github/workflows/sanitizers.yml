@@ -1,0 +1,61 @@
+# Build the libraries and unit tests with the address, undefined-behavior, and thread sanitizers, and run the
+# tests.  This is slow, so it runs nightly and on demand, not on every push.
+name: Sanitizers
+
+on:
+  schedule:
+    - cron: '0 10 * * *'  # Daily at 10:00 UTC.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  sanitize:
+    name: ${{ matrix.name }}
+    runs-on: ubuntu-26.04
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: address-undefined
+            sanitize: address,undefined
+          - name: thread
+            sanitize: thread
+    # Make each undefined-behavior report fatal (like those of the address and thread sanitizers).
+    env:
+      UBSAN_OPTIONS: halt_on_error=1:print_stacktrace=1
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make clang libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev
+
+      - name: Build and test
+        run: |
+          make -k -j"$(getconf _NPROCESSORS_ONLN)" release=0 sanitize=${{ matrix.sanitize }} \
+            PEDANTIC=1 ignore_compile_warnings=0 test 2>&1 | tee build.log
+
+      - name: Show test differences
+        if: failure()
+        run: |
+          shopt -s nullglob
+          for f in test/*.diff; do echo "== $f"; cat "$f"; done
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: sanitize-${{ matrix.name }}-logs
+          path: |
+            build.log
+            test/*.diff
+            test/*.ou
+          if-no-files-found: ignore

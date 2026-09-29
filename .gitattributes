@@ -3,3 +3,6 @@
 # Similarly mark *.obj to make it clear that the file is not win32 object code.
 demos/data/*.m linguist-documentation
 demos/data/*.obj linguist-documentation
+
+# Store and check out all text files with LF line endings on every platform, regardless of core.autocrlf.
+* text=auto eol=lf

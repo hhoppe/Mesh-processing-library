@@ -55,50 +55,20 @@ template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable
     _ar[n1]._pri = _ar[n2]._pri;
   }
   int adjust_up(int n, const float cp) {
-    for (;;) {
-      if (!n) break;
+    while (n > 0) {
       const int pn = (n - 1) / 2;  // Parent node.
-      if (cp < _ar[pn]._pri) {
-        nmove(n, pn);
-        n = pn;
-        continue;
-      }
-      break;
+      if (cp >= _ar[pn]._pri) break;
+      nmove(n, pn), n = pn;
     }
     return n;
   }
   int adjust_down(int n, const float cp) {
     for (;;) {
-      const int ln = n * 2 + 1;  // Left child node.
-      if (ln >= num()) break;    // No children.
-      const float lp = _ar[ln]._pri;
-      const int rn = n * 2 + 2;  // Right child node.
-      if (rn >= num()) {         // No right child.
-        if (cp > lp) {
-          nmove(n, ln);
-          n = ln;
-          continue;
-        }
-        break;
-      }
-      const float rp = _ar[rn]._pri;
-      if (cp > lp) {
-        if (lp < rp) {
-          nmove(n, ln);
-          n = ln;
-          continue;
-        } else {
-          nmove(n, rn);
-          n = rn;
-          continue;
-        }
-      }
-      if (cp > rp) {
-        nmove(n, rn);
-        n = rn;
-        continue;
-      }
-      break;
+      int c = n * 2 + 1;                                         // Left child node.
+      if (c >= num()) break;                                     // No children.
+      if (c + 1 < num() && _ar[c + 1]._pri <= _ar[c]._pri) c++;  // The right child is smaller (or equal).
+      if (cp <= _ar[c]._pri) break;
+      nmove(n, c), n = c;
     }
     return n;
   }

@@ -241,6 +241,21 @@ void test9() {
   }
 }
 
+void test10() {  // A PriorityQueue with built-in storage behaves identically, also beyond its inline_capacity.
+  const Array<float> pris{5.f, 1.f, 4.f, 1.5f, 9.f, 2.f, 6.f, 0.5f};
+  PriorityQueue<int> pq0;
+  PriorityQueue<int, 4> pq4;
+  for_int(i, pris.num()) pq0.enter(i, pris[i]), pq4.enter(i, pris[i]);
+  Array<int> order;
+  while (!pq0.empty()) {
+    const int i = pq0.remove_min();
+    assertx(pq4.remove_min() == i);
+    order.push(i);
+  }
+  assertx(pq4.empty());
+  SHOW(order);
+}
+
 }  // namespace
 
 int main() {
@@ -253,10 +268,12 @@ int main() {
   test7();
   test8();
   test9();
+  test10();
 }
 
 template class hh::PriorityQueue<unsigned>;
 template class hh::PriorityQueue<float>;
+template class hh::PriorityQueue<float, 4>;
 template class hh::PriorityQueue<unique_ptr<int>>;
 
 template class hh::UpdatablePriorityQueue<unsigned>;

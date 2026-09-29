@@ -106,21 +106,8 @@
   </Expand>
  </Type>
 
- <Type Name="hh::Array&lt;*&gt;">
+ <Type Name="hh::Array&lt;*,*&gt;">
   <DisplayString>Array(num={_n})</DisplayString>
-  <Expand>
-   <Item Name="[num]">_n</Item>
-   <Item Name="[data]">_a</Item>
-   <Item Name="[capacity]">_cap</Item>
-   <ArrayItems Condition="_a!=0">
-    <Size>_n</Size>
-    <ValuePointer>_a</ValuePointer>
-   </ArrayItems>
-  </Expand>
- </Type>
-
- <Type Name="hh::InlinedArray&lt;*,*&gt;">
-  <DisplayString>InlinedArray(num={_n})</DisplayString>
   <Expand>
    <Item Name="[num]">_n</Item>
    <Item Name="[data]">_a</Item>

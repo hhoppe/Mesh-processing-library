@@ -23,7 +23,8 @@ template <typename T> struct Node {
 }  // namespace details::PQ
 
 // Self-resizing priority queue.  Note: much code duplicated in UpdatablePriorityQueue!
-template <typename T> class PriorityQueue : noncopyable {
+// If inline_capacity > 0, it has built-in storage for that many elements (as in InlinedArray).
+template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable {
  public:
   void clear() { _ar.clear(); }
   void enter(const T& e, float pri) requires Copyable<T> { ASSERTX(pri >= 0.f), enter_i(e, pri); }
@@ -43,7 +44,7 @@ template <typename T> class PriorityQueue : noncopyable {
 
  private:
   using Node = details::PQ::Node<T>;
-  Array<Node> _ar;
+  Array<Node, inline_capacity> _ar;
   void nmove(int n1, int n2) {
     _ar[n1]._e = std::move(_ar[n2]._e);
     _ar[n1]._pri = _ar[n2]._pri;

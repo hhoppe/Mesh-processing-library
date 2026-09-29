@@ -1,8 +1,8 @@
 // -*- C++ -*-
 #include "libHh/PMesh.h"
 
+#include "libHh/Array.h"
 #include "libHh/HashTuple.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
 #include "libHh/Random.h"
 using namespace hh;

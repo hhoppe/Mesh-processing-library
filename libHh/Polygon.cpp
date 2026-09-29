@@ -3,7 +3,6 @@
 
 #include "libHh/Array.h"
 #include "libHh/Bbox.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/RangeOp.h"
 
 namespace hh {

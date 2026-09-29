@@ -5,10 +5,154 @@
 #include <vector>
 
 #include "libHh/ArrayOp.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Vec.h"
 using namespace hh;
+
+namespace {
+
+void test_inlined_array() {
+  struct S {
+    explicit S(int i) : _i(i) { showf("S(%d)\n", _i); }
+    ~S() { showf("~S(%d)\n", _i); }
+    int _i;
+  };
+  const auto func_construct_array = [](int i0, int n) {  // -> InlinedArray<unique_ptr<S>, 2>
+    InlinedArray<unique_ptr<S>, 2> ar;
+    for_int(i, n) ar.push(make_unique<S>(i0 + i));
+    return ar;
+  };
+  {
+    SHOW("beg");
+    InlinedArray<unique_ptr<S>, 2> ar;
+    ar.push(make_unique<S>(4));
+    SHOW("end");
+  }
+  {
+    SHOW("beg");
+    InlinedArray<unique_ptr<S>, 2> ar;
+    ar.push(make_unique<S>(4));
+    ar.push(make_unique<S>(5));
+    SHOW("end");
+  }
+  {
+    SHOW("beg");
+    InlinedArray<unique_ptr<S>, 2> ar;
+    ar.push(make_unique<S>(4));
+    ar.push(make_unique<S>(5));
+    ar.push(make_unique<S>(6));
+    for (auto& e : ar) SHOW(e->_i);
+    SHOW("end");
+  }
+  {
+    SHOW("beg");
+    InlinedArray<unique_ptr<S>, 2> ar;
+    for_int(i, 20) ar.push(make_unique<S>(i));
+    SHOW("end");
+  }
+  {
+    SHOW("beg");
+    const InlinedArray<unique_ptr<S>, 2> ar(func_construct_array(100, 2));
+    SHOW("end");
+  }
+  {
+    SHOW("beg");
+    InlinedArray<unique_ptr<S>, 2> ar;
+    ar = func_construct_array(500, 2);
+    SHOW(ar[0]->_i);
+    ar = func_construct_array(600, 3);
+    SHOW("end");
+  }
+  {
+    SHOW("beg");
+    auto ar = func_construct_array(100, 3);
+    SHOW("mid");
+    ar = func_construct_array(200, 2);
+    SHOW("end");
+  }
+  {
+    SHOW("beg");
+    auto ar = func_construct_array(100, 3);
+    SHOW("mid");
+    ar = func_construct_array(200, 3);
+    SHOW("end");
+  }
+  {
+    InlinedArray<int, 3> ar1;
+    SHOW(ar1);
+    ar1.push(7);
+    ar1.push(6);
+    ar1.push(5);
+    SHOW(ar1);
+    ar1.push(4);
+    ar1.push(3);
+    SHOW(ar1);
+    const auto func = [](int v) { return v * 1.5f; };
+    SHOW(transformed(ar1, func));
+    InlinedArray<int, 3> ar2;
+    ar2.push(11);
+    ar2.push(12);
+    SHOW(ar2);
+    ranges::swap(ar1, ar2);
+    SHOW("after swap");
+    SHOW(ar1);
+    SHOW(ar2);
+    swap(ar1, ar2);
+    SHOW("after swap back");
+    SHOW(ar1);
+    SHOW(ar2);
+    ar2.push(13);
+    ar2.push(14);
+    ar2.push(15);
+    SHOW(ar2);
+    swap(ar1, ar2);
+    SHOW("after swap");
+    SHOW(ar1);
+    SHOW(ar2);
+    ranges::swap(ar1, ar2);
+    SHOW("after swap back");
+    SHOW(ar1);
+    SHOW(ar2);
+    ar1.erase(0, 3);
+    SHOW(ar1);
+    ar2.erase(0, 3);
+    SHOW(ar2);
+    swap(ar1, ar2);
+    SHOW("after swap");
+    SHOW(ar1);
+    SHOW(ar2);
+    swap(ar1, ar2);
+    SHOW("after swap back");
+    SHOW(ar1);
+    SHOW(ar2);
+  }
+  {
+    InlinedArray<int, 2> ar1{1};
+    SHOW(ar1);
+    InlinedArray<int, 2> ar2{1, 2, 3};
+    SHOW(ar2);
+  }
+  {
+    static_assert(std::is_same_v<InlinedArray<int, 4>, Array<int, 4>>);
+    static_assert(std::is_same_v<Array<int>, Array<int, 0>>);
+    // Moves from the built-in storage and from the heap, and changes of capacity across its boundary.
+    InlinedArray<int, 3> ar1{1, 2};
+    InlinedArray<int, 3> ar2{3, 4, 5, 6};
+    InlinedArray<int, 3> ar3 = std::move(ar1);
+    SHOW(ar3, ar1.num(), ar3.capacity());
+    InlinedArray<int, 3> ar4 = std::move(ar2);
+    SHOW(ar4, ar2.num(), ar4.capacity());
+    ar4.resize(2);
+    ar4.shrink_to_fit();  // Moves the elements back into the built-in storage.
+    SHOW(ar4, ar4.capacity());
+    ar4.reserve(10);
+    SHOW(ar4, ar4.capacity());
+    ar4.clear();
+    SHOW(ar4.num(), ar4.capacity());
+  }
+}
+
+}  // namespace
 
 int main() {
   struct S {
@@ -174,6 +318,7 @@ int main() {
     fill(ArrayView(vec.data(), 2), 10);
     SHOW(Array(vec));
   }
+  test_inlined_array();  // Before the blocks that print to stdout, whose output order varies by platform.
   {
     // (1) Move-only elements from a source that is not an Array<T>, so push_array(type&&) does not apply.
     std::vector<std::unique_ptr<int>> src;
@@ -254,3 +399,8 @@ template class hh::Array<unsigned>;
 template class hh::Array<double>;
 template class hh::Array<const int*>;
 template class hh::Array<unique_ptr<int>>;
+
+template class hh::Array<unsigned, 4>;
+template class hh::Array<double, 10>;
+template class hh::Array<const int*, 100>;
+template class hh::Array<unique_ptr<int>, 2>;

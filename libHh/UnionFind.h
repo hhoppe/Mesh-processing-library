@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_UNIONFIND_H_
 #define MESH_PROCESSING_LIBHH_UNIONFIND_H_
 
-#include "libHh/InlinedArray.h"
+#include "libHh/Array.h"
 #include "libHh/Map.h"
 
 namespace hh {

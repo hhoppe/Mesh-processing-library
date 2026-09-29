@@ -8,7 +8,6 @@
 #include "libHh/GMesh.h"
 #include "libHh/HashPoint.h"
 #include "libHh/HiddenLineRemoval.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"  // floor(Vec<>)
 #include "libHh/Polygon.h"

@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_GRIDOP_H_
 #define MESH_PROCESSING_LIBHH_GRIDOP_H_
 
+#include "libHh/Array.h"
 #include "libHh/Filter.h"
 #include "libHh/Grid.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/ParallelCoords.h"
 #include "libHh/Pixel.h"
 #include "libHh/StridedArrayView.h"

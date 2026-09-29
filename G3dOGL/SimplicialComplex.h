@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "libHh/A3dStream.h"
+#include "libHh/Array.h"
 #include "libHh/Flags.h"
 #include "libHh/GMesh.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
 #include "libHh/MeshOp.h"
 #include "libHh/Polygon.h"

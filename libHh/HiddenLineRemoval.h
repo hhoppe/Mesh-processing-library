@@ -4,7 +4,6 @@
 
 #include "libHh/Array.h"
 #include "libHh/Bbox.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/Kdtree.h"
 #include "libHh/Polygon.h"
 

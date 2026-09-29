@@ -4,7 +4,6 @@
 #include "libHh/Array.h"
 #include "libHh/Geometry.h"
 #include "libHh/HashTuple.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"  // sort()
 #include "libHh/Set.h"

@@ -259,6 +259,259 @@ Array(vec) = Array<int>(3) {
   10
   3
 }
+beg
+S(4)
+end
+~S(4)
+beg
+S(4)
+S(5)
+end
+~S(5)
+~S(4)
+beg
+S(4)
+S(5)
+S(6)
+e->_i = 4
+e->_i = 5
+e->_i = 6
+end
+~S(6)
+~S(5)
+~S(4)
+beg
+S(0)
+S(1)
+S(2)
+S(3)
+S(4)
+S(5)
+S(6)
+S(7)
+S(8)
+S(9)
+S(10)
+S(11)
+S(12)
+S(13)
+S(14)
+S(15)
+S(16)
+S(17)
+S(18)
+S(19)
+end
+~S(19)
+~S(18)
+~S(17)
+~S(16)
+~S(15)
+~S(14)
+~S(13)
+~S(12)
+~S(11)
+~S(10)
+~S(9)
+~S(8)
+~S(7)
+~S(6)
+~S(5)
+~S(4)
+~S(3)
+~S(2)
+~S(1)
+~S(0)
+beg
+S(100)
+S(101)
+end
+~S(101)
+~S(100)
+beg
+S(500)
+S(501)
+ar[0]->_i = 500
+S(600)
+S(601)
+S(602)
+end
+~S(602)
+~S(601)
+~S(600)
+~S(501)
+~S(500)
+beg
+S(100)
+S(101)
+S(102)
+mid
+S(200)
+S(201)
+~S(102)
+~S(101)
+~S(100)
+end
+~S(201)
+~S(200)
+beg
+S(100)
+S(101)
+S(102)
+mid
+S(200)
+S(201)
+S(202)
+~S(102)
+~S(101)
+~S(100)
+end
+~S(202)
+~S(201)
+~S(200)
+ar1 = Array<int>(0) {
+}
+ar1 = Array<int>(3) {
+  7
+  6
+  5
+}
+ar1 = Array<int>(5) {
+  7
+  6
+  5
+  4
+  3
+}
+transformed(ar1, func) = Array<float>(5) {
+  10.5
+  9
+  7.5
+  6
+  4.5
+}
+ar2 = Array<int>(2) {
+  11
+  12
+}
+after swap
+ar1 = Array<int>(2) {
+  11
+  12
+}
+ar2 = Array<int>(5) {
+  7
+  6
+  5
+  4
+  3
+}
+after swap back
+ar1 = Array<int>(5) {
+  7
+  6
+  5
+  4
+  3
+}
+ar2 = Array<int>(2) {
+  11
+  12
+}
+ar2 = Array<int>(5) {
+  11
+  12
+  13
+  14
+  15
+}
+after swap
+ar1 = Array<int>(5) {
+  11
+  12
+  13
+  14
+  15
+}
+ar2 = Array<int>(5) {
+  7
+  6
+  5
+  4
+  3
+}
+after swap back
+ar1 = Array<int>(5) {
+  7
+  6
+  5
+  4
+  3
+}
+ar2 = Array<int>(5) {
+  11
+  12
+  13
+  14
+  15
+}
+ar1 = Array<int>(2) {
+  4
+  3
+}
+ar2 = Array<int>(2) {
+  14
+  15
+}
+after swap
+ar1 = Array<int>(2) {
+  14
+  15
+}
+ar2 = Array<int>(2) {
+  4
+  3
+}
+after swap back
+ar1 = Array<int>(2) {
+  4
+  3
+}
+ar2 = Array<int>(2) {
+  14
+  15
+}
+ar1 = Array<int>(1) {
+  1
+}
+ar2 = Array<int>(3) {
+  1
+  2
+  3
+}
+ar3=Array<int>(2) {
+  1
+  2
+}
+ ar1.num()=0 ar3.capacity()=3
+ar4=Array<int>(4) {
+  3
+  4
+  5
+  6
+}
+ ar2.num()=0 ar4.capacity()=4
+ar4=Array<int>(2) {
+  3
+  4
+}
+ ar4.capacity()=3
+ar4=Array<int>(2) {
+  3
+  4
+}
+ ar4.capacity()=10
+ar4.num()=0 ar4.capacity()=3
 (1) all=0,1,2   src nulled=111
 (2) tail=gamma,delta   words[2..3]='','' (emptied)
 (3) kept=keep_a,keep_b   pool[0]='' (emptied), pool[1]='drop' (untouched)

@@ -64,7 +64,7 @@ void BasePointSpatial::shrink_to_fit() {
   for (auto& cell : _map.values()) cell.shrink_to_fit();
 }
 
-void BasePointSpatial::add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point& pcenter,
+void BasePointSpatial::add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter,
                                 SpatialVisitedSet& /*set*/) const {
   // SHOW("add_cell", ci);
   const int en = encode(ci);
@@ -187,7 +187,7 @@ void IPointSpatial::clear() {
   _map.clear();
 }
 
-void IPointSpatial::add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point& pcenter,
+void IPointSpatial::add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter,
                              SpatialVisitedSet& /*set*/) const {
   const int en = encode(ci);
   bool present;

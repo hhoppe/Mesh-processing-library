@@ -3,7 +3,7 @@
 #define MESH_PROCESSING_MESHSIMPLIFY_BASEQEM_H_
 
 #include "MeshSimplify/Qem.h"
-#include "libHh/InlinedArray.h"
+#include "libHh/Array.h"
 
 namespace hh {
 

@@ -5,7 +5,6 @@
 #include <vector>
 
 #include "libHh/Array.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
 #include "libHh/Mesh.h"
 #include "libHh/Vec.h"

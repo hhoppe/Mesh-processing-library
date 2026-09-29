@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/PMesh.h"
 
-#include "libHh/BinaryIO.h"      // read_binary_std() and write_binary_std()
-#include "libHh/GMesh.h"         // in extract_gmesh()
-#include "libHh/HashTuple.h"     // hash<pair<...>>
-#include "libHh/InlinedArray.h"  // ar_pwedge
-#include "libHh/RangeOp.h"       // fill()
+#include "libHh/Array.h"
+#include "libHh/BinaryIO.h"   // read_binary_std() and write_binary_std()
+#include "libHh/GMesh.h"      // in extract_gmesh()
+#include "libHh/HashTuple.h"  // hash<pair<...>>
+#include "libHh/RangeOp.h"    // fill()
 #include "libHh/Set.h"
 #include "libHh/Vector4.h"
 

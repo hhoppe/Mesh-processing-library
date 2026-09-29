@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-#include "libHh/InlinedArray.h"
+#include "libHh/Array.h"
 
 #if 0
 {

@@ -168,32 +168,73 @@ template <typename T> [[nodiscard]] constexpr bool have_overlap(CArrayView<T> v1
   return v1.begin() < v2.end() && v2.begin() < v1.end();
 }
 
-// Heap-allocated resizable 1D array with elements of type T.
+namespace details {
+
+// The built-in storage of Array<T, inline_capacity>.
+template <typename T, int inline_capacity> class ArrayStorage : public ArrayView<T> {
+ protected:
+  ArrayStorage() : ArrayView<T>(_builtin, 0) {}
+  T _builtin[inline_capacity];
+};
+
+template <typename T> class ArrayStorage<T, 0> : public ArrayView<T> {  // Without built-in storage.
+ protected:
+  ArrayStorage() = default;
+  explicit ArrayStorage(T* a, int n) : ArrayView<T>(a, n) {}
+};
+
+}  // namespace details
+
+// Heap-allocated resizable 1D array with elements of type T.  If inline_capacity > 0, the array has built-in storage
+// for that many elements, which avoids heap allocation while it is small (see InlinedArray below).
 // Type T must have a public operator= (which may be operator=(&&)).
 // Unlike std::vector<T>, Array<T> constructs/destructs elements based on capacity() rather than num().
-template <typename T> class Array : public ArrayView<T> {
+template <typename T, int inline_capacity = 0> class Array : public details::ArrayStorage<T, inline_capacity> {
+  static_assert(inline_capacity >= 0);
   using base = ArrayView<T>;
-  using type = Array<T>;
+  using storage = details::ArrayStorage<T, inline_capacity>;
+  using type = Array<T, inline_capacity>;
 
  public:
   Array() = default;
-  explicit Array(int n) : base(n ? new T[narrow_cast<size_t>(n)] : nullptr, n), _cap(n) { ASSERTX(n >= 0); }
+  explicit Array(int n) requires(inline_capacity == 0)
+      : storage(n ? new T[narrow_cast<size_t>(n)] : nullptr, n), _cap(n) {
+    ASSERTX(n >= 0);
+  }
+  explicit Array(int n) requires(inline_capacity > 0) {
+    ASSERTX(n >= 0);
+    if (n > inline_capacity) _a = new T[narrow_cast<size_t>(n)], _cap = n;
+    _n = n;
+  }
   explicit Array(int n, const T& v) requires Copyable<T> : Array(n) { for_int(i, n) _a[i] = v; }
   explicit Array(const type& ar) requires Copyable<T> : Array(ar.num()) { base::assign(ar); }
   Array(std::initializer_list<T> l) requires Copyable<T> : Array(ranges::subrange(l)) {}
-  Array(type&& ar) noexcept : base(ar._a, ar._n), _cap(ar._cap) { ar._a = nullptr, ar._n = 0, ar._cap = 0; }
+  Array(type&& ar) noexcept requires(inline_capacity == 0) : storage(ar._a, ar._n), _cap(ar._cap) {
+    ar._a = nullptr, ar._n = 0, ar._cap = 0;
+  }
+  Array(type&& ar) noexcept requires(inline_capacity > 0) { *this = std::move(ar); }
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
-  explicit Array(R&& range) : base(nullptr, 0) {  // (Can use ranges::subrange(b, e) if given a (begin(), end()) pair.)
+  explicit Array(R&& range) {  // (Can use ranges::subrange(b, e) if given a (begin(), end()) pair.)
     if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {
       const size_t size = size_t(ranges::distance(range));
-      _a = new T[size];
-      _n = _cap = narrow_cast<int>(size);
+      if constexpr (inline_capacity > 0) {
+        init(narrow_cast<int>(size));
+      } else {
+        _a = new T[size];
+        _n = _cap = narrow_cast<int>(size);
+      }
       ranges::copy(range, _a);  // Moves elements only if the caller opts in via views::as_rvalue.
     } else {
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }
   }
-  ~Array() { delete[] _a; }
+  ~Array() {
+    if constexpr (inline_capacity > 0) {
+      if (_a != this->_builtin) delete[] _a;
+    } else {
+      delete[] _a;
+    }
+  }
   type& operator=(CArrayView<T> ar) requires Copyable<T> {
     init(ar.num());
     base::assign(ar);
@@ -204,10 +245,32 @@ template <typename T> class Array : public ArrayView<T> {
     base::assign(ar);
     return *this;
   }
-  type& operator=(type&& ar) noexcept { return clear(), swap(*this, ar), *this; }
+  type& operator=(type&& ar) noexcept {
+    if constexpr (inline_capacity > 0) {
+      clear();
+      if (ar._a != ar._builtin) {  // Take over its heap storage.
+        _a = ar._a, _n = ar._n, _cap = ar._cap;
+        ar._a = ar._builtin, ar._n = 0, ar._cap = inline_capacity;
+      } else {
+        std::move(ar._builtin, ar._builtin + ar._n, this->_builtin);
+        _n = ar._n, ar._n = 0;
+      }
+      return *this;
+    } else {
+      return clear(), swap(*this, ar), *this;
+    }
+  }
   void clear() {
-    delete[] _a;
-    _a = nullptr, _n = 0, _cap = 0;
+    if constexpr (inline_capacity > 0) {
+      _n = 0;
+      if (_a != this->_builtin) {
+        delete[] _a;
+        _a = this->_builtin, _cap = inline_capacity;
+      }
+    } else {
+      delete[] _a;
+      _a = nullptr, _n = 0, _cap = 0;
+    }
   }
   void init(int n);  // Allocate n, DISCARD old values if too small.
   void init(int n, const T& v) requires Copyable<T> {
@@ -250,7 +313,7 @@ template <typename T> class Array : public ArrayView<T> {
     sub(1);
     return e;
   }
-  type pop(int n);
+  Array<T> pop(int n);
   void push(const T& e) requires Copyable<T> {  // Avoid a.push(a[..])!
     if (_n >= _cap) grow_to_at_least(_n + 1);
     _a[_n++] = e;
@@ -275,10 +338,16 @@ template <typename T> class Array : public ArrayView<T> {
     erase_i(0, 1);
     return e;
   }
-  type shift(int n);
+  Array<T> shift(int n);
   void unshift(const T& e) requires Copyable<T> { insert_i(0, 1), _a[0] = e; }
   friend void swap(Array& l, Array& r) noexcept {
-    std::swap(l._a, r._a), std::swap(l._n, r._n), std::swap(l._cap, r._cap);
+    if constexpr (inline_capacity > 0) {
+      type t = std::move(l);
+      l = std::move(r);
+      r = std::move(t);
+    } else {
+      std::swap(l._a, r._a), std::swap(l._n, r._n), std::swap(l._cap, r._cap);
+    }
   }
   using owns_elements = void;           // Marker for hh::clone().
   type& operator+=(const T&) = delete;  // Dangerous because meaning is ambiguous (either push() or add to elements).
@@ -286,7 +355,7 @@ template <typename T> class Array : public ArrayView<T> {
  private:
   using base::_a;
   using base::_n;
-  int _cap{0};
+  int _cap{inline_capacity};
   void set_capacity(int ncap);
   void grow_to_at_least(int n) { set_capacity(max(_n + (_n / 2) + 3, n)); }
   void insert_i(int i, int n) {
@@ -300,12 +369,24 @@ template <typename T> class Array : public ArrayView<T> {
   using base::reinit;  // Hide it.
 };
 
-// See also Vec.h, InlinedArray.h, and Matrix.h.
+// Array with built-in storage for n elements, which avoids heap allocation while it is small.  Being an alias,
+// it is transparent to template argument deduction: function templates and explicit instantiations must name
+// Array<T, n> instead.
+template <typename T, int n> using InlinedArray = Array<T, n>;
+
+// See also Vec.h and Matrix.h.
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <typename T, typename Func> [[nodiscard]] auto transformed(CArrayView<T> c, Func func) {
   using ResultType = std::decay_t<std::invoke_result_t<Func, const T&>>;
   return Array<ResultType>(c | views::transform(func));
+}
+
+// For an Array with built-in storage, the result has the same built-in storage.
+template <typename T, int inline_capacity, typename Func> requires(inline_capacity > 0)
+[[nodiscard]] auto transformed(const Array<T, inline_capacity>& c, Func func) {
+  using ResultType = std::decay_t<std::invoke_result_t<Func, const T&>>;
+  return Array<ResultType, inline_capacity>(c | views::transform(func));
 }
 
 //----------------------------------------------------------------------------
@@ -422,33 +503,52 @@ template <typename T> void ArrayView<T>::assign(base ar) requires Copyable<T> {
 
 //----------------------------------------------------------------------------
 
-template <typename T> void Array<T>::init(int n) {
+template <typename T, int inline_capacity> void Array<T, inline_capacity>::init(int n) {
   ASSERTX(n >= 0);
   if (n > _cap) {
-    delete[] _a;
+    if constexpr (inline_capacity > 0) {
+      if (_a != this->_builtin) delete[] _a;
+    } else {
+      delete[] _a;
+    }
     _a = new T[narrow_cast<size_t>(n)];
     _cap = n;
   }
   _n = n;
 }
 
-template <typename T> void Array<T>::access(int i) {
+template <typename T, int inline_capacity> void Array<T, inline_capacity>::access(int i) {
   ASSERTXX(i >= 0);
   const int n = i + 1;
   if (n > _cap) grow_to_at_least(n);
   if (n > _n) _n = n;
 }
 
-template <typename T> void Array<T>::set_capacity(int ncap) {
-  _cap = ncap;
-  ASSERTX(_n <= _cap);
-  T* na = _cap ? new T[narrow_cast<size_t>(_cap)] : nullptr;
-  if (na) std::move(_a, _a + _n, na);
-  delete[] _a;
-  _a = na;
+template <typename T, int inline_capacity> void Array<T, inline_capacity>::set_capacity(int ncap) {
+  if constexpr (inline_capacity > 0) {
+    ASSERTX(_n <= ncap);
+    if (ncap <= inline_capacity) {  // Move the elements back into the built-in storage.
+      if (_a == this->_builtin) return;
+      std::move(_a, _a + _n, this->_builtin);
+      delete[] _a;
+      _a = this->_builtin, _cap = inline_capacity;
+    } else {
+      T* na = new T[narrow_cast<size_t>(ncap)];
+      std::move(_a, _a + _n, na);
+      if (_a != this->_builtin) delete[] _a;
+      _a = na, _cap = ncap;
+    }
+  } else {
+    _cap = ncap;
+    ASSERTX(_n <= _cap);
+    T* na = _cap ? new T[narrow_cast<size_t>(_cap)] : nullptr;
+    if (na) std::move(_a, _a + _n, na);
+    delete[] _a;
+    _a = na;
+  }
 }
 
-template <typename T> bool Array<T>::remove_ordered(const T& e) {
+template <typename T, int inline_capacity> bool Array<T, inline_capacity>::remove_ordered(const T& e) {
   for_int(i, _n) {
     if (_a[i] == e) {
       erase(i, 1);
@@ -458,7 +558,7 @@ template <typename T> bool Array<T>::remove_ordered(const T& e) {
   return false;
 }
 
-template <typename T> bool Array<T>::remove_unordered(const T& e) {
+template <typename T, int inline_capacity> bool Array<T, inline_capacity>::remove_unordered(const T& e) {
   for_int(i, _n) {
     if (_a[i] == e) {
       if (i < _n - 1) _a[i] = std::move(_a[_n - 1]);
@@ -469,7 +569,7 @@ template <typename T> bool Array<T>::remove_unordered(const T& e) {
   return false;
 }
 
-template <typename T> Array<T> Array<T>::shift(int n) {
+template <typename T, int inline_capacity> Array<T> Array<T, inline_capacity>::shift(int n) {
   ASSERTX(n >= 0 && n <= _n);
   Array<T> ar(n);
   for_int(i, n) ar[i] = std::move(_a[i]);
@@ -477,7 +577,7 @@ template <typename T> Array<T> Array<T>::shift(int n) {
   return ar;
 }
 
-template <typename T> Array<T> Array<T>::pop(int n) {
+template <typename T, int inline_capacity> Array<T> Array<T, inline_capacity>::pop(int n) {
   ASSERTX(n >= 0 && n <= _n);
   Array<T> ar(n);
   for_int(i, n) ar[i] = std::move(_a[_n - n + i]);
@@ -496,7 +596,8 @@ template <typename T> std::ostream& operator<<(std::ostream& os, CArrayView<T> a
 }
 template <typename T> HH_DECLARE_OSTREAM_EOL(CArrayView<T>);
 template <typename T> HH_DECLARE_OSTREAM_EOL(ArrayView<T>);  // Implemented by CArrayView<T>.
-template <typename T> HH_DECLARE_OSTREAM_EOL(Array<T>);      // Implemented by CArrayView<T>.
+// Implemented by CArrayView<T>.
+template <typename T, int inline_capacity> HH_DECLARE_OSTREAM_EOL(Array<T, inline_capacity>);
 
 // Template deduction guides:
 template <typename T> CArrayView(const T*, int) -> CArrayView<T>;

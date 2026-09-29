@@ -125,6 +125,20 @@ std::wstring utf16_from_utf8(const std::string& str) {
 
 #endif
 
+// Omit the default template argument of "hh::Array<T,0>", which some compilers (e.g., gcc) show and others omit.
+static string omit_array_default_capacity(string s) {
+  const string key = "hh::Array<";
+  for (size_t i = s.find(key); i != string::npos; i = s.find(key, i + 1)) {
+    size_t j = i + key.size();
+    for (int depth = 1; j < s.size(); j++) {  // Find the '>' that closes the template-argument list.
+      if (s[j] == '<') depth++;
+      if (s[j] == '>' && !--depth) break;
+    }
+    if (j < s.size() && s.compare(j - 2, 2, ",0") == 0) s.erase(j - 2, 2);
+  }
+  return s;
+}
+
 static string beautify_type_name(string s) {
   // SHOW(s);
   // ** general:
@@ -134,6 +148,7 @@ static string beautify_type_name(string s) {
   s = replace_all(s, ", ", ",");
   s = replace_all(s, " *", "*");
   s = std::regex_replace(s, std::regex("std::_[A-Z_][A-Za-z0-9_]*::"), "std::");
+  s = omit_array_default_capacity(s);
   // ** win:
   s = replace_all(s, "std::basic_string<char,std::char_traits<char>,std::allocator<char>>", "std::string");
   // E.g. "class Map<class MVertex * __ptr64,float,struct std::hash<class MVertex * __ptr64>,struct std::equal_to<class MVertex * __ptr64>>"

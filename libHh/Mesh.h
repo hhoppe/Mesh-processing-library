@@ -5,7 +5,6 @@
 #include "libHh/Array.h"
 #include "libHh/Flags.h"
 #include "libHh/Geometry.h"  // because of Point, too bad.
-#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
 #include "libHh/Pool.h"
 #include "libHh/Sac.h"

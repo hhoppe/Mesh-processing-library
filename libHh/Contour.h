@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_CONTOUR_H_
 #define MESH_PROCESSING_LIBHH_CONTOUR_H_
 
+#include "libHh/Array.h"
 #include "libHh/GMesh.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/MeshOp.h"  // triangulate_face()
 #include "libHh/Queue.h"
 #include "libHh/Set.h"

@@ -10,8 +10,8 @@ Everything is in namespace `hh`.
 | `Vec<T, n>` | Fixed-size 1D array of `n` elements, like `std::array<T, n>` but with constructors and support for `n == 0`; `Vec2<T>`, `Vec3<T>`, and `Vec4<T>` abbreviate the common sizes. |
 | `CArrayView<T>` | View of a contiguous 1D range of const `T` elements (a `const T*` and a count); it can refer to a C array, `std::vector`, `Vec`, `Array`, `InlinedArray`, or a `Matrix` row. |
 | `ArrayView<T>` | Same, with modifiable elements. |
-| `Array<T>` | Heap-allocated resizable 1D array, like `std::vector<T>` but derived from `ArrayView<T>`. |
-| `InlinedArray<T, n>` | Like `Array<T>`, but with built-in storage for its first `n` elements, which avoids heap allocation for small arrays. |
+| `Array<T>` | Heap-allocated resizable 1D array, like `std::vector<T>` but derived from `ArrayView<T>`; `Array<T, n>` adds built-in storage for `n` elements. |
+| `InlinedArray<T, n>` | Alias of `Array<T, n>`: its first `n` elements use built-in storage, which avoids heap allocation for small arrays. |
 
 A function that only reads or modifies elements should take a `CArrayView<T>` or `ArrayView<T>`, so that it accepts
 any of these containers.

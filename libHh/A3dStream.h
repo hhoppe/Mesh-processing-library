@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_A3DSTREAM_H_
 #define MESH_PROCESSING_LIBHH_A3DSTREAM_H_
 
+#include "libHh/Array.h"
 #include "libHh/Geometry.h"
-#include "libHh/InlinedArray.h"
 #include "libHh/Pixel.h"
 #include "libHh/RangeOp.h"
 

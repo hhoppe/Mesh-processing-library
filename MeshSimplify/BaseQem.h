@@ -7,7 +7,7 @@
 
 namespace hh {
 
-// BaseQem is an abstract base class for a set of derived DQem classes, each containing an instance of Qem.
+// BaseQem is an abstract base class for a set of derived QemOfDim classes, each containing an instance of Qem.
 // By using BaseQem, an application can decide at runtime which size Qem to use.
 template <typename T> class BaseQem : noncopyable {
   using type = BaseQem<T>;
@@ -39,8 +39,8 @@ template <typename T> class BaseQem : noncopyable {
   virtual void serialize(std::ostream& os) const = 0;
 };
 
-template <typename T, int n> class DQem : public BaseQem<T> {
-  using type = DQem<T, n>;
+template <typename T, int n> class QemOfDim : public BaseQem<T> {
+  using type = QemOfDim<T, n>;
   using base = BaseQem<T>;
 
  public:
@@ -90,7 +90,7 @@ template <typename T, int n> class DQem : public BaseQem<T> {
 };
 
 template <typename T> HH_DECLARE_OSTREAM_EOL(BaseQem<T>);
-template <typename T, int n> HH_DECLARE_OSTREAM_EOL(DQem<T, n>);
+template <typename T, int n> HH_DECLARE_OSTREAM_EOL(QemOfDim<T, n>);
 
 }  // namespace hh
 

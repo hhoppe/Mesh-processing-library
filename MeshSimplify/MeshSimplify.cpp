@@ -245,25 +245,25 @@ SetEpts& e_setpts(Edge) {
 // ***
 
 #if defined(QEM_DOUBLE)
-using L_QEM_T = double;
+using QemPrecision = double;
 #else
-using L_QEM_T = float;
+using QemPrecision = float;
 #endif
-using BQemT = BaseQem<L_QEM_T>;
+using AnyQem = BaseQem<QemPrecision>;
 constexpr int k_qemsmax = 9;
 
-using upBQemT = unique_ptr<BQemT>;
+using UniquePtrAnyQem = unique_ptr<AnyQem>;
 #if defined(ENABLE_QEMCACHE)
-HH_SACABLE(upBQemT);
-HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, upBQemT, f_qem_p);
+HH_SACABLE(UniquePtrAnyQem);
+HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, UniquePtrAnyQem, f_qem_p);
 #else
-upBQemT& f_qem_p(Face) {
+UniquePtrAnyQem& f_qem_p(Face) {
   assertnever_ret("");
-  static upBQemT t;
+  static UniquePtrAnyQem t;
   return t;
 }
 #endif
-BQemT& f_qem(Face f) { return *f_qem_p(f); }
+AnyQem& f_qem(Face f) { return *f_qem_p(f); }
 
 // ***
 
@@ -281,7 +281,7 @@ struct WedgeInfo {
 
 Array<WedgeInfo> gwinfo;  // Indexed by c_wedge_id; gwinfo[0] is not used!
 
-Array<unique_ptr<BQemT>> gwq;  // Is empty() if !minqem || qemlocal; indexed by c_wedge_id.
+Array<unique_ptr<AnyQem>> gwq;  // Is empty() if !minqem || qemlocal; indexed by c_wedge_id.
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MCorner, int, c_wedge_id);  // Wedge id's of mesh corners.
 
@@ -306,7 +306,7 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MEdge, int, e_index);  // Index into sorted array.
 // Note that this information is independent of orientation of edge (v1, v2).
 struct NewMeshNei : noncopyable {
   ~NewMeshNei() {
-    for (BQemT* qemp : ar_wq) delete qemp;
+    for (AnyQem* qemp : ar_wq) delete qemp;
   }
   // The inline capacities cover most neighborhoods; the new vertex ring has on average about 9 faces.
   InlinedArray<Vertex, 16> va;                // CCW, va[0] repeated if closed (== #faces + 1).
@@ -325,8 +325,8 @@ struct NewMeshNei : noncopyable {
   Array<eptinfo*> ar_eptretire;  // Edge points to retire.
   Array<int> ar_eptv;            // For ar_epts[], index in va of sharp edge.
 
-  InlinedArray<BQemT*, 4> ar_wq;  // qem for each nwid (new'ed); not unique_ptr<BQemT> because
-  //  DQem<T>::compute_minp*() recasts arg type from BaseQem<T>::compute_minp*().
+  InlinedArray<AnyQem*, 4> ar_wq;  // qem for each nwid (new'ed); not unique_ptr<AnyQem> because
+  //  QemOfDim<T>::compute_minp*() recasts arg type from BaseQem<T>::compute_minp*().
 };
 
 // Parameterization of face points on would-be neighborhood.
@@ -693,11 +693,11 @@ int retrieve_nwid(const NewMeshNei& nn, Corner c) {
   return -1;
 }
 
-unique_ptr<BQemT> make_qem() {
+unique_ptr<AnyQem> make_qem() {
   switch (qems) {
-    case 3: return make_unique<DQem<L_QEM_T, 3>>();
-    case 6: return make_unique<DQem<L_QEM_T, 6>>();
-    case 9: return make_unique<DQem<L_QEM_T, 9>>();
+    case 3: return make_unique<QemOfDim<QemPrecision, 3>>();
+    case 6: return make_unique<QemOfDim<QemPrecision, 6>>();
+    case 9: return make_unique<QemOfDim<QemPrecision, 9>>();
     default: assertnever("");
   }
 }
@@ -738,7 +738,7 @@ void corner_qem_vector(Corner c, ArrayView<float> pp) {
 // offset_cost makes them lose all precision.
 constexpr float frac_diam = 1e-3f;
 
-void get_face_qem(Face f, BQemT& qem) {
+void get_face_qem(Face f, AnyQem& qem) {
   Vec3<Vertex> va = mesh.triangle_vertices(f);
   SGrid<float, 3, k_qemsmax> pa;
   for_int(i, 3) corner_qem_vector(mesh.corner(va[i], f), pa[i]);
@@ -755,7 +755,7 @@ void get_face_qem(Face f, BQemT& qem) {
   }
 }
 
-void get_sharp_edge_qem(Edge e, BQemT& qem) {
+void get_sharp_edge_qem(Edge e, AnyQem& qem) {
   Vector nor{};  // Average normal of adjacent 1 or 2 faces.
   for (Face f : mesh.faces(e)) {
     const Vec3<Point> triangle = mesh.triangle_points(f);
@@ -799,7 +799,7 @@ void init_qem() {
     }
     {
       auto up_qem = make_qem();
-      BQemT& qem = *up_qem;
+      AnyQem& qem = *up_qem;
       for (Face f : mesh.faces()) {
         get_face_qem(f, qem);
         for (Corner c : mesh.corners(f)) gwq[c_wedge_id(c)]->add(qem);
@@ -807,9 +807,9 @@ void init_qem() {
     }
     // Add perpendicular constraints along sharp edges.
     if (neptfac) {
-      if (sizeof(L_QEM_T) == sizeof(float)) assertw(neptfac <= 30.f);
+      if (sizeof(QemPrecision) == sizeof(float)) assertw(neptfac <= 30.f);
       auto up_qem = make_qem();
-      BQemT& qem = *up_qem;
+      AnyQem& qem = *up_qem;
       for (Edge e : mesh.edges()) {
         if (!edge_sharp(e)) continue;
         get_sharp_edge_qem(e, qem);
@@ -848,7 +848,7 @@ void gather_nn_qem(Edge e, NewMeshNei& nn) {
   if (qemlocal) {
     for_int(i, nw) nn.ar_wq[i]->set_zero();
     auto up_ql = make_qem();
-    BQemT& ql = *up_ql;
+    AnyQem& ql = *up_ql;
     // First consider all faces besides f1 and f2.
     for_int(fi, nn.ar_corners.num()) {
       const int nwid = nn.ar_nwid[fi];
@@ -4009,7 +4009,7 @@ EcolResult try_ecol(Edge e, bool commit) {
         float cweight = small_constr_cweight;
         // if (qemweight) cweight *= square(gdiam * .05f);
         auto up_qbu0 = make_qem();
-        BQemT& qbu0 = *up_qbu0;
+        AnyQem& qbu0 = *up_qbu0;
         qbu0.copy(*nn.ar_wq[0]);
         int ncwi = 0;
         for (;; ncwi++) {
@@ -4031,7 +4031,7 @@ EcolResult try_ecol(Edge e, bool commit) {
           }
           if (success) break;
           auto up_qpd2 = make_qem();
-          BQemT& qpd2 = *up_qpd2;
+          AnyQem& qpd2 = *up_qpd2;
           qpd2.set_d2_from_point(minp[0].data());
           qpd2.scale(cweight);
           nn.ar_wq[0]->add(qpd2);

@@ -233,8 +233,9 @@ make_dep ?= Makefile.dep#   This was Makefile_$(CONFIG).dep but is now independe
 # We need "-DMAKEFILE_DEP" for defined() in precompiled_libHh.h.
 # We omit "-march=native": it only affects the inclusion of system headers, which "-MM" excludes anyway, and on some
 #  CPUs, GCC warns about the flag itself (e.g., "'-mavx10.1' is aliased to 512 bit" on Intel Granite Rapids).
+# The "-x c++" makes explicit that g++ treats *.c files as C++; clang (e.g., as g++ on macOS) warns if it is implicit.
 cmd_makedep = @echo Creating $(make_dep); \
-  g++ -MM -DMAKEFILE_DEP $(CPPFLAGS) $(src_c) -std=$(CXX_STD) $(src_cpp) | \
+  g++ -MM -DMAKEFILE_DEP $(CPPFLAGS) -x c++ $(src_c) -x none -std=$(CXX_STD) $(src_cpp) | \
   perl -pe 'BEGIN { binmode(STDOUT); } s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' >$(make_dep) \
   || rm -f $(make_dep)
 

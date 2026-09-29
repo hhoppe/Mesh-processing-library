@@ -308,15 +308,16 @@ struct NewMeshNei : noncopyable {
   ~NewMeshNei() {
     for (BQemT* qemp : ar_wq) delete qemp;
   }
-  Array<Vertex> va;                // CCW, va[0] repeated if closed (== #faces + 1).
-  Array<int> ar_vdisc;             // Sharp edges, indices into va[].
-  Array<Vec3<Corner>> ar_corners;  // 3 corners for each face (third is center).
+  // The inline capacities cover most neighborhoods; the new vertex ring has on average about 9 faces.
+  InlinedArray<Vertex, 16> va;                // CCW, va[0] repeated if closed (== #faces + 1).
+  InlinedArray<int, 4> ar_vdisc;              // Sharp edges, indices into va[].
+  InlinedArray<Vec3<Corner>, 16> ar_corners;  // 3 corners for each face (third is center).
 
-  Array<P2WedgeInfo> ar_p2wi;  // The winfo of outside ar_corners.
+  InlinedArray<P2WedgeInfo, 16> ar_p2wi;  // The winfo of outside ar_corners.
 
-  Array<int> ar_nwid;     // For each new corner, new fake wedge id.
-  Array<int> ar_rwid_v1;  // For each nwid, would-be real wid on v1.
-  Array<int> ar_rwid_v2;  // For each nwid, would-be real wid on v2.
+  InlinedArray<int, 16> ar_nwid;    // For each new corner, new fake wedge id.
+  InlinedArray<int, 4> ar_rwid_v1;  // For each nwid, would-be real wid on v1.
+  InlinedArray<int, 4> ar_rwid_v2;  // For each nwid, would-be real wid on v2.
 
   Array<fptinfo*> ar_fpts;  // Face points projecting onto neighborhood.
 
@@ -324,7 +325,7 @@ struct NewMeshNei : noncopyable {
   Array<eptinfo*> ar_eptretire;  // Edge points to retire.
   Array<int> ar_eptv;            // For ar_epts[], index in va of sharp edge.
 
-  Array<BQemT*> ar_wq;  // qem for each nwid (new'ed); not unique_ptr<BQemT> because
+  InlinedArray<BQemT*, 4> ar_wq;  // qem for each nwid (new'ed); not unique_ptr<BQemT> because
   //  DQem<T>::compute_minp*() recasts arg type from BaseQem<T>::compute_minp*().
 };
 
@@ -2750,7 +2751,7 @@ double evaluate_terrain_resid(const NewMeshNei& nn, const Point& newp) {
 double fit_color(const NewMeshNei& nn, const Param& param, ArrayView<WedgeInfo> ar_wi) {
   assertx(ar_wi.num() == nn.ar_rwid_v1.num());
   // SSTATV2(Srwid, ar_wi.num());
-  Array<unique_ptr<ULls>> ar_ulls;
+  InlinedArray<unique_ptr<ULls>, 4> ar_ulls;
   for_int(i, ar_wi.num()) {
     A3dColor& newcolor = ar_wi[i].col;
     ar_ulls.push(make_unique<ULls>(newcolor.data(), 3));
@@ -4180,8 +4181,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       min_rssa = rssa;
       min_ii = ii;
       min_p = newp;
-      min_ar_wi.init(0);
-      for (const WedgeInfo& wi : ar_wi) min_ar_wi.push(wi);
+      min_ar_wi = ar_wi;
       min_dir_error = dir_error;
     }
   }

@@ -67,7 +67,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
   Simplex vs = assertx(K.getSimplex(0, _vsid));
   Simplex vt = nullptr;
 
-  Vec<Pqueue<Simplex>, ISimplex::MAX_DIM + 1> pq;
+  Vec<PriorityQueue<Simplex>, ISimplex::MAX_DIM + 1> pq;
   for (Simplex spx : vs->get_star()) pq[spx->getDim()].enter_unsorted(spx, float(spx->getId()));
 
   if (0) {
@@ -210,7 +210,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
   Simplex vs = assertx(K.getSimplex(0, _vsid));
   Simplex vt = nullptr;
 
-  Vec<Pqueue<Simplex>, ISimplex::MAX_DIM + 1> pq;
+  Vec<PriorityQueue<Simplex>, ISimplex::MAX_DIM + 1> pq;
   for (Simplex spx : vs->get_star()) pq[spx->getDim()].enter_unsorted(spx, float(spx->getId()));
 
   if (0) {
@@ -356,7 +356,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
   Simplex vs = assertx(K.getSimplex(0, _vsid));
   Simplex vt = nullptr;
 
-  Vec<Pqueue<Simplex>, ISimplex::MAX_DIM + 1> pq;
+  Vec<PriorityQueue<Simplex>, ISimplex::MAX_DIM + 1> pq;
   for (Simplex spx : vs->get_star()) pq[spx->getDim()].enter_unsorted(spx, float(spx->getId()));
 
   if (0) {

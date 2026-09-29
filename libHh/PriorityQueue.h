@@ -1,6 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#ifndef MESH_PROCESSING_LIBHH_PQUEUE_H_
-#define MESH_PROCESSING_LIBHH_PQUEUE_H_
+#ifndef MESH_PROCESSING_LIBHH_PRIORITYQUEUE_H_
+#define MESH_PROCESSING_LIBHH_PRIORITYQUEUE_H_
 
 #include "libHh/Array.h"
 #include "libHh/Map.h"
@@ -22,8 +22,8 @@ template <typename T> struct Node {
 };
 }  // namespace details::PQ
 
-// Self-resizing priority queue.  Note: much code duplicated in HPqueue!
-template <typename T> class Pqueue : noncopyable {
+// Self-resizing priority queue.  Note: much code duplicated in UpdatablePriorityQueue!
+template <typename T> class PriorityQueue : noncopyable {
  public:
   void clear() { _ar.clear(); }
   void enter(const T& e, float pri) requires Copyable<T> { ASSERTX(pri >= 0.f), enter_i(e, pri); }
@@ -134,9 +134,9 @@ template <typename T> class Pqueue : noncopyable {
   }
 };
 
-// Hashed priority queue allowing insertion/deletion/update.  Note: much code duplicated in Pqueue!
+// Hashed priority queue allowing insertion/deletion/update.  Note: much code duplicated in PriorityQueue!
 template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>> requires Copyable<T>
-class HPqueue : noncopyable {
+class UpdatablePriorityQueue : noncopyable {
  public:
   void clear() { _ar.clear(), _m.clear(); }
   void enter(const T& e, float pri) { ASSERTX(pri >= 0.f), enter_i(e, pri); }
@@ -368,4 +368,4 @@ class HPqueue : noncopyable {
 
 }  // namespace hh
 
-#endif  // MESH_PROCESSING_LIBHH_PQUEUE_H_
+#endif  // MESH_PROCESSING_LIBHH_PRIORITYQUEUE_H_

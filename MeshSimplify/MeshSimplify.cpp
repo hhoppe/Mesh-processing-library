@@ -25,7 +25,7 @@
 #include "libHh/MeshOp.h"  // Vnors
 #include "libHh/Parallel.h"
 #include "libHh/Polygon.h"
-#include "libHh/Pqueue.h"
+#include "libHh/PriorityQueue.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Set.h"
@@ -336,8 +336,8 @@ struct Param {
 
 constexpr float k_bad_dih = 1e28f;
 
-class LHPqueue : public HPqueue<Edge> {
-  using base = HPqueue<Edge>;
+class EdgeCostQueue : public UpdatablePriorityQueue<Edge> {
+  using base = UpdatablePriorityQueue<Edge>;
 
  public:
   void clear() {
@@ -492,7 +492,7 @@ float sqrt_neptfac;
 int qems;  // Size of QEM as supported in make_qem().
 Array<int> ar_vt_indices;
 
-LHPqueue pqecost;  // Conservative estimate of cost of ecol.
+EdgeCostQueue pqecost;  // Conservative estimate of cost of ecol.
 
 // Hash an edge on its vertex ids rather than its address, so that the iteration order of a set of edges (and therefore
 // the tie-breaking among equal costs) does not vary from run to run.

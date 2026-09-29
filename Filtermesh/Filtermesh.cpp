@@ -30,8 +30,8 @@
 #include "libHh/MeshOp.h"  // Vnors, ...
 #include "libHh/MeshSearch.h"
 #include "libHh/Polygon.h"
-#include "libHh/Pqueue.h"
 #include "libHh/Principal.h"  // principal_components()
+#include "libHh/PriorityQueue.h"
 #include "libHh/Queue.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
@@ -886,7 +886,7 @@ void gather_follow_seg(Face f, Map<Face, int>& mfseg, int segnum, int& pnf, Poin
 
 void gather_segments(Map<Face, int>& mfseg, Array<Face>& arepf) {
   assertx(mfseg.empty() && !arepf.num());
-  Pqueue<Face> pq;
+  PriorityQueue<Face> pq;
   {
     HH_STAT(Sseg);
     int segnum = 0;
@@ -1923,7 +1923,7 @@ void do_makequads(Args& args) {
   const float p_tol = args.get_float();
   int nerem = 0;
   const int nf = mesh.num_faces();
-  HPqueue<Edge> pqe;
+  UpdatablePriorityQueue<Edge> pqe;
   for (Edge e : mesh.edges()) {
     if (mesh.is_boundary(e)) continue;
     if (!mesh.is_triangle(mesh.face1(e)) || !mesh.is_triangle(mesh.face2(e))) {
@@ -2444,7 +2444,7 @@ void do_obtusesplit() {
   is_sphere = false;  // ?
   // TAU / 4 would be critical point in plane for infinite recursion. actually, 1.3f seems to already cause problems.
   constexpr float thresh_ang = rad_from_deg(135.f);  // TAU * (3.f / 8.f).
-  HPqueue<Edge> pqe;
+  UpdatablePriorityQueue<Edge> pqe;
   pqe.reserve(mesh.num_edges());
   for (Edge e : mesh.edges()) pqe.enter_unsorted(e, max_elen - mesh.length(e));
   int nsplit = 0;
@@ -2666,7 +2666,7 @@ void do_reduce() {
   HH_TIMER("_reduce");
   attribute_safe_reduce = getenv_bool("ATTRIBUTE_SAFE_REDUCE", false);
   assertx(reducecrit != EReduceCriterion::undefined);  // Also use: nfaces, maxcrit.
-  HPqueue<Edge> pqe;
+  UpdatablePriorityQueue<Edge> pqe;
   {
     HH_TIMER("__initpq");
     Array ar_edge(mesh.edges());

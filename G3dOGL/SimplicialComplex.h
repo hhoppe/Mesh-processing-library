@@ -11,7 +11,7 @@
 #include "libHh/MeshOp.h"
 #include "libHh/PArray.h"
 #include "libHh/Polygon.h"
-#include "libHh/Pqueue.h"
+#include "libHh/PriorityQueue.h"
 #include "libHh/Queue.h"
 #include "libHh/Stack.h"
 #include "libHh/Timer.h"

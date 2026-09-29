@@ -5,7 +5,7 @@
 #include "libHh/Array.h"
 #include "libHh/Geometry.h"
 #include "libHh/Map.h"
-#include "libHh/Pqueue.h"
+#include "libHh/PriorityQueue.h"
 #include "libHh/RangeOp.h"  // sort()
 
 namespace hh {
@@ -65,7 +65,7 @@ template <typename T> class Encoding : noncopyable {
 
   // Returns the Huffman coding cost, i.e. the sum of the probabilities of the internal nodes of the binary tree.
   [[nodiscard]] float huffman_cost() const {
-    Pqueue<int> pq;
+    PriorityQueue<int> pq;
     pq.reserve(_map.num());
     for (const float prob : _map.values()) pq.enter_unsorted(0, prob);
     pq.sort();
@@ -119,7 +119,7 @@ template <typename T> class Encoding : noncopyable {
     float tot_prob = sum<float>(_map.values());
     showdf("Encoding: %s (nunique=%d, tot_prob=%g) {\n", name.c_str(), _map.num(), tot_prob);
     if (0) {
-      Pqueue<T> pq;
+      PriorityQueue<T> pq;
       pq.reserve(_map.num());
       float max_prob = 0.f;
       for (const float prob : _map.values()) max_prob = max(max_prob, prob);

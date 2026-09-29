@@ -5,7 +5,7 @@
 #include "libHh/Array.h"
 #include "libHh/Geometry.h"
 #include "libHh/Graph.h"
-#include "libHh/Pqueue.h"
+#include "libHh/PriorityQueue.h"
 #include "libHh/Queue.h"
 #include "libHh/RangeOp.h"  // fill(), truncate()
 #include "libHh/Set.h"
@@ -24,9 +24,9 @@ template <typename T> void graph_symmetric_closure(Graph<T>& g) {
 
 // Given a graph (possibly directed), return vertices in order of increasing graph distance from vs.
 // Single-pass iteration: "for (const auto& [v, dist] : dijkstra) ...".  (Vertex vs itself is the first element.)
-template <typename T, typename Func_dist = float (&)(const T& v1, const T& v2)> class Dijkstra : noncopyable {
+template <typename T, typename Distance = float (&)(const T& v1, const T& v2)> class Dijkstra : noncopyable {
  public:
-  explicit Dijkstra(const Graph<T>* g, T vs, Func_dist fdist = Func_dist{}) : _g(*assertx(g)), _fdist(fdist) {
+  explicit Dijkstra(const Graph<T>* g, T vs, Distance fdist = Distance{}) : _g(*assertx(g)), _fdist(fdist) {
     _pq.enter(vs, 0.f);
     advance();  // Compute the first element, so that begin() and empty() need not do any work.
   }
@@ -57,15 +57,15 @@ template <typename T, typename Func_dist = float (&)(const T& v1, const T& v2)> 
   }
 
   const Graph<T>& _g;
-  Func_dist _fdist;
-  HPqueue<T> _pq;
+  Distance _fdist;
+  UpdatablePriorityQueue<T> _pq;
   Set<T> _set;
   Result _result{};
   bool _done{false};
 };
 
 // Template deduction guide:
-template <typename T, typename Func_dist> Dijkstra(const Graph<T>*, T, Func_dist) -> Dijkstra<T, Func_dist>;
+template <typename T, typename Distance> Dijkstra(const Graph<T>*, T, Distance) -> Dijkstra<T, Distance>;
 
 // *** Kruskal MST
 
@@ -151,14 +151,14 @@ template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(in
 
 // Try to build the EMST of the num points pa using all edges with length less than thresh.
 // Uses modified Prim's, where only edges of length < thresh are considered.
-// Uses a HPqueue because it can no longer afford to find min in O(n) time.
+// Uses an UpdatablePriorityQueue because it can no longer afford to find min in O(n) time.
 // Returns an empty graph if not connected.
 [[nodiscard]] inline Graph<int> try_emst(float thresh, CArrayView<Point> pa, const PointSpatial<int>& sp) {
   Graph<int> gnew;
   Array<bool> inset(pa.num(), false);  // The vertices already added to the mst.
   Array<int> closest(pa.num());        // For !inset[i], the closest inset[] so far.
   for_int(i, pa.num()) gnew.enter(i);
-  HPqueue<int> pq;
+  UpdatablePriorityQueue<int> pq;
   pq.enter(0, 0.f);
   while (!pq.empty()) {
     const int i = pq.remove_min();

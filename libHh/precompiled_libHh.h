@@ -34,7 +34,7 @@
 #endif
 
 #if 0
-#include "libHh/Pqueue.h"
+#include "libHh/PriorityQueue.h"
 #include "libHh/Queue.h"
 #endif
 

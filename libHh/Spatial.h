@@ -6,7 +6,7 @@
 #include "libHh/Bbox.h"
 #include "libHh/Geometry.h"
 #include "libHh/Map.h"
-#include "libHh/Pqueue.h"
+#include "libHh/PriorityQueue.h"
 #include "libHh/Queue.h"
 #include "libHh/Set.h"
 #include "libHh/Stat.h"
@@ -56,10 +56,10 @@ class Spatial : noncopyable {  // An abstract class.
   // For BSpatialSearch:
   // Add elements from cell ci to priority queue with priority equal to distance from pcenter squared.
   // May use set to avoid duplication.
-  virtual void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const = 0;
+  virtual void add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const = 0;
 
   // Refine the distance estimate of the first entry in pq (optional).
-  virtual void pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const { dummy_use(pq, pcenter); }
+  virtual void pq_refine(PriorityQueue<Univ>& pq, const Point& pcenter) const { dummy_use(pq, pcenter); }
 
   virtual Univ pq_id(Univ pqe) const = 0;  // Given a pq entry, return the id.
 };
@@ -77,7 +77,7 @@ class BPointSpatial : public Spatial {
   void shrink_to_fit();                   // Often just fragments memory.
 
  private:
-  void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
+  void add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
   [[nodiscard]] Univ pq_id(Univ pqe) const override;
   struct Node {
     Univ id;
@@ -104,7 +104,7 @@ class IPointSpatial : public Spatial {
   void clear() override;
 
  private:
-  void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
+  void add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
   [[nodiscard]] Univ pq_id(Univ pqe) const override;
 
   const Point* _pp;
@@ -134,8 +134,8 @@ class ObjectSpatial : public Spatial {
  private:
   Map<int, Array<Univ>> _map;  // Encoded cube index -> vector.
 
-  void add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
-  void pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const override;
+  void add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point& pcenter, Set<Univ>& set) const override;
+  void pq_refine(PriorityQueue<Univ>& pq, const Point& pcenter) const override;
   [[nodiscard]] Univ pq_id(Univ pqe) const override { return pqe; }
 };
 
@@ -166,12 +166,12 @@ class BSpatialSearch : noncopyable {
   const Spatial& _spatial;
   const Point _pcenter;
   float _maxdis;
-  Pqueue<Univ> _pq;    // The pq of entries by distance.
-  Vec2<Ind> _ssi;      // Search space indices (extents).
-  float _disbv2{0.f};  // Distance to the search space boundary.
-  int _axis;           // Axis to expand next.
-  int _dir;            // Direction in which to expand next (0, 1).
-  Set<Univ> _setevis;  // May be used by add_cell().
+  PriorityQueue<Univ> _pq;  // The pq of entries by distance.
+  Vec2<Ind> _ssi;           // Search space indices (extents).
+  float _disbv2{0.f};       // Distance to the search space boundary.
+  int _axis;                // Axis to expand next.
+  int _dir;                 // Direction in which to expand next (0, 1).
+  Set<Univ> _setevis;       // May be used by add_cell().
   int _ncellsv{0};
   int _nelemsv{0};
 
@@ -238,7 +238,7 @@ inline Spatial::Ind Spatial::decode(int en) const {
 }
 
 template <typename Approx2, typename Exact2>
-void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, Pqueue<Univ>& pq, const Point& pcenter,
+void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point& pcenter,
                                               Set<Univ>& set) const {
   const int en = encode(ci);
   bool present;
@@ -252,7 +252,7 @@ void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, Pqueue<Univ>& pq, c
 }
 
 template <typename Approx2, typename Exact2>
-void ObjectSpatial<Approx2, Exact2>::pq_refine(Pqueue<Univ>& pq, const Point& pcenter) const {
+void ObjectSpatial<Approx2, Exact2>::pq_refine(PriorityQueue<Univ>& pq, const Point& pcenter) const {
   Univ id = pq.min();
   const float oldv = pq.min_priority();
   Exact2 exact2;

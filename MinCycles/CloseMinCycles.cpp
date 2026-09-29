@@ -4,7 +4,7 @@
 #include <atomic>
 
 #include "libHh/MeshOp.h"  // gather_boundary(), edge_signed_dihedral_angle(), etc.
-#include "libHh/Pqueue.h"
+#include "libHh/PriorityQueue.h"
 #include "libHh/Queue.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"  // reverse()
@@ -393,7 +393,7 @@ auto CloseMinCycles::min_cycle_from_vertex(Vertex vseed, bool process) -> std::o
   //      (a) v through v_vprev(v) to vseed, combined with (b) v_vtouch(v) through v_vprev(v_vtouch(v)) to vseed.
   // These two event types are distinguished based on whether vertex v has been reached by BFS,
   //    i.e. v_dist(v) != BIGFLOAT for type (2).
-  HPqueue<Vertex> hpq;
+  UpdatablePriorityQueue<Vertex> hpq;
   {  // This first iteration is special.
     v_dist(vseed) = 0.f;
     v_vprev(vseed) = nullptr;
@@ -510,7 +510,7 @@ void CloseMinCycles::find_cycles() {
       if (v_dist(v) != BIGFLOAT) showf("vdist(%d)=%g\n", _mesh.vertex_id(v), v_dist(v));
     return;
   }
-  HPqueue<Vertex> pqvlbsr;  // Lower-bound on search radius for min cycle about vertex.
+  UpdatablePriorityQueue<Vertex> pqvlbsr;  // Lower-bound on search radius for min cycle about vertex.
   pqvlbsr.reserve(_mesh.num_vertices());
   for (Vertex v : _mesh.vertices()) pqvlbsr.enter_unsorted(v, 0.f);
   if (0) pqvlbsr.sort();  // Sorting is unnecessary because all initial priority values are the same.

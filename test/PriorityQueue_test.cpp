@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "libHh/Pqueue.h"
+#include "libHh/PriorityQueue.h"
 
 #include <random>  // default_random_engine
 
@@ -10,13 +10,13 @@ namespace {
 void test1() {
 #if 0
   {
-    Pqueue<int> pq;
-    Pqueue<int> pq2 = pq;  // Fails because it is not copyable.
+    PriorityQueue<int> pq;
+    PriorityQueue<int> pq2 = pq;  // Fails because it is not copyable.
     dummy_use(pq2);
   }
   {
-    Pqueue<int> pq;
-    Pqueue<int> pq2 = std::move(pq);  // Fails because move construction is not defined.
+    PriorityQueue<int> pq;
+    PriorityQueue<int> pq2 = std::move(pq);  // Fails because move construction is not defined.
     dummy_use(pq2);
   }
 #endif
@@ -24,7 +24,7 @@ void test1() {
 
 void test2() {
   {
-    Pqueue<int> pq;
+    PriorityQueue<int> pq;
     assertx(pq.num() == 0);
     assertx(pq.empty());
     for_int(i, 100) pq.enter(i, i * 2.f + 1.f);
@@ -45,7 +45,7 @@ void test2() {
     }
   }
   {
-    HPqueue<int> pq;
+    UpdatablePriorityQueue<int> pq;
     assertx(pq.num() == 0);
     assertx(pq.empty());
     for_int(i, 100) pq.enter(i, i * 2.f + 1.f);
@@ -78,7 +78,7 @@ void test2() {
 
 void test3() {
   const int n = 1000;
-  HPqueue<int> pq;
+  UpdatablePriorityQueue<int> pq;
   pq.reserve(n);
   for_int(i, n) pq.enter_unsorted(i, 2.f + std::sin(i * 7.f));
   pq.sort();
@@ -92,7 +92,7 @@ void test3() {
 }
 
 void test4() {
-  Pqueue<int> pq;
+  PriorityQueue<int> pq;
   for_int(i, 1000) pq.enter(i, 2.f + std::sin(float(i)));
   float a = 0.f;
   while (!pq.empty()) {
@@ -107,7 +107,7 @@ void test5() {
   std::default_random_engine random_engine;
   for_int(itest, 500) {
     const int n = itest < 30 ? itest : 30 + random_engine() % 400;
-    HPqueue<int> pq;
+    UpdatablePriorityQueue<int> pq;
     for_int(i, n) pq.enter_unsorted(i, float(random_engine()));
     pq.sort();
     float a = 0.f;
@@ -124,7 +124,7 @@ void test6() {
   std::default_random_engine random_engine;
   for_int(itest, 100) {
     const int n = 70;
-    HPqueue<int> pq;
+    UpdatablePriorityQueue<int> pq;
     for_int(i, n) pq.enter_unsorted(i, float(random_engine()));
     pq.sort();
     for_int(i, n * 3) pq.update(i, float(random_engine()));
@@ -141,7 +141,7 @@ void test6() {
 void test7() {
   for_int(k, 500) {
     const int n = 30;
-    HPqueue<int> pq;
+    UpdatablePriorityQueue<int> pq;
     pq.reserve(n);
     Array<float> arval1;
     for_int(i, n) arval1.push(2.f + std::sin(i * 11.f + k * 1.2345f));
@@ -166,7 +166,7 @@ void test7() {
 }
 
 void test8() {
-  Pqueue<unique_ptr<int>> pq;
+  PriorityQueue<unique_ptr<int>> pq;
   pq.reserve(4);
   pq.enter(make_unique<int>(3), 1.5f);
   pq.enter(make_unique<int>(4), 1.3f);
@@ -218,7 +218,7 @@ void test9() {
     Array<float> ar3;
     for_int(i, n) ar3.push(float(i));
     ranges::shuffle(ar3, random_engine);
-    HPqueue<int> hpq;
+    UpdatablePriorityQueue<int> hpq;
     for_int(i, n) {
       const int j = ar1[i];
       hpq.enter(j, ar2[j]);
@@ -255,10 +255,10 @@ int main() {
   test9();
 }
 
-template class hh::Pqueue<unsigned>;
-template class hh::Pqueue<float>;
-template class hh::Pqueue<unique_ptr<int>>;
+template class hh::PriorityQueue<unsigned>;
+template class hh::PriorityQueue<float>;
+template class hh::PriorityQueue<unique_ptr<int>>;
 
-template class hh::HPqueue<unsigned>;
-template class hh::HPqueue<float>;
-template class hh::HPqueue<double*>;
+template class hh::UpdatablePriorityQueue<unsigned>;
+template class hh::UpdatablePriorityQueue<float>;
+template class hh::UpdatablePriorityQueue<double*>;

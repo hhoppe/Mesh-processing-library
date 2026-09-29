@@ -8,7 +8,7 @@
 #include "libHh/GeomOp.h"
 #include "libHh/MathOp.h"  // Trig
 #include "libHh/Polygon.h"
-#include "libHh/Pqueue.h"
+#include "libHh/PriorityQueue.h"
 #include "libHh/RangeOp.h"  // sort()
 #include "libHh/Set.h"
 #include "libHh/Stack.h"
@@ -421,8 +421,8 @@ Set<Face> mesh_remove_boundary(GMesh& mesh, Edge erep) {
 
 void split_valence(GMesh& mesh, int max_valence) {
   assertx(max_valence > 6);
-  HPqueue<Vertex> pqv;
-  const int large_int = 1 << 24;  // Precision of float in HPqueue.
+  UpdatablePriorityQueue<Vertex> pqv;
+  const int large_int = 1 << 24;  // Precision of float in UpdatablePriorityQueue.
   for (Vertex v : mesh.vertices())
     if (mesh.degree(v) >= max_valence) pqv.enter(v, float(large_int - mesh.degree(v)));
   int nsplit = 0;

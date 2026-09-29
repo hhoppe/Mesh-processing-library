@@ -8,7 +8,7 @@ using namespace hh;
 
 namespace {
 
-// *** Contour2D
+// *** Contour2d
 
 void test2D() {
   struct feval2D {
@@ -38,12 +38,12 @@ void test2D() {
     func_polylinetoa3d(poly, el);
     wborder.write(el);
   };
-  Contour2D contour(gn, feval2D(), func_contour, func_border);
+  Contour2d contour(gn, feval2D(), func_contour, func_border);
   contour.march_near(V(.64f, .39f));
   // contour.march_from(V(.64f, .39f));
 }
 
-// *** Contour3D
+// *** Contour3d
 
 struct feval3D {
   float operator()(const Vec3<float>& p) const {
@@ -74,7 +74,7 @@ void test3D() {
     func_polygontoa3d(poly, el);
     wborder.write(el);
   };
-  Contour3D contour(gn, func_contour, feval3D(), func_border);
+  Contour3d contour(gn, func_contour, feval3D(), func_border);
   const int nc1 = contour.march_from(Point(.35f, .3f, .3f));
   const int nc2 = contour.march_from(Point(.25f, .65f, .7f));
   const int nc3 = contour.march_from(Point(.95f, .65f, .7f));
@@ -86,7 +86,7 @@ void test3D() {
 void testmesh() {
   GMesh mesh;
   {
-    Contour3DMesh<feval3D> contour(10, &mesh);
+    Contour3dMesh<feval3D> contour(10, &mesh);
     if (0) contour.big_mesh_faces();
     contour.set_vertex_tolerance(1e-4f);
     const int nc1 = contour.march_from(Point(.35f, .3f, .3f));
@@ -116,7 +116,7 @@ struct fmonkey {
 void do_monkey() {
   GMesh mesh;
   {
-    Contour3DMesh<fmonkey> contour(50, &mesh);
+    Contour3dMesh<fmonkey> contour(50, &mesh);
     contour.set_vertex_tolerance(1e-5f);
     contour.march_near(Point(.5f, .5f, .5f));
   }
@@ -126,7 +126,7 @@ void do_monkey() {
 void do_densemonkey() {
   GMesh mesh;
   {
-    Contour3DMesh<fmonkey> contour(500, &mesh);
+    Contour3dMesh<fmonkey> contour(500, &mesh);
     contour.set_vertex_tolerance(1e-5f);
     contour.march_near(Point(.5f, .5f, .5f));
   }
@@ -147,7 +147,7 @@ void do_sphere() {
   };
   GMesh mesh;
   {
-    Contour3DMesh contour(128, &mesh, func_sphere);
+    Contour3dMesh contour(128, &mesh, func_sphere);
     contour.set_vertex_tolerance(1 ? 1e-5f : 0);
     contour.march_near(Point(.5f + k_radius, .5f, .5f));
   }
@@ -164,7 +164,7 @@ int main() {
     };
     GMesh mesh;
     {
-      Contour3DMesh contour(50, &mesh, func_eval);  // Or 6.
+      Contour3dMesh contour(50, &mesh, func_eval);  // Or 6.
       contour.march_near(Point(.9f, .5f, .5f));
     }
     mesh.write(std::cout);

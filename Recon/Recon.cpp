@@ -671,18 +671,18 @@ void process_contour() {
   if (is_3D) {
     // Note: now mesh is always created even if !iom.
     if (ioc) {
-      Contour3DMesh<eval_point<3>, output_border3D> contour(gridsize, &mesh);
+      Contour3dMesh<eval_point<3>, output_border3D> contour(gridsize, &mesh);
       contour_3D(contour);
     } else {
-      Contour3DMesh<eval_point<3>> contour(gridsize, &mesh);
+      Contour3dMesh<eval_point<3>> contour(gridsize, &mesh);
       contour_3D(contour);
     }
   } else {
     if (ioc) {
-      Contour2D<eval_point<2>, output_border2D> contour(gridsize);
+      Contour2d<eval_point<2>, output_border2D> contour(gridsize);
       contour_2D(contour);
     } else {
-      Contour2D<eval_point<2>, output_contour2D> contour(gridsize);
+      Contour2d<eval_point<2>, output_contour2D> contour(gridsize);
       contour_2D(contour);
     }
   }

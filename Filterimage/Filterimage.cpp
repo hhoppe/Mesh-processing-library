@@ -2206,7 +2206,7 @@ void output_contour(int gridn, float contour_value) {
     }
     wcontour.write(el);
   };
-  Contour2D contour(gridn, func_eval, func_contour);
+  Contour2d contour(gridn, func_eval, func_contour);
   contour.set_vertex_tolerance(.0001f);
   for (const auto& yx : range(twice(gridn - 1)))                     // Visit all contour cells.
     contour.march_from((convert<float>(yx) + 1.f) * (1.f / gridn));  // Center of the contour cell.

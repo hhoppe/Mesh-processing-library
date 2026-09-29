@@ -17,7 +17,7 @@
   };
   if (1) {
     GMesh mesh;
-    Contour3DMesh contour(50, &mesh, func_eval);
+    Contour3dMesh contour(50, &mesh, func_eval);
     contour.march_near(Point(.9f, .6f, .6f));
     mesh.write(std::cout);
   } else {
@@ -25,7 +25,7 @@
       void operator()(CArrayView<Vec3<float>>){...};
     };
     const auto func_border = [](CArrayView<Vec3<float>>) { ... };
-    Contour3D contour(50, func_eval, func_contour(), func_border);
+    Contour3d contour(50, func_eval, func_contour(), func_border);
     contour.march_from(Point(.9f, .6f, .6f));
   }
 }
@@ -33,21 +33,21 @@
 
 namespace hh {
 
-// Contour2D/Contour3DMesh/Contour3D compute a piecewise linear approximation to the zeroset of a scalar function:
-//   - surface triangle mesh in the unit cube   (Contour3DMesh).
-//   - surface triangle stream in the unit cube (Contour3D).
-//   - curve polyline stream in the unit square (Contour2D).
+// Contour2d/Contour3dMesh/Contour3d compute a piecewise linear approximation to the zeroset of a scalar function:
+//   - surface triangle mesh in the unit cube   (Contour3dMesh).
+//   - surface triangle stream in the unit cube (Contour3d).
+//   - curve polyline stream in the unit square (Contour2d).
 
 // TODO: Improve efficiency/generality:
 // - use 64-bit encoding to allow larger grid sizes.
 // - perhaps distinguish  Set<unsigned> cubes_visited and  Map<unsigned, Node>  cube_vertices? and edge_vertices too?
 // - somehow remove _en from Node?
 // - somehow remove mapsucc.
-// - Contour2D: directly extract joined polylines; no need to check degeneracy.
+// - Contour2d: directly extract joined polylines; no need to check degeneracy.
 
 constexpr float k_Contour_undefined = 1e31f;  // Represents undefined distance, to introduce surface boundaries.
 
-// Protected content in this class just factors functions common to Contour2D, Contour3DMesh, and Contour3D.
+// Protected content in this class just factors functions common to Contour2d, Contour3dMesh, and Contour3d.
 template <int D, typename VertexData = Vec0<int>> class ContourBase {
  public:
   void set_ostream(std::ostream* os) { _os = os; }  // For summary text output; may be set to nullptr.
@@ -174,23 +174,23 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
   }
 };
 
-// *** Contour3D
+// *** Contour3d
 
-struct Contour3D_NoBorder {  // A special type to indicate that no border output is desired.
+struct Contour3dNoBorder {  // A special type to indicate that no border output is desired.
   float operator()(CArrayView<Vec3<float>>) const {
     assertnever_ret("");
     return 0.f;
   }
 };
 
-struct VertexData3DMesh {
+struct VertexData3dMesh {
   Vec3<Vertex> _verts{ntimes<3>(implicit_cast<Vertex>(nullptr))};
 };
 
 template <typename VertexData = Vec0<int>,
           typename Derived = void,  // For contour_cube().
-          typename Eval = float(const Vec3<float>&), typename Border = Contour3D_NoBorder>
-class Contour3DBase : public ContourBase<3, VertexData> {
+          typename Eval = float(const Vec3<float>&), typename Border = Contour3dNoBorder>
+class BaseContour3d : public ContourBase<3, VertexData> {
  protected:
   static constexpr int D = 3;
   using base = ContourBase<D, VertexData>;
@@ -214,7 +214,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
   [[nodiscard]] const Derived& derived() const { return *down_cast<const Derived*>(this); }
 
  public:
-  explicit Contour3DBase(int gn, Eval eval, Border border) : base(gn), _eval(eval), _border(border) {}
+  explicit BaseContour3d(int gn, Eval eval, Border border) : base(gn), _eval(eval), _border(border) {}
   // Returns the number of new cubes visited: 0 = revisit_cube, 1 = no_surface, > 1 = new.
   int march_from(const DPoint& startp) { return march_from_i(startp); }
   // Call march_from() on all cells near startp; returns the number of new cubes visited.
@@ -223,7 +223,7 @@ class Contour3DBase : public ContourBase<3, VertexData> {
  protected:
   Eval _eval;
   Border _border;
-  static constexpr bool b_no_border = std::is_same_v<Border, Contour3D_NoBorder>;
+  static constexpr bool b_no_border = std::is_same_v<Border, Contour3dNoBorder>;
   using Node222 = SGrid<Node*, 2, 2, 2>;
   using base::k_not_yet_evaled;
 
@@ -350,12 +350,12 @@ class Contour3DBase : public ContourBase<3, VertexData> {
   }
 };
 
-template <typename Eval = float(const Vec3<float>&), typename Border = Contour3D_NoBorder>
-class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval, Border>, Eval, Border> {
-  using base = Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval, Border>, Eval, Border>;
+template <typename Eval = float(const Vec3<float>&), typename Border = Contour3dNoBorder>
+class Contour3dMesh : public BaseContour3d<VertexData3dMesh, Contour3dMesh<Eval, Border>, Eval, Border> {
+  using base = BaseContour3d<VertexData3dMesh, Contour3dMesh<Eval, Border>, Eval, Border>;
 
  public:
-  explicit Contour3DMesh(int gn, GMesh* pmesh, Eval eval = Eval(), Border border = Border())
+  explicit Contour3dMesh(int gn, GMesh* pmesh, Eval eval = Eval(), Border border = Border())
       : base(gn, eval, border), _pmesh(pmesh) {
     assertx(_pmesh);
   }
@@ -476,12 +476,12 @@ class Contour3DMesh : public Contour3DBase<VertexData3DMesh, Contour3DMesh<Eval,
 };
 
 template <typename Eval = float(const Vec3<float>&), typename Contour = float(CArrayView<Vec3<float>>),
-          typename Border = Contour3D_NoBorder>
-class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Border>, Eval, Border> {
-  using base = Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Border>, Eval, Border>;
+          typename Border = Contour3dNoBorder>
+class Contour3d : public BaseContour3d<Vec0<int>, Contour3d<Eval, Contour, Border>, Eval, Border> {
+  using base = BaseContour3d<Vec0<int>, Contour3d<Eval, Contour, Border>, Eval, Border>;
 
  public:
-  explicit Contour3D(int gn, Contour contour = Contour(), Eval eval = Eval(), Border border = Border())
+  explicit Contour3d(int gn, Contour contour = Contour(), Eval eval = Eval(), Border border = Border())
       : base(gn, eval, border), _contour(contour) {}
 
  private:
@@ -549,9 +549,9 @@ class Contour3D : public Contour3DBase<Vec0<int>, Contour3D<Eval, Contour, Borde
   }
 };
 
-// *** Contour2D
+// *** Contour2d
 
-struct Contour2D_NoBorder {  // A special type to indicate that no border output is desired.
+struct Contour2dNoBorder {  // A special type to indicate that no border output is desired.
   float operator()(CArrayView<Vec2<float>>) const {
     if (1) assertnever("");
     return 0.f;
@@ -559,13 +559,13 @@ struct Contour2D_NoBorder {  // A special type to indicate that no border output
 };
 
 template <typename Eval = float(const Vec2<float>&), typename Contour = void(CArrayView<Vec2<float>>),
-          typename Border = Contour2D_NoBorder>
-class Contour2D : public ContourBase<2> {
+          typename Border = Contour2dNoBorder>
+class Contour2d : public ContourBase<2> {
   static constexpr int D = 2;
   using base = ContourBase<D>;
 
  public:
-  explicit Contour2D(int gn, Eval eval = Eval(), Contour contour = Contour(), Border border = Border())
+  explicit Contour2d(int gn, Eval eval = Eval(), Contour contour = Contour(), Border border = Border())
       : base(gn), _eval(eval), _contour(contour), _border(border) {}
   // Returns the number of new cubes visited: 0 = revisit_cube, 1 = no_surface, > 1 = new.
   int march_from(const DPoint& startp) { return march_from_i(startp); }
@@ -576,7 +576,7 @@ class Contour2D : public ContourBase<2> {
   Eval _eval;
   Contour _contour;
   Border _border;
-  static constexpr bool b_no_border = std::is_same_v<Border, Contour2D_NoBorder>;
+  static constexpr bool b_no_border = std::is_same_v<Border, Contour2dNoBorder>;
   using Node22 = SGrid<Node*, 2, 2>;
   using base::k_not_yet_evaled;
 
@@ -740,10 +740,10 @@ class Contour2D : public ContourBase<2> {
 };
 
 // Template deduction guides:
-template <typename Eval, typename Border> Contour3DMesh(int, GMesh*, Eval, Border) -> Contour3DMesh<Eval, Border>;
-template <typename Eval, typename Border> Contour3D(int, GMesh*, Eval, Border) -> Contour3D<Eval, Border>;
+template <typename Eval, typename Border> Contour3dMesh(int, GMesh*, Eval, Border) -> Contour3dMesh<Eval, Border>;
+template <typename Eval, typename Border> Contour3d(int, GMesh*, Eval, Border) -> Contour3d<Eval, Border>;
 template <typename Eval, typename Contour, typename Border>
-Contour2D(int, Eval, Contour, Border) -> Contour2D<Eval, Contour, Border>;
+Contour2d(int, Eval, Contour, Border) -> Contour2d<Eval, Contour, Border>;
 
 }  // namespace hh
 

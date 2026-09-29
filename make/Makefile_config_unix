@@ -20,6 +20,9 @@ ifeq ($(is_mac),1)
   # Apple Clang searches /usr/local/include (if present) as a system directory outside the SDK, and -Weverything
   #  then warns in every translation unit that it is "unsafe for cross-compilation".
   cpedantic += -Wno-poison-system-directories
+  # Apple Clang's typed-allocation heuristic flags the pool operator new[] in Pool.h, which deliberately forwards
+  #  to ::operator new.
+  cpedantic += -Wno-allocator-wrappers
 endif
 
 ifeq ($(CC),gcc)

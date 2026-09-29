@@ -106,7 +106,7 @@
     <ClInclude Include="Combination.h" />
     <ClInclude Include="ConsoleProgress.h" />
     <ClInclude Include="Contour.h" />
-    <ClInclude Include="EList.h" />
+    <ClInclude Include="IntrusiveList.h" />
     <ClInclude Include="Encoding.h" />
     <ClInclude Include="Facedistance.h" />
     <ClInclude Include="FileIO.h" />

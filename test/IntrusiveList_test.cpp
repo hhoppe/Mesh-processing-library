@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "libHh/EList.h"
+#include "libHh/IntrusiveList.h"
 using namespace hh;
 
 int main() {
@@ -7,15 +7,15 @@ int main() {
     struct A {
       explicit A(int i) : _i(i) {}
       int _i;
-      EListNode _node;
+      IntrusiveListNode _node;
     };
-    EList list;
+    IntrusiveList list;
     A a1(1);
     a1._node.link_after(list.delim());
     A a2(2);
     a2._node.link_after(&a1._node);
     int count = 0;
-    for (const EListNode* node : list) {
+    for (const IntrusiveListNode* node : list) {
       dummy_use(node);
       count++;
     }
@@ -29,19 +29,19 @@ int main() {
     for (auto pa : list.outer_range<A, (offsetof(A, _node))>()) SHOW(pa->_i);  // Fails on win.
     const size_t off = offsetof(A, _node);
     for (auto pa : list.outer_range<A, off>()) SHOW(pa->_i);                      // Works.
-    for (auto pa : EList::OuterRange<A, off>{list}) SHOW(pa->_i);                 // Works.
-    for (auto pa : EList::OuterRange<A, offsetof(A, _node)>{list}) SHOW(pa->_i);  // Works.
+    for (auto pa : IntrusiveList::OuterRange<A, off>{list}) SHOW(pa->_i);                 // Works.
+    for (auto pa : IntrusiveList::OuterRange<A, offsetof(A, _node)>{list}) SHOW(pa->_i);  // Works.
 #endif
     SHOW("2");
-    for (A* pa : HH_ELIST_RANGE(list, A, _node)) SHOW(pa->_i);
+    for (A* pa : HH_INTRUSIVE_LIST_RANGE(list, A, _node)) SHOW(pa->_i);
     a2._node.relink_before(&a1._node);
     SHOW("relink a2");
-    for (A* pa : HH_ELIST_RANGE(list, A, _node)) SHOW(pa->_i);
+    for (A* pa : HH_INTRUSIVE_LIST_RANGE(list, A, _node)) SHOW(pa->_i);
     a1._node.unlink();
     SHOW("unlink a1");
-    for (A* pa : HH_ELIST_RANGE(list, A, _node)) SHOW(pa->_i);
+    for (A* pa : HH_INTRUSIVE_LIST_RANGE(list, A, _node)) SHOW(pa->_i);
     a2._node.unlink();
     SHOW("unlink a2");
-    for (A* pa : HH_ELIST_RANGE(list, A, _node)) SHOW(pa->_i);
+    for (A* pa : HH_INTRUSIVE_LIST_RANGE(list, A, _node)) SHOW(pa->_i);
   }
 }

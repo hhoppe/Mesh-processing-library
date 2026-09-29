@@ -617,15 +617,15 @@ const int random_initial_face = getenv_int("RANDOM_INITIAL_FACE");
 // Finally, when a face is processed (within the current component),
 //  it is removed from l_unp_nnei and no longer appears on any list.
 
-struct FaceEList {
-  Face f;            // Pointer back to the containing face.
-  EListNode el_uco;  // Within unvisited components.
-  EListNode el_unp;  // Unprocessed within the current component.
+struct FaceListNodes {
+  Face f;                    // Pointer back to the containing face.
+  IntrusiveListNode el_uco;  // Within unvisited components.
+  IntrusiveListNode el_unp;  // Unprocessed within the current component.
 };
-HH_SACABLE(FaceEList);  // EListNode requires its constructor.
+HH_SACABLE(FaceListNodes);  // IntrusiveListNode requires its constructor.
 
 // Associate the above linked_list nodes with each mesh face.
-HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, FaceEList, f_elist);
+HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, FaceListNodes, f_list_nodes);
 
 // Associate an integer with each mesh face:
 //  == std::numeric_limits<int>::max() if the face has already been (globally) processed.
@@ -651,25 +651,25 @@ class MeshStatus {
   void sim_visit_face(Face f);
 
  private:
-  Vec4<EList> _l_unp_nnei;           // Unprocessed faces with 0..3 unprocessed neighbors.
-  EList _l_uco;                      // Faces within unvisited components.
+  Vec4<IntrusiveList> _l_unp_nnei;   // Unprocessed faces with 0..3 unprocessed neighbors.
+  IntrusiveList _l_uco;              // Faces within unvisited components.
   int _sim_num{0};                   // The simulation number.
   bool initialize_next_component();  // Returns true on success, false if no more.
 };
 
 inline bool MeshStatus::processed(Face f) const {
-  // Cannot do ASSERTX(!f_elist(f).el_uco.linked()) because this may be a neighboring face (as in face_nnei()) which
-  // is in l_uco (due to a material boundary).
+  // Cannot do ASSERTX(!f_list_nodes(f).el_uco.linked()) because this may be a neighboring face (as in face_nnei())
+  // which is in l_uco (due to a material boundary).
   // But in this case this function declares the face as processed, which is OK.
-  return !f_elist(f).el_unp.linked();
+  return !f_list_nodes(f).el_unp.linked();
 }
 
 MeshStatus::MeshStatus() {
   if (random_initial_face) Warning("random_initial_face");
   if (random_initial_face >= 2) Warning("random_initial_corner");
   for (Face f : mesh.ordered_faces()) {
-    f_elist(f).f = f;
-    f_elist(f).el_uco.link_before(_l_uco.delim());
+    f_list_nodes(f).f = f;
+    f_list_nodes(f).el_uco.link_before(_l_uco.delim());
     f_sim_num(f) = _sim_num;
   }
 }
@@ -688,13 +688,13 @@ int MeshStatus::face_nnei(Face f) const {
 
 void MeshStatus::process(Face f) {
   ASSERTX(!processed(f));
-  f_elist(f).el_unp.unlink();
+  f_list_nodes(f).el_unp.unlink();
   if (!random_initial_face) {
     // Decrement nnei for each of the face's neighbors.
     for (Face ff : mesh.faces(f)) {
       if (processed(ff)) continue;
       const int nnei = face_nnei(ff);
-      f_elist(ff).el_unp.relink_after(_l_unp_nnei[nnei].delim());
+      f_list_nodes(ff).el_unp.relink_after(_l_unp_nnei[nnei].delim());
     }
   }
   f_sim_num(f) = std::numeric_limits<int>::max();
@@ -722,21 +722,21 @@ bool MeshStatus::initialize_next_component() {
   if (_l_uco.empty()) return false;
   // Gather faces in component containing some initial face f.
   // Identify these faces by placing them in list l_c for now and removing them from _l_uco.
-  EList l_c;
+  IntrusiveList l_c;
   int numfc = 0;
   {
-    Face f = HH_ELIST_OUTER(FaceEList, el_uco, _l_uco.delim()->next())->f;
+    Face f = HH_INTRUSIVE_LIST_OUTER(FaceListNodes, el_uco, _l_uco.delim()->next())->f;
     Queue<Face> queue;
-    f_elist(f).el_uco.unlink();
-    f_elist(f).el_unp.link_before(l_c.delim());
+    f_list_nodes(f).el_uco.unlink();
+    f_list_nodes(f).el_unp.link_before(l_c.delim());
     numfc++;
     for (;;) {
       for (Face f2 : mesh.faces(f)) {
         if (!same_string(mesh.get_string(f), mesh.get_string(f2))) continue;
-        if (f_elist(f2).el_unp.linked()) continue;  // Already added in the component.
+        if (f_list_nodes(f2).el_unp.linked()) continue;  // Already added in the component.
         queue.enqueue(f2);
-        f_elist(f2).el_uco.unlink();
-        f_elist(f2).el_unp.link_before(l_c.delim());
+        f_list_nodes(f2).el_uco.unlink();
+        f_list_nodes(f2).el_unp.link_before(l_c.delim());
         numfc++;
       }
       if (queue.empty()) break;
@@ -745,9 +745,9 @@ bool MeshStatus::initialize_next_component() {
   }
   if (verb >= 2) showdf("***New component: %d faces\n", numfc);
   HH_SSTAT(Scompnf, numfc);
-  for (EListNode* nodee = l_c.delim()->next(); nodee != l_c.delim();) {
-    Face f = HH_ELIST_OUTER(FaceEList, el_unp, nodee)->f;
-    EListNode* next_nodee = nodee->next();
+  for (IntrusiveListNode* nodee = l_c.delim()->next(); nodee != l_c.delim();) {
+    Face f = HH_INTRUSIVE_LIST_OUTER(FaceListNodes, el_unp, nodee)->f;
+    IntrusiveListNode* next_nodee = nodee->next();
     int nnei = face_nnei(f);
     if (random_initial_face) nnei = 0;
     nodee->relink_before(_l_unp_nnei[nnei].delim());
@@ -761,8 +761,8 @@ Face MeshStatus::find_initial_face() {
   for (;;) {
     for_int(nnei, 4) {
       if (_l_unp_nnei[nnei].empty()) continue;
-      const EListNode* nodee = _l_unp_nnei[nnei].delim()->next();
-      Face f = HH_ELIST_OUTER(FaceEList, el_unp, nodee)->f;
+      const IntrusiveListNode* nodee = _l_unp_nnei[nnei].delim()->next();
+      Face f = HH_INTRUSIVE_LIST_OUTER(FaceListNodes, el_unp, nodee)->f;
       ASSERTX(!processed(f));
       return f;
     }

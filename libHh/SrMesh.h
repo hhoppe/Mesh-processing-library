@@ -3,7 +3,7 @@
 #define MESH_PROCESSING_LIBHH_SRMESH_H_
 
 #include "libHh/Bbox.h"
-#include "libHh/EList.h"
+#include "libHh/IntrusiveList.h"
 #include "libHh/LinearFunc.h"
 #include "libHh/Map.h"
 #include "libHh/Materials.h"
@@ -85,13 +85,14 @@ struct SrVertex {
   int vspli;           // -1 if in M^n.
 };
 
-struct SrAVertex {    // An active vertex.
-  EListNode activev;  // At offset 0 for fast pointer conversion.
+struct SrAVertex {            // An active vertex.
+  IntrusiveListNode activev;  // At offset 0 for fast pointer conversion.
   SrVertex* vertex;
   SrVertexGeometry vgeom;
-  SrVertexMorph* vmorph{nullptr};  // Avoid unique_ptr<> because we need standard layout for offsetof() in EListNode.
-  bool visible;                    // Was the vertex visible when last traversed?
-  int cached_time;                 // For transparent vertex caching.
+  SrVertexMorph* vmorph{
+      nullptr};     // Avoid unique_ptr<> because we need standard layout for offsetof() in IntrusiveListNode.
+  bool visible;     // Was the vertex visible when last traversed?
+  int cached_time;  // For transparent vertex caching.
   HH_POOL_ALLOCATION(SrAVertex);
 };
 HH_INITIALIZE_POOL(SrAVertex);
@@ -100,9 +101,9 @@ struct SrFace {
   SrAFace* aface;  // Nullptr if not active; == &_isolated_aface if !fr.
 };
 
-struct SrAFace {      // An active face.
-  EListNode activef;  // At offset 0 for fast pointer conversion.
-  int matid;          // See notes below.  Up here for the cache line.
+struct SrAFace {              // An active face.
+  IntrusiveListNode activef;  // At offset 0 for fast pointer conversion.
+  int matid;                  // See notes below.  Up here for the cache line.
   Vec3<SrAVertex*> vertices;
   Vec3<SrAFace*> fnei;  // Set to &_isolated_aface if no neighbor.
   // Notes on matid:
@@ -238,8 +239,8 @@ class SrMesh {
   Array<SrVsplit> _vsplits;
   Array<SrAVertex> _base_vertices;
   Array<SrAFace> _base_faces;
-  EList _active_vertices;
-  EList _active_faces;
+  IntrusiveList _active_vertices;
+  IntrusiveList _active_faces;
   int _num_active_vertices{-1};
   int _num_active_faces{-1};
   SrVertex* _quick_first_vt;
@@ -317,10 +318,10 @@ class SrMesh {
   [[nodiscard]] bool big_error(const SrVertexGeometry* vg, const SrVsplit* vspl) const;
   [[nodiscard]] bool qrefine(const SrVertex* vs) const;
   [[nodiscard]] bool qcoarsen(const SrVertex* vt) const;
-  void apply_vspl(SrVertex* vs, EListNode*& pn);
-  void apply_ecol(SrVertex* vs, EListNode*& pn);
+  void apply_vspl(SrVertex* vs, IntrusiveListNode*& pn);
+  void apply_ecol(SrVertex* vs, IntrusiveListNode*& pn);
   void set_initial_view_params();
-  void force_vsplit(SrVertex* vsf, EListNode*& n);
+  void force_vsplit(SrVertex* vsf, IntrusiveListNode*& n);
   void finish_vmorph(SrAVertex* va);
   void start_coarsen_morphing(SrVertex* vt);
   void abort_coarsen_morphing(SrVertex* vc);

@@ -24,7 +24,7 @@ void SrMesh::ogl_render_faces_individually(bool unlit_texture) {
   if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
   glBegin(GL_TRIANGLES);
   if (unlit_texture) {
-    for (const SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+    for (const SrAFace* f : HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, activef)) {
       const auto& vertices = f->vertices;
 #if defined(SR_SW_CULLING)
       if (!vertices[0]->visible && !vertices[1]->visible && !vertices[2]->visible) continue;
@@ -35,7 +35,7 @@ void SrMesh::ogl_render_faces_individually(bool unlit_texture) {
     }
   } else {
     int omatid = -1;
-    for (const SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+    for (const SrAFace* f : HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, activef)) {
       const auto& vertices = f->vertices;
 #if defined(SR_SW_CULLING)
       if (!vertices[0]->visible && !vertices[1]->visible && !vertices[2]->visible) continue;
@@ -69,11 +69,11 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
   const unsigned lcur_frame_mask = _cur_frame_mask;
   int omatid = -1;
-  const EListNode* ndelim = _active_faces.delim();
+  const IntrusiveListNode* ndelim = _active_faces.delim();
   assertx(offsetof(SrAFace, activef) == 0);
-  for (const EListNode* n = ndelim->next();;) {
+  for (const IntrusiveListNode* n = ndelim->next();;) {
     if (n == ndelim) break;
-    SrAFace* const f = HH_ELIST_OUTER(SrAFace, activef, n);
+    SrAFace* const f = HH_INTRUSIVE_LIST_OUTER(SrAFace, activef, n);
     const auto& vertices = f->vertices;
     n = n->next();
     const int matid = f->matid;
@@ -196,7 +196,7 @@ int SrMesh::ogl_render_striplines() {
   int ntstrips = 0;
   // Doesn't need to be all that fast, so not carefully optimized.
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
-  for (SrAFace* ff : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+  for (SrAFace* ff : HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, activef)) {
     SrAFace* const f = ff;       // Current face.
     const int matid = f->matid;  // Material of f.
     SrAFace* fn;                 // Next neighboring face.
@@ -322,7 +322,7 @@ static inline void sr_draw_segment(const SrAVertex* v0, const SrAVertex* v1, boo
 
 void SrMesh::ogl_render_edges() {
   glBegin(GL_LINES);
-  for (SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+  for (SrAFace* f : HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, activef)) {
     const SrAVertex* v0 = f->vertices[0];
     const SrAVertex* v1 = f->vertices[1];
     const SrAFace* fn2 = f->fnei[2];
@@ -340,7 +340,7 @@ void SrMesh::ogl_render_edges() {
 }
 
 void SrMesh::ogl_show_radii() {
-  for (const SrAVertex* v : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* v : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     if (!splitable(v)) continue;
     const Point& p = get_point(v);
     glRasterPos3fv(p.data());
@@ -352,7 +352,7 @@ void SrMesh::ogl_show_radii() {
 
 void SrMesh::ogl_show_residuals(bool uniform_too) {
   glBegin(GL_LINES);
-  for (const SrAVertex* v : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* v : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     if (!splitable(v)) continue;
     if (1) {
       const float dir_error_mag = sqrt(get_dir_error_mag2(v));
@@ -402,13 +402,13 @@ int SrMesh::ogl_render_tvclines() {
   const int desiredloc = k_cache_size - 9;
   _cur_frame_mask = _cur_frame_mask ^ k_Face_visited_mask;
   const unsigned lcur_frame_mask = _cur_frame_mask;
-  const EListNode* ndelim = _active_faces.delim();
+  const IntrusiveListNode* ndelim = _active_faces.delim();
   assertx(offsetof(SrAFace, activef) == 0);
   Point p;
-  for (const EListNode* n = ndelim->next();;) {
+  for (const IntrusiveListNode* n = ndelim->next();;) {
   GOTO_STRIP_RESTART_FROM_SCRATCH:
     if (n == ndelim) break;
-    SrAFace* f = HH_ELIST_OUTER(SrAFace, activef, n);
+    SrAFace* f = HH_INTRUSIVE_LIST_OUTER(SrAFace, activef, n);
     n = n->next();
     const int matid = f->matid;
     if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;
@@ -510,13 +510,13 @@ void SrMesh::ogl_render_faces_tvc(bool unlit_texture) {
   const unsigned lcur_frame_mask = _cur_frame_mask;
   int omatid = -1;
   dummy_use(omatid);
-  const EListNode* ndelim = _active_faces.delim();
+  const IntrusiveListNode* ndelim = _active_faces.delim();
   assertx(offsetof(SrAFace, activef) == 0);
   glBegin(GL_TRIANGLES);
-  for (const EListNode* n = ndelim->next();;) {
+  for (const IntrusiveListNode* n = ndelim->next();;) {
   GOTO_STRIP_RESTART_FROM_SCRATCH:
     if (n == ndelim) break;
-    SrAFace* f = HH_ELIST_OUTER(SrAFace, activef, n);
+    SrAFace* f = HH_INTRUSIVE_LIST_OUTER(SrAFace, activef, n);
     n = n->next();
     const int matid = f->matid;
     if ((unsigned(matid) & k_Face_visited_mask) == lcur_frame_mask) continue;

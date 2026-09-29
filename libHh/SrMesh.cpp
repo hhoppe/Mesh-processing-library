@@ -262,7 +262,7 @@ SrMesh::SrMesh() {
 SrMesh::~SrMesh() {
   if (1) {
     fully_coarsen();
-    {  // To avoid ~EList(): not empty.
+    {  // To avoid ~IntrusiveList(): not empty.
       for_int(vi, _base_vertices.num()) _vertices[vi].avertex->activev.unlink();
       assertx(_active_vertices.empty());
       for_int(fi, _base_faces.num()) _faces[fi].aface->activef.unlink();
@@ -274,9 +274,9 @@ SrMesh::~SrMesh() {
     // - delete any active vertex if its upwards branch towards the base mesh includes a right-child relation.
     // - to delete faces, uniquely identify internal nodes (forest above active vertices) by
     //    considering nodes accessible with only right-child relations.
-    const EListNode* ndelim = _active_vertices.delim();
-    for (const EListNode* n = ndelim->next(); n != ndelim;) {
-      SrAVertex* va = HH_ELIST_OUTER(SrAVertex, activev, n);
+    const IntrusiveListNode* ndelim = _active_vertices.delim();
+    for (const IntrusiveListNode* n = ndelim->next(); n != ndelim;) {
+      SrAVertex* va = HH_INTRUSIVE_LIST_OUTER(SrAVertex, activev, n);
       n = n->next();  // Advance here before the node gets deleted.
       bool branch_has_left_child = false;
       bool branch_has_right_child = false;
@@ -549,7 +549,7 @@ void SrMesh::read_pm(PMeshRStream& pmrs) {
       vspl->uni_error_mag2 = 0.f;
     }
     {
-      EListNode* n = _active_vertices.delim();
+      IntrusiveListNode* n = _active_vertices.delim();
       apply_vspl(vs, n);  // Apply the vsplit on the SrMesh.
     }
     for_int(i, 2) {
@@ -1076,7 +1076,7 @@ bool SrMesh::qcoarsen(const SrVertex* vt) const {
   return !(is_visible(vg, vspl) && big_error(vg, vspl));
 }
 
-void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
+void SrMesh::apply_vspl(SrVertex* vs, IntrusiveListNode*& pn) {
   ASSERTX(vspl_legal(vs));
   SrAVertex* vta = vs->avertex;  // Here, vsa becomes vta!
   if (vta->vmorph && vta->vmorph->coarsening) abort_coarsen_morphing(vta->vertex);
@@ -1238,7 +1238,7 @@ void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
     --_num_active_faces;              // Anticipating a correction.
   }
   if (vla->vmorph && vla->vmorph->coarsening) perhaps_abort_coarsen_morphing(vla->vertex);
-  EListNode* n = pn;
+  IntrusiveListNode* n = pn;
   if (is_splitable(vu)) {
     vua->activev.link_after(n);
   } else {
@@ -1253,7 +1253,7 @@ void SrMesh::apply_vspl(SrVertex* vs, EListNode*& pn) {
   _num_active_faces += 2;
 }
 
-void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
+void SrMesh::apply_ecol(SrVertex* vs, IntrusiveListNode*& pn) {
   ASSERTX(ecol_legal(get_vt(vs->vspli)));
   const int vspli = vs->vspli;
   SrVsplit* vspl = &_vsplits[vspli];
@@ -1299,7 +1299,7 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
   }
   delete vua->vmorph;
   delete vua;
-  EListNode* n = pn;
+  IntrusiveListNode* n = pn;
   {
     const SrVertex* vlp = (fl + 0)->aface->vertices[2]->vertex->parent;
     if (vlp) {
@@ -1345,7 +1345,7 @@ void SrMesh::apply_ecol(SrVertex* vs, EListNode*& pn) {
 GMesh SrMesh::extract_gmesh() const {
   GMesh gmesh;
   string str;
-  for (const SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     const int vi = narrow_cast<int>(va->vertex - _vertices.data());
     Vertex gv = gmesh.create_vertex_private(vi + 1);
     gmesh.set_point(gv, va->vgeom.point);
@@ -1353,7 +1353,7 @@ GMesh SrMesh::extract_gmesh() const {
     gmesh.update_string(gv, "normal", csform_vec(str, nor));
   }
   Array<Vertex> gvaa;
-  // Should not use HH_ELIST_RANGE(_active_faces, SrAFace, fa) because we
+  // Should not use HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, fa) because we
   //  would not get reproducible face id's (no SrAFace* -> SrFace* info).
   for_int(fi, _faces.num()) {
     SrAFace* fa = _faces[fi].aface;
@@ -1373,7 +1373,7 @@ GMesh SrMesh::extract_gmesh() const {
 void SrMesh::ok() const {
   Set<const SrAVertex*> setva;
   {
-    for (const SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+    for (const SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
       assertx(_vertices.ok(va->vertex));
       assertx(va->vertex->avertex == va);
       assertx(setva.add(va));
@@ -1391,7 +1391,7 @@ void SrMesh::ok() const {
   }
   Set<const SrAFace*> setfa;
   {
-    for (const SrAFace* fa : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+    for (const SrAFace* fa : HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, activef)) {
       assertx(fa != &_isolated_aface);
       assertx(setfa.add(fa));
     }
@@ -1407,7 +1407,7 @@ void SrMesh::ok() const {
     assertx(numf == num_active_faces());
   }
   {
-    for (SrAFace* fa : HH_ELIST_RANGE(_active_faces, SrAFace, activef)) {
+    for (SrAFace* fa : HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, activef)) {
       for_int(j, 3) {
         const SrAVertex* va = fa->vertices[j];
         assertx(setva.contains(va));
@@ -1520,7 +1520,7 @@ void SrMesh::fully_refine() {
     SrVertex* vs = vt->parent;
     if (!is_active_v(vs)) continue;
     {
-      EListNode* n = _active_vertices.delim();
+      IntrusiveListNode* n = _active_vertices.delim();
       apply_vspl(vs, n);
     }
     if (k_debug && 0) ok();
@@ -1540,7 +1540,7 @@ void SrMesh::fully_coarsen() {
     if (!is_active_v(vt)) continue;
     SrVertex* vs = vt->parent;
     {
-      EListNode* n = &vt->avertex->activev;
+      IntrusiveListNode* n = &vt->avertex->activev;
       apply_ecol(vs, n);
     }
     if (k_debug && 0) ok();
@@ -1551,12 +1551,12 @@ void SrMesh::fully_coarsen() {
 
 void SrMesh::verify_optimality() const {
   HH_ATIMER("____verify_optimality");
-  for (const SrAVertex* vsa : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* vsa : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     const SrVertex* vs = vsa->vertex;
     if (!is_splitable(vs)) continue;
     if (qrefine(vs)) Warning("** should refine");
   }
-  for (const SrAVertex* vta : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* vta : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     const SrVertex* vt = vta->vertex;
     const SrVertex* vs = vt->parent;
     if (!vs) continue;
@@ -1570,7 +1570,7 @@ void SrMesh::verify_optimality() const {
   }
 }
 
-void SrMesh::force_vsplit(SrVertex* vsf, EListNode*& n) {
+void SrMesh::force_vsplit(SrVertex* vsf, IntrusiveListNode*& n) {
   Stack<SrVertex*> stack_split;
   stack_split.push(vsf);
   while (!stack_split.empty()) {
@@ -1614,11 +1614,11 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
   const uintptr_t left_child_result = reinterpret_cast<uintptr_t>(_quick_first_vt) & left_child_mask;
   int nvtraverse = pnvtraverse;
   bool is_modified = false;
-  EListNode* ndelim = _active_vertices.delim();
-  EListNode* n = ndelim->next();
+  IntrusiveListNode* ndelim = _active_vertices.delim();
+  IntrusiveListNode* n = ndelim->next();
   for (;;) {
     if (n == ndelim) break;
-    SrAVertex* vsa = HH_ELIST_OUTER(SrAVertex, activev, n);
+    SrAVertex* vsa = HH_INTRUSIVE_LIST_OUTER(SrAVertex, activev, n);
     SrVertex* vs = vsa->vertex;
     if (!nvtraverse--) break;
     n = n->next();
@@ -1633,7 +1633,7 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
         if (big_error(rvg, cvspl)) {
           is_modified = true;
           // Variable tn to help SGI compiler assign n to register.
-          EListNode* tn = n->prev();
+          IntrusiveListNode* tn = n->prev();
           force_vsplit(vs, tn);
           n = tn;
           continue;
@@ -1664,7 +1664,7 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
     const SrAFace* fra = fr->aface;
     if (fra->fnei[2] != pvspl->fn[2]->aface || fra->fnei[0] != pvspl->fn[3]->aface) continue;
     // Simpler version for below that avoids geomorph coarsening:
-    // if (qcoarsen(vs)) { EListNode* tn = n->prev(); apply_ecol(vsp, tn); n = tn; }
+    // if (qcoarsen(vs)) { IntrusiveListNode* tn = n->prev(); apply_ecol(vsp, tn); n = tn; }
     const SrVertexMorph* vm = vsa->vmorph;
 #if defined(SR_NO_VSGEOM)
     rvg = &pvspl->vs_vgeom;
@@ -1678,7 +1678,7 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
         ASSERTX(vua->vmorph && vua->vmorph->coarsening);
         finish_vmorph(vua);
       }
-      EListNode* tn = n->prev();
+      IntrusiveListNode* tn = n->prev();
       apply_ecol(vsp, tn);
       n = tn;
     } else if (big_error(rvg, pvspl)) {  // No need to coarsen.
@@ -1691,11 +1691,11 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
         SrAVertex* vua = (vs + 1)->avertex;
         ASSERTX(vua->vmorph && vua->vmorph->coarsening && vua->vmorph->time == 0);
         finish_vmorph(vua);
-        EListNode* tn = n->prev();
+        IntrusiveListNode* tn = n->prev();
         apply_ecol(vsp, tn);
         n = tn;
       } else if (!_coarsen_morph_time) {
-        EListNode* tn = n->prev();
+        IntrusiveListNode* tn = n->prev();
         apply_ecol(vsp, tn);
         n = tn;
       } else {
@@ -1705,10 +1705,10 @@ void SrMesh::adapt_refinement(int pnvtraverse) {
   }
 #if defined(SR_SW_CULLING)
   {
-    EListNode* n_bu = n;
+    IntrusiveListNode* n_bu = n;
     for (;;) {
       if (n == ndelim) break;
-      SrAVertex* vsa = HH_ELIST_OUTER(SrAVertex, activev, n);
+      SrAVertex* vsa = HH_INTRUSIVE_LIST_OUTER(SrAVertex, activev, n);
       SrVertex* vs = vsa->vertex;
       n = n->next();
       if (vsa->visible) continue;
@@ -1799,7 +1799,7 @@ void SrMesh::set_refine_morph_time(int refine_morph_time) {
   assertx(!refine_morph_time || refine_morph_time > 1);
   if (_refine_morph_time && !refine_morph_time) {
     // Snap refine-morphing vertices to their final positions.
-    for (SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+    for (SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
       if (!va->vmorph) continue;
       if (va->vmorph->coarsening) continue;
       // Snap vertices forward to their (new) refined positions.
@@ -1814,7 +1814,7 @@ void SrMesh::set_coarsen_morph_time(int coarsen_morph_time) {
   assertx(!coarsen_morph_time || coarsen_morph_time > 1);
   if (_coarsen_morph_time && !coarsen_morph_time) {
     // Perform ecol's for coarsen-morphing vertices.
-    for (SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+    for (SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
       if (!va->vmorph) continue;
       if (!va->vmorph->coarsening) continue;
       // Snap vertices backward to their (original) refined positions.
@@ -1831,10 +1831,10 @@ void SrMesh::update_vmorphs() {
   if (!_refine_morph_time && !_coarsen_morph_time) return;
   int num_vertices_refine_morphing = 0;
   int num_vertices_coarsen_morphing = 0;
-  const EListNode* ndelim = _active_vertices.delim();
-  for (const EListNode* n = ndelim->next();;) {
+  const IntrusiveListNode* ndelim = _active_vertices.delim();
+  for (const IntrusiveListNode* n = ndelim->next();;) {
     if (n == ndelim) break;
-    SrAVertex* va = HH_ELIST_OUTER(SrAVertex, activev, n);
+    SrAVertex* va = HH_INTRUSIVE_LIST_OUTER(SrAVertex, activev, n);
     n = n->next();
     SrVertexMorph* vm = va->vmorph;
     if (!vm) continue;
@@ -1898,13 +1898,13 @@ int SrMesh::num_vertices_refine_morphing() const { return _num_vertices_refine_m
 int SrMesh::num_vertices_coarsen_morphing() const { return _num_vertices_coarsen_morphing; }
 
 bool SrMesh::verify_all_faces_visited() const {
-  for (const SrAFace* f : HH_ELIST_RANGE(_active_faces, SrAFace, activef))
+  for (const SrAFace* f : HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, activef))
     assertx((unsigned(f->matid) & k_Face_visited_mask) == _cur_frame_mask);
   return true;
 }
 
 bool SrMesh::verify_all_vertices_uncached() const {
-  for (const SrAVertex* v : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev))
+  for (const SrAVertex* v : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev))
     assertx(v->cached_time < _cache_time);
   return true;
 }
@@ -1915,13 +1915,14 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
   assertx(!_refine_morph_time && !_coarsen_morph_time);
   Map<SrVertex*, SrVertexGeometry> m_v_vg;
   // Record the geometry of the current set of active vertices.
-  for (const SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) m_v_vg.enter(va->vertex, va->vgeom);
+  for (const SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev))
+    m_v_vg.enter(va->vertex, va->vgeom);
   // Apply vspl's.
   {
     HH_ATIMER("__geo_vspls");
-    const EListNode* ndelim = _active_vertices.delim();
-    for (EListNode* n = ndelim->next(); n != ndelim; n = n->next()) {
-      const SrAVertex* vsa = HH_ELIST_OUTER(SrAVertex, activev, n);
+    const IntrusiveListNode* ndelim = _active_vertices.delim();
+    for (IntrusiveListNode* n = ndelim->next(); n != ndelim; n = n->next()) {
+      const SrAVertex* vsa = HH_INTRUSIVE_LIST_OUTER(SrAVertex, activev, n);
       SrVertex* vs = vsa->vertex;
       if (!is_splitable(vs) || !qrefine(vs)) continue;
       force_vsplit(vs, n);
@@ -1929,7 +1930,7 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
     }
   }
   // Compute geoinfo._ancestors[0].
-  for (const SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* v = va->vertex;
     SrVertex* vv = v;
     while (!m_v_vg.contains(vv)) vv = assertx(vv->parent);
@@ -1940,9 +1941,9 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
   Array<SrVertex*> seq_ecols;
   {
     HH_ATIMER("__geo_ecols");
-    const EListNode* ndelim = _active_vertices.delim();
-    for (EListNode* n = ndelim->next(); n != ndelim; n = n->next()) {
-      const SrAVertex* vsa = HH_ELIST_OUTER(SrAVertex, activev, n);
+    const IntrusiveListNode* ndelim = _active_vertices.delim();
+    for (IntrusiveListNode* n = ndelim->next(); n != ndelim; n = n->next()) {
+      const SrAVertex* vsa = HH_INTRUSIVE_LIST_OUTER(SrAVertex, activev, n);
       const SrVertex* vs = vsa->vertex;
       SrVertex* vsp = vs->parent;
       if (!vsp || get_vt(vsp->vspli) != vs || !ecol_legal(vs)) continue;
@@ -1953,18 +1954,19 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
     }
   }
   // Record the geometry of the current set of active vertices.
-  for (const SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) m_v_vg.enter(va->vertex, va->vgeom);
+  for (const SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev))
+    m_v_vg.enter(va->vertex, va->vgeom);
   // Undo ecol's by traversing sequence backwards.
   for (int i = seq_ecols.num() - 1; i >= 0; --i) {
     SrVertex* vs = seq_ecols[i];
     assertx(vspl_legal(vs));
     {
-      EListNode* n = _active_vertices.delim();
+      IntrusiveListNode* n = _active_vertices.delim();
       apply_vspl(vs, n);
     }
   }
   // Compute geoinfo._ancestors[1].
-  for (const SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* v = va->vertex;
     SrVertex* vv = v;
     while (!m_v_vg.contains(vv)) vv = assertx(vv->parent);
@@ -1975,7 +1977,7 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
 GMesh SrMesh::extract_gmesh(const SrGeomorphInfo& geoinfo) const {
   GMesh gmesh;
   string str;
-  for (const SrAVertex* va : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (const SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* v = va->vertex;
     const int vi = narrow_cast<int>(v - _vertices.data());
     Vertex gv = gmesh.id_vertex(vi + 1);
@@ -2037,7 +2039,7 @@ void SrMesh::refine_in_best_dflclw_order() {
   };
   STree<Scvspl, less_Scvspl> stcvspl;  // The current legal vsplits.
   int ncand = 0;                       // Number in stcvspl.
-  for (SrAVertex* vsa : HH_ELIST_RANGE(_active_vertices, SrAVertex, activev)) {
+  for (SrAVertex* vsa : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* vs = vsa->vertex;
     if (!is_splitable(vs) || !vspl_legal(vs)) continue;
     Scvspl n;
@@ -2083,7 +2085,7 @@ void SrMesh::refine_in_best_dflclw_order() {
       if (vr) pncands.push(vr);
     }
     {
-      EListNode* n = _active_vertices.delim();
+      IntrusiveListNode* n = _active_vertices.delim();
       apply_vspl(vs, n);
     }
     for (SrVertex* v : pncands) {

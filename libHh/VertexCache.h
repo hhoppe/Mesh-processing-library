@@ -3,7 +3,7 @@
 #define MESH_PROCESSING_LIBHH_VERTEXCACHE_H_
 
 #include "libHh/Array.h"
-#include "libHh/EList.h"
+#include "libHh/IntrusiveList.h"
 #include "libHh/RangeOp.h"
 
 namespace hh {
@@ -169,7 +169,7 @@ class LruVertexCache : public VertexCache {
   explicit LruVertexCache(int nverts1, int cs) { LruVertexCache::init(nverts1, cs); }
   ~LruVertexCache() override {
     while (!_list.empty()) {
-      EListNode* nodee = _list.delim()->next();
+      IntrusiveListNode* nodee = _list.delim()->next();
       nodee->unlink();
     }
   }
@@ -183,7 +183,7 @@ class LruVertexCache : public VertexCache {
       _nodes.init(cs);
       for_int(ci, cs) {
         Node* node = &_nodes[ci];
-        node->elist.link_after(_list.delim());
+        node->list_node.link_after(_list.delim());
       }
     } else {
       for_int(ci, cs) {
@@ -199,12 +199,12 @@ class LruVertexCache : public VertexCache {
     const LruVertexCache& vc = static_cast<const LruVertexCache&>(pvc);
     ASSERTX(vc.type() == type() && vc._vinlist.num() == _vinlist.num() && vc._cs == _cs);
     init(vc._vinlist.num(), vc._cs);
-    const EListNode* onodee = vc._list.delim()->next();
-    const EListNode* tnodee = _list.delim()->next();
-    const EListNode* tdelime = _list.delim();
+    const IntrusiveListNode* onodee = vc._list.delim()->next();
+    const IntrusiveListNode* tnodee = _list.delim()->next();
+    const IntrusiveListNode* tdelime = _list.delim();
     while (tnodee != tdelime) {
-      const Node* onode = HH_ELIST_OUTER(Node, elist, onodee);
-      Node* tnode = HH_ELIST_OUTER(Node, elist, tnodee);
+      const Node* onode = HH_INTRUSIVE_LIST_OUTER(Node, list_node, onodee);
+      Node* tnode = HH_INTRUSIVE_LIST_OUTER(Node, list_node, tnodee);
       const int vif = onode->vert;
       tnode->vert = vif;
       _vinlist[vif] = tnode;  // Here, vif == k_no_entry is OK.
@@ -218,12 +218,12 @@ class LruVertexCache : public VertexCache {
     Node* node = _vinlist[vi];
     if (node) {  // If there, move to the front.
       ASSERTX(node->vert == vi);
-      node->elist.relink_after(_list.delim());
+      node->list_node.relink_after(_list.delim());
       return true;
     }
-    EListNode* nodee = _list.delim()->prev();  // The rear node.
+    IntrusiveListNode* nodee = _list.delim()->prev();  // The rear node.
     // if (nodee == _list.delim()) return false;  // cs == 0
-    node = HH_ELIST_OUTER(Node, elist, nodee);
+    node = HH_INTRUSIVE_LIST_OUTER(Node, list_node, nodee);
     const int vj = node->vert;
     ASSERTX(vj == k_no_entry || _vinlist[vj] == node);
     _vinlist[vj] = nullptr;  // Here, vj == k_no_entry is OK.
@@ -239,20 +239,20 @@ class LruVertexCache : public VertexCache {
   [[nodiscard]] int location(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinlist.num());
     if (!_vinlist[vi]) return -1;
-    const EListNode* vinodee = &_vinlist[vi]->elist;
-    const EListNode* delime = _list.delim();
+    const IntrusiveListNode* vinodee = &_vinlist[vi]->list_node;
+    const IntrusiveListNode* delime = _list.delim();
     int num = 0;
-    for (const EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
+    for (const IntrusiveListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
     ASSERTX(num < _cs);
     return num;
   }
   [[nodiscard]] int location_alt(int vi) const override {
     ASSERTX(vi >= 1 && vi < _vinlist.num());
     if (!_vinlist[vi]) return _cs;
-    const EListNode* vinodee = &_vinlist[vi]->elist;
-    const EListNode* delime = _list.delim();
+    const IntrusiveListNode* vinodee = &_vinlist[vi]->list_node;
+    const IntrusiveListNode* delime = _list.delim();
     int num = 0;
-    for (const EListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
+    for (const IntrusiveListNode* nodee = delime->next(); nodee != vinodee; nodee = nodee->next()) num++;
     ASSERTX(num < _cs);
     return num;
   }
@@ -264,23 +264,23 @@ class LruVertexCache : public VertexCache {
     Iter(const LruVertexCache& vcache) : _delim(vcache._list.delim()), _n(vcache._list.delim()->next()) {}
     int next() override {
       if (_n == _delim) return 0;
-      const int vi = HH_ELIST_OUTER(LruVertexCache::Node, elist, _n)->vert;
+      const int vi = HH_INTRUSIVE_LIST_OUTER(LruVertexCache::Node, list_node, _n)->vert;
       _n = _n->next();
       return vi;  // Here, vi == k_no_entry is OK.
     }
 
    private:
-    const EListNode* _delim;
-    const EListNode* _n;
+    const IntrusiveListNode* _delim;
+    const IntrusiveListNode* _n;
   };
   struct Node {
-    EListNode elist;
+    IntrusiveListNode list_node;
     int vert{k_no_entry};  // Set to k_no_entry if the cache entry is empty.
   };
   static constexpr int k_no_entry = 0;
   int _cs{0};
   Array<Node> _nodes;  // Note: Node is noncopyable but Array is never resized.
-  EList _list;
+  IntrusiveList _list;
   Array<Node*> _vinlist;  // Here, _vinlist[k_no_entry = 0] is trash.
 };
 

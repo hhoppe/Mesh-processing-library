@@ -244,7 +244,8 @@ cmd_makedep = @echo Creating $(make_dep); \
   if [[ -z "$(strip $(src))" ]]; then \
     : >$(make_dep); \
   elif ! command -v $(makedep_cxx) >/dev/null; then \
-    echo '$$(warning Warning: header dependencies are not tracked because $(makedep_cxx) is not found)' >$(make_dep); \
+    echo '$$(warning Warning: header dependencies are not tracked because $(makedep_cxx) is not found;' \
+      'after installing it, delete $(make_dep))' >$(make_dep); \
   else \
     set -o pipefail; \
     $(makedep_cxx) -MM -DMAKEFILE_DEP $(CPPFLAGS) -x c++ $(src_c) -x none -std=$(CXX_STD) $(src_cpp) | \

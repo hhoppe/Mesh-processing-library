@@ -23,7 +23,7 @@ extra_objs +=#  This variable must be defined prior to use as a dependency.
 
 all: progs
 
-depend $(make_dep):
+depend $(make_dep): $(MeshRoot)/make/Makefile_defs#  Regenerate if the recipe (cmd_makedep) may have changed.
 	$(cmd_makedep)
 
 ifeq ($(include_make_dep),1)

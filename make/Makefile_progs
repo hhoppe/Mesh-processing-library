@@ -17,7 +17,7 @@ all: progs
 
 dot_quoted_target =#  No intermediate files produced, so target suffix is blank rather than .$(extobj).
 
-depend $(make_dep):
+depend $(make_dep): $(MeshRoot)/make/Makefile_defs#  Regenerate if the recipe (cmd_makedep) may have changed.
 	$(cmd_makedep)
 
 ifeq ($(include_make_dep),1)

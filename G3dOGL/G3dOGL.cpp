@@ -1586,8 +1586,10 @@ void mesh_init(GMesh& mesh) {
   if (strip_lines) {
     bool is_new;
     Array<Face>& fa = map_mfa.enter(&mesh, Array<Face>(), is_new);
-    if (is_new)
+    if (is_new) {
+      fa.reserve(mesh.num_faces());
       for (Face f : mesh.ordered_faces()) fa.push(f);
+    }
   }
 }
 

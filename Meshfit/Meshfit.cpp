@@ -532,6 +532,7 @@ void do_outlierdelete(Args& args) {
 void global_fit() {
   Map<Vertex, int> mvi;
   Array<Vertex> gva;
+  gva.reserve(mesh.num_vertices());
   for (Vertex v : mesh.vertices()) {
     mvi.enter(v, gva.num());
     gva.push(v);

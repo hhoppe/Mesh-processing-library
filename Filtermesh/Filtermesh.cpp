@@ -1320,6 +1320,7 @@ void do_desbrunsmooth(Args& args) {
   const bool use_taubin_laplacian = false;
   Array<Vertex> a_v;
   Map<Vertex, int> m_vi;
+  a_v.reserve(mesh.num_vertices());
   for (Vertex v : mesh.vertices()) {
     m_vi.enter(v, a_v.num());
     a_v.push(v);
@@ -1472,6 +1473,7 @@ void do_lscm() {
   const int n = mesh.num_vertices() * 2;
   Array<Vertex> a_v;
   Map<Vertex, int> m_vi;
+  a_v.reserve(mesh.num_vertices());
   for (Vertex v : mesh.vertices()) {
     m_vi.enter(v, a_v.num());
     a_v.push(v);
@@ -1541,6 +1543,7 @@ void do_poissonparam() {
   const int n = mesh.num_vertices() * 2;
   Array<Vertex> a_v;
   Map<Vertex, int> m_vi;
+  a_v.reserve(mesh.num_vertices());
   for (Vertex v : mesh.vertices()) {
     m_vi.enter(v, a_v.num());
     a_v.push(v);
@@ -4018,6 +4021,7 @@ void do_transferkeysfrom(Args& args) {
     for (Vertex v : mesh.vertices()) hp.pre_consider(mesh.point(v) * xform);
     for (Vertex ov : omesh.vertices()) hp.pre_consider(omesh.point(ov) * xform);
   }
+  arv.reserve(mesh.num_vertices());
   for (Vertex v : mesh.ordered_vertices()) {
     const Point p = mesh.point(v) * xform;
     const int i = hp.enter(p);
@@ -4247,6 +4251,7 @@ void do_to_obj(Args& args) {
   Map<Vertex, int> index_of_vertex;
   Map<Vec2<float>, int> index_of_uv;
   Map<Vec3<float>, int> index_of_normal;
+  points.reserve(mesh.num_vertices());
   for (Vertex v : mesh.ordered_vertices()) {
     index_of_vertex.enter(v, points.num());
     points.push(mesh.point(v));

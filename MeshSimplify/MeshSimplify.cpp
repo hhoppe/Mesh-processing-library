@@ -1496,6 +1496,8 @@ void sample_pts() {
   if (numpts) {
     Array<Face> fface;    // Face of this index (nf).
     Array<float> fcarea;  // Cumulative area (nf + 1).
+    fface.reserve(mesh.num_faces());
+    fcarea.reserve(mesh.num_faces() + 1);
     {
       double sumarea = 0.;  // For accuracy.
       for (Face f : mesh.faces()) {

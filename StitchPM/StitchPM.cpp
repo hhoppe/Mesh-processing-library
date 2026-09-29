@@ -175,6 +175,9 @@ void do_stitch() {
   pmesh._info = pmeshes[0, 0]._info;  // Including _has_*.
   pmesh._info._full_bbox.clear();
   pmesh._vsplits.init(0);
+  int num_vsplits = 0;
+  for_int(bx, blockx) for_int(by, blocky) num_vsplits += pmeshes[bx, by]._vsplits.num();
+  pmesh._vsplits.reserve(num_vsplits);
   // Finally, collect together all vertex split records.
   int pmesh_nvertices = bmesh._vertices.num();
   int pmesh_nfaces = bmesh._faces.num();

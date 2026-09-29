@@ -1018,7 +1018,12 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
   {
     HH_ATIMER("__compute_depend");
     pmi->goto_nvertices(pmesh._base_mesh._vertices.num() + first_ivspl);
+    // Each vertex split adds one or two faces, so this bounds the final number of faces.
+    const int max_faces = pmi->_faces.num() + 2 * (last_ivspl - first_ivspl);
     Array<int> f_ivspldep;  // For each face, ivspl it depends on (or -1).
+    f_ivspldep.reserve(max_faces);
+    oldf_newf.reserve(max_faces);
+    ivspl_fl.reserve(last_ivspl - first_ivspl);
     for_int(f, pmi->_faces.num()) f_ivspldep.push(-1);
     for_int(f, pmi->_faces.num()) oldf_newf.push(f);
     Array<int> faces;
@@ -1054,6 +1059,7 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
   }
   // Now reorder refinement.
   Array<Vsplit> new_vsplits;
+  new_vsplits.reserve(pmesh._vsplits.num());
   for_int(i, first_ivspl) new_vsplits.push(pmesh._vsplits[i]);
   AWMesh temp_mesh;
   {
@@ -1069,10 +1075,9 @@ void global_reorder_vspl(int first_ivspl, int last_ivspl) {
         return s1.flclw1 < s2.flclw1;  // Here, flclw1 may be zero.
       }
     };
-    STree<Sivspl, less_Sivspl> stivspl;  // The current legal ivspl's.
-    Array<bool> ivspl_done;              // Was ivspl already done?
-    int ncand = 0;                       // Size of stivspl.
-    for_int(ivspl, last_ivspl - first_ivspl) ivspl_done.push(false);
+    STree<Sivspl, less_Sivspl> stivspl;                       // The current legal ivspl's.
+    Array<bool> ivspl_done(last_ivspl - first_ivspl, false);  // Was ivspl already done?
+    int ncand = 0;                                            // Size of stivspl.
     if (1) {
       for (const int ivspl : gdep.vertices()) {
         HH_SSTAT(Sdep_outdeg, gdep.out_degree(ivspl));

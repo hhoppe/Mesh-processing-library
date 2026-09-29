@@ -71,6 +71,7 @@ Array<Point> get_base_sphmap(const PMeshIter& pmi, const string& base_param_sche
 
   } else if (base_param_scheme == "projection") {  // Use spherical projection.
     Array<Point> points;
+    points.reserve(pmi._vertices.num());
     for_int(v, pmi._vertices.num()) points.push(pmi._vertices[v].attrib.point);
     const Point center = mean(points);
     for_int(v, pmi._vertices.num()) base_sphmap[v] = normalized(points[v] - center);
@@ -682,6 +683,7 @@ void write_original_mesh(PMeshIter pmi, CArrayView<Point> sphmap, bool split_mer
     assertx(my_getline(fi(), str));
     const int num_vertices = to_int(str);
     assertx(num_vertices == pmi._vertices.num());
+    original_vertex_indices.reserve(num_vertices);
     for_int(vi, num_vertices) {
       assertx(my_getline(fi(), str));
       original_vertex_indices.push(to_int(str));

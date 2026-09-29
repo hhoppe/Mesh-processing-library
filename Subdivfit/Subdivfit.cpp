@@ -281,6 +281,7 @@ void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
   const GMesh& mesh = smesh.mesh();
   Map<Vertex, int> mvi;
   Array<Vertex> iv;
+  iv.reserve(omesh.num_vertices());
   for (Vertex v : omesh.vertices()) {
     mvi.enter(v, iv.num());
     iv.push(v);
@@ -395,6 +396,7 @@ void do_fgfit(Args& args) {
     double _etot{0.};
     bool _desire_global_project{false};
     explicit EvalGrad(SubMesh& smesh) : _smesh(smesh) {
+      _iv.reserve(gmesh.num_vertices());
       for (Vertex v : gmesh.vertices()) {
         _mvi.enter(v, _iv.num());
         _iv.push(v);
@@ -527,6 +529,7 @@ void do_interp() {
   subdivide(smesh, true);
   Map<Vertex, int> mvi;
   Array<Vertex> iv;
+  iv.reserve(gmesh.num_vertices());
   for (Vertex v : gmesh.vertices()) {
     mvi.enter(v, iv.num());
     iv.push(v);
@@ -574,6 +577,7 @@ void do_imagefit() {
   subdivide(smesh, false);
   Map<Vertex, int> mvi;
   Array<Vertex> iv;
+  iv.reserve(gmesh.num_vertices());
   for (Vertex v : gmesh.vertices()) {
     mvi.enter(v, iv.num());
     iv.push(v);

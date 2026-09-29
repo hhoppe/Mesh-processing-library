@@ -275,6 +275,7 @@ void Audio::write_file(const string& pfilename) const {
     WFile fi(filename);
     assertx(write_binary_raw(fi(), V(h)));
     Array<float> ar;
+    ar.reserve(nsamples() * nchannels());
     for_int(i, nsamples()) for_int(ch, nchannels()) {
       ar.push((*this)[ch, i]);
       to_dos(&ar.last());

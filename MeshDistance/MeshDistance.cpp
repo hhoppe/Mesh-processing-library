@@ -155,6 +155,8 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
     // showdf("- random sampling of %d points\n", numpts);
     Array<Face> fface;    // Face of this index (nf).
     Array<float> fcarea;  // Cumulative area (nf + 1).
+    fface.reserve(mesh_s.num_faces());
+    fcarea.reserve(mesh_s.num_faces() + 1);
     {
       double sum_area = 0.;  // For accuracy.
       for (Face f : mesh_s.faces()) {
@@ -167,6 +169,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
       fcarea.push(1.00001f);
     }
     Array<float> randoms;
+    randoms.reserve(numpts * 3);
     for_int(i, numpts * 3) randoms.push(Random::G.unif());
     const int num_threads = use_parallelism ? get_max_threads() : 1;
     Array<PStats> ar_pstats(num_threads);

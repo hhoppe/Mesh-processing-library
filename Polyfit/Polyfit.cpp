@@ -217,6 +217,7 @@ void global_project() {
 void global_fit() {
   Map<vertex, int> mvi;
   Array<vertex> va;
+  va.reserve(verts.num());
   for (vertex v : verts) {
     mvi.enter(v, va.num());
     va.push(v);

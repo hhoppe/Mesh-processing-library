@@ -1425,6 +1425,7 @@ void compute_looping_regions() {
     Array<Homogeneous> arh(g_lp.region_color.num());
     for (const auto& yx : range(video.spatial_dims()))
       arh[g_lp.mat_iregion[yx]] += Point(float(yx[0]), float(yx[1]), 0.f);
+    g_lp.region_centroid.reserve(arh.num());
     for (const Homogeneous& h : arh) g_lp.region_centroid.push(to_Point(normalized(h)));
   }
   if (getenv_bool("LOOPING_REGIONS_DIST_IMAGE")) {

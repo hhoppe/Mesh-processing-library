@@ -1,0 +1,89 @@
+# Build all programs and run the demos: create their results, check these against reference statistics, and run
+# the viewing demos without showing any window.  This is slow, so it runs nightly and on demand, not on every push.
+name: Demos
+
+on:
+  schedule:
+    - cron: '0 9 * * *'  # Daily at 09:00 UTC.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  demos:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ubuntu-demos
+            os: ubuntu-26.04
+          - name: macos-demos
+            os: macos-26
+    steps:
+      - uses: actions/checkout@v7
+
+      # Xvfb and the Mesa drivers provide an X display with software OpenGL, xfonts-base the fonts used by the viewers,
+      # and ffmpeg video I/O.
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make clang libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev \
+            ffmpeg xvfb libgl1-mesa-dri xfonts-base
+
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install --cask xquartz && brew install ffmpeg
+
+      # The rendering demos need an X server with OpenGL, even when drawing offscreen.  On macOS, the Xvfb of XQuartz
+      # lacks OpenGL, so we use the XQuartz server itself, and because the hosted runners have no GPU, the software
+      # renderer of Apple's OpenGL.
+      - name: Start an X server
+        run: |
+          if [[ $RUNNER_OS == macOS ]]; then
+            export LIBGL_ALWAYS_SOFTWARE=1
+            echo LIBGL_ALWAYS_SOFTWARE=1 >>"$GITHUB_ENV"
+            # The XQuartz server sometimes fails to start, so wait for it, and retry.
+            is_up() { DISPLAY=:99 /opt/X11/bin/xset q >/dev/null 2>&1; }
+            for attempt in 1 2 3; do
+              /opt/X11/bin/Xquartz :99 -nolisten tcp >>xquartz.log 2>&1 &
+              for i in {1..30}; do is_up && break 2; sleep 1; done
+              echo "Attempt $attempt to start the XQuartz server failed." >&2
+              pkill -f 'Xquartz :99' || true
+              sleep 2
+            done
+            is_up
+          else
+            Xvfb :99 -screen 0 1920x1080x24 &
+          fi
+          echo DISPLAY=:99 >>"$GITHUB_ENV"
+
+      - name: Build
+        id: build
+        run: make -j"$(getconf _NPROCESSORS_ONLN)" progs 2>&1 | tee build.log
+
+      - name: Create and check the demo results
+        run: make -k -j"$(getconf _NPROCESSORS_ONLN)" -C demos create check 2>&1 | tee demos.log
+
+      # Run these even if some results could not be created, but only after a successful build.
+      - name: Run the viewing demos without windows
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: DEMOS_HIDDEN=1 make -C demos view 2>&1 | tee view.log
+
+      - name: Upload results and logs
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.name }}-results
+          path: |
+            *.log
+            demos/results/
+          if-no-files-found: ignore

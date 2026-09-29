@@ -79,7 +79,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
 
   // 0-simps
   int dim = 0;
-  pq[dim].sort();
+  pq[dim].heapify();
   while (!pq[dim].empty()) {
     assertx(pq[dim].remove_min() == vs);
     int outcome = getNextOutcome();
@@ -114,7 +114,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
 
   // 1-simps
   dim = 1;
-  pq[dim].sort();
+  pq[dim].heapify();
   while (!pq[dim].empty()) {
     Simplex e = pq[dim].remove_min();
     int outcome = getNextOutcome();
@@ -156,7 +156,7 @@ void SplitRecord::applySplit(SimplicialComplex& K) {
 
   // 2-simps
   dim = 2;
-  pq[dim].sort();
+  pq[dim].heapify();
   while (!pq[dim].empty()) {
     Simplex f = pq[dim].remove_min();
     int outcome = getNextOutcome();
@@ -224,7 +224,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
 
   // 0-simps
   int dim = 0;
-  pq[dim].sort();
+  pq[dim].heapify();
   while (!pq[dim].empty()) {
     assertx(pq[dim].remove_min() == vs);
     int outcome = getNextOutcome();
@@ -258,7 +258,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
 
   // 1-simps
   dim = 1;
-  pq[dim].sort();
+  pq[dim].heapify();
   while (!pq[dim].empty()) {
     Simplex e = pq[dim].remove_min();
     int outcome = getNextOutcome();
@@ -301,7 +301,7 @@ void SplitRecord::applyGMSplit(SimplicialComplex& K) {
 
   // 2-simps
   dim = 2;
-  pq[dim].sort();
+  pq[dim].heapify();
   while (!pq[dim].empty()) {
     Simplex f = pq[dim].remove_min();
     int outcome = getNextOutcome();
@@ -370,7 +370,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
 
   // 0-simps
   int dim = 0;
-  pq[dim].sort();
+  pq[dim].heapify();
   while (!pq[dim].empty()) {
     assertx(pq[dim].remove_min() == vs);
     int outcome = getNextOutcome();
@@ -407,7 +407,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
 
   // 1-simps
   dim = 1;
-  pq[dim].sort();
+  pq[dim].heapify();
   while (!pq[dim].empty()) {
     Simplex e = pq[dim].remove_min();
     int outcome = getNextOutcome();
@@ -451,7 +451,7 @@ void SplitRecord::applyCmpSplit(SimplicialComplex& K) {
 
   // 2-simps
   dim = 2;
-  pq[dim].sort();
+  pq[dim].heapify();
   while (!pq[dim].empty()) {
     Simplex f = pq[dim].remove_min();
     int outcome = getNextOutcome();

@@ -2451,7 +2451,7 @@ void do_obtusesplit() {
   pqe.reserve(mesh.num_edges());
   for (Edge e : mesh.edges()) pqe.enter_unsorted(e, max_elen - mesh.length(e));
   int nsplit = 0;
-  pqe.sort();
+  pqe.heapify();
   string str;
   while (!pqe.empty()) {
     Edge e = pqe.remove_min();
@@ -2676,7 +2676,7 @@ void do_reduce() {
     Array<float> ar_cost(ar_edge.num());
     parallel_for(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
     for_int(i, ar_edge.num()) { pqe.enter_unsorted(ar_edge[i], ar_cost[i]); }
-    pqe.sort();
+    pqe.heapify();
   }
   const int orig_nf = mesh.num_faces();
   Set<Edge> edges_to_update;

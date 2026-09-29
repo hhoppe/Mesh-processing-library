@@ -81,7 +81,7 @@ void test3() {
   UpdatablePriorityQueue<int> pq;
   pq.reserve(n);
   for_int(i, n) pq.enter_unsorted(i, 2.f + std::sin(i * 7.f));
-  pq.sort();
+  pq.heapify();
   float a = 0.f;
   while (!pq.empty()) {
     const float b = pq.min_priority();
@@ -109,7 +109,7 @@ void test5() {
     const int n = itest < 30 ? itest : 30 + random_engine() % 400;
     UpdatablePriorityQueue<int> pq;
     for_int(i, n) pq.enter_unsorted(i, float(random_engine()));
-    pq.sort();
+    pq.heapify();
     float a = 0.f;
     while (!pq.empty()) {
       const float b = pq.min_priority();
@@ -126,7 +126,7 @@ void test6() {
     const int n = 70;
     UpdatablePriorityQueue<int> pq;
     for_int(i, n) pq.enter_unsorted(i, float(random_engine()));
-    pq.sort();
+    pq.heapify();
     for_int(i, n * 3) pq.update(i, float(random_engine()));
     float a = 0.f;
     while (!pq.empty()) {
@@ -150,7 +150,7 @@ void test7() {
     Array<float> arval3;
     for_int(i, n) arval3.push(2.f + std::sin(i * 13.f + k * 3.1415f));
     for_int(i, n) pq.enter_unsorted(i, arval1[i]);
-    pq.sort();
+    pq.heapify();
     for_int(i, n) assertx(pq.update(i, arval2[i]) == arval1[i]);
     for_int(i, n) assertx(pq.update(i, arval3[i]) == arval2[i]);
     for_int(i, n) assertx(pq.retrieve(i) == arval3[i]);
@@ -191,7 +191,7 @@ void test8() {
   pq.enter_unsorted(make_unique<int>(6), 1.2f);
   pq.enter_unsorted(make_unique<int>(7), 1.7f);
   pq.enter_unsorted(make_unique<int>(8), 1.8f);
-  pq.sort();
+  pq.heapify();
   assertx(*pq.min() == 6);
   assertx(pq.min_priority() == 1.2f);
   {
@@ -281,6 +281,8 @@ void test11() {  // Dijkstra on a grid, compared with a search that scans all th
       });
     }
   }
+  // Reference distances, from the original O(n^4) form of Dijkstra's algorithm on these n^2 vertices: instead of a
+  // priority queue, each step scans all the unvisited vertices for the closest one, and then relaxes its neighbors.
   Array<float> dist_scan(n * n, BIGFLOAT);
   {
     Array<bool> done(n * n, false);

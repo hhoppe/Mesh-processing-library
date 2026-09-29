@@ -37,11 +37,15 @@ template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable
   [[nodiscard]] const T& min() const { return ASSERTXX(!empty()), _ar[0]._e; }
   [[nodiscard]] float min_priority() const { return ASSERTXX(!empty()), _ar[0]._pri; }
   T remove_min() { return ASSERTXX(!empty()), remove_min_i(); }
+  // Elements entered with enter_unsorted() must be followed by heapify() before any other operation.
   void enter_unsorted(const T& e, float pri) requires Copyable<T> {
     return ASSERTX(pri >= 0.f), _ar.push(Node(e, pri));
   }
   void enter_unsorted(T&& e, float pri) { ASSERTX(pri >= 0.f), _ar.push(Node(std::move(e), pri)); }
-  void sort() { sort_i(); }
+  void heapify() { heapify_i(); }  // Establish the heap order, in time O(num()).
+  // Remove the elements for which pred(e, pri) is true, in time O(num()).  The remaining nodes keep their relative
+  // order in the underlying array before it is heapified, so the result does not depend on how pred is evaluated.
+  template <typename Pred> void remove_if(Pred pred) { remove_if_i(pred); }
 
  private:
   using Node = details::PQ::Node<T>;
@@ -124,7 +128,17 @@ template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable
     _ar[j]._pri = pri;
     return e;
   }
-  void sort_i() {
+  template <typename Pred> void remove_if_i(Pred pred) {
+    int n = 0;
+    for_int(i, num()) {
+      if (pred(std::as_const(_ar[i]._e), _ar[i]._pri)) continue;
+      if (n != i) _ar[n] = std::move(_ar[i]);
+      n++;
+    }
+    _ar.sub(num() - n);
+    heapify_i();
+  }
+  void heapify_i() {
     for (int i = (num() - 2) / 2; i >= 0; --i) {
       T e = std::move(_ar[i]._e);
       const float pri = _ar[i]._pri;
@@ -155,11 +169,11 @@ requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : 
     ASSERTXX(!empty());
     T e = _pq.remove_min();
     _m.remove(e);
-    discard_stale_top();
+    after_change();
     return e;
   }
   void enter_unsorted(const T& e, float pri) { ASSERTX(pri >= 0.f), _m.enter(e, pri), _pq.enter_unsorted(e, pri); }
-  void sort() { _pq.sort(); }
+  void heapify() { _pq.heapify(); }  // (See PriorityQueue::heapify().)
   [[nodiscard]] bool contains(const T& e) const { return _m.contains(e); }
   [[nodiscard]] float retrieve(const T& e) const {  // Ret pri or < 0.f.
     bool present;
@@ -228,19 +242,12 @@ requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : 
   void discard_stale_top() {
     while (!_pq.empty() && !is_current(_pq.min(), _pq.min_priority())) _pq.remove_min();
   }
-  // Remove the stale nodes.  Popping all nodes in priority order (rather than traversing the hash map) keeps the order
-  // of equal priorities independent of the element hash values.
+  // Remove the stale nodes, and all but one of any duplicate nodes, in time O(num()).  The removal preserves the order
+  // of the remaining nodes in the underlying array (see PriorityQueue::remove_if()), rather than traversing the hash
+  // map, so that the order of equal priorities does not depend on the hash values of the elements.
   void rebuild() {
-    Array<T> elements;
-    Array<float> priorities;
-    elements.reserve(num()), priorities.reserve(num());  // At most one node remains per current element.
     Set<T, Hash, Equal> kept;  // (A removed and re-entered element may have two current nodes.)
-    while (!_pq.empty()) {
-      const float pri = _pq.min_priority();
-      T e = _pq.remove_min();
-      if (is_current(e, pri) && kept.add(e)) elements.push(std::move(e)), priorities.push(pri);
-    }
-    for_int(i, elements.num()) _pq.enter_unsorted(std::move(elements[i]), priorities[i]);  // Sorted order is a heap.
+    _pq.remove_if([&](const T& e, float pri) { return !is_current(e, pri) || !kept.add(e); });
   }
 };
 

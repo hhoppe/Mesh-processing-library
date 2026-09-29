@@ -4642,7 +4642,7 @@ void optimize() {
       pqecost.enter_unsorted(e, ecol_result.cost);
       if (verb >= 3) showdf("adding edge with cost=%g\n", ecol_result.cost - offset_cost);
     }
-    pqecost.sort();
+    pqecost.heapify();
   }
   // showf("Begin simplification\n");
   const int orig_nfaces = mesh.num_faces(), orig_nvertices = mesh.num_vertices();

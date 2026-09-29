@@ -513,7 +513,7 @@ void CloseMinCycles::find_cycles() {
   UpdatablePriorityQueue<Vertex> pqvlbsr;  // Lower-bound on search radius for min cycle about vertex.
   pqvlbsr.reserve(_mesh.num_vertices());
   for (Vertex v : _mesh.vertices()) pqvlbsr.enter_unsorted(v, 0.f);
-  if (0) pqvlbsr.sort();  // Sorting is unnecessary because all initial priority values are the same.
+  if (0) pqvlbsr.heapify();  // Heapifying is unnecessary because all initial priority values are the same.
   Vertex vrand = _mesh.random_vertex(Random::G);  // Allow getenv_int("SEED_RANDOM") to vary the search.
   if (0) vrand = _mesh.id_vertex(53);             // For debug, select specific vertex.
   int nprocessed = 0;

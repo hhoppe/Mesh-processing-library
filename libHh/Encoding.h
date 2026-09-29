@@ -68,7 +68,7 @@ template <typename T> class Encoding : noncopyable {
     PriorityQueue<int> pq;
     pq.reserve(_map.num());
     for (const float prob : _map.values()) pq.enter_unsorted(0, prob);
-    pq.sort();
+    pq.heapify();
     assertw(pq.num() >= 2);
     double sum = 0.;
     while (pq.num() >= 2) {
@@ -124,7 +124,7 @@ template <typename T> class Encoding : noncopyable {
       float max_prob = 0.f;
       for (const float prob : _map.values()) max_prob = max(max_prob, prob);
       for (auto& [e, prob] : _map) pq.enter_unsorted(e, max_prob - prob);
-      pq.sort();
+      pq.heapify();
       if (!assertw(tot_prob)) tot_prob = 1.f;
       float cumu_prob = 0.f;
       for_int(i, ntop) {

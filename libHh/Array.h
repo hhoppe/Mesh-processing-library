@@ -49,7 +49,7 @@ inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
 template <typename T> class CArrayView;
 template <typename T> class ArrayView;
 
-// The view type (const or mutable) corresponding to an element pointer type Ptr.
+// The view type (const or modifiable) corresponding to an element pointer type Ptr.
 template <typename Ptr>
 using array_view_t = std::conditional_t<std::is_const_v<std::remove_pointer_t<Ptr>>,
                                         CArrayView<std::remove_cv_t<std::remove_pointer_t<Ptr>>>,
@@ -105,7 +105,7 @@ template <typename T> class CArrayView {
 
  protected:
   // The pointer is declared non-const even though CArrayView's elements are logically const.  This lets the derived
-  // ArrayView<T> and Array<T> expose a mutable data() without a second pointer member, so all three classes share a
+  // ArrayView<T> and Array<T> expose a modifiable data() without a second pointer member, so all three classes share a
   // single layout and derived-to-base conversion is free.  Const-correctness is therefore not enforced by the type of
   // _a but by the member function signatures: CArrayView never returns _a as non-const, and there is deliberately no
   // conversion from CArrayView<T> to ArrayView<T>.  Do not add one, and do not expose _a in a public member.
@@ -157,7 +157,8 @@ template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> 
   using base::_n;
   using base::check;
   ArrayView() = default;
-  type& operator=(const type&) = default;  // Protected to prevent a no-op "matrix[0] = matrix[1]" on a mutable Matrix.
+  // Protected to prevent a no-op "matrix[0] = matrix[1]" on a modifiable Matrix.
+  type& operator=(const type&) = default;
 };
 
 // Create an ArrayView<T> referencing the single specified element.
@@ -170,7 +171,12 @@ template <typename T> [[nodiscard]] constexpr bool have_overlap(CArrayView<T> v1
 
 namespace details {
 
-// The built-in storage of Array<T, inline_capacity>.
+// The built-in storage of Array<T, inline_capacity>.  It is a class between ArrayView<T> and Array in a single chain
+// of inheritance, rather than a second (private) base class of Array such as Vec<T, inline_capacity>, because:
+// (1) the empty base class optimization, needed so that Array<T> gains no size when inline_capacity == 0, is fragile
+//     under multiple inheritance (MSVC applies it to multiple bases only if the class is __declspec(empty_bases));
+// (2) Vec.h includes Array.h (a Vec converts to an ArrayView), so Array.h cannot depend on Vec.h; and
+// (3) keeping _cap in Array itself, initialized after this base, leaves the code generated for Array<T> unchanged.
 template <typename T, int inline_capacity> class ArrayStorage : public ArrayView<T> {
  protected:
   ArrayStorage() : ArrayView<T>(_builtin, 0) {}

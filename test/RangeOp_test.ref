@@ -156,7 +156,11 @@ ar = Array<int>(3) {
   16
   27
 }
-pairs = 0A1B2C
+pairs = Array<std::pair<int,char>>(3) {
+  [0, A]
+  [1, B]
+  [2, C]
+}
 mean(range(20)) = 9.5
 mean(range(20) | views::filter([](auto e) { return e != 10; })) = 9.47368
 contains(range(20), 13) = 1

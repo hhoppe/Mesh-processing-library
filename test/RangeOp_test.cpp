@@ -161,14 +161,14 @@ int main() {
     SHOW(ar);
     using Index = std::remove_cvref_t<decltype(std::get<0>(*ranges::begin(ar | enumerate_fallback)))>;
     static_assert(std::is_same_v<Index, ranges::range_difference_t<Array<int>>>);  // As in the standard.
-    const auto to_string = [](auto&& range) -> string {
-      string result;
-      for (auto [i, ch] : range) result += std::to_string(i) + ch;
+    const auto to_array = [](auto&& range) -> Array<std::pair<int, char>> {
+      Array<std::pair<int, char>> result;
+      for (auto [i, ch] : range) result.push({int(i), ch});
       return result;
     };
-    const string pairs = to_string(enumerate_fallback(string("ABC")));
+    const Array<std::pair<int, char>> pairs = to_array(enumerate_fallback(string("ABC")));
     SHOW(pairs);
-    assertx(to_string(enumerate(string("ABC"))) == pairs);  // The standard one, where it exists.
+    assertx(to_array(enumerate(string("ABC"))) == pairs);  // The standard one, where it exists.
   }
   {
     static_assert(ranges::range<Array<float>>);

@@ -1,19 +1,19 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#ifndef MESH_PROCESSING_MESHSIMPLIFY_BQEM_H_
-#define MESH_PROCESSING_MESHSIMPLIFY_BQEM_H_
+#ifndef MESH_PROCESSING_MESHSIMPLIFY_BASEQEM_H_
+#define MESH_PROCESSING_MESHSIMPLIFY_BASEQEM_H_
 
 #include "MeshSimplify/Qem.h"
 #include "libHh/InlinedArray.h"
 
 namespace hh {
 
-// BQem is an abstract base class for a set of derived DQem classes, each containing an instance of Qem.
-// By using BQem, an application can decide at runtime which size Qem to use.
-template <typename T> class BQem : noncopyable {
-  using type = BQem<T>;
+// BaseQem is an abstract base class for a set of derived DQem classes, each containing an instance of Qem.
+// By using BaseQem, an application can decide at runtime which size Qem to use.
+template <typename T> class BaseQem : noncopyable {
+  using type = BaseQem<T>;
 
  public:
-  virtual ~BQem() = default;
+  virtual ~BaseQem() = default;
   virtual void set_zero() = 0;
   virtual void copy(const type& qem) = 0;
   virtual void add(const type& qem) = 0;
@@ -39,9 +39,9 @@ template <typename T> class BQem : noncopyable {
   virtual void serialize(std::ostream& os) const = 0;
 };
 
-template <typename T, int n> class DQem : public BQem<T> {
+template <typename T, int n> class DQem : public BaseQem<T> {
   using type = DQem<T, n>;
-  using base = BQem<T>;
+  using base = BaseQem<T>;
 
  public:
   void set_zero() override { _q.set_zero(); }
@@ -89,9 +89,9 @@ template <typename T, int n> class DQem : public BQem<T> {
   void serialize(std::ostream& os) const override { os << _q; }
 };
 
-template <typename T> HH_DECLARE_OSTREAM_EOL(BQem<T>);
+template <typename T> HH_DECLARE_OSTREAM_EOL(BaseQem<T>);
 template <typename T, int n> HH_DECLARE_OSTREAM_EOL(DQem<T, n>);
 
 }  // namespace hh
 
-#endif  // MESH_PROCESSING_MESHSIMPLIFY_BQEM_H_
+#endif  // MESH_PROCESSING_MESHSIMPLIFY_BASEQEM_H_

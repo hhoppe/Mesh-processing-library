@@ -31,7 +31,7 @@
 
 namespace hh {
 
-class BSac : noncopyable {  // Noncopyable for safety -- could be removed if careful; if so, make Sac<> noncopyable.
+class BaseSac : noncopyable {  // Noncopyable for safety -- could be removed if careful; if so, make Sac<> noncopyable.
  public:
   using Func = void (*)(void*);
   static constexpr int k_dummy = 4;
@@ -49,7 +49,7 @@ class BSac : noncopyable {  // Noncopyable for safety -- could be removed if car
   alignas(16) char _a[k_dummy];
 };
 
-template <typename T> class Sac : public BSac {
+template <typename T> class Sac : public BaseSac {
   static constexpr int k_max = 50;
 
  public:
@@ -109,32 +109,32 @@ template <typename T> int Sac<T>::size = 0;
 template <typename T> int Sac<T>::max_align = alignof(T);
 template <typename T> int Sac<T>::cnum = 0;
 template <typename T> int Sac<T>::ckeys[k_max] = {};
-template <typename T> BSac::Func Sac<T>::cfuncs[k_max] = {};
+template <typename T> BaseSac::Func Sac<T>::cfuncs[k_max] = {};
 template <typename T> int Sac<T>::dnum = 0;
 template <typename T> int Sac<T>::dkeys[k_max] = {};
-template <typename T> BSac::Func Sac<T>::dfuncs[k_max] = {};
+template <typename T> BaseSac::Func Sac<T>::dfuncs[k_max] = {};
 
-#define HH_MAKE_SAC(T)                                                                                     \
-  static void* operator new(size_t s) {                                                                    \
-    ASSERTX(s == sizeof(T));                                                                               \
-    const int alignment = hh::Sac<T>::get_max_align();                                                     \
-    return assertx(hh::aligned_malloc(alignment, sizeof(T) - hh::BSac::k_dummy + hh::Sac<T>::get_size())); \
-  }                                                                                                        \
-  static void operator delete(void* p, size_t) { hh::aligned_free(p); }                                    \
+#define HH_MAKE_SAC(T)                                                                                        \
+  static void* operator new(size_t s) {                                                                       \
+    ASSERTX(s == sizeof(T));                                                                                  \
+    const int alignment = hh::Sac<T>::get_max_align();                                                        \
+    return assertx(hh::aligned_malloc(alignment, sizeof(T) - hh::BaseSac::k_dummy + hh::Sac<T>::get_size())); \
+  }                                                                                                           \
+  static void operator delete(void* p, size_t) { hh::aligned_free(p); }                                       \
   hh::Sac<T> sac
 
-#define HH_MAKE_POOLED_SAC(T)                                                                  \
-  hh::Sac<T> sac;                                                                              \
-  static void* operator new(size_t s) {                                                        \
-    ASSERTX(s == sizeof(T));                                                                   \
-    const int alignment = hh::Sac<T>::get_max_align();                                         \
-    return pool.alloc_size(alignment, sizeof(T) - hh::BSac::k_dummy + hh::Sac<T>::get_size()); \
-  }                                                                                            \
-  static void operator delete(void* p, size_t) {                                               \
-    pool.free_size(p, sizeof(T) - hh::BSac::k_dummy + hh::Sac<T>::get_size());                 \
-  }                                                                                            \
-  static void* operator new[](size_t) = delete;                                                \
-  static void operator delete[](void*, size_t) = delete;                                       \
+#define HH_MAKE_POOLED_SAC(T)                                                                     \
+  hh::Sac<T> sac;                                                                                 \
+  static void* operator new(size_t s) {                                                           \
+    ASSERTX(s == sizeof(T));                                                                      \
+    const int alignment = hh::Sac<T>::get_max_align();                                            \
+    return pool.alloc_size(alignment, sizeof(T) - hh::BaseSac::k_dummy + hh::Sac<T>::get_size()); \
+  }                                                                                               \
+  static void operator delete(void* p, size_t) {                                                  \
+    pool.free_size(p, sizeof(T) - hh::BaseSac::k_dummy + hh::Sac<T>::get_size());                 \
+  }                                                                                               \
+  static void* operator new[](size_t) = delete;                                                   \
+  static void operator delete[](void*, size_t) = delete;                                          \
   HH_POOL_ALLOCATION_3(T)
 
 #define HH_SACABLE(T)                                   \

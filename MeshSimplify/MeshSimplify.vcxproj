@@ -33,7 +33,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Qem.h" />
-    <ClInclude Include="BQem.h" />
+    <ClInclude Include="BaseQem.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(MeshRoot)\libHh\libHh.vcxproj">

@@ -7,7 +7,7 @@
 
 namespace hh {
 
-// Quadric error metric used in mesh simplification (see also BQem.h).
+// Quadric error metric used in mesh simplification (see also BaseQem.h).
 template <typename T, int n> class Qem {
  public:
   void set_zero();

@@ -29,21 +29,21 @@ namespace hh {
 
 namespace details {
 
-// *** BPointSpatial
+// *** BasePointSpatial
 
-void BPointSpatial::clear() {
+void BasePointSpatial::clear() {
   for (auto& cell : _map.values()) HH_SSTAT(Spspcelln, cell.num());
   _map.clear();
 }
 
-void BPointSpatial::enter(Univ id, const Point* pp) {
+void BasePointSpatial::enter(Univ id, const Point* pp) {
   const Ind ci = indices_from_point(*pp);
   assertx(indices_inbounds(ci));
   const int en = encode(ci);
   _map[en].push(Node{id, pp});  // First create empty Array<Node> if not present.
 }
 
-void BPointSpatial::remove(Univ id, const Point* pp) {
+void BasePointSpatial::remove(Univ id, const Point* pp) {
   const Ind ci = indices_from_point(*pp);
   assertx(indices_inbounds(ci));
   const int en = encode(ci);
@@ -60,11 +60,12 @@ void BPointSpatial::remove(Univ id, const Point* pp) {
   if (!ar.num()) _map.remove(en);
 }
 
-void BPointSpatial::shrink_to_fit() {
+void BasePointSpatial::shrink_to_fit() {
   for (auto& cell : _map.values()) cell.shrink_to_fit();
 }
 
-void BPointSpatial::add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point& pcenter, Set<Univ>& /*set*/) const {
+void BasePointSpatial::add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point& pcenter,
+                                Set<Univ>& /*set*/) const {
   // SHOW("add_cell", ci);
   const int en = encode(ci);
   bool present;
@@ -76,14 +77,14 @@ void BPointSpatial::add_cell(const Ind& ci, PriorityQueue<Univ>& pq, const Point
   }
 }
 
-Univ BPointSpatial::pq_id(Univ pqe) const {
+Univ BasePointSpatial::pq_id(Univ pqe) const {
   const Node* e = Conv<const Node*>::d(pqe);
   return e->id;
 }
 
 // *** SpatialSearch
 
-BSpatialSearch::BSpatialSearch(const Spatial* pspatial, const Point& p, float maxdis)
+BaseSpatialSearch::BaseSpatialSearch(const Spatial* pspatial, const Point& p, float maxdis)
     : _spatial(*assertx(pspatial)), _pcenter(p), _maxdis(maxdis) {
   // SHOW("search", p, maxdis);
   Ind ci = _spatial.indices_from_point(_pcenter);
@@ -94,12 +95,12 @@ BSpatialSearch::BSpatialSearch(const Spatial* pspatial, const Point& p, float ma
   advance();  // Compute the closest element, so that begin() and empty() need not do any work.
 }
 
-BSpatialSearch::~BSpatialSearch() {
+BaseSpatialSearch::~BaseSpatialSearch() {
   HH_SSTAT(Sssncellsv, _ncellsv);
   HH_SSTAT(Sssnelemsv, _nelemsv);
 }
 
-void BSpatialSearch::advance() {
+void BaseSpatialSearch::advance() {
   for (;;) {
     if (_pq.empty()) {
       if (_disbv2 >= square(_maxdis)) return void(_done = true);
@@ -121,7 +122,7 @@ void BSpatialSearch::advance() {
   }
 }
 
-void BSpatialSearch::consider(const Ind& ci) {
+void BaseSpatialSearch::consider(const Ind& ci) {
   // SHOW("consider", ci);
   _ncellsv++;
   const int n = _pq.num();
@@ -129,7 +130,7 @@ void BSpatialSearch::consider(const Ind& ci) {
   _nelemsv += _pq.num() - n;
 }
 
-void BSpatialSearch::get_closest_next_cell() {
+void BaseSpatialSearch::get_closest_next_cell() {
   float mindis = 1e10f;
   for_int(c, 3) {
     if (_ssi[0][c] > 0) {
@@ -155,7 +156,7 @@ void BSpatialSearch::get_closest_next_cell() {
   _disbv2 = square(mindis);
 }
 
-void BSpatialSearch::expand_search_space() {
+void BaseSpatialSearch::expand_search_space() {
   ASSERTX(_axis >= 0 && _axis < 3 && _dir >= 0 && _dir <= 1);
   // SHOW("expand", _axis, _dir, _ssi);
   _ssi[_dir][_axis] += _dir ? 1 : -1;

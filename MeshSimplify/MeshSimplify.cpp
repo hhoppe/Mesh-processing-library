@@ -5,7 +5,7 @@
 #include "recipes.h"
 #endif
 
-#include "MeshSimplify/BQem.h"
+#include "MeshSimplify/BaseQem.h"
 #include "libHh/A3dStream.h"  // A3dColor
 #include "libHh/Args.h"
 #include "libHh/Array.h"
@@ -249,7 +249,7 @@ using L_QEM_T = double;
 #else
 using L_QEM_T = float;
 #endif
-using BQemT = BQem<L_QEM_T>;
+using BQemT = BaseQem<L_QEM_T>;
 constexpr int k_qemsmax = 9;
 
 using upBQemT = unique_ptr<BQemT>;
@@ -325,7 +325,7 @@ struct NewMeshNei : noncopyable {
   Array<int> ar_eptv;            // For ar_epts[], index in va of sharp edge.
 
   Array<BQemT*> ar_wq;  // qem for each nwid (new'ed); not unique_ptr<BQemT> because
-  //  DQem<T>::compute_minp*() recasts arg type from BQem<T>::compute_minp*().
+  //  DQem<T>::compute_minp*() recasts arg type from BaseQem<T>::compute_minp*().
 };
 
 // Parameterization of face points on would-be neighborhood.

@@ -233,11 +233,25 @@ make_dep ?= Makefile.dep#   This was Makefile_$(CONFIG).dep but is now independe
 # We need "-DMAKEFILE_DEP" for defined() in precompiled_libHh.h.
 # We omit "-march=native": it only affects the inclusion of system headers, which "-MM" excludes anyway, and on some
 #  CPUs, GCC warns about the flag itself (e.g., "'-mavx10.1' is aliased to 512 bit" on Intel Granite Rapids).
-# The "-x c++" makes explicit that g++ treats *.c files as C++; clang (e.g., as g++ on macOS) warns if it is implicit.
+# The "-x c++" makes explicit that *.c files are C++; clang warns if it is implicit.
+# The perl script converts CRLF to LF and path separators '\' to '/' (e.g., from mingw g++ and Windows clang).
+# The gcc and clang configs use their own compiler; others (i.e., cl in CONFIG=win) default to g++, and if it is
+#  absent, the build proceeds without tracking the header dependencies, and $(make_dep) warns about it on every run.
+# Any failure of the compiler (thanks to pipefail) removes the incomplete $(make_dep), and because $(make_dep) is
+#  included with "include" rather than "-include", the build then fails.
+makedep_cxx ?= g++
 cmd_makedep = @echo Creating $(make_dep); \
-  g++ -MM -DMAKEFILE_DEP $(CPPFLAGS) -x c++ $(src_c) -x none -std=$(CXX_STD) $(src_cpp) | \
-  perl -pe 'BEGIN { binmode(STDOUT); } s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' >$(make_dep) \
-  || rm -f $(make_dep)
+  if [[ -z "$(strip $(src))" ]]; then \
+    : >$(make_dep); \
+  elif ! command -v $(makedep_cxx) >/dev/null; then \
+    echo '$$(warning Warning: header dependencies are not tracked because $(makedep_cxx) is not found)' >$(make_dep); \
+  else \
+    set -o pipefail; \
+    $(makedep_cxx) -MM -DMAKEFILE_DEP $(CPPFLAGS) -x c++ $(src_c) -x none -std=$(CXX_STD) $(src_cpp) | \
+    perl -pe 'BEGIN { binmode(STDOUT); } s/\r$$//; s@\\(?=\S)@/@g; s/\.o:/$(dot_quoted_target):/g; s@ \.\./include/\S+@@g;' \
+      >$(make_dep) \
+    || { rm -f $(make_dep); exit 1; }; \
+  fi
 
 ifneq ($(want_plain_compiler),1)
   includes += -I$(MeshRoot)

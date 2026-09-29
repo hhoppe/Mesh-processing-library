@@ -27,7 +27,7 @@ depend $(make_dep):
 	$(cmd_makedep)
 
 ifeq ($(include_make_dep),1)
-  -include $(make_dep)
+  include $(make_dep)
 endif
 
 libs:

@@ -2,7 +2,7 @@ release ?= 1#  0=debug or 1=release (usually 1).
 
 ifeq ($(is_mac),1)
   cppinc += -DHH_NO_IMAGE_LIBS#  To avoid installing libjpeg and libpng; instead just use ffmpeg.
-  includes += -I/opt/X11/include#  For XQuartz X11 on Mac.
+  includes += -isystem /opt/X11/include#  For XQuartz X11 on Mac; a system directory, so that its headers do not warn.
   LDFLAGS += -L/opt/X11/lib#  For XQuartz X11 on Mac.
   CC = clang#  Set default choice of compiler (clang or gcc); on Mac, gcc/g++ gets mapped to clang anyway.
   # Mac uses libc++ (rather than libstdc++) and it does not currently have stacktrace.

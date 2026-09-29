@@ -119,3 +119,52 @@ jobs:
           & $msbuild mesh_processing.sln -nologo -maxCpuCount -verbosity:minimal -warnAsError `
             -p:Configuration=ReleaseMD -p:Platform=x64
           exit $LASTEXITCODE
+
+  # Build with the makefiles (CONFIG=win, i.e., the Microsoft compiler) and run the unit tests, under MSYS2.
+  windows-make-test:
+    runs-on: windows-2025-vs2026
+    timeout-minutes: 60
+    defaults:
+      run:
+        shell: msys2 {0}
+    steps:
+      - uses: actions/checkout@v7
+
+      # The MSYS2 packages provide GNU make, bash utilities, perl, and g++ (for the header dependencies only).
+      - uses: msys2/setup-msys2@v2
+        with:
+          msystem: MSYS
+          release: false
+          install: make perl gcc diffutils
+          path-type: inherit
+
+      - name: Show tool versions
+        run: |
+          make --version | sed -n 1p
+          g++ --version | sed -n 1p
+
+      - name: Build and test
+        run: |
+          set -o pipefail
+          make -k -j"$(nproc)" CONFIG=win PEDANTIC=1 ignore_compile_warnings=0 2>&1 | tee build.log
+
+      - name: Check the log for warnings
+        run: |
+          if grep -n -i -E 'warning|error' build.log; then exit 1; fi
+
+      - name: Show test differences
+        if: failure()
+        run: |
+          shopt -s nullglob
+          for f in test/*.diff; do echo "== $f"; cat "$f"; done
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: windows-make-test-logs
+          path: |
+            build.log
+            test/*.diff
+            test/*.ou
+          if-no-files-found: ignore

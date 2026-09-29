@@ -1,0 +1,39 @@
+#!/bin/bash
+
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: ensure_x11_server
+
+Under Cygwin, start an X server on the display $DISPLAY (default :0) unless one already accepts connections, and
+wait until it does.  The Cygwin builds of the viewers (e.g., G3dOGL) draw through X11, so the demos call this when
+they use those builds.  The server is XWin in multiwindow mode (each X window becomes a Windows window), without the
+synchronization of the Windows and X clipboards, which rendering does not need.  Elsewhere, this does nothing.
+
+Examples:
+ensure_x11_server
+DISPLAY=:1 ensure_x11_server
+END_USAGE_EXAMPLES
+
+if [[ $1 == --help ]]; then echo "$usage"; exit 0; fi
+[[ $# == 0 ]] || { echo "$usage" >&2; exit 1; }
+
+[[ $OSTYPE == cygwin ]] || exit 0
+
+export DISPLAY=${DISPLAY:-:0}
+for program in xset XWin; do
+  type -P $program >/dev/null || { echo "ensure_x11_server: $program is not installed." >&2; exit 1; }
+done
+server_is_up() { xset q >&/dev/null; }
+server_is_up && exit 0
+
+echo "ensure_x11_server: starting an X server on display $DISPLAY." >&2
+if type -P run >/dev/null; then
+  run XWin "$DISPLAY" -multiwindow -noclipboard  # The run program detaches XWin without a console window.
+else
+  setsid XWin "$DISPLAY" -multiwindow -noclipboard >&/dev/null </dev/null &
+fi
+for ((i = 0; i < 100; i++)); do
+  server_is_up && exit 0
+  sleep 0.2
+done
+echo "ensure_x11_server: the X server on display $DISPLAY did not start within 20 seconds." >&2
+exit 1

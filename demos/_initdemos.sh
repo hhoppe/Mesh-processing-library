@@ -50,6 +50,9 @@ PATH=../bin:$PATH
 # Allow running scripts in the current directory.
 PATH=.:$PATH
 
+# The Cygwin builds of the viewers draw through X11, so start an X server if none is running.
+if [[ $(type -P G3dOGL) == */bin/cygwin/* ]]; then ensure_x11_server; fi
+
 # Here one can adjust the default window size and position for most demos.
 export G3DARGS="-geom 750x600"
 export G3DARGS="-geom 900x700 -bigfont"

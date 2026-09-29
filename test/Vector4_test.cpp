@@ -44,8 +44,9 @@ void test_consistency() {
       num_div_scalar += quotient_scalar[c] != a[c] / f;
       num_mul += product[c] != a[c] * b[c];
     }
-    // Separate statements prevent the contraction of a product and a sum into a fused multiply-add.
-    const float p0 = a[0] * b[0], p1 = a[1] * b[1], p2 = a[2] * b[2], p3 = a[3] * b[3];
+    // The volatile products prevent their contraction with the sums into fused multiply-adds, which
+    // -ffp-contract=fast permits (although we have not observed it with gcc 15 or clang 21).
+    const volatile float p0 = a[0] * b[0], p1 = a[1] * b[1], p2 = a[2] * b[2], p3 = a[3] * b[3];
     const float expected_dot = (p0 + p1) + (p2 + p3);
     num_dot += dot(a, b) != expected_dot;
   }

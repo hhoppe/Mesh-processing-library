@@ -553,7 +553,7 @@ void SubMesh::averaging_mask(Vertex v, Combvh& comb) const {
 void SubMesh::crease_averaging_mask(Vertex v, Combvh& comb) const {
   assertx(!_isquad);
   int adj_dart_vertices = 0, adj_corner_vertices = 0, adj_ec_vertices = 0, svi = 0;
-  PArray<Vertex, 10> va;
+  InlinedArray<Vertex, 10> va;
   for (Edge e : _m.edges(v)) {
     if (!sharp(e)) continue;
     Vertex vo = _m.opp_vertex(v, e);

@@ -1,11 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/PMesh.h"
 
-#include "libHh/BinaryIO.h"   // read_binary_std() and write_binary_std()
-#include "libHh/GMesh.h"      // in extract_gmesh()
-#include "libHh/HashTuple.h"  // hash<pair<...>>
-#include "libHh/PArray.h"     // ar_pwedge
-#include "libHh/RangeOp.h"    // fill()
+#include "libHh/BinaryIO.h"      // read_binary_std() and write_binary_std()
+#include "libHh/GMesh.h"         // in extract_gmesh()
+#include "libHh/HashTuple.h"     // hash<pair<...>>
+#include "libHh/InlinedArray.h"  // ar_pwedge
+#include "libHh/RangeOp.h"       // fill()
 #include "libHh/Set.h"
 #include "libHh/Vector4.h"
 
@@ -558,7 +558,7 @@ void AWMesh::apply_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo, Ancestry*
   int jlccw, jlclw, jrccw, jrclw;  // Only defined if faces exist.
   dummy_init(jlccw, jlclw, jrccw, jrclw);
   if (k_debug) jlccw = jlclw = jrccw = jrclw = std::numeric_limits<int>::max();
-  PArray<int*, 10> ar_pwedges;
+  InlinedArray<int*, 10> ar_pwedges;
   if (vspl.vlr_offset1 == 0) {
     // Extremely rare case when flclw does not exist.
     flclw = k_undefined;
@@ -1238,7 +1238,7 @@ void AWMesh::undo_vsplit(const Vsplit& vspl, const PMeshInfo& pminfo) {
   }
   // Identify those wedges that will need to be updated to vs.
   //  (wmodif may contain some duplicates)
-  PArray<int, 10> ar_wmodif;
+  InlinedArray<int, 10> ar_wmodif;
   if (ffl >= 0) {
     for (;;) {
       const int w = *pwwl;

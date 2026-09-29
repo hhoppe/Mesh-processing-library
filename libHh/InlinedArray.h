@@ -1,6 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#ifndef MESH_PROCESSING_LIBHH_PARRAY_H_
-#define MESH_PROCESSING_LIBHH_PARRAY_H_
+#ifndef MESH_PROCESSING_LIBHH_INLINEDARRAY_H_
+#define MESH_PROCESSING_LIBHH_INLINEDARRAY_H_
 
 #include "libHh/Array.h"  // ArrayView
 
@@ -8,24 +8,24 @@ namespace hh {
 
 // Resizable allocated 1D array just like Array<T> but contains built-in storage for pcap elements.
 //  As in Array<T>, T must have a public operator=().
-template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-allocated capacity pcap.
+template <typename T, int pcap> class InlinedArray : public ArrayView<T> {  // Pre-allocated capacity pcap.
   using base = ArrayView<T>;
-  using type = PArray<T, pcap>;
+  using type = InlinedArray<T, pcap>;
 
  public:
-  PArray() : base(_pa, 0) {}
-  explicit PArray(int n) : base(_pa, n) {
+  InlinedArray() : base(_pa, 0) {}
+  explicit InlinedArray(int n) : base(_pa, n) {
     ASSERTX(n >= 0);
     if (n > pcap) {
       _a = new T[narrow_cast<size_t>(n)];
       _cap = n;
     }
   }
-  explicit PArray(const type& ar) requires Copyable<T> : PArray() { *this = ar; }
-  PArray(std::initializer_list<T> l) requires Copyable<T> : PArray(ranges::subrange(l)) {}
-  PArray(type&& ar) noexcept : PArray() { *this = std::move(ar); }
+  explicit InlinedArray(const type& ar) requires Copyable<T> : InlinedArray() { *this = ar; }
+  InlinedArray(std::initializer_list<T> l) requires Copyable<T> : InlinedArray(ranges::subrange(l)) {}
+  InlinedArray(type&& ar) noexcept : InlinedArray() { *this = std::move(ar); }
   template <input_range_to<T> R> requires(!std::same_as<std::remove_cvref_t<R>, type>)
-  explicit PArray(R&& range) : PArray() {
+  explicit InlinedArray(R&& range) : InlinedArray() {
     if constexpr (ranges::forward_range<R> || ranges::sized_range<R>) {
       init(narrow_cast<int>(ranges::distance(range)));
       ranges::copy(range, _a);
@@ -33,7 +33,7 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
       for (auto&& e : range) push(std::forward<decltype(e)>(e));
     }
   }
-  ~PArray() {
+  ~InlinedArray() {
     if (_a != _pa) delete[] _a;  // Equivalent to "if (_cap != pcap)".
   }
   auto& operator=(CArrayView<T> ar) requires Copyable<T> {
@@ -241,13 +241,14 @@ template <typename T, int pcap> class PArray : public ArrayView<T> {  // Pre-all
 };
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
-template <typename T, int pcap, typename Func> [[nodiscard]] auto transformed(const PArray<T, pcap>& c, Func func) {
+template <typename T, int pcap, typename Func>
+[[nodiscard]] auto transformed(const InlinedArray<T, pcap>& c, Func func) {
   using ResultType = std::decay_t<std::invoke_result_t<Func, const T&>>;
-  return PArray<ResultType, pcap>(c | views::transform(func));
+  return InlinedArray<ResultType, pcap>(c | views::transform(func));
 }
 
-template <typename T, int pcap> HH_DECLARE_OSTREAM_EOL(PArray<T, pcap>);  // Implemented by CArrayView<T>.
+template <typename T, int pcap> HH_DECLARE_OSTREAM_EOL(InlinedArray<T, pcap>);  // Implemented by CArrayView<T>.
 
 }  // namespace hh
 
-#endif  // MESH_PROCESSING_LIBHH_PARRAY_H_
+#endif  // MESH_PROCESSING_LIBHH_INLINEDARRAY_H_

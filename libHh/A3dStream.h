@@ -3,7 +3,7 @@
 #define MESH_PROCESSING_LIBHH_A3DSTREAM_H_
 
 #include "libHh/Geometry.h"
-#include "libHh/PArray.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/Pixel.h"
 #include "libHh/RangeOp.h"
 
@@ -93,9 +93,9 @@ class A3dElem {
  private:
   EType _type{EType::polygon};
   bool _binary{false};
-  PArray<A3dVertex, 8> _v;  // For EType::polygon, EType::polyline, EType::point.
-  string _comment;          // For EType::comment.
-  Vec3<float> _f;           // For command_type().
+  InlinedArray<A3dVertex, 8> _v;  // For EType::polygon, EType::polyline, EType::point.
+  string _comment;                // For EType::comment.
+  Vec3<float> _f;                 // For command_type().
   void push_i(const A3dVertex& vertex) {
     assertx(_type == EType::polygon || _type == EType::polyline || _type == EType::point);
     if (_type == EType::point) assertx(!num());

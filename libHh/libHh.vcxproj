@@ -147,7 +147,7 @@
     <ClInclude Include="Multigrid.h" />
     <ClInclude Include="NetworkOrder.h" />
     <ClInclude Include="NonlinearOptimization.h" />
-    <ClInclude Include="PArray.h" />
+    <ClInclude Include="InlinedArray.h" />
     <ClInclude Include="PMesh.h" />
     <ClInclude Include="Parallel.h" />
     <ClInclude Include="ParallelCoords.h" />

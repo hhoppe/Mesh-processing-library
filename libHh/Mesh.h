@@ -5,8 +5,8 @@
 #include "libHh/Array.h"
 #include "libHh/Flags.h"
 #include "libHh/Geometry.h"  // because of Point, too bad.
+#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
-#include "libHh/PArray.h"
 #include "libHh/Pool.h"
 #include "libHh/Sac.h"
 
@@ -309,7 +309,7 @@ class Mesh : noncopyable {
 
   // Edge iterators do not define an order.
   [[nodiscard]] Vec2<Vertex> vertices(Edge e) const;
-  [[nodiscard]] PArray<Face, 2> faces(Edge e) const;
+  [[nodiscard]] InlinedArray<Face, 2> faces(Edge e) const;
 
  private:
   friend class GMesh;
@@ -495,7 +495,7 @@ class Mesh : noncopyable {
     }
   };
 
-  struct EF_range : PArray<Face, 2> {  // 1 or 2 faces.
+  struct EF_range : InlinedArray<Face, 2> {  // 1 or 2 faces.
     EF_range(const Mesh& m, Edge e) {
       HEdge he = m.herep(e);
       push(he->_face);
@@ -505,7 +505,7 @@ class Mesh : noncopyable {
 
   // Ccw iterators around a vertex, requiring the vertex to be nice.
 
-  struct WV_range : PArray<Vertex, 10> {  // A ccw Vertex Iter; one extra Vertex if v is on a boundary.
+  struct WV_range : InlinedArray<Vertex, 10> {  // A ccw Vertex Iter; one extra Vertex if v is on a boundary.
     WV_range(const Mesh& m, Vertex v) {
       for (HEdge he : m.ccw_corners(v)) {
         push(he->_next->_vert);
@@ -514,7 +514,7 @@ class Mesh : noncopyable {
     }
   };
 
-  struct WE_range : PArray<Edge, 10> {  // A ccw Edge Iter; one extra Edge if v is on a boundary.
+  struct WE_range : InlinedArray<Edge, 10> {  // A ccw Edge Iter; one extra Edge if v is on a boundary.
     WE_range(const Mesh& m, Vertex v) {
       for (HEdge he : m.ccw_corners(v)) {
         push(he->_next->_edge);
@@ -565,7 +565,7 @@ class Mesh : noncopyable {
   };
 
   struct MVertex {
-    PArray<HEdge, 8> _arhe;  // Hedges he such that he->_prev->_vert == this.
+    InlinedArray<HEdge, 8> _arhe;  // Hedges he such that he->_prev->_vert == this.
     int _id;
     Flags _flags;
     unique_ptr<char[]> _string;
@@ -716,9 +716,9 @@ inline Vec2<Vertex> Mesh::vertices(Edge e) const {
   return V(he->_vert, he->_prev->_vert);
 }
 
-inline PArray<Face, 2> Mesh::faces(Edge e) const {
+inline InlinedArray<Face, 2> Mesh::faces(Edge e) const {
   const HEdge he = herep(e);
-  return he->_sym ? PArray<Face, 2>{he->_face, he->_sym->_face} : PArray<Face, 2>{he->_face};
+  return he->_sym ? InlinedArray<Face, 2>{he->_face, he->_sym->_face} : InlinedArray<Face, 2>{he->_face};
 }
 
 inline Vec3<Vertex> Mesh::triangle_vertices(Face f) const {

@@ -8,9 +8,9 @@
 #include "libHh/GMesh.h"
 #include "libHh/HashPoint.h"
 #include "libHh/HiddenLineRemoval.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"  // floor(Vec<>)
-#include "libHh/PArray.h"
 #include "libHh/Polygon.h"
 #include "libHh/Postscript.h"
 #include "libHh/Set.h"
@@ -137,7 +137,7 @@ struct NodePolygon : Node {
   NodePolygon() : Node(Node::EType::polygon) {}
   coord* repc;
   Vector pnor;
-  PArray<segment*, 4> ars;
+  InlinedArray<segment*, 4> ars;
 };
 
 struct NodeLine : Node {

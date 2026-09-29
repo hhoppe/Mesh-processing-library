@@ -4,14 +4,14 @@
 
 #include "libHh/Bbox.h"
 #include "libHh/Geometry.h"
-#include "libHh/PArray.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/Pool.h"
 
 namespace hh {
 
 // A Polygon is an array of Points with additional functionality.
-class Polygon : public PArray<Point, 4> {
-  using base = PArray<Point, 4>;
+class Polygon : public InlinedArray<Point, 4> {
+  using base = InlinedArray<Point, 4>;
 
  public:
   Polygon() = default;

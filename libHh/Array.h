@@ -56,7 +56,7 @@ using array_view_t = std::conditional_t<std::is_const_v<std::remove_pointer_t<Pt
                                         ArrayView<std::remove_pointer_t<Ptr>>>;
 
 // View of a variable-sized 1D array with constant data of type T; e.g. refers to a const C-array,
-//  std::array<T>, std::vector<T>, Vec<T>, Array<T>, PArray<T>, Matrix<T>[row], etc.
+//  std::array<T>, std::vector<T>, Vec<T>, Array<T>, InlinedArray<T>, Matrix<T>[row], etc.
 template <typename T> class CArrayView {
   using type = CArrayView<T>;
 
@@ -123,7 +123,7 @@ template <typename T> class CArrayView {
 };
 
 // View of a variable-sized 1D array with modifiable data of type T, e.g. refers to a C-array,
-//  std::array<T>, std::vector<T>, Vec<T>, Array<T>, PArray<T>, Matrix<T>[row], etc.
+//  std::array<T>, std::vector<T>, Vec<T>, Array<T>, InlinedArray<T>, Matrix<T>[row], etc.
 template <typename T> class [[HH_NO_DANGLING]] ArrayView : public CArrayView<T> {
   using base = CArrayView<T>;
   using type = ArrayView<T>;
@@ -300,7 +300,7 @@ template <typename T> class Array : public ArrayView<T> {
   using base::reinit;  // Hide it.
 };
 
-// See also Vec.h, PArray.h, and Matrix.h.
+// See also Vec.h, InlinedArray.h, and Matrix.h.
 
 // Given container c, evaluate func() on each element (possibly changing the element type) and return new container.
 template <typename T, typename Func> [[nodiscard]] auto transformed(CArrayView<T> c, Func func) {

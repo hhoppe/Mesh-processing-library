@@ -306,7 +306,7 @@ class SphereMapper::Implementation {
   }
 
   [[nodiscard]] auto gather_1ring_external_edges(int v, int someface) const {
-    PArray<Vector, 12> edge_normals;
+    InlinedArray<Vector, 12> edge_normals;
     const auto normalized_cross = [](const Vector& vec1, const Vector& vec2) {
       return convert<float>(fast_normalized(cross(convert<double>(vec1), convert<double>(vec2))));
     };
@@ -357,7 +357,7 @@ class SphereMapper::Implementation {
   };
 
   [[nodiscard]] auto get_ar_faces(int v, int someface) const {
-    PArray<OptimizerFace, 12> ar_faces;
+    InlinedArray<OptimizerFace, 12> ar_faces;
     for (const int ff : _pmi.ccw_faces(v, someface)) {
       const Vec3<int> vertices = _pmi.face_vertices(ff);
       const int ii = (vertices[1] == v) * 1 + (vertices[2] == v) * 2;

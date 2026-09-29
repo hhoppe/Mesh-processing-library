@@ -3,7 +3,7 @@
 #define MESH_PROCESSING_MESHSIMPLIFY_BQEM_H_
 
 #include "MeshSimplify/Qem.h"
-#include "libHh/PArray.h"
+#include "libHh/InlinedArray.h"
 
 namespace hh {
 
@@ -68,7 +68,7 @@ template <typename T, int n> class DQem : public BQem<T> {
   [[nodiscard]] bool ar_compute_minp(CArrayView<base*> ar_q, MatrixView<float> minp) const override {
     CArrayView<type*> ar_qv(reinterpret_cast<type* const*>(ar_q.data()), ar_q.num());
     ASSERTX(ar_qv[0] == this);
-    PArray<Qem<T, n>*, 20> ar_q2(ar_q.num());
+    InlinedArray<Qem<T, n>*, 20> ar_q2(ar_q.num());
     for_int(i, ar_q.num()) ar_q2[i] = &ar_qv[i]->_q;
     ASSERTX(ar_q2[0] == &_q);
     return _q.ar_compute_minp(ar_q2, minp);
@@ -76,7 +76,7 @@ template <typename T, int n> class DQem : public BQem<T> {
   bool ar_compute_minp_constr_lf(CArrayView<base*> ar_q, MatrixView<float> minp, const float* lf) const override {
     CArrayView<type*> ar_qv(reinterpret_cast<type* const*>(ar_q.data()), ar_q.num());
     ASSERTX(ar_qv[0] == this);
-    PArray<Qem<T, n>*, 20> ar_q2(ar_q.num());
+    InlinedArray<Qem<T, n>*, 20> ar_q2(ar_q.num());
     for_int(i, ar_q.num()) ar_q2[i] = &ar_qv[i]->_q;
     ASSERTX(ar_q2[0] == &_q);
     return _q.ar_compute_minp_constr_lf(ar_q2, minp, lf);

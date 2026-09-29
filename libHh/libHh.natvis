@@ -119,8 +119,8 @@
   </Expand>
  </Type>
 
- <Type Name="hh::PArray&lt;*,*&gt;">
-  <DisplayString>PArray(num={_n})</DisplayString>
+ <Type Name="hh::InlinedArray&lt;*,*&gt;">
+  <DisplayString>InlinedArray(num={_n})</DisplayString>
   <Expand>
    <Item Name="[num]">_n</Item>
    <Item Name="[data]">_a</Item>

@@ -4,8 +4,8 @@
 
 #include "libHh/Array.h"
 #include "libHh/Bbox.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/Kdtree.h"
-#include "libHh/PArray.h"
 #include "libHh/Polygon.h"
 
 namespace hh {
@@ -271,7 +271,7 @@ class HiddenLineRemoval {
     s = _gsret[0];
     --ns;
     if (!ns) return KD::ECallbackReturn::bbshrunk;  // A single possibly modified segment.
-    PArray<HlrSegment, 4> sa(ns);
+    InlinedArray<HlrSegment, 4> sa(ns);
     for_int(i, ns) sa[i] = _gsret[i + 1];
     for_int(i, ns) render_seg_kd(sa[i], kdloc);
     return KD::ECallbackReturn::bbshrunk;  // Non-recursion with the final segment.

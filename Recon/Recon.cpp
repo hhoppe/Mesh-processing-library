@@ -180,7 +180,7 @@ void init_output() {
 }
 
 void compute_tp(int i, int& n, Frame& frame) {
-  PArray<Point, 40> pa;
+  InlinedArray<Point, 40> pa;
   SpatialSearch<int> ss(&*SPp, co[i]);
   for (const auto [pi, d2] : ss) {
     if ((pa.num() >= minkintp && d2 > square(samplingd)) || pa.num() >= maxkintp) break;

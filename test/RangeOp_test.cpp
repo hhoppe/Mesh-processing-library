@@ -5,9 +5,9 @@
 #include <vector>
 
 #include "libHh/Array.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
 #include "libHh/Mesh.h"
-#include "libHh/PArray.h"
 #include "libHh/Vec.h"
 using namespace hh;
 
@@ -128,7 +128,7 @@ int main() {
     const Array<int> ar1{3, 4, 5};
     for (const int i : concatenate(V(1, 2), ar1)) result.push(i);
     int c_array[1] = {6};
-    for (const int i : concatenate(c_array, PArray<int, 2>{7, 8, 9})) result.push(i);
+    for (const int i : concatenate(c_array, InlinedArray<int, 2>{7, 8, 9})) result.push(i);
     for (const int i : concatenate(std::vector<int>{10, 11}, std::list<int>{12, 13})) result.push(i);
     std::vector<int> vector{14, 15};
     std::list<int> list{16, 17};
@@ -160,8 +160,8 @@ int main() {
     static_assert(!ranges::range<std::pair<float, float>>);
     static_assert(ranges::sized_range<Array<float>>);
     static_assert(ranges::random_access_range<Array<float>>);
-    static_assert(ranges::sized_range<PArray<int, 3>>);
-    static_assert(ranges::random_access_range<PArray<int, 3>>);
+    static_assert(ranges::sized_range<InlinedArray<int, 3>>);
+    static_assert(ranges::random_access_range<InlinedArray<int, 3>>);
     const Map<int, float> map;
     static_assert(ranges::sized_range<decltype(map.keys())>);
     static_assert(!ranges::random_access_range<decltype(map.keys())>);

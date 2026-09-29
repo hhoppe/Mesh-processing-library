@@ -3,7 +3,7 @@
 
 #include "libHh/Array.h"
 #include "libHh/Bbox.h"
-#include "libHh/PArray.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/RangeOp.h"
 
 namespace hh {
@@ -48,7 +48,7 @@ float Polygon::get_area() const {
 bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
   assertx(num() >= 3);
   auto& self = *this;
-  PArray<float, 10> sa(num());
+  InlinedArray<float, 10> sa(num());
   int num_intersections = 0;
   for_int(i, num()) {
     sa[i] = dot(self[i] - hp, hn) + 1e-7f;
@@ -136,7 +136,7 @@ void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_nor
   // See example use in Filtera3d.cpp:compute_intersect().
   assertx(num() >= 3);
   const auto& self = *this;
-  PArray<float, 8> sa(num());
+  InlinedArray<float, 8> sa(num());
   for_int(i, num()) {
     float sc = dot(self[i], plane_normal) - plane_d;
     if (abs(sc) <= plane_tol) sc = 0.f;

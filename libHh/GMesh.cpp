@@ -397,7 +397,7 @@ void GMesh::read_line(char* sline) {
     case 'F':
       if (const char* s = after_prefix(sline, "Face ")) {
         const int fi = int_from_chars(s);
-        PArray<Vertex, 6> va;
+        InlinedArray<Vertex, 6> va;
         for (;;) {
           while (std::isspace(*s)) s++;
           if (!*s || *s == '{') break;

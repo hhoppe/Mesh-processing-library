@@ -37,9 +37,9 @@ Array<Simplex> ISimplex::all_faces() const {
   return faces;
 }
 
-PArray<Simplex, 20> ISimplex::get_star() const {
+InlinedArray<Simplex, 20> ISimplex::get_star() const {
   // Buggy: only valid for simplicial complex with DIM <= 3.
-  PArray<Simplex, 20> simplices;
+  InlinedArray<Simplex, 20> simplices;
   Simplex s = const_cast<Simplex>(this);
   simplices.push(s);
   for (Simplex ss : s->getParents()) simplices.push(ss);
@@ -64,8 +64,8 @@ PArray<Simplex, 20> ISimplex::get_star() const {
   return simplices;
 }
 
-PArray<Simplex, 20> ISimplex::faces_of_vertex() const {
-  PArray<Simplex, 20> simplices;
+InlinedArray<Simplex, 20> ISimplex::faces_of_vertex() const {
+  InlinedArray<Simplex, 20> simplices;
   Simplex s = const_cast<Simplex>(this);
   assertx(s->getDim() == 0);
   for (Simplex e : s->getParents())

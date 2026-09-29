@@ -4,7 +4,7 @@
 #include "libHh/Array.h"
 #include "libHh/Geometry.h"
 #include "libHh/HashTuple.h"
-#include "libHh/PArray.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"  // sort()
 #include "libHh/Set.h"
@@ -157,7 +157,7 @@ int main() {
   {
     Map<string, int> map = {{"first", 1}, {"second", 2}};
     SHOW(sort(Array(map.keys() | views::transform([](const string& s) { return "<" + s + ">"; }))));
-    SHOW(sort(PArray<int, 1>(map.values() | views::transform([](int i) { return 100 + i; }))));
+    SHOW(sort(InlinedArray<int, 1>(map.values() | views::transform([](int i) { return 100 + i; }))));
   }
   {
     static_assert(ranges::view<Map<int, int>::keys_range>);

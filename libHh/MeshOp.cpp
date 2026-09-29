@@ -338,7 +338,7 @@ float collapse_edge_qem_criterion(const GMesh& mesh, Edge e) {
   const int ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;
   const Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
   double qem = 0.;
-  PArray<Vector, 12> ar_normals;
+  InlinedArray<Vector, 12> ar_normals;
   for (Vertex v : mesh.vertices(e)) {
     for (Face f : mesh.faces(v)) {
       if (v == v2 && (f == f1 || f == f2)) continue;
@@ -624,12 +624,12 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
     return;
   }
   const int nsharpe = int(ranges::count_if(mesh.edges(v), [&](Edge e) { return sharp(mesh, v, e); }));
-  PArray<Face, 10> faces_visited;
+  InlinedArray<Face, 10> faces_visited;
   for (Face frep : mesh.faces(v)) {
     if (contains(faces_visited, frep)) continue;
     bool closed = false;
-    PArray<Vertex, 10> av;
-    PArray<Face, 10> af;
+    InlinedArray<Vertex, 10> av;
+    InlinedArray<Face, 10> af;
     Face f = frep;
     for (;;) {  // Find f: most_clw, or frep if closed.
       Edge e = mesh.ccw_edge(f, v);

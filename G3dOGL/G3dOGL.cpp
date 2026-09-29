@@ -4721,7 +4721,7 @@ bool psc_key_press(char ch) {
 
 #if defined(DEF_PLY)
 
-using PlyIndices = PArray<int, 4>;
+using PlyIndices = InlinedArray<int, 4>;
 Array<Point> ply_vpos;
 Array<Vector> ply_vnor;
 Array<Pixel> ply_vrgb;

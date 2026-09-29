@@ -9,7 +9,7 @@
 #include <thread>
 #include <vector>
 
-#include "libHh/PArray.h"
+#include "libHh/InlinedArray.h"
 
 #if 0
 {
@@ -175,7 +175,7 @@ void parallel_for_chunk(const ParallelOptions& options, R&& range, int num_threa
     // Process the chunks in parallel.
     const auto chunk_size = (num_elements + Size(num_threads) - 1) / Size(num_threads);
     // Precompute the chunk boundaries; ranges::next() is O(1) for a random-access iterator.
-    PArray<Subrange, 64> subranges(num_threads);
+    InlinedArray<Subrange, 64> subranges(num_threads);
     auto iterator = begin_range;
     Size offset = 0;
     for_int(i, num_threads) {

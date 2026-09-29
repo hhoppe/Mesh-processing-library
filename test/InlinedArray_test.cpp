@@ -1,5 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#include "libHh/PArray.h"
+#include "libHh/InlinedArray.h"
 using namespace hh;
 
 int main() {
@@ -8,27 +8,27 @@ int main() {
     ~S() { showf("~S(%d)\n", _i); }
     int _i;
   };
-  const auto func_construct_array = [](int i0, int n) {  // -> PArray<unique_ptr<S>, 2>
-    PArray<unique_ptr<S>, 2> ar;
+  const auto func_construct_array = [](int i0, int n) {  // -> InlinedArray<unique_ptr<S>, 2>
+    InlinedArray<unique_ptr<S>, 2> ar;
     for_int(i, n) ar.push(make_unique<S>(i0 + i));
     return ar;
   };
   {
     SHOW("beg");
-    PArray<unique_ptr<S>, 2> ar;
+    InlinedArray<unique_ptr<S>, 2> ar;
     ar.push(make_unique<S>(4));
     SHOW("end");
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<S>, 2> ar;
+    InlinedArray<unique_ptr<S>, 2> ar;
     ar.push(make_unique<S>(4));
     ar.push(make_unique<S>(5));
     SHOW("end");
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<S>, 2> ar;
+    InlinedArray<unique_ptr<S>, 2> ar;
     ar.push(make_unique<S>(4));
     ar.push(make_unique<S>(5));
     ar.push(make_unique<S>(6));
@@ -37,18 +37,18 @@ int main() {
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<S>, 2> ar;
+    InlinedArray<unique_ptr<S>, 2> ar;
     for_int(i, 20) ar.push(make_unique<S>(i));
     SHOW("end");
   }
   {
     SHOW("beg");
-    const PArray<unique_ptr<S>, 2> ar(func_construct_array(100, 2));
+    const InlinedArray<unique_ptr<S>, 2> ar(func_construct_array(100, 2));
     SHOW("end");
   }
   {
     SHOW("beg");
-    PArray<unique_ptr<S>, 2> ar;
+    InlinedArray<unique_ptr<S>, 2> ar;
     ar = func_construct_array(500, 2);
     SHOW(ar[0]->_i);
     ar = func_construct_array(600, 3);
@@ -69,7 +69,7 @@ int main() {
     SHOW("end");
   }
   {
-    PArray<int, 3> ar1;
+    InlinedArray<int, 3> ar1;
     SHOW(ar1);
     ar1.push(7);
     ar1.push(6);
@@ -80,7 +80,7 @@ int main() {
     SHOW(ar1);
     const auto func = [](int v) { return v * 1.5f; };
     SHOW(transformed(ar1, func));
-    PArray<int, 3> ar2;
+    InlinedArray<int, 3> ar2;
     ar2.push(11);
     ar2.push(12);
     SHOW(ar2);
@@ -118,14 +118,14 @@ int main() {
     SHOW(ar2);
   }
   {
-    PArray<int, 2> ar1{1};
+    InlinedArray<int, 2> ar1{1};
     SHOW(ar1);
-    PArray<int, 2> ar2{1, 2, 3};
+    InlinedArray<int, 2> ar2{1, 2, 3};
     SHOW(ar2);
   }
 }
 
-template class hh::PArray<unsigned, 4>;
-template class hh::PArray<double, 10>;
-template class hh::PArray<const int*, 100>;
-template class hh::PArray<unique_ptr<int>, 2>;
+template class hh::InlinedArray<unsigned, 4>;
+template class hh::InlinedArray<double, 10>;
+template class hh::InlinedArray<const int*, 100>;
+template class hh::InlinedArray<unique_ptr<int>, 2>;

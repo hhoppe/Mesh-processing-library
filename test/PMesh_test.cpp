@@ -2,15 +2,15 @@
 #include "libHh/PMesh.h"
 
 #include "libHh/HashTuple.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
-#include "libHh/PArray.h"
 #include "libHh/Random.h"
 using namespace hh;
 
 namespace {
 
 // The original eager implementations, kept verbatim as the reference.
-struct Ref_VF : PArray<int, 10> {
+struct Ref_VF : InlinedArray<int, 10> {
   Ref_VF(const AWMesh& mesh, int v, int f) {
     int ff = f, lastf, stopf;
     do {
@@ -31,7 +31,7 @@ struct Ref_VF : PArray<int, 10> {
   }
 };
 
-struct Ref_VV : PArray<std::pair<int, int>, 10> {
+struct Ref_VV : InlinedArray<std::pair<int, int>, 10> {
   Ref_VV(const AWMesh& mesh, int v, int f) {
     int ff = f, lastf;
     do {

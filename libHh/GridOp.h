@@ -4,7 +4,7 @@
 
 #include "libHh/Filter.h"
 #include "libHh/Grid.h"
-#include "libHh/PArray.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/ParallelCoords.h"
 #include "libHh/Pixel.h"
 #include "libHh/StridedArrayView.h"
@@ -638,7 +638,7 @@ template <int D, typename T>
 T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs, const T* bordervalue) {
   static_assert(std::is_trivially_default_constructible_v<T>);
   Vec<int, D> uL, uU;
-  Vec<PArray<float, 10>, D> matw;
+  Vec<InlinedArray<float, 10>, D> matw;
   for_int(d, D) {
     if (filterbs[d].bndrule() == Bndrule::border) assertx(bordervalue);
     assertx(!filterbs[d].filter().has_inv_convolution());

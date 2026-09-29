@@ -7,9 +7,9 @@
 #include "libHh/A3dStream.h"
 #include "libHh/Flags.h"
 #include "libHh/GMesh.h"
+#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
 #include "libHh/MeshOp.h"
-#include "libHh/PArray.h"
 #include "libHh/Polygon.h"
 #include "libHh/PriorityQueue.h"
 #include "libHh/Queue.h"
@@ -39,8 +39,9 @@ class ISimplex : noncopyable {
   // All descendents (>= 1 dim); iterates by generations children first, grandchildren next, etc.
   [[nodiscard]] Array<Simplex> all_faces() const;
   // All ancestors (>= 1 dim); iterates by generations parents first, grandparents next, etc.
-  [[nodiscard]] PArray<Simplex, 20> get_star() const;
-  [[nodiscard]] PArray<Simplex, 20> faces_of_vertex() const;  // Faces adjacent to simplex (which must be a vertex).
+  [[nodiscard]] InlinedArray<Simplex, 20> get_star() const;
+  [[nodiscard]] InlinedArray<Simplex, 20> faces_of_vertex()
+      const;  // Faces adjacent to simplex (which must be a vertex).
   [[nodiscard]] int getDim() const { return _dim; }
   [[nodiscard]] int getId() const { return _id; }
 

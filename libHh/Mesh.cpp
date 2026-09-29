@@ -469,7 +469,7 @@ bool Mesh::legal_edge_collapse(Edge e) const {
       if (query_edge(v, v1)) return false;
     }
   } else {
-    PArray<Vertex, 10> ar_v;
+    InlinedArray<Vertex, 10> ar_v;
     for (Vertex v : vertices(v2))
       if (v != v1 && v != vo1 && v != vo2) ar_v.push(v);
     for (Vertex v : vertices(v1))
@@ -865,11 +865,11 @@ Edge Mesh::remove_vertex_between_edges(Vertex vr) {
 
 Array<Vertex> Mesh::fix_vertex(Vertex v) {
   Array<Vertex> new_vertices;
-  PArray<HEdge, 8> hedges;
+  InlinedArray<HEdge, 8> hedges;
   for (HEdge he : v->_arhe) hedges.push(he->_prev);
   for (HEdge he : hedges) assertx(he->_vert == v);
   int num_he_processed = 0;
-  PArray<HEdge, 8> component;
+  InlinedArray<HEdge, 8> component;
   for (HEdge herep : hedges) {
     if (herep->_vert != v) continue;  // The half-edge already moved to a new vertex.
     component.init(0);

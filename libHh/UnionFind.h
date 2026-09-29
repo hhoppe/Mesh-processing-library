@@ -2,8 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_UNIONFIND_H_
 #define MESH_PROCESSING_LIBHH_UNIONFIND_H_
 
+#include "libHh/InlinedArray.h"
 #include "libHh/Map.h"
-#include "libHh/PArray.h"
 
 namespace hh {
 
@@ -32,7 +32,7 @@ template <typename T> class UnionFind {
 template <typename T> T UnionFind<T>::irep(T e, bool& present) const {
   T parent = _m.retrieve(e, present);
   if (!present || parent == e) return e;
-  PArray<T*, 10> ar;
+  InlinedArray<T*, 10> ar;
   for (;;) {
     T* p = &_m.get(e);
     if (*p == e) break;

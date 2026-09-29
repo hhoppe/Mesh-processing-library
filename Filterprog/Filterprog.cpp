@@ -368,7 +368,7 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         if (save0.skip_current) return true;
         if (record_changes) std::cout << sline << '\n';
         const int fi = int_from_chars(s);
-        PArray<Vertex, 3> va;
+        InlinedArray<Vertex, 3> va;
         for (;;) {
           while (std::isspace(*s)) s++;
           if (!*s || *s == '{') break;
@@ -1201,7 +1201,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       if (const char* s = after_prefix(sline, "Face ")) {
         // NOTE: because the edge collapse records are read in reverse, face2 arrives before face1!
         // Note: still true with std::swap(vs, vt) and collapse_edge_vertex.
-        PArray<Vertex, 3> va;
+        InlinedArray<Vertex, 3> va;
         const int fi = int_from_chars(s);
         for (;;) {
           while (std::isspace(*s)) s++;

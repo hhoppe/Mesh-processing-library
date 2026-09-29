@@ -1,0 +1,80 @@
+# Build all programs and run all unit tests, with compiler warnings treated as errors.
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to the same branch cancels the run of an older one.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    # Explicit bash gives -eo pipefail, so that a failing make is not masked by tee.
+    shell: bash
+
+jobs:
+  build-and-test:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: ubuntu-clang
+            os: ubuntu-26.04
+          - name: macos-clang
+            os: macos-26
+    steps:
+      - uses: actions/checkout@v7
+
+      # The packages are listed explicitly, as the record of what a fresh installation needs.
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make clang libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev
+
+      # XQuartz provides the X11 headers and libraries in /opt/X11, and ffmpeg provides image I/O (see README.md).
+      - name: Install dependencies (macOS)
+        if: runner.os == 'macOS'
+        run: brew install --cask xquartz && brew install ffmpeg
+
+      - name: Show tool versions
+        run: |
+          clang++ --version
+          make --version | sed -n 1p
+
+      # The option -k reports the failures of all directories in one run.
+      # The macOS /bin/bash (version 3.2) does not support '|&'.
+      - name: Build and test
+        run: make -k -j"$(getconf _NPROCESSORS_ONLN)" PEDANTIC=1 ignore_compile_warnings=0 2>&1 | tee build.log
+
+      # Warnings that -Werror does not cover (e.g., from the linker) also count as failures.
+      - name: Check the log for warnings
+        run: |
+          if grep -n -i -E 'warning|error' build.log; then exit 1; fi
+
+      - name: Show test differences
+        if: failure()
+        run: |
+          shopt -s nullglob
+          for f in test/*.diff; do echo "== $f"; cat "$f"; done
+
+      - name: Upload logs
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.name }}-logs
+          path: |
+            build.log
+            test/*.diff
+            test/*.ou
+          if-no-files-found: ignore

@@ -162,10 +162,6 @@ class Vector4 {
   [[nodiscard]] friend Vector4 operator-(const Vector4& v, float f) { return vsubq_f32(v._r, vdupq_n_f32(f)); }
   [[nodiscard]] friend Vector4 operator*(const Vector4& v, float f) { return vmulq_n_f32(v._r, f); }
   [[nodiscard]] friend Vector4 operator/(const Vector4& v, float f) { return vmulq_n_f32(v._r, 1.f / f); }
-  Vector4& operator=(const Vector4& r) {
-    _r = r._r;
-    return *this;
-  }
   void fill(float v) { _r = vdupq_n_f32(v); }  // All components set to same value.
   // Component-wise min/max.
   [[nodiscard]] friend Vector4 min(const Vector4& l, const Vector4& r) { return vminq_f32(l._r, r._r); }

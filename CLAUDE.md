@@ -48,7 +48,7 @@ the recursive make invocations make shell subprocesses expensive. Keep it that w
 ## Layout
 
 - `libHh` is the core library (containers, geometry, meshes, images, video, audio);
-  `libHh/README.txt` gives an overview of its core classes.
+  `libHh/README.md` gives an overview of its core classes.
 - `libHwWindows` (Win32) and `libHwX` (X11) implement windowing; a build links one of them.
 - Each program (`Filtermesh`, `MeshSimplify`, `G3dOGL`, ...) lives in its own directory and
   links against these libraries. `G3dVec` compiles sources from `G3dOGL`, and `Filtervideo`

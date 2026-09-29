@@ -333,6 +333,10 @@ bool details::assertw_aux2(const char* s) {
 
 // May return nullptr.
 void* aligned_malloc(size_t alignment, size_t size) {
+  // Satisfy the strictest implementation: the macOS std::aligned_alloc() fails (EINVAL) for an alignment smaller than
+  // sizeof(void*), and the C standard requires the size to be a multiple of the alignment.
+  alignment = std::max(alignment, sizeof(void*));
+  size = (size + alignment - 1) / alignment * alignment;
   // See https://stackoverflow.com/questions/3839922/aligned-malloc-in-gcc
 #if defined(_MSVC_STL_VERSION)  // 2024: Visual Studio still does not support std::aligned_alloc().
   return _aligned_malloc(size, alignment);

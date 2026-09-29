@@ -11,7 +11,7 @@ namespace hh {
 //    with/without function optimized for grid interior.
 
 template <typename Func = void(int), typename FuncInterior = void(int)>
-void for_1DL_interior(int x0, int xn, Func func, FuncInterior func_interior) {
+void for_1dL_interior(int x0, int xn, Func func, FuncInterior func_interior) {
   {
     int x = x0;
     if (x0 < xn) func(x);
@@ -23,24 +23,24 @@ void for_1DL_interior(int x0, int xn, Func func, FuncInterior func_interior) {
   }
 }
 
-template <typename Func = void(int, int)> void for_2D(int yn, int xn, Func func) {
+template <typename Func = void(int, int)> void for_2d(int yn, int xn, Func func) {
   for_int(y, yn) for_int(x, xn) func(y, x);
 }
 
-template <typename Func = void(int, int)> void for_2DL(int y0, int yn, int x0, int xn, Func func) {
+template <typename Func = void(int, int)> void for_2dL(int y0, int yn, int x0, int xn, Func func) {
   for_intL(y, y0, yn) for_intL(x, x0, xn) func(y, x);
 }
 
-template <typename Func = void(int, int)> void parallel_for_2D(int yn, int xn, Func func) {
+template <typename Func = void(int, int)> void parallel_for_2d(int yn, int xn, Func func) {
   parallel_for(range(yn), [&](const int y) { for_int(x, xn) func(y, x); });
 }
 
-template <typename Func = void(int, int)> void parallel_for_2DL(int y0, int yn, int x0, int xn, Func func) {
+template <typename Func = void(int, int)> void parallel_for_2dL(int y0, int yn, int x0, int xn, Func func) {
   parallel_for(range(y0, yn), [&](const int y) { for_intL(x, x0, xn) func(y, x); });
 }
 
 template <typename Func = void(int, int), typename FuncInterior = void(int, int)>
-void for_2DL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior func_interior) {
+void for_2dL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior func_interior) {
   {
     const int y = y0;
     if (y < yn) for_intL(x, x0, xn) func(y, x);
@@ -63,7 +63,7 @@ void for_2DL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior fu
 }
 
 template <typename Func = void(int, int), typename FuncInterior = void(int, int)>
-void parallel_for_2DL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior func_interior) {
+void parallel_for_2dL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior func_interior) {
   {
     const int y = y0;
     if (y < yn) for_intL(x, x0, xn) func(y, x);

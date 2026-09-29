@@ -106,7 +106,7 @@ template <int D, typename T> class CGridView {
   }
   bool map_inside(Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {  // Returns false if outside a Border.
     for_int(c, D) {
-      if (!map_boundaryrule_1D(u[c], _dims[c], bndrules[c])) return false;
+      if (!map_boundaryrule_1d(u[c], _dims[c], bndrules[c])) return false;
     }
     return true;
   }
@@ -404,7 +404,7 @@ constexpr decltype(auto) CGridView<D, T>::operator[](this auto&& self, const Vec
 }
 
 template <int D, typename T> bool CGridView<D, T>::map_inside(int& y, int& x, Bndrule bndrule) const requires(D == 2) {
-  return map_boundaryrule_1D(y, ysize(), bndrule) && map_boundaryrule_1D(x, xsize(), bndrule);
+  return map_boundaryrule_1d(y, ysize(), bndrule) && map_boundaryrule_1d(x, xsize(), bndrule);
 }
 
 template <int D, typename T>

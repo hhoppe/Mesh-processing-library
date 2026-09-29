@@ -183,21 +183,21 @@ int main(int argc, const char** argv) {
     const auto func_norm = [&](int y, int x) { showf("(%2d, %2d) norm\n", y, x); };
     const auto func_interior = [&](int y, int x) { showf("(%2d, %2d) interior\n", y, x); };
     SHOW("beg");
-    for_2DL_interior(0, 4, 0, 4, func_norm, func_interior);
+    for_2dL_interior(0, 4, 0, 4, func_norm, func_interior);
     SHOW("beg");
-    for_2DL_interior(0, 2, 0, 4, func_norm, func_interior);
+    for_2dL_interior(0, 2, 0, 4, func_norm, func_interior);
     SHOW("beg");
-    for_2DL_interior(0, 1, 0, 4, func_norm, func_interior);
+    for_2dL_interior(0, 1, 0, 4, func_norm, func_interior);
     SHOW("beg");
-    for_2DL_interior(0, 0, 0, 4, func_norm, func_interior);
+    for_2dL_interior(0, 0, 0, 4, func_norm, func_interior);
     SHOW("beg");
-    for_2DL_interior(0, 5, 3, 3, func_norm, func_interior);
+    for_2dL_interior(0, 5, 3, 3, func_norm, func_interior);
     SHOW("beg");
-    for_2DL_interior(0, 5, 3, 4, func_norm, func_interior);
+    for_2dL_interior(0, 5, 3, 4, func_norm, func_interior);
     SHOW("beg");
-    for_2DL_interior(0, 5, 3, 5, func_norm, func_interior);
+    for_2dL_interior(0, 5, 3, 5, func_norm, func_interior);
     SHOW("beg");
-    for_2DL_interior(0, 5, 3, 6, func_norm, func_interior);
+    for_2dL_interior(0, 5, 3, 6, func_norm, func_interior);
     return 0;
   }
   if (0) {  // Debug the iterators with normal and interior functions.

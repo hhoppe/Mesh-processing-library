@@ -44,7 +44,7 @@ inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
 }
 
 // Modify index i to be in domain [0, n - 1] using boundary rule; return false if bndrule == Border and i is outside.
-[[nodiscard]] constexpr bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule);
+[[nodiscard]] constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule);
 
 template <typename T> class CArrayView;
 template <typename T> class ArrayView;
@@ -425,7 +425,7 @@ template <typename T, int inline_capacity, typename Func> requires(inline_capaci
   }
 }
 
-constexpr bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
+constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule) {
   ASSERTX(n >= 1);
   switch (bndrule) {
     case Bndrule::reflected:
@@ -479,7 +479,7 @@ constexpr bool map_boundaryrule_1D(int& i, int n, Bndrule bndrule) {
 //----------------------------------------------------------------------------
 
 template <typename T> [[nodiscard]] bool CArrayView<T>::map_inside(int& i, Bndrule bndrule) const {
-  return map_boundaryrule_1D(i, _n, bndrule);
+  return map_boundaryrule_1d(i, _n, bndrule);
 }
 
 template <typename T>

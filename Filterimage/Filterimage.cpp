@@ -3215,7 +3215,7 @@ TransferResult structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixVie
       for_int(iy, window_diam) {
         const float w = fwindow[iy];
         int yy = y - window_radius + iy;
-        assertx(map_boundaryrule_1D(yy, mat_s.ysize(), k_reflected));
+        assertx(map_boundaryrule_1d(yy, mat_s.ysize(), k_reflected));
         for_int(x, mat_s.xsize()) {
           const Vector4 sv = mat_s[yy, x];
           fscolsum[x] += w * sv;
@@ -3250,7 +3250,7 @@ TransferResult structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixVie
         for_int(ix, window_diam) {
           const float w = fwindow[ix];
           int xx = x - window_radius + ix;
-          bool b = map_boundaryrule_1D(xx, mat_s.xsize(), k_reflected);
+          bool b = map_boundaryrule_1d(xx, mat_s.xsize(), k_reflected);
           ASSERTX(b);
           ssum += w * fscolsum[xx];
           ssum2 += w * fscolsum2[xx];

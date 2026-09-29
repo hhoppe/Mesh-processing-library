@@ -365,7 +365,7 @@ void FilterBnd::setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar
     ar_pixelindex0[x] = pixelindex0;
     double sum = 0.;
     // Here we cannot fold the boundary rule because Bndrule::periodic requires non-contiguous access.
-    // Instead we use map_boundaryrule_1D() within evaluate_kernel_d().
+    // Instead we use map_boundaryrule_1d() within evaluate_kernel_d().
     for_int(k, nk) {
       const int i = pixelindex0 + k;
       const double w0 = double(i);

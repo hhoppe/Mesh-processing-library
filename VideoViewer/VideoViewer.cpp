@@ -410,7 +410,7 @@ bool is_convex_ccw(CArrayView<Vec2<float>> poly) {
   return true;
 }
 
-bool intersect_poly_poly_2D(CArrayView<Vec2<float>> poly1, CArrayView<Vec2<float>> poly2) {
+bool intersect_poly_poly_2d(CArrayView<Vec2<float>> poly1, CArrayView<Vec2<float>> poly2) {
   ASSERTX(is_convex_ccw(poly1) && is_convex_ccw(poly2));  // Assume polygons are convex and oriented ccw.
   // Look for any separating line using any edge of either poly1 or poly2.
   for_int(i, poly1.num()) {
@@ -430,7 +430,7 @@ bool intersect_poly_poly_2D(CArrayView<Vec2<float>> poly1, CArrayView<Vec2<float
 
 bool image_is_not_visible() {
   assertx(g_cob >= 0);
-  return !intersect_poly_poly_2D(bbox_corners(Bbox(twice(0.f), convert<float>(g_win_dims))),
+  return !intersect_poly_poly_2d(bbox_corners(Bbox(twice(0.f), convert<float>(g_win_dims))),
                                  transformed(bbox_corners(Bbox(twice(0.f), convert<float>(g_frame_dims))),
                                              [](const Vec2<float>& p) { return convert<float>(get_win_yx(p)); }));
 }
@@ -4415,13 +4415,13 @@ void do_key(Args& args) { g_keystring += args.get_string(); }
 void test() {
   if (0) {
     auto poly = V(V(0.f, 0.f), V(1.f, 0.f), V(0.f, 1.f));
-    for_int(i, 10) SHOW(i, intersect_poly_poly_2D(poly, poly + V(i * .2f, 0.f)));
+    for_int(i, 10) SHOW(i, intersect_poly_poly_2d(poly, poly + V(i * .2f, 0.f)));
   }
   if (0) {
     auto poly1 = bbox_corners(Bbox(twice(0.f), twice(1.f)));
     auto poly2 = V(V(0.f, 0.f), V(1.f, 0.f), V(0.f, 1.f));
     SHOW(poly1, poly2);
-    for_int(i, 10) SHOW(i, intersect_poly_poly_2D(poly1, poly2 + V(-1.f + i * .1f, -.5f)));
+    for_int(i, 10) SHOW(i, intersect_poly_poly_2d(poly1, poly2 + V(-1.f + i * .1f, -.5f)));
   }
 }
 

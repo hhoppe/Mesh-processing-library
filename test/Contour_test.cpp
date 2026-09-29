@@ -10,8 +10,8 @@ namespace {
 
 // *** Contour2d
 
-void test2D() {
-  struct feval2D {
+void test2d() {
+  struct feval2d {
     float operator()(const Vec2<float>& p) const {
       float f = float(dist(p, V(.4f, .4f)) - .25);
       if (dist2(p, V(.3f, .6f)) < square(.3)) f = k_Contour_undefined;
@@ -38,14 +38,14 @@ void test2D() {
     func_polylinetoa3d(poly, el);
     wborder.write(el);
   };
-  Contour2d contour(gn, feval2D(), func_contour, func_border);
+  Contour2d contour(gn, feval2d(), func_contour, func_border);
   contour.march_near(V(.64f, .39f));
   // contour.march_from(V(.64f, .39f));
 }
 
 // *** Contour3d
 
-struct feval3D {
+struct feval3d {
   float operator()(const Vec3<float>& p) const {
     // Compute at double-precision to avoid numerical differences between different CONFIG.
     const Vec3<double> pd = convert<double>(p);
@@ -55,7 +55,7 @@ struct feval3D {
   }
 };
 
-void test3D() {
+void test3d() {
   const int gn = 10;
   WFile fcontour("Contour_test.3D");
   WSA3dStream wcontour(fcontour());
@@ -74,7 +74,7 @@ void test3D() {
     func_polygontoa3d(poly, el);
     wborder.write(el);
   };
-  Contour3d contour(gn, func_contour, feval3D(), func_border);
+  Contour3d contour(gn, func_contour, feval3d(), func_border);
   const int nc1 = contour.march_from(Point(.35f, .3f, .3f));
   const int nc2 = contour.march_from(Point(.25f, .65f, .7f));
   const int nc3 = contour.march_from(Point(.95f, .65f, .7f));
@@ -86,7 +86,7 @@ void test3D() {
 void testmesh() {
   GMesh mesh;
   {
-    Contour3dMesh<feval3D> contour(10, &mesh);
+    Contour3dMesh<feval3d> contour(10, &mesh);
     if (0) contour.big_mesh_faces();
     contour.set_vertex_tolerance(1e-4f);
     const int nc1 = contour.march_from(Point(.35f, .3f, .3f));
@@ -176,7 +176,7 @@ int main() {
     do_densemonkey();
   } else {
     testmesh();
-    test2D();
-    test3D();
+    test2d();
+    test3d();
   }
 }

@@ -60,7 +60,7 @@ int maxkintp = 20;
 int minkintp = 4;
 
 int num;            // # data points
-bool is_3D;         // Is it a 3D problem (vs. 2D)?
+bool is_3d;         // Is it a 3D problem (vs. 2D)?
 int minora;         // Minor axis: 1 in 2D, 2 in 3D.
 bool have_normals;  // The data contains normal information.
 
@@ -88,7 +88,7 @@ unique_ptr<Mk3d> ioo;  // Oriented tangent planes.
 unique_ptr<Mk3d> ioh;  // Here, iog with normals.
 unique_ptr<Mk3d> iol;  // Projections co[i] to the nearest tp.
 unique_ptr<Mk3d> ioc;  // Visited marching cubes.
-unique_ptr<Mk3d> iom;  // Final mesh (not a3d!), a3d curve if !is_3D.
+unique_ptr<Mk3d> iom;  // Final mesh (not a3d!), a3d curve if !is_3d.
 
 Array<Point> co;    // Data points.
 Array<Vector> nor;  // Normal at the point (is_zero() if none).
@@ -119,16 +119,16 @@ void process_read() {
     assertx(el.type() == A3dElem::EType::point);
     co.push(el[0].p);
     nor.push(el[0].n);
-    if (co[num][0]) is_3D = true;
+    if (co[num][0]) is_3d = true;
     if (!is_zero(nor[num])) {
       nnor++;
       if (usenormals) assertw(nor[num].normalize());
     }
     num++;
   }
-  showdf("%d points (with %d normals), %dD analysis\n", num, nnor, (is_3D ? 3 : 2));
+  showdf("%d points (with %d normals), %dD analysis\n", num, nnor, (is_3d ? 3 : 2));
   assertx(num > 1);
-  minora = is_3D ? 2 : 1;
+  minora = is_3d ? 2 : 1;
   if (nnor > 0 && !usenormals) showdf("ignoring normals!\n");
   have_normals = usenormals && nnor > 0;
   // if (have_normals) assertx(prop == 2);
@@ -141,7 +141,7 @@ void compute_xform() {
   assertx(co.num() == num);
   const Bbox bbox{co};
   xform = bbox.get_frame_to_small_cube();
-  if (!is_3D) xform.p()[0] = 0.f;  // Preserve x == 0.
+  if (!is_3d) xform.p()[0] = 0.f;  // Preserve x == 0.
   const float xform_scale = xform[0, 0];
   showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   xform_inverse = ~xform;
@@ -197,7 +197,7 @@ void draw_pc_extent(Mk3d& mk) {
   mk.scale(2);
   Mklib mklib(mk);
   // The frame is defined in terms of the principal frame!
-  if (is_3D) {
+  if (is_3d) {
     mklib.cubeO();
   } else {
     mklib.squareU();
@@ -205,7 +205,7 @@ void draw_pc_extent(Mk3d& mk) {
 }
 
 void draw_pc_linear(Mk3d& mk) {
-  if (is_3D) {
+  if (is_3d) {
     const MkSave mksave(mk);
     mk.scale(2);
     Mklib mklib(mk);
@@ -436,7 +436,7 @@ void draw_oriented_tps() {
     ioo->push();
     ioo->apply(frame * xform_inverse);
     draw_pc_linear(*ioo);
-    if (!is_3D) {
+    if (!is_3d) {
       ioo->point(0.f, 0.f, 0.f);
       ioo->point(0.f, 1.f, 0.f);
       ioo->end_polyline();
@@ -539,8 +539,8 @@ float compute_signed(const Point& p, Point& proj) {
   const Vector vptopc = p - pcorg[tpi];
   const float dis = dot(vptopc, pcnor[tpi]);
   proj = p - dis * pcnor[tpi];
-  if (!is_3D) assertx(!proj[0]);
-  if ((is_3D && (proj[0] <= 0.f || proj[0] >= 1.f)) || proj[1] <= 0.f || proj[1] >= 1.f || proj[2] <= 0.f ||
+  if (!is_3d) assertx(!proj[0]);
+  if ((is_3d && (proj[0] <= 0.f || proj[0] >= 1.f)) || proj[1] <= 0.f || proj[1] >= 1.f || proj[2] <= 0.f ||
       proj[2] >= 1.f)
     return k_Contour_undefined;
   if (1) {
@@ -575,9 +575,9 @@ void print_directed_seg(Mk3d& mk, const Point& p1, const Point& p2, const A3dCol
 Point build_Point(const Vec3<float>& p) { return p; }
 Point build_Point(const Vec2<float>& p) { return Point(0.f, p[0], p[1]); }
 
-template <int D> struct eval_point {
+template <int D> struct EvalPoint {
   float operator()(const Vec<float, D>& pp) const {
-    ASSERTX((D == 3) == is_3D);
+    ASSERTX((D == 3) == is_3d);
     const Point p = build_Point(pp);
     Point proj;
     const float dis = unsigneddis ? compute_unsigned(p, proj) : compute_signed(p, proj);
@@ -592,7 +592,7 @@ template <int D> struct eval_point {
   }
 };
 
-struct output_border3D {
+struct OutputBorder3d {
   void operator()(CArrayView<Vec3<float>> poly) const {
     assertx(ioc);
     A3dElem el(A3dElem::EType::polygon);
@@ -604,7 +604,7 @@ struct output_border3D {
   }
 };
 
-struct output_border2D {
+struct OutputBorder2d {
   void operator()(CArrayView<Vec2<float>> poly) const {
     assertx(ioc);
     ASSERTX(poly.num() == 2);
@@ -617,7 +617,7 @@ struct output_border2D {
   }
 };
 
-struct output_contour2D {
+struct OutputContour2d {
   void operator()(CArrayView<Vec2<float>> poly) const {
     if (!iom) return;
     ASSERTX(poly.num() == 2);
@@ -630,7 +630,7 @@ struct output_contour2D {
   }
 };
 
-template <typename Contour> void contour_3D(Contour& contour) {  // With or without a border.
+template <typename Contour> void contour_3d(Contour& contour) {  // With or without a border.
   contour.set_ostream(&std::cout);
   if (unsigneddis) {
     Point p = co[0];
@@ -646,7 +646,7 @@ template <typename Contour> void contour_3D(Contour& contour) {  // With or with
   }
 }
 
-template <typename Contour> void contour_2D(Contour& contour) {  // With or without a border.
+template <typename Contour> void contour_2d(Contour& contour) {  // With or without a border.
   contour.set_ostream(&std::cout);
   assertx(!pcorg[0][0]);
   if (unsigneddis) {
@@ -668,22 +668,22 @@ template <typename Contour> void contour_2D(Contour& contour) {  // With or with
 
 void process_contour() {
   HH_TIMER("_contour");
-  if (is_3D) {
+  if (is_3d) {
     // Note: now mesh is always created even if !iom.
     if (ioc) {
-      Contour3dMesh<eval_point<3>, output_border3D> contour(gridsize, &mesh);
-      contour_3D(contour);
+      Contour3dMesh<EvalPoint<3>, OutputBorder3d> contour(gridsize, &mesh);
+      contour_3d(contour);
     } else {
-      Contour3dMesh<eval_point<3>> contour(gridsize, &mesh);
-      contour_3D(contour);
+      Contour3dMesh<EvalPoint<3>> contour(gridsize, &mesh);
+      contour_3d(contour);
     }
   } else {
     if (ioc) {
-      Contour2d<eval_point<2>, output_border2D> contour(gridsize);
-      contour_2D(contour);
+      Contour2d<EvalPoint<2>, OutputBorder2d> contour(gridsize);
+      contour_2d(contour);
     } else {
-      Contour2d<eval_point<2>, output_contour2D> contour(gridsize);
-      contour_2D(contour);
+      Contour2d<EvalPoint<2>, OutputContour2d> contour(gridsize);
+      contour_2d(contour);
     }
   }
   // Here, iom is closed back in main().
@@ -708,7 +708,7 @@ void process() {
   }
   {
     HH_TIMER("_SPp");
-    const int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
+    const int n = is_3d ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
     SPp.emplace(n);
     for_int(i, num) SPp->enter(i, &co[i]);
   }
@@ -718,7 +718,7 @@ void process() {
     process_principal();
     {
       HH_TIMER("_SPpc");
-      const int n = is_3D ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
+      const int n = is_3d ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
       SPpc.emplace(n);
       for_int(i, num) SPpc->enter(i, &pcorg[i]);
     }
@@ -726,7 +726,7 @@ void process() {
     gpcpseudo.reset();
   }
   if (iol || ioc || iom) process_contour();
-  if (iom && is_3D) showdf("%s\n", mesh_genus_string(mesh).c_str());
+  if (iom && is_3d) showdf("%s\n", mesh_genus_string(mesh).c_str());
   SPp.reset();
   SPpc.reset();
 }
@@ -752,7 +752,7 @@ int main(int argc, const char** argv) {
   process();
   hh_clean_up();
   // We close iom here so that the mesh comes after everything else in the file.
-  if (iom && is_3D) {
+  if (iom && is_3d) {
     for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform_inverse);
     // mesh.write(assertx(dynamic_cast<WSA3dStream*>(&iom->oa3d()))->os());  // Note: would require RTTI.
     mesh.write(down_cast<WSA3dStream*>(&iom->oa3d())->os());

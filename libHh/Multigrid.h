@@ -371,27 +371,27 @@ class Multigrid : noncopyable {
             const int y0 = thread * ychunk, yn = min((thread + 1) * ychunk, ny) - sync_rows;
             if (0) for_intL(y, y0, yn) for_int(x, nx) func_update(y, x);
             if (1 && b_default_metric) {
-              for_2DL_interior(y0, yn, 0, nx, func_update, func_update_interior);
+              for_2dL_interior(y0, yn, 0, nx, func_update, func_update_interior);
             } else {
-              for_2DL(y0, yn, 0, nx, func_update);
+              for_2dL(y0, yn, 0, nx, func_update);
             }
-            // mingw 4096 4096: for_intL: 0.58 sec* for_2DL_interior: 0.64 sec  for_2DL: 0.83 sec
-            // win   4096 4096: for_intL: 1.84 sec  for_2DL_interior: 1.19 sec* for_2DL: 1.83 sec
+            // mingw 4096 4096: for_intL: 0.58 sec* for_2dL_interior: 0.64 sec  for_2dL: 0.83 sec
+            // win   4096 4096: for_intL: 1.84 sec  for_2dL_interior: 1.19 sec* for_2dL: 1.83 sec
           });
           const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(nx * size_t{sync_rows} * 10 / nthreads)};
           parallel_for(parallel_options, range(nthreads), [&](const int thread) {
             const int overlap = 0;  // = {1, 2} does not seem to help much over = 0.
             const int y0 = min((thread + 1) * ychunk, ny) - sync_rows, yn = min((thread + 1) * ychunk + overlap, ny);
-            for_2DL(y0, yn, 0, nx, func_update);
+            for_2dL(y0, yn, 0, nx, func_update);
           });
         }
         if (extra && 1) {  // Perform additional relaxations near the ends of dimensions with odd sizes.
           const int extra_niter = 30;
           const int extra_size = 6;
           if (ny > 1 && ny % 2 == 1)
-            for_int(extra_iter, extra_niter) for_2DL(max(ny - extra_size, 0), ny, 0, nx, func_update);
+            for_int(extra_iter, extra_niter) for_2dL(max(ny - extra_size, 0), ny, 0, nx, func_update);
           if (nx > 1 && nx % 2 == 1)
-            for_int(extra_iter, extra_niter) for_2DL(0, ny, max(nx - extra_size, 0), nx, func_update);
+            for_int(extra_iter, extra_niter) for_2dL(0, ny, max(nx - extra_size, 0), nx, func_update);
         }
       }
     } else {  // !constexpr (k_enable_specializations && D == 2)
@@ -645,8 +645,8 @@ class Multigrid : noncopyable {
       if (1)
         parallel_for({.cycles_per_elem = uint64_t(nx) * 10}, range(ny),
                      [&](const int y) { for_int(x, nx) func(y, x); });
-      if (0) parallel_for_2DL(0, ny, 0, nx, func);
-      if (0) parallel_for_2DL_interior(0, ny, 0, nx, func, func_interior);
+      if (0) parallel_for_2dL(0, ny, 0, nx, func);
+      if (0) parallel_for_2dL_interior(0, ny, 0, nx, func, func_interior);
     } else {
       HH_MULTIGRID_TIMER("_compute_residual");
       const float wL = get_wL(dims);

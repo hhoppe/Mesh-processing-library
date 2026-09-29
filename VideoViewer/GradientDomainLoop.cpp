@@ -117,7 +117,7 @@ class BoundedIntervals {
 
 #if 0
 // Traverse a 2D grid using a sequence of bounded-width swaths instead of simple raster-scan order.
-#define for_2D_swaths(y, ny, x, nx, xwidth)                             \
+#define for_2d_swaths(y, ny, x, nx, xwidth)                             \
   for (BoundedIntervals HH_ID(bi)(nx, xwidth); *HH_ID(bi); ++HH_ID(bi)) \
   for_int(y, ny) for_intL(x, HH_ID(bi).l(), HH_ID(bi).u())
 #endif
@@ -228,11 +228,11 @@ void compute_gdloop_fast_relax(GridView<3, Pixel> videoloop, CGridView<3, Pixel>
         parallel_for(range(nthreads), [&](const int thread) {  // Pass 1.
           const int y0 = thread * ychunk, yn = min((thread + 1) * ychunk, ny) - sync_rows;
           if (0) for_intL(y, y0, yn) for_int(x, nx) func_update(y, x);
-          for_2DL_interior(y0, yn, 0, nx, func_update, func_update_interior);
+          for_2dL_interior(y0, yn, 0, nx, func_update, func_update_interior);
         });
         for_int(thread, nthreads) {  // Pass 2.
           const int y0 = min((thread + 1) * ychunk, ny) - sync_rows, yn = min((thread + 1) * ychunk, ny);
-          for_2DL(y0, yn, 0, nx, func_update);
+          for_2dL(y0, yn, 0, nx, func_update);
         }
       }
     }
@@ -273,7 +273,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
         const int fm1 = f > 0 ? f - 1 : nnf - 1;
         const int fp1 = f < nnf - 1 ? f + 1 : 0;
         // const int max_xwidth = 10'000;  // Because data fits in L2 cache, it is detrimental to break it up.
-        // for_2D_swaths(y, ny, x, nx, max_xwidth) {
+        // for_2d_swaths(y, ny, x, nx, max_xwidth) {
         for_int(y, ny) for_int(x, nx) {
           const int fi = grid_frameif[y, x];
           CMatrixView<Pixel> videofi = video[fi];

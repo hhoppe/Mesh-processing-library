@@ -45,8 +45,7 @@ class Video : public Grid<3, Pixel> {
   [[nodiscard]] const Vec2<int>& spatial_dims() const { return dims().tail<2>(); }
   [[nodiscard]] int ysize() const { return dim(1); }
   [[nodiscard]] int xsize() const { return dim(2); }
-  [[nodiscard]] const Attrib& attrib() const { return _attrib; }
-  [[nodiscard]] Attrib& attrib() { return _attrib; }
+  [[nodiscard]] auto& attrib(this auto&& self) { return self._attrib; }
   void read_file(const string& filename);         // The name may be "-" for std::cin; may throw std::runtime_error.
   void write_file(const string& filename) const;  // The name may be "-" for std::cout; may throw std::runtime_error.
 
@@ -92,10 +91,8 @@ class VideoNv12 : noncopyable {
   [[nodiscard]] size_t size() const { return _grid_Y.size(); }
   [[nodiscard]] CNv12View operator[](int f) const { return CNv12View(_grid_Y[f], _grid_UV[f]); }
   [[nodiscard]] Nv12View operator[](int f) { return Nv12View(_grid_Y[f], _grid_UV[f]); }
-  [[nodiscard]] GridView<3, uint8_t> get_Y() { return _grid_Y; }
-  [[nodiscard]] CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
-  [[nodiscard]] GridView<3, Vec2<uint8_t>> get_UV() { return _grid_UV; }
-  [[nodiscard]] CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
+  [[nodiscard]] auto get_Y(this auto&& self) { return grid_view_t<3, decltype(self._grid_Y.data())>(self._grid_Y); }
+  [[nodiscard]] auto get_UV(this auto&& self) { return grid_view_t<3, decltype(self._grid_UV.data())>(self._grid_UV); }
   void special_reduce_dim0(int i) { _grid_Y.special_reduce_dim0(i), _grid_UV.special_reduce_dim0(i); }
   void read_file(const string& filename, Video::Attrib* pattrib = nullptr);    // May throw std::runtime_error.
   void write_file(const string& filename, const Video::Attrib& attrib) const;  // May throw std::runtime_error.
@@ -118,10 +115,8 @@ class VideoNv12View {
   [[nodiscard]] int nframes() const { return _grid_Y.dim(0); }
   [[nodiscard]] size_t size() const { return _grid_Y.size(); }
   [[nodiscard]] Nv12View operator[](int f) { return Nv12View(_grid_Y[f], _grid_UV[f]); }
-  [[nodiscard]] GridView<3, uint8_t> get_Y() { return _grid_Y; }
-  [[nodiscard]] CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
-  [[nodiscard]] GridView<3, Vec2<uint8_t>> get_UV() { return _grid_UV; }
-  [[nodiscard]] CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }
+  [[nodiscard]] auto get_Y(this auto&& self) { return grid_view_t<3, decltype(self._grid_Y.data())>(self._grid_Y); }
+  [[nodiscard]] auto get_UV(this auto&& self) { return grid_view_t<3, decltype(self._grid_UV.data())>(self._grid_UV); }
 
  private:
   GridView<3, uint8_t> _grid_Y;         // Luminance.

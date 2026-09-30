@@ -108,10 +108,10 @@ class Frame : public SGrid<float, 4, 3> {
  public:
   Frame() = default;
   constexpr Frame(Vector v0, Vector v1, Vector v2, Point q) : base(V<Vec3<float>>(v0, v1, v2, q)) {}
-  [[nodiscard]] Vector& v(int i) { return HH_CHECK_BOUNDS(i, 3), static_cast<Vector&>((*this)[i]); }
-  [[nodiscard]] const Vector& v(int i) const { return HH_CHECK_BOUNDS(i, 3), static_cast<const Vector&>((*this)[i]); }
-  [[nodiscard]] Point& p() { return static_cast<Point&>((*this)[3]); }
-  [[nodiscard]] const Point& p() const { return static_cast<const Point&>((*this)[3]); }
+  [[nodiscard]] auto& v(this auto&& self, int i) {
+    return HH_CHECK_BOUNDS(i, 3), static_cast<copy_const_t<decltype(self), Vector>&>(self[i]);
+  }
+  [[nodiscard]] auto& p(this auto&& self) { return static_cast<copy_const_t<decltype(self), Point>&>(self[3]); }
   void zero() { fill(grid_view(), 0.f); }
   [[nodiscard]] bool is_ident() const;
   bool invert();

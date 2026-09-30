@@ -85,24 +85,15 @@ requires Hashable<Key, Hash, Equal> class Map {
     if (it == end()) return def();
     return it->second;
   }
-  [[nodiscard]] Value& get(const Key& key) {
-    auto it = _map.find(key);
-    ASSERTXX(it != end());
-    return it->second;
-  }
-  [[nodiscard]] const Value& get(const Key& key) const {
-    auto it = _map.find(key);
-    ASSERTXX(it != end());
+  [[nodiscard]] auto& get(this auto&& self, const Key& key) {
+    auto it = self._map.find(key);
+    ASSERTXX(it != self.end());
     return it->second;
   }
   // const Value& get(const Key& key) const { return (*this)[key]; } // Bad: throws exception if absent.
-  [[nodiscard]] Value* find_ptr(const Key& key) {  // Returns nullptr if key is absent.
-    auto it = _map.find(key);
-    return it != end() ? &it->second : nullptr;
-  }
-  [[nodiscard]] const Value* find_ptr(const Key& key) const {  // Returns nullptr if key is absent.
-    auto it = _map.find(key);
-    return it != end() ? &it->second : nullptr;
+  [[nodiscard]] auto* find_ptr(this auto&& self, const Key& key) {  // Returns nullptr if key is absent.
+    auto it = self._map.find(key);
+    return it != self.end() ? &it->second : nullptr;
   }
   Value remove(const Key& key) { return remove_i(key); }
   Value replace(const Key& key, const Value& value) requires Copyable<Key> && Copyable<Value> {
@@ -127,9 +118,8 @@ requires Hashable<Key, Hash, Equal> class Map {
   [[nodiscard]] const Key& get_random_key(Random& random) const { return crand(random)->first; }
   [[nodiscard]] const Value& get_random_value(Random& random) const { return crand(random)->second; }
   [[nodiscard]] keys_range keys() const { return views::keys(_map); }  // Keys are always constant.
-  [[nodiscard]] values_range values() { return views::values(_map); }
+  [[nodiscard]] auto values(this auto&& self) { return views::values(self._map); }
   [[nodiscard]] cvalues_range cvalues() const { return views::values(_map); }
-  [[nodiscard]] cvalues_range values() const { return views::values(_map); }
   // For "for (auto& [key, value] : map)" and HH_DECLARE_OSTREAM_RANGE(Map<Key, Value>):
   [[nodiscard]] bciter begin() const { return _map.begin(); }
   [[nodiscard]] bciter end() const { return _map.end(); }

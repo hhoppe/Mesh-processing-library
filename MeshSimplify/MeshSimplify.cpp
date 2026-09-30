@@ -156,10 +156,8 @@ struct fptinfo {
   Face cmf;
   float dist2;
 #if defined(ENABLE_FPTNOR)
-  [[nodiscard]] Vector& ptnor() { return _ptnor; }
-  [[nodiscard]] const Vector& ptnor() const { return _ptnor; }
-  [[nodiscard]] float& nordist2() { return _nordist2; }
-  [[nodiscard]] const float& nordist2() const { return _nordist2; }
+  [[nodiscard]] auto& ptnor(this auto&& self) { return self._ptnor; }
+  [[nodiscard]] auto& nordist2(this auto&& self) { return self._nordist2; }
 
  private:
   Vector _ptnor;    // k_undefined if undefined.
@@ -170,10 +168,8 @@ struct fptinfo {
   [[nodiscard]] float& nordist2() const { assertnever(""); }
 #endif
 #if defined(ENABLE_FPTCOLOR)
-  [[nodiscard]] A3dColor& ptcol() { return _ptcol; }
-  [[nodiscard]] const A3dColor& ptcol() const { return _ptcol; }
-  [[nodiscard]] float& coldist2() { return _coldist2; }
-  [[nodiscard]] const float& coldist2() const { return _coldist2; }
+  [[nodiscard]] auto& ptcol(this auto&& self) { return self._ptcol; }
+  [[nodiscard]] auto& coldist2(this auto&& self) { return self._coldist2; }
 
  private:
   A3dColor _ptcol;  // k_undefined if undefined.

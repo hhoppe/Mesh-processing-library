@@ -38,10 +38,8 @@ class SubMesh {
   void clear();
   static const FlagMask vflag_variable;  // An MVertex flag bit.
   // mesh() may be modified if no more SubMesh operations will be done.
-  [[nodiscard]] GMesh& mesh() { return _m; }
-  [[nodiscard]] const GMesh& mesh() const { return _m; }
-  [[nodiscard]] GMesh& orig_mesh() { return _omesh; }
-  [[nodiscard]] const GMesh& orig_mesh() const { return _omesh; }
+  [[nodiscard]] auto& mesh(this auto&& self) { return self._m; }
+  [[nodiscard]] auto orig_mesh(this auto&& self) -> copy_const_t<decltype(self), GMesh>& { return self._omesh; }
 
   // Subdivide (makes use of refine(), create_conv(), convolve_self(), ...):
   void subdivide(float cosang = 1.f);

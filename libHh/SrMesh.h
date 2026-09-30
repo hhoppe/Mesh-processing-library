@@ -298,10 +298,8 @@ class SrMesh {
   [[nodiscard]] SrAFace*& get_fnei(SrAFace* f, SrAFace* fn) const;
   [[nodiscard]] SrAFace* rotate_clw(SrAFace* f, SrAVertex* v) const;
   [[nodiscard]] SrAFace* rotate_ccw(SrAFace* f, SrAVertex* v) const;
-  [[nodiscard]] const SrVertex* get_vt(int vspli) const;
-  [[nodiscard]] SrVertex* get_vt(int vspli);
-  [[nodiscard]] const SrFace* get_fl(int vspli) const;
-  [[nodiscard]] SrFace* get_fl(int vspli);
+  [[nodiscard]] auto* get_vt(this auto&& self, int vspli);
+  [[nodiscard]] auto* get_fl(this auto&& self, int vspli);
   [[nodiscard]] int get_vspli(const SrFace* fl) const;  // Slow; requires an integer divide.
   [[nodiscard]] bool is_splitable(const SrVertex* v) const { return v->vspli >= 0; }
   [[nodiscard]] bool has_been_created(const SrVertex* v) const;

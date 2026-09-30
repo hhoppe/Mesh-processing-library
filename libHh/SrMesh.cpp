@@ -197,24 +197,16 @@ inline SrAFace* SrMesh::rotate_ccw(SrAFace* f, SrAVertex* v) const {
   return f->fnei[get_vf_j1(v, f)];
 }
 
-inline const SrVertex* SrMesh::get_vt(int vspli) const {
-  ASSERTX(_vsplits.ok(vspli));
-  return _quick_first_vt + size_t(vspli) * 2;
+inline auto* SrMesh::get_vt(this auto&& self, int vspli) {
+  ASSERTX(self._vsplits.ok(vspli));
+  copy_const_t<decltype(self), SrVertex>* vt = self._quick_first_vt;
+  return vt + size_t(vspli) * 2;
 }
 
-inline SrVertex* SrMesh::get_vt(int vspli) {
-  ASSERTX(_vsplits.ok(vspli));
-  return _quick_first_vt + size_t(vspli) * 2;
-}
-
-inline const SrFace* SrMesh::get_fl(int vspli) const {
-  ASSERTX(_vsplits.ok(vspli));
-  return _quick_first_fl + size_t(vspli) * 2;
-}
-
-inline SrFace* SrMesh::get_fl(int vspli) {
-  ASSERTX(_vsplits.ok(vspli));
-  return _quick_first_fl + size_t(vspli) * 2;
+inline auto* SrMesh::get_fl(this auto&& self, int vspli) {
+  ASSERTX(self._vsplits.ok(vspli));
+  copy_const_t<decltype(self), SrFace>* fl = self._quick_first_fl;
+  return fl + size_t(vspli) * 2;
 }
 
 inline int SrMesh::get_vspli(const SrFace* fl) const {

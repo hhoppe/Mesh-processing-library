@@ -53,8 +53,7 @@ class Image : public Matrix<Pixel> {
   void init(const Vec2<int>& pdims) { base::init(pdims); }
   void init(const Vec2<int>& pdims, Pixel pixel);
   void clear() { init(twice(0)); }
-  [[nodiscard]] const Attrib& attrib() const { return _attrib; }
-  [[nodiscard]] Attrib& attrib() { return _attrib; }
+  [[nodiscard]] auto& attrib(this auto&& self) { return self._attrib; }
   void set_zsize(int n);
   [[nodiscard]] int zsize() const { return HH_ASSUME(attrib().zsize <= 4), attrib().zsize; }
   void set_suffix(string suffix) { attrib().suffix = std::move(suffix); }  // E.g. "jpg"; for writing '-'.
@@ -171,10 +170,8 @@ class Nv12 {
     _mat_UV.init(dims / 2);
     assertx(_mat_Y.dims() == _mat_UV.dims() * 2);
   }
-  [[nodiscard]] MatrixView<uint8_t> get_Y() { return _mat_Y; }
-  [[nodiscard]] CMatrixView<uint8_t> get_Y() const { return _mat_Y; }
-  [[nodiscard]] MatrixView<Vec2<uint8_t>> get_UV() { return _mat_UV; }
-  [[nodiscard]] CMatrixView<Vec2<uint8_t>> get_UV() const { return _mat_UV; }
+  [[nodiscard]] auto get_Y(this auto&& self) { return grid_view_t<2, decltype(self._mat_Y.data())>(self._mat_Y); }
+  [[nodiscard]] auto get_UV(this auto&& self) { return grid_view_t<2, decltype(self._mat_UV.data())>(self._mat_UV); }
 
  private:
   Matrix<uint8_t> _mat_Y;         // Luminance.
@@ -189,10 +186,8 @@ class Nv12View {
     assertx(_mat_Y.dims() == _mat_UV.dims() * 2);
   }
   Nv12View(Nv12& nv12) : _mat_Y(nv12.get_Y()), _mat_UV(nv12.get_UV()) {}
-  [[nodiscard]] MatrixView<uint8_t> get_Y() { return _mat_Y; }
-  [[nodiscard]] CMatrixView<uint8_t> get_Y() const { return _mat_Y; }
-  [[nodiscard]] MatrixView<Vec2<uint8_t>> get_UV() { return _mat_UV; }
-  [[nodiscard]] CMatrixView<Vec2<uint8_t>> get_UV() const { return _mat_UV; }
+  [[nodiscard]] auto get_Y(this auto&& self) { return grid_view_t<2, decltype(self._mat_Y.data())>(self._mat_Y); }
+  [[nodiscard]] auto get_UV(this auto&& self) { return grid_view_t<2, decltype(self._mat_UV.data())>(self._mat_UV); }
 
  private:
   MatrixView<uint8_t> _mat_Y;         // Luminance.

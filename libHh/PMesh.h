@@ -453,8 +453,7 @@ class PMeshIter : public AWMesh {
   bool prev();                                    // Returns success; die if !_pmrs.is_reversible().
   bool goto_nvertices(int nv) { return goto_nvertices_ancestry(nv, nullptr); }  // Returns success.
   bool goto_nfaces(int nf) { return goto_nfaces_ancestry(nf, nullptr); }        // Within +- 1, favor 0 or -1.
-  [[nodiscard]] PMeshRStream& rstream() { return _pmrs; }
-  [[nodiscard]] const PMeshRStream& rstream() const { return _pmrs; }
+  [[nodiscard]] auto rstream(this auto&& self) -> copy_const_t<decltype(self), PMeshRStream>& { return self._pmrs; }
   [[nodiscard]] GMesh extract_gmesh() const { return AWMesh::extract_gmesh(rstream()._info); }
 
  private:

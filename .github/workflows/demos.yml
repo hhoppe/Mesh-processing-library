@@ -9,13 +9,35 @@ on:
 
 permissions:
   contents: read
+  actions: read  # For the query of previous runs.
 
 defaults:
   run:
     shell: bash
 
 jobs:
+  # A scheduled run is skipped if this commit already passed this workflow, except on Sundays, whose run also
+  # detects any changes in the runner images and packages.
+  check:
+    runs-on: ubuntu-26.04
+    outputs:
+      needed: ${{ steps.check.outputs.needed }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          needed=true
+          if [[ $GITHUB_EVENT_NAME == schedule && $(date -u +%u) != 7 ]]; then
+            n=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$GITHUB_WORKFLOW" --commit "$GITHUB_SHA" \
+              --status success --json databaseId -q length)
+            if ((n > 0)); then needed=false; fi
+          fi
+          echo "needed=$needed" | tee -a "$GITHUB_OUTPUT"
+
   demos:
+    needs: check
+    if: needs.check.outputs.needed == 'true'
     name: ${{ matrix.name }}
     runs-on: ${{ matrix.os }}
     timeout-minutes: 90

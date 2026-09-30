@@ -1,0 +1,88 @@
+# Run clang-tidy (configured by .clang-tidy) over all C++ sources, both on Linux (with libHwX and libstdc++) and on
+# Windows (with libHwWindows and the MSVC STL), as each covers code that the other cannot; any finding fails the job.
+# This is slow, so it runs nightly and on demand, not on every push.
+name: Clang-tidy
+
+on:
+  schedule:
+    - cron: '0 11 * * *'  # Daily at 11:00 UTC.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read  # For the query of previous runs.
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  # A scheduled run is skipped if this commit already passed this workflow, except on Sundays, whose run also
+  # detects any changes in the runner images and packages.
+  check:
+    runs-on: ubuntu-26.04
+    outputs:
+      needed: ${{ steps.check.outputs.needed }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          needed=true
+          if [[ $GITHUB_EVENT_NAME == schedule && $(date -u +%u) != 7 ]]; then
+            n=$(gh run list -R "$GITHUB_REPOSITORY" --workflow "$GITHUB_WORKFLOW" --commit "$GITHUB_SHA" \
+              --status success --json databaseId -q length)
+            if ((n > 0)); then needed=false; fi
+          fi
+          echo "needed=$needed" | tee -a "$GITHUB_OUTPUT"
+
+  clang-tidy:
+    needs: check
+    if: needs.check.outputs.needed == 'true'
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix:
+        # Each platform omits the window-system library of the other.
+        include:
+          - name: linux
+            os: ubuntu-26.04
+            omit: libHwWindows
+            includes: -I./libHwX
+          - name: windows
+            os: windows-2025-vs2026
+            omit: libHwX
+            includes: -I./libHwWindows
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Install dependencies (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang-tidy libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev
+
+      # The Windows image includes LLVM.
+      - name: Add LLVM to the PATH (Windows)
+        if: runner.os == 'Windows'
+        run: echo 'C:\Program Files\LLVM\bin' >>"$GITHUB_PATH"
+
+      - name: Show the clang-tidy version
+        run: clang-tidy --version
+
+      - name: Run clang-tidy
+        run: |
+          shopt -s globstar
+          ls **/*.cpp | grep -vE '${{ matrix.omit }}|precompiled_libHh' |
+            xargs -P "$(nproc)" -I {} clang-tidy --quiet {} -- -I. ${{ matrix.includes }} 2>&1 | tee tidy.log
+          if grep -E ':[0-9]+:[0-9]+: (warning|error):' tidy.log; then exit 1; fi
+
+      - name: Upload the log
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: clang-tidy-${{ matrix.name }}-log
+          path: tidy.log
+          if-no-files-found: ignore

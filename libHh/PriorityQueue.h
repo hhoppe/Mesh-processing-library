@@ -146,48 +146,47 @@ requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : 
   void heapify() { _pq.heapify(); }  // (See PriorityQueue::heapify().)
   [[nodiscard]] bool contains(const T& e) const { return _m.contains(e); }
   [[nodiscard]] float retrieve(const T& e) const {  // Ret pri or < 0.f.
-    bool present;
-    const float pri = _m.retrieve(e, present);
-    return present ? pri : -1.f;
+    const float* p = _m.find_ptr(e);
+    return p ? *p : -1.f;
   }
   float remove(const T& e) {  // Ret pri or < 0.f.
-    bool present;
-    const float pri = _m.retrieve(e, present);
-    if (!present) return -1.f;
+    const float* p = _m.find_ptr(e);
+    if (!p) return -1.f;
+    const float pri = *p;
     _m.remove(e);
     after_change();
     return pri;
   }
   float update(const T& e, float pri) {  // Ret prevpri or < 0.f.
     ASSERTX(pri >= 0.f);
-    const float oldpri = retrieve(e);
-    if (oldpri >= 0.f && pri != oldpri) set_priority(e, pri);
+    float* p = _m.find_ptr(e);
+    if (!p) return -1.f;
+    const float oldpri = *p;
+    if (pri != oldpri) set_priority(*p, e, pri);
     return oldpri;
   }
   float enter_update(const T& e, float pri) {  // Ret prevpri or < 0.f.
     ASSERTX(pri >= 0.f);
-    const float oldpri = retrieve(e);
-    if (oldpri < 0.f) {
-      enter(e, pri);
-    } else if (pri != oldpri) {
-      set_priority(e, pri);
-    }
+    float* p = _m.find_ptr(e);
+    if (!p) return enter(e, pri), -1.f;
+    const float oldpri = *p;
+    if (pri != oldpri) set_priority(*p, e, pri);
     return oldpri;
   }
   bool enter_update_if_smaller(const T& e, float pri) {
     ASSERTX(pri >= 0.f);
-    const float oldpri = retrieve(e);
-    if (oldpri < 0.f) return enter(e, pri), true;
-    if (!(pri < oldpri)) return false;
-    set_priority(e, pri);
+    float* p = _m.find_ptr(e);
+    if (!p) return enter(e, pri), true;
+    if (!(pri < *p)) return false;
+    set_priority(*p, e, pri);
     return true;
   }
   bool enter_update_if_greater(const T& e, float pri) {
     ASSERTX(pri >= 0.f);
-    const float oldpri = retrieve(e);
-    if (oldpri < 0.f) return enter(e, pri), true;
-    if (!(pri > oldpri)) return false;
-    set_priority(e, pri);
+    float* p = _m.find_ptr(e);
+    if (!p) return enter(e, pri), true;
+    if (!(pri > *p)) return false;
+    set_priority(*p, e, pri);
     return true;
   }
 
@@ -195,8 +194,8 @@ requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : 
   PriorityQueue<T> _pq;           // Nodes of current elements, plus stale nodes (never at the top).
   Map<T, float, Hash, Equal> _m;  // Element -> current priority.
 
-  void set_priority(const T& e, float pri) {  // Element e is present.
-    _m.replace(e, pri);
+  void set_priority(float& cur_pri, const T& e, float pri) {  // cur_pri is the entry of e in _m.
+    cur_pri = pri;
     _pq.enter(e, pri);
     after_change();
   }
@@ -205,9 +204,8 @@ requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : 
     if (_pq.num() > 2 * num() + 16) rebuild();
   }
   [[nodiscard]] bool is_current(const T& e, float pri) const {
-    bool present;
-    const float cur_pri = _m.retrieve(e, present);
-    return present && cur_pri == pri;
+    const float* p = _m.find_ptr(e);
+    return p && *p == pri;
   }
   void discard_stale_top() {
     while (!_pq.empty() && !is_current(_pq.min(), _pq.min_priority())) _pq.remove_min();

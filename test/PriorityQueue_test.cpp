@@ -310,10 +310,14 @@ void test12() {  // Random operations, compared with a brute-force model of the 
     bool is_new;
     model.enter(e, pri, is_new) = pri;
   };
+  const auto model_get = [&](int e) {  // Returns the priority of e, or -1.f if e is absent.
+    const float* p = model.find_ptr(e);
+    return p ? *p : -1.f;
+  };
   for_int(op, 100'000) {
     const int e = int(gen() % 50);
     const float pri = float(gen() % 20);  // Frequent ties.
-    const float old_pri = model.contains(e) ? model.get(e) : -1.f;
+    const float old_pri = model_get(e);
     switch (gen() % 6) {
       case 0:
         assertx(pq.enter_update(e, pri) == old_pri);
@@ -349,7 +353,7 @@ void test12() {  // Random operations, compared with a brute-force model of the 
         }
     }
     assertx(pq.num() == model.num());
-    assertx(pq.retrieve(e) == (model.contains(e) ? model.get(e) : -1.f));
+    assertx(pq.retrieve(e) == model_get(e));
   }
   SHOW(pq.num());
 }

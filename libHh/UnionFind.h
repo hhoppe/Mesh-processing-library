@@ -22,60 +22,39 @@ template <typename T> class UnionFind {
  private:
   // Default operator=() and copy constructor are safe.
   mutable Map<T, T> _m;  // Mutable because "irep()" performs path compression.
-  T irep(T e, bool& present) const;
+  T irep(T e) const;
 };
 
 //----------------------------------------------------------------------------
 
-// As an optimization, any isolated element (i.e., with equivalence class of size 1) is omitted from _m.
+// Each non-root element maps to its parent; the root of each equivalence class (including any isolated element) is
+// omitted from _m.
 
-template <typename T> T UnionFind<T>::irep(T e, bool& present) const {
-  T parent = _m.retrieve(e, present);
-  if (!present || parent == e) return e;
+template <typename T> T UnionFind<T>::irep(T e) const {
   InlinedArray<T*, 10> ar;
-  for (;;) {
-    T* p = &_m.get(e);
-    if (*p == e) break;
-    ar.push(p);
-    e = *p;
-  }
-  // Note that e now identifies the root; update all nodes along the path to point to root.
-  for (T* p : ar) *p = e;
+  while (T* p = _m.find_ptr(e)) ar.push(p), e = *p;
+  for (T* p : ar) *p = e;  // Path compression: e is now the root.
   return e;
 }
 
 template <typename T> bool UnionFind<T>::unify(T e1, T e2) {
   if (e1 == e2) return false;
-  bool present1, present2;
-  T r1 = irep(e1, present1);
-  T r2 = irep(e2, present2);
+  const T r1 = irep(e1);
+  const T r2 = irep(e2);
   if (r1 == r2) return false;
-  if (!present1) _m.enter(e1, e1);
-  if (!present2) _m.enter(e2, e2);
-  _m.replace(r1, r2);
+  _m.enter(r1, r2);  // Root r1 (like root r2, absent from _m) becomes a child of r2, which remains a root.
   return true;
 }
 
-template <typename T> bool UnionFind<T>::equal(T e1, T e2) const {
-  if (e1 == e2) return true;
-  bool present;
-  T r1 = irep(e1, present);
-  T r2 = irep(e2, present);
-  return r1 == r2;
-}
+template <typename T> bool UnionFind<T>::equal(T e1, T e2) const { return e1 == e2 || irep(e1) == irep(e2); }
 
-template <typename T> T UnionFind<T>::get_label(T e) const {
-  bool present;
-  T r = irep(e, present);
-  return r;
-}
+template <typename T> T UnionFind<T>::get_label(T e) const { return irep(e); }
 
 template <typename T> void UnionFind<T>::promote(T e) {
-  bool present;
-  T r = irep(e, present);
+  const T r = irep(e);
   if (r == e) return;
-  _m.replace(e, e);
-  _m.replace(r, e);
+  _m.remove(e);    // Element e becomes the root.
+  _m.enter(r, e);  // And the closest old root points to it.
 }
 
 }  // namespace hh

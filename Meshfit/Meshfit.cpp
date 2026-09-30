@@ -698,18 +698,18 @@ void do_fgfit(Args& args) {
         for_int(k, va.num()) {
           const float baryk = k < 3 ? bary[k] : 1.f - sum<float>(bary);
           Vector vd = vtop * (-2.f * baryk);
-          bool present;
-          const int vi = _mvi.retrieve(va[k], present);
-          if (!present) continue;
+          const int* pvi = _mvi.find_ptr(va[k]);
+          if (!pvi) continue;
+          const int vi = *pvi;
           for_int(c, 3) ret_grad[vi * 3 + c] += vd[c];
         }
       }
       // D espr.
       if (spring) {
         for (Vertex v : mesh.vertices()) {
-          bool present;
-          const int vi = _mvi.retrieve(v, present);
-          if (!present) continue;
+          const int* pvi = _mvi.find_ptr(v);
+          if (!pvi) continue;
+          const int vi = *pvi;
           for (Edge e : mesh.edges(v)) {
             Vertex vv = mesh.opp_vertex(v, e);
             const Vector vtovv = mesh.point(vv) - mesh.point(v);

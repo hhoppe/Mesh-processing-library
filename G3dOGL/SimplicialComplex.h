@@ -178,10 +178,7 @@ class SimplicialComplex : noncopyable {
 };
 
 inline Simplex SimplicialComplex::getSimplex(int dim, int id) const {
-  if (_simplices[dim].contains(id))
-    return _simplices[dim].get(id);
-  else
-    return nullptr;
+  return _simplices[dim].retrieve(id);  // Returns nullptr if id is absent.
 }
 
 inline Simplex ISimplex::opp_vertex(Simplex v1) {

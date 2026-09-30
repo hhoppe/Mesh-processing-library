@@ -1933,8 +1933,9 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
   for (const SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* v = va->vertex;
     SrVertex* vv = v;
-    while (!m_v_vg.contains(vv)) vv = assertx(vv->parent);
-    if (vv != v) geoinfo._ancestors[0].enter(v, m_v_vg.get(vv));
+    const SrVertexGeometry* vg;
+    while (!(vg = m_v_vg.find_ptr(vv))) vv = assertx(vv->parent);
+    if (vv != v) geoinfo._ancestors[0].enter(v, *vg);
   }
   m_v_vg.clear();
   // Apply ecol's and record them in a sequence.
@@ -1969,8 +1970,9 @@ void SrMesh::construct_geomorph(SrGeomorphInfo& geoinfo) {
   for (const SrAVertex* va : HH_INTRUSIVE_LIST_RANGE(_active_vertices, SrAVertex, activev)) {
     SrVertex* v = va->vertex;
     SrVertex* vv = v;
-    while (!m_v_vg.contains(vv)) vv = assertx(vv->parent);
-    if (vv != v) geoinfo._ancestors[1].enter(v, m_v_vg.get(vv));
+    const SrVertexGeometry* vg;
+    while (!(vg = m_v_vg.find_ptr(vv))) vv = assertx(vv->parent);
+    if (vv != v) geoinfo._ancestors[1].enter(v, *vg);
   }
 }
 
@@ -1982,18 +1984,16 @@ GMesh SrMesh::extract_gmesh(const SrGeomorphInfo& geoinfo) const {
     const int vi = narrow_cast<int>(v - _vertices.data());
     Vertex gv = gmesh.id_vertex(vi + 1);
     {
-      bool present;
-      const SrVertexGeometry* vg = &geoinfo._ancestors[0].retrieve(v, present);
-      if (!present) vg = &va->vgeom;
+      const SrVertexGeometry* vg = geoinfo._ancestors[0].find_ptr(v);
+      if (!vg) vg = &va->vgeom;
       const Point& p = vg->point;
       gmesh.update_string(gv, "Opos", csform_vec(str, p));
       const Vector& n = vg->vnormal;
       gmesh.update_string(gv, "Onormal", csform_vec(str, n));
     }
     {
-      bool present;
-      const SrVertexGeometry* vg = &geoinfo._ancestors[1].retrieve(v, present);
-      if (!present) vg = &va->vgeom;
+      const SrVertexGeometry* vg = geoinfo._ancestors[1].find_ptr(v);
+      if (!vg) vg = &va->vgeom;
       const Point& p = vg->point;
       gmesh.set_point(gv, p);
       const Vector& n = vg->vnormal;

@@ -250,11 +250,10 @@ template <typename Approx2, typename Exact2>
 void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter,
                                               SpatialVisitedSet& set) const {
   const int en = encode(ci);
-  bool present;
-  const auto& cell = _map.retrieve(en, present);
-  if (!present) return;
+  const auto* cell = _map.find_ptr(en);
+  if (!cell) return;
   Approx2 approx2;
-  for (Univ e : cell) {
+  for (Univ e : *cell) {
     if (!set.add(e)) continue;
     pq.enter(e, approx2(pcenter, e));
   }
@@ -331,10 +330,9 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
     for (const Ind& cit : range(bi[0], bi[1] + 1)) {
       const int en = encode(cit);
       if (en == pen) continue;
-      bool present;
-      const auto& cell = _map.retrieve(en, present);
-      if (!present) continue;
-      for (Univ e : cell)
+      const auto* cell = _map.find_ptr(en);
+      if (!cell) continue;
+      for (Univ e : *cell)
         if (set.add(e) && ftest(e)) should_stop = true;
     }
     if (i == ni || should_stop) break;

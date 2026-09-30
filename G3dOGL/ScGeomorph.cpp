@@ -312,8 +312,7 @@ void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // Alpha 
   // Area.
   for (const auto& [s, narea] : anew) {
     assertx(s->isPrincipal());
-    float oarea = 0.f;
-    if (aold.contains(s)) oarea = aold.get(s);
+    const float oarea = aold.retrieve(s);  // Returns 0.f if s is absent.
     s->setArea(alpha * narea + (1.f - alpha) * oarea);
   }
 

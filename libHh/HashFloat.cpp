@@ -32,6 +32,7 @@ HashFloat::HashFloat(int nignorebits, float small) : _nignorebits(nignorebits), 
   _nignorebits = getenv_int("HASHFLOAT_NIGNOREBITS", _nignorebits, true);
   assertx(_nignorebits >= 0 && _nignorebits <= 22);
   _small = getenv_float("HASHFLOAT_SMALL", _small, true);
+  assertx(_small >= 0.f);  // Ensures that all values stored in _m are nonzero.
   _factor = compute_factor(_nignorebits);
   _recip = 1.f / _factor;
 }
@@ -95,15 +96,17 @@ void HashFloat::pre_consider(float f) {
       ff *= _factor;
       const uint32_t b = encode(ff);
       assertx(b != k_small_key);
-      if (!_m.retrieve(b)) break;
-      _m.replace(b, f);
+      float* p = _m.find_ptr(b);
+      if (!p) break;
+      *p = f;
     }
     for (float ff = f;;) {
       ff *= _recip;
       const uint32_t b = encode(ff);
       assertx(b != k_small_key);
-      if (!_m.retrieve(b)) break;
-      _m.replace(b, f);
+      float* p = _m.find_ptr(b);
+      if (!p) break;
+      *p = f;
     }
   } else if (rp) {
     _m.enter(bc, rp);

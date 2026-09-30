@@ -70,14 +70,13 @@ Combvh Mvcvh::compose_c(const Combvh& ci) const {
   Combvh co;
   co.h = ci.h;
   for_combination(ci.c, [&](Vertex v, float val) {
-    bool present;
-    const Combvh& comb = retrieve(v, present);
-    if (!present) {
+    const Combvh* comb = find_ptr(v);
+    if (!comb) {
       // Missing entry -> assume the identity map.
       co.c[v] += val;
     } else {
-      co.h += comb.h * val;
-      if (comb.c.num()) for_combination(comb.c, [&](Vertex v2, float val2) { co.c[v2] += val2 * val; });
+      co.h += comb->h * val;
+      if (comb->c.num()) for_combination(comb->c, [&](Vertex v2, float val2) { co.c[v2] += val2 * val; });
     }
   });
   return co;
@@ -438,9 +437,8 @@ void SubMesh::selectively_refine(Mvcvh& mconv, float cosang) {
     Vec3<Vertex> vs;
     for_int(i, 3) {
       Edge e = _m.edge(va[i], va[mod3(i + 1)]);
-      bool present;
-      const Snvf& nvf = mvvnewv.retrieve(Svv(_m.vertex1(e), _m.vertex2(e)), present);
-      vs[i] = present ? nvf.vnew : nullptr;
+      const Snvf* nvf = mvvnewv.find_ptr(Svv(_m.vertex1(e), _m.vertex2(e)));
+      vs[i] = nvf ? nvf->vnew : nullptr;
       if (vs[i]) {
         nnew++;
         i0 = i;

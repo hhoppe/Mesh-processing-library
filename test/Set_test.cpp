@@ -25,10 +25,9 @@ int main() {
     const auto func_get = [](const Set<Vector>& hs, const Vector& p) {
       SHOW("");
       SHOW(p);
-      bool present;
-      const Vector& po = hs.retrieve(p, present);
-      SHOW(present);
-      if (present) SHOW(po);
+      const Vector* po = hs.find_ptr(p);
+      SHOW(po != nullptr);
+      if (po) SHOW(*po);
     };
 
     Set<Vector> hs;

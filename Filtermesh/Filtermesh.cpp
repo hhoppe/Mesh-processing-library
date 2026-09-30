@@ -1206,9 +1206,8 @@ void do_silsubdiv() {
       Edge e = mesh.edge(va[i], va[mod3(i + 1)]);
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       if (v2 < v1) std::swap(v1, v2);
-      bool present;
-      const Vb& nvb = mvv_nvb.retrieve(PairVV(v1, v2), present);
-      vs[i] = present ? nvb.vnew : nullptr;
+      const Vb* nvb = mvv_nvb.find_ptr(PairVV(v1, v2));
+      vs[i] = nvb ? nvb->vnew : nullptr;
       if (vs[i]) {
         nnew++;
         i0 = i;

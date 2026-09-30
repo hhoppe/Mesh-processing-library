@@ -68,10 +68,9 @@ void BasePointSpatial::add_cell(const Ind& ci, SpatialPriorityQueue& pq, const P
                                 SpatialVisitedSet& /*set*/) const {
   // SHOW("add_cell", ci);
   const int en = encode(ci);
-  bool present;
-  const auto& cell = _map.retrieve(en, present);
-  if (!present) return;
-  for (const Node& e : cell) {
+  const auto* cell = _map.find_ptr(en);
+  if (!cell) return;
+  for (const Node& e : *cell) {
     // SHOW("enter", *e.p, dist2(pcenter, *e.p));
     pq.enter(Conv<const Node*>::e(&e), dist2(pcenter, *e.p));
   }
@@ -190,10 +189,9 @@ void IPointSpatial::clear() {
 void IPointSpatial::add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter,
                              SpatialVisitedSet& /*set*/) const {
   const int en = encode(ci);
-  bool present;
-  const auto& cell = _map.retrieve(en, present);
-  if (!present) return;
-  for (const int i : cell) pq.enter(Conv<int>::e(i), dist2(pcenter, _pp[i]));
+  const auto* cell = _map.find_ptr(en);
+  if (!cell) return;
+  for (const int i : *cell) pq.enter(Conv<int>::e(i), dist2(pcenter, _pp[i]));
 }
 
 Univ IPointSpatial::pq_id(Univ pqe) const { return pqe; }

@@ -80,11 +80,6 @@ requires Hashable<Key, Hash, Equal> class Map {
   // Omit "Value& enter(const Key& key, Value&& value, bool& is_new)" because value could be lost if !is_new.
   // Note: force_enter using: { map[key] = std::move(value); }.
   [[nodiscard]] bool contains(const Key& key) const { return _map.find(key) != end(); }
-  [[nodiscard]] const Value& retrieve(const Key& key, bool& present) const {
-    auto it = _map.find(key);
-    present = it != end();
-    return present ? it->second : def();
-  }
   [[nodiscard]] const Value& retrieve(const Key& key) const {
     auto it = _map.find(key);
     if (it == end()) return def();
@@ -101,6 +96,14 @@ requires Hashable<Key, Hash, Equal> class Map {
     return it->second;
   }
   // const Value& get(const Key& key) const { return (*this)[key]; } // Bad: throws exception if absent.
+  [[nodiscard]] Value* find_ptr(const Key& key) {  // Returns nullptr if key is absent.
+    auto it = _map.find(key);
+    return it != end() ? &it->second : nullptr;
+  }
+  [[nodiscard]] const Value* find_ptr(const Key& key) const {  // Returns nullptr if key is absent.
+    auto it = _map.find(key);
+    return it != end() ? &it->second : nullptr;
+  }
   Value remove(const Key& key) { return remove_i(key); }
   Value replace(const Key& key, const Value& value) requires Copyable<Key> && Copyable<Value> {
     auto it = _map.find(key);

@@ -702,13 +702,13 @@ void GMesh::collapse_edge_vertex_saving_attribs(Edge e, Vertex vs) {
   collapse_edge_vertex(e, vs);  // Vertex v2 is destroyed.
   if (v_has_corner_normals) {
     for (Corner c : corners(vs))
-      if (Face f = corner_face(c); face_normal.contains(f)) update_string(c, "normal", face_normal.get(f).c_str());
+      if (const string* s = face_normal.find_ptr(corner_face(c))) update_string(c, "normal", s->c_str());
   } else {
     for (Corner c : corners(vs)) update_string(c, "normal", nullptr);
   }
   if (v_has_corner_uvs) {
     for (Corner c : corners(vs))
-      if (Face f = corner_face(c); face_uv.contains(f)) update_string(c, "uv", face_uv.get(f).c_str());
+      if (const string* s = face_uv.find_ptr(corner_face(c))) update_string(c, "uv", s->c_str());
   } else {
     for (Corner c : corners(vs)) update_string(c, "uv", nullptr);
   }
@@ -832,7 +832,7 @@ Vertex GMesh::center_split_face(Face f) {
         Vertex vv = corner_vertex(cc);
         if (vv == vn) continue;
         // Each original corner string should get assigned to two different corners.
-        if (mvs.contains(vv)) set_string(cc, mvs.get(vv).c_str());
+        if (const string* s = mvs.find_ptr(vv)) set_string(cc, s->c_str());
       }
     }
   }

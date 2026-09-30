@@ -78,7 +78,10 @@ requires Hashable<T, Hash, Equal> class Set {
   [[nodiscard]] int num() const { return narrow_cast<int>(_set.size()); }
   [[nodiscard]] size_t size() const { return _set.size(); }
   [[nodiscard]] bool empty() const { return _set.empty(); }
-  const T& retrieve(const T& e, bool& present) const { return retrieve_i(e, present); }
+  [[nodiscard]] const T* find_ptr(const T& e) const {  // Returns nullptr if e is absent.
+    auto it = _set.find(e);
+    return it != end() ? &*it : nullptr;
+  }
   [[nodiscard]] const T& retrieve(const T& e) const {
     auto it = _set.find(e);
     return it != end() ? *it : def();
@@ -114,11 +117,6 @@ requires Hashable<T, Hash, Equal> class Set {
   static const T& def() {
     static const T k_default = T{};
     return k_default;
-  }
-  const T& retrieve_i(const T& e, bool& present) const {
-    auto it = _set.find(e);
-    present = it != end();
-    return present ? *it : def();
   }
   bool remove_i(const T& e) {
     if (_set.erase(e) == 0) return false;

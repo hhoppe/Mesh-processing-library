@@ -377,9 +377,9 @@ class EdgeCostQueue : public UpdatablePriorityQueue<Edge> {
     return opri;
   }
   float update(Edge e, float pri) {
-    const float opri = base::retrieve(e);
+    const float opri = base::update(e, pri);
     if (opri < 0.f) return opri;
-    if (opri >= 0.f && opri < k_bad_dih) {
+    if (opri < k_bad_dih) {
       _tot -= opri;
       --_ntot;
     }
@@ -387,7 +387,7 @@ class EdgeCostQueue : public UpdatablePriorityQueue<Edge> {
       _tot += pri;
       _ntot++;
     }
-    return base::update(e, pri);
+    return opri;
   }
   [[nodiscard]] double total_priority() const { return _tot; }
   [[nodiscard]] int total_num() const { return _ntot; }

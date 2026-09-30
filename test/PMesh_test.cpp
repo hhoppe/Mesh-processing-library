@@ -90,10 +90,7 @@ AWMesh make_mesh(int ny, int nx, bool wrap) {
   }
   for_int(f, mesh._faces.num()) for_int(j, 3) {
     const int v1 = mesh._faces[f].wedges[mod3(j + 1)], v2 = mesh._faces[f].wedges[mod3(j + 2)];
-    bool present;
-    const auto [f2, j2] = edge_map.retrieve(std::pair{v2, v1}, present);
-    if (present) mesh._fnei[f].faces[j] = f2;
-    dummy_use(j2);
+    if (const std::pair<int, int>* fj = edge_map.find_ptr(std::pair{v2, v1})) mesh._fnei[f].faces[j] = fj->first;
   }
   return mesh;
 }

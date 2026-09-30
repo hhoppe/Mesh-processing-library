@@ -73,15 +73,14 @@ jobs:
           if [[ $RUNNER_OS == macOS ]]; then
             export LIBGL_ALWAYS_SOFTWARE=1
             echo LIBGL_ALWAYS_SOFTWARE=1 >>"$GITHUB_ENV"
-            # The XQuartz server sometimes fails to start, so wait for it, and retry.
+            # Register the newly installed XQuartz.app with LaunchServices.  Otherwise, the Xquartz launcher often
+            # cannot yet find it ("Unable to find application for org.xquartz.X11") and exits with status 10.
+            /System/Library/Frameworks/CoreServices.framework/Frameworks/LaunchServices.framework/Support/lsregister \
+              -f /Applications/Utilities/XQuartz.app
+            /opt/X11/bin/Xquartz :99 -nolisten tcp &
+            # The server accepts connections after a few seconds.
             is_up() { DISPLAY=:99 /opt/X11/bin/xset q >/dev/null 2>&1; }
-            for attempt in 1 2 3; do
-              /opt/X11/bin/Xquartz :99 -nolisten tcp >>xquartz.log 2>&1 &
-              for i in {1..30}; do is_up && break 2; sleep 1; done
-              echo "Attempt $attempt to start the XQuartz server failed." >&2
-              pkill -f 'Xquartz :99' || true
-              sleep 2
-            done
+            for i in {1..30}; do is_up && break; sleep 1; done
             is_up
           else
             Xvfb :99 -screen 0 1920x1080x24 &

@@ -43,6 +43,7 @@ Video I/O can use Windows Media Foundation (WMF).
 Across all platforms, if the command <a href="https://ffmpeg.org/">`ffmpeg`</a>
 is present in the `PATH`,
 it is spawned in a piped subprocess for both image and video I/O.
+A file specified as a URL is read by spawning the command `wget`.
 
 On Mac OS X, it is necessary to install
 <a href="https://www.xquartz.org/">`XQuartz`</a> for `X11` support and
@@ -94,6 +95,19 @@ These need to be adjusted depending on the versions and installation paths of th
 For instance, the line
 `"release ?= 0"` in `make/Makefile_config_win` specifies a debug (non-release) build, and
 `"$(call prepend_PATH,...)"` in `make/Makefile_base_vc` sets the compiler directory.
+
+
+### Build using Docker
+
+The `Dockerfile` defines a Linux environment (Ubuntu with `clang`, GNU `make`, and the libraries above)
+in which all programs are built and the unit tests are run, without installing anything else:
+<br/>`docker build -t mesh-processing .`
+
+To then start a shell in which the programs are in the `PATH`:
+<br/>`docker run -it --rm mesh-processing`
+
+To create and check the demo results (`xvfb-run` provides an X display, and requires `--init`):
+<br/>`docker run --init --rm mesh-processing xvfb-run -a make -C demos create check`
 
 
 ## Publications and associated programs/demos

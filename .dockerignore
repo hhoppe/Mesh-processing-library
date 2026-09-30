@@ -1,0 +1,18 @@
+# Keep the repository metadata and any local build outputs out of the Docker build context.
+.git
+# The directories bin/<CONFIG> must exist (each holds a tracked .gitignore), but not their executables.
+bin/*/*
+!bin/*/.gitignore
+demos/results
+**/*.o
+**/*.a
+**/*.obj
+**/*.lib
+**/*.pdb
+**/*.pch
+**/*.gch
+**/*.exe
+**/Makefile.dep
+**/built_*
+test/*.ou
+test/*.diff

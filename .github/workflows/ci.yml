@@ -101,6 +101,20 @@ jobs:
             test/*.ou
           if-no-files-found: ignore
 
+  # Build the Docker image (which builds all programs and runs the unit tests), and render a demo inside it.
+  docker:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Build the image
+        run: docker build -t mesh-processing .
+
+      - name: Run a demo in the container
+        timeout-minutes: 10
+        run: docker run --init --rm mesh-processing xvfb-run -a make -C demos create_rendered_mechpart_image.sh
+
   # The Windows jobs use VS 2026.  Windows 10 with VS 2022 (runs-on: windows-2022, although that is Windows Server)
   # is omitted because it is the primary development environment, where every change is already built and tested.
 

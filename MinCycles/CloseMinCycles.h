@@ -38,7 +38,8 @@ class CloseMinCycles {
   void flood_reinitialize(Vertex vseed);
   Array<Vertex> close_cycle(CArrayView<Vertex> vertex_loop);
   bool would_be_nonseparating_cycle(Edge e12, bool exact);
-  std::optional<int> look_for_cycle(Vertex v1, Vertex v2, bool process, float verify_dist);  // Ret: num_edges.
+  // Returns the number of edges in the nonseparating cycle, if one is found.
+  std::optional<int> look_for_cycle(Vertex v1, Vertex v2, bool process, float verify_dist);
   struct MinCycleResult {
     float search_radius;
     Vertex farthest_vertex;

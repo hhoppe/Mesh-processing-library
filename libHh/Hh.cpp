@@ -315,7 +315,7 @@ void details::assertx_aux2(const char* s) noexcept {
 }
 
 // We use "const char*" rather than "string" for efficiency of hashing in Warnings.
-// Ret: true if this is the first time the warning message is printed.
+// Returns true if this is the first time the warning message is printed.
 bool details::assertw_aux2(const char* s) {
   static const bool warn_just_once = !getenv_bool("ASSERTW_VERBOSE");
   const int count = Warnings::increment_count(s);

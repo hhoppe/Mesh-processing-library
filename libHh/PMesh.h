@@ -495,7 +495,7 @@ class Geomorph : public WMesh {
   // ** Construction:
   // Create a geomorph from pmi's current mesh to the mesh obtained after applying n vsplits to pmi.
   // Note side-effect on pmi!
-  // Ret: was_able_to_go_all_the_way; die if !empty
+  // Returns true if all nvsplits vsplits were applied.  The geomorph must initially be empty.
   [[nodiscard]] bool construct_next(PMeshIter& pmi, int nvsplits);
   // Same up to nvertices
   // Returns success.

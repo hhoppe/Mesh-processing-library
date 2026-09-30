@@ -145,11 +145,11 @@ requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : 
   void enter_unsorted(const T& e, float pri) { ASSERTX(pri >= 0.f), _m.enter(e, pri), _pq.enter_unsorted(e, pri); }
   void heapify() { _pq.heapify(); }  // (See PriorityQueue::heapify().)
   [[nodiscard]] bool contains(const T& e) const { return _m.contains(e); }
-  [[nodiscard]] float retrieve(const T& e) const {  // Ret pri or < 0.f.
+  [[nodiscard]] float retrieve(const T& e) const {  // Returns the priority of e, or a negative value if e is absent.
     const float* p = _m.find_ptr(e);
     return p ? *p : -1.f;
   }
-  float remove(const T& e) {  // Ret pri or < 0.f.
+  float remove(const T& e) {  // Returns the priority of e, or a negative value if e is absent.
     const float* p = _m.find_ptr(e);
     if (!p) return -1.f;
     const float pri = *p;
@@ -157,7 +157,7 @@ requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : 
     after_change();
     return pri;
   }
-  float update(const T& e, float pri) {  // Ret prevpri or < 0.f.
+  float update(const T& e, float pri) {  // Returns the previous priority, or a negative value if e is absent.
     ASSERTX(pri >= 0.f);
     float* p = _m.find_ptr(e);
     if (!p) return -1.f;
@@ -165,7 +165,7 @@ requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : 
     if (pri != oldpri) set_priority(*p, e, pri);
     return oldpri;
   }
-  float enter_update(const T& e, float pri) {  // Ret prevpri or < 0.f.
+  float enter_update(const T& e, float pri) {  // Returns the previous priority, or a negative value if e is absent.
     ASSERTX(pri >= 0.f);
     float* p = _m.find_ptr(e);
     if (!p) return enter(e, pri), -1.f;

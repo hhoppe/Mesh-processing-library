@@ -37,6 +37,17 @@ and project (`*.vcxproj`) files.
 On Unix (Linux, Mac OS, and Cygwin),
 the code compiles using the `clang` and `gcc` compilers and GNU `make`.
 
+The code requires C++23.
+Continuous integration verifies Microsoft Visual Studio 2026,
+`gcc` 14 and 15, `clang` 20 and 21, and Apple `clang` 21 (Xcode 26),
+on Linux (x86-64 and ARM64), Mac OS (ARM64), and Windows;
+Visual Studio 2022 is also supported.
+Older compilers lack needed features:
+`gcc` 13 lacks explicit object parameters (`this auto&& self`),
+`clang` 18 lacks class template argument deduction for alias templates,
+and `clang` 19 and 20 fail with the older `libstdc++` 14 (though `clang` 20 works with `libstdc++` 15).
+GNU `make` 3.81 (as shipped with Mac OS) suffices.
+
 Reading/writing of images and videos is enabled using several options.
 If available, image I/O can use `libpng`/`libjpeg` or Windows Imaging Component (WIC).
 Video I/O can use Windows Media Foundation (WMF).

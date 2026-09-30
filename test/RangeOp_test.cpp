@@ -163,7 +163,7 @@ int main() {
     static_assert(std::is_same_v<Index, ranges::range_difference_t<Array<int>>>);  // As in the standard.
     const auto to_array = [](auto&& range) -> Array<std::pair<int, char>> {
       Array<std::pair<int, char>> result;
-      for (auto [i, ch] : range) result.push({int(i), ch});
+      for (const auto [i, ch] : range) result.push({int(i), ch});
       return result;
     };
     const Array<std::pair<int, char>> pairs = to_array(enumerate_fallback(string("ABC")));

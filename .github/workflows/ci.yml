@@ -101,6 +101,9 @@ jobs:
             test/*.ou
           if-no-files-found: ignore
 
+  # The Windows jobs use VS 2026.  Windows 10 with VS 2022 (runs-on: windows-2022, although that is Windows Server)
+  # is omitted because it is the primary development environment, where every change is already built and tested.
+
   # Build the Visual Studio solution (without running the unit tests, which require make and bash).
   windows-msbuild:
     runs-on: windows-2025-vs2026

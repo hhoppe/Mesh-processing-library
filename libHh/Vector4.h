@@ -348,8 +348,11 @@ inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
   // Round to nearest, with ties to even, like _mm_cvtps_epi32() in the SSE version.
   uint32x4_t a = vcvtnq_u32_f32(t._r);  // uint32x4_t vcvtnq_u32_f32(float32x4_t a);  // FCVTNU Vd.4S, Vn.4S
 #else
-  // ARMv7 lacks vcvtnq_u32_f32(), and vcvtq_u32_f32() truncates; ties are rounded up rather than to even.
-  uint32x4_t a = vcvtq_u32_f32(vaddq_f32(t._r, vdupq_n_f32(.5f)));
+  // ARMv7 lacks vcvtnq_u32_f32(), and vcvtq_u32_f32() truncates.  Adding and then subtracting 2^23 rounds to the
+  // nearest integer (with ties to even) for 0 <= t < 2^23; larger values and negative values saturate regardless.
+  // (Adding .5f and truncating would instead round ties up, and would round 0.49999997f up to 1.)
+  const float32x4_t k_2p23 = vdupq_n_f32(0x1p23f);
+  uint32x4_t a = vcvtq_u32_f32(vsubq_f32(vaddq_f32(t._r, k_2p23), k_2p23));
 #endif
   uint16x4_t b = vqmovn_u32(a);           // uint16x4_t vqmovn_u32(uint32x4_t a);  // VQMOVN.I32 d0, q0 // Saturation.
   uint16x8_t c = vcombine_u16(b, b);      // uint16x8_t vcombine_u16(uint16x4_t low, uint16x4_t high);
@@ -368,7 +371,8 @@ inline void Vector4::raw_to_byte4(Vec4<uint8_t>& p) const {
   }
 }
 inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
-  for_int(c, 4) p[c] = uint8_t(clamp(_c[c], 0.f, 1.f) * 255.f + .5f);
+  // Round to nearest, with ties to even, like _mm_cvtps_epi32() in the SSE version.
+  for_int(c, 4) p[c] = uint8_t(std::nearbyint(clamp(_c[c], 0.f, 1.f) * 255.f));
 }
 
 #endif  // defined(HH_VECTOR4_SSE) or defined(HH_VECTOR4_NEON)

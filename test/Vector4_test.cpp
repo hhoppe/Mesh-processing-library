@@ -66,6 +66,16 @@ void test_conversions() {
   SHOW(convert<int>(Vector4(0.999f, 1.f, 254.999f, 255.998f).raw_pixel()));
   // norm_to_byte4() rounds, with the exact tie 0.5f * 255.f == 127.5f rounded to the even 128; it clamps to [0, 255].
   SHOW(convert<int>(Vector4(0.5f, -0.f, -1e-8f, 1.f + 1e-6f).pixel()));
+  // It rounds to the nearest integer (with ties to even) also at and next to each tie (k + 0.5) / 255.
+  int num_tie = 0;
+  for_int(k, 255) {
+    const float x = (float(k) + .5f) / 255.f;
+    for (const float v : {std::nextafter(x, 0.f), x, std::nextafter(x, 1.f)}) {
+      const int expected = int(std::nearbyint(v * 255.f));
+      num_tie += convert<int>(Vector4(v).pixel())[0] != expected;
+    }
+  }
+  SHOW(num_tie);
 }
 
 }  // namespace

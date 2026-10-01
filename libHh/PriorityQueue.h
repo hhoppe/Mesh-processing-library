@@ -125,7 +125,9 @@ template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable
 // discarded once it reaches the top ("lazy deletion"); the top node is always current.  When the discarded nodes
 // would outnumber the current ones, the heap is rebuilt.
 template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
-requires Copyable<T> && Hashable<T, Hash, Equal> class UpdatablePriorityQueue : noncopyable {
+class UpdatablePriorityQueue : noncopyable {
+  static_assert(Copyable<T> && Hashable<T, Hash, Equal>);
+
  public:
   void clear() { _pq.clear(), _m.clear(); }
   void enter(const T& e, float pri) { ASSERTX(pri >= 0.f), _m.enter(e, pri), _pq.enter(e, pri); }  // e must be new.

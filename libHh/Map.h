@@ -32,7 +32,8 @@ namespace hh {
 // Map is very similar to std::unordered_map but using my own accessor functions.
 // (The typename Equal also goes by the name Pred in the C++ standard library)
 template <typename Key, typename Value, typename Hash = std::hash<Key>, typename Equal = std::equal_to<Key>>
-requires Hashable<Key, Hash, Equal> class Map {
+class Map {
+  static_assert(Hashable<Key, Hash, Equal>);
   using type = Map<Key, Value, Hash, Equal>;
   using base = std::unordered_map<Key, Value, Hash, Equal>;
   using value_type = base::value_type;

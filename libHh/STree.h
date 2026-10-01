@@ -21,7 +21,8 @@ namespace hh {
 
 // Splay Tree (originally); now implemented by std::map which is usually a red-black tree.
 // (typename Less also goes by name Compare in C++ standard library)
-template <typename T, typename Less = std::less<T>> requires Copyable<T> class STree : noncopyable {
+template <typename T, typename Less = std::less<T>> class STree : noncopyable {
+  static_assert(Copyable<T>);
   using base = std::set<T, Less>;
 
  public:

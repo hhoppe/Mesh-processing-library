@@ -96,7 +96,8 @@ int main() {
     // A complete foldover, with the two faces coincident.
     const Point po2_folded(.5f, 1.f, 0.f);
     SHOW(dihedral_angle_cos(p1, p2, po1, po2_folded));
-    SHOW(abs(signed_dihedral_angle(p1, p2, po1, po2_folded)) == TAU / 2);
+    // (Whether the result equals TAU / 2 exactly depends on the platform's floating-point math.)
+    assertx(abs(abs(signed_dihedral_angle(p1, p2, po1, po2_folded)) - TAU / 2) < 1e-6f);
     // cos(signed_dihedral_angle()) == dihedral_angle_cos() for general configurations.
     for_int(i, 12) {
       const float angle = TAU * (float(i) + .5f) / 12.f;

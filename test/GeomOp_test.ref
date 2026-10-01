@@ -24,7 +24,6 @@ dihedral_angle_cos(p1, p2, po1, po2_flat)=1 signed_dihedral_angle(p1, p2, po1, p
 rounded(dihedral_angle_cos(p1, p2, po1, po2_convex))=0 rounded(signed_dihedral_angle(p1, p2, po1, po2_convex))=1.5708
 rounded(dihedral_angle_cos(p1, p2, po1, po2_concave))=0 rounded(signed_dihedral_angle(p1, p2, po1, po2_concave))=-1.5708
 dihedral_angle_cos(p1, p2, po1, po2_folded) = -1
-abs(signed_dihedral_angle(p1, p2, po1, po2_folded)) == TAU / 2 = 1
 dihedral_angle_cos(p1, p2, Point(2.f, 0.f, 0.f), po2_flat) = -2
 signed_dihedral_angle(p1, p2, Point(2.f, 0.f, 0.f), po2_flat) = -10
 rounded(solid_angle(origin, V(px, py, pz)) / (TAU / 4)) = 1

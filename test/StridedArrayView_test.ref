@@ -18,8 +18,9 @@ Array(v | views::reverse) = Array<int>(6) {
   6
   1
 }
-Array(v | views::drop(2) | views::stride(2)) = Array<int>(2) {
+Array(v | views::drop(2) | views::take(3)) = Array<int>(3) {
   11
+  16
   21
 }
 ar = Array<int>(10) {

@@ -114,7 +114,7 @@ int main() {
     assertx(ranges::distance(v) == 6 && v.end() - v.begin() == v.num());
     assertx(*ranges::find(v, 16) == 16 && ranges::find(v, 17) == v.end());  // 17 lies between the strided elements.
     SHOW(Array(v | views::reverse));
-    SHOW(Array(v | views::drop(2) | views::stride(2)));
+    SHOW(Array(v | views::drop(2) | views::take(3)));  // (Apple libc++ lacks the C++23 views::stride.)
   }
   {
     // Algorithms that modify the elements through the view touch only the strided elements.

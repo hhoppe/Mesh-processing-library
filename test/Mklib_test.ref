@@ -697,4 +697,24 @@ v 7.2041 8 2.6124
 v 7.7815 8 1.7959
 E 0 0 0
 
+# squareO: npolygons=1 bbox=[0, -0.5, -0.5] [0, 0.5, 0.5]
+# squareXY: npolygons=1 bbox=[0, 0, 0] [1, 1, 0]
+# squareU: npolygons=1 bbox=[-0.5, -0.5, 0] [0.5, 0.5, 0]
+# cubeO: npolygons=6 bbox=[-0.5, -0.5, -0.5] [0.5, 0.5, 0.5] volume=1.0000
+# cubeXYZ: npolygons=6 bbox=[0, 0, 0] [1, 1, 1] volume=1.0000
+# cubeU: npolygons=6 bbox=[-0.5, -0.5, 0] [0.5, 0.5, 1] volume=1.0000
+# polygonO(6): npolygons=1 bbox=[0, -1, -0.866] [0, 1, 0.866]
+# polygonU(6): npolygons=1 bbox=[-1, -0.866, 0] [1, 0.866, 0]
+# cylinderU(6): npolygons=8 bbox=[-1, -0.866, 0] [1, 0.866, 1] volume=2.5981
+# tubeU(6): npolygons=6 bbox=[-1, -0.866, 0] [1, 0.866, 1]
+# coneU(6): npolygons=7 bbox=[-1, -0.866, 0] [1, 0.866, 1] volume=0.8660
+# capU(6): npolygons=6 bbox=[-1, -0.866, 0] [1, 0.866, 1]
+# ringU: npolygons=5 bbox=[-0.809, -0.9511, 0] [1, 0.9511, 2]
+# flat_ringU: npolygons=5 bbox=[-0.809, -0.9511, 0] [1, 0.9511, 1]
+# poly_hole: npolygons=8 bbox=[-1, -1, 0] [1, 1, 0]
+# volume_ringU: npolygons=32 bbox=[-1, -1, 0] [1, 1, 1] volume=2.1213
+# sphere: npolygons=96 bbox=[-1, -1, -1] [1, 1, 1] volume=3.8478
+# sphere_nonsmooth: npolygons=96 bbox=[-1, -1, -1] [1, 1, 1] volume=3.8478
+# hemisphere: npolygons=48 bbox=[-1, -1, 0] [1, 1, 1]
+# tetra: npolygons=4 bbox=[-0.2887, -0.5, -0.2041] [0.5774, 0.5, 0.6124] volume=0.1179
 # End Mk3d: 77gons 0lines 0points, 288verts(max 7)

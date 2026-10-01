@@ -4,3 +4,7 @@ dims = [33, 33]
 dims = [129, 3]
 dims = [8, 16, 8]
 dims = [32, 8, 4]
+mag_e(-2.f)=-2 mag_e(3.)=3 mag_e(Vector4(3.f, 0.f, 4.f, 0.f))=5
+max_e(-2.f)=-2 max_e(3.)=3 max_e(Vector4(1.f, 5.f, -7.f, 2.f))=5
+mean(grid)=2.5 mean(CGridView<2, float>(grid))=2.5 mean(Grid<1, double>{1., 2., 4.})=2.33333
+mean(gridv) = Vector4(1.5, 2, 2.5, 0)

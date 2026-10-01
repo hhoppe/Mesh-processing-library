@@ -18,8 +18,8 @@ const string tmpf = "v.Hh_test.txt";
 
 void try_it(const string& stest) {
   if (0) SHOW(stest);
-  // This test is broken.  We cannot assume that sh or cmd are in the user's path.
-  for_int(method, 2) {  // sh, cmd.
+  // This test is disabled in main() because we cannot assume that csh is in the user's path.
+  for_int(method, 2) {  // csh, then sh (through my_sh()).
     if (0) SHOW(method);
     string s1 = quote_arg_for_sh(stest);  // Stronger than quote_arg_for_shell().
     if (0) SHOW(s1);
@@ -622,5 +622,114 @@ line2)";
     const int i = 3, j = 4;
     assertx(SSHOW(i) == "i = 3");
     assertx(SSHOW(i, j) == "i=3 j=4");
+  }
+  {
+    // Simple constexpr arithmetic helpers.
+    static_assert(interp(1.f, 3.f, .25f) == 2.5f && interp(1.f, 3.f) == 2.f && interp(1., 3., 1.) == 1.);
+    static_assert(sign(0) == 1 && signz(0) == 0 && signz(-0.5) == -1.);
+    static_assert(mod3(0) == 0 && mod3(2) == 2 && mod3(3) == 0 && mod3(4) == 1);
+    static_assert(general_clamp(5, 1, 3) == 3 && general_clamp(-5, 1, 3) == 1 && general_clamp(2, 1, 3) == 2);
+    SHOW(round_fraction_digits(1.234567f), round_fraction_digits(-1.25, 10.), round_fraction_digits(2.5f, 1.f));
+  }
+  {
+    // Casts and type utilities.
+    static_assert(std::is_same_v<copy_const_t<const int*, float>, const float>);
+    static_assert(std::is_same_v<copy_const_t<const int&, float>, const float>);
+    static_assert(std::is_same_v<copy_const_t<int*, float>, float>);
+    static_assert(narrow_cast<uchar>(255) == 255 && possible_cast<int>(2.7f) == 2);
+    static_assert(implicit_cast<double>(1.5f) == 1.5);
+    static_assert(has_ostream_eol_v<Array<int>> && !has_ostream_eol_v<Vec2<int>> && !has_ostream_eol_v<int>);
+    int k = 5;
+    float f = 2.f;
+    dummy_init(k, f);
+    assertx(k == 0 && f == 0.f);
+    int* p = &k;
+    assertx(postfix_increment(p) == &k && p == &k + 1);
+    assertx(postfix_decrement(p) == &k + 1 && p == &k);
+    assertx(make_optional_if<string>(true, 3, 'x') == "xxx" && !make_optional_if<string>(false, 3, 'x'));
+  }
+  {
+    // Formatting of strings and stream output.
+    SHOW(make_string(V(1, 2)), make_string(1.5f), make_string(std::pair{1, "a"}));
+    SHOW((std::tuple{1, 'b', 2.5}));
+    SHOW(std::strong_ordering::less, std::weak_ordering::equivalent, std::partial_ordering::unordered);
+    SHOW(static_cast<const char*>(nullptr));
+    string str;
+    assertx(string(csform(str, "%s-%03d", "abc", 7)) == "abc-007" && str == "abc-007");
+    assertx(sform("%.3f|%5s|%-3c|", 1.f / 3.f, "ab", 'z') == "0.333|   ab|z  |");
+    assertx(sform("%s", "") == "");
+    const unique_ptr<char[]> s1 = make_unique_c_string("abc");
+    assertx(string(s1.get()) == "abc" && !make_unique_c_string(nullptr));
+    assertx(string(assertx(after_prefix("abcdef", "abc"))) == "def");
+    assertx(string(assertx(after_prefix("abc", ""))) == "abc" && string(assertx(after_prefix("abc", "abc"))) == "");
+    assertx(!after_prefix("abcdef", "abd") && !after_prefix("ab", "abc"));
+  }
+  {
+    // Parsing of numbers.
+    const char* s = " 12 -34  4000000000 1.5 -2e-300 rest";
+    assertx(int_from_chars(s) == 12);
+    assertx(int_from_chars(s) == -34);
+    assertx(uint_from_chars(s) == 4'000'000'000u);
+    assertx(float_from_chars(s) == 1.5f && double_from_chars(s) == -2e-300);
+    assertx(string(s) == " rest");
+    assert_no_more_chars("  \t\n");
+    assertx(to_int("-5") == -5 && to_int(string("+7 ")) == 7 && to_uint("4294967295") == 4'294'967'295u);
+    assertx(to_float("1e3") == 1000.f && to_float(string(".25")) == .25f && to_double("1e-300") == 1e-300);
+  }
+  {
+    // Environment variables with explicit values.
+    const string name = "HH_TEST_ENV_VAR";
+    for (const char* value : {"0", "false"}) {
+      my_setenv(name, value);
+      assertx(!getenv_bool(name, true));
+    }
+    for (const char* value : {"1", "true"}) {
+      my_setenv(name, value);
+      assertx(getenv_bool(name));
+    }
+    my_setenv(name, "-7");
+    assertx(getenv_int(name, 3) == -7 && getenv_string(name, "x") == "-7" && getenv_type<int>(name, 3) == -7);
+    my_setenv(name, "2.5");
+    assertx(getenv_float(name, 1.f) == 2.5f && getenv_type<float>(name, 1.f) == 2.5f);
+    assertx(getenv_int(name + "_UNDEFINED", 3, true) == 3);  // The warning is shown only for a defined variable.
+    my_setenv(name, "4");
+    assertx(getenv_int(name, 3, true) == 4);
+    my_setenv(name, "");
+    assertx(!getenv(name.c_str()) && getenv_type<bool>(name, true));
+  }
+  {
+    // assertt() throws an exception, rather than aborting the program.
+    try {
+      assertt(g_unoptimized_zero == 1);
+      assertnever("assertt() did not throw");
+    } catch (const std::runtime_error& ex) {
+      assertx(string(ex.what()).starts_with("assertt(g_unoptimized_zero == 1) in line "));
+    }
+    assertx(assertt(7) == 7);
+  }
+  {
+    // Aligned memory allocation.
+    for (const int alignment : {1, 8, 16, 64, 4096}) {
+      void* p = assertx(aligned_malloc(size_t(alignment), 100));
+      assertx(reinterpret_cast<uintptr_t>(p) % uintptr_t(alignment) == 0);
+      static_cast<char*>(p)[99] = 'x';
+      aligned_free(p);
+    }
+  }
+  {
+    // my_getline() strips a trailing carriage return.
+    std::istringstream iss("ab\r\n\ncd\r\nlast");
+    string line;
+    for (const string expected : {"ab", "", "cd", "last"}) assertx(my_getline(iss, line, false) && line == expected);
+    assertx(!my_getline(iss, line, false));
+  }
+  {
+    // Time and system information.
+    const double time0 = get_precise_time();
+    my_sleep(0.);
+    assertx(get_precise_time() >= time0 && get_seconds_per_counter() > 0.);
+    const string datetime = get_current_datetime();
+    assertx(datetime.size() == 19 && datetime[4] == '-' && datetime[10] == ' ' && datetime[16] == ':');
+    assertx(get_current_directory() != "" && get_host_name() != "");
   }
 }

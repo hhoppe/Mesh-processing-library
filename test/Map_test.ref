@@ -1,4 +1,7 @@
 m.get(std::tuple(2.f, 3.f)) = 4
+tu = tuple<2, 2>
+tu = tuple<2, 3>
+tu = tuple<3, 3>
 sum(m.values()) = 12
 s=ab m[s]=14
 s=abcd m[s]=113
@@ -25,3 +28,4 @@ sort(InlinedArray<int, 1>(map.values() | views::transform([](int i) { return 100
   101
   102
 }
+m.num() = 151

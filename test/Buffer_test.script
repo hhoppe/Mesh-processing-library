@@ -1,3 +1,5 @@
 #!/bin/bash
 
+set -e -o pipefail
 Buffer_test -out 1 -bsize 23 | Buffer_test -out 0 2>&1 | grep -v '^RBuffer empty' | grep -v '^blocked'
+Buffer_test -records -out 1 | Buffer_test -records -out 0

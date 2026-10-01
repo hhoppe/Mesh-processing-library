@@ -204,11 +204,12 @@ int main() {
   {
     Vec3<int> a1(3, 4, 5);
     SHOW(a1);
-#if 0  // Fails because a1 contains int and 3.f is a float.
-  SHOW(a1 / 3.f);
-  Vec3<float> a2 = a1 / 3.f;
-  SHOW(a2);
+#if 0
+    // The expression a1 / 3.f compiles (with -Wconversion warnings), but its type is Vec3<int>, with each element
+    // truncated, so this initialization fails.
+    Vec3<float> a2 = a1 / 3.f;
 #endif
+    SHOW(a1.cast<float>() / 3.f);  // The correct form.
   }
   {
     Vec2<Vec2<int>> pp{V(3, 4), Vec2<int>{5, 6}};  // Test both ways.
@@ -344,13 +345,6 @@ int main() {
     static_assert(std::is_standard_layout_v<Vec<float, 3>>);
   }
   {
-    // Previously, the iterators were forward rather than input.
-    // static_assert(std::forward_iterator<ranges::iterator_t<decltype(range(Vec2<int>{}))>>);
-    // static_assert(std::sentinel_for<std::default_sentinel_t, ranges::iterator_t<decltype(range(Vec2<int>{}))>>);
-    // static_assert(ranges::forward_range<decltype(range(Vec3<int>{}))>);
-    // static_assert(ranges::forward_range<decltype(range(Vec3<int>{}, Vec3<int>{}))>);
-  }
-  {
     // The coordinate ranges are proper C++20 views over which the std::ranges adaptors and algorithms compose.
     // The iterators are input, not forward: operator*() returns a reference to the coordinate held within the
     // iterator, so the reference is invalidated by the next operator++(); see the discussion in Vec.h.
@@ -427,6 +421,162 @@ int main() {
     SHOW(ranges::distance(range(V(3, 4))), range(V(3, 4)).size());
     SHOW(Array(range(V(2, 3))));
     SHOW(range(V(1, 2), V(3, 4)) | ranges::to<Array<Vec2<int>>>());
+  }
+  {
+    // Element access, and the views of the elements.
+    Vec<int, 4> v(1, 2, 3, 4);
+    static_assert(Vec<int, 4>::Num == 4);
+    assertx(v.num() == 4 && v.size() == 4);
+    assertx(v.last() == 4 && v.ok(0) && v.ok(3) && !v.ok(4) && !v.ok(-1));
+    v.last() = 40;
+    static_assert(std::is_same_v<decltype(v.view()), ArrayView<int>>);
+    static_assert(std::is_same_v<decltype(std::as_const(v).view()), CArrayView<int>>);
+    static_assert(std::is_same_v<decltype(v.const_view()), CArrayView<int>>);
+    static_assert(std::is_same_v<decltype(v.head(2)), ArrayView<int>>);
+    static_assert(std::is_same_v<decltype(std::as_const(v).tail(2)), CArrayView<int>>);
+    static_assert(std::is_same_v<decltype(v.head<2>()), Vec2<int>&>);
+    static_assert(std::is_same_v<decltype(std::as_const(v).head<2>()), const Vec2<int>&>);
+    static_assert(std::is_same_v<decltype(std::as_const(v)[0]), const int&>);
+    assertx(v.head(2) == V(1, 2).view() && v.tail(1) == V(40).view());
+    assertx(v.segment(1, 2) == V(2, 3).view() && v.slice(1, 3) == V(2, 3).view() && v.head(0).num() == 0);
+    assertx((v.segment<1, 2>() == V(2, 3)) && v.segment<2>(2) == V(3, 40));
+    assertx(&v.tail<3>()[0] == &v[1]);
+    v.head<2>() = V(10, 20);  // Writes through the reinterpreted reference.
+    v.segment<1>(2) = V(30);
+    v.tail<1>()[0] += 1;
+    assertx(v == V(10, 20, 30, 41));
+    v.assign(V(5, 6, 7, 8));
+    assertx(v == V(5, 6, 7, 8));
+    const Vec3<int> w = v.head(3);  // Construction from a view of the same size.
+    assertx(w == V(5, 6, 7));
+    v.view().tail(2).assign(V(0, 0));
+    assertx(v == V(5, 6, 0, 0));
+    assertx(&v.vec() == &v);
+  }
+  {
+    // The comparison is lexicographic.
+    assertx(V(1, 2) < V(1, 3) && V(1, 3) < V(2, 0) && V(2, 0) > V(1, 9) && V(1, 2) <= V(1, 2));
+    assertx((V(1, 2) <=> V(1, 2)) == 0 && V(1, 2) != V(2, 1));
+    static_assert(V(1, 2, 3) < V(1, 2, 4));
+    Array<Vec2<int>> ar{V(2, 1), V(1, 3), V(1, 2), V(0, 5)};
+    sort(ar);
+    SHOW(ar);
+  }
+  {
+    // Structured bindings.
+    static_assert(std::tuple_size_v<Vec3<int>> == 3);
+    static_assert(std::is_same_v<std::tuple_element_t<1, Vec3<float>>, float>);
+    const auto [a, b, c] = V(1, 2, 3);
+    SHOW(a, b, c);
+    Vec2<int> u(1, 2);
+    auto& [x, y] = u;
+    x = 5;
+    y++;
+    assertx(u == V(5, 3));
+    auto [p, q] = V(make_unique<int>(7), make_unique<int>(8));  // Moves from the temporary.
+    assertx(*p == 7 && *q == 8);
+  }
+  {
+    // The functions with(), rev(), cast(), and in_range().
+    const auto v = V(1, 2, 3);
+    assertx(v.with(0, 9) == V(9, 2, 3) && v == V(1, 2, 3));
+    assertx(V(1, 2, 3).with(2, 0) == V(1, 2, 0));  // The rvalue overload.
+    const auto vu = V(make_unique<int>(1), make_unique<int>(2)).with(1, make_unique<int>(3));
+    assertx(*vu[0] == 1 && *vu[1] == 3);
+    assertx(v.rev() == V(3, 2, 1) && V(5).rev() == V(5));
+    const auto vf = v.cast<float>();
+    static_assert(std::is_same_v<decltype(vf), const Vec3<float>>);
+    assertx(vf == V(1.f, 2.f, 3.f));
+    assertx(V(1.7f, -1.7f).cast<int>() == V(1, -1));  // The conversion truncates.
+    assertx(V(1, 2).in_range(V(2, 3)) && !V(2, 2).in_range(V(2, 3)) && !V(-1, 0).in_range(V(2, 3)));
+    assertx(V(1, 2).in_range(V(1, 2), V(2, 3)) && !V(0, 2).in_range(V(1, 2), V(2, 3)));
+    assertx(!V(1, 3).in_range(V(1, 2), V(2, 3)));
+    static_assert(V(1, 2).in_range(V(2, 3)));
+  }
+  {
+    // The construction helpers.
+    static_assert(twice(5) == V(5, 5) && thrice(6) == V(6, 6, 6) && ntimes<4>(7) == V(7, 7, 7, 7));
+    static_assert(std::is_same_v<decltype(V<double>(1.f, 2.)), Vec2<double>>);  // An explicit element type.
+    static_assert(std::is_same_v<decltype(V(1.f, 2.f)), Vec2<float>>);
+    constexpr auto vt = to_Vec({1, 2, 3});
+    static_assert(std::is_same_v<decltype(vt), const Vec3<int>> && vt == V(1, 2, 3));
+    const auto vp = to_Vec({make_unique<int>(4), make_unique<int>(5)});
+    assertx(*vp[1] == 5);
+    static_assert(concat(V(1, 2), V<int>(), V(3)) == V(1, 2, 3));
+    static_assert(Vec<int, 3>::create([](int i) { return i * i; }) == V(0, 1, 4));
+    static_assert(Vec3<int>::all(2) == V(2, 2, 2));
+    constexpr Vec<int, 0> v0;
+    static_assert(v0.num() == 0 && v0.begin() == v0.end());
+    SHOW(concat(V(1, 2), V(3)), type_name<decltype(concat(V(1, 2), V(3)))>());
+  }
+  {
+    // Element-wise and scalar arithmetic.
+    const auto a = V(6, 7, 8), b = V(1, 2, 3);
+    assertx(a + b == V(7, 9, 11) && a - b == V(5, 5, 5) && a * b == V(6, 14, 24));
+    assertx(a / b == V(6, 3, 2) && a % b == V(0, 1, 2) && -b == V(-1, -2, -3));
+    assertx(a + 1 == V(7, 8, 9) && 10 - a == V(4, 3, 2) && 2 * a == V(12, 14, 16));
+    assertx(a / 2 == V(3, 3, 4) && 24 / a == V(4, 3, 3) && a % 3 == V(0, 1, 2));
+    Vec3<int> c = a;
+    c += b, c -= 1, c *= V(1, 2, 3), c /= 2, c %= 5;
+    assertx(c == V(3, 3, 0));  // (((6, 8, 10) * (1, 2, 3)) / 2) % 5.
+    c += 2, c *= 3, c -= V(0, 1, 2), c /= 3;
+    assertx(c == V(5, 4, 1));
+    assertx(min(a, V(7, 7, 7)) == V(6, 7, 7) && max(a, V(7, 7, 7)) == V(7, 7, 8));
+    assertx(clamp(V(-5, 3, 12), 0, 10) == V(0, 3, 10));
+    assertx(dot(a, b) == 44 && mag2(b) == 14 && dist2(a, b) == 75);
+    static_assert(dot(V(1, 2), V(3, 4)) == 11);
+  }
+  {
+    // Floating-point functions, with arguments that give exact results.
+    assertx(mag(V(3.f, 4.f)) == 5.f && dist(V(1.f, 1.f), V(4.f, 5.f)) == 5.f && mag(V(0., 2.)) == 2.);
+    const Vec2<float> n = normalized(V(3.f, 4.f));
+    assertx(std::abs(n[0] - .6f) < 1e-6f && std::abs(n[1] - .8f) < 1e-6f && is_unit(n));
+    assertx(!is_unit(V(1.f, 1.f)) && is_unit(V(0.f, 0.f, 1.f)));
+    const Vec2<float> nf = fast_normalized(V(0.f, 2.f));
+    assertx(nf == V(0.f, 1.f));
+    Vec2<float> z{};
+    assertx(!z.normalize() && z == V(0.f, 0.f));  // A zero vector cannot be normalized and is unchanged.
+    assertx(ok_normalized(V(0.f, 0.f)) == V(0.f, 0.f));
+    assertx(snap_coordinates(V(1e-7f, .9999999f, -1.0000001f, .5f)) == V(0.f, 1.f, -1.f, .5f));
+    assertx(snap_coordinate(-2e-7) == 0. && snap_coordinate(.1) == .1);
+    assertx(interp(V(0.f, 4.f), V(8.f, 12.f)) == V(4.f, 8.f));
+    assertx(interp(V(0.f, 4.f), V(8.f, 12.f), .25f) == V(6.f, 10.f));
+    assertx(interp(V(0.f, 4.f), V(8.f, 12.f), V(16.f, 20.f), .5f, .25f) == V(6.f, 10.f));
+    assertx(interp(V(0.f, 4.f), V(8.f, 12.f), V(16.f, 20.f), V(.5f, .25f, .25f)) == V(6.f, 10.f));
+    assertx(interp(V(0.f, 4.f), V(8.f, 12.f), V(16.f, 20.f), V(1.f, 1.f, 0.f)) == V(8.f, 16.f));  // Unnormalized.
+    assertx(interp(V(V(0.f, 4.f), V(8.f, 12.f), V(16.f, 20.f)), .5f, .25f) == V(6.f, 10.f));      // A triple.
+    assertx(interp(V(0, 10), V(10, 20)) == V(5, 15));     // Integer elements, interpolated in float.
+    SHOW(interp(V(0.f, 3.f), V(3.f, 6.f), V(6.f, 9.f)));  // Equal weights of one third.
+  }
+  {
+    // A nested Vec, as an SGrid.
+    using G = SGrid<int, 2, 3>;
+    static_assert(std::is_same_v<G, Vec2<Vec3<int>>>);
+    static_assert(vec_depth_v<int> == 0 && vec_depth_v<Vec3<int>> == 1 && vec_depth_v<G> == 2);
+    static_assert(is_vec_v<G> && is_vec_v<Vec3<int>> && !is_vec_v<int> && !is_vec_v<S>);
+    static_assert(std::is_same_v<sgrid_leaf_t<1, G>, Vec3<int>> && std::is_same_v<sgrid_leaf_t<2, G>, int>);
+    static_assert(G::grid_dims() == V(2, 3) && G::grid_dims<1>() == V(2));
+    static_assert(SGrid<int, 4, 3, 2>::grid_dims<3>() == V(4, 3, 2));
+    static_assert(sizeof(G) == 6 * sizeof(int));
+    G g{{1, 2, 3}, {4, 5, 6}};  // Nested brace initialization.
+    assertx((g[1, 2] == 6 && g[V(1, 2)] == 6 && g[1][2] == 6));
+    g[0, 1] = 20;
+    assertx(g[V(0, 1)] == 20);
+    g[V(0, 1)] = 2;
+    SHOW(g * 10);                  // A scalar operation reaches the leaves.
+    SHOW(g + V(100, 200, 300));    // A less nested Vec applies to each row.
+    SHOW(interp(g, g * 3, .25f));  // The interpolation recurses to the leaves.
+    int count = 0;
+    for (const auto& u : range(G::grid_dims())) assertx(g[u] == ++count);
+    assertx(count == 6);
+  }
+  {
+    // Equal Vecs have equal hashes, so a Vec can be used as a key.
+    assertx(std::hash<Vec2<int>>{}(V(1, 2)) == std::hash<Vec2<int>>{}(V(1, 2)));
+    assertx(my_hash(V(1, 2)) != my_hash(V(2, 1)));
+    Set<Vec2<int>> set;
+    for_int(i, 3) for_int(j, 3) set.enter(V(i, j));
+    assertx(set.num() == 9 && set.contains(V(2, 1)) && !set.contains(V(3, 0)));
   }
 }
 

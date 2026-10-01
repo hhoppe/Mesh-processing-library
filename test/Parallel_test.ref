@@ -1,7 +1,11 @@
 sum(array) = 499500
 sum(array) = 504500
 sum(array) = 504500
-sum(array) = 504500
-sum(array) = 504500
 result = 499500
 count = 1000
+sum(list) = 9900
+sums = Array<int>(3) {
+  1122
+  3434
+  5344
+}

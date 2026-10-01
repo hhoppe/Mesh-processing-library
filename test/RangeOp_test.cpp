@@ -10,6 +10,35 @@
 #include "libHh/Vec.h"
 using namespace hh;
 
+namespace {
+
+// A single-pass range over the integers [0, n) that counts how often it is advanced.
+class CountingCursor {
+ public:
+  using Iterator = CursorIterator<CountingCursor>;
+  explicit CountingCursor(int n) : _n(n) {}
+  Iterator begin() noexcept { return Iterator(*this); }
+  [[nodiscard]] std::default_sentinel_t end() const noexcept { return {}; }
+  [[nodiscard]] bool empty() const { return _i >= _n; }
+  [[nodiscard]] int num_advances() const { return _num_advances; }
+
+ private:
+  int _i{0};
+  int _n;
+  int _num_advances{0};
+  [[nodiscard]] int current() const { return _i; }
+  void advance() { _i++, _num_advances++; }
+  friend CursorIterator<CountingCursor>;
+};
+
+template <typename R> Array<int> to_int_array(R&& range) {
+  Array<int> result;
+  for (const int e : range) result.push(e);
+  return result;
+}
+
+}  // namespace
+
 int main() {
   {
     const Array<uchar> ar1 = {4, 200, 254, 3, 7, 2};
@@ -209,5 +238,142 @@ int main() {
     SHOW(contains(range(20), 13));
     SHOW(contains(range(20) | views::filter([](auto e) { return e != 10; }), 13));
     SHOW(contains(range(20) | views::filter([](auto e) { return e != 10; }), 10));
+  }
+  {
+    // iterable() passes a const-iterable range through by reference, and copies a view that is not.
+    const Array<int> ar{1, 2};
+    static_assert(std::is_same_v<decltype(iterable(ar)), const Array<int>&>);
+    using View = decltype(ar | views::filter([](int i) { return i > 1; }));
+    static_assert(!std::is_reference_v<decltype(iterable(std::declval<const View&>()))>);
+    assertx(&iterable(ar) == &ar);
+  }
+  {
+    // find_index() and index() on random-access and other ranges.
+    const Array<int> ar{5, 7, 5, 9};
+    assertx(find_index(ar, 5) == 0 && find_index(ar, 9) == 3 && !find_index(ar, 6));
+    assertx(!find_index(Array<int>{}, 5));
+    const std::list<int> list{5, 7, 5, 9};
+    assertx(find_index(list, 7) == 1 && !find_index(list, 6));
+    assertx(index(list, 9) == 3);
+    assertx(find_index(range(10) | views::filter([](int i) { return i % 2 == 1; }), 7) == 3);
+    assertx(contains(list, 9) && !contains(list, 8) && !contains(Array<int>{}, 0));
+  }
+  {
+    // find_if_ptr() returns the address of the first matching element, through which it may be modified.
+    Array<int> ar{1, 4, 6, 8};
+    int* p = find_if_ptr(ar, [](int i) { return i % 2 == 0; });
+    assertx(p == &ar[1]);
+    *p = 40;
+    assertx(ar[1] == 40);
+    assertx(!find_if_ptr(ar, [](int i) { return i > 100; }));
+    const std::list<int> list{3, 5};
+    const int* p2 = find_if_ptr(list, [](int i) { return i == 5; });
+    assertx(p2 && *p2 == 5);
+  }
+  {
+    // min(), max(), arg_min(), and arg_max() return the first occurrence among ties, optionally with a comparator.
+    const Array<int> ar{3, -7, 9, -7, 9, 2};
+    SHOW(min(ar), max(ar), arg_min(ar), arg_max(ar));
+    const auto abs_less = [](int a, int b) { return abs(a) < abs(b); };
+    SHOW(min(ar, abs_less), max(ar, abs_less), arg_min(ar, abs_less), arg_max(ar, abs_less));
+    SHOW(min(ar, std::greater<>()), arg_min(ar, std::greater<>()));
+    SHOW(max_abs_element(ar), max_abs_element(V(-2.5f)));
+    assertx(min(V(4)) == 4 && arg_max(V(4)) == 0);
+    assertx(min(range(5, 9) | views::filter([](int i) { return i != 5; })) == 6);
+  }
+  {
+    // fill(), reverse(), rotate(), and sort() return the range for chaining.
+    Array<int> ar(5);
+    assertx(&fill(ar, 3) == &ar && ar == V(3, 3, 3, 3, 3).view());
+    Array<int> ar2{1, 2, 3, 4, 5};
+    SHOW(reverse(rotate(ar2, ar2.begin() + 1)));
+    SHOW(sort(ar2, std::greater<>()));
+    const Array<int> ar3 = sorted(ar2);
+    assertx(ar3 == V(1, 2, 3, 4, 5).view() && ar2 == V(5, 4, 3, 2, 1).view());
+    assertx(sort(Array<int>{}).num() == 0 && reverse(Array<int>{7}) == V(7).view());
+  }
+  {
+    // swap_elements() on sized ranges and on a range that is not sized.
+    Array<int> ar1{1, 2, 3}, ar2{4, 5, 6};
+    swap_elements(ar1, ar2);
+    assertx(ar1 == V(4, 5, 6).view() && ar2 == V(1, 2, 3).view());
+    std::list<int> list{7, 8, 9};
+    swap_elements(ar1, list | views::filter([](int) { return true; }));
+    assertx(ar1 == V(7, 8, 9).view() && list == std::list<int>({4, 5, 6}));
+  }
+  {
+    // The sums use a wider accumulator type, unless a type is specified.
+    const Array<int> ar{std::numeric_limits<int>::max(), std::numeric_limits<int>::max()};
+    SHOW(sum(ar), type_name(sum(ar)));
+    SHOW(sum<double>(V(1, 2)), type_name(sum<double>(V(1, 2))));
+    SHOW(sum(Array<float>{}), sum(Array<int>{}));
+    SHOW(product(V(100'000, 100'000)), product(V(2.5f)), product(V(uchar{200}, uchar{200})));
+    SHOW(mean(Array<uchar>{1, 2}), type_name(mean(Array<uchar>{1, 2})));
+    SHOW(mean<float>(V(1, 2)), type_name(mean<float>(V(1, 2))));
+    SHOW(mag2(Array<int>{}), mag2(V(3, 4)), mag(V(3, 4)), mag(V(3.f, 4.f)));
+  }
+  {
+    // Compare var() and rms() against a reference computation.
+    const Array<float> ar{2.f, 4.f, 4.f, 4.f, 5.f, 5.f, 7.f, 9.f};
+    double s1 = 0., s2 = 0.;
+    for (const float e : ar) s1 += e, s2 += square(double(e));
+    const double n = ar.num();
+    assertx(abs(var(ar) - (s2 - s1 * s1 / n) / (n - 1.)) < 1e-12);
+    assertx(abs(rms(ar) - std::sqrt(s2 / n)) < 1e-12);
+    assertx(abs(mean(ar) - s1 / n) < 1e-12);
+    SHOW(mean(ar), var(ar), rms(ar));
+  }
+  {
+    // is_unit(), normalize(), and round_elements().
+    SHOW(is_unit(V(.6f, .8f)), is_unit(V(1.f, 1.f)), is_unit(V(1.001f), 1e-2f));
+    SHOW(normalize(V(3.f, 0.f, 4.f)));
+    SHOW(round_elements(V(1.234567f, -2.5f, 0.000004f)), round_elements(V(1.26f, -1.26f), 10.f));
+  }
+  {
+    // dist2(), dist(), and dot() on ranges of floats and of mixed range types.
+    const Array<float> ar1{1.f, 2.f, 3.f};
+    const Vec3<float> ar2{4.f, 6.f, 3.f};
+    SHOW(dist2(ar1, ar2), dist(ar1, ar2), dot(ar1, ar2));
+    SHOW(dist2(Array<int>{}, Array<int>{}), dot(Array<float>{}, Array<float>{}));
+  }
+  {
+    // compare() with a tolerance distinguishes differences larger than the tolerance.
+    SHOW(compare(V(1.f, 2.f), V(1.f, 2.5f), .3f), compare(V(1.f, 2.5f), V(1.f, 2.f), .3f));
+    SHOW(compare(V(1.f, 2.f), V(1.2f, 9.f), .3f));
+    SHOW(compare(Array<int>{}, Array<int>{}));
+  }
+  {
+    // convert() casts each element, truncating toward zero for floating-point to integer.
+    SHOW(convert<float>(V(1, 2)), convert<int>(V(1.7f, -1.7f)));
+    SHOW(convert<int>(Array<float>{2.9f, -0.5f}));
+  }
+  {
+    // concatenate() of empty ranges, of more than two ranges, and with mutable references.
+    assertx(to_int_array(concatenate(Array<int>{}, Array<int>{})).num() == 0);
+    assertx(to_int_array(concatenate(Array<int>{}, V(1), Array<int>{}, V(2, 3))) == V(1, 2, 3).view());
+    const auto c = concatenate(V(1, 2), V(3), V(4, 5, 6));
+    SHOW(c.size(), ranges::distance(c), sum(c));
+    static_assert(ranges::forward_range<decltype(c)>);
+    Array<int> ar1{1, 2};
+    std::vector<int> vec{3};
+    for (int& e : concatenate(ar1, vec)) e *= 10;
+    assertx(ar1 == V(10, 20).view() && vec == std::vector<int>{30});
+  }
+  {
+    // truncate() yields at most count elements.
+    const Array<int> ar{1, 2, 3, 4};
+    assertx(to_int_array(ar | truncate(2)) == V(1, 2).view());
+    assertx(to_int_array(ar | truncate(0)).num() == 0);
+    assertx(to_int_array(ar | truncate(10)) == ar);
+    assertx(to_int_array(Array<int>{} | truncate(3)).num() == 0);
+    assertx(to_int_array(range(100) | truncate(3)) == V(0, 1, 2).view());
+    // Unlike views::take(), truncate() does not advance a single-pass source beyond the last yielded element.
+    CountingCursor cursor1(10);
+    assertx(to_int_array(cursor1 | truncate(3)) == V(0, 1, 2).view());
+    CountingCursor cursor2(10);
+    assertx(to_int_array(cursor2 | views::take(3)) == V(0, 1, 2).view());
+    SHOW(cursor1.num_advances(), cursor2.num_advances());
+    CountingCursor cursor3(2);
+    assertx(to_int_array(cursor3 | truncate(5)) == V(0, 1).view());
   }
 }

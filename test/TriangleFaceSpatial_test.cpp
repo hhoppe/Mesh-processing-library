@@ -30,20 +30,52 @@ void test2(int gridn) {
     const Vec3<Point>& triangle1 = triangleface.triangle;
     const float rd2 = project_point_triangle(p, triangle1).d2;
     assertx(abs(rd2 - d2) < 1e-8f);
+    // Compare with a linear scan over all triangles.
     float mind2 = BIGFLOAT;
-    int mini = 0;
     for_int(i, np) {
       const Vec3<Point>& triangle2 = trianglefaces[i].triangle;
       const float tmp_d2 = project_point_triangle(p, triangle2).d2;
       const float lbd2 = square(lb_dist_point_triangle(p, triangle2));
-      assertw(tmp_d2 >= lbd2 - 1e-12f);
-      if (tmp_d2 < mind2) {
-        mind2 = tmp_d2;
-        mini = i;
-      }
+      assertx(tmp_d2 >= lbd2 - 1e-12f);
+      mind2 = min(mind2, tmp_d2);
     }
-    if (found_i != mini) SHOW(j, d2, mind2, found_i, mini);
+    assertx(abs(d2 - mind2) < 1e-8f);  // The found triangle may differ from the linear-scan one only in a tie.
   }
+  // The successive search results are in order of nondecreasing distance, and visit every triangle once.
+  const Point p(.5f, .5f, .5f);
+  SpatialSearch<TriangleFace*> ss(&spatial, p);
+  float od2 = 0.f;
+  int count = 0;
+  for (const auto [ptriangleface, d2] : ss) {
+    assertx(d2 >= od2 && abs(d2 - project_point_triangle(p, ptriangleface->triangle).d2) < 1e-8f);
+    od2 = d2;
+    count++;
+  }
+  assertx(count == np);
+  // first_along_segment() finds an intersection along each segment that intersects some triangle.
+  int num_hits = 0;
+  for_int(j, ns) {
+    Point p1, p2;
+    for_int(c, 3) p1[c] = Random::G.unif();
+    for_int(c, 3) p2[c] = Random::G.unif();
+    float min_t = BIGFLOAT;
+    for (const TriangleFace& triangleface : trianglefaces)
+      if (const auto pint = intersect_segment_with_triangle(p1, p2, triangleface.triangle))
+        min_t = min(min_t, dist(p1, *pint));
+    const auto result = spatial.first_along_segment(p1, p2);
+    assertx(bool(result) == (min_t != BIGFLOAT));
+    if (result) {
+      num_hits++;
+      // KNOWN_BUG: the intersection should be the first one along the segment, as in a linear scan, but this fails for
+      // about 5% of the segments, because ObjectSpatial::search_segment() stops at the end of the step in which a
+      // first intersection is found, without testing the triangles in the cells farther along the segment, which
+      // may have an intersection closer than the one found.
+      if (0) assertx(abs(dist(p1, result->pint) - min_t) < 1e-6f);
+      assertx(dist(p1, result->pint) >= min_t - 1e-6f);
+      assertx(intersect_segment_with_triangle(p1, p2, result->triangleface->triangle));
+    }
+  }
+  assertx(num_hits > 10 && num_hits < ns);
 }
 
 }  // namespace
@@ -51,8 +83,8 @@ void test2(int gridn) {
 int main() {
   my_setenv("SHOW_STATS", "-2");
   Timer::set_show_times(-1);
-  Face f1 = Face(intptr_t{1});
-  Face f2 = Face(intptr_t{1});
+  const Face f1 = Face(intptr_t{1});
+  const Face f2 = Face(intptr_t{2});
   const Vec2<TriangleFace> trianglefaces =
       V(TriangleFace{V(Point(.2f, .2f, .2f), Point(.2f, .8f, .8f), Point(.2f, .8f, .2f)), f1},
         TriangleFace{V(Point(.8f, .2f, .2f), Point(.8f, .8f, .8f), Point(.8f, .8f, .2f)), f2});
@@ -82,6 +114,20 @@ int main() {
   {
     SpatialSearch<TriangleFace*> ss(&spatial, Point(.4f, .3f, .3f));
     for (const auto [ptriangleface, d2] : ss) SHOW(d2, ptriangleface->triangle);
+  }
+  {
+    // The segment in the reverse direction first hits the other triangle.
+    const auto result = spatial.first_along_segment(Point(.9f, .5f, .3f), Point(.1f, .5f, .3f));
+    assertx(result && result->triangleface->face == f2);
+    SHOW(result->pint);
+  }
+  {
+    // A segment that ends before reaching the first triangle, and one that misses both triangles.
+    assertx(!spatial.first_along_segment(Point(.1f, .5f, .3f), Point(.15f, .5f, .3f)));
+    assertx(!spatial.first_along_segment(Point(.1f, .5f, .9f), Point(.9f, .5f, .9f)));
+    // A segment that starts between the two triangles.
+    const auto result = spatial.first_along_segment(Point(.5f, .5f, .3f), Point(.9f, .5f, .3f));
+    assertx(result && result->triangleface->face == f2);
   }
   test2(5);
   test2(20);

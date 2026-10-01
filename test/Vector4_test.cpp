@@ -1,8 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Vector4.h"
 
-#include <iomanip>  // setprecision()
-
 #include "libHh/Array.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Vec.h"
@@ -51,6 +49,73 @@ void test_consistency() {
     num_dot += dot(a, b) != expected_dot;
   }
   SHOW(num_div, num_div_scalar, num_mul, num_dot);
+  // The remaining operations are also exact in IEEE arithmetic, so all implementations must agree bit for bit.
+  // (A comparison with != ignores the sign of zero.)
+  int num_add = 0, num_sub = 0, num_scalar = 0, num_min_max = 0, num_neg = 0, num_abs = 0, num_sqrt = 0;
+  for_int(iter, 10'000) {
+    const Vector4 a(lcg(), lcg(), lcg(), lcg()), b(lcg(), lcg(), lcg(), lcg());
+    const float f = lcg();
+    const Vector4 sum_ab = a + b, diff_ab = a - b, sum_f = a + f, diff_f = a - f, prod_f = a * f, prod_f2 = f * a;
+    const Vector4 vmin = min(a, b), vmax = max(a, b), neg = -a, vabs = abs(a), vsqrt = sqrt(abs(a));
+    for_int(c, 4) {
+      num_add += sum_ab[c] != a[c] + b[c];
+      num_sub += diff_ab[c] != a[c] - b[c];
+      num_scalar += sum_f[c] != a[c] + f || diff_f[c] != a[c] - f || prod_f[c] != a[c] * f || prod_f2[c] != f * a[c];
+      num_min_max += vmin[c] != min(a[c], b[c]) || vmax[c] != max(a[c], b[c]);
+      num_neg += neg[c] != -a[c];
+      num_abs += vabs[c] != std::abs(a[c]) || std::signbit(vabs[c]);
+      num_sqrt += vsqrt[c] != std::sqrt(std::abs(a[c]));
+    }
+  }
+  SHOW(num_add, num_sub, num_scalar, num_min_max, num_neg, num_abs, num_sqrt);
+}
+
+// Element access, iteration, loads and stores, and the compound assignment operators.
+void test_interface() {
+  const Vector4 v1(1.f, 2.f, 3.f, 4.f), v2(8.f, 7.f, 6.f, 5.f);
+  assertx(v1.size() == 4 && Vector4::ok(3) && !Vector4::ok(4) && !Vector4::ok(-1));
+  {
+    Vector4 v = v1;
+    v[2] = 9.f;
+    assertx(v[0] == 1.f && v[2] == 9.f && v.data()[2] == 9.f);
+    assertx(dist2(v1.with(2, 9.f), v) == 0.f);
+    assertx(v1[2] == 3.f);  // with() does not modify the original.
+    float sum_iter = 0.f;
+    for (const float f : v1) sum_iter += f;
+    assertx(sum_iter == 10.f && v1.end() - v1.begin() == 4);
+  }
+  {
+    float ar[5] = {9.f, 1.f, 2.f, 3.f, 4.f};
+    Vector4 v;
+    v.load_unaligned(ar + 1);  // Possibly misaligned.
+    assertx(dist2(v, v1) == 0.f);
+    v2.store_unaligned(ar + 1);
+    assertx(ar[0] == 9.f && ar[1] == 8.f && ar[4] == 5.f);
+    assertx(dist2(Vector4(V(1.f, 2.f, 3.f, 4.f)), v1) == 0.f);  // Constructor from Vec4<float>.
+  }
+  {
+    Vector4 v = v1;
+    v += v2;  // [9, 9, 9, 9]
+    v -= v1;  // [8, 7, 6, 5]
+    v *= v1;  // [8, 14, 18, 20]
+    v /= v2;  // [1, 2, 3, 4]
+    assertx(dist2(v, v1) == 0.f);
+    v += 2.f;
+    v -= 1.f;
+    v *= 4.f;
+    v /= 2.f;
+    SHOW(v);
+    assertx(dist2(v, (v1 + 1.f) * 2.f) == 0.f);
+    SHOW(interp(v1, v2, .25f), interp(v1, v2));
+    SHOW(sqrt(Vector4(4.f, 9.f, .25f, 0.f)), abs(Vector4(-1.f, 2.f, -0.f, -3.5f)));
+  }
+  {
+    // The constructor from a Pixel normalizes the values to [0.f, 1.f].
+    const Pixel pixel(0, 51, 255, 102);
+    const Vector4 v(pixel);
+    SHOW(v);
+    assertx(dist2(v, to_Vector4_norm(pixel)) == 0.f && v.pixel() == pixel);
+  }
 }
 
 // Conversions between floats and bytes.
@@ -81,12 +146,6 @@ void test_conversions() {
 }  // namespace
 
 int main() {
-  if (0) {
-    // Setting the precision has no effect on SHOW() because it now uses a temporary std::ostringstream .
-    std::cerr << std::setprecision(4) << std::setiosflags(std::ios::fixed);
-    std::cerr.precision(4);
-    std::cerr.setf(std::ios::fixed);
-  }
   {
     SHOW(std::is_trivially_copyable_v<Vector4>);
     SHOW(std::is_trivially_default_constructible_v<Vector4>);
@@ -148,16 +207,9 @@ int main() {
   }
   test_consistency();
   test_conversions();
-  if (0) {  // Huge numbers fail the conversion to int32_t.
+  test_interface();
+  if (0) {  // Huge numbers fail the conversion to int32_t (the assertion in norm_to_byte4() in debug builds).
     to_norm(Vector4(2147483583.f, 2147483584.f, 2147483647.f, BIGFLOAT) / 255.f);
     to_norm(Vector4(-2147483580.f, -2147483582.f, -2147483647.f, -BIGFLOAT) / 255.f);
   }
-#if 0
-  {
-    // Fails: static_assert(std::is_trivially_copyable_v<Vector4>);
-#if defined(HH_VECTOR4_SSE)
-    static_assert(std::is_trivially_copyable_v<__m128>);  // True.
-#endif
-  }
-#endif
 }

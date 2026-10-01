@@ -1,0 +1,14 @@
+sort(get_files_in_directory(dir)) = Array<std::string>(2) {
+  file1.txt
+  file2
+}
+sort(get_directories_in_directory(dir)) = Array<std::string>(2) {
+  sub1
+  sub2
+}
+quote_arg_for_sh("simple-name_1.txt")=simple-name_1.txt quote_arg_for_shell("simple-name_1.txt")=simple-name_1.txt
+quote_arg_for_sh("a b'c")=a\ b\'c quote_arg_for_shell("a b'c")="a b'c"
+quote_arg_for_sh("$x;y&") = \$x\;y\&
+my_sh("exit 3") = 3
+my_sh(V<string>("sh", "-c", "exit 4")) = 4
+my_spawn(V<string>("sh", "-c", "exit 5"), true) = 5

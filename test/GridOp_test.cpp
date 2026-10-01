@@ -124,17 +124,24 @@ int main() {
     test(V(2, 1, 5, 3), V(1, 2, 1, 4));
     SHOW("end test");
   }
-  {  // Scaling of Grid<2, T> matches scaling of Matrix<2, T>; no longer applicable.
-    const int cy = 13, cx = 17;
-    const int ny = 16, nx = 11;
-    Matrix<float> mat(cy, cx);
-    for (float& e : mat) e = Random::G.unif();
-    const FilterBnd filterb(Filter::get("spline"), Bndrule::reflected);
-    // Matrix<float> matn = scale(mat, ny, nx, {filterb, filterb});
-    // SHOW(Stat(matn));
-    const Grid<2, float> gridn = scale(mat, V(ny, nx), twice(filterb));
-    // SHOW(Stat(gridn));
-    // assertx(dist(matn, gridn) < 1e-5f);
+  {  // Magnification by a non-preprocessed filter matches pointwise evaluation by sample_domain().
+    Random random(17);
+    Matrix<float> mat(5, 4);
+    for (float& e : mat) e = random.unif();
+    for (const auto& [filter_name, bndrule] :
+         {std::pair{"triangle", Bndrule::reflected}, std::pair{"keys", Bndrule::clamped},
+          std::pair{"mitchell", Bndrule::periodic}}) {
+      const auto filterbs = twice(FilterBnd(Filter::get(filter_name), bndrule));
+      for (const Vec2<int> ndims : {V(5, 4), V(9, 11), V(5, 13)}) {
+        const Grid<2, float> gridn = scale(mat, ndims, filterbs);
+        assertx(gridn.dims() == ndims);
+        for (const auto& yx : range(ndims)) {
+          const Vec2<float> p((yx[0] + .5f) / ndims[0], (yx[1] + .5f) / ndims[1]);
+          const float expected = sample_domain(mat, p, filterbs);
+          if (!(abs(gridn[yx] - expected) < 1e-5f)) assertnever(SSHOW(filter_name, ndims, yx, gridn[yx], expected));
+        }
+      }
+    }
   }
   {
     const Grid<2, int> grid(V(20, 20), 5);
@@ -257,6 +264,172 @@ int main() {
     const Grid<2, Pixel> grid(V(20, 20), Pixel(65, 66, 67, 72));
     CGridView<3, Pixel> view = raise_grid_rank(grid);
     assertx(view.dims() == V(1, 20, 20));
+    assertx(view.data() == grid.data());
     assertx(ranges::equal(view[0], grid));
+  }
+  {  // The runtime-dimension grid_column() matches the compile-time one, and the mutable column writes through.
+    Grid<3, int> grid(V(2, 3, 4));
+    for (const size_t i : range(grid.size())) grid.flat(i) = int(i);
+    for (const auto& u : range(grid.dims())) {
+      for_int(d, 3) {
+        if (u[d] != 0) continue;
+        const CStridedArrayView<int> column = grid_column(CGridView<3, int>(grid), d, u);
+        assertx(column.num() == grid.dim(d));
+        for_int(i, column.num()) assertx(column[i] == grid[u.with(d, i)]);
+      }
+      if (u[1] == 0) assertx(ranges::equal(grid_column<1>(CGridView<3, int>(grid), u), grid_column(grid, 1, u)));
+    }
+    StridedArrayView<int> column = grid_column<0>(GridView<3, int>(grid), V(0, 2, 3));
+    for (int& e : column) e = -e;
+    SHOW(grid_column(CGridView<3, int>(grid), 0, V(0, 2, 3)));
+    grid_column(GridView<3, int>(grid), 2, V(1, 1, 0))[3] = 99;
+    assertx((grid[1, 1, 3]) == 99);
+  }
+  {  // Cropping, including negative crops that grow the grid using each boundary rule.
+    const Grid<2, int> grid = grid_from_flat(V(3, 4), range(12));
+    const int bordervalue = -1;
+    for (const Bndrule bndrule :
+         {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::border, Bndrule::reflected101}) {
+      for (const auto& dLU : range(ntimes<4>(-3), ntimes<4>(2))) {
+        const Vec2<int> dL = V(dLU[0], dLU[1]), dU = V(dLU[2], dLU[3]);
+        const Grid<2, int> newgrid = crop(grid, dL, dU, twice(bndrule), &bordervalue);
+        assertx(newgrid.dims() == grid.dims() - dL - dU);
+        for (const auto& yx : range(newgrid.dims())) {
+          Vec2<int> yx2 = yx + dL;
+          const int expected = grid.map_inside(yx2, twice(bndrule)) ? grid[yx2] : bordervalue;
+          assertx(newgrid[yx] == expected);
+        }
+      }
+    }
+    SHOW(crop(grid, V(1, 1), V(0, 2)));  // The fast path, cropping more than dim0.
+    SHOW(crop(grid, V(1, 0), V(1, 0)));  // The fastest path, cropping just dim0.
+    SHOW(crop(grid, V(-1, -2), V(-1, -2), twice(Bndrule::reflected)));
+    SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::clamped, Bndrule::border), &bordervalue));
+    // KNOWN_BUG: a Bndrule::undefined dimension that is not cropped negatively still fails, because the
+    //  slow path maps every coordinate through map_boundaryrule_1d(), which rejects Bndrule::undefined.
+    if (0) SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::undefined, Bndrule::border), &bordervalue));
+  }
+  {  // Assembly of a grid of grids with differing sizes and each alignment.
+    Grid<2, Grid<2, int>> grids(V(2, 2));
+    grids[0, 0] = Grid<2, int>(V(1, 2), 1);
+    grids[0, 1] = Grid<2, int>(V(2, 1), 2);
+    grids[1, 0] = Grid<2, int>(V(3, 3), 3);
+    grids[1, 1] = Grid<2, int>(V(1, 1), 4);
+    for (const Alignment alignment : {Alignment::left, Alignment::center, Alignment::right}) {
+      const Grid<2, int> grid = assemble(grids, 0, twice(alignment));
+      SHOW(grid);
+    }
+    SHOW(assemble(grids, 0, V(Alignment::right, Alignment::left)));
+    Grid<1, Grid<1, int>> grids1(V(2));
+    grids1[0] = Grid<1, int>{1, 2};
+    grids1[1] = Grid<1, int>{3, 4, 5};
+    SHOW(assemble(grids1));  // Tight packing.
+  }
+  {  // Conversions between integer and floating-point grids round-trip exactly.
+    Grid<1, Pixel> gridu(V(256));
+    for_int(i, 256) gridu[i] = Pixel(uint8_t(i), uint8_t(255 - i), uint8_t(i / 2), uint8_t(i * 7));
+    Grid<1, Vector4> gridf(gridu.dims());
+    convert(gridu, gridf);
+    assertx(gridf[0][0] == 0.f && gridf[255][0] == 1.f && gridf[255][1] == 0.f);
+    Grid<1, Pixel> gridu2(gridu.dims());
+    convert(gridf, gridu2);
+    assertx(ranges::equal(gridu, gridu2));
+    Grid<2, uint8_t> gridb(V(16, 16));
+    for (const size_t i : range(gridb.size())) gridb.flat(i) = uint8_t(i);
+    Grid<2, float> gridbf(gridb.dims());
+    convert(gridb, gridbf);
+    assertx(gridbf[15, 15] == 255.f);
+    Grid<2, uint8_t> gridb2(gridb.dims());
+    convert(gridbf, gridb2);
+    assertx(ranges::equal(gridb, gridb2));
+    Grid<1, Vec2<uint8_t>> griduv(V(256));
+    for_int(i, 256) griduv[i] = V(uint8_t(i), uint8_t(255 - i));
+    Grid<1, Vector4> griduvf(griduv.dims());
+    convert(griduv, griduvf);
+    Grid<1, Vec2<uint8_t>> griduv2(griduv.dims());
+    convert(griduvf, griduv2);
+    assertx(ranges::equal(griduv, griduv2));
+  }
+  {  // Primal scaling with the (interpolating) triangle filter reproduces a linear ramp.
+    const Grid<1, float> ramp = grid_from_flat(V(5), range(5) | views::transform([](int i) { return i / 4.f; }));
+    const Grid<1, float> ramp2 = scale_primal(ramp, V(9), V(FilterBnd(Filter::get("triangle"), Bndrule::clamped)));
+    for_int(i, 9) assertx(abs(ramp2[i] - i / 8.f) < 1e-6f);
+    const Grid<2, float> grid(V(3, 3), 2.f);
+    const Grid<2, float> grid2 =
+        scale_primal(grid, V(5, 7), twice(FilterBnd(Filter::get("spline"), Bndrule::reflected)));
+    for (const float e : grid2) assertx(abs(e - 2.f) < 1e-5f);
+  }
+  {  // Nearest-filter scaling to the same dimensions copies, and to a zero-size grid yields an empty grid.
+    const Grid<2, int> grid = grid_from_flat(V(2, 3), range(6));
+    assertx(ranges::equal(scale_filter_nearest(grid, V(2, 3)), grid));
+    const Grid<2, int> grid0 = scale_filter_nearest(grid, V(0, 3));
+    assertx(grid0.dims() == V(0, 3) && grid0.size() == 0);
+  }
+  {  // Pointwise evaluation with the triangle filter is linear interpolation, with boundary rules outside.
+    const Grid<1, float> grid = {0.f, 10.f, 20.f, 40.f};
+    const float bordervalue = 100.f;
+    const auto filterb_clamped = V(FilterBnd(Filter::get("triangle"), Bndrule::clamped));
+    const auto filterb_border = V(FilterBnd(Filter::get("triangle"), Bndrule::border));
+    const auto filterb_periodic = V(FilterBnd(Filter::get("triangle"), Bndrule::periodic));
+    SHOW(sample_grid(grid, V(0.f), filterb_clamped), sample_grid(grid, V(1.5f), filterb_clamped),
+         sample_grid(grid, V(2.25f), filterb_clamped), sample_grid(grid, V(-1.f), filterb_clamped),
+         sample_grid(grid, V(4.f), filterb_clamped));
+    SHOW(sample_grid(grid, V(-.5f), filterb_border, &bordervalue), sample_grid(grid, V(3.5f), filterb_periodic));
+    SHOW(sample_domain(grid, V(.5f), filterb_clamped), sample_domain(grid, V(.125f), filterb_clamped));
+    const Grid<2, float> grid2 = {{0.f, 1.f}, {2.f, 3.f}};
+    SHOW(sample_grid(grid2, V(.5f, .5f), twice(filterb_clamped[0])),
+         sample_grid(grid2, V(1.f, .25f), twice(filterb_clamped[0])));
+  }
+  {  // Convolution of a pixel grid along each dimension, compared against floating-point evaluation.
+    Random random(5);
+    Grid<2, Pixel> grid(V(5, 7));
+    for (Pixel& pixel : grid) for_int(z, 4) pixel[z] = uint8_t(random.get_uint64() % 256);
+    const Pixel bordervalue(255, 0, 0, 255);
+    for (const Bndrule bndrule :
+         {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::border, Bndrule::reflected101}) {
+      for (const Array<float>& kernel :
+           {Array<float>{1.f}, Array<float>{.25f, .5f, .25f}, Array<float>{.1f, .2f, .4f, .2f, .1f},
+            Array<float>{.0625f, .0625f, .0625f, .625f, .0625f, .0625f, .0625f}}) {
+        const int r = kernel.num() / 2;
+        for_int(d, 2) {
+          const Grid<2, Pixel> newgrid = convolve_d(grid, d, kernel, bndrule, &bordervalue);
+          const Grid<2, Pixel> newgrid2 = convolve_d<2, false>(grid, d, kernel, bndrule, &bordervalue);
+          assertx(ranges::equal(newgrid, newgrid2));
+          for (const auto& yx : range(grid.dims())) {
+            Vec4<float> v{};
+            for_int(k, kernel.num()) {
+              Vec2<int> yx2 = yx.with(d, yx[d] - r + k);
+              const Pixel& pixel = grid.map_inside(yx2, twice(bndrule)) ? grid[yx2] : bordervalue;
+              for_int(z, 4) v[z] += kernel[k] * pixel[z];
+            }
+            for_int(z, 4) assertx(abs(newgrid[yx][z] - v[z]) <= .51f);
+          }
+        }
+      }
+    }
+    const Grid<2, Pixel> grid1 = convolve_d(grid, 1, Array<float>{1.f}, Bndrule::reflected);
+    assertx(ranges::equal(grid1, grid));
+    SHOW(convolve_d(grid, 1, Array<float>{.25f, .5f, .25f}, Bndrule::clamped)[2]);
+  }
+  {  // Inverse convolution returns the corresponding non-preprocessing filters.
+    Grid<2, float> grid(V(4, 5), 1.f);
+    const auto filterbs = inverse_convolution(grid, V(FilterBnd(Filter::get("spline"), Bndrule::reflected),
+                                                      FilterBnd(Filter::get("omoms"), Bndrule::periodic)));
+    SHOW(filterbs);
+    // An inverse convolution along a dimension of size 1 is the identity.
+    Grid<2, float> grid1(V(1, 1), 5.f);
+    inverse_convolution(grid1, twice(FilterBnd(Filter::get("spline"), Bndrule::reflected)));
+    assertx((grid1[0, 0]) == 5.f);
+    // The inverse convolution along dimension 0 commutes with the extraction of a column.
+    Grid<2, float> grid2(V(6, 2));
+    for_int(y, 6) grid2[y][0] = grid2[y][1] = float(y * y);
+    Grid<1, float> column = grid_from_flat(V(6), grid_column<0>(CGridView<2, float>(grid2), V(0, 0)));
+    inverse_convolution(grid2, V(FilterBnd(Filter::get("spline"), Bndrule::reflected),
+                                 FilterBnd(Filter::get("spline"), Bndrule::reflected)));
+    inverse_convolution(column, V(FilterBnd(Filter::get("spline"), Bndrule::reflected)));
+    for_int(y, 6) {
+      const float tolerance = 1e-5f * (1.f + abs(column[y]));
+      assertx(abs(grid2[y][0] - column[y]) < tolerance && abs(grid2[y][1] - column[y]) < tolerance);
+    }
   }
 }

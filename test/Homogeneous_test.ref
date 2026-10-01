@@ -4,3 +4,7 @@ to_Point((Homogeneous(p) + Homogeneous(p) * 2.f + Homogeneous(p)) / 4.f) = [1, 2
 to_Point((Homogeneous(p) + Homogeneous(p)) / 2.f) = [1, 2, 3]
 to_Point((Homogeneous(p) * 2.f) / 2.f) = [1, 2, 3]
 to_Point((Homogeneous(p) + Homogeneous(q)) / 2.f) = [4.5, 4.5, 4.5]
+normalized(h1) = [0.25, 0.5, 0.75, 1]
+to_Vector(Homogeneous(q) - Homogeneous(p)) = [7, 5, 3]
+to_Point(Homogeneous(p) * .25f + Homogeneous(q) * .75f) = [6.25, 5.75, 5.25]
+to_Point(normalized(h)) = [2, 3, 3]

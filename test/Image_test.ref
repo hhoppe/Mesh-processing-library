@@ -1,2 +1,39 @@
 (image[19, 19]) = Pixel(65, 66, 67, 72)
 newgrid.dims() = [10, 10]
+image.dims()=[0, 0] image.zsize()=3 image.suffix()=
+image.dims()=[2, 3] (image[1, 2])=Pixel(1, 2, 3, 4)
+image2.zsize()=4 image2.suffix()=png
+image4.dims()=[1, 2] image4.zsize()=3 (image4[0, 1])=Pixel(255, 0, 0, 255)
+image.zsize() = 1
+image.zsize() = 3
+image.zsize() = 3
+rgb_equal(p1, p2)=1 equal(p1, p2, 3)=1 equal(p1, p2, 4)=0 rgb_equal(p1, p3)=0 rgb_dist2(p1, p3)=25
+filename=a.png filename_is_image(filename)=1
+filename=dir.jpg/a.JPG filename_is_image(filename)=1
+filename=a.jpeg filename_is_image(filename)=1
+filename=a.avif filename_is_image(filename)=1
+filename=a.mp4 filename_is_image(filename)=0
+filename=a filename_is_image(filename)=0
+filename=a.png.txt filename_is_image(filename)=0
+s =  'rgb' 'jpg' 'bmp' 'ppm' 'png' 'arw' 'exr' ''
+as_image(matrixf)[0][1] = Pixel(128, 128, 128, 255)
+as_image(matrixd)[0][0] = Pixel(128, 128, 128, 255)
+imagev.zsize()=3 (imagev[0, 0])=Pixel(255, 0, 128, 255)
+as_image(matrixv2).zsize() = 4
+as_image(matrix3)[0][0] = Pixel(255, 128, 0, 255)
+as_image(matrixp)[0][0] = Pixel(1, 2, 3, 4)
+int{Y_from_RGB(gray128)}=126 int{U_from_RGB(gray128)}=128 int{V_from_RGB(gray128)}=128
+int{Y_from_RGB(Pixel::black())}=16 int{Y_from_RGB(Pixel::white())}=235
+YUV_Pixel_from_RGB(255, 0, 0)=Pixel(82, 90, 240, 255) RGB_Pixel_from_YUV(16, 128, 128)=Pixel(0, 0, 0, 255) RGB_Pixel_from_YUV(235, 128, 128)=Pixel(255, 255, 255, 255)
+max_error = 2
+nv12.get_Y().dims()=[4, 6] nv12.get_UV().dims()=[2, 3]
+image5[3][3]=Pixel(200, 101, 50, 255) rgb_dist2(image5[3][3], image4[3][3])=1
+image2.dims()=[8, 3] image2.zsize()=4
+image.dims() = [2, 9]
+image4 = Matrix<hh::Pixel>(4, 4) {
+  Pixel(112, 112, 112, 255) Pixel(64, 64, 64, 255) Pixel(64, 64, 64, 255) Pixel(112, 112, 112, 255)
+  Pixel(64, 64, 64, 255) Pixel(0, 0, 0, 255) Pixel(0, 0, 0, 255) Pixel(64, 64, 64, 255)
+  Pixel(64, 64, 64, 255) Pixel(0, 0, 0, 255) Pixel(0, 0, 0, 255) Pixel(64, 64, 64, 255)
+  Pixel(112, 112, 112, 255) Pixel(64, 64, 64, 255) Pixel(64, 64, 64, 255) Pixel(112, 112, 112, 255)
+}
+

@@ -66,21 +66,21 @@ face vertex: 5 3 1
 mesh.vertex_id(v) = 5
 mesh.vertex_id(v) = 3
 mesh.vertex_id(v) = 1
-face face: 4, 2
+face face (ccw, by face id): 5 3
 mesh.face_id(ff) = 5
 mesh.face_id(ff) = 3
 face edge: (1, 5), (3, 5), (3, 1)
 edge (1, 5)
 edge (3, 5)
 edge (3, 1)
-vertex vertex: 5 2 1
+vertex vertex (in unspecified order): 1 5 2
 mesh.vertex_id(vv) = 1
 mesh.vertex_id(vv) = 5
 mesh.vertex_id(vv) = 2
-vertex face: 2, 3
+vertex face (in unspecified order, by face id): 4 3
 mesh.face_id(f) = 4
 mesh.face_id(f) = 3
-vertex edge: (3, 5), (2, 3), (3, 1)
+vertex edge (in unspecified order): (3, 1), (3, 5), (2, 3)
 edge (3, 1)
 edge (3, 5)
 edge (2, 3)
@@ -109,4 +109,36 @@ Mesh {
     Face 6 { 3 4 2 }
   } EndFaces
 } EndMesh
+mesh.num_vertices()=4 mesh.num_edges()=6 mesh.num_faces()=4 euler_characteristic(mesh)=2
+ Face{1}=[1 2 3] Face{2}=[1 3 4] Face{3}=[1 4 2] Face{4}=[2 4 3]
+mesh.edge(va[0], va[1])=Edge{1, 2} mesh.corner(va[2], mesh.face(va[0], va[1]))=Corner{v=3, f=1}
+mesh.query_edge(va[0], va[0]) = Edge{null}
+mesh.num_vertices()=7 mesh.num_edges()=12 mesh.num_faces()=6 euler_characteristic(mesh)=1
+ 3 1 7
+mesh.most_clw_vertex(va[1])=Vertex{3} mesh.most_ccw_vertex(va[1])=Vertex{7}
+mesh.most_clw_face(va[1])=Face{1}=[1 2 3] mesh.most_ccw_face(va[1])=Face{6}=[1 7 2]
+mesh.most_clw_edge(va[1])=Edge{2, 3} mesh.most_ccw_edge(va[1])=Edge{7, 2}
+count = 6
+mesh.degree(va[0])=5 mesh.degree(va[1])=2 mesh.degree(va[2])=4
+ Face{2}=[1 3 4] Face{3}=[1 4 5] Face{4}=[1 5 6] Face{5}=[1 6 7] Face{7}=[1 7 3] Face{8}=[2 3 7]
+mesh.num_vertices()=9 mesh.num_edges()=17 mesh.num_faces()=9 euler_characteristic(mesh)=1
+mesh.num_vertices()=7 mesh.num_edges()=12 mesh.num_faces()=6 euler_characteristic(mesh)=1
+ Face{7}=[5 6 3] Face{8}=[2 3 6] Face{11}=[8 5 3] Face{12}=[8 3 4] Face{13}=[100 5 8] Face{14}=[100 8 4]
+mesh.num_vertices()=8 mesh.num_edges()=15 mesh.num_faces()=8 euler_characteristic(mesh)=1
+ Face{1}=[1 2 5] Face{2}=[6 4 2] Face{3}=[6 2 3] Face{4}=[7 4 6] Face{5}=[7 6 3] Face{6}=[4 5 8] Face{7}=[5 2 8] Face{8}=[2 4 8]
+mesh.num_faces()=3 mesh.num_edges()=8
+ Face{2}=[2 5 6 3] Face{3}=[2 3 4] Face{4}=[4 1 2]
+f=Face{5}=[4 1 2 3] mesh.num_faces()=2 mesh.num_edges()=7
+mesh.face(va[1], vnew)=Face{6}=[3 4 1 2 7] mesh.face(vnew, va[1])=Face{7}=[2 5 6 3 7] mesh.degree(vnew)=2
+mesh.num_vertices()=6 mesh.num_edges()=7 mesh.num_faces()=2
+ Face{8}=[2 5 6 3] Face{9}=[3 4 1 2]
+fhex=Face{10}=[3 4 1 2 5 6] mesh.num_vertices(fhex)=6 mesh.num_edges()=6
+fc=Face{3}=[4 1 2 5] mesh2.num_vertices()=4
+mesh.num_vertices()=4 mesh.num_edges()=5 mesh.num_faces()=2
+ Face{1}=[1 2 3] Face{2}=[4 3 2]
+mesh.num_boundaries(va[0])=2 mesh.degree(va[0])=4
+mesh.num_vertices()=6 mesh.num_edges()=6
+mesh.degree(va[0])=4 mesh.degree(v2)=4 mesh.num_faces()=6 mesh.num_edges()=14
+ Face{1}=[1 2 3] Face{2}=[1 3 4] Face{3}=[1 4 5] Face{4}=[8 5 6] Face{5}=[8 6 7] Face{6}=[8 7 2]
+mesh.num_vertices()=8 mesh.num_edges()=15 mesh.num_faces()=8 euler_characteristic(mesh)=1
 all ok

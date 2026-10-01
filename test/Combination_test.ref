@@ -2,4 +2,28 @@ comb[1] = 0
 comb[2] = 0.5
 comb[3] = 0
 comb[4] = 0.25
+comb.num() = 6
 comb.sum() = 1.25
+sorted_entries(comb) = Array<std::pair<int,float>>(6) {
+  [1, 0]
+  [2, 0.5]
+  [3, 0]
+  [4, 0.25]
+  [7, 0.5]
+  [8, 0]
+}
+comb.num() = 3
+comb.sum() = 1.25
+sorted_entries(comb) = Array<std::pair<int,float>>(3) {
+  [2, 0.5]
+  [4, 0.25]
+  [7, 0.5]
+}
+comb.sum() = 0
+comb.sum() = 0
+sorted_entries(comb) = Array<std::pair<hh::Vec<int,2>,float>>(2) {
+  [[0, 0], 0.5]
+  [[0, 1], -0.5]
+}
+p = [0, -0.5]
+sum_keys=1.5 comb.sum()=0.5

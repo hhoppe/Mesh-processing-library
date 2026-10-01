@@ -118,7 +118,7 @@ CArrayView<int>({1, 2, 3, 4}) = Array<int>(4) {
 sum(ar) = 10
 sum(ar2) = 10
 min(ar2) = 1
-sum(ar2) = 10
+max(ar2) = 4
 mean(ar2) = 2.5
 sum(ar) = 197
 min(ar) = a
@@ -512,6 +512,21 @@ ar4=Array<int>(2) {
 }
  ar4.capacity()=10
 ar4.num()=0 ar4.capacity()=3
+bndrule = Bndrule{reflected}
+bndrule = Bndrule{periodic}
+bndrule = Bndrule{clamped}
+bndrule = Bndrule{border}
+bndrule = Bndrule{101reflected}
+Bndrule::undefined = Bndrule{undefined}
+bndrule=Bndrule{reflected} s=33210012332100
+bndrule=Bndrule{periodic} s=30123012301230
+bndrule=Bndrule{clamped} s=00000012333333
+bndrule=Bndrule{border} s=-----0123-----
+bndrule=Bndrule{101reflected} s=12321012321012
+interp(f1, f2, f3) = Array<float>(2) {
+  8
+  12
+}
 (1) all=0,1,2   src nulled=111
 (2) tail=gamma,delta   words[2..3]='','' (emptied)
 (3) kept=keep_a,keep_b   pool[0]='' (emptied), pool[1]='drop' (untouched)

@@ -265,6 +265,12 @@ end
 end s2
 end s1
 catch4 ex.what()=func2_err
+round_fraction_digits(1.234567f)=1.23457 round_fraction_digits(-1.25, 10.)=-1.2 round_fraction_digits(2.5f, 1.f)=3
+make_string(V(1, 2))=[1, 2] make_string(1.5f)=1.5 make_string(std::pair{1, "a"})=[1, a]
+(std::tuple{1, 'b', 2.5}) = tuple<1, b, 2.5>
+std::strong_ordering::less=-1 std::weak_ordering::equivalent=0 std::partial_ordering::unordered=unordered
+static_cast<const char*>(nullptr) = <nullptr>
+Environment variable 'HH_TEST_ENV_VAR=4' overrides default value '3'
 # Summary of warnings:
 #      1 'A is chronologically earliest in line 343 of file ...
 #     11 'Should occur 11 times in line 339 of file ...

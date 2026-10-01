@@ -15,3 +15,8 @@ p2 = [0.9, 0.25, 0.7]
 Segment between:
 p1 = [0.8, 0.9, 0.1]
 p2 = [0.864, 0.484, 0.484]
+num_tested=1996 num_visible=1586
+g_num_drawn > 50 = 1
+g_num_drawn = 0
+g_num_drawn=1 abs(g_drawn_length - dist(Point(.1f, .1f, .1f), Point(.1f, .9f, .9f))) < 1e-6=1
+g_num_drawn=1 round_fraction_digits(g_drawn_length, 1e4)=0.2

@@ -12,6 +12,18 @@ nc1=56 nc2=208 nc3=0 nc4=1 nc5=0
 # visited 265 cubes (11 were undefined, 1 contained nothing)
 # evaluated 556 vertices (0 were zero, 5 were undefined)
 # encountered 642 tough edges
+gn=12 vertex_tol > 0.f=0 big_mesh_faces=0 nc=273 nv=268 ne=798 nf=532 nv - ne + nf=2
+ncenter = 14
+gn=12 vertex_tol > 0.f=1 big_mesh_faces=0 nc=273 nv=268 ne=798 nf=532 nv - ne + nf=2
+ncenter = 14
+gn=9 vertex_tol > 0.f=0 big_mesh_faces=1 nc=159 nv=146 ne=292 nf=148 nv - ne + nf=2
+ncenter = 0
+gn=12 vertex_tol > 0.f=0 nc=256 ntriangles=1520
+gn=12 vertex_tol > 0.f=1 nc=256 ntriangles=1520
+nc1=1 nc2=0 nc3 > 1=1 nc4=0
+nboundary > 0=1 euler=1
+gn=30 vertex_tol > 0.f=0 segments.num()=122 npositive=0
+gn=30 vertex_tol > 0.f=1 segments.num()=122 npositive=0
 # Created by WA3dStream on yyyy-mm-dd hh:mm:ss
 
 L 0 0 0

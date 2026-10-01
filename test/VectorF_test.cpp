@@ -1,6 +1,87 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/VectorF.h"
+
+#include "libHh/RangeOp.h"  // sum(), mag2(), dist2(), dot() on Vec.
 using namespace hh;
+
+namespace {
+
+// Deterministic small integer values in [-8, 8], so that all sums and products are exact.
+struct Lcg {
+  uint32_t state = 1;
+  float operator()() {
+    state = state * 1'664'525u + 1'013'904'223u;
+    return float(int(state >> 16) % 17 - 8);
+  }
+};
+
+// Compare the operations of VectorF<n> against a scalar reference Vec<float, n>, element by element.
+template <int n> void test_vs_reference() {
+  using VecF = VectorF<n>;
+  assertx(VecF().num() == n && VecF().size() == size_t{n});
+  assertx(VecF::ok(0) && VecF::ok(n - 1) && !VecF::ok(-1) && !VecF::ok(n));
+  Lcg lcg;
+  for_int(iter, 20) {
+    Vec<float, n> a, b;
+    for_int(i, n) a[i] = lcg(), b[i] = lcg();
+    for_int(i, n) if (b[i] == 0.f) b[i] = 4.f;  // Avoid division by zero.
+    VecF va, vb;
+    va.load_unaligned(a.data());
+    for_int(i, n) vb[i] = b[i];
+    for_int(i, n) assertx(va[i] == a[i] && vb.data()[i] == b[i]);
+    const auto verify = [&](const VecF& v, auto func) { for_int(i, n) assertx(v[i] == func(i)); };
+    verify(va + vb, [&](int i) { return a[i] + b[i]; });
+    verify(va - vb, [&](int i) { return a[i] - b[i]; });
+    verify(va * vb, [&](int i) { return a[i] * b[i]; });
+    verify(va / vb, [&](int i) { return a[i] / b[i]; });
+    verify(va * 3.f, [&](int i) { return a[i] * 3.f; });
+    verify(3.f * va, [&](int i) { return a[i] * 3.f; });
+    verify(va / 4.f, [&](int i) { return a[i] * (1.f / 4.f); });  // Implemented as multiplication by 1.f / f.
+    verify(min(va, vb), [&](int i) { return min(a[i], b[i]); });
+    verify(max(va, vb), [&](int i) { return max(a[i], b[i]); });
+    assertx(dot(va, vb) == dot(a, b));
+    assertx(mag2(va) == mag2(a));
+    assertx(dist2(va, vb) == dist2(a, b));
+    assertx(sum(va) == sum(a));
+    VecF vc = va;
+    vc += vb;
+    verify(vc, [&](int i) { return a[i] + b[i]; });
+    vc -= vb;
+    verify(vc, [&](int i) { return a[i]; });
+    vc *= vb;
+    verify(vc, [&](int i) { return a[i] * b[i]; });
+    vc /= vb;
+    verify(vc, [&](int i) { return a[i]; });
+    vc *= 2.f;
+    vc /= 2.f;
+    verify(vc, [&](int i) { return a[i]; });
+    // KNOWN_BUG: operator+=(VectorF<n>&, float) and operator-=(VectorF<n>&, float) fail to compile when instantiated,
+    // because there is no operator+(const VectorF<n>&, float) or operator-(const VectorF<n>&, float).
+    {
+      float sum_iter = 0.f;
+      int count = 0;
+      for (const float f : va) sum_iter += f, count++;
+      assertx(count == n && sum_iter == sum(a));
+    }
+    {
+      alignas(16) float buf[n + 4];
+      vb.store_aligned(buf);
+      VecF vd;
+      vd.load_aligned(buf);
+      verify(vd, [&](int i) { return b[i]; });
+      va.store_unaligned(buf + 1);  // Misaligned.
+      vd.load_unaligned(buf + 1);
+      verify(vd, [&](int i) { return a[i]; });
+    }
+    vc.zero();
+    verify(vc, [](int) { return 0.f; });
+    vc.fill(-2.5f);
+    verify(vc, [](int) { return -2.5f; });
+    verify(VecF(1.5f), [](int) { return 1.5f; });
+  }
+}
+
+}  // namespace
 
 int main() {
   {
@@ -59,6 +140,14 @@ int main() {
     SHOW(sizeof(v9));
     dummy_use(v9);
   }
+  test_vs_reference<1>();
+  test_vs_reference<3>();
+  test_vs_reference<4>();
+  test_vs_reference<5>();
+  test_vs_reference<8>();
+  test_vs_reference<11>();
+  test_vs_reference<37>();
+  showf("VectorF<n> operations match the scalar reference.\n");
 }
 
 template class hh::VectorF<1>;

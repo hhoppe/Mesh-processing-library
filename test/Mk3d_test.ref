@@ -31,4 +31,82 @@ s 0.5 0.5 0.2
 g 4 0 0
 n 1 0 0
 p 6 7 8
-# End Mk3d: 2gons 1lines 1points, 10verts(max 3)
+# A two-sided polygon, output in both orientations.
+
+P 0 0 0
+d 1 0.16 0
+s 1 0.5 0.3
+g 3 0 0
+v 0 0 0
+v 1 0 0
+v 0 1 0
+v -1 1 0
+E 0 0 0
+
+P 0 0 0
+v 0 0 0
+v -1 1 0
+v 0 1 0
+v 1 0 0
+E 0 0 0
+
+# A polygon forced to a closed polyline, and a two-sided polygon forced to a polyline.
+
+L 0 0 0
+v 0 0 0
+v 1 0 0
+v 0 1 0
+v 0 0 0
+E 0 0 0
+
+L 0 0 0
+v 0 0 1
+v 1 0 1
+v 0 1 1
+v 0 0 1
+E 0 0 0
+
+# A flipped polygon, whose normals are also negated.
+
+P 0 0 0
+n -0.333333 -0.666667 -0.666667
+v 0 0 0
+n -0.57735 -0.57735 -0.57735
+v 0 1 0
+n -0.666667 -0.666667 -0.333333
+v 1 1 0
+n -0.666667 -0.333333 -0.666667
+v 1 0 0
+E 0 0 0
+
+# Normals transform by the inverse transpose, so they stay perpendicular to the scaled surface.
+
+P 0 0 0
+n 0.894427 0.447214 0
+v 0 0 0
+n 0.894427 0.447214 0
+v 1 -2 0
+n 0.894427 0.447214 0
+v 0 0 1
+E 0 0 0
+
+# Nested transforms: the most recent transform applies first.
+p 102 2 2
+p 101 1 1
+p 99 1 1
+# Colors.
+d 0.25 0.5 0.25
+s 0.5 1 0.25
+g 1 0 0
+p 1 1 1
+d 0 1 0
+s 0 0 1
+p 2 2 2
+d 0.25 0.5 0.25
+s 0.5 1 0.25
+p 3 3 3
+d 1 0.16 0
+s 1 0.5 0.3
+g 3 0 0
+p 4 4 4
+# End Mk3d: 6gons 3lines 8points, 40verts(max 4)

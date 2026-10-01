@@ -77,3 +77,9 @@ round_fraction_digits(lls.get_x_rc(1, 0)) = 10.6667
 c = 5
 round_fraction_digits(lls.get_x_rc(0, 0)) = 0.66667
 round_fraction_digits(lls.get_x_rc(1, 0)) = 10.6667
+S = Array<float>(3) {
+  3
+  2
+  1
+}
+Random 12x5 systems: all solvers agree with the reference solution.

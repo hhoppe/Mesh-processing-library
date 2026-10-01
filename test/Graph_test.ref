@@ -31,3 +31,37 @@ Graph: vertices {
  edge (4, 5)
  edge (6, 2)
 }
+g.edges(1) = Array<int>(3) {
+  6
+  3
+  2
+}
+g.edges(1) = Array<int>(2) {
+  2
+  3
+}
+Graph: vertices {
+  vertex 0
+  vertex 1
+  vertex 2
+  vertex 3
+}, edges {
+ edge (0, 2)
+ edge (1, 2)
+ edge (2, 0)
+ edge (2, 1)
+}
+Graph: vertices {
+  vertex 0
+  vertex 1
+  vertex 2
+  vertex 3
+}, edges {
+ edge (0, 2)
+ edge (0, 3)
+ edge (1, 2)
+ edge (2, 0)
+ edge (2, 1)
+ edge (3, 0)
+}
+sum = 900

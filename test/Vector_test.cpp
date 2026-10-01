@@ -4,7 +4,7 @@
 #include <vector>
 
 #include "libHh/RangeOp.h"  // contains()
-#include "libHh/Stack.h"    // vec_pop()
+#include "libHh/Stack.h"    // vec_pop(), vec_remove_ordered()
 using namespace hh;
 
 namespace {
@@ -17,14 +17,36 @@ void test_stack() {
       explicit S(int i) : _i(i) {}
       int _i;
     };
+    const S s1(1), s2(2), s3(3);  // The vector holds non-owning pointers to these.
     std::vector<const S*> s;
     assertx(s.empty());
-    s.push_back(new S(1));  // Never deleted.
-    s.push_back(new S(2));
-    s.push_back(new S(3));
-    assertw(vec_pop(s)->_i == 3);
-    assertw(vec_pop(s)->_i == 2);
-    assertw(vec_pop(s)->_i == 1);
+    s.push_back(&s1);
+    s.push_back(&s2);
+    s.push_back(&s3);
+    assertx(vec_pop(s)->_i == 3);
+    assertx(vec_pop(s) == &s2);
+    assertx(vec_pop(s)->_i == 1);
+    assertx(s.empty());
+  }
+  {
+    // vec_pop() moves the element out, so it also works with move-only types.
+    std::vector<unique_ptr<int>> s;
+    s.push_back(make_unique<int>(4));
+    s.push_back(make_unique<int>(5));
+    const unique_ptr<int> p = vec_pop(s);
+    assertx(*p == 5 && s.size() == 1 && *s[0] == 4);
+  }
+  {
+    // vec_remove_ordered() removes the first matching element and preserves the order of the others.
+    std::vector<int> s{3, 1, 4, 1, 5};
+    assertx(vec_remove_ordered(s, 1));
+    assertx((s == std::vector<int>{3, 4, 1, 5}));
+    assertx(vec_remove_ordered(s, 5));
+    assertx((s == std::vector<int>{3, 4, 1}));
+    assertx(!vec_remove_ordered(s, 7));
+    assertx(s.size() == 3);
+    assertx(vec_remove_ordered(s, 1) && vec_remove_ordered(s, 3) && vec_remove_ordered(s, 4));
+    assertx(s.empty() && !vec_remove_ordered(s, 4));
   }
   {
     std::vector<int> s;
@@ -32,11 +54,11 @@ void test_stack() {
     s.push_back(1);
     s.push_back(2);
     int i = 0;
-    for (const int j : s) assertw(j == i++);
+    for (const int j : s) assertx(j == i++);
     assertx(i == 3);
-    assertw(vec_pop(s) == 2);
-    assertw(vec_pop(s) == 1);
-    assertw(vec_pop(s) == 0);
+    assertx(vec_pop(s) == 2);
+    assertx(vec_pop(s) == 1);
+    assertx(vec_pop(s) == 0);
     assertx(s.empty());
   }
   {
@@ -46,13 +68,13 @@ void test_stack() {
     s.push_back(9);
     int i = 0;
     for (const float v : s) {
-      assertw(v == square(i + 1));
+      assertx(v == square(i + 1));
       i++;
     }
     assertx(i == 3);
-    assertw(vec_pop(s) == 9);
-    assertw(vec_pop(s) == 4);
-    assertw(vec_pop(s) == 1);
+    assertx(vec_pop(s) == 9);
+    assertx(vec_pop(s) == 4);
+    assertx(vec_pop(s) == 1);
     assertx(s.empty());
   }
   {
@@ -63,20 +85,20 @@ void test_stack() {
       if (1) assertnever("");
     }
     for_int(i, 4) s.push_back(i);
-    assertw(s.size() == 4);
-    assertw(!s.empty());
-    assertw(contains(s, 2));
-    assertw(s.back() == 3);
-    assertw(vec_pop(s) == 3);
-    assertw(vec_pop(s) == 2);
+    assertx(s.size() == 4);
+    assertx(!s.empty());
+    assertx(contains(s, 2));
+    assertx(s.back() == 3);
+    assertx(vec_pop(s) == 3);
+    assertx(vec_pop(s) == 2);
     {
       int i = 0;
-      for (const int j : s) assertw(j == i++);
+      for (const int j : s) assertx(j == i++);
     }
-    assertw(!contains(s, 2));
-    assertw(vec_pop(s) == 1);
-    assertw(vec_pop(s) == 0);
-    assertw(s.empty());
+    assertx(!contains(s, 2));
+    assertx(vec_pop(s) == 1);
+    assertx(vec_pop(s) == 0);
+    assertx(s.empty());
   }
 }
 
@@ -102,27 +124,27 @@ void test_queue() {
     if (1) assertnever("");
   }
   for_int(i, 4) q.push_back(i);
-  assertw(q.size() == 4);
-  assertw(!q.empty());
-  assertw(queue_contains(q, 1));
-  assertw(q.front() == 0);
-  assertw(queue_pop(q) == 0);
-  assertw(queue_pop(q) == 1);
+  assertx(q.size() == 4);
+  assertx(!q.empty());
+  assertx(queue_contains(q, 1));
+  assertx(q.front() == 0);
+  assertx(queue_pop(q) == 0);
+  assertx(queue_pop(q) == 1);
   {
     int i = 0;
-    for (const int j : q) assertw(j == 2 + i++);
+    for (const int j : q) assertx(j == 2 + i++);
   }
-  assertw(!queue_contains(q, 1));
+  assertx(!queue_contains(q, 1));
   q.push_front(5);
   q.push_front(4);
-  assertw(queue_pop(q) == 4);
-  assertw(queue_pop(q) == 5);
-  assertw(queue_pop(q) == 2);
-  assertw(queue_pop(q) == 3);
-  assertw(q.empty());
+  assertx(queue_pop(q) == 4);
+  assertx(queue_pop(q) == 5);
+  assertx(queue_pop(q) == 2);
+  assertx(queue_pop(q) == 3);
+  assertx(q.empty());
 }
 
-// *** from HList_test
+// *** adapted from the former HList_test
 
 template <typename T> bool list_contains(const std::list<T>& l, const T& e) {
   for (const auto& ee : l)
@@ -141,28 +163,28 @@ void test_list() {
   l.push_front(0);
   l.push_back(2);
   l.push_back(3);
-  assertw(l.size() == 4);
-  assertw(!l.empty());
-  for_intL(i, -2, 6) assertw(list_contains(l, i) == (i >= 0 && i < 4));
-  assertw(l.front() == 0);
-  assertw(l.back() == 3);
-  assertw(l.front() == 0);
+  assertx(l.size() == 4);
+  assertx(!l.empty());
+  for_intL(i, -2, 6) assertx(list_contains(l, i) == (i >= 0 && i < 4));
+  assertx(l.front() == 0);
+  assertx(l.back() == 3);
+  assertx(l.front() == 0);
   l.pop_front();
-  assertw(l.front() == 1);
+  assertx(l.front() == 1);
   l.pop_front();
-  assertw(l.back() == 3);
+  assertx(l.back() == 3);
   l.pop_back();
-  assertw(l.back() == 2);
+  assertx(l.back() == 2);
   l.pop_back();
-  assertw(l.empty());
-  assertw(l.size() == 0);
+  assertx(l.empty());
+  assertx(l.size() == 0);
   l.push_back(1);
   l.push_back(2);
   l.insert(ranges::find(l, 1), 0);
   l.insert(++ranges::find(l, 2), 3);
   {
     int i = 0;
-    for (const int j : l) assertw(j == i++);
+    for (const int j : l) assertx(j == i++);
   }
   l.clear();
 }
@@ -178,11 +200,3 @@ int main() {
 template class std::vector<int>;
 template class std::vector<void*>;
 // template class std::vector<unique_ptr<int>>;  // Full instantiation is unsupported; we cannot modify std namespace.
-
-// This test intentionally leaks the objects marked "never deleted" above, to exercise the
-// non-owning pointer semantics; disable LeakSanitizer rather than alter the expected output.
-// Other AddressSanitizer checks remain active.
-#if HH_HAS_LSAN
-#include <sanitizer/lsan_interface.h>
-extern "C" int __lsan_is_turned_off() { return 1; }
-#endif

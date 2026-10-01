@@ -4,3 +4,33 @@ Array(grid_column(matrix, 0, V(0, 1)) | views::transform([](int v) { return v * 
   42
 }
 sum(grid_column(matrix, 1, V(2, 0))) = 86
+v = StridedArray<int>(4) {
+  2
+  5
+  8
+  110
+}
+Array(v | views::reverse) = Array<int>(6) {
+  26
+  21
+  16
+  11
+  6
+  1
+}
+Array(v | views::drop(2) | views::stride(2)) = Array<int>(2) {
+  11
+  21
+}
+ar = Array<int>(10) {
+  10
+  0
+  20
+  0
+  30
+  0
+  40
+  0
+  50
+  0
+}

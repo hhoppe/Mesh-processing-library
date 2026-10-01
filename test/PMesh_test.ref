@@ -8,3 +8,26 @@ Array(mesh.ccw_faces(5, 0) | views::filter([](int f) { return f % 2 == 0; })) = 
   10
   8
 }
+va.point = [2.5, 2, 1.5]
+vad.dpoint = [-2, 0, 2]
+transformed(wa.normal, [](float v) { return round_fraction_digits(v, 1e4f); })=[0.7071, 0.7071, 0] wa.rgb=[0.5, 0.5, 0] wa.uv=[0.5, 0.25]
+wa.normal=[1, 2, 0] wa.rgb=[1, 0, 0] wa.uv=[0, 0]
+wrap=0 gmesh.num_vertices()=20 gmesh.num_edges()=43 gmesh.num_faces()=24
+gmesh.num_vertices() - gmesh.num_edges() + gmesh.num_faces() = 1
+gmesh.get_string(f)=matid=0 gmesh.get_string(gmesh.id_vertex(2))=wid=2 normal=(0 0 1)
+wrap=1 gmesh.num_vertices()=20 gmesh.num_edges()=60 gmesh.num_faces()=40
+gmesh.num_vertices() - gmesh.num_edges() + gmesh.num_faces() = 0
+gmesh.get_string(f)=matid=0 gmesh.get_string(gmesh.id_vertex(2))=wid=2 normal=(0 0 1)
+torus_after_split_edge   nv=23    nf=46    checks=138    ok
+mesh._vertices[nv].attrib.point=[0.75, 0, 0] mesh._vertices[nv + 1].attrib.point=[3.5, 1, 0]
+mesh2._materials.num()=2 mesh2._materials.get(1)=matid=1 rgb=(1 0 0)
+pmesh._info._full_nvertices=20 pmesh._info._full_nfaces=24 pmesh._info._full_bbox=Bbox{[0, 0, 0], [4, 3, 0]}
+str.substr(0, str.find("PM base mesh:")) = PM
+version=2
+nvsplits=0 nvertices=20 nwedges=20 nfaces=24
+bbox 0 0 0  4 3 0
+has_rgb=0
+has_uv=0
+has_resid=0
+
+gmesh.num_vertices()=20 gmesh.num_faces()=24

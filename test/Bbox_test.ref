@@ -22,3 +22,14 @@ bb = Bbox{[3.40282e+38, 3.40282e+38], [-3.40282e+38, -3.40282e+38]}
 bb = Bbox{[-3.40282e+38, -3.40282e+38], [3.40282e+38, 3.40282e+38]}
 bb = Bbox{[3.40282e+38, 3.40282e+38], [-3.40282e+38, -3.40282e+38]}
 bb = Bbox{[2147483647, 2147483647, 2147483647], [-2147483648, -2147483648, -2147483648]}
+Bbox(V(V(1.f, 2.f))) = Bbox{[1, 2], [1, 2]}
+bb.max_side()=4 inner.max_side()=3 touching.max_side()=2
+bbox_union(bb1, bb2) = Bbox{[0, -1], [5, 2]}
+bb = Bbox{[3, 0], [4, 1]}
+bb3 = Bbox{[10, 10], [4, 2]}
+bb2.enclosing_hypercube() = Bbox{[-1.5, -1, 0], [2.5, 3, 4]}
+bb_cube = Bbox{[0, 0.25, 0], [1, 0.75, 0.25]}
+bb_small = Bbox{[0.1, 0.3, 0.1], [0.9, 0.7, 0.3]}
+transformed(bb2[0], rounded) = [-0.7071, 0, 0]
+transformed(bb2[1], rounded) = [1.4142, 2.1213, 1]
+bb.transform(Frame::rotation(2, TAU / 4)) = Bbox{[-1, 0, 0], [0, 2, 1]}

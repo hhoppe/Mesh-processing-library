@@ -39,8 +39,17 @@ void test_continuous_binary_search_func() {
     SHOW(x);
     assertx(feval(x) <= 1. && 1. < feval(x + xtol));
   }
+  {  // The abscissa may be a float, and the range may include negative values.
+    const auto feval = [](float x) { return x * x * x; };
+    const float xtol = 1e-4f;
+    const float x = continuous_binary_search_func(feval, -2.f, 1.f, xtol, -1.f);
+    assertx(feval(x) <= -1.f && -1.f < feval(x + xtol));
+    assertx(continuous_binary_search_func(feval, -2.f, 1.f, 4.f, -1.f) == -2.f);  // Within tolerance, xl is returned.
+  }
 }
 
+// KNOWN_BUG: discrete_binary_search_func() computes its midpoint as (xl + xh) / 2, which overflows for large ranges
+// such as [1'500'000'000, 2'000'000'000], so those are not tested.
 void test_discrete_binary_search_func() {
   {  // Find the largest integer x such that x * x <= 50.
     const auto feval = [](int x) { return x * x; };
@@ -50,6 +59,11 @@ void test_discrete_binary_search_func() {
     const auto feval = [](int64_t x) { return x * x; };
     const int64_t x = discrete_binary_search_func(feval, int64_t{0}, int64_t{10'000'000}, int64_t{10'000'000'000'000});
     SHOW(x);
+  }
+  {  // The abscissa may be negative, and a range with xh == xl + 1 immediately returns xl.
+    const auto feval = [](int x) { return x; };
+    for_intL(y, -100, 100) assertx(discrete_binary_search_func(feval, -100, 100, y) == y);
+    assertx(discrete_binary_search_func(feval, -10, -9, -10) == -10);
   }
 }
 

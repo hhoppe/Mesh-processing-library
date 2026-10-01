@@ -63,3 +63,6 @@ uf2.get_label(2) = 1
 uf2.get_label(3) = 1
 uf2.get_label(4) = 1
 uf2.get_label(5) = 5
+uf.equal(2, 4)=1 uf.equal(2, 5)=0 uf2.equal(4, 3)=1
+nclasses = 183
+label = 1000

@@ -423,3 +423,75 @@ grid_column<3>(grid4.grid_view<4>(), V(1, 1, 1, 0)) = StridedArray<int>(2) {
   17
   18
 }
+grid_column(CGridView<3, int>(grid), 0, V(0, 2, 3)) = StridedArray<int>(2) {
+  -11
+  -23
+}
+crop(grid, V(1, 1), V(0, 2)) = Matrix<int>(2, 1) {
+  5
+  9
+}
+crop(grid, V(1, 0), V(1, 0)) = Matrix<int>(1, 4) {
+  4 5 6 7
+}
+crop(grid, V(-1, -2), V(-1, -2), twice(Bndrule::reflected)) = Matrix<int>(5, 8) {
+  1 0 0 1 2 3 3 2
+  1 0 0 1 2 3 3 2
+  5 4 4 5 6 7 7 6
+  9 8 8 9 10 11 11 10
+  9 8 8 9 10 11 11 10
+}
+crop(grid, V(0, -1), V(0, -1), V(Bndrule::clamped, Bndrule::border), &bordervalue) = Matrix<int>(3, 6) {
+  -1 0 1 2 3 -1
+  -1 4 5 6 7 -1
+  -1 8 9 10 11 -1
+}
+grid = Matrix<int>(5, 4) {
+  1 1 0 2
+  0 0 0 2
+  3 3 3 4
+  3 3 3 0
+  3 3 3 0
+}
+grid = Matrix<int>(5, 4) {
+  1 1 0 2
+  0 0 0 2
+  3 3 3 0
+  3 3 3 4
+  3 3 3 0
+}
+grid = Matrix<int>(5, 4) {
+  0 0 0 2
+  0 1 1 2
+  3 3 3 0
+  3 3 3 0
+  3 3 3 4
+}
+assemble(grids, 0, V(Alignment::right, Alignment::left)) = Matrix<int>(5, 4) {
+  0 0 0 2
+  1 1 0 2
+  3 3 3 0
+  3 3 3 0
+  3 3 3 4
+}
+assemble(grids1) = Array<int>(5) {
+  1
+  2
+  3
+  4
+  5
+}
+sample_grid(grid, V(0.f), filterb_clamped)=0 sample_grid(grid, V(1.5f), filterb_clamped)=15 sample_grid(grid, V(2.25f), filterb_clamped)=25 sample_grid(grid, V(-1.f), filterb_clamped)=0 sample_grid(grid, V(4.f), filterb_clamped)=40
+sample_grid(grid, V(-.5f), filterb_border, &bordervalue)=50 sample_grid(grid, V(3.5f), filterb_periodic)=20
+sample_domain(grid, V(.5f), filterb_clamped)=15 sample_domain(grid, V(.125f), filterb_clamped)=0
+sample_grid(grid2, V(.5f, .5f), twice(filterb_clamped[0]))=1.5 sample_grid(grid2, V(1.f, .25f), twice(filterb_clamped[0]))=2.25
+convolve_d(grid, 1, Array<float>{.25f, .5f, .25f}, Bndrule::clamped)[2] = Array<hh::Pixel>(7) {
+  Pixel(219, 120, 193, 146)
+  Pixel(176, 142, 97, 182)
+  Pixel(126, 83, 76, 141)
+  Pixel(156, 23, 140, 84)
+  Pixel(192, 29, 144, 125)
+  Pixel(149, 81, 83, 161)
+  Pixel(88, 125, 61, 96)
+}
+filterbs = [FilterBnd{justspline, reflected}, FilterBnd{justomoms, periodic}]

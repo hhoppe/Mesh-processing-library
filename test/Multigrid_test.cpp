@@ -127,7 +127,7 @@ void test(GridView<D, T> grid_orig, Periodic /*unused*/ = Periodic{}) {
   constexpr float tolerance = std::is_same_v<decltype(max_e(T{})), float> ? 1e-7f : 1e-16f;
   auto expected_rms_err = max(dims) * 10.f * fudge * tolerance;
   if (0) SHOW(expected_rms_err, result_rms_err);
-  if (result_rms_err >= expected_rms_err) {
+  if (!(result_rms_err < expected_rms_err)) {  // Also catches a NaN error.
     SHOW(expected_rms_err, result_rms_err);
     if (0) assertnever("");
   }
@@ -136,6 +136,112 @@ void test(GridView<D, T> grid_orig, Periodic /*unused*/ = Periodic{}) {
 struct MultigridPeriodicDim0 {
   bool operator()(int d) const { return d == 0; }  // Only dimension-0 is periodic.
 };
+
+struct MultigridMetricAnisotropic {
+  float operator()(float v, int d) const { return d == 0 ? v * 4.f : v; }  // Stiffer along dimension 0.
+};
+
+// Apply the discrete operator (the Laplacian minus the screening term) solved by Multigrid at the finest level.
+template <typename Periodic, typename Metric, int D, typename T>
+Grid<D, T> apply_operator(CGridView<D, T> grid, float screening_weight) {
+  const Periodic periodic;
+  const Metric metric;
+  const Vec<int, D> dims = grid.dims();
+  Grid<D, T> result(dims);
+  for (const auto& u : range(dims)) {
+    T v = -screening_weight * grid[u];
+    for_int(c, D) {
+      const float w = metric(1.f, c);
+      for (const int step : {-1, +1}) {
+        int i = u[c] + step;
+        if (i < 0 || i >= dims[c]) {
+          if (!periodic(c)) continue;
+          i = (i + dims[c]) % dims[c];
+        }
+        v += w * (grid[u.with(c, i)] - grid[u]);
+      }
+    }
+    result[u] = v;
+  }
+  return result;
+}
+
+// Reconstruct a grid of random numbers from the result of apply_operator(), and return the rms error.
+template <typename Periodic, typename Metric, int D, typename T>
+double solve_random(const Vec<int, D>& dims, float screening_weight, int num_vcycles) {
+  Random random(1);
+  Grid<D, T> grid_orig(dims);
+  for (auto& e : grid_orig) e = T(random.unif());
+  Multigrid<D, T, Periodic, Metric> multigrid(dims);
+  fill(multigrid.initial_estimate(), T{0});
+  // With screening, the solution is unique; without it, its mean is unconstrained and must be specified.
+  if (!screening_weight) multigrid.set_desired_mean(mean(grid_orig));
+  multigrid.set_screening_weight(screening_weight);
+  multigrid.rhs().assign(apply_operator<Periodic, Metric>(CGridView<D, T>(grid_orig), screening_weight));
+  multigrid.set_num_vcycles(num_vcycles);
+  multigrid.solve();
+  return max_e(rms(multigrid.result() - grid_orig));
+}
+
+// Additional tests of the solver configurations, with self-checking error bounds.
+void test_configurations() {
+  {  // The helper functions.
+    SHOW(mag_e(-2.f), mag_e(3.), mag_e(Vector4(3.f, 0.f, 4.f, 0.f)));
+    SHOW(max_e(-2.f), max_e(3.), max_e(Vector4(1.f, 5.f, -7.f, 2.f)));
+    const Grid<2, float> grid = grid_from_flat(V(2, 3), range(6) | views::transform([](int i) { return float(i); }));
+    SHOW(mean(grid), mean(CGridView<2, float>(grid)), mean(Grid<1, double>{1., 2., 4.}));
+    const Grid<1, Vector4> gridv = {Vector4(3.f, 4.f, 0.f, 0.f), Vector4(0.f, 0.f, 5.f, 0.f)};
+    SHOW(mean(gridv));
+    const Stat stat = range_stat(gridv);
+    assertx(stat.num() == 2 && stat.min() == 5.f && stat.max() == 5.f);
+  }
+  {  // Periodic boundary conditions on all dimensions, using the non-specialized 2D code path.
+    const double err =
+        solve_random<MultigridPeriodicAll<2>, MultigridMetricIsotropic<2>, 2, double>(V(32, 16), 0.f, 20);
+    assertx(err < 1e-12);
+    const double err1 = solve_random<MultigridPeriodicAll<1>, MultigridMetricIsotropic<1>, 1, double>(V(64), 0.f, 20);
+    assertx(err1 < 1e-12);
+  }
+  {  // An anisotropic metric.
+    const double err =
+        solve_random<MultigridPeriodicNone<2>, MultigridMetricAnisotropic, 2, double>(V(32, 32), 0.f, 40);
+    assertx(err < 1e-8);
+  }
+  {  // A screened Poisson problem, whose solution has a determined mean.
+    const double err =
+        solve_random<MultigridPeriodicNone<2>, MultigridMetricIsotropic<2>, 2, double>(V(33, 20), .5f, 20);
+    assertx(err < 1e-12);
+    const double err3 =
+        solve_random<MultigridPeriodicNone<3>, MultigridMetricIsotropic<3>, 3, float>(V(8, 8, 8), 1.f, 10);
+    assertx(err3 < 1e-5);
+  }
+  {  // Grids with a dimension of size 1.
+    for (const Vec2<int> dims : {V(1, 64), V(64, 1), V(1, 33)}) {
+      const double err = solve_random<MultigridPeriodicNone<2>, MultigridMetricIsotropic<2>, 2, double>(dims, 0.f, 20);
+      if (!(err < 1e-12)) assertnever(SSHOW(dims, err));
+    }
+  }
+  {  // Relaxation alone reduces the residual.
+    const Vec2<int> dims = V(16, 16);
+    Random random(2);
+    Grid<2, double> grid_orig(dims);
+    for (auto& e : grid_orig) e = random.dunif();
+    Multigrid<2, double> multigrid(dims);
+    fill(multigrid.initial_estimate(), 0.);
+    const Grid<2, double> rhs =
+        apply_operator<MultigridPeriodicNone<2>, MultigridMetricIsotropic<2>>(CGridView<2, double>(grid_orig), 0.f);
+    multigrid.rhs().assign(rhs);
+    const auto residual = [&] {
+      return rms(rhs - apply_operator<MultigridPeriodicNone<2>, MultigridMetricIsotropic<2>>(multigrid.result(), 0.f));
+    };
+    const double residual0 = residual();
+    multigrid.just_relax(10);
+    const double residual1 = residual();
+    multigrid.just_relax(100);
+    const double residual2 = residual();
+    assertx(residual1 < residual0 * .5 && residual2 < residual1 * .5);
+  }
+}
 
 }  // namespace
 
@@ -151,32 +257,31 @@ int main(int argc, const char** argv) {
       test(Grid<2, double>(129, 3));
       test(Grid<3, Vector4>(8, 16, 8));
       test(Grid<3, float>(32, 8, 4), MultigridPeriodicDim0());
-    } else {
+      test_configurations();
+    } else if (0) {
       test(Grid<1, float>(2049));
       test(Grid<1, float>(511));
       test(Grid<2, double>(33, 33));
       test(Grid<2, double>(129, 3));
       test(Grid<3, Vector4>(16, 16, 8));
       test(Grid<3, float>(64, 8, 4), MultigridPeriodicDim0());
+    } else {  // The most extensive (and slowest) set of grid dimensions.
+      test(Grid<1, float>(1024));
+      test(Grid<1, float>(4096));
+      test(Grid<1, float>(4095));
+      test(Grid<1, float>(4097));
+      test(Grid<1, float>(511));
+      test(Grid<2, double>(64, 64));
+      test(Grid<2, double>(8, 256));
+      test(Grid<2, double>(256, 8));
+      test(Grid<2, double>(65, 65));
+      test(Grid<2, double>(5, 127));
+      test(Grid<2, double>(129, 3));
+      test(Grid<3, Vector4>(16, 16, 16));
+      test(Grid<3, Vector4>(15, 32, 8));
+      test(Grid<3, Vector4>(1, 16, 128));
+      test(Grid<3, float>(64, 8, 4), MultigridPeriodicDim0());
     }
-    return 0;
-  }
-  if (standard_test && !args.num()) {  // Verify multigrid convergence with different grid dimensions.
-    test(Grid<1, float>(1024));
-    test(Grid<1, float>(4096));
-    test(Grid<1, float>(4095));
-    test(Grid<1, float>(4097));
-    test(Grid<1, float>(511));
-    test(Grid<2, double>(64, 64));
-    test(Grid<2, double>(8, 256));
-    test(Grid<2, double>(256, 8));
-    test(Grid<2, double>(65, 65));
-    test(Grid<2, double>(5, 127));
-    test(Grid<2, double>(129, 3));
-    test(Grid<3, Vector4>(16, 16, 16));
-    test(Grid<3, Vector4>(15, 32, 8));
-    test(Grid<3, Vector4>(1, 16, 128));
-    test(Grid<3, float>(64, 8, 4), MultigridPeriodicDim0());
     return 0;
   }
   if (0) {  // Debug the iterators with normal and interior functions.
@@ -359,6 +464,6 @@ int main(int argc, const char** argv) {
 }
 
 template class hh::Multigrid<2, Vector4>;
-// Cannot instantiate classes with D != 2 because specializations would fail.  SFINAE cannot help.
-// template class hh::Multigrid<3, float>;
-// template class hh::Multigrid<1, double>;
+template class hh::Multigrid<3, float>;
+template class hh::Multigrid<1, double>;
+template class hh::Multigrid<2, float, hh::MultigridPeriodicAll<2>>;

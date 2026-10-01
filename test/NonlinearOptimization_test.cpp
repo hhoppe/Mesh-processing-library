@@ -36,13 +36,80 @@ double feval(ArrayView<double> ret_grad) {
     }
     default: assertnever("");
   }
-  if (0) {
-    // Was %18.12g but then get differences between different CONFIG.
-    string s_x;
-    for_int(i, g_x.num()) s_x += sform("%s %11.5g", (i ? "," : ""), g_x[i]);
-    showf("x=(%s) f=%11.5g mag(g)=%11.3g)\n", s_x.c_str(), f, mag(ret_grad));
-  }
   return f;
+}
+
+// The magnitude of the gradient of feval() at g_x.
+double gradient_magnitude() {
+  Array<double> grad(g_x.num());
+  dummy_use(feval(grad));
+  return mag(grad);
+}
+
+// The Rosenbrock function f(x, y) = (1 - x)^2 + 100 * (y - x^2)^2, with its curved valley and minimum at (1, 1).
+// KNOWN_BUG: this currently fails an assertion: the backtracking line search does not enforce the curvature condition,
+// so at iteration 6 the step s and gradient difference y have dot(y, s) < 0, the L-BFGS update is then not
+// positive definite, and the next search direction is not a descent direction (assertx(m < 0.) in line_search()).
+void test_rosenbrock() {
+  Array<double> x{-1.2, 1.};
+  const auto eval = [&](ArrayView<double> ret_grad) {
+    const double t1 = 1. - x[0], t2 = x[1] - square(x[0]);
+    ret_grad[0] = -2. * t1 - 400. * x[0] * t2;
+    ret_grad[1] = 200. * t2;
+    return square(t1) + 100. * square(t2);
+  };
+  NonlinearOptimization opt(x, eval);
+  assertx(opt.solve());
+  assertx(dist(x, V(1., 1.)) < 1e-5);
+}
+
+// A separable quadratic f(x) = sum_i (i + 1) * (x_i - sin(i))^2 in n dimensions with different curvatures.
+struct Quadratic {
+  const Array<double>& x;
+  int& neval;
+  double operator()(ArrayView<double> ret_grad) const {
+    neval++;
+    double f = 0.;
+    for_int(i, x.num()) {
+      const double weight = i + 1., target = std::sin(i * 1.);
+      f += weight * square(x[i] - target);
+      ret_grad[i] = 2. * weight * (x[i] - target);
+    }
+    return f;
+  }
+};
+
+// With 20 dimensions, the optimization requires many iterations, so the L-BFGS history buffers wrap around.
+void test_quadratic() {
+  const int n = 20;
+  Array<double> x(n, 0.);
+  int neval = 0;
+  NonlinearOptimization opt(x, Quadratic{x, neval});
+  assertx(opt.solve());
+  for_int(i, n) assertx(abs(x[i] - std::sin(i * 1.)) < 1e-6);
+  assertx(neval > 10);  // (The exact number of evaluations depends on floating-point roundoff.)
+}
+
+// The maximum number of evaluations limits the optimization.
+void test_max_neval() {
+  const int n = 20;
+  Array<double> x(n);
+  Array<double> grad(n);
+  int neval = 0;
+  const Quadratic quadratic{x, neval};
+  fill(x, 0.);
+  const double finit = quadratic(grad);
+  for (const int max_neval : {1, 4, 8}) {
+    fill(x, 0.);
+    neval = 0;
+    NonlinearOptimization opt(x, quadratic);
+    opt.set_max_neval(max_neval);
+    assertx(opt.solve());
+    // The limit is checked only after each line search, which may require several evaluations.
+    assertx(neval >= max_neval && neval < max_neval + 20);
+    assertx(quadratic(grad) < finit);  // The function value has decreased.
+    assertx(mag(grad) > 1e-3);         // The solution has not yet converged.
+  }
 }
 
 }  // namespace
@@ -52,15 +119,18 @@ int main() {
     SHOW("try1");
     g_func = 1;
     g_x = Array{6. / 11., 5. / 7.};
-    // NonlinearOptimization<double(ArrayView<double>)> opt(g_x, feval);  // Fails.
-    // NonlinearOptimization<double (*)(ArrayView<double>)> opt(g_x, feval);  // Works.
-    // NonlinearOptimization<double (&)(ArrayView<double>)> opt(g_x, feval);  // Works.
-    // NonlinearOptimization<decltype(&feval)> opt(g_x, feval);  // Works.
-    // NonlinearOptimization<> opt(g_x, feval);  // Works.
+    // The deduction guide gives Eval == double (*)(ArrayView<double>).  (Eval == double(ArrayView<double>) fails.)
     NonlinearOptimization opt(g_x, feval);
-    const int niter = 5;
-    opt.set_max_neval(niter);
+    static_assert(std::is_same_v<decltype(opt), NonlinearOptimization<double (*)(ArrayView<double>)>>);
+    const int max_neval = 5;
+    opt.set_max_neval(max_neval);
     assertx(opt.solve());
+    assertx(dist(g_x, V(.3, .4)) < 1e-6);  // The quadratic converges within few evaluations.
+    g_x.assign(V(6. / 11., 5. / 7.));
+    // KNOWN_BUG: solve() fails an assertion if started at a stationary point (where the gradient is zero).
+    NonlinearOptimization<double (&)(ArrayView<double>)> opt2(g_x, feval);  // A function reference also works.
+    assertx(opt2.solve());
+    assertx(dist(g_x, V(.3, .4)) < 1e-6);
   }
   if (1) {
     for_int(ifunc, 3) {
@@ -78,9 +148,10 @@ int main() {
         case 2: assertx(dist(g_x, V(-0.19092f, 0.73547f, 0.7f)) < 1e-5f); break;
         default: assertnever("");
       }
-      // x=(     0.45509) f=   0.045971 mag(g)=   9.96e-13)
-      // x=(         0.3,         0.4) f=          0 mag(g)=          0)
-      // x=(    -0.19092,     0.73547,         0.7) f=     0.9053 mag(g)=   2.99e-11)
+      assertx(gradient_magnitude() < 1e-6);  // The solution is a stationary point.
     }
   }
+  if (0) test_rosenbrock();  // KNOWN_BUG: see the note on test_rosenbrock().
+  test_quadratic();
+  test_max_neval();
 }

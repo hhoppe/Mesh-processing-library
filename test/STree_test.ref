@@ -1,0 +1,14 @@
+stree.num() = 48
+stree.min()=30 stree.max()=10
+stree.pred(25)=30 stree.succ(25)=20 stree.pred_eq(20)=20 stree.succ_eq(20)=20 stree.pred(30)=0 stree.succ(10)=0
+ar = Array<int>(3) {
+  30
+  20
+  10
+}
+Array<string>(stree) = Array<std::string>(3) {
+  apple
+  fig
+  pear
+}
+stree.succ("b")=fig stree.pred("b")=apple stree.succ("pear") == ""=1

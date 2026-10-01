@@ -34,7 +34,12 @@ ar = [0, 1, 2, 3]
 v = Vector4(0.392157, 0.396078, 0.4, 0.403922)
 ar = [100, 101, 102, 103]
 num_div=0 num_div_scalar=0 num_mul=0 num_dot=0
+num_add=0 num_sub=0 num_scalar=0 num_min_max=0 num_neg=0 num_abs=0 num_sqrt=0
 num_raw=0 num_norm=0
 convert<int>(Vector4(0.999f, 1.f, 254.999f, 255.998f).raw_pixel()) = [0, 1, 254, 255]
 convert<int>(Vector4(0.5f, -0.f, -1e-8f, 1.f + 1e-6f).pixel()) = [128, 0, 0, 255]
 num_tie = 0
+v = Vector4(4, 6, 8, 10)
+interp(v1, v2, .25f)=Vector4(6.25, 5.75, 5.25, 4.75) interp(v1, v2)=Vector4(4.5, 4.5, 4.5, 4.5)
+sqrt(Vector4(4.f, 9.f, .25f, 0.f))=Vector4(2, 3, 0.5, 0) abs(Vector4(-1.f, 2.f, -0.f, -3.5f))=Vector4(1, 2, 0, 3.5)
+v = Vector4(0, 0.2, 1, 0.4)

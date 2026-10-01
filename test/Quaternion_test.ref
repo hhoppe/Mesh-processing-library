@@ -47,3 +47,4 @@ qi.axis() = [0.224231, 0.523205, 0.822179]
 qo.axis() = [0.224231, 0.523205, 0.822179]
 qi.angle() = 0.448799
 qo.angle() = 0.299199
+Quaternion identities verified.

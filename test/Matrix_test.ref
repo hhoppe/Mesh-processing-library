@@ -217,3 +217,19 @@ mean(m) = 5.25
 mean(m) = Vector4(10, 10, 10, 10)
 mean(mn) = Vector4(10, 10, 10, 10)
 mean(mn) = Vector4(10, 10, 10, 10)
+m = Matrix<int>(2, 3) {
+  0 1 2
+  10 11 12
+}
+mt = Matrix<int>(3, 2) {
+  0 10
+  1 11
+  2 12
+}
+Row y=-1 for x=-4..6 with Bndrule::reflected: 2 2 1 0 0 1 2 2 1 0 0
+Row y=-1 for x=-4..6 with Bndrule::periodic: 12 10 11 12 10 11 12 10 11 12 10
+Row y=-1 for x=-4..6 with Bndrule::clamped: 0 0 0 0 0 1 2 2 2 2 2
+m3 = Matrix<int>(2, 3) {
+  1 11 21
+  0 10 20
+}

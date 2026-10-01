@@ -1,5 +1,27 @@
 args.get_string() = string
 args.get_int() = 3
+prog Options:
+ -?                           : print available options (also --help, --version)
+                              :Comment line
+ -flag                        : set a flag
+ -b bool                      : a boolean parameter                                  [false]
+ -ch c                        : a character parameter                                [z]
+ -niter n                     : number of iterations                                 [7]
+ -nooutput f                  : a float parameter whose name shares the prefix '-n'  [2.5]
+ -sc[ale] s                   : a parameter with a minimum prefix                    [3.]
+ -str string                  : a string parameter                                   [hello world]
+ -ivec i1 i2 i3               : three integers                                       [1 -2 3]
+ -dvec d1 d2                  : two doubles                                          [0.5 0.1]
+ -func0                       : call a function
+ -consume a b                 : consume two arguments
+Argument '-n' is ambiguous, '-niter' assumed
+unrecognized = Array<std::string>(5) {
+  prog
+  -verb
+  file
+  --
+  -verbose
+}
 ****
 CArrayView(argv, argc) = Array<const char*>(1) {
   Args_test

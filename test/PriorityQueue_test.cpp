@@ -1,8 +1,10 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/PriorityQueue.h"
 
-#include <random>  // default_random_engine, mt19937
+#include <random>  // mt19937
+#include <set>
 
+#include "libHh/RangeOp.h"  // sort()
 using namespace hh;
 
 namespace {
@@ -28,20 +30,20 @@ void test2() {
     assertx(pq.num() == 0);
     assertx(pq.empty());
     for_int(i, 100) pq.enter(i, i * 2.f + 1.f);
-    assertw(pq.num() == 100);
+    assertx(pq.num() == 100);
     for_int(i, 100) pq.enter(100 + i, i * 2.f);
-    assertw(pq.num() == 200);
-    assertw(pq.min() == 100);
-    assertw(pq.min_priority() == 0.f);
-    assertw(pq.remove_min() == 100);
-    assertw(pq.min() == 0);
-    assertw(pq.min_priority() == 1.f);
+    assertx(pq.num() == 200);
+    assertx(pq.min() == 100);
+    assertx(pq.min_priority() == 0.f);
+    assertx(pq.remove_min() == 100);
+    assertx(pq.min() == 0);
+    assertx(pq.min_priority() == 1.f);
     pq.enter(100, 0 * 2.f);
     for_int(i, 100) {
-      assertx(pq.min() >= 0.f);
-      assertw(!pq.empty());
-      assertw(pq.num() == 200 - i);
-      assertw(pq.remove_min() == (i % 2 ? i / 2 : 100 + i / 2));
+      assertx(pq.min_priority() >= 0.f);
+      assertx(!pq.empty());
+      assertx(pq.num() == 200 - i);
+      assertx(pq.remove_min() == (i % 2 ? i / 2 : 100 + i / 2));
     }
   }
   {
@@ -49,30 +51,33 @@ void test2() {
     assertx(pq.num() == 0);
     assertx(pq.empty());
     for_int(i, 100) pq.enter(i, i * 2.f + 1.f);
-    assertw(pq.num() == 100);
+    assertx(pq.num() == 100);
     for_int(i, 100) pq.enter(100 + i, i * 2.f);
-    assertw(pq.num() == 200);
-    assertw(pq.retrieve(2) == 2 * 2.f + 1.f);
-    assertw(pq.retrieve(102) == 2 * 2.f);
-    assertw(pq.min() == 100);
-    assertw(pq.retrieve(200) < 0.f);
-    assertw(pq.remove(100) >= 0.f);
-    assertw(pq.min() == 0);
+    assertx(pq.num() == 200);
+    assertx(pq.retrieve(2) == 2 * 2.f + 1.f);
+    assertx(pq.retrieve(102) == 2 * 2.f);
+    assertx(pq.min() == 100);
+    assertx(pq.retrieve(200) < 0.f);
+    assertx(pq.remove(100) == 0.f);
+    assertx(pq.min() == 0);
     pq.enter(100, 0 * 2.f);
     for_int(i, 100) {
-      assertx(pq.min() >= 0.f);
-      assertw(!pq.empty());
-      assertw(pq.num() == 200 - i);
-      assertw(pq.remove_min() == (i % 2 ? i / 2 : 100 + i / 2));
+      assertx(pq.min_priority() >= 0.f);
+      assertx(!pq.empty());
+      assertx(pq.num() == 200 - i);
+      assertx(pq.remove_min() == (i % 2 ? i / 2 : 100 + i / 2));
     }
-    assertw(pq.update(177, 3.f) >= 0.f);
-    assertw(pq.min() == 177);
+    assertx(pq.update(177, 3.f) == 77 * 2.f);
+    assertx(pq.min() == 177);
+    float prev_pri = 0.f;
     for_int(i, 100) {
-      assertw(pq.min());
+      const float pri = pq.min_priority();
+      assertx(pri >= prev_pri && pq.retrieve(pq.min()) == pri);
+      prev_pri = pri;
       pq.remove_min();
     }
-    assertw(pq.empty());
-    assertw(pq.num() == 0);
+    assertx(pq.empty());
+    assertx(pq.num() == 0);
   }
 }
 
@@ -104,7 +109,7 @@ void test4() {
 }
 
 void test5() {
-  std::default_random_engine random_engine;
+  std::mt19937 random_engine;
   for_int(itest, 500) {
     const int n = itest < 30 ? itest : 30 + random_engine() % 400;
     UpdatablePriorityQueue<int> pq;
@@ -121,7 +126,7 @@ void test5() {
 }
 
 void test6() {
-  std::default_random_engine random_engine;
+  std::mt19937 random_engine;
   for_int(itest, 100) {
     const int n = 70;
     UpdatablePriorityQueue<int> pq;
@@ -207,7 +212,7 @@ void test8() {
 void test9() {
   const int ntests = 100;
   const int n = 19;
-  std::default_random_engine random_engine;
+  std::mt19937 random_engine;
   for_int(k, ntests) {
     Array<int> ar1;
     for_int(i, n) ar1.push(i);
@@ -353,9 +358,120 @@ void test12() {  // Random operations, compared with a brute-force model of the 
         }
     }
     assertx(pq.num() == model.num());
-    assertx(pq.retrieve(e) == model_get(e));
+    assertx(pq.retrieve(e) == model_get(e) && pq.contains(e) == model.contains(e));
+    if (!model.empty()) assertx(model.get(pq.min()) == pq.min_priority());  // The top node is always current.
   }
   SHOW(pq.num());
+}
+
+// Random operations on a PriorityQueue (with or without built-in storage), compared with a std::multiset model.
+template <int inline_capacity> void test13() {
+  std::mt19937 gen(3);
+  PriorityQueue<int, inline_capacity> pq;
+  std::multiset<std::pair<float, int>> model;  // Pairs (priority, element), ordered by priority.
+  for_int(op, 20'000) {
+    switch (gen() % 8) {
+      case 0:
+      case 1:
+      case 2: {
+        const int e = int(gen() % 1000);
+        const float pri = float(gen() % 50);  // Frequent ties.
+        pq.enter(e, pri);
+        model.emplace(pri, e);
+        break;
+      }
+      case 3:
+      case 4:
+        if (!model.empty()) {
+          const float pri = pq.min_priority();
+          const int e = pq.remove_min();  // Any element with the minimum priority is valid.
+          assertx(pri == model.begin()->first);
+          const auto it = model.find({pri, e});
+          assertx(it != model.end());
+          model.erase(it);
+        }
+        break;
+      case 5: {  // Enter a batch of elements without ordering them, followed by heapify().
+        const int nbatch = int(gen() % 10);
+        for_int(i, nbatch) {
+          const int e = int(gen() % 1000);
+          const float pri = float(gen() % 50);
+          pq.enter_unsorted(e, pri);
+          model.emplace(pri, e);
+        }
+        pq.heapify();
+        break;
+      }
+      case 6: {
+        const int modulus = 2 + int(gen() % 50);
+        const auto pred = [&](int e, float pri) { return (e + int(pri)) % modulus == 0; };
+        pq.remove_if(pred);
+        std::erase_if(model, [&](const auto& pair) { return pred(pair.second, pair.first); });
+        break;
+      }
+      default:
+        if (gen() % 100 == 0) {
+          pq.clear();
+          model.clear();
+        }
+    }
+    assertx(pq.num() == narrow_cast<int>(model.size()) && pq.size() == model.size() && pq.empty() == model.empty());
+    if (!model.empty()) {
+      assertx(pq.min_priority() == model.begin()->first && model.contains({pq.min_priority(), pq.min()}));
+    }
+  }
+  SHOW(pq.num());
+  while (!pq.empty()) {
+    const auto it = model.find({pq.min_priority(), pq.min()});
+    assertx(it != model.end() && it->first == model.begin()->first);
+    model.erase(it);
+    pq.remove_min();
+  }
+  assertx(model.empty());
+}
+
+void test14() {  // Small and degenerate cases.
+  {
+    PriorityQueue<int> pq;
+    pq.heapify();  // Heapifying an empty queue is valid.
+    pq.remove_if([](int, float) { return true; });
+    assertx(pq.empty());
+    pq.enter_unsorted(5, 2.f);
+    pq.heapify();
+    assertx(pq.num() == 1 && pq.min() == 5 && pq.min_priority() == 2.f);
+    pq.enter(6, 0.f);  // A priority of zero is valid.
+    assertx(pq.min() == 6 && pq.remove_min() == 6 && pq.remove_min() == 5 && pq.empty());
+    for_int(i, 5) pq.enter(i, 1.f);  // All priorities are equal.
+    Array<int> ar;
+    while (!pq.empty()) ar.push(pq.remove_min());
+    assertx(ranges::equal(sort(ar), V(0, 1, 2, 3, 4)));
+  }
+  {  // The predicate of remove_if() is given each element and its priority.
+    PriorityQueue<unique_ptr<int>> pq;
+    for_int(i, 10) pq.enter(make_unique<int>(i), float(9 - i));
+    pq.remove_if(
+        [](const unique_ptr<int>& p, float pri) { return *p % 3 == 0 || pri == 1.f; });  // Removes 0, 3, 6, 8, 9.
+    Array<int> ar;
+    while (!pq.empty()) ar.push(*pq.remove_min());
+    SHOW(ar);
+  }
+  {
+    UpdatablePriorityQueue<string> pq;
+    pq.enter("b", 2.f);
+    pq.enter("a", 3.f);
+    pq.enter("c", 1.f);
+    assertx(pq.contains("a") && !pq.contains("d") && pq.retrieve("d") < 0.f && pq.remove("d") < 0.f);
+    assertx(pq.update("d", 1.f) < 0.f && !pq.contains("d"));  // Function update() does not enter an absent element.
+    assertx(pq.update("a", 0.5f) == 3.f && pq.min() == "a" && pq.min_priority() == 0.5f);
+    assertx(pq.update("a", 0.5f) == 0.5f && pq.num() == 3);  // Updating to the same priority is valid.
+    assertx(!pq.enter_update_if_smaller("b", 2.f) && !pq.enter_update_if_greater("b", 2.f));  // Ties do not update.
+    assertx(pq.enter_update_if_greater("a", 4.f) && pq.min() == "c");
+    assertx(pq.remove("c") == 1.f && pq.min() == "b" && !pq.contains("c"));
+    pq.clear();
+    assertx(pq.empty() && !pq.contains("a"));
+    pq.enter("a", 1.f);  // After clear(), elements may be entered again.
+    assertx(pq.num() == 1 && pq.remove_min() == "a");
+  }
 }
 
 }  // namespace
@@ -373,13 +489,18 @@ int main() {
   test10();
   test11();
   test12();
+  test13<0>();
+  test13<4>();
+  test14();
 }
 
 template class hh::PriorityQueue<unsigned>;
 template class hh::PriorityQueue<float>;
 template class hh::PriorityQueue<float, 4>;
 template class hh::PriorityQueue<unique_ptr<int>>;
+template class hh::PriorityQueue<unique_ptr<int>, 2>;
 
 template class hh::UpdatablePriorityQueue<unsigned>;
 template class hh::UpdatablePriorityQueue<float>;
 template class hh::UpdatablePriorityQueue<double*>;
+template class hh::UpdatablePriorityQueue<string>;

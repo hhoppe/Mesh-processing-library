@@ -213,7 +213,36 @@ Graph: edges {
  edge (19, 17)
  edge (19, 18)
 }  (cost=500)
+do_directed
+from 1: 1 at dist=0
+from 1: 2 at dist=1
+from 1: 0 at dist=3
+from 5: 5 at dist=0
+graph_edge_stats(g, fdist()) = (5      )           1:2            av=1.2            sd=0.4472136
+graph_num_components(g) = 3
+Graph: edges {
+ edge (0, 1)
+ edge (0, 2)
+ edge (1, 0)
+ edge (1, 2)
+ edge (2, 0)
+ edge (2, 1)
+ edge (3, 4)
+ edge (4, 3)
+}  (cost=10)
+graph_num_components(g) = 3
+graph_mst: 6 vertices, 4/4 edges considered, 3 output
+Graph: edges {
+ edge (0, 1)
+ edge (1, 2)
+ edge (3, 4)
+}  (cost=3)
+do_random
+graph_mst: 60 vertices, 133/150 edges considered, 59 output
+GraphQuickEmst: had to do 7 approximate Emst's
+round_fraction_digits(prim_weight, 1e4) = 10.1399
+graph_mst: 60 vertices, 187/1770 edges considered, 59 output
 # Summary of statistics:
-# Sssncellsv:         (46     )           8:294          av=61.304348      sd=59.549744
-# Sssnelemsv:         (46     )           3:14           av=8.5            sd=2.8343136
-# Spspcelln:          (13     )           1:4            av=1.5384615      sd=0.96741792
+# Sssncellsv:         (180    )           8:648          av=170.56667      sd=117.30522
+# Sssnelemsv:         (180    )           3:42           av=12.216667      sd=6.4446721
+# Spspcelln:          (72     )           1:4            av=1.1111111      sd=0.46133778

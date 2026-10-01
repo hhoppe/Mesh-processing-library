@@ -8,10 +8,8 @@ using namespace hh;
 
 namespace {
 
+// The three cyclic vertex orderings of a random triangle give nearly identical distances.
 void test1() {
-  // Point p1(.2f, .3f, .6f);
-  // Point p2(.3f, .7f, .2f);
-  // Point p3(.7f, .5f, .5f);
   for_int(j, 100) {
     Point p1;
     for_int(c, 3) p1[c] = Random::G.unif();
@@ -27,12 +25,13 @@ void test1() {
       const auto [d3, bary3, clp3] = project_point_triangle(p, p3, p1, p2);
       const float dmin = min({d1, d2, d3});
       const float dmax = max({d1, d2, d3});
-      if (dmax - dmin < 3e-7) continue;
+      if (dmax - dmin < 3e-7f) continue;
       SHOW(p1, p2, p3);
       SHOW(p, dmax - dmin, dmin, dmax);
       SHOW(d1, d2, d3);
       SHOW(bary1, bary2, bary3);
       SHOW(clp1, clp2, clp3);
+      assertnever("Inconsistent distances");
     }
   }
 }
@@ -173,10 +172,73 @@ void test3() {
   }
 }
 
+// Lower bounds on distances, and projections onto segments.
+void test4() {
+  {
+    // The lower bound is the largest per-axis separation from the triangle bbox, which never exceeds the distance.
+    const Vec3<Point> triangle{Point(0.f, 0.f, 0.f), Point(1.f, 0.f, 0.f), Point(0.f, 1.f, 0.f)};
+    SHOW(lb_dist_point_triangle(Point(.2f, .2f, 0.f), triangle));  // Inside.
+    SHOW(lb_dist_point_triangle(Point(.2f, .2f, 3.f), triangle));
+    SHOW(lb_dist_point_triangle(Point(-2.f, .5f, 1.f), triangle));
+    SHOW(lb_dist_point_triangle(Point(2.f, 3.f, -1.f), triangle[0], triangle[1], triangle[2]));
+    // The point (.8, .8, 0) is outside the triangle but inside its bbox.
+    SHOW(lb_dist_point_triangle(Point(.8f, .8f, 0.f), triangle));
+    const Bbox<float, 3> bbox(Point(0.f, 0.f, 0.f), Point(1.f, 2.f, 3.f));
+    SHOW(lb_dist_point_bbox(Point(.5f, .5f, .5f), bbox), lb_dist_point_bbox(Point(-1.f, 1.f, 1.f), bbox));
+    SHOW(lb_dist_point_bbox(Point(2.f, 5.f, 4.f), bbox), lb_dist_point_bbox(Point(1.f, 2.f, 3.f), bbox));
+  }
+  {
+    // Random checks of the lower bounds.
+    Random random(1);
+    const auto random_point = [&] {
+      Point p;
+      for_int(c, 3) p[c] = random.unif() * 4.f - 2.f;
+      return p;
+    };
+    for_int(i, 1000) {
+      const Vec3<Point> triangle{random_point(), random_point(), random_point()};
+      const Point p = random_point();
+      const float lb = lb_dist_point_triangle(p, triangle);
+      assertx(lb >= 0.f && lb <= std::sqrt(project_point_triangle(p, triangle).d2) + 1e-6f);
+      // The triangle lower bound equals the bbox lower bound for the triangle's bbox.
+      assertx(lb == lb_dist_point_bbox(p, Bbox(triangle)));
+      // The bbox lower bound is at least the true distance divided by sqrt(3).
+      const Bbox bbox(triangle);
+      float d2 = 0.f;
+      for_int(c, 3) d2 += square(max({bbox[0][c] - p[c], p[c] - bbox[1][c], 0.f}));
+      assertx(lb <= std::sqrt(d2) + 1e-6f && lb * std::sqrt(3.f) >= std::sqrt(d2) - 1e-6f);
+    }
+  }
+  {
+    // Projection onto a segment.
+    const Point p1(1.f, 0.f, 0.f), p2(3.f, 0.f, 0.f);
+    const auto show = [&](const Point& p) {
+      const auto [d2, bary, clp] = project_point_segment(p, p1, p2);
+      SHOW(p, d2, bary, clp);
+      assertx(dist(interp(p1, p2, bary), clp) < 1e-6f && abs(dist2(p, clp) - d2) < 1e-6f);
+    };
+    show(Point(2.f, 1.f, 0.f));   // Interior.
+    show(Point(2.5f, 0.f, 2.f));  // Interior.
+    show(Point(0.f, 1.f, 0.f));   // Beyond p1.
+    show(Point(5.f, 0.f, -1.f));  // Beyond p2.
+    show(Point(1.f, 0.f, 0.f));   // At p1.
+    show(Point(1.5f, 0.f, 0.f));  // On the segment.
+    // A degenerate segment projects to its single point, with a barycentric coordinate of .5f.
+    const auto [d2, bary, clp] = project_point_segment(Point(0.f, 3.f, 4.f), p1, p1);
+    SHOW(d2, bary, clp);
+    // The projection onto a degenerate (zero-area) triangle is the closest point on its sides.
+    const auto result = project_point_triangle(Point(2.f, 1.f, 0.f), p1, Point(2.f, 0.f, 0.f), p2);
+    SHOW(result.d2, result.bary, result.clp);
+    const auto result2 = project_point_triangle(Point(0.f, 1.f, 0.f), p1, p1, p1);
+    SHOW(result2.d2, result2.clp);
+  }
+}
+
 }  // namespace
 
 int main() {
   test1();
   test2();
   test3();
+  test4();
 }

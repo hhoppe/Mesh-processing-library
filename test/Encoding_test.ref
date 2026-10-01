@@ -32,3 +32,23 @@ DeltaEncoding::val_bits(1.0f) = 1
 DeltaEncoding::val_sign(13.3f) = 1
 DeltaEncoding::val_sign(-13.3f) = 0
 de.total_entropy() = 29.3645
+move.enter("a")=0 move.enter("b")=1
+move.enter("a")=1 move.enter("a")=0
+enc.entropy()=0 enc.norm_entropy()=0
+enc.huffman_cost()=6 enc.entropy()=6 enc.norm_entropy()=1.5
+# Encoding {
+#  x 2
+#  y 2
+#  z 2
+# }
+enc.huffman_cost() = 10
+std::round(enc.entropy() * 1e4f) / 1e4f = 9.5098
+enc.huffman_cost()=3 enc.entropy()=3
+DeltaEncoding::val_bits(0.f)=0 DeltaEncoding::val_bits(0.99f)=0 DeltaEncoding::val_bits(-0.5f)=0
+DeltaEncoding::val_bits(255.f)=8 DeltaEncoding::val_bits(256.f)=8
+DeltaEncoding::val_sign(0.f)=1 DeltaEncoding::val_sign(-0.f)=1 DeltaEncoding::val_sign(-1e-6f)=0
+de.analyze("") = 16
+# DE coords: n=7  nbits=1.7  sign=0.3  bdelta=0.9  total=2.9  (20)
+de.analyze("coords") = 20
+# DE vector: n=3  nbits=1.6  sign=0.9  bdelta=4.0  total=6.7  (20)
+de.analyze("vector") = 20

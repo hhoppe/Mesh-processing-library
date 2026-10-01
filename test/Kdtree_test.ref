@@ -198,3 +198,23 @@ partition of axis 0 along 0.5 <<
   <nil>
   <nil>
 
+D=1 maxlevel=8 fsize=0 num_found=12807 num_reports=12807
+D=2 maxlevel=8 fsize=0 num_found=2278 num_reports=2278
+D=2 maxlevel=5 fsize=1 num_found=2278 num_reports=2737
+D=3 maxlevel=6 fsize=0 num_found=325 num_reports=325
+D=3 maxlevel=6 fsize=0.5 num_found=325 num_reports=348
+found = Array<int>(2) {
+  5
+  4
+}
+partition of axis 0 along 0.5 <<
+>>
+ partition of axis 1 along 0.5 <<
+ >>
+  partition of axis 0 along 0.25 <<
+  3
+  >>
+   <nil>
+   <nil>
+  <nil>
+ <nil>

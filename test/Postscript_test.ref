@@ -83,3 +83,167 @@ showpage
 
 %%Trailer
 %TightBoundingBox: 20 112  469 449
+%!PS-Adobe-2.0 EPSF-1.2
+%%Orientation: Landscape
+%%DocumentFonts:
+%%Creator: hps
+%%CreationDate: yyyy-mm-dd hh:mm:ss
+%%LanguageLevel: 1
+%%Pages: 1
+%%BoundingBox: 20 15 582 771
+%%EndComments
+%%BeginPreview: 16 16 1 16
+% FFFF
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% FFFF
+%%EndPreview
+%%BeginProlog
+%%EndProlog
+%%Page: 1 1
+%%BeginPageSetup
+15 dict begin
+/pagelevel save def
+% Setup CTM
+[0 0.0252  -0.0168 0  563.2 15] concat
+%%EndPageSetup
+% hps.c created from Postscript.h in libHh
+% Initialize procedures
+/m { moveto } bind def
+/l { lineto } bind def
+/s { stroke } bind def
+/p { wpoint 0.5 mul  0 360 arc  fill } bind def
+
+% Setup variables
+/wborder 20 def
+/wline 20 def
+/wpoint 80 def
+/drawborder false def
+
+% Begin drawing
+newpath
+1 setlinecap
+1 setlinejoin
+drawborder {
+  wborder setlinewidth
+  0 0 moveto 0 30000 lineto 30000 30000 lineto 30000 0 lineto 
+  closepath stroke
+} if
+
+newpath
+wline setlinewidth
+3001 3001 m
+27000 3001 l
+27000 27000 l
+15000 15000 l
+s
+6001 9001 m
+12001 9001 l
+s
+1 15000 m
+30000 15000 l
+s
+1 9001 m
+15000 12001 l
+s
+wpoint setlinewidth
+15000 15000 p
+wline setlinewidth
+wline 2 mul setlinewidth
+s
+6001 24000 m
+24000 24000 l
+s
+% A comment.
+wline setlinewidth
+wline setlinewidth
+s
+6001 21000 m
+24000 21000 l
+s
+
+pagelevel restore
+end
+showpage
+
+%%Trailer
+%TightBoundingBox: 110 15  513 771
+%!PS-Adobe-2.0 EPSF-1.2
+%%Orientation: Portrait
+%%DocumentFonts:
+%%Creator: hps
+%%CreationDate: yyyy-mm-dd hh:mm:ss
+%%LanguageLevel: 1
+%%Pages: 1
+%%BoundingBox: 20 15 582 771
+%%EndComments
+%%BeginPreview: 16 16 1 16
+% FFFF
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% 8001
+% FFFF
+%%EndPreview
+%%BeginProlog
+%%EndProlog
+%%Page: 1 1
+%%BeginPageSetup
+15 dict begin
+/pagelevel save def
+% Setup CTM
+[0.0126 0  0 0.0252  111.8 15] concat
+%%EndPageSetup
+% hps.c created from Postscript.h in libHh
+% Initialize procedures
+/m { moveto } bind def
+/l { lineto } bind def
+/s { stroke } bind def
+/p { wpoint 0.5 mul  0 360 arc  fill } bind def
+
+% Setup variables
+/wborder 20 def
+/wline 20 def
+/wpoint 80 def
+/drawborder false def
+
+% Begin drawing
+newpath
+1 setlinecap
+1 setlinejoin
+drawborder {
+  wborder setlinewidth
+  0 0 moveto 0 30000 lineto 30000 30000 lineto 30000 0 lineto 
+  closepath stroke
+} if
+
+newpath
+
+pagelevel restore
+end
+showpage
+
+%%Trailer
+%TightBoundingBox: 20 112  582 674

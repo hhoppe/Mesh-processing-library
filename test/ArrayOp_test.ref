@@ -38,3 +38,45 @@ i=1 rank_element(array, i)=2
 i=2 rank_element(array, i)=3
 i=3 rank_element(array, i)=4
 i=4 rank_element(array, i)=5
+median_two(V(7))=[7, 7] median(V(7))=7
+median_two(V(8, 3))=[3, 8] median(V(8, 3))=5.5
+sort_unique(V(5)) = Array<int>(1) {
+  5
+}
+rankf_element(V(5), 0.)=5 rankf_element(V(5), 1.)=5
+med = 1.5
+medf = 2.25
+rankf=0 rankf_element(ar, rankf)=10
+rankf=0.2 rankf_element(ar, rankf)=10
+rankf=0.25 rankf_element(ar, rankf)=20
+rankf=0.49 rankf_element(ar, rankf)=20
+rankf=0.5 rankf_element(ar, rankf)=30
+rankf=0.74 rankf_element(ar, rankf)=30
+rankf=0.75 rankf_element(ar, rankf)=40
+rankf=0.99 rankf_element(ar, rankf)=40
+rankf=1 rankf_element(ar, rankf)=40
+sort_unique(vec) = Array<int>(3) {
+  1
+  2
+  3
+}
+median(vec) = 2
+rank_element(vec, 4) = 3
+median(CArrayView(carray)) = 8
+sort_unique(vec | views::transform([](int i) { return i * 10; })) = Array<int>(3) {
+  10
+  20
+  30
+}
+sort_unique(V(1, 3, 2, 3, 1), std::greater<>{}) = Array<int>(3) {
+  3
+  2
+  1
+}
+sort_unique(words) = Array<std::string>(3) {
+  apple
+  fig
+  pear
+}
+rank_element(words, 0)=apple rank_element(words, 4)=pear
+sort_unique(Array<int>{}).num() = 0

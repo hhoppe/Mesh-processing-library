@@ -61,6 +61,56 @@ void test(int nignore, float small) {
   }
 }
 
+// With the default nignorebits = 8, the buckets of values in [1.f, 2.f) each span 256 ulps, i.e. a width of 2^-15.
+// Function enter() adopts the representative of the value's bucket if any, or else of a nearby bucket.
+void test_buckets() {
+  const float w = std::ldexp(1.f, -15);                  // The bucket width.
+  const auto at = [&](float k) { return 1.f + k * w; };  // A value (exact) lying in bucket floor(k), for k >= 0.
+  {  // The equivalence classes depend on the order in which values are entered.
+    HashFloat hf;
+    assertx(hf.enter(at(.25f)) == at(.25f));    // Bucket 0 gets a new representative.
+    assertx(hf.enter(at(3.25f)) == at(3.25f));  // Bucket 3 is too far from bucket 0.
+    assertx(hf.enter(at(1.25f)) == at(.25f));   // Bucket 1 inherits from bucket 0.
+    assertx(hf.enter(at(2.25f)) == at(.25f));   // Bucket 2 inherits from bucket 1, although it is next to bucket 3.
+    assertx(hf.enter(at(3.75f)) == at(3.25f));
+    assertx(hf.enter(at(.75f)) == at(.25f));
+  }
+  {  // Negative values behave symmetrically, and are distinct from positive values.
+    HashFloat hf;
+    assertx(hf.enter(-at(.25f)) == -at(.25f));
+    assertx(hf.enter(-at(1.25f)) == -at(.25f));
+    assertx(hf.enter(-at(3.25f)) == -at(3.25f));
+    assertx(hf.enter(at(1.25f)) == at(1.25f));
+  }
+  {  // Values with magnitude at most `small` map to zero, as do the values in buckets next to them.
+    HashFloat hf(8, 1e-4f);
+    assertx(hf.enter(-5e-5f) == 0.f);
+    assertx(hf.enter(1e-4f) == 0.f);
+    assertx(hf.enter(-1.00001e-4f) == 0.f);
+    assertx(hf.enter(2e-4f) == 2e-4f);
+    assertx(hf.enter(0.f) == 0.f);
+  }
+  {  // A pre-pass with pre_consider() unifies the representatives of buckets 0 and 2 through bucket 1.
+    HashFloat hf;
+    hf.pre_consider(at(.25f));
+    hf.pre_consider(at(2.25f));  // Bucket 2 gets its own representative.
+    hf.pre_consider(at(1.25f));  // Its neighbors have different representatives, so they are unified (a warning).
+    hf.pre_consider(at(3.25f));  // Bucket 3 inherits from bucket 2 (the lower neighbor).
+    for (const float k : {.25f, .75f, 1.25f, 2.25f, 2.75f, 3.25f, 3.75f}) assertx(hf.enter(at(k)) == at(1.25f));
+    assertx(hf.enter(at(5.25f)) == at(5.25f));
+  }
+  {
+    HashFloat hf;
+    hf.pre_consider(at(5.25f));
+    hf.pre_consider(at(4.25f));  // Bucket 4 inherits from bucket 5 (the upper neighbor).
+    hf.pre_consider(at(5.75f));  // Bucket 5 already has a representative.
+    hf.pre_consider(0.f);        // The small values have the representative zero.
+    for (const float k : {4.25f, 4.75f, 5.25f, 5.75f}) assertx(hf.enter(at(k)) == at(5.25f));
+    assertx(hf.enter(at(2.25f)) == at(2.25f));
+    assertx(hf.enter(5e-5f) == 0.f);
+  }
+}
+
 template <typename T> T roundtrip(T v, int digits = -1) {
   std::stringstream ss;
   if (digits >= 0) {
@@ -124,5 +174,6 @@ int main() {
     test(4, 1e-6f);
     test(0, 0.f);
   }
+  test_buckets();
   test_io();
 }

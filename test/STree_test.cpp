@@ -1,11 +1,81 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/STree.h"
 
+#include <set>
+
+#include "libHh/Array.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Set.h"
 #include "libHh/Vec.h"
 using namespace hh;
+
+namespace {
+
+// Random operations on an STree, compared with a std::set as a reference model.  The elements are nonzero so that
+// they differ from the T{} returned when an element is absent.
+void test_random_operations() {
+  Random random(1);
+  STree<int> stree;
+  std::set<int> model;
+  const auto model_pred = [&](int e) {  // The largest element less than e, or 0.
+    auto it = model.lower_bound(e);
+    return it != model.begin() ? *--it : 0;
+  };
+  const auto model_succ = [&](int e) {  // The smallest element greater than e, or 0.
+    auto it = model.upper_bound(e);
+    return it != model.end() ? *it : 0;
+  };
+  for_int(iter, 20'000) {
+    const int e = 1 + int(random.get_unsigned(100));
+    switch (random.get_unsigned(3)) {
+      case 0: assertx(stree.enter(e) == model.insert(e).second); break;
+      case 1: assertx(stree.remove(e) == (model.erase(e) == 1)); break;
+      default: {
+        const int e2 = int(random.get_unsigned(102));  // Also query values outside the range of the elements.
+        assertx(stree.retrieve(e2) == (model.contains(e2) ? e2 : 0));
+        assertx(stree.pred(e2) == model_pred(e2));
+        assertx(stree.succ(e2) == model_succ(e2));
+        assertx(stree.pred_eq(e2) == (model.contains(e2) ? e2 : model_pred(e2)));
+        assertx(stree.succ_eq(e2) == (model.contains(e2) ? e2 : model_succ(e2)));
+      }
+    }
+    assertx(stree.num() == narrow_cast<int>(model.size()) && stree.size() == model.size());
+    assertx(stree.empty() == model.empty());
+    if (!model.empty()) assertx(stree.min() == *model.begin() && stree.max() == *model.rbegin());
+    if (iter % 1000 == 0) assertx(ranges::equal(stree, model));  // The iteration is in sorted order.
+  }
+  SHOW(stree.num());
+  stree.clear();
+  assertx(stree.empty() && stree.num() == 0 && stree.begin() == stree.end());
+}
+
+void test_edge_cases() {
+  {
+    STree<int> stree;
+    assertx(stree.pred(5) == 0 && stree.succ(5) == 0 && stree.pred_eq(5) == 0 && stree.succ_eq(5) == 0);
+    assertx(stree.enter(5));
+    assertx(stree.min() == 5 && stree.max() == 5);
+    assertx(stree.pred(5) == 0 && stree.succ(5) == 0 && stree.pred_eq(5) == 5 && stree.succ_eq(5) == 5);
+    assertx(stree.pred(6) == 5 && stree.succ(4) == 5 && stree.pred_eq(4) == 0 && stree.succ_eq(6) == 0);
+  }
+  {  // With a reversed ordering, the predecessor is the next larger element.
+    STree<int, std::greater<>> stree;
+    for (const int e : {10, 30, 20}) stree.enter(e);
+    SHOW(stree.min(), stree.max());
+    SHOW(stree.pred(25), stree.succ(25), stree.pred_eq(20), stree.succ_eq(20), stree.pred(30), stree.succ(10));
+    Array<int> ar(stree);
+    SHOW(ar);
+  }
+  {
+    STree<string> stree;
+    for (const string s : {"pear", "apple", "fig", "apple"}) stree.enter(s);
+    SHOW(Array<string>(stree));
+    SHOW(stree.succ("b"), stree.pred("b"), stree.succ("pear") == "");
+  }
+}
+
+}  // namespace
 
 int main() {
   {
@@ -49,7 +119,6 @@ int main() {
     };
     struct less_astruct {
       bool operator()(const astruct& s1, const astruct& s2) const {
-        // return func_compare_astruct(s1, s2) < 0;
         return s1.a[0] != s2.a[0] ? s1.a[0] < s2.a[0] : s1.a[1] < s2.a[1];
       }
     };
@@ -96,6 +165,10 @@ int main() {
       }
     }
   }
+  test_random_operations();
+  test_edge_cases();
 }
 
 template class hh::STree<unsigned>;
+template class hh::STree<string>;
+template class hh::STree<int, std::greater<int>>;

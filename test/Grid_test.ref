@@ -286,7 +286,7 @@ grid[0][V(0, 0)][0] = 0
   17
   18
 }
-(grid[1][V(1, 1)]) = Array<int>(2) {
+(grid[V(1)][1, 1]) = Array<int>(2) {
   17
   18
 }
@@ -313,4 +313,31 @@ Array(grid[1] | views::transform([](int v) { return v + 100; })) = Array<int>(3)
   103
   104
   105
+}
+grid05.dims()=[0, 5] grid05.size()=0 grid05.dim(1)=5
+grid05 = Matrix<int>(0, 5) {
+}
+grid203.dims()=[2, 0, 3] grid203.size()=0 grid203[1].dims()=[0, 3] grid203.slice(1, 2).dims()=[1, 0, 3]
+(Grid<1, int>(0)) = Array<int>(0) {
+}
+reflected   : 2 3 3 2 1 0 0 1 2 3 3 2 1 0 0 1
+periodic    : 2 3 0 1 2 3 0 1 2 3 0 1 2 3 0 1
+clamped     : 0 0 0 0 0 0 0 1 2 3 3 3 3 3 3 3
+border      : . . . . . . 0 1 2 3 . . . . . .
+101reflected: 0 1 2 3 2 1 0 1 2 3 2 1 0 1 2 3
+grid.inside(V(-1, -1, -1), bndrules)=100 grid.inside(V(2, 3, 4), bndrules)=23 grid.inside(V(5, 7, 9), bndrules)=121
+grid.inside(V(1, -2, 6), bndrules2, &bordervalue)=122 grid.inside(V(2, 0, 0), bndrules2, &bordervalue)=-1
+grid_stride(dims, 0)=8 grid_stride(dims, 1)=8 grid_stride(dims, 2)=2 grid_stride(dims, 3)=1
+slice.dims()=[2, 2, 3] (slice[0, 0, 0])=6 (slice[1, 1, 2])=17
+grid = Matrix<int>(2, 3) {
+  5 4 3
+  2 1 0
+}
+grid3 = Matrix<int>(2, 3) {
+  2 2 3
+  3 4 4
+}
+gridf = Matrix<float>(2, 3) {
+  0.5 1 1.5
+  2 2.5 3
 }

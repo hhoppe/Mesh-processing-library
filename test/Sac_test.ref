@@ -1,8 +1,11 @@
 key_p = 0
 key_b = 12
+key_i = 16
 B allocation
 sac_access<Point>(a, key_p) = [1, 2, 3]
 sac_access<B>(a, key_b).dummy = 1
 sac_access<int>(a, key_i) = 3
 B deallocation
 dummy = 2
+point(a2.get())=[1, 2, 3] point(a2b.get())=[4, 5, 6]
+Sac<C>::get_size()=33 Sac<C>::get_max_align()=16

@@ -13,3 +13,5 @@ stat.num()=5 stat.min()=2 stat.max()=9 stat.avg()=4.2
 # }
 tally.num()=4 tally.total()=4
 tally.num()=0 tally.total()=0 tally[0]=0
+tally.num()=1 tally.total()=1 tally[0]=1 tally[1]=0
+tally3.num()=10 tally3.total()=4 tally3[6]=1 tally3[7]=0

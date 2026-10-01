@@ -14,3 +14,37 @@ max_lat_error < 1e-6f = 1
 max_lon_error < 1e-6f = 1
 abs(lonlat_from_sph(sph_from_lonlat(Uv(.3f, .0004f)))[1] - .0004f) < 1e-6f = 1
 max_error < 1e-5f = 1
+rounded(circum_radius(p0, p1, p2))=2.5 rounded(inscribed_radius(p0, p1, p2))=1 rounded(aspect_ratio(p0, p1, p2))=2.5
+rounded(circum_radius(q0, q1, q2) / edge_length * std::sqrt(3.f)) = 1
+rounded(inscribed_radius(q0, q1, q2) / edge_length * std::sqrt(12.f)) = 1
+rounded(aspect_ratio(q0, q1, q2)) = 2
+inscribed_radius(r0, r1, r2)=0 aspect_ratio(r0, r1, r2)=1e+10
+inscribed_radius(r0, r0, r0) = 0
+dihedral_angle_cos(p1, p2, po1, po2_flat)=1 signed_dihedral_angle(p1, p2, po1, po2_flat)=0
+rounded(dihedral_angle_cos(p1, p2, po1, po2_convex))=0 rounded(signed_dihedral_angle(p1, p2, po1, po2_convex))=1.5708
+rounded(dihedral_angle_cos(p1, p2, po1, po2_concave))=0 rounded(signed_dihedral_angle(p1, p2, po1, po2_concave))=-1.5708
+dihedral_angle_cos(p1, p2, po1, po2_folded) = -1
+abs(signed_dihedral_angle(p1, p2, po1, po2_folded)) == TAU / 2 = 1
+dihedral_angle_cos(p1, p2, Point(2.f, 0.f, 0.f), po2_flat) = -2
+signed_dihedral_angle(p1, p2, Point(2.f, 0.f, 0.f), po2_flat) = -10
+rounded(solid_angle(origin, V(px, py, pz)) / (TAU / 4)) = 1
+rounded(solid_angle(origin, V(px, pz, py)) / (TAU / 4)) = 7
+rounded(solid_angle(origin, square) / TAU) = 1
+rounded(solid_angle(origin, loop) / (TAU / 4)) = 1
+angle_cos(p1, p2, Point(2.f, 0.f, 0.f))=1 angle_cos(p1, p2, Point(1.f, 1.f, 0.f))=0
+angle_cos(p1, p2, Point(0.f, 0.f, 0.f))=-1 angle_cos(p1, p2, p2)=-2
+frame4.v(0)=[1, 0, 0] transformed(frame4.v(1), rounded)=[0, 2.0616, 0] transformed(frame4.v(2), rounded)=[0, 0, 3.0083] frame4.p()=[1, 2, 3]
+transformed(frame5.v(2), rounded) = [0, 0, 1]
+transformed(euler_angles_from_frame(Frame::rotation(2, .4f)), rounded) = [0.4, 0, 0]
+transformed(euler_angles_from_frame(Frame::rotation(1, -.4f)), rounded) = [0, -0.4, 0]
+transformed(euler_angles_from_frame(Frame::rotation(0, .4f)), rounded) = [0, 0, 0.4]
+wide = [[-0.6, -0.3, 0], [7.2, -0.3, 0], [-0.6, 3.6, 0]]
+intersect_line_with_plane(Line{Point(1.f, 1.f, 0.f), Vector(1.f, 0.f, 1.f)}, plane).value() = [3, 1, 2]
+intersect_line_with_plane(Line{Point(1.f, 1.f, 5.f), Vector(0.f, 0.f, -2.f)}, plane).value() = [1, 1, 2]
+intersect_segment_with_plane(Point(0.f, 0.f, 0.f), Point(0.f, 0.f, 4.f), plane).value() = [0, 0, 2]
+intersect_segment_with_plane(Point(0.f, 0.f, 2.f), Point(1.f, 1.f, 4.f), plane).value() = [0, 0, 2]
+intersect_segment_with_plane(Point(0.f, 0.f, 0.f), Point(1.f, 1.f, 2.f), plane).value() = [1, 1, 2]
+intersect_line_with_triangle(Line{Point(1.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f)}, triangle).value() = [1, 1, 2]
+intersect_segment_with_triangle(Point(1.f, 2.f, 0.f), Point(1.f, 2.f, 3.f), triangle).value() = [1, 2, 2]
+rounded(signed_volume(p1, p2, p3, p4))=0.1667 rounded(signed_volume(p1, p3, p2, p4))=-0.1667
+signed_volume(p1, p2, p3, Point(5.f, 7.f, 0.f)) = 0

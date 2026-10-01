@@ -10,3 +10,12 @@ order = Array<int>(8) {
 }
 sum=16394250 dist.last()=18649
 pq.num() = 22
+pq.num() = 104
+pq.num() = 104
+ar = Array<int>(5) {
+  7
+  5
+  4
+  2
+  1
+}

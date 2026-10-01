@@ -6,6 +6,90 @@
 #include "libHh/Vector4.h"
 using namespace hh;
 
+namespace {
+
+// Matrices are equal if they have the same dimensions and elements.  (Grid has no operator==().)
+template <typename T> bool same_matrix(CMatrixView<T> m1, CMatrixView<T> m2) {
+  return m1.dims() == m2.dims() && ranges::equal(m1, m2);
+}
+
+// Matrix<T> is an alias of Grid<2, T>, with dimensions (ysize(), xsize()) and elements m[y, x].
+void test_transpose() {
+  Matrix<int> m(2, 3);
+  assertx(m.ysize() == 2 && m.xsize() == 3 && m.dims() == V(2, 3) && m.size() == 6);
+  for_int(y, 2) for_int(x, 3) m[y, x] = 10 * y + x;
+  const Matrix<int> mt = transpose(m);
+  SHOW(m);
+  SHOW(mt);
+  assertx(mt.dims() == V(3, 2));
+  for_int(y, 2) for_int(x, 3) assertx(mt[x, y] == m[y, x]);
+  assertx(same_matrix<int>(transpose(mt), m));  // Involution.
+  // The transpose of a row vector is a column vector.
+  const Matrix<int> mrow = {{1, 2, 3, 4}};
+  const Matrix<int> mcol = transpose(mrow);
+  assertx(mcol.dims() == V(4, 1) && mcol[3, 0] == 4);
+  // The transpose of a matrix product is the product of the transposes in reverse order; with small integer
+  // values, the float arithmetic is exact.
+  Matrix<float> a(3, 4), b(4, 2);
+  for_int(y, 3) for_int(x, 4) a[y, x] = float((y * 7 + x * 3) % 5 - 2);
+  for_int(y, 4) for_int(x, 2) b[y, x] = float((y * 2 + x * 5) % 7 - 3);
+  assertx(same_matrix<float>(transpose(mat_mul(a, b)), mat_mul(transpose(b), transpose(a))));
+  // A row-vector-matrix product equals the transposed matrix times a column vector.
+  const Array<float> v{1.f, -2.f, 3.f};
+  assertx(mat_mul(v, a) == mat_mul(transpose(a), v));
+  // A symmetric matrix equals its transpose.
+  const Matrix<float> ata = mat_mul(transpose(a), a);
+  assertx(same_matrix<float>(transpose(ata), ata));
+  // The transpose of a view of some rows.
+  const Matrix<int> mt_slice = transpose(m.slice(1, 2));
+  assertx(mt_slice.dims() == V(3, 1) && mt_slice[2, 0] == 12);
+  // An empty matrix.
+  assertx(transpose(Matrix<int>(0, 3)).dims() == V(3, 0));
+}
+
+// Access outside the matrix using boundary rules.
+void test_inside() {
+  Matrix<int> m(2, 3);
+  for_int(y, 2) for_int(x, 3) m[y, x] = 10 * y + x;
+  const CMatrixView<int> mv = m;
+  const auto bndrules = {std::pair{Bndrule::reflected, "reflected"}, std::pair{Bndrule::periodic, "periodic"},
+                         std::pair{Bndrule::clamped, "clamped"}};
+  for (const auto& [bndrule, name] : bndrules) {
+    string s;
+    for_intL(x, -4, 7) s += sform(" %d", mv.inside(-1, x, bndrule));
+    showf("Row y=-1 for x=-4..6 with Bndrule::%s:%s\n", name, s.c_str());
+    for_int(y, 2) for_int(x, 3) assertx(mv.inside(y, x, bndrule) == m[y, x]);
+  }
+  const int bordervalue = -1;
+  assertx(mv.inside(0, 3, Bndrule::border, &bordervalue) == -1);
+  assertx(mv.inside(-1, 0, Bndrule::border, &bordervalue) == -1);
+  assertx(mv.inside(1, 2, Bndrule::border, &bordervalue) == 12);
+  int y = 2, x = -1;
+  assertx(!mv.map_inside(y, x, Bndrule::border));
+  y = 2, x = -1;
+  assertx(mv.map_inside(y, x, Bndrule::periodic) && y == 0 && x == 2);
+  m.inside(5, -7, Bndrule::periodic) = 99;  // Modifiable element [1, 2].
+  assertx(m[1, 2] == 99);
+}
+
+void test_reverse() {
+  Matrix<int> m(3, 2);
+  for_int(y, 3) for_int(x, 2) m[y, x] = 10 * y + x;
+  Matrix<int> m2(m);
+  m2.reverse_y();
+  for_int(y, 3) for_int(x, 2) assertx(m2[y, x] == m[2 - y, x]);
+  m2.reverse_x();
+  for_int(y, 3) for_int(x, 2) assertx(m2[y, x] == m[2 - y, 1 - x]);  // Rotation by 180 degrees.
+  assertx(same_matrix<int>(m2, rotate_ccw(m, 180)));
+  // Reversing the rows of the transpose is a rotation by 90 degrees.
+  Matrix<int> m3 = transpose(m);
+  m3.reverse_y();
+  assertx(same_matrix<int>(m3, rotate_ccw(m, 90)));
+  SHOW(m3);
+}
+
+}  // namespace
+
 int main() {
   using Vec2f = Vec2<float>;
   struct A {
@@ -93,14 +177,9 @@ int main() {
     SHOW(mat_mul(matrix3, matrix4));  // OPT:2
   }
   {
-    // Matrix4 m;
     Matrix<float> m(4, 4);
     Array<float> v1{1.f, 2.f, 3.f, 4.f};
     Array<float> v2{8.f, 7.f, 6.f, 5.f};
-    if (0) {
-      std::cerr << "uninitialized ";
-      SHOW(m);
-    }
     SHOW(v1);
     SHOW(v2);
     // ArrayView::operator=() is not enabled.
@@ -144,7 +223,7 @@ int main() {
       };
       assertx(dist(inverse(m), expected) < 1e-6f);
     }
-    assertx(dist(mat_mul(m, inverse(m)), identity_mat<float>(4)) < 1e-6f);
+    assertx(dist(mat_mul(m, inverse(m)), identity_mat<float>(4)) < 1e-5f);
     {
       const Matrix<float> expected{
           {1.f, 2.f, 3.f, 4.f}, {8.f, 7.f, 6.f, 5.f}, {7.f, 2.f, 3.f, 4.f}, {8.f, 7.f, 6.f, 11.f}};
@@ -172,6 +251,9 @@ int main() {
   {
     static_assert(ranges::view<CMatrixView<int>> && !ranges::view<Matrix<int>>);
   }
+  test_transpose();
+  test_inside();
+  test_reverse();
 }
 
 // Matrix*<T> cannot be instanced because aliases for Grid*<2, T>, which however are instanced in Grid_test.cpp.

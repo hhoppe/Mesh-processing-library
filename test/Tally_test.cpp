@@ -1,6 +1,9 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Tally.h"
 
+#include <list>
+#include <vector>
+
 #include "libHh/Random.h"
 using namespace hh;
 
@@ -50,6 +53,37 @@ int main() {
   {
     const Tally tally(Array<int>{});
     SHOW(tally.num(), tally.total(), tally[0]);
+    assertx(tally.stat().num() == 0);
+  }
+  {
+    const Tally tally(Array<int>{0});
+    SHOW(tally.num(), tally.total(), tally[0], tally[1]);
+  }
+  {
+    // Ranges of other integral types, a range that is not random-access, and a view that is not const-iterable.
+    const Tally tally1(std::vector<uchar>{3, 3, 255});
+    assertx(tally1.num() == 256 && tally1[3] == 2 && tally1[255] == 1 && tally1.total() == 3);
+    const std::list<short> list{1, 0, 1};
+    const Tally tally2(list);
+    assertx(tally2.num() == 2 && tally2[0] == 1 && tally2[1] == 2);
+    const Tally tally3(range(10) | views::filter([](int i) { return i % 3 == 0; }));
+    SHOW(tally3.num(), tally3.total(), tally3[6], tally3[7]);
+  }
+  {
+    // Compare against a reference model, and compare stat() against the Stat of the values themselves.
+    Random random(7);
+    const int m = 50;
+    Array<int> values(1000), counts(m, 0);
+    for (int& value : values) {
+      value = int(random.get_unsigned(m));
+      counts[value]++;
+    }
+    const Tally tally(values);
+    assertx(tally.num() == max(values) + 1 && tally.total() == values.num());
+    for_int(value, m + 5) assertx(tally[value] == (value < m ? counts[value] : 0));
+    const Stat stat1 = tally.stat(), stat2(values);
+    assertx(stat1.num() == stat2.num() && stat1.min() == stat2.min() && stat1.max() == stat2.max());
+    assertx(abs(stat1.avg() - stat2.avg()) < 1e-4f && abs(stat1.sdv() - stat2.sdv()) < 1e-4f);
   }
   {
     // The first value drawn after each of n successive seeds is uniformly distributed over m values.

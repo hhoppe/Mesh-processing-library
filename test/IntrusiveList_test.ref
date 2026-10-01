@@ -8,3 +8,20 @@ pa->_i = 1
 unlink a1
 pa->_i = 2
 unlink a2
+values(list) = Array<int>(3) {
+  3
+  1
+  2
+}
+all=Array<int>(5) {
+  0
+  1
+  2
+  3
+  4
+}
+ odd=Array<int>(2) {
+  3
+  1
+}
+

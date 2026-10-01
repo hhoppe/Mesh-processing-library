@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Set.h"
 
+#include <set>
+
 #include "libHh/Advanced.h"  // my_hash()
 #include "libHh/Array.h"
 #include "libHh/Geometry.h"
@@ -14,6 +16,110 @@ template <> struct std::hash<hh::Vector> {
 template <> struct std::equal_to<hh::Vector> {
   bool operator()(const hh::Vector& p1, const hh::Vector& p2) const { return std::is_eq(hh::compare(p1, p2, 1e-4f)); }
 };
+
+namespace {
+
+// Random operations on a Set, compared with a std::set as a reference model.
+void test_random_operations() {
+  Random random(1);
+  Set<int> s;
+  std::set<int> model;
+  const auto verify_contents = [&] { assertx(ranges::equal(sort(Array<int>(s)), model)); };
+  for_int(iter, 20'000) {
+    const int e = 1 + int(random.get_unsigned(iter < 10'000 ? 200 : 20));  // Nonzero, unlike the default T{}.
+    const bool present = model.contains(e);
+    switch (random.get_unsigned(8)) {
+      case 0:
+        if (!present) {
+          s.enter(e);
+          model.insert(e);
+        }
+        break;
+      case 1: {  // The variant with is_new returns a reference to the element in the set.
+        bool is_new;
+        const int& e2 = s.enter(e, is_new);
+        assertx(is_new == !present && e2 == e && &e2 == s.find_ptr(e));
+        model.insert(e);
+        break;
+      }
+      case 2:
+        assertx(s.add(e) == !present);
+        model.insert(e);
+        break;
+      case 3:
+        assertx(s.remove(e) == present);
+        model.erase(e);
+        break;
+      case 4:
+        if (!model.empty()) {
+          const int e2 = random.get_unsigned(2) ? s.remove_one() : s.remove_random(random);
+          assertx(model.erase(e2) == 1);
+        }
+        break;
+      case 5:
+        if (!model.empty()) assertx(model.contains(s.get_one()) && model.contains(s.get_random(random)));
+        break;
+      default:
+        assertx((s.find_ptr(e) != nullptr) == present);
+        assertx(s.retrieve(e) == (present ? e : 0));  // If absent, it returns the default T{}.
+        if (present) assertx(s.get(e) == e);
+    }
+    assertx(s.num() == narrow_cast<int>(model.size()) && s.size() == model.size() && s.empty() == model.empty());
+    assertx(s.contains(e) == model.contains(e));
+    if (iter % 1000 == 0) verify_contents();
+  }
+  verify_contents();
+}
+
+void test_merge() {
+  Set<int> s1{1, 2, 3, 4};
+  Set<int> s2{3, 4, 5, 6};
+  s1.merge(s2);  // The elements 5 and 6 are moved from s2; the duplicates 3 and 4 remain in s2.
+  SHOW(sort(Array<int>(s1)));
+  SHOW(sort(Array<int>(s2)));
+  Set<int> s3;
+  s3.merge(s2);
+  assertx(s2.empty() && s3.num() == 2 && s3.contains(3) && s3.contains(4));
+  s3.clear();
+  assertx(s3.empty() && !s3.contains(3) && s3.begin() == s3.end());
+}
+
+void test_move_only() {
+  using U = unique_ptr<int>;
+  Set<U> s;
+  for_int(i, 10) s.enter(make_unique<int>(i));
+  Random random(2);
+  int sum_removed = 0;
+  while (s.num() > 5) {
+    const U u = s.remove_random(random);  // The element is moved out of the set.
+    sum_removed += *u;
+  }
+  int sum_remaining = 0;
+  for (const U& u : s) sum_remaining += *u;
+  assertx(sum_removed + sum_remaining == 45);
+  const int* p = s.get_one().get();
+  const U u = s.remove_one();
+  assertx(u.get() == p && s.num() == 4);
+}
+
+void test_stateful_functors() {  // Hash and equality functors with state, passed to the constructor.
+  struct HashMod {
+    int modulus;
+    size_t operator()(int i) const { return size_t(i % modulus); }
+  };
+  struct EqualMod {
+    int modulus;
+    bool operator()(int i1, int i2) const { return i1 % modulus == i2 % modulus; }
+  };
+  Set<int, HashMod, EqualMod> s(HashMod{10}, EqualMod{10});
+  assertx(s.add(3) && !s.add(13) && s.add(14));
+  assertx(s.num() == 2 && s.contains(23) && s.get(33) == 3 && s.retrieve(5) == 0);
+  bool is_new;
+  assertx(s.enter(24, is_new) == 14 && !is_new);
+  assertx(s.remove(103) && !s.remove(3) && s.num() == 1 && s.get_one() == 14);
+}
+
+}  // namespace
 
 int main() {
   {
@@ -84,28 +190,25 @@ int main() {
   {
     Set<int> s;
     assertx(s.num() == 0);
-    for (const int i : s) {
-      dummy_use(i);
-      if (1) assertnever("");
-    }
+    assertx(s.begin() == s.end());
     for_int(i, 50) s.enter(i);
     for_intL(i, 50, 100) assertx(s.add(i));
-    assertw(s.num() == 100);
+    assertx(s.num() == 100);
     for_int(i, 100) assertx(!s.add(i));
-    assertw(s.num() == 100);
-    assertw(s.contains(2));
-    assertw(!s.contains(100));
+    assertx(s.num() == 100);
+    assertx(s.contains(2));
+    assertx(!s.contains(100));
     int se = 0;
     for (const int i : s) se += i;
-    assertw(se == (0 + 99) * (100 / 2));
-    assertw(!s.remove(101));
-    for_int(i, 50) assertw(s.remove(i));
-    assertw(s.num() == 50);
+    assertx(se == (0 + 99) * (100 / 2));
+    assertx(!s.remove(101));
+    for_int(i, 50) assertx(s.remove(i));
+    assertx(s.num() == 50);
     se = int(sum(s));
-    assertw(se == (50 + 99) * (50 / 2));
+    assertx(se == (50 + 99) * (50 / 2));
     se = 0;
     while (s.num()) se += s.remove_one();
-    assertw(se == (50 + 99) * (50 / 2));
+    assertx(se == (50 + 99) * (50 / 2));
   }
   {
     Set<int> s;
@@ -191,6 +294,10 @@ int main() {
     }
     SHOW(iset.num());
   }
+  test_random_operations();
+  test_merge();
+  test_move_only();
+  test_stateful_functors();
 }
 
 template class hh::Set<unsigned>;

@@ -229,3 +229,19 @@ sliver       max closest-point error < 0.002
 collinear    max closest-point error < 5e-06
 coincident   max closest-point error < 1e-05
 tiny         max closest-point error < 0.001
+lb_dist_point_triangle(Point(.2f, .2f, 0.f), triangle) = 0
+lb_dist_point_triangle(Point(.2f, .2f, 3.f), triangle) = 3
+lb_dist_point_triangle(Point(-2.f, .5f, 1.f), triangle) = 2
+lb_dist_point_triangle(Point(2.f, 3.f, -1.f), triangle[0], triangle[1], triangle[2]) = 2
+lb_dist_point_triangle(Point(.8f, .8f, 0.f), triangle) = 0
+lb_dist_point_bbox(Point(.5f, .5f, .5f), bbox)=0 lb_dist_point_bbox(Point(-1.f, 1.f, 1.f), bbox)=1
+lb_dist_point_bbox(Point(2.f, 5.f, 4.f), bbox)=3 lb_dist_point_bbox(Point(1.f, 2.f, 3.f), bbox)=0
+p=[2, 1, 0] d2=1 bary=0.5 clp=[2, 0, 0]
+p=[2.5, 0, 2] d2=4 bary=0.25 clp=[2.5, 0, 0]
+p=[0, 1, 0] d2=2 bary=1 clp=[1, 0, 0]
+p=[5, 0, -1] d2=5 bary=0 clp=[3, 0, 0]
+p=[1, 0, 0] d2=0 bary=1 clp=[1, 0, 0]
+p=[1.5, 0, 0] d2=0 bary=0.75 clp=[1.5, 0, 0]
+d2=26 bary=0.5 clp=[1, 0, 0]
+result.d2=1 result.bary=[0, 1, 0] result.clp=[2, 0, 0]
+result2.d2=2 result2.clp=[1, 0, 0]

@@ -22,3 +22,5 @@ round_elements(mo) = Matrix<float>(2, 2) {
   0.89443 0.44721
   -0.44721 0.89443
 }
+Synthetic 300x6 data: the principal components are verified.
+round_elements(clone(eimag.head<2>()), 1e4f) = [2.1213, 0.7071]

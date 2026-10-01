@@ -28,3 +28,8 @@ i2 = 24
 round_fraction_digits(d2, 1e6f) = 0.083417
 i2 = 23
 round_fraction_digits(d2, 1e6f) = 0.083809
+found = Array<int>(2) {
+  2
+  3
+}
+i=203 round_fraction_digits(d2, 1e6f)=0.001846

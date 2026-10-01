@@ -67,3 +67,86 @@ i = 1
 i = 2
 i = 3
 sum_destruct = 6
+Vertex 1  0 0 0 {cusp normal=(0 0 1)}
+Vertex 2  2 0 0 {normal=(0 0 1)}
+Vertex 3  2 2 0
+Vertex 4  0 2 0
+Vertex 5  1 1 0 {uv=(.5 .5)}
+Face 1  1 2 5 {mat=1}
+Face 2  2 3 5 {mat=1}
+Face 3  3 4 5 {mat=2}
+Face 4  4 1 5 {mat=2}
+Edge 2 5 {sharp}
+Corner 3 2 {normal=(0 0 1) uv=(1 1)}
+Corner 3 3 {normal=(0 0 -1)}
+mesh2.num_faces()=1 mesh2.face_id(mesh2.ordered_faces().begin()[0])=1
+Vertex 1  0 0 5
+Vertex 2  1 0 5
+Vertex 3  0 1 5
+Vertex 4  0 0 0 {cusp normal=(0 0 1)}
+Vertex 5  2 0 0 {normal=(0 0 1)}
+Vertex 6  2 2 0
+Vertex 7  0 2 0
+Vertex 8  1 1 0 {uv=(.5 .5)}
+Face 1  1 2 3 {mat=3}
+Face 2  4 5 8 {mat=1}
+Face 3  5 6 8 {mat=1}
+Face 4  6 7 8 {mat=2}
+Face 5  7 4 8 {mat=2}
+Edge 5 8 {sharp}
+Corner 6 3 {normal=(0 0 1) uv=(1 1)}
+Corner 6 4 {normal=(0 0 -1)}
+mesh.triangle_points(f1)=[[0, 0, 0], [2, 0, 0], [1, 1, 0]] mesh.area(f1)=1
+mesh.length2(e)=4 mesh.length(e)=2
+sum_area = 4
+mesh2.area(mesh2.id_face(1)) = 6
+mesh2.point(mesh2.id_vertex(3))=[7, 3, 1] mesh2.area(mesh2.id_face(1))=12
+mesh.get_string(v1)=cusp normal=(0 0 1) mesh.get_string(f2)=mat=1
+GMesh::string_key(str, mesh.get_string(v1), "normal") = (0 0 1)
+GMesh::string_key(str, mesh.get_string(v1), "cusp") = 
+mesh.get_string(c32)=normal=(0 0 1) uv=(1 1) mesh.corner_key(str, c32, "uv")=(1 1) mesh.corner_key(str, c52, "uv")=(.5 .5)
+nor = [0, 0, -1]
+uv = [0.5, 0.5]
+nor = [1.5, -2, 300]
+csform_vec(str, V(1.5f, -2.f, 1e-7f))=(1.5 -2 1e-07) csform_vec(str, Vec2<float>(1.f / 3.f, 1e10f))=(0.333333 1e+10)
+a='1'
+b=''
+c='(2 3)'
+d='"x y"'
+e='-4'
+mesh.get_string(v3)=rgb=(1 0 0) mesh.get_string(v1)=normal=(0 0 1) mesh.get_string(f2)=mat=5 mesh.get_string(c32)=normal=(0 0 1)
+mesh.get_string(mesh.edge(v1, v5)) = crease
+mesh.get_string(f3)=mat=5 mesh.get_string(v5)=
+mesh.point(v6) = [1.5, 0.5, 0]
+f=Face{9}=[4 1 3] mesh.get_string(f)=mat=2
+f=Face{10}=[5 3 1] mesh.get_string(f)=mat=2
+mesh.point(vertex(5)) = [1.25, 0.75, 0]
+mesh.point(vertex(5))=[0, 0, 0] mesh.num_vertices()=4 mesh.num_faces()=2
+mesh.point(vc)=[1.33333, 0.666667, 0] mesh.get_string(vc)=<nullptr>
+Vertex 2  2 0 0 {normal=(0 0 1)}
+Vertex 3  2 2 0
+Vertex 4  0 2 0
+Vertex 5  0 0 0 {uv=(.5 .5)}
+Vertex 7  1.33333 0.666667 0
+Face 9  4 5 3 {mat=2}
+Face 11  5 2 7 {mat=1}
+Face 12  2 3 7 {mat=1}
+Face 13  3 5 7 {mat=1}
+Espl 2 5 6
+Eswa 4 5
+Ecol 5 6
+Ecol 5 1
+DFace 7
+CVertex 7
+Face 11  5 2 7
+Face 12  2 3 7
+Face 13  3 5 7
+MVertex 7  1.33333 0.666667 0
+f=Face{6}=[5 2 4] mesh0.get_string(f)=<nullptr>
+f=Face{5}=[3 4 2] mesh0.get_string(f)=<nullptr>
+fn=Face{5}=[5 3 4 1] mesh.get_string(fn)=mat=2
+mesh.point(vn) = [1.5, 0.5, 0]
+fn2=Face{8}=[5 3 4 1 2 6] mesh.get_string(fn2)=<nullptr>
+f=Face{3}=[3 4 1] mesh2.get_string(f)=mat=7
+f=Face{2}=[1 2 3] mesh2.get_string(f)=mat=7
+mesh.point(new_vertices[0])=[0, 0, 0] mesh.get_string(new_vertices[0])=a

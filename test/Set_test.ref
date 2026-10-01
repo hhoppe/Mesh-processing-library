@@ -53,3 +53,15 @@ s=d is_new=1 set.num()=4
 s=b is_new=0 set.num()=4
 s=e is_new=1 set.num()=5
 iset.num() = 23
+sort(Array<int>(s1)) = Array<int>(6) {
+  1
+  2
+  3
+  4
+  5
+  6
+}
+sort(Array<int>(s2)) = Array<int>(2) {
+  3
+  4
+}

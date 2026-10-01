@@ -251,6 +251,87 @@ int main() {
     SHOW(g);
     SHOW(clamp(g, 2, 5));
   }
+  {
+    // The flat grid view enumerates the leaves in raster order, and writes through it reach the nested Vec.
+    SGrid<int, 2, 3, 4> grid;
+    for_int(i, 2) for_int(j, 3) for_int(k, 4) grid[i][j][k] = i * 100 + j * 10 + k;
+    int count = 0;
+    for (const auto& u : range(V(2, 3, 4))) {
+      assertx(grid.grid_view<3>().flat(count) == u[0] * 100 + u[1] * 10 + u[2]);
+      const int i = u[0], j = u[1], k = u[2];
+      assertx(&grid[u] == &grid.grid_view<3>()[u] && &grid[u] == &grid[i, j, k]);
+      count++;
+    }
+    grid.grid_view<3>()[1, 2, 3] = -1;
+    assertx(grid[1][2][3] == -1);
+    grid.grid_view<2>()[0, 1][2] = -2;  // A rank-2 view has leaves of type Vec<int, 4>.
+    assertx(grid[0][1][2] == -2);
+    assertx(grid.grid_view<1>()[1][0][0] == 100);
+    // Subscripting by a partial coordinate yields the nested Vec.
+    static_assert(std::is_same_v<decltype(grid[V(1)]), Vec<Vec<int, 4>, 3>&>);
+    static_assert(std::is_same_v<decltype(grid[V(1, 2)]), Vec<int, 4>&>);
+    static_assert(std::is_same_v<decltype(grid[V(1, 2, 3)]), int&>);
+    assertx(&grid[V(1, 2)] == &grid[1][2] && &grid[V(1)] == &grid[1]);
+    // The view types reflect the constness of the object and the requested rank.
+    const SGrid<int, 2, 3, 4>& cgrid = grid;
+    static_assert(std::is_same_v<decltype(grid.grid_view<3>()), GridView<3, int>>);
+    static_assert(std::is_same_v<decltype(cgrid.grid_view<3>()), CGridView<3, int>>);
+    static_assert(std::is_same_v<decltype(grid.grid_view<2>()), GridView<2, Vec<int, 4>>>);
+    static_assert(std::is_same_v<decltype(grid.grid_view<1>()), GridView<1, Vec<Vec<int, 4>, 3>>>);
+    static_assert(std::is_same_v<decltype(grid.const_grid_view<3>()), CGridView<3, int>>);
+    static_assert(std::is_same_v<decltype(cgrid[1, 2, 3]), const int&>);
+    assertx(cgrid.grid_view<3>().data() == &grid[0][0][0]);
+    assertx(cgrid.grid_view<3>().dims() == V(2, 3, 4) && grid.grid_view<2>().dims() == V(2, 3));
+  }
+  {
+    // Grids with a zero-size dimension occupy no elements.
+    SGrid<int, 2, 0> grid20;
+    static_assert(SGrid<int, 2, 0>::grid_dims<2>() == V(2, 0));
+    SHOW(grid20.grid_view<2>().size(), grid20.grid_view<2>().dims(), grid20.size(), grid20[1].size());
+    const SGrid<int, 0, 3> grid03{};
+    SHOW(grid03.grid_view<2>().size(), grid03.size());
+  }
+  {
+    // A 1-wide grid and a 1D grid.
+    SGrid<float, 1, 3> grid13 = {{1.f, 2.f, 3.f}};
+    static_assert(SGrid<float, 1, 3>::grid_dims<2>() == V(1, 3));
+    SHOW(grid13.grid_view<2>());
+    Vec3<int> vec = V(4, 5, 6);
+    static_assert(Vec3<int>::grid_dims<1>() == V(3));
+    vec.grid_view<1>()[2] = 7;
+    SHOW(vec.grid_view<1>());
+    SHOW(vec[V(2)]);
+  }
+  {
+    // Lexicographic comparison, equality, and hashing recurse into the nested Vec.
+    constexpr SGrid<int, 2, 2> ga = {{1, 2}, {3, 4}};
+    constexpr SGrid<int, 2, 2> gb = {{1, 2}, {3, 5}};
+    constexpr SGrid<int, 2, 2> gc = {{1, 3}, {0, 0}};
+    static_assert(ga < gb && gb < gc && ga != gb && ga == SGrid<int, 2, 2>{{1, 2}, {3, 4}});
+    assertx(std::hash<SGrid<int, 2, 2>>()(ga) == std::hash<SGrid<int, 2, 2>>()(SGrid<int, 2, 2>{{1, 2}, {3, 4}}));
+    // Structured bindings operate on the outermost level.
+    const auto& [row0, row1] = ga;
+    SHOW(row0, row1);
+  }
+  {
+    // The remaining elementwise operations recurse to the leaves.
+    constexpr SGrid<int, 2, 3> ga = {{1, 2, 3}, {4, 5, 6}};
+    constexpr SGrid<int, 2, 3> gb = {{2, 2, 2}, {3, 3, 3}};
+    SHOW(-ga, ga % gb, ga % 4, ga / gb, ga * gb);
+    SGrid<int, 2, 3> gc = ga;
+    gc -= gb;
+    gc %= 3;
+    gc += 10;
+    SHOW(gc);
+    constexpr SGrid<float, 2, 2> fa = {{0.f, 1.f}, {2.f, 3.f}};
+    constexpr SGrid<float, 2, 2> fb = {{4.f, 5.f}, {6.f, 7.f}};
+    constexpr SGrid<float, 2, 2> fc = {{8.f, 9.f}, {10.f, 11.f}};
+    SHOW(interp(fa, fb, .25f), interp(fa, fb, fc), interp(fa, fb, fc, V(.5f, .25f, .25f)));
+    static_assert(interp(fa, fb, .25f)[1][1] == 6.f);
+    // An integral grid interpolates through float at the leaves, truncating the result.
+    constexpr SGrid<int, 1, 2> ia = {{0, 10}}, ib = {{10, 20}};
+    SHOW(interp(ia, ib, .25f));
+  }
 }
 
 template class hh::Vec<double*, 1>;

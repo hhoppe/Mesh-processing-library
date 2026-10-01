@@ -1,17 +1,17 @@
 #!/bin/bash
 
-# was: (Timer_test <$nul 2>&1 | ...)
-# (Timer_test 2>&1 | grep -v 'Timing on' | sed -e 's/^/TEST>> /' -e 's/[0-9]\.[0-9]*//g')
-# (Timer_test 2>&1 | tee Timer_test.raw | grep -v 'Timing on' | sed -e 's/^/TEST>> /' -e 's/[0-9]\.[0-9].*$//')
-# (Timer_test 2>&1 | grep -v 'Summary of timers' | grep -v 'Timing on' | sed -e 's/^/TEST>> /' -e 's/[0-9]\.[0-9].*$//')
-
-perlcmd=(perl -pe 'BEGIN { binmode(STDOUT); } s/Timing on .*\)/Timing on ...)/; s/Summary of timers \(.*\)/Summary of timers (...)/; s/:.*$/:/')
-perlcmd=(perl -pe 'BEGIN { binmode(STDOUT); } s/Timing on .*\)/Timing on ...)/; s/Summary of timers \(.*\)/Summary of timers (...)/; s/ *[0-9]\.[0-9].*//')
+# Run Timer_test with its stdout and stderr captured separately, and mask the host information and all the
+# timing values (starting at the first number with a decimal point on each line).
+perlcmd=(perl -pe 'BEGIN { binmode(STDOUT); }
+  s/Timing on .*\)/Timing on ...)/;
+  s/Summary of timers \(.*\)/Summary of timers (...)/;
+  s/ *[0-9]+\.[0-9].*//;
+')
 
 cout=Timer_test.cout
 cerr=Timer_test.cerr
 
-Timer_test >$cout 2>$cerr  # | perl -pe 'BEGIN { binmode(STDOUT); } s/[0-9]\.[0-9].*$//'
+Timer_test >$cout 2>$cerr
 
 echo '** cerr:'
 cat $cerr | "${perlcmd[@]}"

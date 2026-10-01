@@ -48,6 +48,8 @@ ar = Array<unsigned int>(11) {
   862
   883
 }
+r4.get_unsigned() = 625952067
+Random::min()=0 Random::max()=4294967295 Random::default_seed=0
 # Summary of statistics:
 # Sint:               (1000000)       23813:4.29496e+09  av=2.1466998e+09  sd=1.2397857e+09
 # Sunif:              (1000000) 3.37488e-07:0.999999     av=0.50007711     sd=0.28866061

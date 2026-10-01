@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Mask the line number in the warning from libHh/HashFloat.cpp, so that edits to that file do not affect the output.
+HashFloat_test 2>&1 |
+  perl -pe 'BEGIN { binmode(STDOUT); } s/(Performing unification in line )[0-9]+ of file .*$/${1}N of file .../'

@@ -145,3 +145,19 @@ triangle=[[0, 0], [1, 0], [0, 1]] triangle.size()=3 triangle[1]=[1, 0]
 triangle.grid_dims<2>() = [3, 2]
 g = [[1, 2], [3, 4], [5, 6]]
 clamp(g, 2, 5) = [[2, 2], [3, 4], [5, 5]]
+grid20.grid_view<2>().size()=0 grid20.grid_view<2>().dims()=[2, 0] grid20.size()=2 grid20[1].size()=0
+grid03.grid_view<2>().size()=0 grid03.size()=0
+grid13.grid_view<2>() = Matrix<float>(1, 3) {
+  1 2 3
+}
+vec.grid_view<1>() = Array<int>(3) {
+  4
+  5
+  7
+}
+vec[V(2)] = 7
+row0=[1, 2] row1=[3, 4]
+-ga=[[-1, -2, -3], [-4, -5, -6]] ga % gb=[[1, 0, 1], [1, 2, 0]] ga % 4=[[1, 2, 3], [0, 1, 2]] ga / gb=[[0, 1, 1], [1, 1, 2]] ga * gb=[[2, 4, 6], [12, 15, 18]]
+gc = [[9, 10, 11], [11, 12, 10]]
+interp(fa, fb, .25f)=[[3, 4], [5, 6]] interp(fa, fb, fc)=[[4, 5], [6, 7]] interp(fa, fb, fc, V(.5f, .25f, .25f))=[[3, 4], [5, 6]]
+interp(ia, ib, .25f) = [[7, 17]]

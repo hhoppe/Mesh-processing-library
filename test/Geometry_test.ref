@@ -105,3 +105,34 @@ dist2((p + q) / 2.f, (p + q) / 2.f) = 0
 mag2(p - q) = 83
 mag2(p - p) = 0
 p=[10, 20, 30] v0=[1, 0, 0] v1=[0, 1, 0]
+cross(V(1.f, 0.f), V(0.f, 1.f))=1 cross(V(0.f, 1.f), V(1.f, 0.f))=-1 cross(V(2.f, 3.f), V(4.f, 6.f))=0
+cross(p1, p2, p3) = [0, 0, 6]
+get_normal_dir(triangle)=[0, 0, 6] get_normal(triangle)=[0, 0, 1]
+area2(triangle)=9 area2(p1, p2, p3)=9
+plane.nor=[0, 0, 1] plane.d=1
+normalized(Vector(3.f, 0.f, 4.f))=[0.6, 0, 0.8] mag(normalized(Vector(3.f, 0.f, 4.f)))=1
+ok_normalized(Vector(0.f, 0.f, 0.f)) = [0, 0, 0]
+project_orthogonally(Vector(1.f, 2.f, 3.f), Vector(0.f, 0.f, 1.f)) = [1, 2, 0]
+Point(1.f, 2.f, 3.f) * Frame::translation(V(10.f, 20.f, 30.f)) = [11, 22, 33]
+Vector(1.f, 2.f, 3.f) * Frame::translation(V(10.f, 20.f, 30.f)) = [1, 2, 3]
+Point(1.f, 2.f, 3.f) * Frame::scaling(V(2.f, 3.f, 4.f)) = [2, 6, 12]
+axis=0 Point(1.f, 2.f, 3.f) * rot=[1, -3, 2]
+axis=1 Point(1.f, 2.f, 3.f) * rot=[3, 2, -1]
+axis=2 Point(1.f, 2.f, 3.f) * rot=[-2, 1, 3]
+Point(1.f, 1.f, 1.f) * frame9 = [8, 10, 10]
+uv=[0.25, 0.75] uv[0]=0.25 uv[1]=0.75
+bilerp(a0, a1, a2, a3, 0.f, 0.f)=[0, 0] bilerp(a0, a1, a2, a3, 1.f, 0.f)=[1, 0]
+bilerp(a0, a1, a2, a3, 1.f, 1.f)=[1, 1] bilerp(a0, a1, a2, a3, 0.f, 1.f)=[0, 1]
+bilerp(a0, a1, a2, a3, .25f, .5f) = [0.25, 0.5]
+qinterp(b1, b2, b3, b4, Bary(.25f, .25f, .25f)) = [0.25, 0.25, 0.25]
+qinterp(b1, b2, b3, b4, Bary(0.f, 0.f, 0.f)) = [0, 0, 0]
+rad_from_deg(180.)=3.14159 rad_from_deg(90.f)=1.5708 deg_from_rad(TAU / 4)=90
+rounded(angle_between_unit_vectors(Vector(0.f, 0.f, 1.f), normalized(Vector(1.f, 1.f, 1.f)))) = 0.9553
+rounded(spherical_triangle_area(V(px, py, pz)) / (TAU / 4)) = 1
+rounded(spherical_triangle_area(V(px, pz, py)) / (TAU / 4)) = 7
+signed_area(V(0.f, 0.f), V(2.f, 0.f), V(0.f, 3.f)) = 3
+signed_area(V(0.f, 0.f), V(0.f, 3.f), V(2.f, 0.f)) = -3
+signed_area<float>(V(1.f, 1.f), V(2.f, 2.f), V(3.f, 3.f)) = 0
+transformed(bary2, rounded) = [-0.75, 0.5, 0.25]
+transformed(bary, rounded) = [0.5, -0.25, -0.25]
+vector_from_bary(triangle, Bary(-1.f, 1.f, 0.f)) = [-1, 1, 0]

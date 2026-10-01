@@ -1,0 +1,6 @@
+counter=3 fa=1 fb=2 fc=4
+FlagMask(flags)=5 bool(flags.flag(fa))=1 bool(flags.flag(fb))=0 bool(flags.flag(fc))=1
+previous1=0 previous2=1
+previous=6 FlagMask(flags)=1
+FlagMask(flags)=6 FlagMask(flags2)=1
+counter = 32

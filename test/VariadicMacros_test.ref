@@ -1,0 +1,9 @@
+ar = Array<int>(4) {
+  2
+  4
+  6
+  8
+}
+ar12.num()=12 ar12.last()=24
+a=1 b=2 c=3
+a + b = 3

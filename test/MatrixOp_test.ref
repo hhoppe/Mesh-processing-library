@@ -1,0 +1,92 @@
+rounded(mi[y, 0])=0.6667 rounded(mi[y, 1])=0.1667 rounded(mi[y, 2])=-0.5
+rounded(mi[y, 0])=0 rounded(mi[y, 1])=0.5 rounded(mi[y, 2])=-0.5
+rounded(mi[y, 0])=-0.3333 rounded(mi[y, 1])=-0.3333 rounded(mi[y, 2])=1
+invert(m, mo) = 0
+invert(m, mo) = 0
+m = Matrix<int>(3, 2) {
+  10 20
+  20 40
+  30 60
+}
+rot=0 rotate_ccw<int>(m, rot)=Matrix<int>(3, 2) {
+  10 20
+  20 40
+  30 60
+}
+
+rot=90 rotate_ccw<int>(m, rot)=Matrix<int>(2, 3) {
+  20 40 60
+  10 20 30
+}
+
+rot=180 rotate_ccw<int>(m, rot)=Matrix<int>(3, 2) {
+  60 30
+  40 20
+  20 10
+}
+
+rot=270 rotate_ccw<int>(m, rot)=Matrix<int>(2, 3) {
+  30 20 10
+  60 40 20
+}
+
+rot=-90 rotate_ccw<int>(m, rot)=Matrix<int>(2, 3) {
+  30 20 10
+  60 40 20
+}
+
+boundaryrule_name(bndrule)=reflected result=Array<float>(5) {
+  1.25
+  2.25
+  4.5
+  9
+  14
+}
+
+boundaryrule_name(bndrule)=periodic result=Array<float>(5) {
+  5
+  2.25
+  4.5
+  9
+  10.25
+}
+
+boundaryrule_name(bndrule)=clamped result=Array<float>(5) {
+  1.25
+  2.25
+  4.5
+  9
+  14
+}
+
+boundaryrule_name(bndrule)=border result=Array<float>(5) {
+  1
+  2.25
+  4.5
+  9
+  10
+}
+
+boundaryrule_name(bndrule)=101reflected result=Array<float>(5) {
+  1.5
+  2.25
+  4.5
+  9
+  12
+}
+
+result = Matrix<float>(5, 5) {
+  0 0 0 0 0
+  0 9 8 7 0
+  0 6 5 4 0
+  0 3 2 1 0
+  0 0 0 0 0
+}
+linear_transform(V(1.f, 0.f), rot)=[0, 1] linear_transform(V(0.f, 1.f), rot)=[-1, 0]
+affine_transform(V(1.f, 0.f), frame) = [10, 21]
+transform_about_center(V(0.f, 0.f), rot)=[1, 0] transform_about_center(V(.5f, .5f), rot)=[0.5, 0.5]
+last_column = [0, 0, 0, 1]
+[   1] [-200]
+[1000] [   3]
+[  -5] [  40]
+ny * nx=1200 num_inexact=0 max_excess=0

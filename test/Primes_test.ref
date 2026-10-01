@@ -1,0 +1,6 @@
+num_primes = 9592
+factors =  2:2 3:3 4:2 5:5 6:2 7:7 8:2 9:3 10:2 11:11 12:2 13:13 14:2 15:3 16:2 17:17 18:2 19:19 20:2 21:3 22:2 23:23 24:2 25:5 26:2 27:3 28:2 29:29
+next_prime(0)=2 next_prime(1)=2 next_prime(2)=3 next_prime(13)=17 next_prime(14)=17 next_prime(1000)=1009
+next_prime(10, 5) = 23
+prev_prime(3)=2 prev_prime(14)=13 prev_prime(1000)=997 prev_prime(100, 5)=73
+are_coprime(8, 15)=1 are_coprime(12, 18)=0 are_coprime(1, 1)=1 are_coprime(17, 34)=0

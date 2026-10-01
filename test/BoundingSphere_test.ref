@@ -1,0 +1,4 @@
+bsphere_union(big, small)=BoundingSphere(point=[0, 0, 0], radius=10) bsphere_union(small, big)=BoundingSphere(point=[0, 0, 0], radius=10)
+bsphere_union(s1, s2) = BoundingSphere(point=[2, 0, 0], radius=3)
+bsphere_union(s1, s3) = BoundingSphere(point=[0.75, 0, 0], radius=1.75)
+bsphere_union(s1, s4) = BoundingSphere(point=[1, 0, 0], radius=2)

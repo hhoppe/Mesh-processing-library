@@ -1,0 +1,30 @@
+VertexCache::type_string(type)=Fifo nverts=1 cs=1 num_hits=1999
+VertexCache::type_string(type)=Fifo nverts=3 cs=1 num_hits=688
+VertexCache::type_string(type)=Fifo nverts=20 cs=1 num_hits=95
+VertexCache::type_string(type)=Fifo nverts=1 cs=2 num_hits=1999
+VertexCache::type_string(type)=Fifo nverts=3 cs=2 num_hits=1320
+VertexCache::type_string(type)=Fifo nverts=20 cs=2 num_hits=189
+VertexCache::type_string(type)=Fifo nverts=1 cs=5 num_hits=1999
+VertexCache::type_string(type)=Fifo nverts=3 cs=5 num_hits=1997
+VertexCache::type_string(type)=Fifo nverts=20 cs=5 num_hits=499
+VertexCache::type_string(type)=Fifo nverts=1 cs=16 num_hits=1999
+VertexCache::type_string(type)=Fifo nverts=3 cs=16 num_hits=1997
+VertexCache::type_string(type)=Fifo nverts=20 cs=16 num_hits=1562
+VertexCache::type_string(type)=Fifo *vc1={ 6 5 3 2} *vc2={ 6 5 3 2}
+*vc1={} vc1->access_hits(5)=0 *vc1={ 5}
+*vc2 = { 6 5 3 2}
+VertexCache::type_string(type)=Lru nverts=1 cs=1 num_hits=1999
+VertexCache::type_string(type)=Lru nverts=3 cs=1 num_hits=688
+VertexCache::type_string(type)=Lru nverts=20 cs=1 num_hits=95
+VertexCache::type_string(type)=Lru nverts=1 cs=2 num_hits=1999
+VertexCache::type_string(type)=Lru nverts=3 cs=2 num_hits=1305
+VertexCache::type_string(type)=Lru nverts=20 cs=2 num_hits=188
+VertexCache::type_string(type)=Lru nverts=1 cs=5 num_hits=1999
+VertexCache::type_string(type)=Lru nverts=3 cs=5 num_hits=1997
+VertexCache::type_string(type)=Lru nverts=20 cs=5 num_hits=494
+VertexCache::type_string(type)=Lru nverts=1 cs=16 num_hits=1999
+VertexCache::type_string(type)=Lru nverts=3 cs=16 num_hits=1997
+VertexCache::type_string(type)=Lru nverts=20 cs=16 num_hits=1581
+VertexCache::type_string(type)=Lru *vc1={ 6 5 2 3} *vc2={ 6 5 2 3}
+*vc1={} vc1->access_hits(5)=0 *vc1={ 5}
+*vc2 = { 6 5 2 3}

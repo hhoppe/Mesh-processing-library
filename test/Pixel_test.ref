@@ -1,0 +1,5 @@
+pix=Pixel(10, 20, 30, 40) pix.to_BGRA()=Pixel(30, 20, 10, 40) pix.to_BGRA().from_BGRA()=Pixel(10, 20, 30, 40)
+Pixel(1, 2, 3) = Pixel(1, 2, 3, 255)
+Pixel::black()=Pixel(0, 0, 0, 255) Pixel::white()=Pixel(255, 255, 255, 255) Pixel::gray(128)=Pixel(128, 128, 128, 255)
+Pixel::red()=Pixel(255, 0, 0, 255) Pixel::green()=Pixel(0, 255, 0, 255) Pixel::blue()=Pixel(0, 0, 255, 255) Pixel::yellow()=Pixel(255, 255, 0, 255) Pixel::pink()=Pixel(255, 150, 150, 255)
+ar[0]=Pixel(3, 2, 1, 4) ar[1]=Pixel(7, 6, 5, 8)

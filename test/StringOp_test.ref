@@ -1,0 +1,32 @@
+s = body.suffix
+s = body
+replace_all("a.b.c", ".", "::") = a::b::c
+replace_all("aaaa", "aa", "b") = bb
+replace_all("abc", "x", "y") = abc
+replace_all("abc", "abc", "") = 
+replace_all("", "a", "b") = 
+replace_all("a\\b\\c", "\\", "/") = a/b/c
+to_lower("Hello, World! 123") = hello, world! 123
+to_upper("Hello, World! 123") = HELLO, WORLD! 123
+s=dir/sub/file.ext get_path_head(s)=dir/sub get_path_tail(s)=file.ext get_path_root(s)=dir/sub/file get_path_extension(s)=ext
+s=file.ext get_path_head(s)=file.ext get_path_tail(s)=file.ext get_path_root(s)=file get_path_extension(s)=ext
+s=dir\file.tar.gz get_path_head(s)=dir get_path_tail(s)=file.tar.gz get_path_root(s)=dir\file.tar get_path_extension(s)=gz
+s=dir/file get_path_head(s)=dir get_path_tail(s)=file get_path_root(s)=dir/file get_path_extension(s)=
+s=/file get_path_head(s)= get_path_tail(s)=file get_path_root(s)=/file get_path_extension(s)=
+s=file get_path_head(s)=file get_path_tail(s)=file get_path_root(s)=file get_path_extension(s)=
+s=dir.v2/file get_path_root(s)=dir.v2/file get_path_extension(s)=
+s=dir.v2/file.txt get_path_root(s)=dir.v2/file get_path_extension(s)=txt
+s=dir.v2\file get_path_root(s)=dir.v2\file get_path_extension(s)=
+get_canonical_path("C:\\Users\\name\\file.txt") = c:/Users/name/file.txt
+get_canonical_path("c:/already/canonical") = c:/already/canonical
+get_canonical_path("relative\\path") = relative/path
+get_canonical_path("Z:") = Z:
+get_canonical_path("") = 
+s=/usr/bin is_path_absolute(s)=1
+s=\server is_path_absolute(s)=1
+s=C:/dir is_path_absolute(s)=1
+s=c:\dir is_path_absolute(s)=1
+s=dir/file is_path_absolute(s)=0
+s=file is_path_absolute(s)=0
+s=C: is_path_absolute(s)=0
+s=C:file is_path_absolute(s)=0

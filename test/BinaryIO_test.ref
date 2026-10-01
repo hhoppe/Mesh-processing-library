@@ -1,0 +1,11 @@
+hex_bytes(oss.str()) =  12 34 AB CD
+ar1=Array<unsigned short>(2) {
+  4660
+  43981
+}
+ ar2=Array<unsigned short>(2) {
+  4660
+  43981
+}
+
+hex_bytes(oss.str()) =  3F C0 00 00 C0 00 00 00

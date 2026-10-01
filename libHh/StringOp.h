@@ -28,6 +28,7 @@ inline bool remove_at_end(string& s, std::string_view suffix) {
 // Replace all instances of substring with the replacement substring.
 [[nodiscard]] static inline string replace_all(std::string_view str, std::string_view substring,
                                                std::string_view sreplacement) {
+  assertx(substring != "");  // An empty substring would match endlessly.
   string result;
   std::string_view::size_type i = 0;
   for (;;) {
@@ -66,17 +67,17 @@ inline bool remove_at_end(string& s, std::string_view suffix) {
   return i == string::npos ? s : s.substr(i + 1);
 }
 
-// Returns the root name of a file path, like csh "$file:r" or bash "${file%.*}".
+// Returns the root name of a file path, like csh "$file:r", by removing any extension from its last component.
 [[nodiscard]] inline string get_path_root(const string& s) {
-  auto i = s.rfind('.');
-  return i == string::npos ? s : s.substr(0, i);
+  const auto i = s.rfind('.'), j = s.find_last_of("/\\");
+  return i == string::npos || (j != string::npos && i < j) ? s : s.substr(0, i);
 }
 
-// Returns the file extension of a file path, without the period, like csh "$file:e" or bash "${file##*.}", except
-// that it returns "" if the path has no period.
+// Returns the file extension of a file path, without the period, like csh "$file:e", except that it returns "" if the
+// last component of the path has no period.
 [[nodiscard]] inline string get_path_extension(const string& s) {
-  auto i = s.rfind('.');
-  return i == string::npos ? "" : s.substr(i + 1);
+  const auto i = s.rfind('.'), j = s.find_last_of("/\\");
+  return i == string::npos || (j != string::npos && i < j) ? "" : s.substr(i + 1);
 }
 
 // Change directory separator characters '\\' to '/'.

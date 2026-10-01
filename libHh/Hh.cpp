@@ -169,6 +169,8 @@ static string beautify_type_name(string s) {
   s = replace_all(s, "std::basic_string<char>", "std::string");
   s = replace_all(s, ",std::hash<int>,std::equal_to<int>>", ">");
   s = replace_all(s, ",std::hash<std::string>,std::equal_to<std::string>>", ">");
+  s = replace_all(s, "short unsigned int", "unsigned short");  // As named by clang and MSVC.
+  s = replace_all(s, "short int", "short");
   s = replace_all(s, "long long", "int64");
   s = replace_all(s, "int64 int", "int64");
   s = replace_all(s, "int64 unsigned int", "unsigned int64");

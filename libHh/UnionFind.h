@@ -53,8 +53,8 @@ template <typename T> T UnionFind<T>::get_label(T e) const { return irep(e); }
 template <typename T> void UnionFind<T>::promote(T e) {
   const T r = irep(e);
   if (r == e) return;
-  _m.remove(e);    // Element e becomes the root.
-  _m.enter(r, e);  // And the closest old root points to it.
+  _m.remove(e);    // Element e becomes the new root.
+  _m.enter(r, e);  // And the old root points to it.
 }
 
 }  // namespace hh

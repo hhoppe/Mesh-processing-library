@@ -1,6 +1,6 @@
 # A Linux environment with the tools and libraries to build the programs and to run the unit tests and demos.
 # Usage:
-#   docker build -t mesh-processing .    # Build all programs and run the unit tests.
+#   docker build -f docker/Dockerfile -t mesh-processing .  # Build all programs and run the unit tests.
 #   docker run -it --rm mesh-processing  # Start a shell, with the programs in the PATH.
 #   docker run --init --rm mesh-processing xvfb-run -a make -C demos create check  # Create and check the demos.
 # (The --init is necessary for xvfb-run, which otherwise hangs as the first process in the container.)

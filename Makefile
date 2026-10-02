@@ -39,7 +39,7 @@ lib_dirs = \
 
 prog_dirs = \
   Recon Meshfit Subdivfit Polyfit MeshDistance \
-  MeshSimplify reverselines Filterprog FilterPM StitchPM \
+  MeshSimplify Filterprog FilterPM StitchPM \
   MinCycles MeshReorder \
   SphereParam SphereSample \
   Filtermesh Filtera3d Filterframe Filterimage Filtervideo \

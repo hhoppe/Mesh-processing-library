@@ -1,5 +1,7 @@
 # Mesh Processing Library
 
+[![CI](https://github.com/hhoppe/Mesh-processing-library/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hhoppe/Mesh-processing-library/actions/workflows/ci.yml)
+
 <!--
 Preview exact GitHub rendering using "env grip"; it automatically calls GitHub API and serves webpage; really nice.
 GitHub-specific syntax: https://help.github.com/categories/writing-on-github/
@@ -110,9 +112,9 @@ For instance, the line
 
 ### Build using Docker
 
-The `Dockerfile` defines a Linux environment (Ubuntu with `clang`, GNU `make`, and the libraries above)
+The file `docker/Dockerfile` defines a Linux environment (Ubuntu with `clang`, GNU `make`, and the libraries above)
 in which all programs are built and the unit tests are run, without installing anything else:
-<br/>`docker build -t mesh-processing .`
+<br/>`docker build -f docker/Dockerfile -t mesh-processing .`
 
 To then start a shell in which the programs are in the `PATH`:
 <br/>`docker run -it --rm mesh-processing`
@@ -127,7 +129,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <tr id="pub_recon">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/recon.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/recon.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/recon/">Surface reconstruction from unorganized points</a>.</div>
@@ -141,7 +143,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <tr id="pub_meshopt">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/meshopt.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/meshopt.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/meshopt/">Mesh optimization</a>.</div>
@@ -155,7 +157,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <tr id="pub_psrecon">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/psrecon.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/psrecon.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/psrecon/">Piecewise Smooth Surface Reconstruction</a>.</div>
@@ -169,21 +171,21 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <tr id="pub_pm">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/pm.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/pm.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/pm/">Progressive meshes</a>.</div>
    <div class="authors">Hugues Hoppe.</div>
    <div class="pub"><cite>ACM SIGGRAPH 1996 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div class="desc"><em>Efficient, lossless, continuous-resolution representation of surface triangulations.</em></div>
-   <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_MeshSimplify"><code>MeshSimplify</code></a>, <a href="#prog_reverselines"><code>reverselines</code></a>, <a href="#prog_Filterprog"><code>Filterprog</code></a></div>
+   <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_MeshSimplify"><code>MeshSimplify</code></a>, <a href="#prog_Filterprog"><code>Filterprog</code></a></div>
    <div class="demos"><span class="sdemos">Demos:</span> <code>create_geomorphs</code>, <code>view_geomorphs</code>
   </td>
  </tr>
 
  <tr id="pub_efficientpm">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/efficientpm.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/efficientpm.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/efficientpm/">Efficient implementation of progressive meshes</a>.</div>
@@ -197,7 +199,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <!--<tr id="pub_newqem">
      <td class="lcell">
-      <img class="thumbnail" src="thumbnails/newqem.red.jpg" alt=""/>
+      <img class="thumbnail" src=".github/thumbnails/newqem.red.jpg" alt=""/>
      </td>
      <td class="rcell">
       <div class="title"><a href="https://hhoppe.com/proj/newqem/">New quadric metric for simplifying meshes with appearance attributes</a>.</div>
@@ -211,7 +213,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <tr id="pub_vdrpm">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/vdrpm.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/vdrpm.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/vdrpm/">View-dependent refinement of progressive meshes</a>.</div>
@@ -225,7 +227,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <tr id="pub_svdlod">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/svdlod.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/svdlod.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/svdlod/">Smooth view-dependent level-of-detail control and its application to terrain rendering</a>.</div>
@@ -239,7 +241,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <tr id="pub_psc">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/psc.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/psc.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/psc/">Progressive simplicial complexes</a>.</div>
@@ -253,7 +255,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <tr id="pub_tvc">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/tvc.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/tvc.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/tvc/">Optimization of mesh locality for transparent vertex caching</a>.</div>
@@ -267,7 +269,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
  <tr id="pub_sphereparam">
   <td class="lcell">
-   <img class="thumbnail" src="thumbnails/sphereparam.red.jpg" alt=""/>
+   <img class="thumbnail" src=".github/thumbnails/sphereparam.red.jpg" alt=""/>
   </td>
   <td class="rcell">
    <div class="title"><a href="https://hhoppe.com/proj/sphereparam/">Spherical parameterization and remeshing</a>.</div>
@@ -552,8 +554,6 @@ obtained by reading the stored edge collapses in reverse order:<a id="prog_Filte
 ```shell
 Filterprog -fbase club.base.m -fprog club.prog -pm_encode >club.pm
 ```
-(The older two-step process `reverselines club.prog >club.rprog`<a id="prog_reverselines"></a>
-followed by `Filterprog ... -fprog club.rprog` is still supported.)
 
 The complete process from the original mesh to the progressive mesh is implemented by the script call
 ```shell

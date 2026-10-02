@@ -132,7 +132,7 @@ cppinc += -D_UNICODE -DUNICODE#  (Useful for alternative testing since my msbuil
 # cppinc += -DHH_NO_LIB_REFERENCES
 # cppinc += -DHH_NO_HH_INIT
 
-# Also update '-std=' in .clang-tidy, LanguageStandard in hhmain.props and LoopAPILib.vcxproj,
+# Also update '-std=' in .clang-tidy, LanguageStandard in msvc/hhmain.props and LoopAPILib.vcxproj,
 # build_and_test_using_*.sh, the gnu++ conversion in Makefile_config_cygwin, and c++latest in Makefile_base_win.
 CXX_STD ?= c++23
 

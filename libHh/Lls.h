@@ -64,7 +64,7 @@ class Lls : noncopyable {
 // Sparse conjugate-gradient approach.
 class SparseLls : public Lls {
  public:
-  explicit SparseLls(int m, int n, int nd) : Lls(m, n, nd), _rows(m), _cols(n), _tolerance(square(8e-7f) * m) {}
+  explicit SparseLls(int m, int n, int nd) : Lls(m, n, nd), _tolerance(square(8e-7f) * m) {}
   void clear() override;
   void enter_a_rc(int r, int c, float val) override;
   void enter_a_r(int r, CArrayView<float> ar) override;
@@ -74,16 +74,26 @@ class SparseLls : public Lls {
   void set_max_iter(int max_iter);      // Default std::numeric_limits<int>::max().
   void set_verbose(int verb);           // Default 0.
  private:
+  struct Entry {
+    int _r;
+    int _c;
+    float _v;
+  };
   struct Ival {
     int _i;
     float _v;
   };
-  Array<Array<Ival>> _rows;
-  Array<Array<Ival>> _cols;
+  // The matrix entries, as entered; solve() compresses them into contiguous row-major and column-major storage
+  // (CSR and CSC), which makes the matrix-vector products in the conjugate-gradient iterations much faster.
+  Array<Entry> _entries;
+  Array<int> _row_start;   // Row r has the entries _row_ivals[_row_start[r]] .. _row_ivals[_row_start[r + 1] - 1].
+  Array<int> _col_start;   // Column c has the entries _col_ivals[_col_start[c]] .. _col_ivals[_col_start[c + 1] - 1].
+  Array<Ival> _row_ivals;  // For each row, its column indices and values.
+  Array<Ival> _col_ivals;  // For each column, its row indices and values.
   float _tolerance;
   int _max_iter{std::numeric_limits<int>::max()};
   int _verb{0};
-  int _nentries{0};
+  void compress();
   [[nodiscard]] Array<float> mult_m_v(CArrayView<float> vi) const;
   [[nodiscard]] Array<float> mult_mt_v(CArrayView<float> vi) const;
   bool do_cg(ArrayView<float> x, CArrayView<float> h, double* prssb, double* prssa) const;

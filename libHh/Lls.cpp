@@ -62,16 +62,15 @@ void Lls::get_x(MatrixView<float> mat) {
 // *** SparseLls
 
 void SparseLls::clear() {
-  for (auto& row : _rows) row.clear();
-  for (auto& col : _cols) col.clear();
-  _nentries = 0;
+  _entries.clear();
+  _row_start.clear(), _col_start.clear();
+  _row_ivals.clear(), _col_ivals.clear();
   Lls::clear();
 }
 
 void SparseLls::enter_a_rc(int r, int c, float val) {
-  _rows[r].push(Ival{c, val});
-  _cols[c].push(Ival{r, val});
-  _nentries++;
+  ASSERTX(r >= 0 && r < _m && c >= 0 && c < _n);
+  _entries.push(Entry{r, c, val});
 }
 
 void SparseLls::enter_a_r(int r, CArrayView<float> ar) {
@@ -88,12 +87,27 @@ void SparseLls::enter_a_c(int c, CArrayView<float> ar) {
   }
 }
 
+// Sort the entries into the row-major and column-major arrays, using a counting sort, and release the entries.
+void SparseLls::compress() {
+  _row_start.init(_m + 1, 0), _col_start.init(_n + 1, 0);
+  for (const Entry& e : _entries) _row_start[e._r + 1]++, _col_start[e._c + 1]++;
+  for_int(i, _m) _row_start[i + 1] += _row_start[i];
+  for_int(j, _n) _col_start[j + 1] += _col_start[j];
+  _row_ivals.init(_entries.num()), _col_ivals.init(_entries.num());
+  Array<int> row_pos(_row_start.head(_m)), col_pos(_col_start.head(_n));
+  for (const Entry& e : _entries) {
+    _row_ivals[row_pos[e._r]++] = Ival{e._c, e._v};
+    _col_ivals[col_pos[e._c]++] = Ival{e._r, e._v};
+  }
+  _entries.clear();  // (This also deallocates its memory.)
+}
+
 Array<float> SparseLls::mult_m_v(CArrayView<float> vi) const {
   Array<float> vo(_m);
   // vo[m] = _a[m, n]*vi[n];
   for_int(i, _m) {
     double sum = 0.;
-    for (const Ival& ival : _rows[i]) sum += double(ival._v) * vi[ival._i];
+    for_intL(k, _row_start[i], _row_start[i + 1]) sum += double(_row_ivals[k]._v) * vi[_row_ivals[k]._i];
     vo[i] = float(sum);
   }
   return vo;
@@ -104,7 +118,7 @@ Array<float> SparseLls::mult_mt_v(CArrayView<float> vi) const {
   // vo[n] = uT[n, m]*vi[m];
   for_int(j, _n) {
     double sum = 0.;
-    for (const Ival& ival : _cols[j]) sum += double(ival._v) * vi[ival._i];
+    for_intL(k, _col_start[j], _col_start[j + 1]) sum += double(_col_ivals[k]._v) * vi[_col_ivals[k]._i];
     vo[j] = float(sum);
   }
   return vo;
@@ -154,7 +168,8 @@ bool SparseLls::solve(double* prssb, double* prssa) {
   auto up_timer = _verb ? make_unique<Timer>("_____SparseLls", Timer::EMode::abbrev) : nullptr;
   assertx(!_solved);
   _solved = true;
-  if (sdebug) showf("SparseLls: solving %dx%d system, nonzerofrac=%f\n", _m, _n, float(_nentries) / _m / _n);
+  if (sdebug) showf("SparseLls: solving %dx%d system, nonzerofrac=%f\n", _m, _n, float(_entries.num()) / _m / _n);
+  compress();
   if (prssb) *prssb = 0.;
   if (prssa) *prssa = 0.;
   Array<float> x(_n), rhv(_m);

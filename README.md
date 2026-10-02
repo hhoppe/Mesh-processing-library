@@ -19,7 +19,7 @@ Nice docs in http://daringfireball.net/projects/markdown/syntax
 ## Overview
 
 This package contains C++ libraries and programs demonstrating mesh processing research
-published in ACM SIGGRAPH (1992&ndash;2003):
+published from 1992 to 2003, mostly in ACM SIGGRAPH:
 
 - <em>surface reconstruction</em> (from unorganized, unoriented points)
 - <em>mesh optimization</em>
@@ -38,22 +38,24 @@ The source code has been updated to modern C++ style and for cross-platform use.
 
 ## Requirements / dependencies
 
-The code can be compiled with Microsoft Visual Studio using the solution (`*.sln`)
+The code compiles with Microsoft Visual Studio, using the solution (`*.sln`)
 and project (`*.vcxproj`) files.
 
-On Unix (Linux, Mac OS, and Cygwin),
+On Unix (Linux, macOS, WSL, Cygwin),
 the code compiles using the `clang` and `gcc` compilers and GNU `make`.
 
 The code requires C++23.
 Continuous integration verifies Microsoft Visual Studio 2026,
-`gcc` 14 and 15, `clang` 20 and 21, and Apple `clang` 21 (Xcode 26),
-on Linux (x86-64 and ARM64), Mac OS (ARM64), and Windows;
+`gcc` 15, `clang` 20 and 21, and Apple `clang` 21 (Xcode 26),
+on Linux (x86-64 and ARM64), macOS (ARM64), and Windows;
 Visual Studio 2022 is also supported.
 Older compilers lack needed features:
 `gcc` 13 lacks explicit object parameters (`this auto&& self`),
 `clang` 18 lacks class template argument deduction for alias templates,
 and `clang` 19 and 20 fail with the older `libstdc++` 14 (though `clang` 20 works with `libstdc++` 15).
-GNU `make` 3.81 (as shipped with Mac OS) suffices.
+GNU `make` 3.81 (as shipped with macOS) suffices.
+The `make` builds compile with `-march=native`, so their executables are tuned to (and may require) the CPU of the
+building machine; the Visual Studio builds require AVX2 (`/arch:AVX2`).
 
 Reading/writing of images and videos is enabled using several options.
 If available, image I/O can use `libpng`/`libjpeg` or Windows Imaging Component (WIC).
@@ -63,7 +65,7 @@ is present in the `PATH`,
 it is spawned in a piped subprocess for both image and video I/O.
 A file specified as a URL is read by spawning the command `wget`.
 
-On Mac OS X, it is necessary to install
+On macOS, it is necessary to install
 <a href="https://www.xquartz.org/">`XQuartz`</a> for `X11` support and
 <a href="https://evermeet.cx/ffmpeg/">`ffmpeg`</a> for image/video I/O.
 
@@ -84,9 +86,9 @@ The `CONFIG` environment variable determines
 which `make/Makefile_config_*` definition file is loaded.
 On Windows, `CONFIG` can be chosen among `{win, mingw, clang, cygwin}`,
 defaulting to `win` if undefined.
-On Unix platforms (Linux and Mac OS), `CONFIG=unix` is the unique and default setting.
+On Unix platforms (Linux, macOS, WSL), `CONFIG=unix` is the unique and default setting.
 
-For example, to build using the Microsoft `cl` compiler (Debug, placing `*.exe` into directory `bin/win`):
+For example, to build using the Microsoft `cl` compiler (a debug build, placing `*.exe` into directory `bin/win`):
 <br/>`make -j8`<br/>
 
 To build all programs (into either `bin/unix` or `bin/win`) and run all unit tests:
@@ -142,7 +144,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
    <div class="pub"><cite>ACM SIGGRAPH 1992 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div class="desc"><em>Signed-distance field estimated from a set of unoriented noisy points.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_recon"><code>Recon</code></a></div>
-   <div class="demos"><span class="sdemos">Demos:</span> <code>create_recon_*.{sh,bat}</code>, <code>view_recon_*.{sh,bat}</code></div>
+   <div class="demos"><span class="sdemos">Demos:</span> <code>create_recon_*</code>, <code>view_recon_*</code></div>
   </td>
  </tr>
 
@@ -165,7 +167,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
    <img class="thumbnail" src=".github/thumbnails/psrecon.red.jpg" alt=""/>
   </td>
   <td class="rcell">
-   <div class="title"><a href="https://hhoppe.com/proj/psrecon/">Piecewise Smooth Surface Reconstruction</a>.</div>
+   <div class="title"><a href="https://hhoppe.com/proj/psrecon/">Piecewise smooth surface reconstruction</a>.</div>
    <div class="authors">Hugues Hoppe, Tony DeRose, Tom Duchamp, Michael Halstead, Hubert Jin, John McDonald, Jean Schweitzer, Werner Stuetzle.</div>
    <div class="pub"><cite>ACM SIGGRAPH 1994 Proceedings</cite>.</div>
    <div class="desc"><em>Subdivision surfaces with sharp features, and their automatic creation by data fitting.</em></div>
@@ -184,7 +186,7 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
    <div class="pub"><cite>ACM SIGGRAPH 1996 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div class="desc"><em>Efficient, lossless, continuous-resolution representation of surface triangulations.</em></div>
    <div class="bins"><span class="sprogram">Programs:</span> <a href="#prog_MeshSimplify"><code>MeshSimplify</code></a>, <a href="#prog_Filterprog"><code>Filterprog</code></a></div>
-   <div class="demos"><span class="sdemos">Demos:</span> <code>create_geomorphs</code>, <code>view_geomorphs</code>
+   <div class="demos"><span class="sdemos">Demos:</span> <code>create_geomorphs</code>, <code>view_geomorphs</code></div>
   </td>
  </tr>
 
@@ -293,14 +295,14 @@ To create and check the demo results (`xvfb-run` provides an X display, and requ
 
 After the code is compiled, the demos can be run as follows.
 
-In Windows, create, view, and clean up all the results using the `batch` scripts:
+On Windows, create, view, and clean up all the results using the batch scripts:
 ```shell
 demos/all_demos_create_results.bat
 demos/all_demos_view_results.bat
 demos/all_demos_clean.bat
 ```
 
-On Unix-based systems (e.g. Linux, Mac OS, Cygwin), either run the `bash` scripts:
+On Unix-based systems (Linux, macOS, WSL, Cygwin), either run the `bash` scripts:
 ```shell
 demos/all_demos_create_results.sh
 demos/all_demos_view_results.sh
@@ -363,8 +365,8 @@ FilterPM demos/data/standingblob.pm -info -nfaces 1000 -outmesh | \
 - reports statistics on the mesh geometry,
 - remeshes the surface as the zero isocontour of its signed-distance function on a 60<sup>3</sup> grid,
 - reports the new mesh genus, and
-- shows the result in an interactive viewer using the specified view parameters,
-- simulating keypresses <kbd>Dm</kbd> to enable flat shading and <kbd>De</kbd> to make mesh edges visible.
+- shows the result in an interactive viewer,
+  simulating the keypresses <kbd>Dm</kbd> to enable flat shading and <kbd>De</kbd> to make mesh edges visible.
 
 The **`Filtermesh`** command<a id="prog_Filtermesh"></a>
 ```shell
@@ -388,7 +390,7 @@ Filtervideo demos/data/palmtrees_small.mp4 -filter keys -scaleu 1.5 >palmtrees_s
 
 The command
 ```shell
-Filtervideo demos/data/palmtrees_small.mp4 -info -trimbeg 4 -boundary clamped -trimend -20% | \
+Filtervideo demos/data/palmtrees_small.mp4 -info -trimbeg 4 -boundary clamped -trimend -20% \
     -tscale 1.5 -framerate 150% -croprectangle 50% 50% 400 240 -gamma 1.5 -bitrate 10m | \
   VideoViewer demos/data/palmtrees_small.mp4 - -key =an
 ```
@@ -426,14 +428,14 @@ Recon <demos/data/distcap.pts -samplingd 0.02 | \
 - saves it to a file, and
 - displays it interactively starting from a specified viewpoint, with flat-shaded faces (<kbd>Dm</kbd>)
   and mesh edges (<kbd>De</kbd>).
-  
+
 To show the progression of the Marching Cubes algorithm,
 ```shell
 Recon <demos/data/distcap.pts -samplingd 0.02 -what c | \
   Filtera3d -split 30 | G3dOGL -key DCDb -st demos/data/distcap_backside.s3d -terse
 ```
 - selects the 'c' (cubes) output stream,
-- forces a frame refresh every 30 polygon primitive, and
+- forces a frame refresh every 30 polygon primitives, and
 - shows the result without display-list caching (<kbd>DC</kbd>) and without backface culling (<kbd>Db</kbd>).
 
 To show a similar streaming reconstruction of the surface mesh,
@@ -446,7 +448,7 @@ Recon <demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d | \
 - converts the mesh to a stream of polygons, and
 - shows the points and streamed reconstruction with a slow (<kbd>_</kbd>) rotation (<kbd>J</kbd>)
   about the object frame (<kbd>o</kbd>).
- 
+
 The same program can also read a list of 2D (y, z) points to reconstruct an approximating curve:
 ```shell
 Recon <demos/data/curve1.pts -samplingd 0.06 -grid 30 | \
@@ -457,7 +459,7 @@ Recon <demos/data/curve1.pts -samplingd 0.06 -grid 30 | \
 ### <a id="prog_Meshfit"></a>Meshfit
 
 Given an initial mesh and a list of 3D points, this program optimizes both the mesh connectivity and
-geometry to improve the fit, i.e. minimizing the squared distances from the points to the surface.
+geometry to improve the fit, i.e., to minimize the squared distances from the points to the surface.
 For example,
 ```shell
 Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts -crep 1e-5 -reconstruct | \
@@ -469,10 +471,10 @@ Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts -crep 1e-5 -reconstr
   (<var>c<sub>rep</sub></var>=1e-4 yields a coarser mesh),
 - saves the result to a file, and displays it interactively.
 
-The input points can also be sampled from an existing surface, e.g.:
+The input points can also be sampled from an existing surface, for example:
 ```shell
 Filtermesh demos/data/blob5.orig.m -randpts 10000 -vertexpts | \
-  Meshfit -mfile demos/data/blob5.orig.m  -file - -crep 1e-6 -simplify | \
+  Meshfit -mfile demos/data/blob5.orig.m -file - -crep 1e-6 -simplify | \
   G3dOGL -st demos/data/blob5.s3d -key DmDe
 ```
 
@@ -494,7 +496,7 @@ Polyfit -pfile curve1.a3d -file demos/data/curve1.pts -crep 3e-4 -spring 1 -reco
   G3dOGL demos/data/curve1.pts -input -st demos/data/curve1.s3d
 ```
 - reads the previously reconstructed polyline and the original list of points,
-- optimizes vertex positions and simplifies the number of line segments according to some representation cost, and
+- optimizes the vertex positions and reduces the number of line segments according to a representation cost, and
 - displays the result together with the original points.
 
 ### <a id="prog_Subdivfit"></a>Subdivfit
@@ -530,7 +532,7 @@ projections of each point onto the closest point on a second mesh.
 ```shell
 MeshDistance -mfile distcap.recon.m -mfile distcap.opt.m -bothdir 1 -maxerror 1 -distance
 ```
-- `MeshDistance` loads the earlier results of mesh reconstruction and mesh optimization,
+- loads the earlier results of mesh reconstruction and mesh optimization,
 - computes correspondences from points sampled on each mesh to the other mesh (in both directions), and
 - reports differences in geometric distance, color, and surface normals,
   using both L<sup>2</sup> (rms) and L<sup>&infin;</sup> (max) norms.
@@ -572,14 +574,15 @@ G3dOGL -pm_mode club.pm -st demos/data/club.s3d -lightambient .4
 ```
 - by dragging the left vertical slider using the left or right mouse button, and
 - toggling mesh edges using the <kbd>De</kbd> key sequence.
- 
-We can also define geomorphs between discrete levels of detail, e.g.
+
+We can also define geomorphs between discrete levels of detail, for example:
 ```shell
 FilterPM club.pm -nfaces 2000 -geom_nfaces 3300 -geom_nfaces 5000 -geom_nfaces 8000 | \
   G3dOGL -st demos/data/club.s3d -key SPDeN -lightambient .5 -thickboundary 1 -video 101 - | \
   VideoViewer - -key m
 ```
-- creates a geomorph between 2000 and 3300 faces, another between 3300 and 5000 faces, and one more,
+- creates a geomorph between 2000 and 3300 faces, another between 3300 and 5000 faces,
+  and a third between 5000 and 8000 faces,
 - shows these in a viewer with the level-of-detail slider enabled (<kbd>S</kbd>),
 - selects all three geomorph meshes (<kbd>P</kbd>), enables mesh edges (<kbd>De</kbd>),
   selects the first mesh (<kbd>N</kbd>),
@@ -645,8 +648,8 @@ Then, within `demos/view_sr_terrain.sh`,
    G3dOGL $common -geom 800x820+970+10 -async -killeof -input -key Dg)
 ```
 
-- opens two synchronized side-by-side windows of the same texture mapped terrain,
-- in which the first windows shows the temporal pops resulting from instantaneous mesh operations,
+- opens two synchronized side-by-side windows of the same texture-mapped terrain,
+- in which the first window shows the temporal pops resulting from instantaneous mesh operations,
 - whereas the second window shows the smooth appearance provided by runtime geomorphs (<kbd>Dg</kbd>).
 
 For large terrain meshes, we form a hierarchical progressive mesh by partitioning the terrain mesh into tiles,
@@ -680,9 +683,9 @@ FilterPM demos/data/office.pm -nf 200000 -outmesh | \
   G3dOGL -st demos/data/office.s3d -key DeDEJ---- -thickboundary 0 -lightambient .9
 ```
 - extracts a mesh of 200000 faces from a progressive mesh,
-- closes 46 topological handles to reduce the mesh genus from 50 to 4,
-- where the final remaining handle would require a nonseparating cycle of length greater than `0.10`.
-- speeding up the process by identifying approximately shortest nonseparating cycles
+- closes 46 nonseparating cycles (33 handles and 13 tunnels), reducing the mesh genus from 50 to 4,
+- stops when every remaining nonseparating cycle has a length greater than `0.10`,
+- speeds up the process by identifying approximately shortest nonseparating cycles
   within a factor 1.2 of optimal, and
 - shows the resulting closed edge cycles (tagged as sharp) in blue.
 
@@ -695,7 +698,7 @@ to exploit GPU vertex caching and thereby minimize memory bandwidth and shading 
 For example, within `demos/create_vertexcache_bunny`,
 ```shell
 MeshReorder data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -color_corners 1 -analyze \
-    >data/bunny.vertexcache.m
+    >results/bunny.vertexcache.m
 ```
 - simulates traversal using a FIFO cache of 16 vertices and reports cache miss rates,
 - optimizes the triangle face ordering,
@@ -704,7 +707,7 @@ MeshReorder data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -color_cor
 
 Then, within `demos/view_vertexcache_bunny`,
 ```shell
-G3dOGL data/bunny.vertexcache.m -st data/bunny.s3d -key DmDTDTDC
+G3dOGL results/bunny.vertexcache.m -st data/bunny.s3d -key DmDTDC
 ```
 visualizes the resulting sequence of triangle strips and cache misses.
 
@@ -717,7 +720,7 @@ so as to minimize parametric stretch from the sphere to the surface mesh.
 For example, within `demos/create_spherical_param_bunny`,
 ```shell
 mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow | \
-  SphereParam - -rot data/bunny.s3d >data/bunny.sphparam.m
+  SphereParam - -rot data/bunny.s3d -split_meridian >results/bunny.sphparam.m
 ```
 - creates a progressive mesh (`*.pm`) stream minimizing a quadric error metric (`qem`),
 - runs a coarse-to-fine spherical parameterization optimization,
@@ -726,7 +729,15 @@ mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow | \
 
 Then, within `demos/view_spherical_param_bunny`,
 ```shell
-Filtermesh data/bunny.sphparam.m -renamekey v sph P | \
+mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow | \
+  SphereParam - -visualize -wait_on_visualizer -nooutput
+```
+- reruns the same spherical parameterization, piping its progress to an interactive `G3dOGL` viewer, and
+- exits after the viewer window is closed, without writing the parameterized mesh.
+
+Alternatively, to view the parameterization as a triangulated sphere,
+```shell
+Filtermesh results/bunny.sphparam.m -renamekey v sph P | \
   G3dOGL - -st data/unitsphere_ang.s3d -key DeoJ
 ```
 - transfers each vertex's spherical coordinates `sph` to its position `P`,
@@ -738,14 +749,14 @@ Filtermesh data/bunny.sphparam.m -renamekey v sph P | \
 
 The program **`SphereSample`** computes uniform samplings of a spherically parameterized mesh.
 
-For example, within `demos/create_create_spherical_param_bunny`,
+For example, within `demos/create_spherical_param_bunny`,
 ```shell
-SphereSample -egrid 128 -domain octaflat -scheme best -param data/bunny.sphparam.m \
-    -rot data/bunny.s3d -keys imageuv -remesh | \
-  Filtermesh -renamekey v imageuv uv >data/bunny.spheresample.remesh.m
+SphereSample -domain octaflat -egrid 128 -sample_map results/octaflat_eg128.uv.sphparam.m \
+    -param results/bunny.sphparam.m -rot data/bunny.s3d -keys imageuv -remesh | \
+  Filtermesh -renamekey v imageuv uv >results/bunny.spheresample.remesh.m
 ```
-- defines an effective 128&times;128 regular grid
-- using a flat-octahedron domain mapped on the sphere,
+- defines an effective 128&times;128 regular grid on a flat-octahedron domain,
+- maps it onto the sphere using a domain-to-sphere map computed earlier in the script,
 - maps these samples onto the bunny mesh using its spherical parameterization,
 - generates a remesh where vertices include image-space coordinates (`imageuv`),
 - renames those coordinates to `uv` coordinates, and
@@ -753,24 +764,23 @@ SphereSample -egrid 128 -domain octaflat -scheme best -param data/bunny.sphparam
 
 Also,
 ```shell
-SphereSample -egrid 1024 -omit_faces -domain octaflat -scheme best -param data/bunny.sphparam.m \
-    -rot data/identity.s3d -signal N -write_texture \
-    data/bunny.spheresample.octaflat.unrotated.normalmap.png
+SphereSample -domain octaflat -grid 1024 -domain_file results/octaflat_eg128.uv.sphparam.m \
+    -param results/bunny.sphparam.m -signal N -write_texture \
+    results/bunny.spheresample.octaflat.unrotated.normalmap.png
 ```
-- defines an effective 1024&times;1024 regular grid
-- using a flat-octahedron domain mapped on the sphere,
+- defines a 1024&times;1024 grid over the same flat-octahedron domain and domain-to-sphere map,
 - maps these samples onto the bunny mesh using its spherical parameterization,
 - samples the surface normal (`N`) field, and
-- writes these sampled normal vectors as RGB colors in a normap-map `png` image.
+- writes these sampled normal vectors as RGB colors in a normal-map `png` image.
 
-Then, within `demos/view_vertexcache_bunny`,
+Then, within `demos/view_spherical_param_bunny`,
 ```shell
-G3dOGL data/bunny.spheresample.remesh.m -st data/bunny.s3d \
-    -texturemap data/bunny.spheresample.octaflat.unrotated.normalmap.png \
+G3dOGL results/bunny.spheresample.remesh.m -st data/bunny.s3d \
+    -texturemap results/bunny.spheresample.octaflat.unrotated.normalmap.png \
     -texturenormal 1 -key DmDe -hwkey '(DtDe)' -hwdelay 1.0
 ```
 - renders the remesh using flat shading (`Dm`) and mesh edges (`De`), and
-- after 1 second, enables normal-mapping using the normals stored in the `png` image.
+- after 1 second, enables normal mapping using the normals stored in the `png` image.
 
 
 ## <a id="prog_G3dOGL"></a>Geometry viewer
@@ -835,7 +845,7 @@ VideoViewer output_video.mp4
 ```
 
 The related program **`G3dVec`** shows wireframe hidden-line-removed renderings of `*.a3d` streams and `*.m` meshes.
-It can write vector-based Postscript figures (see `demos/view_hidden_line_removed`).
+It can write vector-based PostScript figures (see `demos/view_hidden_line_removed`).
 
 In both programs, the keys <kbd>?</kbd> and <kbd>D?</kbd> show a list of available keyboard commands.
 
@@ -851,7 +861,7 @@ Audio is not currently supported.
 
 ### Mesh (`*.m`)
 
-See the documentation at the end of `libHh/GMesh.h`
+See the documentation at the end of `libHh/GMesh.h`.
 
 A mesh is a set of vertices and faces.  These in turn also define edges and corners.
 Arbitrary string tuples can be associated with vertices, faces, edges, and corners.
@@ -863,7 +873,7 @@ in hindsight that was a poor choice.
 
 ### Geometry stream (`*.a3d`, `*.pts`)
 
-See the documentation at the end of `libHh/A3dStream.h`
+See the documentation at the end of `libHh/A3dStream.h`.
 
 The stream contains polygons, polylines, points, and control codes
 (like end-of-frame, end-of-input, change-of-object).
@@ -871,7 +881,7 @@ Unlike in a mesh, these primitives do not share vertices.  The stream can be eit
 
 ### Frame stream (`*.frame`, `*.s3d`)
 
-See the documentation at the end of `libHh/FrameIO.h`
+See the documentation at the end of `libHh/FrameIO.h`.
 
 This text or binary format encodes a 4&times;3 affine transformation
 (plus an object id and a scalar field-of-view zoom).
@@ -883,11 +893,10 @@ The stream can be either text or binary.
 
 This is a binary representation that consists of a coarse base mesh and a sequence of vertex split records.
 
-### Edge collapse / vertex split records (`*.prog`, `*.rprog`)
+### Edge collapse / vertex split records (`*.prog`)
 
-These are temporary text files containing verbose information for a sequence of edge collapse / vertex split records
-used by MeshSimplify / Filterprog to create a progressive mesh.
-The `*.rprog` file contains the same lines in reverse order.
+This is a temporary text file containing verbose information for a sequence of edge collapse / vertex split records,
+written by `MeshSimplify` and read by `Filterprog` to create a progressive mesh.
 
 
 ## Libraries
@@ -899,7 +908,7 @@ All files include `Hh.h` which sets up a common cross-platform environment.
 The libraries <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/libHwWindows">`libHwWindows`</a>
 and <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/libHwX">`libHwX`</a>
 define different implementations of a simple windowing interface (class `Hw`),
-under `Win32` and `X Windows`, respectively.
+under `Win32` and the X Window System, respectively.
 Both implementations support `OpenGL` rendering.
 
 
@@ -928,5 +937,5 @@ All streams are opened in binary mode.  This allows text and binary to coexist i
 
 ## License
 
-See <a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/LICENSE">`LICENSE`</a>.
+See <a href="LICENSE">`LICENSE`</a>.
 This project has adopted the <a href="https://opensource.microsoft.com/codeofconduct/">Microsoft Open Source Code of Conduct</a>.  For more information see the <a href="https://opensource.microsoft.com/codeofconduct/faq/">Code of Conduct FAQ</a> or contact <a href="mailto:opencode@microsoft.com">opencode@microsoft.com</a> with any additional questions or comments.

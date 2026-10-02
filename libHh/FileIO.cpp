@@ -295,10 +295,16 @@ RFile::RFile(string filename) {
   if (filename.starts_with("https://") || filename.starts_with("http://")) {
 #if defined(_WIN32) && !defined(__MINGW32__)
     // Note: opening a FILE on an in-memory buffer using fmemopen() is unavailable on Windows.
+    // Retry after a failure, as wget does by default on Unix, so that a transient network error is not fatal.
     WCHAR cache_filename[MAX_PATH];
-    if (!SUCCEEDED(
-            URLDownloadToCacheFileW(nullptr, utf16_from_utf8(filename).c_str(), cache_filename, MAX_PATH, 0, nullptr)))
-      assertnever("Failed to download '" + filename + "'");
+    const int max_attempts = 3;
+    for (int attempt = 1;; attempt++) {
+      if (SUCCEEDED(URLDownloadToCacheFileW(nullptr, utf16_from_utf8(filename).c_str(), cache_filename, MAX_PATH, 0,
+                                            nullptr)))
+        break;
+      if (attempt == max_attempts) assertnever("Failed to download '" + filename + "'");
+      my_sleep(1.);
+    }
     filename = utf8_from_utf16(cache_filename);
 #else
     filename = "wget -qO- " + portable_simple_quote(filename) + " |";

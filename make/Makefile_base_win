@@ -38,6 +38,7 @@ ifneq ($(want_plain_compiler),1)
   ccommon += $(if $(ignore_compile_warnings:0=),,-WX)
   ccommon += -D_CRT_SECURE_NO_WARNINGS
   ccommon += -nologo -Oi -Gm- -Zc:rvalueCast -fp:fast -FC -Zc:preprocessor
+  ccommon += -arch:AVX2#  AVX, AVX2, FMA, and BMI (Intel since 2013 and AMD since 2017); the default is SSE2.
   ccommon += $(if $(PEDANTIC:0=),$(cpedantic))
   # ccommon += -D_CRT_DECLARE_NONSTDC_NAMES=1#  Obviate the need for HH_POSIX(fdopen) (but still needed for clang).
   # cxxall += -GR-#  Could disable RTTI.

@@ -3,6 +3,7 @@
 #include "libHh/GMesh.h"
 #include "libHh/SrMesh.h"
 #include "libHh/Stat.h"
+#include "libHh/Vector4.h"
 
 namespace hh {
 
@@ -15,8 +16,7 @@ void SrMesh::ogl_process_materials() {
       // co = V(.8f, .5f, .4f);
       co = V(.6f, .6f, .6f);
     }
-    _ogl_mat_byte_rgba.push(
-        Pixel(uint8_t(co[0] * 255.f + .5f), uint8_t(co[1] * 255.f + .5f), uint8_t(co[2] * 255.f + .5f)));
+    _ogl_mat_byte_rgba.push(Vector4(concat(co, V(1.f))).pixel());
   }
 }
 

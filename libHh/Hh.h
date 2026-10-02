@@ -612,6 +612,9 @@ template <typename T> [[nodiscard]] constexpr T general_clamp(const T& v, const 
 // Returns v clamped to range [0, 255].
 [[nodiscard]] constexpr uint8_t clamp_to_uint8(int v);
 
+// Returns 255 * v rounded to the nearest integer (with ties to even, like Vector4::pixel()), for v clamped to [0, 1].
+[[nodiscard]] uint8_t uint8_from_unit(float v);
+
 // Returns j%3 (where j is in [0, 5]).
 [[nodiscard]] constexpr int mod3(int j);
 
@@ -993,6 +996,11 @@ constexpr uint8_t clamp_to_uint8(int v) {
   // https://codereview.stackexchange.com/questions/6502/fastest-way-to-clamp-an-integer-to-the-range-0-255
   v &= -(v >= 0);
   return uint8_t(v | ((255 - v) >> 31));
+}
+
+inline uint8_t uint8_from_unit(float v) {
+  v = v > 0.f ? std::min(v, 1.f) : 0.f;  // (A NaN gives 0.)
+  return uint8_t(std::nearbyint(v * 255.f));
 }
 
 constexpr int mod3(int j) {

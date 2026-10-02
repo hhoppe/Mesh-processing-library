@@ -63,6 +63,11 @@ void do_ints() {
     Dijkstra di(&g, vs, func_fdist);
     for (const auto& [v, dis] : di) showf("V4: %d at dist=%g\n", v, dis);
   }
+  {  // With the default Distance (a function pointer), a function or a captureless lambda can be passed as-is.
+    Dijkstra<int> di1(&g, vs, ffdist);
+    Dijkstra<int> di2(&g, vs, [](const int& v1, const int& v2) { return float(abs(v1 - v2)); });
+    assertx(ranges::equal(di1, di2, [](const auto& r1, const auto& r2) { return r1.vertex == r2.vertex; }));
+  }
   {  // The nearest vertex alone, read without consuming the search.
     Dijkstra di(&g, vs, fdist());
     const auto& [v, dis] = *di.begin();

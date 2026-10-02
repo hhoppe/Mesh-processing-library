@@ -239,8 +239,7 @@ inline const SrVertexGeometry* SrMesh::refined_vg(const SrAVertex* va) const {
 
 inline void SrMesh::finish_vmorph(SrAVertex* va) {
   va->vgeom = va->vmorph->vgrefined;
-  delete va->vmorph;
-  va->vmorph = nullptr;
+  delete std::exchange(va->vmorph, nullptr);
 }
 
 SrMesh::SrMesh() {
@@ -1161,8 +1160,7 @@ void SrMesh::apply_vspl(SrVertex* vs, IntrusiveListNode*& pn) {
     vta->vgeom = vspl->vt_vgeom;
 #endif
     vua->vgeom = vspl->vu_vgeom;
-    delete vua->vmorph;
-    vua->vmorph = nullptr;
+    delete std::exchange(vua->vmorph, nullptr);
   }
   SrFace* fl = get_fl(vspli);
   SrFace* fr = fl + 1;

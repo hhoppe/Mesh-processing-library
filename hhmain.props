@@ -82,10 +82,10 @@
   <!-- x64 (64-bit) properties: -->
   <ItemDefinitionGroup Condition="'$(Platform)'=='x64'">
     <ClCompile>
-      <!-- Note that this option cannot be set explicitly to StreamingSIMDExtensions2 in x64. -->
-      <!-- The default (not set) on x64 is to use StreamingSIMDExtensions2 (SSE2), which is nicely portable. -->
-      <!-- Setting to AdvancedVectorExtensions2 enables AVX+AVX2, but is less portable. -->
-      <!-- <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet> -->
+      <!-- The default (not set) on x64 is StreamingSIMDExtensions2 (SSE2), which is the most portable. -->
+      <!-- AdvancedVectorExtensions2 enables AVX, AVX2, FMA, and BMI (Intel since 2013 and AMD since 2017). -->
+      <!-- (Vector4.h uses SSE4.1 intrinsics regardless, which MSVC allows under any setting.) -->
+      <EnableEnhancedInstructionSet>AdvancedVectorExtensions2</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <!-- #pragma referenced: mkl_intel_lp64_dll.lib mkl_intel_thread_dll.lib mkl_core_dll.lib libiomp5md.lib -->

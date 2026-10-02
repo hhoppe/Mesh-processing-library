@@ -829,8 +829,7 @@ class SphereMapper::Implementation {
     os << "keys J\n";              // Start rotating.
     os << std::flush;
     if (_options.wait_on_visualizer) {
-      delete _visualizer;
-      _visualizer = nullptr;
+      delete std::exchange(_visualizer, nullptr);
     }
   }
 
@@ -838,8 +837,7 @@ class SphereMapper::Implementation {
     const std::ostream& os = (*_visualizer)();
     if (!os) {
       showf("Failed pipe write to visualizer; its window is likely closed.  Continuing non-interactively.\n");
-      delete _visualizer;
-      _visualizer = nullptr;
+      delete std::exchange(_visualizer, nullptr);
     }
   }
 };

@@ -932,7 +932,7 @@ void do_fromtxt(Args& args) {
   for (const auto& yx : range(image.dims())) {
     for_int(c, nch) {
       const float val = *pval++;
-      image[yx][c] = uint8_t(clamp(val, 0.f, 1.f) * 255.f + .5f);
+      image[yx][c] = uint8_from_unit(val);
     }
   }
 }
@@ -1032,7 +1032,7 @@ void do_replace(Args& args) {
 void do_gamma(Args& args) {
   const float gamma = args.get_float();
   Vec<uint8_t, 256> transf;
-  for_int(i, 256) transf[i] = uint8_t(clamp(pow(i / 255.f, gamma), 0.f, 1.f) * 255.f + .5f);
+  for_int(i, 256) transf[i] = uint8_from_unit(pow(i / 255.f, gamma));
   parallel_for_coords({.cycles_per_elem = 10}, image.dims(), [&](const Vec2<int>& yx) {  //
     for_int(z, image.zsize()) image[yx][z] = transf[image[yx][z]];
   });
@@ -1381,7 +1381,7 @@ void do_normalizenor() {
     Pixel& pixel = image[yx];
     Vector v = convert<float>(pixel.head<3>()) / 255.f * 2.f - 1.f;
     assertw(v.normalize());
-    pixel.head<3>() = convert<uint8_t>((v + 1.f) / 2.f * 255.f + .5f);
+    pixel.head<3>() = transformed((v + 1.f) / 2.f, uint8_from_unit);
   }
 }
 
@@ -1399,7 +1399,7 @@ void do_shadenor(Args& args) {
       float vdot = dot(vnor, lightdir);
       if (twolights && vdot < 0.f) vdot = -vdot;
       vdot = clamp(vdot, .05f, 1.f);
-      fill(pixel.head<3>(), uint8_t(vdot * 255.f + .5f));
+      fill(pixel.head<3>(), uint8_from_unit(vdot));
     }
   }
 }
@@ -1446,7 +1446,7 @@ void do_shadefancy(Args& args) {
       vdot = pow(vdot, ls[i]);
       vcol += vdot * li[i] * lc[i];
     }
-    pixel.head<3>() = convert<uint8_t>(clamp(vcol, 0.f, 1.f) * 255.f + .5f);
+    pixel.head<3>() = transformed(vcol, uint8_from_unit);
   }
 }
 
@@ -1655,7 +1655,7 @@ void do_transf(Args& args) {
     Point p{};
     for_int(z, image.zsize()) p[z] = image[yx][z] / 255.f;
     p *= frame;
-    for_int(z, image.zsize()) image[yx][z] = uint8_t(clamp(p[z], 0.f, 1.f) * 255.f + .5f);
+    for_int(z, image.zsize()) image[yx][z] = uint8_from_unit(p[z]);
   });
 }
 
@@ -1710,7 +1710,7 @@ void do_composite(Args& args) {
       } else {
         assertnever("");
       }
-      image[yx][z] = uint8_t(clamp(vr, 0.f, 1.f) * 255.f + .5f);
+      image[yx][z] = uint8_from_unit(vr);
     }
   }
 }
@@ -1782,7 +1782,7 @@ void do_genpattern(Args& args) {
       }
     }
     assertw(v >= 0.f && v <= 1.f);
-    for_int(z, image.zsize()) image[yx][z] = uint8_t(clamp(v, 0.f, 1.f) * 255.f + .5f);
+    for_int(z, image.zsize()) image[yx][z] = uint8_from_unit(v);
   }
 }
 
@@ -2225,8 +2225,9 @@ void do_mcontours(Args& args) {
   const int gridn = args.get_int();
   const int ncontours = args.get_int();
   for_int(i, ncontours) {
-    // float contour_value = 255.f * (i + .5f) / ncontours;  // contours lie at center of uniform value intervals
-    // Contours delineate a uniform partition of pixel values.
+    // Contours lie at center of uniform value intervals:
+    // const float contour_value = 255.f * (i + .5f) / ncontours;
+    // Contours delineate a uniform partition of pixel values:
     const float contour_value = 255.f * i / (ncontours + 1.f);
     output_contour(gridn, contour_value);
   }
@@ -2586,7 +2587,7 @@ void do_procedure(Args& args) {
       const Vec2<float> yxf = (convert<float>(yx) + .5f) / float(size);
       const Vec2<int> yxi = convert<int>(yxf * float(gridn));
       const bool is_on = sum(yxi) % 2 == 1;
-      const Pixel pixel = !is_on ? pixel_gray : Pixel(uint8_t(yxf[1] * 255.f + .5f), uint8_t(yxf[0] * 255.f + .5f), 0);
+      const Pixel pixel = !is_on ? pixel_gray : Pixel(uint8_from_unit(yxf[1]), uint8_from_unit(yxf[0]), 0);
       image[yx] = pixel;
     }
 
@@ -2612,7 +2613,7 @@ void do_procedure(Args& args) {
   } else if (name == "red_green_ramp") {
     // Filterimage -create 512 512 -procedure red_green_ramp -to png >~/data/image/ramp_red_green.png
     for (const auto& yx : range(image.dims())) {
-      image[yx].head<2>() = convert<uint8_t>(convert<float>(yx) / (convert<float>(image.dims()) - 1.f) * 255.f + .5f);
+      image[yx].head<2>() = transformed(convert<float>(yx) / (convert<float>(image.dims()) - 1.f), uint8_from_unit);
       image[yx][2] = 0;
       image[yx][3] = 255;
     }
@@ -2801,7 +2802,7 @@ void do_procedure(Args& args) {
       parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
         const bool is_static = (z == 2 || z == 3) && image[yx][2] == 0;
         uint8_t val = image[yx][z];
-        if (z < 3) val = clamp_to_uint8(int(val * 255.f / (est_num_input_frames - 1) + .5f));
+        if (z < 3) val = uint8_from_unit(float(val) / (est_num_input_frames - 1.f));
         image2[yx] = is_static ? Pixel::gray(230) : k_color_ramp[val];
       });
       image2.write_file(root_name + "." + channel_name[z] + ".png");
@@ -2832,7 +2833,7 @@ void do_procedure(Args& args) {
       const int period = timage[yx][2];
       const float fstart = float(start) / (est_num_input_frames - period - 1);
       const float fperiod = float(period) / (est_num_input_frames - 1);
-      Pixel pixel = k_color_ramp[clamp_to_uint8(int(fperiod * 255.f + .5f))];
+      Pixel pixel = k_color_ramp[uint8_from_unit(fperiod)];
       for_int(c, 3) pixel[c] = clamp_to_uint8(int(pixel[c] * (.4f + .6f * fstart)));
       if (is_static) pixel = Pixel::gray(have_mask ? 180 : 230);  // There are so few, make them more prominent.
       if (is_masked) pixel = Pixel::white();

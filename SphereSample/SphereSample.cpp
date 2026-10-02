@@ -1296,18 +1296,18 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
       const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
       Point p_m{};
       for_int(i, 3) p_m += bary[i] * v_domainp(face_vertices[i]);
-      pixel.head<3>() = convert<uint8_t>((p_m - bbox[0]) / (bbox[1] - bbox[0]) * 255.f + .5f);
+      pixel.head<3>() = transformed((p_m - bbox[0]) / (bbox[1] - bbox[0]), uint8_from_unit);
       break;
     }
     case 'N': {
       Vector normal = interp_f_normal(mesh, f, bary) * rotate_frame;
       if (0) project_to_cube(normal);  // An idea to improve compression quality; it does not help.
-      pixel.head<3>() = convert<uint8_t>((normal * .5f + .5f) * 255.f + .5f);
+      pixel.head<3>() = transformed(normal * .5f + .5f, uint8_from_unit);
       break;
     }
     case 'C': {
       const Vector rgb = interp_f_rgb(mesh, f, bary);
-      pixel.head<3>() = convert<uint8_t>(rgb * 255.f + .5f);
+      pixel.head<3>() = transformed(rgb, uint8_from_unit);
       break;
     }
     case 'T': {
@@ -1581,17 +1581,17 @@ void do_write_primal_texture(Args& args) {
     switch (signal_[0]) {
       case 'G': {
         const Point& p = g_mesh.point(v);
-        pixel.head<3>() = convert<uint8_t>((p - bbox[0]) / (bbox[1] - bbox[0]) * 255.f + .5f);
+        pixel.head<3>() = transformed((p - bbox[0]) / (bbox[1] - bbox[0]), uint8_from_unit);
         break;
       }
       case 'N': {
         const Vector normal = v_normal(v) * rotate_frame;
-        pixel.head<3>() = convert<uint8_t>((normal * .5f + .5f) * 255.f + .5f);
+        pixel.head<3>() = transformed(normal * .5f + .5f, uint8_from_unit);
         break;
       }
       case 'C': {
         const Vector& rgb = v_rgb(v);
-        pixel.head<3>() = convert<uint8_t>(rgb * 255.f + .5f);
+        pixel.head<3>() = transformed(rgb, uint8_from_unit);
         break;
       }
       case 'T': assertnever("Unsupported");

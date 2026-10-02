@@ -124,10 +124,7 @@ template <typename T> [[nodiscard]] Image as_image(CMatrixView<T> matrix) {
   static_assert(std::is_floating_point_v<T>, "T must be float/double");
   Image image(matrix.dims());
   parallel_for(range(image.ysize()), [&](const int y) {
-    for_int(x, image.xsize()) {
-      // Round to nearest, with ties to even, like Vector4::pixel().
-      image[y, x] = Pixel::gray(narrow_cast<uint8_t>(std::nearbyint(clamp(matrix[y, x], T{0}, T{1}) * T{255})));
-    }
+    for_int(x, image.xsize()) { image[y, x] = Pixel::gray(uint8_from_unit(float(matrix[y, x]))); }
   });
   return image;
 }

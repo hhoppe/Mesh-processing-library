@@ -144,6 +144,45 @@ void test_conversions() {
   SHOW(num_tie);
 }
 
+// uint8_from_unit() rounds 255 * v to the nearest integer, with ties to even, and agrees with Vector4::pixel().
+void test_uint8_from_unit() {
+  // Exact ties (where v * 255.f == k + .5f) round to the even neighbor, which is sometimes below and sometimes above.
+  int num_tie_down = 0, num_tie_up = 0;
+  for_int(k, 255) {
+    const float x = (float(k) + .5f) / 255.f;
+    for (const float v : {std::nextafter(x, 0.f), x, std::nextafter(x, 1.f)}) {
+      if (v * 255.f != float(k) + .5f) continue;
+      const int result = uint8_from_unit(v);
+      assertx(result % 2 == 0 && (result == k || result == k + 1));
+      (result == k ? num_tie_down : num_tie_up)++;
+    }
+  }
+  assertx(num_tie_down > 0 && num_tie_up > 0);
+  SHOW(int(uint8_from_unit(.5f)));  // The exact tie 127.5 rounds to the even 128.
+  // Values outside [0, 1] are clamped, and a NaN gives 0.
+  constexpr float inf = std::numeric_limits<float>::infinity();
+  for (const float v : {-1.f, -0.f, -inf, 1.f + 1e-6f, 2.f, inf}) assertx(uint8_from_unit(v) == (v > 0.f ? 255 : 0));
+  assertx(uint8_from_unit(std::numeric_limits<float>::quiet_NaN()) == 0);
+  // It agrees with Vector4::pixel() (e.g., the SSE or NEON version), both on a sweep of all the floats in [0, 1] and
+  // next to each rounding boundary (k + .5f) / 255.f and each value k / 255.f.
+  const auto agrees = [](float v) { return uint8_from_unit(v) == Vector4(v).pixel()[0]; };
+  int num_disagree = 0, num_tested = 0;
+  for (uint32_t bits = 0; bits <= std::bit_cast<uint32_t>(1.f); bits += 997) {
+    num_disagree += !agrees(std::bit_cast<float>(bits)), num_tested++;
+  }
+  for_int(k, 256) {
+    for (const float x : {(float(k) + .5f) / 255.f, float(k) / 255.f}) {
+      float v = x;
+      for_int(i, 4) v = std::nextafter(v, 0.f);
+      for_int(i, 9) num_disagree += !agrees(v), num_tested++, v = std::nextafter(v, 2.f);
+    }
+  }
+  // (Vector4::pixel() requires that 255 * v fit in an int32, so infinities are excluded.)
+  for (const float v : {-1.f, 2.f, -1e6f, 1e6f}) num_disagree += !agrees(v), num_tested++;
+  assertx(num_tested > 1'000'000);
+  SHOW(num_disagree);
+}
+
 }  // namespace
 
 int main() {
@@ -208,6 +247,7 @@ int main() {
   }
   test_consistency();
   test_conversions();
+  test_uint8_from_unit();
   test_interface();
   if (0) {  // Huge numbers fail the conversion to int32_t (the assertion in norm_to_byte4() in debug builds).
     to_norm(Vector4(2147483583.f, 2147483584.f, 2147483647.f, BIGFLOAT) / 255.f);

@@ -1079,8 +1079,7 @@ void do_replace(Args& args) {
 
 void do_gamma(Args& args) {
   const float gamma = args.get_float();
-  const auto transf =
-      Vec<uint8_t, 256>::create([gamma](int uc) { return uint8_t(255.f * pow(uc / 255.f, gamma) + 0.5f); });
+  const auto transf = Vec<uint8_t, 256>::create([gamma](int uc) { return uint8_from_unit(pow(uc / 255.f, gamma)); });
   parallel_for({.cycles_per_elem = 10}, range(video.size()), [&](const size_t i) {
     Pixel& pixel = video.flat(i);
     for_int(z, nz) pixel[z] = transf[pixel[z]];
@@ -1291,7 +1290,7 @@ void do_pjcompression() {
     assertx(start <= 255);
     assertx(period <= 255);
     assertx(staticf <= 255);
-    const uint8_t uc_activation = clamp_to_uint8(int(activation * 255.f + .5f));
+    const uint8_t uc_activation = uint8_from_unit(activation);
     image[yx] = Pixel(uint8_t(start), uint8_t(period), uint8_t(staticf), uc_activation);
   });
   image.write_file("pjcompression.png");
@@ -1788,7 +1787,7 @@ void process_gen(Args& args) {
     parallel_for(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
         const float v = std::cos((yx[1] / speriod - f / tperiod) * TAU) * .5f + .5f;
-        video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
+        video[f][yx] = Pixel::gray(uint8_from_unit(v));
       }
     });
   } else if (name == "box_y") {
@@ -1797,7 +1796,7 @@ void process_gen(Args& args) {
     parallel_for(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
         const float v = frac(yx[0] / speriod - f / tperiod) > .5f ? 1.f : 0.f;
-        video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
+        video[f][yx] = Pixel::gray(uint8_from_unit(v));
       }
     });
   } else if (name.starts_with("checker")) {
@@ -1820,7 +1819,7 @@ void process_gen(Args& args) {
     parallel_for(range(video.nframes()), [&](const int f) {
       fill(video[f], Pixel::black());
       if (name == "checker3")
-        fill(video[f], Pixel::gray(uint8_t(abs(float(f) / video.nframes() - .5) * 2.f * 255.f + .5f)));
+        fill(video[f], Pixel::gray(uint8_from_unit(abs(float(f) / video.nframes() - .5f) * 2.f)));
       for (const auto& yx : range(video.spatial_dims())) {
         auto p =
             (convert<float>(yx) + V(std::sin(f / tperiod * TAU), std::cos(f / tperiod * TAU)) * motion_amplitude) /
@@ -1840,7 +1839,7 @@ void process_gen(Args& args) {
     parallel_for(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
         const float v = frac(float(yx[1]) / video.xsize() - f / tperiod) < speriod / video.xsize() ? 1.f : 0.f;
-        video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
+        video[f][yx] = Pixel::gray(uint8_from_unit(v));
       }
     });
   } else if (name == "slit1_y") {
@@ -1849,7 +1848,7 @@ void process_gen(Args& args) {
     parallel_for(range(video.nframes()), [&](const int f) {
       for (const auto& yx : range(video.spatial_dims())) {
         const float v = frac(float(yx[0]) / video.ysize() + f / tperiod) < speriod / video.ysize() ? 1.f : 0.f;
-        video[f][yx] = Pixel::gray(uint8_t(v * 255.f + .5f));
+        video[f][yx] = Pixel::gray(uint8_from_unit(v));
       }
     });
   } else if (name.starts_with("slits")) {
@@ -1924,11 +1923,9 @@ void process_gen(Args& args) {
     parallel_for(range(video.nframes()), [&](const int f) {
       Matrix<F2> mvec(video.spatial_dims(), twice(1e10f));
       Matrix<Pixel> mpixel(video.spatial_dims(), Pixel::pink());
-      if (name == "stars4")
-        fill(video[f], Pixel::gray(uint8_t(abs(float(f) / video.nframes() - .5) * 2.f * 255.f + .5f)));
+      if (name == "stars4") fill(video[f], Pixel::gray(uint8_from_unit(abs(float(f) / video.nframes() - .5f) * 2.f)));
       if (name == "stars5")
-        fill(video[f],
-             Pixel::gray(uint8_t(max(1.f - abs(frac(f * 4.f / video.nframes()) - .5f) * 4.f, 0.f) * 255.f + .5f)));
+        fill(video[f], Pixel::gray(uint8_from_unit(max(1.f - abs(frac(f * 4.f / video.nframes()) - .5f) * 4.f, 0.f))));
       for_int(i, n) {
         F2 p = ar_point0[i] + ar_velocity[i] * float(f);
         for_int(c, 2) p[c] = frac(p[c]);  // Periodic boundaries.
@@ -2007,7 +2004,7 @@ void do_procedure(Args& args) {
         float finterior = 1.f - bx - by + 3.f * bx * by;
         const bool even = (int(flx) + int(fly)) % 2 == 0;
         if (!even) finterior = 1.f - finterior;
-        video[f][yx] = Pixel::gray(uint8_t(finterior * 255.f + .5f));
+        video[f][yx] = Pixel::gray(uint8_from_unit(finterior));
       });
     }
   } else if (name == "slow_value_drift") {
@@ -2136,7 +2133,7 @@ void do_transf(Args& args) {
     for (Pixel& pixel : video[f]) {
       Point p = convert<float>(pixel.head<3>()) / 255.f;
       p *= frame;
-      pixel.head<3>() = convert<uint8_t>(clamp(p, 0.f, 1.f) * 255.f + .5f);
+      pixel.head<3>() = transformed(p, uint8_from_unit);
     }
   });
 }

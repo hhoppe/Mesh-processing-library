@@ -393,8 +393,7 @@ EResult try_ecol(vertex v, int ni, int nri, float& edrss) {
   }
   v->pts.clear();
   assertx(verts.remove(v));
-  delete v;
-  v = nullptr;
+  delete std::exchange(v, nullptr);
   if (v0) v0->v[1] = v1;
   v1->v[0] = v0;
   if (v0) ecand.add(v0);

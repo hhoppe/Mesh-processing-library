@@ -24,9 +24,11 @@ template <typename T> void graph_symmetric_closure(Graph<T>& g) {
 
 // Given a graph (possibly directed), return vertices in order of increasing graph distance from vs.
 // Single-pass iteration: "for (const auto& [v, dist] : dijkstra) ...".  (Vertex vs itself is the first element.)
-template <typename T, typename Distance = float (&)(const T& v1, const T& v2)> class Dijkstra : noncopyable {
+// The default Distance is a pointer to a function, which must then be passed to the constructor.
+template <typename T, typename Distance = float (*)(const T& v1, const T& v2)> class Dijkstra : noncopyable {
  public:
   explicit Dijkstra(const Graph<T>* g, T vs, Distance fdist = Distance{}) : _g(*assertx(g)), _fdist(fdist) {
+    if constexpr (std::is_pointer_v<Distance>) assertx(_fdist);
     _pq.enter(vs, 0.f);
     advance();  // Compute the first element, so that begin() and empty() need not do any work.
   }

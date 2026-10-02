@@ -2604,9 +2604,8 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   cusp_color = create_mat_color(
       A3dVertexColor(A3dColor(spherecolor), A3dColor(spherecolor), A3dColor((cusp_bright ? 1.f : 7.f), 0.f, 0.f)));
   mesh_color = create_mat_color(A3dVertexColor(A3dColor(meshcold), A3dColor(meshcols), A3dColor(meshcolp)));
-  const int mesha = int(meshcola[0] * 255.f + .5f);
-  assertx(mesha >= 0 && mesha <= 255);
-  mesh_color.d[3] = uint8_t(mesha);
+  assertx(meshcola[0] >= 0.f && meshcola[0] <= 1.f);
+  mesh_color.d[3] = uint8_from_unit(meshcola[0]);
   // Without a visible window, the program can only end upon the completion of a picture, movie, or video,
   // the "\c" escape in an -hwkey sequence, or -killeof.
   if (hw.is_hidden() && !hw.is_offscreen() && !picture && !hw.has_hwkey() && !g3d::killeof)

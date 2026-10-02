@@ -2322,7 +2322,7 @@ bool DerivedHw::key_press(string skey) {
                 y = pow(y, g_gamma);
                 y *= contrast_fac;
                 y += brightness_term;
-                yuv[0] = clamp_to_uint8(int(y * 255.f + .5f));
+                yuv[0] = uint8_from_unit(y);
                 for_intL(c, 1, 3) yuv[c] = clamp_to_uint8(int(128.5f + (yuv[c] - 128.f) * saturation_fac));
                 pixel = RGB_Pixel_from_YUV(yuv[0], yuv[1], yuv[2]);
                 if (bgra) std::swap(pixel[0], pixel[2]);
@@ -2335,7 +2335,7 @@ bool DerivedHw::key_press(string skey) {
                 y = pow(y, g_gamma);
                 y *= contrast_fac;
                 y += brightness_term;
-                nvideo_nv12.get_Y().flat(i) = clamp_to_uint8(int(y * 255.f + .5f));
+                nvideo_nv12.get_Y().flat(i) = uint8_from_unit(y);
               });
               parallel_for(range(ob._video_nv12.get_UV().size()), [&](const size_t i) {
                 for_int(c, 2) {
@@ -4100,7 +4100,7 @@ void background_work(bool asynchronous) {
             const int period = g_lp.mat_period[yx];
             const float fstart = float(start) / (num_input_frames - period - 1);
             const float fperiod = float(period) / (num_input_frames - 1);
-            Pixel pixel = k_color_ramp[clamp_to_uint8(int(fperiod * 255.f + .5f))];
+            Pixel pixel = k_color_ramp[uint8_from_unit(fperiod)];
             for_int(c, 3) pixel[c] = clamp_to_uint8(int(pixel[c] * (.4f + .6f * fstart)));
             const bool have_mask = false;
             const bool is_masked = false;

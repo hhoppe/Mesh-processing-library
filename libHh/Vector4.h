@@ -372,7 +372,7 @@ inline void Vector4::raw_to_byte4(Vec4<uint8_t>& p) const {
 }
 inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
   // Round to nearest, with ties to even, like _mm_cvtps_epi32() in the SSE version.
-  for_int(c, 4) p[c] = uint8_t(std::nearbyint(clamp(_c[c], 0.f, 1.f) * 255.f));
+  for_int(c, 4) p[c] = uint8_from_unit(_c[c]);
 }
 
 #endif  // defined(HH_VECTOR4_SSE) or defined(HH_VECTOR4_NEON)

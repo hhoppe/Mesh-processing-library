@@ -1,6 +1,11 @@
 # Mesh Processing Library
 
 [![CI](https://github.com/hhoppe/Mesh-processing-library/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/hhoppe/Mesh-processing-library/actions/workflows/ci.yml)
+[![Demos](https://github.com/hhoppe/Mesh-processing-library/actions/workflows/demos.yml/badge.svg?branch=main)](https://github.com/hhoppe/Mesh-processing-library/actions/workflows/demos.yml)
+[![Sanitizers](https://github.com/hhoppe/Mesh-processing-library/actions/workflows/sanitizers.yml/badge.svg?branch=main)](https://github.com/hhoppe/Mesh-processing-library/actions/workflows/sanitizers.yml)
+![C++23](https://img.shields.io/badge/C%2B%2B-23-blue)
+![Platforms](https://img.shields.io/badge/platforms-Linux%20%7C%20macOS%20%7C%20Windows-lightgrey)
+[![License: MIT](https://img.shields.io/github/license/hhoppe/Mesh-processing-library)](https://github.com/hhoppe/Mesh-processing-library/blob/main/LICENSE)
 
 <!--
 Preview exact GitHub rendering using "env grip"; it automatically calls GitHub API and serves webpage; really nice.

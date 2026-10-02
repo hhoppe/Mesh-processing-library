@@ -25,7 +25,8 @@ int main() {
       // HH_SSTAT(Sgauss, r1.gauss());
       Sgauss.enter(r1.gauss());
     }
-    SHOW(round_fraction_digits(Sgauss.avg(), 1e10f));
+    // (The float sum of the 1'000'000 samples differs in its last bits across compilers, so print fewer digits.)
+    SHOW(round_fraction_digits(Sgauss.avg(), 1e7f));
     SHOW(round_fraction_digits(Sgauss.sdv(), 1e7f));
   }
   SHOW(0.5f);  // Mean of uniform [0, 1] distribution.
@@ -148,12 +149,15 @@ int main() {
     assertx(abs(stat_dunif.avg() - .5f) < .006f && abs(stat_dunif.sdv() - std::sqrt(1.f / 12.f)) < .004f);
     assertx(abs(stat_dgauss.avg()) < .02f && abs(stat_dgauss.sdv() - 1.f) < .015f);
   }
-  if (0) {
-    // KNOWN_BUG: unif() returns 1.f whenever get_unsigned() >= 2^32 - 128, i.e. with probability
-    // 2^-25, because the conversion of the 32-bit value to float rounds it up to 2^32.
+  {
+    // For get_unsigned() >= 2^32 - 128 (with probability 2^-25), the conversion of the 32-bit value to float rounds it
+    // up to 2^32, so unif() returns the largest float below 1.f rather than 1.f itself.
     Random r3;
     r3.discard(60'571'531);  // The first such value for the default seed.
-    assertx(r3.unif() < 1.f);
+    Random r4;
+    r4.discard(60'571'531);
+    assertx(r4.get_unsigned() >= 0xFFFF'FF80u);
+    assertx(r3.unif() == std::nextafter(1.f, 0.f));
   }
   {
     // A shuffle of an empty or single-element array is a no-op, and a shuffle of a larger array is a permutation.

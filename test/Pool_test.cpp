@@ -115,12 +115,15 @@ int main() {
     assertx(q->_c == 'q');
     q->~Q();
   }
-  if (0) {
-    // KNOWN_BUG: an array of an over-aligned pooled class is misaligned, because the operator new[] defined by
-    // HH_POOL_ALLOCATION() calls ::operator new(size_t), which ignores the alignment.
-    Q* qa = new Q[2];
-    assertx(is_aligned(qa, 32));
-    delete[] qa;
+  {
+    // An array of an over-aligned pooled class is aligned, because the operator new[] defined by HH_POOL_ALLOCATION()
+    // passes the class alignment to the global allocator.
+    Array<Q*> qas;
+    for_int(i, 20) {
+      qas.push(new Q[i + 1]);
+      assertx(is_aligned(qas.last(), 32) && qas.last()[i]._c == 'q');
+    }
+    for (Q* qa : qas) delete[] qa;
   }
   {
     // Direct use of a Pool whose element size is set by the first alloc_size() call, as in HH_MAKE_POOLED_SAC().
@@ -137,5 +140,13 @@ int main() {
     for (uint8_t* elem : elems) g_pool.free_size(elem, size);
     g_pool.free_size(nullptr, size);  // Freeing a null pointer is a no-op.
     g_pool.destroy();                 // It prints nothing because no elements are outstanding.
+    // The destroyed Pool can be constructed again, here with a different element size and alignment.
+    g_pool.construct("g_pool", 0, 0);
+    for_int(i, n) {
+      elems[i] = static_cast<uint8_t*>(g_pool.alloc_size(64, 24));
+      assertx(is_aligned(elems[i], 64));
+    }
+    for (uint8_t* elem : elems) g_pool.free_size(elem, 24);
+    g_pool.destroy();
   }
 }  // NOLINT(clang-analyzer-unix.Malloc)

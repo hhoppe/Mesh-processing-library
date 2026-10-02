@@ -210,7 +210,7 @@ int main() {
       Set<int> reported;
       sp.search_segment(p1, p2, [&](Univ id) {
         assertx(reported.add(Conv<int>::d(id)));
-        return false;
+        return BIGFLOAT;  // Report no intersection, so that the search continues to the end of the segment.
       });
       for_int(i, g_boxes.num()) {
         bool intersects = false;
@@ -218,11 +218,11 @@ int main() {
         if (intersects) assertx(reported.contains(i + 1));
       }
     }
-    // When ftest returns true, the search stops early.
+    // When ftest reports an intersection at the start of the segment, the search stops early.
     int num_tested = 0;
     sp.search_segment(Point(0.f, 0.f, 0.f), Point(1.f, 1.f, 1.f), [&](Univ) {
       num_tested++;
-      return true;
+      return 0.f;
     });
     assertx(num_tested >= 1 && num_tested < g_boxes.num());
     sp.clear();

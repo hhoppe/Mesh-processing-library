@@ -1569,8 +1569,7 @@ void do_object_to_tangent_normals(Args& args) {
           const SGrid<float, 3, 3> tbn_ortho =
               V<Vec3<float>>(cross(bitangent, normal), cross(normal, tangent), cross(tangent, bitangent));
           mat_mul(tbn_ortho.grid_view(), object_space_detail_normal.view(), detail_normal_in_tbn.view());
-          const float sign = dot(tangent, tbn_ortho[0]) < 0.f ? -1.f : 1.f;
-          detail_normal_in_tbn = sign * detail_normal_in_tbn;
+          detail_normal_in_tbn = sign(dot(tangent, tbn_ortho[0])) * detail_normal_in_tbn;
         }
         // It is always OK to rescale the vector because the 3x3 transform is linear even if non-orthogonal?
         if (1) detail_normal_in_tbn = normalized(detail_normal_in_tbn);

@@ -103,10 +103,18 @@ void test_exact_recovery() {
   }
   {
     // A plane z = 3 + 2 * x - y in two dimensions, using a captureless lambda as the Eval functor.
-    // KNOWN_BUG: the default Eval of LinearRegression is a function type, which cannot be a data member, so an
-    // explicit Eval is required.
     using Eval = decltype([](const Vec2<float>& p) { return V(1.f, p[0], p[1]); });
     LinearRegression<3, 2, Eval> regression(9);
+    for_int(i, 3) for_int(j, 3) {
+      const float x = float(i), y = float(j * 2 - 1);
+      regression.enter(V(x, y), 3.f + 2.f * x - y);
+    }
+    const Vec3<float> ar = regression.get_solution();
+    assertx(max_abs_element(ar - V(3.f, 2.f, -1.f)) < 1e-5f);
+  }
+  {
+    // The same plane, using the default Eval, which is a function pointer passed to the constructor.
+    LinearRegression<3, 2> regression(9, [](const Vec2<float>& p) { return V(1.f, p[0], p[1]); });
     for_int(i, 3) for_int(j, 3) {
       const float x = float(i), y = float(j * 2 - 1);
       regression.enter(V(x, y), 3.f + 2.f * x - y);
@@ -149,3 +157,4 @@ int main() {
 }
 
 template class hh::LinearRegression<4, 1, LinearRegressionPolynomialOrder<4>>;
+template class hh::LinearRegression<3, 2>;

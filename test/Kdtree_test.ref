@@ -218,3 +218,8 @@ partition of axis 0 along 0.5 <<
    <nil>
   <nil>
  <nil>
+D=1 maxlevel=8 fsize=0 num_found=28718
+D=1 maxlevel=8 fsize=1 num_found=28718
+D=2 maxlevel=8 fsize=0 num_found=2468
+D=2 maxlevel=8 fsize=1 num_found=2468
+D=3 maxlevel=6 fsize=0.5 num_found=284

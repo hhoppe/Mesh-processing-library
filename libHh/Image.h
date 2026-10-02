@@ -125,7 +125,8 @@ template <typename T> [[nodiscard]] Image as_image(CMatrixView<T> matrix) {
   Image image(matrix.dims());
   parallel_for(range(image.ysize()), [&](const int y) {
     for_int(x, image.xsize()) {
-      image[y, x] = Pixel::gray(narrow_cast<uint8_t>(clamp(matrix[y, x], T{0}, T{1}) * 255.f + .5f));
+      // Round to nearest, with ties to even, like Vector4::pixel().
+      image[y, x] = Pixel::gray(narrow_cast<uint8_t>(std::nearbyint(clamp(matrix[y, x], T{0}, T{1}) * T{255})));
     }
   });
   return image;

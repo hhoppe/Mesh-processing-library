@@ -248,11 +248,11 @@ int main() {
       const Vector v2(float(std::cos(angle)), float(std::sin(angle)), 0.f);
       const float ang = angle_between_unit_vectors(v1, v2);
       assertx(abs(ang - angle) < 2e-6);
-      // KNOWN_BUG: the Vec2<float> overload is checked only for counterclockwise angles: for nearly parallel or nearly
-      // opposite vectors, it returns a signed angle (negative if clockwise), unlike its other regime and the
-      // Vec3 overload.
-      const Vec2<float> w1(1.f, 0.f), w2(v2[0], v2[1]);
+      // The Vec2<float> overload returns the same unsigned angle for both counterclockwise and clockwise rotations.
+      const Vec2<float> w1(1.f, 0.f), w2(v2[0], v2[1]), w2_clockwise(v2[0], -v2[1]);
       assertx(abs(angle_between_unit_vectors(w1, w2) - angle) < 2e-6);
+      assertx(abs(angle_between_unit_vectors(w1, w2_clockwise) - angle) < 2e-6);
+      assertx(abs(angle_between_unit_vectors(w2_clockwise, w1) - angle) < 2e-6);
     }
     SHOW(rounded(angle_between_unit_vectors(Vector(0.f, 0.f, 1.f), normalized(Vector(1.f, 1.f, 1.f)))));
   }

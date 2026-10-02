@@ -66,12 +66,8 @@ void test2(int gridn) {
     assertx(bool(result) == (min_t != BIGFLOAT));
     if (result) {
       num_hits++;
-      // KNOWN_BUG: the intersection should be the first one along the segment, as in a linear scan, but this fails for
-      // about 5% of the segments, because ObjectSpatial::search_segment() stops at the end of the step in which a
-      // first intersection is found, without testing the triangles in the cells farther along the segment, which
-      // may have an intersection closer than the one found.
-      if (0) assertx(abs(dist(p1, result->pint) - min_t) < 1e-6f);
-      assertx(dist(p1, result->pint) >= min_t - 1e-6f);
+      // The intersection is the first one along the segment, as in a linear scan.
+      assertx(abs(dist(p1, result->pint) - min_t) < 1e-6f);
       assertx(intersect_segment_with_triangle(p1, p2, result->triangleface->triangle));
     }
   }
@@ -128,6 +124,17 @@ int main() {
     // A segment that starts between the two triangles.
     const auto result = spatial.first_along_segment(Point(.5f, .5f, .3f), Point(.9f, .5f, .3f));
     assertx(result && result->triangleface->face == f2);
+  }
+  {
+    // A large slanted triangle, which is tested early because it occupies the cells near the start of the segment, but
+    // which intersects the segment only near its end, at x == .9.  The first intersection is with a small triangle
+    // at x == .5, which lies only in cells farther along the segment.
+    const Vec2<TriangleFace> trianglefaces2 =
+        V(TriangleFace{V(Point(.02f, .5f, .61f), Point(.98f, .3f, .49f), Point(.98f, .7f, .49f)), f1},
+          TriangleFace{V(Point(.5f, .45f, .45f), Point(.5f, .55f, .45f), Point(.5f, .5f, .55f)), f2});
+    TriangleFaceSpatial spatial2(trianglefaces2, 10);
+    const auto result = spatial2.first_along_segment(Point(.05f, .5f, .5f), Point(.95f, .5f, .5f));
+    assertx(result && result->triangleface->face == f2 && abs(result->pint[0] - .5f) < 1e-6f);
   }
   test2(5);
   test2(20);

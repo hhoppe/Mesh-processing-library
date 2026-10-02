@@ -173,11 +173,14 @@ template <typename T, int D> class Kdtree : noncopyable {
       const int axis = n._axis;
       ASSERTX(axis >= 0 && axis < D);
       const float val = n._val;
-      const bool want_l = n._l >= 0 && bb0[axis] < val;
+      // A box of zero extent lying exactly on the splitting plane (bb0[axis] == bb1[axis] == val) may still overlap
+      // the elements that straddle the plane; with allow_duplication(), these are stored only in the two child
+      // subtrees, so the search descends into the lower one (either one would do).
+      const bool want_l = n._l >= 0 && (bb0[axis] < val || bb1[axis] <= val);
       const bool want_h = n._h >= 0 && bb1[axis] > val;
       if (want_l && want_h) {  // Single recursion.
         if (rec_search(n._h, nlca, bb0, bb1, cbfunc, nelemvis)) return true;
-        if (!(bb0[axis] < val)) return false;  // Test again because bb may have changed.
+        if (!(bb0[axis] < val || bb1[axis] <= val)) return false;  // Test again because bb may have changed.
         ni = n._l;
       } else if (want_l) {
         if (nlca == ni) nlca = n._l;

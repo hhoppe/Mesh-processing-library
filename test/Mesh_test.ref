@@ -134,6 +134,9 @@ mesh.num_vertices()=6 mesh.num_edges()=7 mesh.num_faces()=2
  Face{8}=[2 5 6 3] Face{9}=[3 4 1 2]
 fhex=Face{10}=[3 4 1 2 5 6] mesh.num_vertices(fhex)=6 mesh.num_edges()=6
 fc=Face{3}=[4 1 2 5] mesh2.num_vertices()=4
+mesh3.num_vertices()=4 mesh3.num_edges()=5 mesh3.num_faces()=2
+mesh4.num_vertices()=3 mesh4.num_edges()=3 mesh4.num_faces()=1
+ Face{2}=[3 4 1]
 mesh.num_vertices()=4 mesh.num_edges()=5 mesh.num_faces()=2
  Face{1}=[1 2 3] Face{2}=[4 3 2]
 mesh.num_boundaries(va[0])=2 mesh.degree(va[0])=4

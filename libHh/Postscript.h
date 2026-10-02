@@ -147,13 +147,13 @@ class Postscript : noncopyable {
       if (c1y && c2y && y1 * y2 > 0.f) return;
       if (c1y) {
         a = sign(y1);
-        x1 = (a - y1) * m + x1;
+        x1 = (a - y1) / m + x1;
         y1 = a;
       }
       if (abs(x1) > 1.f) return;
       if (c2y) {
         a = sign(y2);
-        x2 = (a - y2) * m + x2;
+        x2 = (a - y2) / m + x2;
         y2 = a;
       }
       if (abs(x2) > 1.f) return;
@@ -191,8 +191,8 @@ class Postscript : noncopyable {
     _os << px << " " << py << " p\n";
   }
   void convert(float x, float y, int& px, int& py) {
-    px = k_max + int(k_max * x + .5f);
-    py = k_max + int(k_max * y + .5f);
+    px = k_max + int(std::floor(k_max * x + .5f));
+    py = k_max + int(std::floor(k_max * y + .5f));
     Point p = Point(float(px), float(py), 0.f) * _ctm;
     const int ix = int(p[0] + .5f), iy = int(p[1] + .5f);
     _bbx0 = min(_bbx0, ix);

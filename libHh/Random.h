@@ -21,8 +21,8 @@ class Random : noncopyable {
   [[nodiscard]] uint64_t get_uint64();               // Returns range [0, std::numeric_limits<uint64_t>::max()].
   [[nodiscard]] size_t get_size_t();                 // Returns full range of size_t.
   [[nodiscard]] unsigned get_unsigned(unsigned ub);  // Returns range [0, ub - 1].
-  [[nodiscard]] float unif();                        // Returns range [0.f, 1.f).
-  [[nodiscard]] double dunif();                      // Returns range [0., 1.).
+  [[nodiscard]] float unif();                        // Returns range (0.f, 1.f).
+  [[nodiscard]] double dunif();                      // Returns range (0., 1.).
   [[nodiscard]] float gauss();                       // Returns samples with avg = 0.f, sdv = 1.f
   [[nodiscard]] double dgauss();                     // Returns samples with avg = 0.,  sdv = 1.
   void discard(uint64_t count);

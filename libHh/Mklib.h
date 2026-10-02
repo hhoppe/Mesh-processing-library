@@ -28,7 +28,7 @@ class Mklib : noncopyable {
   void volume_ringU(int n, float r1);                   // A "discrete torus" with rectangular cross section.
   void tubeU(int n);                                    // Height 1, radius 1, open in +z axis, vertex on +x axis.
   void cylinderU(int n);                                // Cylinder == tube with closed ends.
-  void capU(int n);                                     // Height 1, radius 1, bottom at origin, peak at (1, 0, 0).
+  void capU(int n);                                     // Height 1, radius 1, bottom at origin, peak at (0, 0, 1).
   void coneU(int n);                                    // Cone == cap with closed bottom.
   void sphere(int nlat, int nlong);                     // Radius 1, #latitudes (>= 2), #longitudes (>= 3).
   void hemisphere(int nlat, int nlong);                 // Radius 1, #latitudes (>= 2), #longitudes (>= 2).

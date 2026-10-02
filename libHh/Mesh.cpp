@@ -624,6 +624,9 @@ Vertex Mesh::split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) {
 }
 
 bool Mesh::legal_vertex_merge(Vertex vs, Vertex vt) {
+  if (vs == vt) return false;
+  for (Face f : faces(vt))
+    if (contains(vertices(f), vs)) return false;  // The merge would create a face with a duplicate vertex.
   for (HEdge he : corners(vt)) {
     if (query_hedge(he->_prev->_vert, vs)) return false;
     if (query_hedge(vs, he->_next->_vert)) return false;
@@ -805,13 +808,9 @@ Vertex Mesh::insert_vertex_on_edge(Edge e) {
   // If > 1 edge shared between f1 and f2, other shared edges will be
   //  destroyed and recreated -> will lose attributes.
   if (debug() >= 1) valid(e);
-  // Create bogus hedges if boundaries.
-  Array<HEdge> ar_he;
-  for (Face f : faces(e))
-    for (HEdge he : corners(f)) ar_he.push(he);
-  create_bogus_hedges(ar_he);
   Vertex v1 = vertex1(e), v2 = vertex2(e);
-  Face f1 = face1(e), f2 = face2(e);
+  Face f1 = face1(e), f2 = face2(e);  // Here, f2 could be nullptr.
+  // Gather the face vertices before creating any bogus hedges, which would corrupt the adjacency queries.
   Array<Vertex> va1, va2;
   for (Vertex v = v2;;) {
     va1.push(v);
@@ -825,6 +824,12 @@ Vertex Mesh::insert_vertex_on_edge(Edge e) {
       if (v == v1) break;
     }
   }
+  // Create bogus hedges if boundaries.
+  Array<HEdge> ar_he;
+  for (Face f : faces(e))
+    for (HEdge he : corners(f))
+      if (he->_edge != e) ar_he.push(he);
+  create_bogus_hedges(ar_he);
   destroy_face(f1);
   if (f2) destroy_face(f2);
   Vertex vn = create_vertex();
@@ -843,11 +848,7 @@ Vertex Mesh::insert_vertex_on_edge(Edge e) {
 Edge Mesh::remove_vertex_between_edges(Vertex vr) {
   Array<Face> fa(ccw_faces(vr));
   assertx(fa.num() <= 2);
-  // Create bogus hedges if boundaries.
-  Array<HEdge> ar_he;
-  for (Face f : fa)
-    for (HEdge he : corners(f)) ar_he.push(he);
-  create_bogus_hedges(ar_he);
+  // Gather the face vertices before creating any bogus hedges, which would corrupt the adjacency queries.
   Vec2<Array<Vertex>> va;
   for_int(i, fa.num()) {
     for (Vertex v = vr;;) {
@@ -856,6 +857,12 @@ Edge Mesh::remove_vertex_between_edges(Vertex vr) {
       va[i].push(v);
     }
   }
+  // Create bogus hedges if boundaries, except on the edges adjacent to vr, which are destroyed together with vr.
+  Array<HEdge> ar_he;
+  for (Face f : fa)
+    for (HEdge he : corners(f))
+      if (he->_vert != vr && he->_prev->_vert != vr) ar_he.push(he);
+  create_bogus_hedges(ar_he);
   for_int(i, fa.num()) destroy_face(fa[i]);
   destroy_vertex(vr);
   for_int(i, fa.num()) fa[i] = create_face(va[i]);

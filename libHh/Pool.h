@@ -27,18 +27,19 @@ namespace hh {
   HH_POOL_ALLOCATION_2(T)
 
 // Reason to check size_t in new and delete: class may be derived and may not provide its own new/delete operators.
-#define HH_POOL_ALLOCATION_1(T)                                       \
-  static void* operator new(size_t s) {                               \
-    ASSERTX(s == sizeof(T));                                          \
-    return pool.alloc();                                              \
-  }                                                                   \
-  static void* operator new(size_t, void* p) { return p; }            \
-  static void operator delete(void* p, size_t s) {                    \
-    ASSERTX(s == sizeof(T));                                          \
-    pool.free(p);                                                     \
-  }                                                                   \
-  static void* operator new[](size_t s) { return ::operator new(s); } \
-  static void operator delete[](void* p, size_t) { ::operator delete(p); }
+// An array is allocated by the global allocator, with the alignment of T, which may exceed the default alignment.
+#define HH_POOL_ALLOCATION_1(T)                                                                       \
+  static void* operator new(size_t s) {                                                               \
+    ASSERTX(s == sizeof(T));                                                                          \
+    return pool.alloc();                                                                              \
+  }                                                                                                   \
+  static void* operator new(size_t, void* p) { return p; }                                            \
+  static void operator delete(void* p, size_t s) {                                                    \
+    ASSERTX(s == sizeof(T));                                                                          \
+    pool.free(p);                                                                                     \
+  }                                                                                                   \
+  static void* operator new[](size_t s) { return ::operator new[](s, std::align_val_t{alignof(T)}); } \
+  static void operator delete[](void* p, size_t) { ::operator delete[](p, std::align_val_t{alignof(T)}); }
 
 #define HH_POOL_ALLOCATION_2(T)                                \
   static hh::Pool pool;                                        \
@@ -115,9 +116,11 @@ class Pool : noncopyable {
     }
     _name = nullptr;
     _esize = 0;
+    _ealign = 0;
     _h = nullptr;
     _nalloc = 0;
     _chunkh = nullptr;
+    _offset = 0;
   }
   // Allocate based on the static size of the class.
   [[nodiscard]] void* alloc() {

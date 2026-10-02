@@ -147,11 +147,16 @@ template <int D, typename T>
 Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& dU, Vec<Bndrule, D> bndrules,
                 const T* bordervalue) {
   for_int(i, D) {
-    if (bndrules[i] == Bndrule::undefined) assertx(dL[i] >= 0 && dU[i] >= 0);  // No negative crop.
     if (bndrules[i] == Bndrule::border) assertx(bordervalue);
     if (grid.size() == 0)
       assertx(bndrules[i] != Bndrule::reflected && bndrules[i] != Bndrule::periodic &&
               bndrules[i] != Bndrule::clamped && bndrules[i] != Bndrule::reflected101);
+    if (bndrules[i] == Bndrule::undefined) {
+      assertx(dL[i] >= 0 && dU[i] >= 0);  // No negative crop.
+      // So the dimension is never accessed outside its domain, and any defined rule maps it identically.  (The slower
+      // path below maps every dimension through map_boundaryrule_1d(), which rejects Bndrule::undefined.)
+      bndrules[i] = Bndrule::clamped;
+    }
   }
   Vec<int, D> newdims = max(grid.dims() - dL - dU, ntimes<D>(0));
   if (product(newdims) == 0) {

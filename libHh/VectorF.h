@@ -100,6 +100,18 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
     for_int(k, p) v.b()[k] = l.b()[k] / r.b()[k];
     return v;
   }
+  [[nodiscard]] friend VectorF<n> operator+(const VectorF<n>& l, float f) {
+    VectorF<n> v;
+    local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] + f; });
+    for_int(k, p) v.b()[k] = l.b()[k] + f;
+    return v;
+  }
+  [[nodiscard]] friend VectorF<n> operator-(const VectorF<n>& l, float f) {
+    VectorF<n> v;
+    local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] - f; });
+    for_int(k, p) v.b()[k] = l.b()[k] - f;
+    return v;
+  }
   [[nodiscard]] friend VectorF<n> operator*(const VectorF<n>& l, float f) {
     VectorF<n> v;
     local_unroll<m>([&](int j) { v.a()[j] = l.a()[j] * f; });
@@ -164,6 +176,8 @@ template <int n> VectorF<n> operator+(const VectorF<n>& l, const VectorF<n>& r);
 template <int n> VectorF<n> operator-(const VectorF<n>& l, const VectorF<n>& r);
 template <int n> VectorF<n> operator*(const VectorF<n>& l, const VectorF<n>& r);
 template <int n> VectorF<n> operator/(const VectorF<n>& l, const VectorF<n>& r);
+template <int n> VectorF<n> operator+(const VectorF<n>& v, float f);
+template <int n> VectorF<n> operator-(const VectorF<n>& v, float f);
 template <int n> VectorF<n> operator*(const VectorF<n>& v, float f);
 template <int n> VectorF<n> operator/(const VectorF<n>& v, float f);
 template <int n> VectorF<n>& operator+=(VectorF<n>& l, const VectorF<n>& r) { return l = l + r; }

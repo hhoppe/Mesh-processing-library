@@ -78,14 +78,27 @@ unsigned Random::get_unsigned(unsigned ub) {
   }
 }
 
+// The result approximates the nearest float (or double) to the uniform real (i + 1/2) / 2^32 (or (i + 1/2) / 2^64),
+// for a random integer i.  It uses all the random bits, so its resolution is fine near zero (the smallest value is
+// 2^-33 or 2^-65), which matters for transforms such as -log(u).  Its mean is within about 1e-10 of 1/2.
+// The conversion of the integer to floating-point rounds the largest values (those within 2^7 of 2^32, or within 2^10
+// of 2^64) up to the power of two, so the result is clamped to the largest representable value below 1.
+// Alternatives considered:
+// - float((i >> 8) | 1) * 2^-24, the midpoints of 2^23 equal bins: no rounding or clamp, and exactly symmetric with a
+//   mean of exactly 1/2, but only 2^23 equally spaced values, so the smallest value is 2^-24.
+// - float(i >> 8) * 2^-24: 2^24 equally spaced values, but it includes 0 and its mean is 1/2 - 2^-25.
+// - A scale factor of (1 - 2^-24) * 2^-32 instead of the clamp: it also avoids 1, but changes nearly every value by
+//   one ulp and lowers the mean by about 4e-8.
 template <> float Random::get_unif<float>() {
   static const float unif_factor = pow(2.f, -32.f);
-  return get_int<4>() * unif_factor + .5f * unif_factor;
+  constexpr float max_unif = 1.f - std::numeric_limits<float>::epsilon() / 2.f;  // Largest float below 1.f.
+  return std::min(get_int<4>() * unif_factor + .5f * unif_factor, max_unif);
 }
 
 template <> double Random::get_unif<double>() {
   static const double unif_factor = pow(2., -64.);
-  return get_int<8>() * unif_factor + .5 * unif_factor;
+  constexpr double max_unif = 1. - std::numeric_limits<double>::epsilon() / 2.;  // Largest double below 1.
+  return std::min(get_int<8>() * unif_factor + .5 * unif_factor, max_unif);
 }
 
 float Random::unif() { return get_unif<float>(); }

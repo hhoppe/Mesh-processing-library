@@ -21,11 +21,11 @@ office.nf80000.orig.m 7140990
 office.nf80000.sr.pm 2311530
 gcanyon_sq200.orig.m 5562092
 gcanyon_sq200.pm 2082725
-gcanyon_sq129_b44.l-1.stitched.pm 915556
-gcanyon_sq129_b44.l0.stitched.pm 722843
-gcanyon_sq129_b44.l1.stitched.pm 705611
-gcanyon_sq129_b44.l1t.stitched.pm 442180
-gcanyon_sq129_b44.l2.pm 704217
+gcanyon_sq129_b44.l-1.stitched.pm 909799
+gcanyon_sq129_b44.l0.stitched.pm 642222
+gcanyon_sq129_b44.l1.stitched.pm 624178
+gcanyon_sq129_b44.l1t.stitched.pm 365635
+gcanyon_sq129_b44.l2.pm 621066
 office.nf200000.mincycles.m 17956675
 bunny.vertexcache.m 10979171
 bunny.sphparam.m 7796624

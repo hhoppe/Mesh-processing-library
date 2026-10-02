@@ -62,8 +62,9 @@ void Lls::get_x(MatrixView<float> mat) {
 // *** SparseLls
 
 void SparseLls::clear() {
-  _rows.clear();
-  _cols.clear();
+  for (auto& row : _rows) row.clear();
+  for (auto& col : _cols) col.clear();
+  _nentries = 0;
   Lls::clear();
 }
 
@@ -187,15 +188,18 @@ bool FullLls::solve(double* prssb, double* prssa) {
   assertx(_m >= _n);
   assertx(!_solved);
   _solved = true;
-  if (prssb) *prssb = get_rss();
+  if (prssb) *prssb = get_rss(_a, _b);
+  // Some solve_aux() overwrite _a and _b (GivensLls, and LudLls if _m == _n), so keep copies for the final residual.
+  Matrix<float> a, b;
+  if (prssa) a = _a, b = _b;
   const bool success = solve_aux();
-  if (prssa) *prssa = get_rss();
+  if (prssa) *prssa = get_rss(a, b);
   return success;
 }
 
-double FullLls::get_rss() {
+double FullLls::get_rss(CMatrixView<float> a, CMatrixView<float> b) const {
   double rss = 0.;
-  for_int(di, _nd) for_int(i, _m) rss += square(dot(_a[i], _x[di]) - _b[di, i]);
+  for_int(di, _nd) for_int(i, _m) rss += square(dot(a[i], _x[di]) - b[di, i]);
   return rss;
 }
 
@@ -285,7 +289,19 @@ bool LudLls::solve_aux() {
   return true;
 }
 
+constexpr float k_float_cond_warning = 1e4f;
+constexpr float k_float_cond_max = 1e5f;
+
+constexpr double k_double_cond_warning = 1e8;
+constexpr double k_double_cond_max = 1e12;
+
 // *** GivensLls
+
+// Rejecting an ill-conditioned system, as SvdLls does, is disabled.  The test below compares the diagonal elements of
+// the triangular factor R, whose ratio max|r_ii| / min|r_ii| is a lower bound on the condition number.  Without it,
+// GivensLls fails only on an exactly zero diagonal element, so it "succeeds" on a rank-deficient system (e.g., one
+// with two equal columns) and returns a huge solution.  Enabling it might reject systems that callers now "solve".
+constexpr bool k_givens_reject_ill_conditioned = false;
 
 bool GivensLls::solve_aux() {
   int nposs = 0, ngivens = 0;
@@ -323,6 +339,11 @@ bool GivensLls::solve_aux() {
     }
   }
   if (sdebug) showf("Givens: %d/%d rotations done\n", ngivens, nposs);
+  if constexpr (k_givens_reject_ill_conditioned) {
+    float rmin = BIGFLOAT, rmax = 0.f;
+    for_int(i, _n) rmin = min(rmin, abs(_a[i, i])), rmax = max(rmax, abs(_a[i, i]));
+    if (rmin <= rmax / k_float_cond_max) return false;  // Rank-deficient or ill-conditioned.
+  }
   // Backsubstitutions.
   for_int(di, _nd) {
     for (int i = _n - 1; i >= 0; --i) {
@@ -334,12 +355,6 @@ bool GivensLls::solve_aux() {
   }
   return true;
 }
-
-constexpr float k_float_cond_warning = 1e4f;
-constexpr float k_float_cond_max = 1e5f;
-
-constexpr double k_double_cond_warning = 1e8;
-constexpr double k_double_cond_max = 1e12;
 
 #if defined(HH_HAVE_LAPACK)  // ***
 
@@ -476,10 +491,11 @@ bool QrdLls::solve_aux() {
 SvdLls::SvdLls(int m, int n, int nd) : FullLls(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
 
 bool SvdLls::solve_aux() {
-  dummy_use(k_float_cond_max);
   if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
   sort_singular_values(_mU, _mS, _mVT);
-  if (!_mS.last()) return false;
+  // As in the LAPACK version, a singular value counts as zero unless it exceeds rcond times the largest one.
+  const float rcond = 1.f / k_float_cond_max;
+  if (_mS.last() <= rcond * _mS[0]) return false;  // Rank-deficient.
   const float cond = _mS[0] / _mS.last();
   if (cond > k_float_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   // SHOW(_a, _b, _mU, _mS, _mVT);
@@ -496,12 +512,19 @@ bool SvdLls::solve_aux() {
 
 SvdDoubleLls::SvdDoubleLls(int m, int n, int nd) : FullLls(m, n, nd), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
 
+// Rejecting a rank-deficient system, as in the LAPACK version (where a singular value counts as zero unless it exceeds
+// rcond times the largest one), is disabled.  MeshSimplify solves quadric systems with condition numbers up to about
+// 1e19, which this version has always accepted; with the test enabled, the MeshSimplify demo instead reports 8416
+// times that it is "Assuming current attributes are just fine".
+constexpr bool k_svd_double_reject_rank_deficient = false;
+
 bool SvdDoubleLls::solve_aux() {
-  dummy_use(k_double_cond_max);
   const Matrix<double> A = convert<double>(_a);
   if (!singular_value_decomposition(A, _mU, _mS, _mVT)) return false;
   sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
+  if constexpr (k_svd_double_reject_rank_deficient)
+    if (_mS.last() <= _mS[0] / k_double_cond_max) return false;  // Rank-deficient.
   const double cond = _mS[0] / _mS.last();
   if (cond > k_double_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   for (double& s : _mS) s = 1. / s;
@@ -514,10 +537,11 @@ bool SvdDoubleLls::solve_aux() {
 QrdLls::QrdLls(int m, int n, int nd) : FullLls(m, n, nd), _work(n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}  // == SvdLls
 
 bool QrdLls::solve_aux() {
-  dummy_use(k_float_cond_max);
   if (!singular_value_decomposition(_a, _mU, _mS, _mVT)) return false;
   sort_singular_values(_mU, _mS, _mVT);
-  if (!_mS.last()) return false;
+  // As in the LAPACK version, a singular value counts as zero unless it exceeds rcond times the largest one.
+  const float rcond = 1.f / k_float_cond_max;
+  if (_mS.last() <= rcond * _mS[0]) return false;  // Rank-deficient.
   const float cond = _mS[0] / _mS.last();
   if (cond > k_float_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   for (float& s : _mS) s = 1.f / s;

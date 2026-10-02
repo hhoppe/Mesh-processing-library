@@ -305,7 +305,7 @@ void test_random_systems() {
     if (!(max_err < 1e-5)) SHOW(c, max_err);
     assertx(max_err < 1e-5);
     assertx(abs(rssb - rss_b) < 1e-5 * rss_b);
-    if (c != 2) assertx(abs(rssa - rss_ref) < 1e-5 * rss_ref);  // KNOWN_BUG: see the note on rssa in test_rssa().
+    assertx(abs(rssa - rss_ref) < 1e-5 * rss_ref);
   }
   showf("Random %dx%d systems: all solvers agree with the reference solution.\n", m, n);
 }
@@ -324,11 +324,12 @@ void test_consistent_system() {
     double rssa;
     assertx(lls.solve(nullptr, &rssa));
     for_int(j, n) assertx(abs(lls.get_x_rc(j, 0) - x_true[j]) < 2e-5f);
-    if (c != 2) assertx(rssa < 1e-8);  // KNOWN_BUG: see the note on rssa in test_rssa().
+    assertx(rssa < 1e-8);
   }
 }
 
 // The residuals reported by solve() for a square system with exact solution x = (1, 1).
+// (GivensLls overwrites both A and b, and LudLls overwrites A for a square system, yet rssa must use the originals.)
 void test_rssa() {
   for_int(c, 6) {
     auto up_lls = make_lls(c, 2, 2, 1);
@@ -339,10 +340,6 @@ void test_rssa() {
     assertx(lls.solve(&rssb, &rssa));
     assertx(abs(lls.get_x_rc(0, 0) - 1.f) < 1e-5f && abs(lls.get_x_rc(1, 0) - 1.f) < 1e-5f);
     assertx(rssb == 58.);  // Here |b|^2 == 3^2 + 7^2 for the initial estimate x = (0, 0).
-    // KNOWN_BUG: FullLls::solve() computes rssa from the matrices _a and _b after solve_aux(), but
-    // GivensLls::solve_aux() overwrites both, and LudLls::solve_aux() overwrites _a when the system is square; their
-    // rssa is then wrong.
-    if (c == 1 || c == 2) continue;
     assertx(rssa < 1e-10);
   }
 }
@@ -366,13 +363,20 @@ void test_singular_system() {
     assertx(lls.solve());
     assertx(abs(lls.get_x_rc(0, 0) - 1.f) < 1e-6f && lls.get_x_rc(1, 0) == 7.f);
   }
-  // KNOWN_BUG: a rank-deficient system with two equal columns is not reliably detected:
-  // without LAPACK, SvdLls and QrdLls only fail on an exactly zero singular value.
+  for (const int c : {3, 5}) {
+    // A system with two equal columns is rank-deficient.  In single precision, roundoff makes its smallest singular
+    // value nonzero, but negligible relative to the largest one, so the solvers also report failure.
+    auto up_lls = make_lls(c, 3, 2, 1);
+    Lls& lls = *up_lls;
+    for_int(k, 3) for_int(j, 2) lls.enter_a_rc(k, j, k + 1.f);
+    for_int(k, 3) lls.enter_b_rc(k, 0, k * .3f + 1.f);
+    assertx(!lls.solve());
+  }
 }
 
 // After clear(), an Lls can solve a new system.
 void test_clear() {
-  for_intL(c, 1, 6) {  // KNOWN_BUG: SparseLls::clear() is omitted; see below.
+  for_int(c, 6) {
     auto up_lls = make_lls(c, 2, 1, 1);
     Lls& lls = *up_lls;
     lls.enter_a_rc(0, 0, 1.f);
@@ -389,8 +393,6 @@ void test_clear() {
     assertx(lls.solve());
     assertx(abs(lls.get_x_rc(0, 0) - 1.f) < 1e-6f);
   }
-  // KNOWN_BUG: SparseLls::clear() empties its arrays _rows and _cols instead of each of their rows, so any subsequent
-  // enter_a_rc() accesses beyond the array bounds.
 }
 
 // The SparseLls conjugate-gradient options.

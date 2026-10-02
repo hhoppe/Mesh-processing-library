@@ -246,7 +246,7 @@ void Mklib::tetra() {
 
 void Mklib::tetraU() {
   mk_save;
-  mk.translate(.5f / sqrt(6.f), 0, 0);
+  mk.translate(0, 0, .5f / sqrt(6.f));
   tetra();
 }
 

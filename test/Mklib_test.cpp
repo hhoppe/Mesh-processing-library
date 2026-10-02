@@ -83,10 +83,8 @@ void summarize_shapes(WSA3dStream& os) {
   };
   show("sphere_nonsmooth", nonsmooth_sphere, true);
   show("hemisphere", [](Mklib& mkl) { mkl.hemisphere(4, 12); }, false);
-  show("tetra", [](Mklib& mkl) { mkl.tetra(); }, true);  // The volume is 1 / (6 * sqrt(2)) == 0.1179.
-  // KNOWN_BUG: Mklib::tetraU() should place its bottom face at z == 0, but it currently translates the tetrahedron
-  // along x rather than z, so its bbox is not shown.
-  if (0) show("tetraU", [](Mklib& mkl) { mkl.tetraU(); }, true);
+  show("tetra", [](Mklib& mkl) { mkl.tetra(); }, true);    // The volume is 1 / (6 * sqrt(2)) == 0.1179.
+  show("tetraU", [](Mklib& mkl) { mkl.tetraU(); }, true);  // The bottom face lies at z == 0.
 }
 
 }  // namespace

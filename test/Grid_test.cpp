@@ -427,9 +427,14 @@ int main() {
     assertx(grid1.dims() == V(4) && sum(grid1) == 8);
     grid2b.special_reduce_dim0(2);  // Retains the allocation but shrinks the first dimension.
     assertx(grid2b.dims() == V(2, 2) && grid2b[1, 1] == 3);
-    // KNOWN_BUG: after special_reduce_dim0(0), size() is 0 while the allocation remains, so clear()
-    //  (and hence ~Grid()) sees no change in volume and never deletes it, which LeakSanitizer reports.
-    if (0) grid2b.special_reduce_dim0(0);
+    grid2b.special_reduce_dim0(0);  // Frees the allocation (else a leak, which LeakSanitizer would report).
+    assertx(grid2b.dims() == V(0, 2) && grid2b.data() == nullptr);
+    grid2b.init(V(2, 3), 4);
+    assertx(sum(grid2b) == 24);
+    Grid<2, int> grid2c(V(3, 0));
+    grid2c.special_reduce_dim0(1);
+    grid2c.special_reduce_dim0(0);
+    assertx(grid2c.dims() == V(0, 0) && grid2c.data() == nullptr);
   }
   {
     // Elementwise arithmetic, compared against the per-element results.

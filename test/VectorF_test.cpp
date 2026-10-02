@@ -34,6 +34,8 @@ template <int n> void test_vs_reference() {
     verify(va - vb, [&](int i) { return a[i] - b[i]; });
     verify(va * vb, [&](int i) { return a[i] * b[i]; });
     verify(va / vb, [&](int i) { return a[i] / b[i]; });
+    verify(va + 3.f, [&](int i) { return a[i] + 3.f; });
+    verify(va - 3.f, [&](int i) { return a[i] - 3.f; });
     verify(va * 3.f, [&](int i) { return a[i] * 3.f; });
     verify(3.f * va, [&](int i) { return a[i] * 3.f; });
     verify(va / 4.f, [&](int i) { return a[i] * (1.f / 4.f); });  // Implemented as multiplication by 1.f / f.
@@ -55,8 +57,10 @@ template <int n> void test_vs_reference() {
     vc *= 2.f;
     vc /= 2.f;
     verify(vc, [&](int i) { return a[i]; });
-    // KNOWN_BUG: operator+=(VectorF<n>&, float) and operator-=(VectorF<n>&, float) fail to compile when instantiated,
-    // because there is no operator+(const VectorF<n>&, float) or operator-(const VectorF<n>&, float).
+    vc += 2.f;
+    verify(vc, [&](int i) { return a[i] + 2.f; });
+    vc -= 2.f;
+    verify(vc, [&](int i) { return a[i]; });
     {
       float sum_iter = 0.f;
       int count = 0;

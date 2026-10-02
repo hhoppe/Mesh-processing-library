@@ -281,7 +281,13 @@ template <int D, typename T> class Grid : public GridView<D, T> {
     ranges::swap(l._a, r._a);
     ranges::swap(l._dims, r._dims);
   }
-  void special_reduce_dim0(int i) { assertx(i >= 0 && i <= _dims[0]), _dims[0] = i; }
+  void special_reduce_dim0(int i) {  // Retains the allocation, unless the grid becomes empty.
+    assertx(i >= 0 && i <= _dims[0]);
+    // An empty (i.e., size() == 0) grid must own no allocation, because clear() (through init()) and hence ~Grid()
+    // free the allocation if and only if size() > 0.
+    if (i == 0) delete[] std::exchange(_a, nullptr);
+    _dims[0] = i;
+  }
   // (Must declare template parameters because these functions access private _a of <D - 1, T> and <D + 1, T>.)
   template <int DD, typename TT> friend Grid<DD - 1, TT> reduce_grid_rank(Grid<DD, TT>&& grid);
   template <int DD, typename TT> friend Grid<DD + 1, TT> increase_grid_rank(Grid<DD, TT>&& grid);

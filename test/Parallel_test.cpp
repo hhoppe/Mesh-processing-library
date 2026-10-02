@@ -54,8 +54,10 @@ int main() {
   }
   {
     // An empty range invokes nothing.
-    parallel_for(Array<int>{}, [&](int) { assertnever("Unexpected call"); });
-    parallel_for(range(0), [&](int) { assertnever("Unexpected call"); });
+    int num_calls = 0;
+    parallel_for(Array<int>{}, [&](int) { num_calls++; });
+    parallel_for(range(0), [&](int) { num_calls++; });
+    assertx(num_calls == 0);
   }
   {
     // Each element is visited exactly once, for sizes smaller and larger than the number of threads.
@@ -122,12 +124,17 @@ int main() {
     parallel_for_chunk(list, [&](auto subrange) { total += sum<int>(subrange); });
     assertx(total == 9900);
   }
-  if (0) {
-    // A nested parallel loop runs serially within its outer iteration.
-    // KNOWN_BUG: ThreadPoolIndexedTask::already_active() reads _num_remaining_tasks without holding the mutex,
-    // which ThreadSanitizer reports as a data race with its decrement in worker_main().
+  {
+    // A nested parallel loop runs serially within its outer iteration (without a data race on the state of the
+    // thread pool, as checked by ThreadSanitizer).
     std::atomic<int> count{0};
-    parallel_for(range(64), [&](int) { parallel_for(range(64), [&](int) { count++; }); });
+    parallel_for(range(64), [&](int) {
+      const std::thread::id id = std::this_thread::get_id();
+      parallel_for(range(64), [&](int) {
+        assertx(std::this_thread::get_id() == id);
+        count++;
+      });
+    });
     assertx(count == 64 * 64);
   }
 }

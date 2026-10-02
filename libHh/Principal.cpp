@@ -297,10 +297,10 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
       for_int(c, n) mo[i, c] -= d * mo[j, c];
     }
   }
-  // Normalize them.
+  // Normalize them, using their norms after the orthogonalization (rather than the eigenvalue estimates vnorm).
   const Array<float> all1(n, 1.f);
   for_int(i, ne) {
-    float recipnormj = 1.f / vnorm[i];
+    float recipnormj = 1.f / float(assertx(mag(mo[i])));
     if (dot(mo[i], all1) < 0.) recipnormj *= -1.f;
     mo[i] *= recipnormj;
   }

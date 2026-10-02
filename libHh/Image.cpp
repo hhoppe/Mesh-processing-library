@@ -45,9 +45,15 @@ void Image::to_bw() {
       // Equivalent to 0.3086, 0.6094, 0.0820.
       value = (pixel[0] * 79 + pixel[1] * 156 + pixel[2] * 21) >> 8;
     } else {
+      // Average the channels in linear space (after gamma expansion), then gamma-compress and round the result.
+      // The usual formulation first normalizes each channel to [0, 1] and finally scales the result back to [0, 255],
+      // i.e., 255 * (sum_z w_z * (v_z / 255)^gamma)^(1 / gamma).  Because (v / 255)^gamma == v^gamma / 255^gamma,
+      // the two scale factors cancel, so the normalization is omitted.  Because the weights w_z sum to 1, a gray
+      // pixel (with v_z == v) gives (v^gamma)^(1 / gamma) == v, up to a float error far smaller than the .5 margin of
+      // the final rounding, so it maps to itself.
       const float gamma = 2.2f;
       Vec3<float> af;
-      for_int(z, 3) af[z] = pow(pixel[z] + 0.5f, gamma);
+      for_int(z, 3) af[z] = pow(float(pixel[z]), gamma);
       const float gray = af[0] * .30f + af[1] * .59f + af[2] * .11f;
       value = clamp_to_uint8(int(pow(gray, 1.f / gamma) + .5f));
     }

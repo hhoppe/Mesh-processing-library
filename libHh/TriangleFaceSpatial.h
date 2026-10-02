@@ -66,17 +66,18 @@ class TriangleFaceSpatial
     std::optional<SegmentResult> result;
     const Vector vray = p2 - p1;
     float tmin = BIGFLOAT;
-    const auto func_test_triangleface_with_ray = [&](Univ id) -> bool {
+    const auto func_test_triangleface_with_ray = [&](Univ id) -> float {
       const TriangleFace* ptriangleface = Conv<const TriangleFace*>::d(id);
       const Vec3<Point>& triangle = ptriangleface->triangle;
       const auto pint = intersect_segment_with_triangle(p1, p2, triangle);
-      if (!pint) return false;
-      const float t = dot(*pint - p1, vray);
+      if (!pint) return BIGFLOAT;
+      // An intersection implies that vray is nonzero.
+      const float t = dot(*pint - p1, vray) / mag2(vray);
       if (t < tmin) {
         tmin = t;
         result = {ptriangleface, *pint};
       }
-      return true;
+      return t;
     };
     search_segment(p1, p2, func_test_triangleface_with_ray);
     return result;

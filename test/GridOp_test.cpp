@@ -305,9 +305,19 @@ int main() {
     SHOW(crop(grid, V(1, 0), V(1, 0)));  // The fastest path, cropping just dim0.
     SHOW(crop(grid, V(-1, -2), V(-1, -2), twice(Bndrule::reflected)));
     SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::clamped, Bndrule::border), &bordervalue));
-    // KNOWN_BUG: a Bndrule::undefined dimension that is not cropped negatively still fails, because the
-    //  slow path maps every coordinate through map_boundaryrule_1d(), which rejects Bndrule::undefined.
-    if (0) SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::undefined, Bndrule::border), &bordervalue));
+    // A Bndrule::undefined dimension (not cropped negatively) combined with a negative crop in another dimension.
+    SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::undefined, Bndrule::border), &bordervalue));
+    SHOW(crop(grid, V(1, -1), V(0, 0), V(Bndrule::undefined, Bndrule::periodic)));
+    for (const auto& dLU : range(V(0, -3, 0, -3), V(2, 2, 2, 2))) {
+      const Vec2<int> dL = V(dLU[0], dLU[1]), dU = V(dLU[2], dLU[3]);
+      const Grid<2, int> newgrid = crop(grid, dL, dU, V(Bndrule::undefined, Bndrule::reflected101));
+      assertx(newgrid.dims() == grid.dims() - dL - dU);
+      for (const auto& yx : range(newgrid.dims())) {
+        int x = yx[1] + dL[1];
+        assertx(map_boundaryrule_1d(x, grid.dim(1), Bndrule::reflected101));
+        assertx(newgrid[yx] == grid[yx[0] + dL[0], x]);
+      }
+    }
   }
   {  // Assembly of a grid of grids with differing sizes and each alignment.
     Grid<2, Grid<2, int>> grids(V(2, 2));

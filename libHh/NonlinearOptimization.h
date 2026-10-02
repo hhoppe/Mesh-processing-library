@@ -93,11 +93,17 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
     }
   }
   bool solve_i() {
-    int ic = 0;                          // Index into the circular buffers _as, _ay.
-    double f = _eval(_g);                // Evaluate both the objective f and its gradient _g at _x.
-    int neval = 1;                       // Number of times that _eval is called.
+    int ic = 0;            // Index into the circular buffers _as, _ay.
+    int npairs = 0;        // Number of pairs (s_k, y_k) stored in the circular buffers, at most _m.
+    double f = _eval(_g);  // Evaluate both the objective f and its gradient _g at _x.
+    int neval = 1;         // Number of times that _eval is called.
+    if (mag(_g) / max(mag(_x), 1.) <= _eps) {  // Already converged, e.g. at a stationary point?
+      if (_debug >= 1) show_debug("converged", 0, neval, f, mag(_g));
+      return true;
+    }
     for_int(i, _n) _as[ic, i] = -_g[i];  // The initial line search direction.
     double alpha = 1. / mag(_g);         // The initial step size.
+    double gamma = alpha;                // Scale of the initial inverse Hessian; then set from the latest stored pair.
     for_int(iter, 1000) {
       _tmp.assign(_g);  // Archive the current gradient.
       if (!line_search(f, _as[ic], alpha, neval, iter)) {
@@ -116,18 +122,26 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
       for_int(i, _n) _ay[ic, i] = _g[i] - _tmp[i];  // Record the gradient difference.
       const double ys = dot(_ay[ic], _as[ic]);
       const double yy = dot(_ay[ic], _ay[ic]);
+      // The backtracking line search does not enforce the curvature condition (dot(y, s) > 0), so keep the new pair
+      // only if it satisfies it; otherwise the updated Hessian approximation would not be positive definite, and the
+      // new search direction need not be a descent direction.
+      if (ys > 1e-10 * std::sqrt(yy * mag2(_as[ic]))) {
+        _rho[ic] = 1. / ys;
+        gamma = ys / yy;
+        ic = my_mod(ic + 1, _m);  // Roll the circular buffers.
+        npairs = min(npairs + 1, _m);
+      } else if (_debug >= 2) {
+        showf("NonlinearOptimization iter=%-3d skips the update with dot(y, s)=%g\n", iter, ys);
+      }
       // Compute -H*_g using [Nocedal 1980].
-      _rho[ic] = 1. / ys;
-      ic = my_mod(ic + 1, _m);  // Roll the circular buffers.
       for_int(i, _n) _tmp[i] = -_g[i];
-      const int mm = min(iter + 1, _m);
-      for_int(i, mm) {
+      for_int(i, npairs) {
         ic = my_mod(ic - 1, _m);
         _alphak[ic] = _rho[ic] * dot(_as[ic], _tmp);
         _tmp += -_alphak[ic] * _ay[ic];
       }
-      _tmp *= ys / yy;
-      for_int(i, mm) {
+      _tmp *= gamma;
+      for_int(i, npairs) {
         const double beta = _alphak[ic] - _rho[ic] * dot(_ay[ic], _tmp);
         _tmp += beta * _as[ic];
         ic = my_mod(ic + 1, _m);

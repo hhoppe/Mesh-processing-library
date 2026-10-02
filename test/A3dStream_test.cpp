@@ -20,10 +20,12 @@ bool same_vertices(const A3dElem& el1, const A3dElem& el2) {
 
 // Self-checks, which produce no output (because stdout is the filtered stream of elements).
 void self_test() {
-  const A3dVertexColor color1(A3dColor(1.f, .5f, .25f)), color2(Pixel(255, 0, 51)),
+  const A3dVertexColor color1(A3dColor(1.f, .5f, .25f)), color2(A3dColor(1.f, 0.f, .2f)),
       color3(A3dColor(.5f, .5f, .5f), A3dColor(.25f, .25f, .25f), A3dColor(4.f, 0.f, 0.f));
   assertx(color1.s == A3dColor(1.f, 1.f, 1.f) && color1.g == A3dColor(1.f, 0.f, 0.f));
-  assertx(color2.d == A3dColor(1.f, 0.f, .2f));
+  // The colors in the elements below are written as text, so they must have short exact decimal representations.
+  // (Although 51 / 255.f == .2f in IEEE arithmetic, /fp:fast may give a nearby value instead.)
+  assertx(dist(A3dVertexColor(Pixel(255, 0, 51)).d, A3dColor(1.f, 0.f, .2f)) < 1e-6f);
   // A polygon, its normal, and its Polygon.
   A3dElem polygon(A3dElem::EType::polygon);
   polygon.push(A3dVertex(Point(0.f, 0.f, 0.f), Vector(0.f, 0.f, 1.f), color1));

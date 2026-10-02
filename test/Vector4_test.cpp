@@ -39,7 +39,8 @@ void test_consistency() {
     const Vector4 quotient = a / b, quotient_scalar = a / f, product = a * b;
     for_int(c, 4) {
       num_div += quotient[c] != a[c] / b[c];
-      num_div_scalar += quotient_scalar[c] != a[c] / f;
+      // (The reference is not a[c] / f, which a compiler with /fp:fast may evaluate as a[c] * (1.f / f).)
+      num_div_scalar += quotient_scalar[c] != (a / Vector4(f))[c];
       num_mul += product[c] != a[c] * b[c];
     }
     // The volatile products prevent their contraction with the sums into fused multiply-adds, which

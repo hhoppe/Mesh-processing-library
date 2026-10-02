@@ -37,12 +37,9 @@ float Polygon::get_tolerance(const Vector& pnor, float d) const {
   return tol;
 }
 
-float Polygon::get_area() const {
-  assertx(num() >= 3);
-  float sum = 0.f;
-  for_intL(i, 1, num() - 1) sum += sqrt(area2((*this)[0], (*this)[i], (*this)[i + 1]));
-  return sum;
-}
+// The magnitude of the vector area is correct for any planar polygon, including a concave one, unlike a sum of the
+// unsigned areas of a triangle fan.  For a non-planar polygon, it is the area projected along get_normal_dir().
+float Polygon::get_area() const { return .5f * mag(get_normal_dir()); }
 
 bool Polygon::intersect_hyperplane(const Point& hp, const Vector& hn) {
   assertx(num() >= 3);

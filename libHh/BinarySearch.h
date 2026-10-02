@@ -28,11 +28,17 @@ template <typename T1, typename T2, typename Func = T2(const T1&)>
 template <typename T1, typename T2, typename Func = T2(const T1&)>
 [[nodiscard]] T1 discrete_binary_search_func(Func feval, T1 xl, T1 xh, T2 y_desired) {
   static_assert(std::is_integral_v<T1>);
+  using U = std::make_unsigned_t<T1>;
   assertx(xl < xh);
   for (;;) {
     ASSERTXX(xl < xh && feval(xl) <= y_desired && y_desired < feval(xh));
-    if (xh - xl == 1) return xl;
-    T1 xm = (xl + xh) / 2;
+    // if (xh - xl == 1) return xl;
+    // T1 xm = (xl + xh) / 2;  // Could overflow.
+    const U diff = U(U(xh) - U(xl));  // Equals xh - xl, computed without overflow.
+    if (diff == 1) return xl;
+    T1 xm = xl + T1(diff / 2);  // Equals floor((xl + xh) / 2), computed without overflow.
+    if constexpr (std::is_signed_v<T1>)
+      if (xm < 0 && diff % 2) xm++;  // Round toward zero, like the integer division (xl + xh) / 2.
     T2 ym = feval(xm);
     if (y_desired >= ym)
       xl = xm;

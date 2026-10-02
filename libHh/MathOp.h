@@ -61,7 +61,11 @@ template <typename T> [[nodiscard]] T my_mod(T a, T b) {
   static_assert(std::is_floating_point_v<T>);
   ASSERTX(b > T{0});
   T ret = std::fmod(a, b);
-  if (ret < T{0}) ret += b;
+  if (ret < T{0}) {
+    ret += b;
+    // For tiny negative ret, the sum rounds up to b itself; the closest value within [0, b) is the one just below b.
+    if (ret == b) ret = std::nextafter(b, T{0});
+  }
   ASSERTX(ret >= T{0} && ret < b);
   return ret;
 }

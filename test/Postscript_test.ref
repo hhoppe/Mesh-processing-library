@@ -59,23 +59,23 @@ drawborder {
 
 newpath
 wpoint setlinewidth
-6001 3001 p
-9001 3001 p
-12001 3601 p
+6000 3000 p
+9000 3000 p
+12000 3600 p
 wline setlinewidth
-18000 6001 m
+18000 6000 m
 18000 18000 l
 s
-18000 6001 m
-24000 6001 l
-24000 6901 l
-23100 6901 l
+18000 6000 m
+24000 6000 l
+24000 6900 l
+23100 6900 l
 s
-1 4126 m
-8064 1 l
+0 4125 m
+6600 0 l
 s
 wpoint setlinewidth
-12001 4501 p
+12000 4500 p
 
 pagelevel restore
 end
@@ -144,33 +144,39 @@ drawborder {
 
 newpath
 wline setlinewidth
-3001 3001 m
-27000 3001 l
+3000 3000 m
+27000 3000 l
 27000 27000 l
 15000 15000 l
 s
-6001 9001 m
-12001 9001 l
+6000 9000 m
+12000 9000 l
 s
-1 15000 m
+0 15000 m
 30000 15000 l
 s
-1 9001 m
-15000 12001 l
+0 9000 m
+15000 12000 l
+s
+15000 15000 m
+16000 30000 l
+s
+14000 0 m
+15000 15000 l
 s
 wpoint setlinewidth
 15000 15000 p
 wline setlinewidth
 wline 2 mul setlinewidth
 s
-6001 24000 m
+6000 24000 m
 24000 24000 l
 s
 % A comment.
 wline setlinewidth
 wline setlinewidth
 s
-6001 21000 m
+6000 21000 m
 24000 21000 l
 s
 
@@ -179,7 +185,7 @@ end
 showpage
 
 %%Trailer
-%TightBoundingBox: 110 15  513 771
+%TightBoundingBox: 59 15  563 771
 %!PS-Adobe-2.0 EPSF-1.2
 %%Orientation: Portrait
 %%DocumentFonts:

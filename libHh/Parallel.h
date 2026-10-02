@@ -74,13 +74,19 @@ class ThreadPoolIndexedTask : noncopyable {
     for (auto& thread : _threads) thread.join();
   }
   [[nodiscard]] int num_threads() const { return int(_threads.size()); }
-  [[nodiscard]] bool already_active() const { return _num_remaining_tasks != 0; }  // Detect nested execution.
+  // Detect nested execution, i.e., a call from within a task, or a concurrent call from another thread.
+  [[nodiscard]] bool already_active() const {
+    // This lock-free read is atomic; execute() tests _num_remaining_tasks again while holding the lock.
+    return _num_remaining_tasks.load(std::memory_order_relaxed) != 0;
+  }
   void execute(int num_tasks, const Task& task_function) {
-    if (already_active()) {
+    std::unique_lock<std::mutex> lock(_mutex);
+    // Testing and claiming the thread pool under the same lock ensures that concurrent calls cannot both claim it.
+    if (_num_remaining_tasks) {
+      lock.unlock();
       Warning("Nested execution of ThreadPoolIndexedTask is run serially");
       for_int(i, num_tasks) task_function(i);
     } else {
-      std::unique_lock<std::mutex> lock(_mutex);
       _task_function = task_function;
       _num_tasks = num_tasks;
       _num_remaining_tasks = num_tasks;
@@ -102,7 +108,7 @@ class ThreadPoolIndexedTask : noncopyable {
   std::vector<std::thread> _threads;
   Task _task_function;
   int _num_tasks = 0;
-  int _num_remaining_tasks = 0;
+  std::atomic<int> _num_remaining_tasks{0};  // Modified only while holding the lock.
   int _task_index = 0;
   std::condition_variable _condition_variable_worker;
   std::condition_variable _condition_variable_main;

@@ -109,7 +109,7 @@ class FullLls : public Lls {
   Matrix<float> _a;              // Dimensions [_m, _n].
   virtual bool solve_aux() = 0;  // Abstract class.
  private:
-  double get_rss();
+  [[nodiscard]] double get_rss(CMatrixView<float> a, CMatrixView<float> b) const;
 };
 
 // LU decomposition on A^t * A = A^t * b (slow).

@@ -87,9 +87,7 @@ void test_synthetic() {
     incr_principal_components(mi, mo2, eimag2, 10);
     for_int(i, ne) {
       assertx(dot(mo[i], mo2[i]) > .999f);
-      // KNOWN_BUG: incr_principal_components() divides each vector by its norm from before the Gram-Schmidt
-      // orthogonalization, so all but the first vector are only approximately unit-length.
-      assertx(abs(mag(mo2[i]) - 1.f) < (i == 0 ? 1e-5f : 1e-3f));
+      assertx(abs(mag(mo2[i]) - 1.f) < 1e-5f);
       if (i) assertx(abs(dot(mo2[i], mo2[0])) < 1e-5f);
       assertx(abs(eimag2[i] / eimag[i] - 1.f) < .03f);
     }

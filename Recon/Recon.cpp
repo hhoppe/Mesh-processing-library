@@ -337,7 +337,7 @@ float pc_dot(int i, int j) {
     if (have_normals) {
       return dot(nor[j], pcnor[j]);
     } else {
-      return pcnor[j][2] < 0.f ? -1.f : 1.f;
+      return sign(pcnor[j][2]);
     }
   } else {
     return dot(pcnor[i], pcnor[j]);

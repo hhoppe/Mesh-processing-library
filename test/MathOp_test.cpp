@@ -67,8 +67,10 @@ void test_my_mod() {
   // Floating-point version; these values are exactly representable.
   SHOW(my_mod(-.5f, 2.f), my_mod(5.25, 2.), my_mod(7.5f, 2.5f) == 0.f, my_mod(-.25, .5));
   assertx(my_mod(-4.f, 2.f) == 0.f);  // Possibly -0.f, which compares equal to 0.f.
-  // KNOWN_BUG: my_mod(-1e-10f, 1.f) returns 1.f, i.e., b itself (and fails an ASSERTX in debug builds), so tiny
-  // negative arguments are not tested.
+  // For a tiny negative argument, a + b rounds to b, so the result is instead the largest value below b.
+  assertx(my_mod(-1e-10f, 1.f) == std::nextafter(1.f, 0.f) && my_mod(-1e-20, 1.) == std::nextafter(1., 0.));
+  assertx(my_mod(-1e-10f, 4.f) == std::nextafter(4.f, 0.f) && my_mod(-1e-30f, 1e-20f) < 1e-20f);
+  assertx(my_mod(-.25f, 1.f) == .75f && my_mod(-std::numeric_limits<float>::denorm_min(), 1.f) < 1.f);
   for_intL(i, -20, 21) {
     const float a = float(i) * .37f;
     const float r = my_mod(a, 1.5f);

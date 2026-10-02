@@ -47,9 +47,9 @@ double gradient_magnitude() {
 }
 
 // The Rosenbrock function f(x, y) = (1 - x)^2 + 100 * (y - x^2)^2, with its curved valley and minimum at (1, 1).
-// KNOWN_BUG: this currently fails an assertion: the backtracking line search does not enforce the curvature condition,
-// so at iteration 6 the step s and gradient difference y have dot(y, s) < 0, the L-BFGS update is then not
-// positive definite, and the next search direction is not a descent direction (assertx(m < 0.) in line_search()).
+// The backtracking line search does not enforce the curvature condition, so some steps s and gradient differences y
+// have dot(y, s) < 0 (e.g. at iteration 6); the solver must then skip their L-BFGS update to keep the search
+// directions descent directions.
 void test_rosenbrock() {
   Array<double> x{-1.2, 1.};
   const auto eval = [&](ArrayView<double> ret_grad) {
@@ -127,10 +127,15 @@ int main() {
     assertx(opt.solve());
     assertx(dist(g_x, V(.3, .4)) < 1e-6);  // The quadratic converges within few evaluations.
     g_x.assign(V(6. / 11., 5. / 7.));
-    // KNOWN_BUG: solve() fails an assertion if started at a stationary point (where the gradient is zero).
     NonlinearOptimization<double (&)(ArrayView<double>)> opt2(g_x, feval);  // A function reference also works.
     assertx(opt2.solve());
     assertx(dist(g_x, V(.3, .4)) < 1e-6);
+    // Starting at a stationary point (where the gradient is exactly zero), solve() succeeds immediately.
+    g_x.assign(V(.3, .4));
+    assertx(gradient_magnitude() == 0.);
+    NonlinearOptimization opt3(g_x, feval);
+    assertx(opt3.solve());
+    assertx(g_x[0] == .3 && g_x[1] == .4);
   }
   if (1) {
     for_int(ifunc, 3) {
@@ -151,7 +156,7 @@ int main() {
       assertx(gradient_magnitude() < 1e-6);  // The solution is a stationary point.
     }
   }
-  if (0) test_rosenbrock();  // KNOWN_BUG: see the note on test_rosenbrock().
+  test_rosenbrock();
   test_quadratic();
   test_max_neval();
 }

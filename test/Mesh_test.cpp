@@ -321,7 +321,6 @@ void test_polygons() {
   verify_adjacencies(mesh);
   SHOW(f, mesh.num_faces(), mesh.num_edges());
   // Insert a vertex on the interior edge, then remove it.
-  // KNOWN_BUG: both insert_vertex_on_edge() and remove_vertex_between_edges() currently fail on the mesh boundary.
   const Vertex vnew = mesh.insert_vertex_on_edge(mesh.edge(va[1], va[2]));
   verify_adjacencies(mesh);
   // The two pentagons now share two edges, so they are not nice faces.
@@ -345,6 +344,34 @@ void test_polygons() {
   const Face fc = mesh2.coalesce_faces(mesh2.edge(vb[1], vb[2]));
   verify_adjacencies(mesh2);
   SHOW(fc, mesh2.num_vertices());
+  {
+    // Insert a vertex on a boundary edge, then remove it; the other edges of the modified faces are preserved.
+    Mesh mesh3;
+    const Array<Vertex> vc = create_mesh(mesh3, 4, V(Array<int>{0, 1, 2}, Array<int>{0, 2, 3}));
+    const Edge e12 = mesh3.edge(vc[1], vc[2]), e02 = mesh3.edge(vc[0], vc[2]);
+    const Vertex vn = mesh3.insert_vertex_on_edge(mesh3.edge(vc[0], vc[1]));
+    verify_adjacencies(mesh3);
+    assertx(mesh3.is_boundary(vn) && mesh3.degree(vn) == 2 && mesh3.num_vertices(mesh3.face(vc[0], vn)) == 4);
+    assertx(mesh3.edge(vc[1], vc[2]) == e12 && mesh3.edge(vc[0], vc[2]) == e02);
+    const Edge e3 = mesh3.remove_vertex_between_edges(vn);
+    verify_adjacencies(mesh3);
+    assertx(mesh3.is_boundary(e3) && mesh3.query_edge(vc[0], vc[1]) == e3);
+    assertx(mesh3.edge(vc[1], vc[2]) == e12 && mesh3.edge(vc[0], vc[2]) == e02);
+    SHOW(mesh3.num_vertices(), mesh3.num_edges(), mesh3.num_faces());
+  }
+  {
+    // Remove a vertex from the boundary of a single quadrilateral, leaving a triangle.
+    Mesh mesh4;
+    const Array<Vertex> vd = create_mesh(mesh4, 4, V(Array<int>{0, 1, 2, 3}));
+    assertx(!mesh4.legal_vertex_merge(vd[0], vd[2]));  // Opposite vertices of the same face.
+    const Edge e23 = mesh4.edge(vd[2], vd[3]), e30 = mesh4.edge(vd[3], vd[0]);
+    const Edge e4 = mesh4.remove_vertex_between_edges(vd[1]);
+    verify_adjacencies(mesh4);
+    assertx(mesh4.is_boundary(e4) && mesh4.query_edge(vd[2], vd[0]) == e4);
+    assertx(mesh4.edge(vd[2], vd[3]) == e23 && mesh4.edge(vd[3], vd[0]) == e30);
+    SHOW(mesh4.num_vertices(), mesh4.num_edges(), mesh4.num_faces());
+    show_faces(mesh4);
+  }
 }
 
 // Vertex merging, splitting, and fixing of non-nice vertices.
@@ -353,9 +380,9 @@ void test_vertex_operations() {
     // Two separate triangles (0, 1, 2) and (3, 4, 5), where vertices 4 and 5 coincide with 2 and 1.
     Mesh mesh;
     const Array<Vertex> va = create_mesh(mesh, 6, V(Array<int>{0, 1, 2}, Array<int>{3, 4, 5}));
-    // KNOWN_BUG: merging two vertices of the same face would create a face with a duplicate vertex, yet
-    // legal_vertex_merge() currently returns true, after which merge_vertices() dies.
-    if (0) assertx(!mesh.legal_vertex_merge(va[0], va[2]));
+    // Merging two vertices of the same face (or a vertex with itself) would create a face with a duplicate vertex.
+    assertx(!mesh.legal_vertex_merge(va[0], va[2]) && !mesh.legal_vertex_merge(va[2], va[0]));
+    assertx(!mesh.legal_vertex_merge(va[0], va[0]));
     assertx(mesh.legal_vertex_merge(va[2], va[4]));
     mesh.merge_vertices(va[2], va[4]);
     // The shared vertex 2 now has two separate partial rings, so it is not nice.

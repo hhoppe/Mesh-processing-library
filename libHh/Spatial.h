@@ -134,11 +134,13 @@ class ObjectSpatial : public Spatial {
   // within a given bounding box.  A starting point is also given.
   template <typename Func = bool(const Bbox<float, 3>&)> void enter(Univ id, const Point& startp, Func fcontains);
 
-  // Find the objects that could possibly intersect the segment (p1, p2).
-  // The objects are not returned in the exact order of intersection!
-  // However, once should_stop is set (ftest's return), the procedure
-  // will keep calling ftest with all objects that could be closer.
-  template <typename Func = bool(Univ)> void search_segment(const Point& p1, const Point& p2, Func ftest) const;
+  // Find the objects that could possibly intersect the segment (p1, p2), calling ftest(id) on each one once.
+  // The function ftest returns the parametric position f of the object's intersection along the segment, i.e. the
+  // point p1 + f * (p2 - p1) with 0 <= f <= 1, or BIGFLOAT if the object does not intersect the segment.
+  // The objects are not tested in the exact order of intersection!
+  // However, the procedure stops only after calling ftest with all the objects that could intersect the segment at
+  // a position smaller than the minimum f returned so far.
+  template <typename Func = float(Univ)> void search_segment(const Point& p1, const Point& p2, Func ftest) const;
 
  private:
   Map<int, Array<Univ>> _map;  // Encoded cube index -> vector.
@@ -307,8 +309,9 @@ void ObjectSpatial<Approx2, Exact2>::enter(Univ id, const Point& startp, Func fc
 template <typename Approx2, typename Exact2>
 template <typename Func>
 void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point& p2, Func ftest) const {
+  static_assert(std::is_same_v<std::invoke_result_t<Func&, Univ>, float>);
   Set<Univ> set;
-  bool should_stop = false;
+  float fmin = BIGFLOAT;  // The minimum parametric position of an intersection found so far.
   for_int(c, 3) {
     assertx(p1[c] >= 0.f && p1[c] <= 1.f);
     assertx(p2[c] >= 0.f && p2[c] <= 1.f);
@@ -333,14 +336,26 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
       const auto* cell = _map.find_ptr(en);
       if (!cell) continue;
       for (Univ e : *cell)
-        if (set.add(e) && ftest(e)) should_stop = true;
+        if (set.add(e)) fmin = min(fmin, ftest(e));
     }
-    if (i == ni || should_stop) break;
+    if (i == ni) {
+      assertw(std::is_eq(compare(p, p2, 1e-6f)));
+      break;
+    }
+    if (fmin != BIGFLOAT) {
+      // The cells visited so far contain the segment up to its exit from the cell cci (which contains p), so any
+      // object not yet tested can only intersect the segment beyond that parametric position.
+      float fexit = BIGFLOAT;
+      for_int(c, 3) {
+        const float d = p2[c] - p1[c];
+        if (d) fexit = min(fexit, (float_from_index(cci[c] + (d > 0.f ? 1 : 0)) - p1[c]) / d);
+      }
+      if (fmin <= fexit) break;
+    }
     pci = cci;
     pen = encode(pci);
     p += v;
   }
-  if (!should_stop) assertw(std::is_eq(compare(p, p2, 1e-6f)));
 }
 
 }  // namespace hh

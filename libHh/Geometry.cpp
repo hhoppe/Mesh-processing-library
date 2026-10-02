@@ -78,8 +78,10 @@ Frame Frame::rotation(int axis, float angle) {
   assertx(axis >= 0 && axis < 3);
   Frame frame = Frame::identity();
   float c = std::cos(angle), s = std::sin(angle);
-  if (abs(c) < 1e-6f) c = 0.f;
-  if (abs(s) < 1e-6f) s = 0.f;
+  // Make rotations by multiples of TAU / 4 exact.  Snapping one value to zero also snaps the other one to +-1, because
+  // a less accurate sin() or cos() (e.g., with MSVC /fp:fast, std::sin(TAU / 4) == 0.99999994f) need not give +-1.
+  if (abs(c) < 1e-6f) c = 0.f, s = sign(s);
+  if (abs(s) < 1e-6f) s = 0.f, c = sign(c);
   switch (axis) {
     case 0:
       frame[0, 0] = 1.f;

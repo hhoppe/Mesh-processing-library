@@ -108,14 +108,10 @@ int main() {
     SHOW(image.zsize());
     for_int(x, 4)
         assertx(image[0, x][0] == image[0, x][1] && image[0, x][0] == image[0, x][2] && image[0, x][3] == 255);
-    // KNOWN_BUG: to_bw() offsets each channel by +.5f before the gamma expansion and adds another .5f
-    //  before truncating the result, so a gray pixel v maps to v + 1 in exact arithmetic, and float rounding (FMA,
-    //  pow() implementation) determines whether the result is v or v + 1.  Therefore we only check |change| <= 1.
-    Image image2(V(1, 256));
+    Image image2(V(1, 256));  // A gray pixel maps to itself.
     for_int(x, 256) image2[0, x] = Pixel::gray(uint8_t(x));
     image2.to_bw();
-    for_int(x, 256) assertx(abs(image2[0, x][0] - x) <= 1 && image2[0, x][1] == image2[0, x][0]);
-    if (0) SHOW((image2[0, 0]), (image2[0, 80]));  // Pixel(1, 1, 1, 255) and Pixel(80, 80, 80, 255) on clang x86-64.
+    for_int(x, 256) assertx(image2[0, x] == Pixel::gray(uint8_t(x)));
     image.to_color();
     SHOW(image.zsize());
     image.to_color();  // A no-op on a color image.
@@ -137,11 +133,17 @@ int main() {
   }
   {
     // Conversion of matrices of various element types to images.
-    // KNOWN_BUG: as_image() of a float/double matrix applies narrow_cast<uint8_t>() to the unrounded
-    //  value v * 255.f + .5f, so a debug build asserts for every value except .5 (e.g. 0.f gives .5f).
-    if (0) {
+    {
       const Matrix<float> matrixf = {{0.f, .5f, 1.f}, {-1.f, 2.f, .25f}};
-      SHOW(as_image(matrixf));  // Rows "0 128 255" and "0 255 64" in a release build.
+      SHOW(as_image(matrixf));
+    }
+    {
+      // Each value rounds to the nearest level, like Vector4::pixel().
+      Matrix<float> matrixf(V(1, 256));
+      for_int(x, 256) matrixf[0][x] = (x + .49f) / 255.f;
+      const Image imagef = as_image(matrixf);
+      for_int(x, 256) assertx(imagef[0, x] == Pixel::gray(uint8_t(x)));
+      for_int(x, 256) assertx(rgb_equal(imagef[0, x], Vector4(matrixf[0][x]).pixel()));
     }
     const Matrix<float> matrixf = {{.5f, .5f}};
     SHOW(as_image(matrixf)[0][1]);

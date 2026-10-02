@@ -69,12 +69,13 @@ int main() {
     SHOW(de.total_entropy());
     assertx(total_bits == int(std::ceil(de.total_entropy())));
   }
-  if (0) {
+  {
+    // After entering 1, 2, 3 (giving the list [3, 2, 1]), entering 2 gives [2, 3, 1], so that enter(3) returns 1.
+    MoveToFront<int> move;
+    SHOW(move.enter(1), move.enter(2), move.enter(3), move.enter(2), move.enter(3));
+  }
+  {
     // A random sequence of elements, compared against a reference model.
-    // KNOWN_BUG: MoveToFront::enter() rotates the whole list rather than just its prefix [0, ifound], so that the
-    // elements after the found one also move ahead of the elements before it.  E.g., after entering 1, 2, 3 (giving
-    // the list [3, 2, 1]), entering 2 gives [2, 1, 3] rather than [2, 3, 1], so that a later enter(3) returns 2
-    // rather than 1.
     MoveToFront<int> move;
     Array<int> list;
     Random random{7};

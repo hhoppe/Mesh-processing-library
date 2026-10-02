@@ -32,6 +32,7 @@ DeltaEncoding::val_bits(1.0f) = 1
 DeltaEncoding::val_sign(13.3f) = 1
 DeltaEncoding::val_sign(-13.3f) = 0
 de.total_entropy() = 29.3645
+move.enter(1)=0 move.enter(2)=1 move.enter(3)=2 move.enter(2)=1 move.enter(3)=1
 move.enter("a")=0 move.enter("b")=1
 move.enter("a")=1 move.enter("a")=0
 enc.entropy()=0 enc.norm_entropy()=0

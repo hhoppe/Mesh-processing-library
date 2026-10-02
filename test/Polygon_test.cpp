@@ -69,9 +69,12 @@ int main() {
     Polygon rev = ls;
     reverse(rev);
     assertx(rev.get_normal() == -ls.get_normal());
-    // KNOWN_BUG: Polygon::get_area() sums the unsigned areas of the triangle fan about vertex 0, so for this reversed
-    // concave polygon (whose fan about (0, 3) is not a valid triangulation) it currently returns 9 instead of 5.
-    if (0) assertx(rev.get_area() == ls.get_area());
+    // The area is independent of the orientation and of the starting vertex, even for this concave polygon, whose
+    // triangle fans about (0, 3) and (3, 0) are not valid triangulations.
+    assertx(rev.get_area() == ls.get_area());
+    Polygon rotated = ls;
+    rotate(rotated, rotated.begin() + 1);
+    assertx(rotated.get_area() == ls.get_area());
     // A degenerate polygon has a zero normal.
     const Polygon degenerate{Point(0.f, 0.f, 0.f), Point(1.f, 1.f, 1.f), Point(2.f, 2.f, 2.f)};
     SHOW(degenerate.get_normal(), degenerate.get_area());

@@ -26,11 +26,9 @@ int main() {
     ps.line(.5f, -.5f, .6f, -.2f);  // Entirely outside, below.
     ps.line(-.5f, .5f, 1.5f, .5f);  // Clipped at both ends.
     ps.line(-.5f, .2f, .5f, .4f);   // Clipped at its first endpoint.
-    // KNOWN_BUG: a line that crosses the top or bottom boundary of the unit square should be clipped there, but it is
-    // currently dropped, because Postscript::line_i() computes the clipped x as (a - y) * m + x rather than (a - y) /
-    // m + x.
-    if (0) ps.line(.5f, .5f, .6f, 2.f);
-    ps.point(1.1f, .5f);  // Outside.
+    ps.line(.5f, .5f, .6f, 2.f);    // Clipped at the top boundary, at x == .5f + .1f / 3.f.
+    ps.line(.4f, -1.f, .5f, .5f);   // Clipped at the bottom boundary, at x == .5f - .1f / 3.f.
+    ps.point(1.1f, .5f);            // Outside.
     ps.point(.5f, .5f);
     ps.edge_width(2.f);
     ps.line(.2f, .8f, .8f, .8f);

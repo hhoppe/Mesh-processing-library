@@ -48,8 +48,6 @@ void test_continuous_binary_search_func() {
   }
 }
 
-// KNOWN_BUG: discrete_binary_search_func() computes its midpoint as (xl + xh) / 2, which overflows for large ranges
-// such as [1'500'000'000, 2'000'000'000], so those are not tested.
 void test_discrete_binary_search_func() {
   {  // Find the largest integer x such that x * x <= 50.
     const auto feval = [](int x) { return x * x; };
@@ -64,6 +62,22 @@ void test_discrete_binary_search_func() {
     const auto feval = [](int x) { return x; };
     for_intL(y, -100, 100) assertx(discrete_binary_search_func(feval, -100, 100, y) == y);
     assertx(discrete_binary_search_func(feval, -10, -9, -10) == -10);
+  }
+  {  // The midpoint computation does not overflow, even for ranges spanning the whole type.
+    const auto feval = [](int x) { return x; };
+    assertx(discrete_binary_search_func(feval, 1'500'000'000, 2'000'000'000, 1'800'000'000) == 1'800'000'000);
+    constexpr int imin = std::numeric_limits<int>::min(), imax = std::numeric_limits<int>::max();
+    for (const int y : {imin, imin + 1, -1, 0, 1, imax - 1})
+      assertx(discrete_binary_search_func(feval, imin, imax, y) == y);
+    const auto feval_u = [](uint8_t x) { return x; };
+    for_int(y, 255) assertx(discrete_binary_search_func(feval_u, uint8_t{0}, uint8_t{255}, uint8_t(y)) == y);
+  }
+  {  // As with the integer division (xl + xh) / 2, the midpoint is rounded toward zero, also for negative ranges.
+    // This non-monotonic function has crossings at both -3 and -1, so the result reveals the first midpoint.
+    const auto feval = [](int x) { return x == -2 || x == 0 ? 1 : 0; };
+    assertx(discrete_binary_search_func(feval, -3, 0, 0) == -1);  // The midpoint is -1 rather than -2.
+    const auto feval2 = [](int x) { return x == 1 || x == 3 ? 1 : 0; };
+    assertx(discrete_binary_search_func(feval2, 0, 3, 0) == 0);  // The midpoint is 1 rather than 2.
   }
 }
 

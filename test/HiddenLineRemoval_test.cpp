@@ -109,6 +109,16 @@ void test_scene() {
   g_drawn_length = 0.;
   hlr.draw_segment(Point(.1f, .35f, .35f), Point(.5f, .35f, .35f));
   SHOW(g_num_drawn, round_fraction_digits(g_drawn_length, 1e4));
+  {
+    // A point lying exactly on a splitting plane of the internal Kdtree (here y == .5) is hidden by a small polygon
+    // that straddles that plane, although the Kdtree stores that polygon only in its two child subtrees.
+    HiddenLineRemoval hlr2;
+    hlr2.enter(Polygon{Point(.3f, .4f, .4f), Point(.3f, .6f, .4f), Point(.3f, .6f, .6f), Point(.3f, .4f, .6f)});
+    for (const float y : {.45f, .5f, .55f}) {
+      assertx(!hlr2.draw_point(Point(.9f, y, .45f)));
+      assertx(hlr2.draw_point(Point(.1f, y, .45f)));
+    }
+  }
   // After clear(), everything is visible.
   hlr.clear();
   assertx(hlr.draw_point(Point(.9f, .3f, .3f)));

@@ -14,12 +14,14 @@ class Quaternion {
  public:
   Quaternion() { zero(); }
   Quaternion(const Quaternion& q) = default;
-  explicit Quaternion(const Frame& frame);  // Mapping from Frame::identity() to frame; origin frame.p() is ignored.
+  // Mapping from Frame::identity() to frame, with nonnegative real part; origin frame.p() is ignored.
+  explicit Quaternion(const Frame& frame);
   explicit Quaternion(const Vector& axis, float angle);
   explicit Quaternion(const Vector& vf, const Vector& vt);  // Resulting quaternion is 2 times rotation from vf to vt!
   Quaternion& operator=(const Quaternion&) = default;
   void zero() { _c[0] = _c[1] = _c[2] = 0.f, _c[3] = 1.f; }
-  // Extraction.
+  // Extraction, such that *this == Quaternion(axis, angle) with angle in [0, TAU].  The angle exceeds TAU / 2 if the
+  // real part is negative, in which case -*this represents the same rotation with angle TAU - angle about -axis.
   void angle_axis(float& angle, Vector& axis) const;
   [[nodiscard]] float angle() const;
   [[nodiscard]] Vector axis() const;  // The axis will be the zero vector if angle == 0.
@@ -49,6 +51,7 @@ class Quaternion {
   friend float mag(const Quaternion& q) { return mag(q._c); }
   friend float dot(const Quaternion& q1, const Quaternion& q2) { return dot(q1._c, q2._c); }
   void normalize() { _c *= 1.f / assertx(mag(_c)); }
+  [[nodiscard]] float half_angle() const;
 };
 
 Quaternion operator*(const Quaternion& q1, const Quaternion& q2);
@@ -98,6 +101,7 @@ inline Quaternion::Quaternion(const Frame& frame) {
     _c[3] = (frame[j, k] - frame[k, j]) * s;
     _c[j] = (frame[i, j] + frame[j, i]) * s;
     _c[k] = (frame[i, k] + frame[k, i]) * s;
+    if (_c[3] < 0.f) _c = -_c;  // Of the two equivalent quaternions, choose the one with nonnegative real part.
   }
   normalize();  // Optional; just to be sure.
 }
@@ -125,8 +129,8 @@ inline void Quaternion::angle_axis(float& angle, Vector& axis) const {
   // float a = std::sin(angle * .5f);
   // a = a ? 1.f / a : 1.f;
   // axis = _c.head<3>() * a;
+  angle = half_angle() * 2.f;
   const float xyz = mag(_c.head<3>());
-  angle = my_asin(xyz) * 2.f;
   const float a = xyz ? 1.f / xyz : 1.f;
   axis = _c.head<3>() * a;
 }
@@ -136,8 +140,7 @@ inline float Quaternion::angle() const {
   if (0) {
     return my_acos(_c[3]) * 2.f;
   } else {
-    const float xyz = mag(_c.head<3>());
-    return my_asin(xyz) * 2.f;
+    return half_angle() * 2.f;
   }
 }
 
@@ -149,6 +152,11 @@ inline Vector Quaternion::axis() const {
   const float a = xyz ? 1.f / xyz : 1.f;
   return _c.head<3>() * a;
 }
+
+// Return half the rotation angle, in [0, TAU / 2].  Using both the vector part and the real part, std::atan2() is
+// accurate over the whole range, unlike my_asin() of the vector part (inaccurate near TAU / 2) or my_acos() of the
+// real part (inaccurate for small angles, for which all the precision is in _c[0..2]).
+inline float Quaternion::half_angle() const { return std::atan2(mag(_c.head<3>()), _c[3]); }
 
 // Frame origin is set to zero!
 [[nodiscard]] inline Frame to_Frame(const Quaternion& q) {
@@ -205,12 +213,13 @@ inline Vector Quaternion::axis() const {
     // 2007-06-15 much more numerically stable
     // The important case is small angles, for which all the precision is in qi[0..2].
     const float xyzo = mag(qi._c.head<3>());
-    const float ango = my_asin(xyzo) * 2.f;
+    const float ango = qi.half_angle() * 2.f;
     const float angn = ango * e;
     const float xyzn = std::sin(angn * .5f);
     const float a = xyzo ? xyzn / xyzo : 1.f;
     for_int(i, 3) q[i] = qi[i] * a;
-    q[3] = my_sqrt(1.f - mag2(q._c.head<3>()));
+    const float wn = std::cos(angn * .5f);
+    q[3] = xyzo ? wn : sign(wn);  // If the vector part is zero, keep the quaternion unit-length.
   }
   return q;
 }
@@ -252,7 +261,7 @@ inline Vector Quaternion::axis() const {
     q[3] = q0[2];
     sclp = std::sin((.5f - t) * (TAU / 2));
     sclq = std::sin(t * (TAU / 2));
-    for_int(i, 3) q[i] = sclp * q0[i] + sclq * q[i];
+    for_int(i, 4) q[i] = sclp * q0[i] + sclq * q[i];
   } else if (1 - cosom < 1e-6f) {  // Ends very close.
     sclp = 1.f - t;
     sclq = t;

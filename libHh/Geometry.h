@@ -262,9 +262,9 @@ template <typename T> [[nodiscard]] T angle_between_unit_vectors(const Vec2<T>& 
   const T vdot = dot(v1, v2);
   const float thresh = 0.9475f;
   if (vdot > +thresh) {
-    return std::asin(cross(v1, v2));
+    return std::asin(abs(cross(v1, v2)));
   } else if (vdot < -thresh) {
-    return T(D_TAU / 2) - std::asin(cross(v1, v2));
+    return T(D_TAU / 2) - std::asin(abs(cross(v1, v2)));
   } else {
     return std::acos(vdot);
   }

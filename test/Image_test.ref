@@ -16,6 +16,11 @@ filename=a.mp4 filename_is_image(filename)=0
 filename=a filename_is_image(filename)=0
 filename=a.png.txt filename_is_image(filename)=0
 s =  'rgb' 'jpg' 'bmp' 'ppm' 'png' 'arw' 'exr' ''
+as_image(matrixf) = Matrix<hh::Pixel>(2, 3) {
+  Pixel(0, 0, 0, 255) Pixel(128, 128, 128, 255) Pixel(255, 255, 255, 255)
+  Pixel(0, 0, 0, 255) Pixel(255, 255, 255, 255) Pixel(64, 64, 64, 255)
+}
+
 as_image(matrixf)[0][1] = Pixel(128, 128, 128, 255)
 as_image(matrixd)[0][0] = Pixel(128, 128, 128, 255)
 imagev.zsize()=3 (imagev[0, 0])=Pixel(255, 0, 128, 255)

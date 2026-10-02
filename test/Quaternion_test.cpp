@@ -101,7 +101,7 @@ void test_frames() {
 void test_interpolation() {
   Random random{2};
   for_int(iter, 200) {
-    // Here the angles are less than TAU / 2, so the quaternions have positive real parts; see the note below.
+    // Here the angles are less than TAU / 2, so the quaternions have positive real parts; see below for the others.
     const Quaternion q0 = random_quaternion(random, 3.f), q1 = random_quaternion(random, 3.f);
     assertx(rotation_dist(pow(q0, 0.f), Quaternion()) < 5e-6f);
     assertx(rotation_dist(pow(q0, 1.f), q0) < 5e-6f);
@@ -109,9 +109,9 @@ void test_interpolation() {
     assertx(abs(pow(q0, .5f).angle() - q0.angle() * .5f) < 1e-4f);
     assertx(rotation_dist(pow(q0, .4f), exp(log(q0) * .4f)) < 1e-5f);
     assertx(rotation_dist(pow(q0, .4f), slerp(Quaternion(), q0, .4f)) < 1e-5f);
-    // Quaternion(frame) has a positive real part only if the frame trace is positive, i.e., for angles below
-    // TAU / 3; see the note below.
-    if (q0.angle() < 2.f) assertx(frame_dist(pow(to_Frame(q0), .5f) * pow(to_Frame(q0), .5f), to_Frame(q0)) < 1e-5f);
+    // The power of a frame is the principal one, i.e., about the same axis with the angle scaled.
+    assertx(frame_dist(pow(to_Frame(q0), .5f) * pow(to_Frame(q0), .5f), to_Frame(q0)) < 1e-5f);
+    assertx(frame_dist(pow(to_Frame(q0), .5f), to_Frame(pow(q0, .5f))) < 1e-5f);
     // Slerp interpolates the endpoints, at constant angular velocity along a great arc.
     assertx(rotation_dist(slerp(q0, q1, 0.f), q0) < 5e-6f && rotation_dist(slerp(q0, q1, 1.f), q1) < 5e-6f);
     const Quaternion qt = slerp(q0, q1, .3f);
@@ -131,19 +131,46 @@ void test_interpolation() {
     assertx(rotation_dist(squadseg(&qb, q0, q1, &qa, 0.f), q0) < 5e-6f);
     assertx(rotation_dist(squadseg(&qb, q0, q1, &qa, 1.f), q1) < 5e-6f);
   }
-  // KNOWN_BUG: angle(), axis(), angle_axis(), and pow() use my_asin() on the magnitude of the vector part and
-  // therefore assume a nonnegative real part (i.e., an angle at most TAU / 2).  For a quaternion with negative real
-  // part, pow(q, 1.f) represents a different rotation, and so does pow(frame, 1.f) when Quaternion(frame) yields such
-  // a quaternion.  Also, slerp() between nearly opposite quaternions does not return q0 at t == 0.f because it updates
-  // only 3 of the 4 components.
-  if (0) {
-    const Quaternion q(Vector(0.f, 0.f, 1.f), 1.5f * TAU / 2);  // Real part is negative.
+  // A quaternion with negative real part has an angle in (TAU / 2, TAU], and its powers are taken accordingly.
+  for (const float angle : {2.f, 3.f, 3.5f, 4.f, 5.f, 6.f, 6.2f}) {
+    const Vector axis = normalized(Vector(1.f, -2.f, 3.f));
+    const Quaternion q(axis, angle);
+    float angle2;
+    Vector axis2;
+    q.angle_axis(angle2, axis2);
+    assertx(abs(angle2 - angle) < 1e-4f && dist(axis2, axis) < 1e-4f);
+    assertx(angle2 == q.angle() && axis2 == q.axis());
     assertx(rotation_dist(pow(q, 1.f), q) < 5e-6f);
+    for (const float e : {-.7f, .3f, .5f, 1.5f, 2.f, 3.f}) {
+      assertx(rotation_dist(pow(q, e), Quaternion(axis, angle * e)) < 1e-5f);
+      assertx(rotation_dist(pow(q, e), exp(log(q) * e)) < 1e-5f);
+    }
+    // The quaternion of a frame has nonnegative real part, so the power of a frame is about the shorter rotation.
+    const Frame frame = to_Frame(q);
+    assertx(Quaternion(frame).access_private()[3] >= 0.f);
+    assertx(frame_dist(pow(frame, 1.f), frame) < 5e-6f);
+    const float short_angle = angle <= TAU / 2 ? angle : TAU - angle;
+    const Vector short_axis = angle <= TAU / 2 ? axis : Vector(-axis);
+    assertx(frame_dist(pow(frame, .5f), to_Frame(Quaternion(short_axis, short_angle * .5f))) < 1e-5f);
+  }
+  {
     const Frame frame = Frame::rotation(2, -2.6f);
     assertx(frame_dist(pow(frame, 1.f), frame) < 5e-6f);
+    assertx(frame_dist(pow(frame, .5f), Frame::rotation(2, -1.3f)) < 5e-6f);
+  }
+  {
+    // Slerp between nearly opposite quaternions, which represent the same rotation, follows a great semicircle.
+    const Quaternion q(Vector(0.f, 0.f, 1.f), 1.5f * TAU / 2);
     Quaternion q1 = q;
     q1.access_private() = -q.access_private();
-    assertx(rotation_dist(slerp(q, q1, 0.f), q) < 5e-6f);
+    assertx(dist(slerp(q, q1, 0.f).access_private(), q.access_private()) < 5e-6f);
+    assertx(dist(slerp(q, q1, 1.f).access_private(), q1.access_private()) < 5e-6f);
+    for (const float t : {.25f, .5f, .75f}) {
+      const Quaternion qt = slerp(q, q1, t);
+      assertx(qt.is_unit());
+      const float arc_t = std::acos(clamp(dot(q.access_private(), qt.access_private()), -1.f, 1.f));
+      assertx(abs(arc_t - t * (TAU / 2)) < 1e-3f);
+    }
   }
 }
 
@@ -153,11 +180,11 @@ void test_from_two_vectors() {
   for_int(iter, 100) {
     const Vector vf = normalized(Vector(random.unif() - .5f, random.unif() - .5f, random.unif() - .5f));
     Vector vt = normalized(Vector(random.unif() - .5f, random.unif() - .5f, random.unif() - .5f));
-    if (dot(vf, vt) < .1f) vt = normalized(vt + vf * (.1f - dot(vf, vt)) * 2.f);  // Angle less than TAU / 4.
+    if (dot(vf, vt) < -.9f) vt = normalized(vt + vf);  // Avoid nearly opposite vectors.
     const Quaternion q(vf, vt);
     assertx(q.is_unit());
     const float angle = std::acos(dot(vf, vt));
-    assertx(abs(q.angle() - 2.f * angle) < 5e-4f);
+    assertx(abs(q.angle() - 2.f * angle) < 5e-4f);  // The real part is negative for angles beyond TAU / 4.
     assertx(dist(vf * to_Frame(pow(q, .5f)), vt) < 1e-5f);
   }
 }

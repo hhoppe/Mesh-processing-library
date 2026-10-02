@@ -2,6 +2,7 @@
 #include "libHh/Kdtree.h"
 
 #include "libHh/Random.h"
+#include "libHh/Set.h"
 using namespace hh;
 
 namespace {
@@ -74,6 +75,50 @@ template <int D> void test_random_searches(int maxlevel, float fsize) {
     num_reports += found.num();
   }
   SHOW(D, maxlevel, fsize, num_found, num_reports);
+}
+
+// Query boxes whose coordinates are multiples of 1/32, so that they often lie exactly on splitting planes, and which
+// often have zero extent along some axes (e.g., the point queries of HiddenLineRemoval), compared with a brute-force
+// search.
+template <int D> void test_degenerate_searches(int maxlevel, float fsize) {
+  using KD = Kdtree<int, D>;
+  using VecD = Vec<float, D>;
+  Random random(2);
+  KD kd(maxlevel);
+  if (fsize) kd.allow_duplication(fsize);
+  const int n = 300;
+  Array<VecD> ar_bb0(n), ar_bb1(n);
+  for_int(i, n) {
+    for_int(c, D) {  // (Separate statements give a defined order of the random calls.)
+      const float max_size = random.get_unsigned(4) ? .0625f : .5f;
+      ar_bb0[i][c] = random.unif();
+      ar_bb1[i][c] = ar_bb0[i][c] + random.unif() * max_size;
+    }
+    kd.enter(i, ar_bb0[i], ar_bb1[i]);
+  }
+  int num_found = 0;
+  for_int(iquery, 1000) {
+    VecD q0, q1;
+    for_int(c, D) {
+      q0[c] = float(random.get_unsigned(33)) / 32.f;
+      q1[c] = random.get_unsigned(2) ? q0[c] : std::min(q0[c] + float(random.get_unsigned(4)) / 32.f, 1.f);
+    }
+    Set<int> found;
+    assertx(!kd.search(q0, q1, [&](const int& id, VecD&, VecD&, KD::CBloc) {
+      found.add(id);
+      return KD::ECallbackReturn::nothing;
+    }));
+    int num_expected = 0;
+    for_int(i, n) {
+      if (boxes_overlap(q0, q1, ar_bb0[i], ar_bb1[i])) {
+        assertx(found.contains(i));
+        num_expected++;
+      }
+    }
+    assertx(found.num() == num_expected);
+    num_found += num_expected;
+  }
+  SHOW(D, maxlevel, fsize, num_found);
 }
 
 void test_callback_returns() {
@@ -209,20 +254,28 @@ int main() {
   test_random_searches<3>(6, 0.f);
   test_random_searches<3>(6, .5f);
   test_callback_returns();
-  if (0) {  // KNOWN_BUG: with allow_duplication(), a point query lying exactly on a splitting plane misses the
-            // elements that straddle the plane, because they are stored only in the two child subtrees.
+  {
+    // With allow_duplication(), a point query lying exactly on a splitting plane finds the element that straddles the
+    // plane, although that element is stored only in the two child subtrees.
     using KD = Kdtree<int, 1>;
     KD kd;
     kd.allow_duplication(1.f);
     kd.enter(1, Vec1<float>(.4f), Vec1<float>(.6f));
-    Vec1<float> bb0(.5f), bb1(.5f);
-    int nfound = 0;
-    kd.search(bb0, bb1, [&](const int&, Vec1<float>&, Vec1<float>&, KD::CBloc) {
-      nfound++;
-      return KD::ECallbackReturn::nothing;
-    });
-    assertx(nfound == 1);  // Fails: nfound == 0.
+    for (const float x : {.45f, .5f, .55f}) {
+      Vec1<float> bb0(x), bb1(x);
+      int nfound = 0;
+      kd.search(bb0, bb1, [&](const int&, Vec1<float>&, Vec1<float>&, KD::CBloc) {
+        nfound++;
+        return KD::ECallbackReturn::nothing;
+      });
+      assertx(nfound == 1);
+    }
   }
+  test_degenerate_searches<1>(8, 0.f);
+  test_degenerate_searches<1>(8, 1.f);
+  test_degenerate_searches<2>(8, 0.f);
+  test_degenerate_searches<2>(8, 1.f);
+  test_degenerate_searches<3>(6, .5f);
 }
 
 template class hh::Kdtree<unsigned, 1>;

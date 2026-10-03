@@ -205,6 +205,13 @@ int main() {
     Frame frame5 = frame3;
     assertx(invert(frame5, frame5));
     assertx(near(frame5, frame4));
+    // A frame with a large translation is invertible, because the inversion depends only on its linear part.
+    const Frame frame_far = Frame::rotation(2, .3f) * Frame::translation(V(5.8e8f, 2.9e7f, -3.4e8f));
+    Frame frame_far_inv;
+    assertx(invert(frame_far, frame_far_inv));
+    const Frame product = frame_far * frame_far_inv;
+    for_int(i, 3) assertx(near(product.v(i), Frame::identity().v(i)));
+    assertx(mag(product.p()) < 1e-6f * mag(frame_far.p()));  // The translation cancels to within float precision.
     // make_right_handed() negates the first axis of a left-handed frame.
     Frame frame6 = Frame::scaling(V(1.f, -1.f, 1.f));
     frame6.make_right_handed();

@@ -52,9 +52,15 @@ Frame operator*(const Frame& frame1, const Frame& frame2) {
 
 bool invert(const Frame& frame, Frame& frame_inv) {
   // Here, &frame == &frame_inv is OK.
-  SGrid<float, 4, 4> m = to_Matrix(frame);
-  if (!invert(m.const_grid_view(), m.grid_view())) return false;
-  frame_inv = to_Frame(m.const_grid_view());
+  // The frame maps a point x to x * A + p, where the rows of A are frame.v(0..2), so its inverse maps y to
+  // y * A^-1 - p * A^-1.  Inverting just A, rather than the homogeneous 4x4 matrix [A 0; p 1], keeps a large
+  // translation from affecting the result: the condition number of the 4x4 matrix grows as |p|^2, so that a frame
+  // with a well-conditioned A but a translation of about 1e8 would be deemed singular.
+  SGrid<float, 3, 3> a;
+  for_int(i, 3) a[i] = frame.v(i);
+  if (!invert(a.const_grid_view(), a.grid_view())) return false;
+  const Point p = frame.p();
+  frame_inv = Frame(Vector(a[0]), Vector(a[1]), Vector(a[2]), Point(-(p[0] * a[0] + p[1] * a[1] + p[2] * a[2])));
   return true;
 }
 

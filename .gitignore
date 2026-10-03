@@ -91,17 +91,16 @@ Makefile.dep
 # RCS version control
 RCS/
 
-# Claude Code local state (e.g. worktrees)
+# Claude Code local state (e.g. worktrees), personal settings, and private instructions
 .claude/
+/.claude/settings.local.json
+/CLAUDE.md
 
 # Specific paths
 /TAGS
 
 #  Optional per-machine overrides.
 /Makefile_local_defs
-
-#  Personal Claude Code settings.
-/.claude/settings.local.json
 
 /bin/unix/*
 !/bin/unix/.gitignore

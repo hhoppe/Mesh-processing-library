@@ -4,17 +4,25 @@
 #include "libHh/Array.h"
 using namespace hh;
 
-// Count the macro arguments, as used by SHOW() and similar macros.
-static_assert(HH_NUM_ARGS(a) == 1);
-static_assert(HH_NUM_ARGS(a, b) == 2);
-static_assert(HH_NUM_ARGS(a, b, c) == 3);
-static_assert(HH_NUM_ARGS(f(x, y), g(z)) == 2);  // Commas within parentheses do not separate arguments.
-static_assert(HH_NUM_ARGS(a, b, c, d, e, f, g, h, i, j, k, l) == 12);
+namespace {
 
-static_assert(HH_GT1_ARGS(a) == 0);
-static_assert(HH_GT1_ARGS(f(x, y)) == 0);
-static_assert(HH_GT1_ARGS(a, b) == 1);
-static_assert(HH_GT1_ARGS(a, b, c, d, e, f, g, h, i, j, k, l) == 1);
+// Returns its argument.  Comparing a macro-expanded count directly against a literal (e.g., "1 == 1" after
+// expansion) is reported by the clang-tidy check misc-redundant-expression in some versions (e.g., LLVM 20).
+consteval int as_int(int n) { return n; }
+
+}  // namespace
+
+// Count the macro arguments, as used by SHOW() and similar macros.
+static_assert(as_int(HH_NUM_ARGS(a)) == 1);
+static_assert(as_int(HH_NUM_ARGS(a, b)) == 2);
+static_assert(as_int(HH_NUM_ARGS(a, b, c)) == 3);
+static_assert(as_int(HH_NUM_ARGS(f(x, y), g(z))) == 2);  // Commas within parentheses do not separate arguments.
+static_assert(as_int(HH_NUM_ARGS(a, b, c, d, e, f, g, h, i, j, k, l)) == 12);
+
+static_assert(as_int(HH_GT1_ARGS(a)) == 0);
+static_assert(as_int(HH_GT1_ARGS(f(x, y))) == 0);
+static_assert(as_int(HH_GT1_ARGS(a, b)) == 1);
+static_assert(as_int(HH_GT1_ARGS(a, b, c, d, e, f, g, h, i, j, k, l)) == 1);
 
 #define TEST_SQUARE(x) ((x) * (x))
 #define TEST_SUM_OF_SQUARES(...) HH_MAP_REDUCE((TEST_SQUARE, +, __VA_ARGS__))

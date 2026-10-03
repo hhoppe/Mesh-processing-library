@@ -28,7 +28,7 @@ class Stat {
  public:
   explicit Stat(string name_ = "", bool print = false, bool is_static = false);
   explicit Stat(const char* name_, bool print = false, bool is_static = false);
-  Stat(Stat&& s) noexcept : _print(false) { swap(*this, s); }  // Not "= default".
+  Stat(Stat&& s) noexcept : _print(false) { zero(); swap(*this, s); }  // Not "= default".
   template <ranges::input_range R> requires std::is_arithmetic_v<range_value_t<R>> explicit Stat(R&& range);
   ~Stat();
   Stat& operator=(Stat&& s) noexcept;

@@ -1,8 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Args.h"
 
-#include <cctype>  // isdigit()
-
 #include "libHh/FileIO.h"  // is_pipe(), is_url()
 #include "libHh/StringOp.h"
 
@@ -34,17 +32,13 @@ bool Args::check_bool(const string& s) { return s == "0" || s == "1" || s == "tr
 bool Args::check_char(const string& s) { return s.size() == 1; }
 
 bool Args::check_int(const string& s) {
-  if (s.empty()) return false;
-  for_int(i, narrow_cast<int>(s.size())) {
-    const char ch = s[i];
-    if (i == 0 && (ch == '-' || ch == '+')) continue;
-    if (std::isdigit(ch)) continue;
-    return false;
-  }
-  return true;
+  if (s == "") return false;
+  const size_t i0 = s[0] == '-' || s[0] == '+' ? 1 : 0;  // Skip an optional sign.
+  return s.size() > i0 && s.find_first_not_of("0123456789", i0) == string::npos;
 }
 
 bool Args::check_float(const string& s) {
+  if (s.find_first_of("0123456789") == string::npos) return false;
   if (s.find_first_not_of("0123456789-+.e") != string::npos) return false;
   return true;
 }

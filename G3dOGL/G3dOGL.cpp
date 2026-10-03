@@ -2239,7 +2239,7 @@ void process_print() {
       movie_video.emplace(concat(V(movie_nframes), image.dims()));
       movie_video->attrib().suffix = "mp4";                                             // Useful default.
       movie_video->attrib().framerate = 60;                                             // Useful default.
-      movie_video->attrib().bitrate = max(1'000'000, int(product(image.dims()) * 10));  // ~20Mbps at FullHD
+      movie_video->attrib().bitrate = max(1'000'000, int(product(image.dims()) * 10));  // ~20M bps at FullHD.
     }
     (*movie_video)[movie_frame].assign(image);
   } else {

@@ -84,9 +84,9 @@ template <typename T> class Encoding : noncopyable {
   }
 
   [[nodiscard]] float entropy() const {
+    if (_map.num() <= 1) return 0.f;  // An empty or single-event distribution needs no bits.
     double tot_prob = sum(_map.values());
     if (!assertw(tot_prob)) tot_prob = 1.;
-    if (_map.num() <= 1) return 0.f;
     double sum = 0.;
     for (const float prob : _map.values()) sum += prob * (-std::log2(prob / tot_prob));
     return float(sum);
@@ -94,9 +94,9 @@ template <typename T> class Encoding : noncopyable {
 
   // Returns the normalized entropy (entropy() / tot_prob).
   [[nodiscard]] float norm_entropy() const {
+    if (_map.num() <= 1) return 0.f;  // An empty or single-event distribution needs no bits.
     double tot_prob = sum(_map.values());
     if (!assertw(tot_prob)) tot_prob = 1.;
-    if (_map.num() <= 1) return 0.f;
     double sum = 0.;
     for (const float prob : _map.values()) sum += prob * (-std::log2(prob / tot_prob));
     return float(sum / tot_prob);

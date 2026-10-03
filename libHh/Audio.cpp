@@ -16,8 +16,8 @@ string Audio::diagnostic_string() const {
   if (attrib().suffix != "") s += " (" + attrib().suffix + ")";
   const int brate = attrib().bitrate;
   if (brate)
-    s += (brate > 1'000'000 ? sform(" (%.2fMi bps)", brate / 1'000'000.f)
-          : brate > 1000    ? sform(" (%.2fKi bps)", brate / 1000.f)
+    s += (brate > 1'000'000 ? sform(" (%.2f Mbps)", brate / 1'000'000.f)
+          : brate > 1000    ? sform(" (%.2f kbps)", brate / 1000.f)
                             : sform(" (%d bps)", brate));
   return s;
 }

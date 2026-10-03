@@ -1,5 +1,5 @@
 audio1.nsamples() = 144000
-audio1.diagnostic_string() = nsamples=144000 nchannels=2 (48000 Hz) (wav) (256.00Ki bps)
+audio1.diagnostic_string() = nsamples=144000 nchannels=2 (48000 Hz) (wav) (256.00 kbps)
 audio2.nsamples() = 144000
 audio2.diagnostic_string() = nsamples=144000 nchannels=2 (48000 Hz) (wav)
 audio2.dims() = [2, 144000]
@@ -34,7 +34,7 @@ audio2[2] = Array<float>(10) {
   1.2
 }
 audio.diagnostic_string()=nsamples=5 nchannels=1 (0 Hz) audio.nchannels()=1 audio.nsamples()=5
-audio.diagnostic_string() = nsamples=5 nchannels=1 (8000 Hz) (mp3) (2.50Mi bps)
+audio.diagnostic_string() = nsamples=5 nchannels=1 (8000 Hz) (mp3) (2.50 Mbps)
 audio.diagnostic_string() = nsamples=5 nchannels=1 (8000 Hz) (mp3) (500 bps)
 filename=a.wav filename_is_audio(filename)=1
 filename=a.WAV filename_is_audio(filename)=1

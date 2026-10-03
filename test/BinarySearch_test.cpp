@@ -45,6 +45,8 @@ void test_continuous_binary_search_func() {
     const float x = continuous_binary_search_func(feval, -2.f, 1.f, xtol, -1.f);
     assertx(feval(x) <= -1.f && -1.f < feval(x + xtol));
     assertx(continuous_binary_search_func(feval, -2.f, 1.f, 4.f, -1.f) == -2.f);  // Within tolerance, xl is returned.
+    // A zero tolerance terminates once xl and xh are adjacent floating-point values.
+    assertx(continuous_binary_search_func(feval, -2.f, 1.f, 0.f, -1.f) == -1.f);
   }
 }
 

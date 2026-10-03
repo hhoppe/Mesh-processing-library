@@ -42,6 +42,12 @@ int main() {
     enc.print_top_entries("enc", 2, [](const int& i) { return std::to_string(i); });
   }
   {
+    // With only negative values, the sign encoding that follows a positive sign remains empty and costs no bits.
+    DeltaEncoding de;
+    de.enter_coords(V(-3.f, -5.f));
+    assertx(de.total_entropy() == 4.f);
+  }
+  {
     DeltaEncoding de;
     de.enter_sign(0);
     de.enter_bits(3);
@@ -89,6 +95,11 @@ int main() {
     MoveToFront<string> move;
     SHOW(move.enter("a"), move.enter("b"));
     SHOW(move.enter("a"), move.enter("a"));
+  }
+  {
+    // An empty distribution has zero entropy (without a warning).
+    const Encoding<int> enc;
+    assertx(enc.entropy() == 0.f && enc.norm_entropy() == 0.f);
   }
   {
     // A single event has zero entropy.

@@ -102,9 +102,9 @@ void Audio::read_file(const string& pfilename) {
     assertx(h.Subchunk2Size == size_t(nsamples()) * nchannels() * sizeof(float));
     Array<float> ar(nsamples() * nchannels());
     assertx(read_binary_raw(fi(), ar));
-    const float* p = ar.data();
+    float* p = ar.data();
     for_int(i, nsamples()) for_int(ch, nchannels()) {
-      from_dos(&p);
+      from_dos(p);
       (*this)[ch, i] = *p++;
     }
   } else {

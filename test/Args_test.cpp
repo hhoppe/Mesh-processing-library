@@ -17,10 +17,10 @@ void test_static_checks() {
   assertx(Args::check_char("x") && !Args::check_char("") && !Args::check_char("xy"));
   assertx(Args::parse_char("-") == '-');
   for (const char* str : {"0", "-12", "+7", "2147483647"}) assertx(Args::check_int(str));
-  for (const char* str : {"", "1.", "1e3", "12a", "--1", " 1", "0x10"}) assertx(!Args::check_int(str));
+  for (const char* str : {"", "-", "+", "1.", "1e3", "12a", "--1", " 1", "0x10"}) assertx(!Args::check_int(str));
   assertx(Args::parse_int("-12") == -12 && Args::parse_int("+7") == 7);
   for (const char* str : {"1", "-1.5", ".5", "1e-3", "+2.5e+2"}) assertx(Args::check_float(str));
-  for (const char* str : {"1,5", "1.5f", "inf", "nan", " 1"}) assertx(!Args::check_float(str));
+  for (const char* str : {"", "-", ".", "e", "1,5", "1.5f", "inf", "nan", " 1"}) assertx(!Args::check_float(str));
   assertx(Args::parse_float("-1.5") == -1.5f && Args::parse_float("+2.5e+2") == 250.f);
   assertx(Args::check_double("1e-300") && Args::parse_double("1e-300") == 1e-300);
   for (const char* str : {"file", "-", "a/b.c", "cmd args |", "https://a.b/c?d"}) assertx(Args::check_filename(str));

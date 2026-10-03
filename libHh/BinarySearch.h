@@ -15,8 +15,9 @@ template <typename T1, typename T2, typename Func = T2(const T1&)>
   for (;;) {
     ASSERTXX(xl < xh && feval(xl) <= y_desired && y_desired < feval(xh));
     if (xh - xl < xtol) return xl;
-    T1 xm = (xl + xh) / 2;
-    T2 ym = feval(xm);
+    const T1 xm = (xl + xh) / 2;
+    if (xm <= xl || xm >= xh) return xl;  // No representable value lies strictly between (e.g., xtol is too small).
+    const T2 ym = feval(xm);
     if (y_desired >= ym)
       xl = xm;
     else

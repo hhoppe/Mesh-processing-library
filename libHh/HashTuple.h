@@ -7,7 +7,7 @@
 #include "libHh/Advanced.h"  // hash_combine()
 
 // Define hash functions for std::tuple<> and std::pair<>.
-// Also define std::ostream operators for std::tuple<>.   (std::ostream for std::pair<> is in Hh.h)
+// (The std::ostream operators for std::tuple<> and std::pair<> are in Hh.h.)
 
 template <typename... Types> struct std::hash<std::tuple<Types...>> {
   [[nodiscard]] size_t operator()(const std::tuple<Types...>& tu) const {

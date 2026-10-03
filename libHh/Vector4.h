@@ -303,7 +303,7 @@ inline void Vector4::raw_to_byte4(Vec4<uint8_t>& p) const {
 }
 inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
   Vector4 t = *this * 255.f;
-  for_int(c, 4) ASSERTX(t[c] <= 2'147'480'000.f);  // See Vector4_test.h
+  for_int(c, 4) ASSERTX(t[c] <= 2'147'480'000.f);  // See Vector4_test.cpp.
   const __m128i t1 = _mm_cvtps_epi32(t._r);  // 4 float -> 4 signed 32-bit int (rounding)  (or cvttps for truncation).
   const __m128i t2 = _mm_packs_epi32(t1, t1);   // 8 signed 32-bit -> 8 signed 16-bit (saturation).
   const __m128i t3 = _mm_packus_epi16(t2, t2);  // 16 signed 16-bit -> 16 unsigned 8-bit (saturation).
@@ -343,7 +343,7 @@ inline void Vector4::raw_to_byte4(Vec4<uint8_t>& p) const {
 }
 inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
   Vector4 t = *this * 255.f;
-  for_int(c, 4) ASSERTX(t[c] <= 2'147'480'000.f);  // see Vector4_test.h
+  for_int(c, 4) ASSERTX(t[c] <= 2'147'480'000.f);  // See Vector4_test.cpp.
 #if defined(__aarch64__) || defined(_M_ARM64)
   // Round to nearest, with ties to even, like _mm_cvtps_epi32() in the SSE version.
   uint32x4_t a = vcvtnq_u32_f32(t._r);  // uint32x4_t vcvtnq_u32_f32(float32x4_t a);  // FCVTNU Vd.4S, Vn.4S

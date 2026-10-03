@@ -20,8 +20,7 @@ void principal_components(CArrayView<Vector> va, Frame& frame, Vec3<float>& eima
 // Given mi[m, n] (m data points of dimension n),
 //   compute mo[n, n] (n orthonormal eigenvectors rows, by decreasing eigenv.) and eigenvalues eimag[n].
 // Note that the mean must be subtracted out of mi[][] if desired.
-// As shown in Principal_test.cpp test_sgesvd(), this is related to computing singular value decomposition
-//   using sgesdv_().
+// This is related to computing the singular value decomposition of mi[][], e.g. using sgesvd_() (my_lapack.h).
 void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView<float> eimag);
 
 // Same using incremental approximate computation.

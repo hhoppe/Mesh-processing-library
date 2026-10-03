@@ -67,7 +67,7 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
     }
     assertx(iter < 10);
   }
-  // Insertion sort: eigenvalues in descending order.
+  // Selection sort: eigenvalues in descending order.
   for_int(i, n) {
     int imax = i;
     float vmax = val[i];
@@ -211,7 +211,7 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
   compute_eigenvectors(a, mo, eimag);
   // Convert variances to standard deviations.
   for_int(i, n) eimag[i] = sqrt(eimag[i]);
-  // Insertion sort: eigenvalues in descending order.
+  // Selection sort: eigenvalues in descending order.
   for_int(i, n) {
     int imax = i;
     float vmax = eimag[i];
@@ -275,7 +275,7 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
       }
     }
   }
-  // Insertion sort: eigenvalues in descending order.
+  // Selection sort: eigenvalues in descending order.
   for_int(i, ne) {
     int imax = i;
     float vmax = vnorm[i];

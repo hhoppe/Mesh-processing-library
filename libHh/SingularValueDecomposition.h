@@ -100,7 +100,7 @@ template <typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S,
   assertx(m >= n);
   assertx(S.num() == n);
   assertx(VT.dims() == V(n, n));
-  // Insertion sort.
+  // Selection sort: singular values in descending order.
   for_int(i0, n - 1) {
     const int i1 = arg_max(S.slice(i0, n)) + i0;
     if (i0 == i1) continue;

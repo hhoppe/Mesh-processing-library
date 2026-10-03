@@ -25,7 +25,7 @@
       void operator()(CArrayView<Vec3<float>>){...};
     };
     const auto func_border = [](CArrayView<Vec3<float>>) { ... };
-    Contour3d contour(50, func_eval, func_contour(), func_border);
+    Contour3d contour(50, func_contour(), func_eval, func_border);
     contour.march_from(Point(.9f, .6f, .6f));
   }
 }
@@ -741,7 +741,8 @@ class Contour2d : public ContourBase<2> {
 
 // Template deduction guides:
 template <typename Eval, typename Border> Contour3dMesh(int, GMesh*, Eval, Border) -> Contour3dMesh<Eval, Border>;
-template <typename Eval, typename Border> Contour3d(int, GMesh*, Eval, Border) -> Contour3d<Eval, Border>;
+template <typename Contour, typename Eval, typename Border>
+Contour3d(int, Contour, Eval, Border) -> Contour3d<Eval, Contour, Border>;
 template <typename Eval, typename Contour, typename Border>
 Contour2d(int, Eval, Contour, Border) -> Contour2d<Eval, Contour, Border>;
 

@@ -76,7 +76,8 @@ int my_pclose(FILE* file);
 
 inline bool character_requires_quoting(char ch) {
   // The `cmd` special characters include: space, "&()[]{}^=;!'+,`~".
-  return !std::isalnum(ch) && !std::string_view(":/-@_.").contains(ch);  // Removed "+" and ",".
+  return !std::isalnum(static_cast<unsigned char>(ch)) &&
+         !std::string_view(":/-@_.").contains(ch);  // Removed "+" and ",".
 }
 
 bool string_requires_quoting(const string& s) { return ranges::any_of(s, character_requires_quoting); }
@@ -489,7 +490,7 @@ bool file_exists(const string& name) {
   static_assert(sizeof(fstat.st_size) == sizeof(int64_t), "Would be unable to open files larger than 2 GB.");
   if (stat(name.c_str(), &fstat)) return false;
 #endif
-  if (fstat.st_mode & S_IFDIR) {
+  if ((fstat.st_mode & S_IFMT) == S_IFDIR) {
     if (0) Warning("Found directory when expecting a file");
     if (0) SHOW("found directory '" + name + "' when expecting a file");
     return false;
@@ -505,7 +506,7 @@ bool directory_exists(const string& name) {
   struct stat fstat;
   if (stat(name.c_str(), &fstat)) return false;
 #endif
-  if (fstat.st_mode & S_IFDIR) return true;  // Test if a directory.
+  if ((fstat.st_mode & S_IFMT) == S_IFDIR) return true;  // Test if a directory.
   return false;
 }
 
@@ -575,7 +576,7 @@ Array<string> get_in_directory(const string& directory, EType type) {
       const string path_name = directory + "/" + file_name;
       struct stat st;
       if (stat(path_name.c_str(), &st) == -1) continue;
-      const bool is_directory = (st.st_mode & S_IFDIR) != 0;
+      const bool is_directory = (st.st_mode & S_IFMT) == S_IFDIR;
       if ((type == EType::files && is_directory) || (type == EType::directories && !is_directory)) continue;
       if (is_directory && (file_name == "." || file_name == "..")) continue;
       ar_filenames.push(std::move(file_name));
@@ -847,7 +848,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
       if (!pid) {                             // If child process.
         if (0) assertx(!HH_POSIX(close)(0));  // No need to read from stdin?
         execvp(argv[0], const_cast<char**>(argv.data()));
-        exit(127);  // If exec() failed, report same exit code as failed system().
+        _exit(127);  // If exec() failed, report same exit code as failed system(); skip the atexit() handlers.
       }
       int status;
       assertx(waitpid(pid, &status, 0) == pid);
@@ -868,7 +869,7 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
           // Grandchild pid back to parent.
           int64_t t = pid;
           assertx(HH_POSIX(write)(fd[1], &t, sizeof(t)) == sizeof(t));
-          exit(0);
+          _exit(0);
         }
         if (!pid) {                                    // Grandchild process.
           if (fcntl(fd[1], F_SETFD, FD_CLOEXEC) == 0)  // (Close pipe if exec succeeds.)
@@ -878,16 +879,15 @@ intptr_t my_spawn(CArrayView<string> sargv, bool wait_) {
         assertx(errno > 0);
         int64_t t = -errno;
         assertx(write(fd[1], &t, sizeof(t)) == sizeof(t));
-        exit(1);  // This exit code is not accessed by parent.
+        _exit(1);  // This exit code is not accessed by parent.
       }
-      wait(nullptr);                     // The reason/need for this is unclear.
-      assertx(!HH_POSIX(close)(fd[1]));  // No need to write to child process.
-      pid = -1;                          // Expect to read back a process id from child.
-      for (;;) {                         // Outputs from child or grandchild may come in any order.
+      assertx(waitpid(pid, nullptr, 0) == pid);  // Reap the intermediate child, which exits immediately.
+      assertx(!HH_POSIX(close)(fd[1]));          // No need to write to child process.
+      pid = -1;                                  // Expect to read back a process id from child.
+      for (;;) {                                 // Outputs from child or grandchild may come in any order.
         int64_t t;
         const int nread = HH_POSIX(read)(fd[0], &t, sizeof(t));
         assertx(nread >= 0);
-        SHOW(t);  // ?
         if (!nread) break;
         if (t < 0)
           errno = narrow_cast<int>(-t);

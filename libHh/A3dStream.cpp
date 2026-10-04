@@ -161,6 +161,7 @@ void RA3dStream::set_current_color(char ctype, const Vec3<float>& f) {
 bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& comment) {
   // _is >> std::ws;  // Commented 2012-12-11.
   char ch;
+  if (_is.peek() == '\r') _is.get(ch);  // A blank line in a DOS-format file.
   if (_is.peek() == '\n') _is.get(ch);  // There may be a blank line between elements.
   const int vpeek = _is.peek();
   if (vpeek < 0) return false;

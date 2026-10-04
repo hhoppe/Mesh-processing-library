@@ -123,7 +123,7 @@ timingtest: Filterimage Filtervideo
 #	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
 
 phony_targets = all progs libs $(dirs+test) clean $(clean_dirs) \
-  deepclean $(deepclean_dirs) depend $(depend_dirs) TAGS tags debug timingtest
+  deepclean $(deepclean_dirs) depend $(depend_dirs) debug timingtest makeall cleanall debug_path
 .PHONY: $(phony_targets)
 $(check_goals)
 

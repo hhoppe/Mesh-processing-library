@@ -277,7 +277,7 @@ void process_principal() {
     Sr20.enter(len2 / len0);
     Sr21.enter(len2 / len1);
     pcorg[i] = frame.p();
-    pcnor[i] = usenormals < 3 ? frame.v(minora) : nor[i];
+    pcnor[i] = usenormals == 3 && have_normals ? nor[i] : frame.v(minora);
     assertx(pcnor[i].normalize());
     print_principal(frame);
   }
@@ -679,7 +679,7 @@ void process_contour() {
     }
   } else {
     if (ioc) {
-      Contour2d<EvalPoint<2>, OutputBorder2d> contour(gridsize);
+      Contour2d<EvalPoint<2>, OutputContour2d, OutputBorder2d> contour(gridsize);
       contour_2d(contour);
     } else {
       Contour2d<EvalPoint<2>, OutputContour2d> contour(gridsize);

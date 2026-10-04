@@ -668,6 +668,7 @@ Vertex Mesh::center_split_face(Face f) {
 Edge Mesh::split_face(Face f, Vertex v1, Vertex v2) {
   if (debug() >= 1) valid(v1), valid(v2);
   assertx(!query_edge(v1, v2));
+  assertx(contains(vertices(f), v1) && contains(vertices(f), v2));  // Otherwise, the loop below never ends.
   Array<Vertex> va1, va2;
   for (Vertex v = v1;;) {
     va1.push(v);

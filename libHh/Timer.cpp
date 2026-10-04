@@ -95,9 +95,9 @@ string timing_host() {
         DWORD len = DWORD(buf.size() - 2);
         if (!RegQueryValueExA(hkey, "ProcessorNameString", nullptr, nullptr, reinterpret_cast<uchar*>(buf.data()),
                               &len)) {
-          const char* p = buf.data();     // E.g., "                   Intel(R) Xeon(TM) CPU 3.06GHz"
-          while (*p == ' ') p++;          // Skip initial whitespace (optional).
-          while (!std::isdigit(*p)) p++;  // Go right to the CPU speed.
+          const char* p = buf.data();  // E.g., "                   Intel(R) Xeon(TM) CPU 3.06GHz"
+          while (*p == ' ') p++;       // Skip initial whitespace (optional).
+          while (*p && !std::isdigit(static_cast<unsigned char>(*p))) p++;  // Go right to the CPU speed.
           rev = p;
           for (auto& ch : rev)
             if (ch == ' ') ch = '_';
@@ -319,7 +319,7 @@ double Timer::cpu() const {
 
 double Timer::parallelism() const {
   assertx(!_started);
-  return cpu() / max(real(), 1e-9);
+  return _process_cpu_time / max(real(), 1e-9);
 }
 
 }  // namespace hh

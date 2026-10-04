@@ -14,7 +14,7 @@
   audio.attrib().samplerate = samplerate;
   for_int(i, audio.nsamples()) for_int(ch, audio.nchannels()) {
     float t = i / samplerate;  // Time in seconds.
-    audio(ch, i) = std::sin(t * freq * TAU);
+    audio[ch, i] = std::sin(t * freq * TAU);
   }
   audio.attrib().bitrate = 256'000;  // 256 kbps
   audio.write_file("file.mp3");
@@ -70,7 +70,7 @@ class Audio : public Grid<2, float> {
 
 //----------------------------------------------------------------------------
 
-// Shared for the implementation in Video.cpp.
+// Shared with the implementations in Image_IO.cpp and Video_IO.cpp.
 [[nodiscard]] bool ffmpeg_command_exists();
 
 }  // namespace hh

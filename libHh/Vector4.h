@@ -380,7 +380,7 @@ inline void Vector4::norm_to_byte4(Vec4<uint8_t>& p) const {
 // This is required so that "Vector4 v{};" is properly zero-initialized.
 static_assert(std::is_trivially_default_constructible_v<Vector4>);
 
-// The absence of "Vector4& operator=(const Vector4& r)" and "Vector4& operator=(const Vector4& r)" enables this
+// The absence of a user-declared copy constructor and of "Vector4& operator=(const Vector4& r)" enables this
 // property, which in turn allows more features (e.g., std::bit_cast<Vector4>, memcpy, relocation optimization).
 static_assert(std::is_trivially_copyable_v<Vector4>);
 

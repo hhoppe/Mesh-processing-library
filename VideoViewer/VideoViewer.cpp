@@ -435,6 +435,14 @@ bool image_is_not_visible() {
                                              [](const Vec2<float>& p) { return convert<float>(get_win_yx(p)); }));
 }
 
+// Surround the name (e.g., a filename) with single quotes if it contains any character other than [A-Za-z0-9_].
+string optionally_quote(const string& name) {
+  const auto is_plain = [](char ch) {
+    return (ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || (ch >= '0' && ch <= '9') || ch == '_';
+  };
+  return ranges::all_of(name, is_plain) ? name : "'" + name + "'";
+}
+
 // Add a modifier (e.g. "_crop") to the end of the root part of a filename.
 string append_to_filename(const string& filename, const string& smodif) {
   if (file_requires_pipe(filename)) return filename;
@@ -453,10 +461,10 @@ bool is_unlocked(const Object& ob) {
 }
 
 void verify_saved(const Object& ob) {
-  const string s = ob.stype() + " '" + ob._filename + "'";
+  const string s = ob.stype() + " " + optionally_quote(ob._filename);
   if (ob._unsaved) throw s + " is unsaved";
   if (file_requires_pipe(ob._filename)) throw s + " is loaded from a pipe rather than a file";
-  if (!file_exists(ob._filename)) throw "file '" + ob._filename + "' is no longer found";
+  if (!file_exists(ob._filename)) throw "file " + optionally_quote(ob._filename) + " is no longer found";
 }
 
 // Must be called with lock on g_mutex_obs.  Is there any way to assert this (e.g. in Debug build)?
@@ -499,7 +507,8 @@ Object& check_saved_object() {
 
 void check_all_objects() {
   for (auto& pob : g_obs)
-    if (!is_unlocked(*pob)) throw pob->stype() + " " + pob->_filename + "is locked due to background processing";
+    if (!is_unlocked(*pob))
+      throw pob->stype() + " " + optionally_quote(pob->_filename) + " is locked due to background processing";
 }
 
 // No lock on g_mutex_obs.
@@ -875,10 +884,10 @@ void set_fullscreen(bool v) {
 void view_externally() {
   const string& filename = getob()._filename;
   if (!is_url(filename)) {
-    if (!file_exists(filename)) throw "file '" + filename + "' does not exist";
-    if (file_requires_pipe(filename)) throw "file '" + filename + "' is a pipe";
+    if (!file_exists(filename)) throw "file " + optionally_quote(filename) + " does not exist";
+    if (file_requires_pipe(filename)) throw "file " + optionally_quote(filename) + " is a pipe";
   }
-  message("Externally opening " + filename, 5.);
+  message("Externally opening " + optionally_quote(filename), 5.);
   // This works best in Windows, even with Unicode filenames.
   if (!my_spawn(V<string>("cmd", "/s/c", R"(start "dummy_window_title" ")" + filename + "\""), true)) {
     if (g_verbose) SHOW("spawned using cmd");
@@ -913,7 +922,7 @@ void view_externally() {
       return;  // Success.
     }
   }
-  throw "unable to externally open " + filename;
+  throw "unable to externally open " + optionally_quote(filename);
 }
 
 // Rotate counter-clockwise by an angle of -270, -180, -90, 0, +90, +180, or +270 degrees.
@@ -931,7 +940,7 @@ template <typename T> void reverse_x(GridView<3, T> grid) {
   parallel_for(range(grid.dim(0)), [&](const int i) { grid[i].reverse_x(); });
 }
 
-// Replace current object with previous/next file in object's directory.  Ret: success.
+// Replace current object with previous/next file in object's directory.  Returns success.
 bool replace_with_other_object_in_directory(int increment) {
   assertx(abs(increment) == 1 || abs(increment) == std::numeric_limits<int>::max());
   const Object& ob0 = check_saved_object();
@@ -969,7 +978,7 @@ bool replace_with_other_object_in_directory(int increment) {
     } else {
       i = my_mod(i + increment, filenames.num());
       if (i == i0) {
-        message(s_message + "No other video/image in " + directory, message_time);
+        message(s_message + "No other video/image in " + optionally_quote(directory), message_time);
         return false;
       }
     }
@@ -998,7 +1007,7 @@ bool replace_with_other_object_in_directory(int increment) {
       set_video_frame(g_cob, k_before_start, k_force_refresh);
       return true;
     } catch (std::runtime_error& ex) {
-      s_message += "(Error opening " + filename_tail + " : " + ex.what() + ") ";
+      s_message += "(Error opening " + optionally_quote(filename_tail) + " : " + ex.what() + ") ";
       message_time = 10;
     }
   }
@@ -1172,7 +1181,7 @@ bool DerivedHw::key_press(string skey) {
     int framenum = getob(obi)._framenum;
     if (getob(obi)._dims == getob()._dims) framenum = g_framenum;  // Stay synchronized.
     set_video_frame(obi, float(framenum));
-    message("Switched to " + getob().stype() + " " + get_path_tail(getob()._filename));
+    message("Switched to " + getob().stype() + " " + optionally_quote(get_path_tail(getob()._filename)));
   };
   const bool is_shift = get_key_modifier(Hw::EModifier::shift);
   const bool is_control = get_key_modifier(Hw::EModifier::control);
@@ -1196,10 +1205,11 @@ bool DerivedHw::key_press(string skey) {
       string new_filename = old_filename;
       if (!query(V(20, 10), "Rename " + old_type + " to (or <esc>): ", new_filename)) throw "";
       if (new_filename == old_filename) throw "source and destination are identical";
-      if (file_exists(new_filename)) throw "file " + new_filename + " already exists";
+      if (file_exists(new_filename)) throw "file " + optionally_quote(new_filename) + " already exists";
       const bool success = !rename(old_filename.c_str(), new_filename.c_str());  // Like command mv(1).
-      if (!success) throw "could not rename " + old_filename + " to " + new_filename;
-      message("Renamed " + old_type + " to " + new_filename);
+      if (!success)
+        throw "could not rename " + optionally_quote(old_filename) + " to " + optionally_quote(new_filename);
+      message("Renamed " + old_type + " to " + optionally_quote(new_filename));
       ob._filename = new_filename;
       ob._orig_filename = new_filename;
       g_dir_media_filenames.invalidate();
@@ -1216,16 +1226,16 @@ bool DerivedHw::key_press(string skey) {
           if (file_requires_pipe(filename) || file_exists(filename)) break;
           const string root = get_path_root(filename);
           auto i = root.rfind('_');
-          if (i == string::npos) throw "cannot find file for " + ob0._filename;
+          if (i == string::npos) throw "cannot find file for " + optionally_quote(ob0._filename);
           filename = root.substr(0, i) + "." + get_path_extension(filename);
         }
         try {
           g_obs[obi] = ob0._is_image ? object_reading_image(filename) : object_reading_video(filename);
         } catch (std::runtime_error& ex) {
-          throw "while re-reading " + getob().stype() + " from " + filename + " : " + ex.what();
+          throw "while re-reading " + getob().stype() + " from " + optionally_quote(filename) + " : " + ex.what();
         }
         Object& ob = getob(obi);
-        message("Reloading " + ob.stype() + " " + get_path_tail(filename));
+        message("Reloading " + ob.stype() + " " + optionally_quote(get_path_tail(filename)));
         ob._filename = filename;
         if (obi == g_cob) {
           set_video_frame(g_cob, k_before_start, k_force_refresh);
@@ -1242,18 +1252,18 @@ bool DerivedHw::key_press(string skey) {
       if (g_dest_dir == get_path_head(old_filename)) throw "source and destination are identical";
       if (!directory_exists(g_dest_dir)) throw "destination directory does not exist";
       const string new_filename = g_dest_dir + "/" + get_path_tail(old_filename);
-      if (file_exists(new_filename)) throw "file " + new_filename + " already exists";
+      if (file_exists(new_filename)) throw "file " + optionally_quote(new_filename) + " already exists";
       const bool next_loaded = replace_with_other_object_in_directory(+1);
       const bool success = !rename(old_filename.c_str(), new_filename.c_str());  // Like command mv(1).
       // SHOW(old_type, old_filename, new_filename, next_loaded, success);
       if (!success) {
         if (next_loaded) replace_with_other_object_in_directory(-1);
-        throw "could not move " + old_filename + " to " + new_filename;
+        throw "could not move " + optionally_quote(old_filename) + " to " + optionally_quote(new_filename);
       }
       if (next_loaded) {
-        message("Moved " + old_type + " to " + new_filename + " and loaded next object");
+        message("Moved " + old_type + " to " + optionally_quote(new_filename) + " and loaded next object");
       } else {
-        message("Moved " + old_type + " to " + new_filename + "; no other files in directory");
+        message("Moved " + old_type + " to " + optionally_quote(new_filename) + "; no other files in directory");
         unload_current_object();
       }
       g_dir_media_filenames.invalidate();
@@ -1269,7 +1279,7 @@ bool DerivedHw::key_press(string skey) {
       const string new_filename = g_dest_dir + "/" + get_path_tail(old_filename);
       if (file_exists(new_filename)) {
         string s = "yes";
-        if (!query(V(20, 10), "OK to overwrite " + new_filename + ": ", s) || s != "yes") throw "";
+        if (!query(V(20, 10), "OK to overwrite " + optionally_quote(new_filename) + ": ", s) || s != "yes") throw "";
       }
       try {  // Like command "cp".
         {
@@ -1279,9 +1289,10 @@ bool DerivedHw::key_press(string skey) {
         }
         assertw(set_path_modification_time(new_filename, get_path_modification_time(old_filename)));
       } catch (const std::runtime_error& ex) {
-        throw "could not copy " + old_filename + " to " + new_filename + " : " + ex.what();
+        throw "could not copy " + optionally_quote(old_filename) + " to " + optionally_quote(new_filename) + " : " +
+            ex.what();
       }
-      message("Copied " + old_type + " to " + new_filename);
+      message("Copied " + old_type + " to " + optionally_quote(new_filename));
     } else if (keycode == 'L' - 64 && !is_shift) {  // C-l is unbound
       beep();
     } else if (keycode == 'R' - 64 && !is_shift) {  // C-r is unbound
@@ -1343,13 +1354,15 @@ bool DerivedHw::key_press(string skey) {
       const string old_type = getob().stype();
       if (!g_prompted_for_delete) {
         string s = "yes";
-        if (!query(V(20, 10), "OK to delete " + old_type + " '" + old_filename + "': ", s) || s != "yes") throw "";
+        if (!query(V(20, 10), "OK to delete " + old_type + " " + optionally_quote(old_filename) + ": ", s) ||
+            s != "yes")
+          throw "";
         g_prompted_for_delete = true;
       }
       const bool next_loaded = replace_with_other_object_in_directory(+1);
       if (!recycle_path(old_filename)) {
         if (next_loaded) replace_with_other_object_in_directory(-1);
-        throw "could not delete " + old_filename;
+        throw "could not delete " + optionally_quote(old_filename);
       }
       if (next_loaded) {
         message("Deleted current " + old_type + " and loaded next " + getob().stype());
@@ -1506,7 +1519,7 @@ bool DerivedHw::key_press(string skey) {
           std::swap(g_obs[g_cob], g_obs[g_cob - 1]);
           g_cob--;
           if (0) set_video_frame(g_cob, g_framenum);  // Would force unnecessary texture refresh.
-          message("Moved object earlier than " + g_obs[g_cob + 1]->_filename);
+          message("Moved object earlier than " + optionally_quote(g_obs[g_cob + 1]->_filename));
           break;
         }
         case 'X': {  // Exchange object with next one.
@@ -1516,7 +1529,7 @@ bool DerivedHw::key_press(string skey) {
           std::swap(g_obs[g_cob], g_obs[g_cob + 1]);
           g_cob++;
           if (0) set_video_frame(g_cob, g_framenum);  // Would force unnecessary texture refresh.
-          message("Moved object later than " + g_obs[g_cob - 1]->_filename);
+          message("Moved object later than " + optionally_quote(g_obs[g_cob - 1]->_filename));
           break;
         }
         case 's': {  // Change directory sort type.
@@ -1623,7 +1636,7 @@ bool DerivedHw::key_press(string skey) {
           for (const string& pfilename : filenames) {
             const string filename = get_path_absolute(pfilename);
             if (!file_exists(filename)) {
-              s_message += " (File '" + filename + "' not found)";
+              s_message += " (File " + optionally_quote(filename) + " not found)";
               continue;
             }
             std::scoped_lock lock(g_mutex_obs);
@@ -1632,7 +1645,7 @@ bool DerivedHw::key_press(string skey) {
               set_video_frame(g_cob, k_before_start);     // Set to first frame.
               if (first_cob_loaded < 0) first_cob_loaded = g_cob;
             } catch (std::runtime_error& ex) {
-              s_message += " (Error reading file " + filename + " : " + ex.what() + ")";
+              s_message += " (Error reading file " + optionally_quote(filename) + " : " + ex.what() + ")";
             }
           }
           if (first_cob_loaded >= 0) {
@@ -1651,12 +1664,12 @@ bool DerivedHw::key_press(string skey) {
           if (is_shift && ob._file_modification_time && file_exists(cur_filename) &&
               ob._file_modification_time != get_path_modification_time(cur_filename)) {
             ob._file_modification_time = 0;  // Succeed if try again.
-            throw "file '" + cur_filename + "' has been modified externally";
+            throw "file " + optionally_quote(cur_filename) + " has been modified externally";
           }
           const bool force = is_shift;
           const string filename = query_save_filename(cur_filename, force);
           if (filename == "") throw "";
-          immediate_message("Writing to file " + filename + " ...");
+          immediate_message("Writing to file " + optionally_quote(filename) + " ...");
           try {
             uint64_t time = 0;
             if (is_shift) time = get_path_modification_time(filename);
@@ -1677,13 +1690,13 @@ bool DerivedHw::key_press(string skey) {
             } else {
               assertnever("");
             }
-            message("Done writing '" + get_path_tail(filename) + "'", 4.);
+            message("Done writing " + optionally_quote(get_path_tail(filename)), 4.);
             ob._unsaved = false;
             ob._filename = filename;
             ob._orig_filename = filename;
             if (time) assertw(set_path_modification_time(filename, time));
           } catch (const std::runtime_error& ex) {
-            throw "while writing file " + filename + " : " + ex.what();
+            throw "while writing file " + optionally_quote(filename) + " : " + ex.what();
           }
           break;
         }
@@ -1695,7 +1708,7 @@ bool DerivedHw::key_press(string skey) {
         case 'D' - 64: {  // C-d: unload current image/video from viewer
           std::scoped_lock lock(g_mutex_obs);
           const Object& ob = check_object();
-          message("Unloaded " + ob.stype() + " " + get_path_tail(ob._filename), 4.);
+          message("Unloaded " + ob.stype() + " " + optionally_quote(get_path_tail(ob._filename)), 4.);
           unload_current_object();
           break;
         }
@@ -1715,7 +1728,7 @@ bool DerivedHw::key_press(string skey) {
           string filename = getob()._filename;
           if (filename == "") throw getob().stype() + " has no filename";
           if (my_spawn(V<string>(g_argv0, filename), false) < 0)
-            throw "failed to create new VideoViewer window on '" + filename + "'";
+            throw "failed to create new VideoViewer window on " + optionally_quote(filename);
           if (g_verbose) SHOW("spawned new window", g_argv0, filename);
           break;
         }
@@ -2011,7 +2024,7 @@ bool DerivedHw::key_press(string skey) {
           string s = get_current_directory();
           if (g_cob >= 0 && directory_exists(get_path_head(getob()._filename))) s = get_path_head(getob()._filename);
           if (my_sh(V<string>("start", s)) && my_sh(V<string>("cygstart", s)))
-            throw "Could not launch directory window on " + s;
+            throw "Could not launch directory window on " + optionally_quote(s);
           break;
         }
         case '<':

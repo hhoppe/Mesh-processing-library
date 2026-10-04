@@ -29,7 +29,7 @@ string append_old_pm;         // Name of the old PM file.
 
 std::optional<RFile> fi_prog;  // The vsplit records (*.rprog) being read.
 GMesh mesh;                    // The current mesh.
-bool record_changes = false;   // The output stream of mesh changes.
+bool record_changes = false;   // Write mesh changes to std::cout (-animateto).
 bool sel_refinement = false;   // Selective refinement is active.
 Frame view_frame;              // Used only if sel_refinement.
 float view_zoom = 0.f;         // Used only if sel_refinement.
@@ -715,6 +715,7 @@ void do_arithseq(Args& args) {
 // Write a sequence of morphs forming a geometric sequence.
 void do_geomseq(Args& args) {
   float factornf = args.get_float();
+  assertx(factornf > 1.f);
   if (maxnfaces) {
     const float oldfactornf = factornf;
     const int cnfaces = mesh.num_faces();
@@ -1336,7 +1337,7 @@ void do_pm_encode() {
       const WedgeInfo& wi = gcwinfo.get(wid);
       // Note that has_normal=true already.
       if (wi.col[0] != k_undefined) has_rgb = true;
-      if (wi.uv[0] != k_undefined && wi.uv[0] && wi.uv[1]) has_uv = true;
+      if (wi.uv[0] != k_undefined && (wi.uv[0] || wi.uv[1])) has_uv = true;
     }
   }
   Map<int, int> mwrenumber;
@@ -1360,10 +1361,12 @@ void do_pm_encode() {
         assertx(wi.nor[0] != k_undefined);
         wa.normal = wi.nor;
         fill(wa.rgb, 0.f);
+        fill(wa.uv, 0.f);
         if (has_rgb) {
           assertx(wi.col[0] != k_undefined);
           wa.rgb = wi.col;
-        } else if (has_uv) {
+        }
+        if (has_uv) {
           assertx(wi.uv[0] != k_undefined);
           wa.uv = wi.uv;
         }

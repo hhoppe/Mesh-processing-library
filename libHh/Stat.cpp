@@ -34,8 +34,8 @@ class Stats {
   }
   Stats() { hh_at_clean_up(Stats::flush); }
   void flush_internal() {
-    for (const auto& [master, partial] : _partials) master->add(*partial);
-    _partials.clear();
+    // Keep the partials alive (zeroed), because each thread_local reference in HH_SSTAT still refers to one.
+    for (const auto& [master, partial] : _partials) master->add(*partial), partial->zero();
     if (_vec.empty()) return;
     int num_to_print = 0;
     for (const Stat* stat : _vec)

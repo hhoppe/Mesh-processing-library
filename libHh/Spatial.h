@@ -41,7 +41,7 @@ class Spatial : noncopyable {  // An abstract class.
   const float _gni;  // 1.f / _gn
 
   using Ind = Vec3<int>;
-  [[nodiscard]] int inbounds(int i) const { return i >= 0 && i < _gn; }
+  [[nodiscard]] bool inbounds(int i) const { return i >= 0 && i < _gn; }
   [[nodiscard]] bool indices_inbounds(const Ind& ci) const {
     return inbounds(ci[0]) && inbounds(ci[1]) && inbounds(ci[2]);
   }
@@ -180,8 +180,8 @@ class BaseSpatialSearch : noncopyable {
   SpatialPriorityQueue _pq;    // The pq of entries by distance.
   Vec2<Ind> _ssi;              // Search space indices (extents).
   float _disbv2{0.f};          // Distance to the search space boundary.
-  int _axis;                   // Axis to expand next.
-  int _dir;                    // Direction in which to expand next (0, 1).
+  int _axis{-1};               // Axis to expand next.
+  int _dir{-1};                // Direction in which to expand next (0, 1).
   SpatialVisitedSet _setevis;  // May be used by add_cell().
   int _ncellsv{0};
   int _nelemsv{0};

@@ -1956,7 +1956,7 @@ void do_makequads(Args& args) {
     dummy_use(fnew);
     nerem++;
   }
-  showdf("Applied %d coalesces: (%d tris) -> (%d tris, %d quads)\n", nerem, nf, nf - nerem, nerem);
+  showdf("Applied %d coalesces: (%d tris) -> (%d tris, %d quads)\n", nerem, nf, nf - 2 * nerem, nerem);
 }
 
 void do_cornermerge() {
@@ -2039,21 +2039,21 @@ void do_rgbvertexmerge() {
   int nmerge = 0;
   string str;
   for (Vertex v : mesh.vertices()) {
-    const char* s = nullptr;
+    string s;  // A copy, because each corner_key() call overwrites str.
     for (Corner c : mesh.corners(v)) {
       const char* ck = mesh.corner_key(str, c, "rgb");
-      // if (!ck) { s = nullptr; break; }
+      // if (!ck) { s = ""; break; }
       if (!ck) continue;
-      if (!s) {
+      if (s == "") {
         s = ck;
-      } else if (strcmp(s, ck) != 0) {
-        s = nullptr;
+      } else if (s != ck) {
+        s = "";
         break;
       }
     }
-    if (!s) continue;
+    if (s == "") continue;
     nmerge++;
-    mesh.update_string(v, "rgb", s);
+    mesh.update_string(v, "rgb", s.c_str());
     for (Corner c : mesh.corners(v)) mesh.update_string(c, "rgb", nullptr);
   }
   showdf("at %d/%d vertices, merged rgb strings\n", nmerge, mesh.num_vertices());
@@ -2088,23 +2088,23 @@ void do_rgbfacemerge() {
   int nmerge = 0;
   string str;
   for (Face f : mesh.faces()) {
-    const char* s = nullptr;
+    string s;  // A copy, because each corner_key() call overwrites str.
     for (Corner c : mesh.corners(f)) {
       const char* ck = mesh.corner_key(str, c, "rgb");
       if (!ck) {
-        s = nullptr;
+        s = "";
         break;
       }
-      if (!s) {
+      if (s == "") {
         s = ck;
-      } else if (strcmp(s, ck) != 0) {
-        s = nullptr;
+      } else if (s != ck) {
+        s = "";
         break;
       }
     }
-    if (!s) continue;
+    if (s == "") continue;
     nmerge++;
-    mesh.update_string(f, "rgb", s);
+    mesh.update_string(f, "rgb", s.c_str());
     for (Corner c : mesh.corners(f)) mesh.update_string(c, "rgb", nullptr);
   }
   showdf("at %d/%d faces, merged rgb strings\n", nmerge, mesh.num_faces());
@@ -2205,7 +2205,7 @@ void do_removekey(Args& args) {
   if (!strcmp(key, "sharp"))
     for (Edge e : mesh.edges()) mesh.flags(e).flag(GMesh::eflag_sharp) = false;
   if (!strcmp(key, "cusp"))
-    for (Edge v : mesh.edges()) mesh.flags(v).flag(GMesh::vflag_cusp) = false;
+    for (Vertex v : mesh.vertices()) mesh.flags(v).flag(GMesh::vflag_cusp) = false;
 }
 
 void do_renamekey(Args& args) {
@@ -2760,10 +2760,10 @@ void do_randpts(Args& args) {
     farea.push(mesh.area(f));
   }
   const float sumarea = float(sum(farea));
-  showdf("Total area %g over %d faces\n", sumarea, nf);
+  showdf("Total area %g over %d faces\n", sumarea, fface.num());
   {
     double area = 0.;  // For accuracy.
-    for_int(i, nf) {
+    for_int(i, fface.num()) {
       fcarea.push(float(area));
       area += farea[i] / sumarea;
     }
@@ -2773,7 +2773,7 @@ void do_randpts(Args& args) {
   Map<Vertex, Vnors> mvnors;
   for (Vertex v : mesh.vertices()) mvnors.enter(v, Vnors(mesh, v));
   for_int(i, npoints) {
-    const int fi = discrete_binary_search(fcarea, 0, nf, Random::G.unif());
+    const int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.unif());
     Face f = fface[fi];
     Bary bary(Random::G.unif(), Random::G.unif(), 0.f);
     if (bary[0] + bary[1] > 1.f) {
@@ -3197,7 +3197,7 @@ void do_splitdiaguv() {
     for (Vertex v : mesh.vertices(e)) uvs.push(get_uv(v));
     if (abs(uvs[0][0] - uvs[1][0]) > 1e-4f && abs(uvs[0][1] - uvs[1][1]) > 1e-4f) esplit.push(e);
   }
-  showdf("removing %d diagonals\n", esplit.num());
+  showdf("splitting %d diagonals\n", esplit.num());
   for (Edge e : esplit) {
     const Point p = interp(interp(mesh.point(mesh.vertex1(e)), mesh.point(mesh.vertex2(e))),
                            interp(mesh.point(mesh.side_vertex1(e)), mesh.point(mesh.side_vertex2(e))));
@@ -3276,7 +3276,7 @@ void do_projectimage(Args& args) {
 
 void do_quantizeverts(Args& args) {
   const int nbits = args.get_int();
-  assertx(nbits >= 1 && nbits <= 32);
+  assertx(nbits >= 1 && nbits <= 30);
   const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
   const Frame xform = bbox.get_frame_to_cube(), xform_inverse = ~xform;
   const float scale = pow(2.f, float(nbits));
@@ -3287,7 +3287,7 @@ void do_quantizeverts(Args& args) {
     for_int(c, 3) {
       float f = p[c];
       assertx(f >= -eps && f <= 1.f + eps);
-      const int i = int(f * scale - 1e-6f);
+      const int i = clamp(int(f * scale - 1e-6f), 0, (1 << nbits) - 1);  // The bbox max may map to exactly scale.
       f = (i * 2 + 1) / (2.f * scale);
       assertx(f >= 0.f && f <= 1.f);
       p[c] = f;
@@ -4125,8 +4125,9 @@ void convex_group_flip_faces(const Set<Face>& group) {
   }
 }
 
-// Will clear the old mesh.
+// Requires an empty mesh (so -fromObj must be the first argument).
 void do_fromObj(Args& args) {
+  assertx(mesh.empty());
   // Build a mesh from Obj input.  Specify <flip> to flip the face to point to the outside of convex components.
   Array<Vector> ar_nor;
   Array<Uv> ar_uv;
@@ -4464,7 +4465,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(fixfaces, ": remove contradictory faces");
   HH_ARGSD(nice, ": assert mesh is nice");
   HH_ARGSD(flip, ": flip orientation of faces");
-  HH_ARGSD(smootha3d, ": equivalent to ;-angle 180 -selsmooth'");
+  HH_ARGSD(smootha3d, ": equivalent to '-angle 180 -selsmooth'");
   HH_ARGSD(fillholes, "nedges : fill holes with <= nedges");
   HH_ARGSP(checkflat, "tol : if > 0, triang faces dif. (rec. 1e-5)");
   HH_ARGSF(alltriangulate, ": subdivide even the triangle");
@@ -4477,7 +4478,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(quadxuvdiag, ": triangulate quads using X pattern in uv");
   HH_ARGSD(quadduvdiag, ": triangulate quads using diamond uv pattern");
   HH_ARGSD(quadodddiag, ": triangulate quads to form odd-valence vertices");
-  HH_ARGSD(rmcomp, "nfaces : remove components with <= nfaces");
+  HH_ARGSD(rmcomp, "nfaces : remove components with < nfaces faces");
   HH_ARGSD(rmcompn, "ncomp : remove components until <= ncomp");
   HH_ARGSD(coalesce, "fcrit : coalesce planar faces into polygons");
   HH_ARGSD(makequads, "p_tol : coalesce coplanar tris into quads");
@@ -4544,9 +4545,9 @@ int main(int argc, const char** argv) {
   {
     const string arg0 = args.num() ? args.peek_string() : "";
     if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-    const bool from_other = contains(
-        V<std::string_view>("-froma3d", "-rawfroma3d", "-creategrid", "-fromgrid", "-frompointgrid", "-createobject"),
-        arg0);
+    const bool from_other = contains(V<std::string_view>("-froma3d", "-rawfroma3d", "-creategrid", "-fromgrid",
+                                                         "-frompointgrid", "-createobject", "-fromObj"),
+                                     arg0);
     if (!from_other) {
       const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
       RFile fi(filename);

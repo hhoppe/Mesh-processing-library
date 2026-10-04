@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_IMAGE_H_
 #define MESH_PROCESSING_LIBHH_IMAGE_H_
 
+#include <atomic>
+
 #include "libHh/Array.h"
 #include "libHh/Matrix.h"
 #include "libHh/MatrixOp.h"
@@ -43,7 +45,7 @@ class Image : public Matrix<Pixel> {
   explicit Image(const Vec2<int>& pdims, Pixel pixel) : Image(pdims) { fill(*this, pixel); }
   explicit Image(const Image&) = default;
   explicit Image(const base& image) : base(image.dims()) { base::assign(image); }
-  explicit Image(const string& filename) { read_file(filename); }
+  explicit Image(const string& filename) : Image() { read_file(filename); }
   Image(Image&& m) noexcept { swap(*this, m); }
   Image(base&& m) noexcept { swap(implicit_cast<base&>(*this), m); }
   Image& operator=(Image&& image) noexcept { return clear(), swap(*this, image), *this; }
@@ -132,11 +134,21 @@ template <typename T> [[nodiscard]] Image as_image(CMatrixView<T> matrix) {
 // Specialize as_image() to grid of Vector4.
 [[nodiscard]] inline Image as_image(CMatrixView<Vector4> grid) {
   Image image(grid.dims());
-  parallel_for_coords({.cycles_per_elem = 10}, image.dims(), [&](const Vec2<int>& yx) {
-    image[yx] = grid[yx].pixel();
-    if (0) image[yx][3] = 255;
-    if (image[yx][3] != 255) image.set_zsize(4);
+  // Copy the rows in parallel chunks, reducing within each chunk whether any pixel is transparent.
+  std::atomic<bool> has_transparency{false};
+  const ParallelOptions options{.cycles_per_elem = 10 * uint64_t(image.xsize())};
+  parallel_for_chunk(options, range(image.ysize()), get_max_threads(), [&](int, auto subrange) {
+    bool transparent = false;
+    for (const int y : subrange) {
+      for_int(x, image.xsize()) {
+        const Pixel pixel = grid[y, x].pixel();
+        image[y, x] = pixel;
+        transparent |= pixel[3] != 255;
+      }
+    }
+    if (transparent) has_transparency = true;
   });
+  if (has_transparency) image.set_zsize(4);
   return image;
 }
 

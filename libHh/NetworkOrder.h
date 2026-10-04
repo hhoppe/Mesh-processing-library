@@ -46,7 +46,7 @@ template <typename T> void to_std(T* p) {
 // Convert from network order to native order.
 template <typename T> void from_std(T* p) { to_std(p); }
 
-// Convert from to native order to DOS order.
+// Convert from native order to DOS (little-endian) order.
 template <typename T> void to_dos(T* p) {
   if (k_is_big_endian) my_swap_bytes(p);
 }

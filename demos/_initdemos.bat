@@ -44,7 +44,7 @@ set TEXGEOMETRY=-geom 1000x800+150+50
 :: crashes and assertion failures; it compares no rendered pixels.  The Windows desktop is still required;
 :: only the display of the window is suppressed.
 set HIDDEN_ARGS=
-if defined DEMOS_HIDDEN set HIDDEN_ARGS=-hidden -hwdelay 1 -hwkey \9\c
+if defined DEMOS_HIDDEN set HIDDEN_ARGS=-hidden -hwdelay 1 -hwkey \2\c
 
 :: Extra arguments for the viewers; the geometry of %G3DARGS% is overridden by any later -geom.
 set G3DARGS=%G3DARGS% %HIDDEN_ARGS%

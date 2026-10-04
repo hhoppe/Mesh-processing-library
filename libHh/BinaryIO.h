@@ -48,16 +48,16 @@ template <ranges::contiguous_range R> std::ostream& write_binary_std(std::ostrea
   return write_binary_raw(os, array);
 }
 
-// Read an array of elements without any Endian byte-reordering.  Ret: success.
+// Read an array of elements without any Endian byte-reordering.  Returns success.
 template <ranges::contiguous_range R> [[nodiscard]] bool read_raw(FILE* file, R&& range) {
   const auto sp = std::span(range);
-  return fread(sp.data(), sp.size_bytes(), 1, file) == 1;
+  return sp.empty() || fread(sp.data(), sp.size_bytes(), 1, file) == 1;
 }
 
-// Write an array of elements without any Endian byte-reordering.  Ret: success.
+// Write an array of elements without any Endian byte-reordering.  Returns success.
 template <ranges::contiguous_range R> [[nodiscard]] bool write_raw(FILE* file, const R& range) {
   const auto sp = std::span(range);
-  return fwrite(sp.data(), sp.size_bytes(), 1, file) == 1;
+  return sp.empty() || fwrite(sp.data(), sp.size_bytes(), 1, file) == 1;
 }
 
 }  // namespace hh

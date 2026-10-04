@@ -41,7 +41,7 @@ template <typename T> class Stack {
   void push(const T& e) requires Copyable<T> { _s.push_back(e); }
   void push(T&& e) { _s.push_back(std::move(e)); }
   T pop() { return vec_pop(_s); }
-  [[nodiscard]] const T& top() const { return _s.back(); }
+  [[nodiscard]] const T& top() const { return ASSERTX(!empty()), _s.back(); }
   [[nodiscard]] bool empty() const { return _s.empty(); }
   [[nodiscard]] int height() const { return narrow_cast<int>(_s.size()); }
   [[nodiscard]] size_t size() const { return _s.size(); }

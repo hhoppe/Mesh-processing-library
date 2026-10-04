@@ -196,7 +196,7 @@ std::optional<SelectedEdge> select_edge(const Vec2<float>& yx) {
   std::optional<SelectedEdge> selected_edge;
   const Vec2<int> win_dims = HB::get_extents();
   static const bool prune_backfacing = getenv_bool("PRUNE_BACKFACING");
-  // Must be this close (3 pixels).  For all vertices in that range, pick the closest one.
+  // Must be this close (3 pixels).  For all edges in that range, pick the closest one.
   const float maxd = 3.f / max(win_dims);
   // Select the first object for which this is true.
   float minz = BIGFLOAT;
@@ -604,7 +604,7 @@ shift-middle:   roll (x rotation)
 shift-right:    zoom (change focal length)
 " "\
 OTHER KEYS:
-+ =     movement magnitude (x2) _ +     bigger increments (x10)
+- =     movement magnitude (x2) _ +     bigger increments (x10)
 |       reverse 180 about xy    H       level horizon (roll & pitch)
 l       toggle auto_level       L       level roll
 y       set hither/yonder       Y       clear hither/yonder
@@ -620,7 +620,7 @@ O       output current frame    !       output single frame
 B       bobble motion           @       object cycling (movie)
 < ,     read s3d file           > .     save all frames in s3d file
 '       record current point    \"       compute distance to recorded point
-ctrl-C  quit
+<esc>   quit
 DEVICE COMMANDS:
 D       device prefix           D ?     list device commands
 )"[1];

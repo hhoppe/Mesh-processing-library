@@ -138,8 +138,8 @@ class HwBase : noncopyable {
   Vec2<int> _query_yx;
   string _query_prompt;
   string _query_buffer;
-  bool _query_success;
-  bool _within_query;
+  bool _query_success{false};
+  bool _within_query{false};
   int _hwdebug{0};
   string _user_geometry;
   string _backcolor;
@@ -270,6 +270,7 @@ inline void HwBase::draw_point(const Vec2<float>& yx) {
 inline void HwBase::handle_keyintr() {
   if (!_is_keyintr) return;
   _is_keyintr = false;
+  if (_hwkey == "") return;  // A timer tick may arrive after the last simulated key was consumed.
   bool skip = false;
   int is_group = 0;
   for (;;) {

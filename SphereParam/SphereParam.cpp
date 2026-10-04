@@ -787,7 +787,6 @@ void split_awmesh_along_prime_meridian(AWMesh& awmesh) {
 
 // Write a single-resolution progressive mesh, encoding the spherical parameterization as lat-lon uv coordinates.
 void write_parameterized_pm(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
-  dummy_use(split_meridian);
   PMeshInfo pminfo = pmi.rstream()._info;
   pminfo._has_uv = true;
   for_int(w, pmi._wedges.num()) {
@@ -804,7 +803,6 @@ void write_parameterized_pm(PMeshIter pmi, CArrayView<Point> sphmap, bool split_
 
 // Write a *.ply mesh file, encoding the spherical parameterization as lat-lon uv coordinates on corners.
 void write_parameterized_ply(PMeshIter pmi, CArrayView<Point> sphmap, bool split_meridian) {
-  dummy_use(split_meridian);
   PMeshInfo& pminfo = pmi.rstream()._info;
   pminfo._has_uv = true;
   for_int(w, pmi._wedges.num()) {

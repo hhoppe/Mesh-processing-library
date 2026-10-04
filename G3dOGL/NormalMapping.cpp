@@ -93,7 +93,8 @@ class NormalMapping_ogl2 final : public NormalMapping {
     glUniform3fv(get_loc("eyedirmodel"), 1, eyedirmodel.data());
     glUniform1fv(get_loc("ambient"), 1, V(ambient).data());
     glUniform1fv(get_loc("lightsource"), 1, V(lightsource).data());
-    glUniform1iv(get_loc("twolights"), 1, V(getenv_int("G3D_TWOLIGHTS")).data());
+    static const int twolights = getenv_int("G3D_TWOLIGHTS");
+    glUniform1iv(get_loc("twolights"), 1, V(twolights).data());
     assertx(!gl_report_errors());
   }
 

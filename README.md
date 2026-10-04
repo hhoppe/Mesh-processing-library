@@ -92,6 +92,9 @@ For example, to build using the Microsoft `cl` compiler (a debug build, placing 
 <br/>`make -j8`<br/>
 
 To build all programs (into either `bin/unix` or `bin/win`) and run all unit tests:
+<br/>`make -j`
+
+To build just the libraries and run all unit tests:
 <br/>`make -j test`
 
 To build on Unix, forcing the use of the `gcc` compiler (default is `clang`):
@@ -110,11 +113,12 @@ To clean up all files in all configurations:
 <br/>`make CONFIG=all -j deepclean`
 
 Note that additional options such as debug/release and
-compiler tool paths/parameters are set in the various `make/Makefile_*` files.
-These need to be adjusted depending on the versions and installation paths of the tools.
+compiler parameters are set in the various `make/Makefile_*` files.
 For instance, the line
-`"release ?= 0"` in `make/Makefile_config_win` specifies a debug (non-release) build, and
-`"$(call prepend_PATH,...)"` in `make/Makefile_base_vc` sets the compiler directory.
+`"release ?= 0"` in `make/Makefile_config_win` specifies a debug (non-release) build.
+The compiler tool paths are discovered automatically;
+to override them, set the variables named in `make/Makefile_base_vc` and `make/Makefile_config_*`
+(e.g., `vs_instance`, `MINGW_ROOT`, or `LLVM_ROOT`) in a file `Makefile_local_defs` at the repository root.
 
 
 ### Build using Docker
@@ -333,14 +337,14 @@ A display is still required, because only the mapping of the window is suppresse
 All programs recognize the argument `--help` (or `-?`) to show their many options.
 
 The programs `Filterimage`, `Filtermesh`, `Filtervideo`,
-`FilterPM`, and `Filterframe` are all designed to:
+`FilterPM`, `Filtera3d`, and `Filterframe` are all designed to:
 - read media from `stdin` (or from files or procedures specified as initial arguments),
 - perform operations specified by arguments, and
 - write media to `stdout` (unless `-nooutput` is specified).
 
 For example, the **`Filterimage`** command<a id="prog_Filterimage"></a>
 ```shell
-Filterimage demos/data/gaudipark.png -rotate 20 -cropleft 100 -cropright 100 \
+Filterimage demos/data/gaudipark.png -rotate 20 -cropl 100 -cropr 100 \
   -filter lanczos6 -scaletox 100 -color 0 0 255 255 -boundary border -cropall -20 \
   -setalpha 255 -color 0 0 0 0 -drawrectangle 30% 30% -30% -30% -gdfill \
   -info -to jpg >gaudipark.new.jpg

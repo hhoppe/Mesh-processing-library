@@ -311,11 +311,11 @@ int main() {
     return 0;
   }
   {
-    assertx(!getenv("ZZ"));
-    assertx(!getenv_bool("ZZ"));
-    assertx(getenv_int("ZZ") == 0);
-    assertx(getenv_float("ZZ", 4.f) == 4.f);
-    assertx(getenv_string("ZZ") == "");
+    assertx(!getenv("HH_TEST_UNDEFINED_VARIABLE"));
+    assertx(!getenv_bool("HH_TEST_UNDEFINED_VARIABLE"));
+    assertx(getenv_int("HH_TEST_UNDEFINED_VARIABLE") == 0);
+    assertx(getenv_float("HH_TEST_UNDEFINED_VARIABLE", 4.f) == 4.f);
+    assertx(getenv_string("HH_TEST_UNDEFINED_VARIABLE") == "");
     const Array<const char*> strings = {"ABC", "LONG_WORD", "MIX8WORD", "OTHER"};
     for_int(i, 100) {
       const char* s = strings[Random::G.get_unsigned(strings.num())];

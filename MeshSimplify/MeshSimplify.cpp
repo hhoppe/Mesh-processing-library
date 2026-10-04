@@ -4947,7 +4947,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(rebuildpq, ": reevaluate all edges");
   HH_ARGSD(verb, "i : verbosity level (1=avg, 2=more, 3=lots)");
   HH_ARGSP(neptfac, "f : fac # samples on sharp edges (def 1or4)");
-  HH_ARGSP(affectpq, "i :  (1=little, 2=avg, 3=all)");
+  HH_ARGSP(affectpq, "i : (2=avg, 3=all)");
   HH_ARGSD(vsgeom, ": for SR, '-minii2 -no_fit_geom'");
   HH_ARGSF(miniiall, ": search 3 new vertex pos");
   HH_ARGSF(minii1, ": force minii == 1 always");

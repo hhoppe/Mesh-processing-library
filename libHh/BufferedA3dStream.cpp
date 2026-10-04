@@ -11,7 +11,7 @@ bool RBufferedA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, st
     int i = 0;
     for (;; i++) {
       assertx(i < _buf.num());
-      if (_buf[i] != '\n') break;
+      if (_buf[i] != '\n' && _buf[i] != '\r') break;
     }
     if (i) _buf.extract(i);
   }
@@ -41,7 +41,7 @@ RBufferedA3dStream::ERecognize RBufferedA3dStream::recognize() const {
   // Skip leading newlines.
   int i;
   for (i = 0; i < _buf.num(); i++)
-    if (_buf[i] != '\n') break;
+    if (_buf[i] != '\n' && _buf[i] != '\r') break;
   if (i == _buf.num()) return ERecognize::no;
   {
     const char ch = _buf[i];

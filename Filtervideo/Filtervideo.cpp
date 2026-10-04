@@ -250,7 +250,7 @@ void assemble_videos(MatrixView<Video> videos) {
     Video& vid = videos[yx];
     const int max_pad_frames = 1;
     if (1 && vid.nframes() != maxframes && vid.nframes() && maxframes - vid.nframes() <= max_pad_frames) {
-      showf("Padding video[%d][%d] with %d frames to %d frames\n", yx[0], yx[1], vid.nframes(), maxframes);
+      showf("Padding video[%d][%d] from %d frames to %d frames\n", yx[0], yx[1], vid.nframes(), maxframes);
       Warning("assemble: padding shorter video with extra frames");
       const int npad = maxframes - vid.nframes();
       vid = crop(vid, V(0, 0, 0), V(-npad, 0, 0), thrice(Bndrule::clamped));
@@ -294,9 +294,11 @@ void do_assemble(Args& args) {
   parallel_for_coords(videos.dims(), [&](const Vec2<int>& yx) {
     if (filenames[yx] == "") return;
     videos[yx].read_file(filenames[yx]);
-    assertw(videos[yx].attrib().framerate == videos[0, 0].attrib().framerate);
     apply_assemble_operations(videos[yx], yx, videos.dims());
   });  // We can assume that parallelism is justified.
+  // (Checked after the loop, because videos[0, 0] is written concurrently within it.)
+  for (const auto& yx : range(videos.dims()))
+    if (filenames[yx] != "") assertw(videos[yx].attrib().framerate == videos[0, 0].attrib().framerate);
   if (0)
     for (const auto& yx : range(videos.dims())) SHOW(yx, filenames[yx], videos[yx].nframes());
   ConsoleProgress::set_all_silent(prev_silent);
@@ -1025,7 +1027,7 @@ void do_disassemble(Args& args) {
   string suffix = video.attrib().suffix;
   assertx(suffix != "");
   if (video.attrib().audio.size()) Warning("Duplicating audio");
-  const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(video.nframes() * product(tiledims)) * 4};
+  const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(video.nframes()) * product(tiledims) * 4};
   parallel_for_coords(parallel_options, atiles, [&](const Vec2<int>& tyx) {
     Video nvideo(video.nframes(), tiledims);
     nvideo.attrib() = video.attrib();
@@ -1045,7 +1047,7 @@ void do_gridcrop(Args& args) {
   int sx = args.get_int(), sy = args.get_int();
   assertx(sx >= 0 && sx <= video.xsize() && sy >= 0 && sy <= video.ysize());
   Matrix<Video> videos(ny, nx);
-  const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(video.nframes() * sy * sx) * 4};
+  const ParallelOptions parallel_options{.cycles_per_elem = uint64_t(video.nframes()) * sy * sx * 4};
   parallel_for_coords(parallel_options, videos.dims(), [&](const Vec2<int>& yx) {
     int vl = int((video.xsize() - sx) * float(yx[1]) / (nx - 1) + .5f);
     int vt = int((video.ysize() - sy) * float(yx[0]) / (ny - 1) + .5f);
@@ -1988,8 +1990,7 @@ void do_procedure(Args& args) {
       Frame frame;
       {
         const float ang = rad_from_deg(f * degrees_per_frame);
-        frame = (Frame::translation(V(-video.xsize() / 2.f, -video.ysize() / 2.f, 0.f)) *
-                 Frame::rotation(2, -rad_from_deg(ang)) *
+        frame = (Frame::translation(V(-video.xsize() / 2.f, -video.ysize() / 2.f, 0.f)) * Frame::rotation(2, -ang) *
                  Frame::scaling(V(1.f / pixels_per_grid, 1.f / pixels_per_grid, 1.f)));
       }
       parallel_for_coords({.cycles_per_elem = 50}, video.spatial_dims(), [&](const Vec2<int>& yx) {
@@ -2194,12 +2195,12 @@ int main(int argc, const char** argv) {
   HH_ARGSD(nostdin, ": do not attempt to read input video from stdin");
   HH_ARGSD(create, "nframes width height : create video (default white)");
   HH_ARGSD(readnv12, "filename : read video into NV12 grids rather than RGB grid");
-  HH_ARGSD(trunc_begin, "nframes : skip the first nframes frames");
-  HH_ARGSD(trunc_frames, "nframes : read no more than nframes frames");
+  HH_ARGSD(trunc_begin, "nframes : skip the first nframes frames (must precede all other args)");
+  HH_ARGSD(trunc_frames, "nframes : read no more than nframes frames (must precede all other args)");
   HH_ARGSD(as_fit, "nx ny : in assemble, scale each frame uniformly to fit");
   HH_ARGSD(as_cropsides, "l r t b : in assemble, crop each frame");
   HH_ARGSD(as_tnframes, "nframes : in assemble, temporally scale to frame count");
-  HH_ARGSD(assemble, "nx ny videos_lr_bt_order : concatenate grid of videos");
+  HH_ARGSD(assemble, "nx ny videos_lr_tb_order : concatenate grid of videos");
   HH_ARGSP(startframe, "i : start %d numbering at i");
   HH_ARGSD(fromimages, "root_name.%03d.png : read frame images");
   HH_ARGSC("", ":");
@@ -2270,9 +2271,9 @@ int main(int argc, const char** argv) {
   HH_ARGSD(gamma, "v : gammawarp video");
   HH_ARGSC("", ":");
   HH_ARGSD(loadpj, "file.pj{o,r} : read progressive video project file");
-  HH_ARGSD(loadvlp, "file.vlp : read progressive video project file");
+  HH_ARGSD(loadvlp, "file.vlp : read video-loop parameters (PNG)");
   HH_ARGSD(savepj, "file.pj{o,r} : write progressive video project file");
-  HH_ARGSD(savevlp, "file.vlp : write progressive video project file");
+  HH_ARGSD(savevlp, "file.vlp : write video-loop parameters (not implemented)");
   HH_ARGSD(savestaticloop, "imagefile : write image for static loop");
   HH_ARGSD(pjcompression, ": analyze compression");
   HH_ARGSD(compressloop, ": compress/decompress loop");

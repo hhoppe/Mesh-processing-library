@@ -673,6 +673,7 @@ void Hw::start_hwkey() {
   struct itimerval ti;
   struct timeval tv;
   signal(SIGALRM, handle_alarm);
+  _hwdelay = max(_hwdelay, .01f);  // As in libHwWindows; a zero interval would disarm the timer.
   const int64_t usec = int(_hwdelay * 1'000'000.f + .5f);
   tv.tv_sec = int(usec / 1'000'000);
   tv.tv_usec = int(usec % 1'000'000);

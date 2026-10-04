@@ -108,7 +108,6 @@ void project_point(GMesh& mesh_s, const Point& ps, const A3dColor& pscol, const 
 
 void project_point(GMesh& mesh_s, Face fs, const Bary& barys, const GMesh& mesh_d, const MeshSearch& mesh_search,
                    string& str, PStats& pstats) {
-  dummy_use(fs);
   Vec3<Corner> cas = mesh_s.triangle_corners(fs);
   const Point ps = interp(mesh_s.point(mesh_s.corner_vertex(cas[0])), mesh_s.point(mesh_s.corner_vertex(cas[1])),
                           mesh_s.point(mesh_s.corner_vertex(cas[2])), barys);

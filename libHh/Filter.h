@@ -75,9 +75,9 @@ class FilterBnd {
   [[nodiscard]] Bndrule bndrule() const { return _bndrule; }
   void set_filter(const Filter& pfilter) { _filter = &pfilter; }
   void set_bndrule(Bndrule pbndrule) { _bndrule = pbndrule, assertx(_bndrule != Bndrule::undefined); }
-  // Given a filtertype, return an evaluation function and its support radius (centered about origin).
+  // Returns the LU factorization of the inverse convolution matrix for the filter and boundary rule.
   [[nodiscard]] const LUfactorization& lu_factorization() const;
-  // Given old size cx and new size cx, for each new index i compute the interval of weights on old values
+  // Given old size cx and new size nx, for each new index i compute the interval of weights on old values
   //  starting at index ar_pixelindex0[i].  mat_weights is allocated of size [nx, nk] where nk is interval size.
   // Samples are assumed at half-integer locations (!primal) or integer locations (primal).
   void setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar_pixelindex0, Matrix<float>& mat_weights) const;

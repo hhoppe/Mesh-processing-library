@@ -33,7 +33,7 @@ bool filename_is_audio(const string& filename) {
 
 std::string_view audio_suffix_for_magic_byte(uchar c) {
   // See also image_suffix_for_magic_byte() and video_suffix_for_magic_byte().
-  // Documentation on prefixes for various image containers:
+  // Documentation on prefixes for various audio containers:
   // *.wav: "RIFF"
   // *.mp3: "ID3\003\000", "\377\373\220D"   (ID3 is a metadata container often used in conjunction with MP3)
   switch (c) {

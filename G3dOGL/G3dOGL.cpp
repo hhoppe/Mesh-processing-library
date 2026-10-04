@@ -1445,6 +1445,7 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
         if (j > buffer_nedges) {
           glEnd();
           glBegin(GL_LINES);
+          j = 0;
         }
         glVertex3fv(poly[0].data());
         for_intL(vi, 1, poly.num()) {
@@ -1791,7 +1792,7 @@ void draw_mesh(GMesh& mesh) {
               glEnd();
               nquads = 0;
             }
-            glBegin(GL_QUADS);
+            if (!nquads) glBegin(GL_QUADS);
             nquads++;
             break;
           default:
@@ -1979,7 +1980,6 @@ void draw_mesh(GMesh& mesh) {
         glVertex3fv(mesh.point(mesh.vertex1(e)).data());
         glVertex3fv(mesh.point(mesh.vertex2(e)).data());
       }
-      if (!nedges) glEnd();  // GL_LINES
     }
     if (nedges) glEnd();  // GL_LINES
     if (sphereradius) {
@@ -2656,7 +2656,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
 #endif
   }
   if (ply_filename != "") {
-#if defined(DEF_SC)
+#if defined(DEF_PLY)
     read_ply(ply_filename);
     ply_mode = true;
 #else
@@ -2827,7 +2827,7 @@ void HB::draw_space() {
     }
   }
   if (noinfo) {
-    g3d::info = false;
+    g3d::info = 0;
   } else {
     wrap_draw(true);
   }
@@ -2976,11 +2976,7 @@ bool HB::special_keypress(char ch) {
       hw.redraw_now();
       break;
     case '\r':  // Key <enter>/<ret> (== uchar{13} == 'M' - 64); for use in: G3d -key $'\n'
-    case '\n':
-      static bool g_fullscreen;
-      g_fullscreen = !g_fullscreen;
-      hw.make_fullscreen(g_fullscreen);
-      break;
+    case '\n': hw.make_fullscreen(!hw.is_fullscreen()); break;
     case '?': {
       const string s = &R"(
 Device commands (prefixed by 'D'):
@@ -2989,7 +2985,7 @@ Device commands (prefixed by 'D'):
    Global:
 depthc<u>e  <a>ntialiasing  <n>ice_rendering  <p>erspective  <S>liders
 <q>uickmode  button<Q>uick   <[>, <]>:change_quicki
-</>statefile  set<R>enderedimage  <P>rint_image  <cntrl-C>quit
+</>statefile  set<R>enderedimage  <P>rint_image  <esc>quit
 )"[1];
       std::cerr << s;
       break;

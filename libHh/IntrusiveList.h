@@ -27,7 +27,7 @@ namespace hh {
 #define HH_INTRUSIVE_LIST_RANGE(list, Struct, node_elem_name) \
   hh::IntrusiveList::OuterRange<Struct, offsetof(Struct, node_elem_name)>(list)
 
-// Given a pointer to IntrusiveListNode node_elem_name, a member of Struct, return a pointer the Struct.
+// Given a pointer to IntrusiveListNode node_elem_name, a member of Struct, return a pointer to the Struct.
 #define HH_INTRUSIVE_LIST_OUTER(Struct, node_elem_name, node) \
   reinterpret_cast<Struct*>(const_cast<char*>(reinterpret_cast<const char*>(node) - offsetof(Struct, node_elem_name)))
 

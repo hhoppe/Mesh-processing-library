@@ -383,7 +383,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       return 0;
     }
     case WM_MOVE: {
-      _win_pos = convert<int>(V(HIWORD(lParam), LOWORD(lParam)));  // The (y, x) coordinates.
+      _win_pos = V(int(short(HIWORD(lParam))), int(short(LOWORD(lParam))));  // The (y, x) coordinates; signed.
       if (_hwdebug) SHOW("WM_MOVE", _win_pos);
       return 0;
     }
@@ -400,8 +400,8 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
     case WM_RBUTTONUP:
     case WM_XBUTTONDOWN:
     case WM_XBUTTONUP: {
-      // Cursor relative to upper-left of client area.
-      const Vec2<int> yx = convert<int>(V(HIWORD(lParam), LOWORD(lParam)));
+      // Cursor relative to upper-left of client area; signed, as it may lie outside the window during a capture.
+      const Vec2<int> yx = V(int(short(HIWORD(lParam))), int(short(LOWORD(lParam))));
       const bool shift = (wParam & MK_SHIFT) != 0;
       dummy_use(shift);
       int butnum;
@@ -583,7 +583,11 @@ void Hw::handle_key(int why_called, WPARAM key_data) {
     }
   } else {
     // We assume we're handling a WM_CHAR message.
-    char ch = assert_narrow_cast<char>(key_data);
+    if (key_data > 127) {  // A non-ASCII UTF-16 character, which no caller handles.
+      beep();
+      return;
+    }
+    char ch = narrow_cast<char>(key_data);
     if (ch == 127) ch = '\b';  // C-<backspace> should just be <backspace> for now
     s = ch;
   }
@@ -856,7 +860,7 @@ Array<string> Hw::query_open_filenames(const string& hint_filename) {
     filenames.push(get_canonical_path(utf8_from_utf16(buffer.data())));
   } else {  // Multiple files.
     const string directory = get_canonical_path(utf8_from_utf16(buffer.data()));
-    for (wchar_t* p = &buffer[int(directory.size() + 1)]; *p;) {
+    for (wchar_t* p = buffer.data() + wcslen(buffer.data()) + 1; *p;) {
       if (0) SHOW(directory, utf8_from_utf16(p));
       filenames.push(directory + "/" + utf8_from_utf16(p));
       p += wcslen(p) + 1;
@@ -1362,10 +1366,12 @@ std::optional<Image> Hw::copy_clipboard_to_image() {
         optional_image = Image();
         Image& image = *optional_image;
         image.init(V(bmih.biHeight, bmih.biWidth));
-        assertx(bmih.biBitCount == 8 || bmih.biBitCount == 24 || bmih.biBitCount == 32);
+        assertx(bmih.biBitCount == 24 || bmih.biBitCount == 32);
+        assertx(bmih.biCompression == 0 || bmih.biCompression == 3);  // BI_RGB or BI_BITFIELDS (assumed BGRA masks).
         const int ncomp = bmih.biBitCount / 8;
         image.set_zsize(ncomp);
-        uint8_t* p = buf + bmih.biSize;
+        // With BI_BITFIELDS, three DWORD color masks follow the header.
+        uint8_t* p = buf + bmih.biSize + (bmih.biCompression == 3 ? 3 * sizeof(uint32_t) : 0);
         for_int(y, image.ysize()) {
           const int yy = image.ysize() - 1 - y;  // Flip vertically.
           for_int(x, image.xsize()) {

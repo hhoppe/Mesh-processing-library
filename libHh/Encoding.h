@@ -105,7 +105,7 @@ template <typename T> class Encoding : noncopyable {
   // Include the probability table.
   [[nodiscard]] float worst_entropy() const {
     assertnever("not implemented");
-    // Sturling's approximation: n! =~ sqrt(TAU * n) * n^n * e^-n
+    // Stirling's approximation: n! =~ sqrt(TAU * n) * n^n * e^-n
     //   log_2(n!) =~ (0.5 * log(TAU) + (n + 0.5) * log(n) - n) / log(2)
     // For arithmetic coding with large probability distributions, the distribution itself is very predictable.
     // What requires encoding is the permutation of the symbols in the sorted decreasing list of symbols.

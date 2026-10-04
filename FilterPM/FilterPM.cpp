@@ -670,8 +670,8 @@ void do_compression() {
       // Remove materials.
       const Materials no_materials;
       lbasemesh._materials = no_materials;
-      lbasemesh.write(fo(), pmi->rstream()._info);
       quantize_mesh_int(lbasemesh, pmi->rstream()._info);
+      lbasemesh.write(fo(), pmi->rstream()._info);
       for_int(vspli, pmesh._vsplits.num()) {
         Vsplit vspl = pmesh._vsplits[vspli];
         quantize_vsplit_int(vspl, pmi->rstream()._info);
@@ -1186,7 +1186,7 @@ void do_lreorder_vspl(Args& args) {
 
 void do_exp_reorder(Args& args) {
   float fac = args.get_float();
-  assertx(fac > 0.f);
+  assertx(fac > 1.f);
   ensure_pm_loaded();
   const int base_nv = pmesh._base_mesh._vertices.num();
   const int full_nv = pmesh._info._full_nvertices;
@@ -1453,13 +1453,13 @@ int main(int argc, const char** argv) {
   HH_ARGSD(nedges, "nedges : goto mesh with that many edges");
   HH_ARGSD(nsplits, "nsplits : goto mesh after that many vsplits");
   HH_ARGSD(maxresidd, "residd : goto mesh with <= resid_dir error");
-  HH_ARGSD(coarsest, ": goto to base mesh");
-  HH_ARGSD(finest, ": goto to fully detailed mesh");
+  HH_ARGSD(coarsest, ": go to base mesh");
+  HH_ARGSD(finest, ": go to fully detailed mesh");
   HH_ARGSC(HH_ARGS_INDENT "Act on current mesh:");
   HH_ARGSD(info, ": output stats on current mesh");
   HH_ARGSD(minfo, ": output more stats on current mesh");
   HH_ARGSD(outmesh, ": output mesh");
-  HH_ARGSD(outsmesh, ": output simple mesh (split wedges)");
+  HH_ARGSD(outsmesh, ": output full-res simple mesh (split wedges) with 'parent' keys");
   HH_ARGSD(geom_nfaces, "nf : output geomorph up to nf faces");
   HH_ARGSC(HH_ARGS_INDENT "Output selectively refined meshes and geomorphs:");
   HH_ARGSD(srout, "'frame' srthresh : create SR mesh");
@@ -1513,7 +1513,7 @@ int main(int argc, const char** argv) {
     assertx(fi().peek() == 'P' || fi().peek() == 'S');
     const bool srm_input = fi().peek() == 'S';
     showff("%s", args.header().c_str());
-    if (arg0 == "-tosrm") {
+    if (args.num() && args.peek_string() == "-tosrm") {
       // It will do its own efficient parsing.
       pfi = &fi;
     } else if (srm_input) {

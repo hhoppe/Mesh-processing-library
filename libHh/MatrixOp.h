@@ -129,7 +129,7 @@ template <typename T> void mat_mul(CArrayView<T> vi, CMatrixView<T> m, ArrayView
   });
 }
 
-// Multiply row vector vi by matrix m and return the resulting row vector m * vi.
+// Multiply row vector vi by matrix m and return the resulting row vector vi * m.
 template <typename T> [[nodiscard]] Array<T> mat_mul(CArrayView<T> vi, CMatrixView<T> m) {
   Array<T> vo(m.xsize());
   mat_mul(vi, m, vo);

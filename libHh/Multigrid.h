@@ -310,7 +310,7 @@ class Multigrid : noncopyable {
     assertx(same_size(grid_rhs, grid_result));
     const Vec<int, D> dims = grid_rhs.dims();
     if (product(dims) == 1) {
-      Warning("relax of singleteon");
+      Warning("relax of singleton");
       return;
     }
     if (0 && k_enable_specializations && D == 1) {

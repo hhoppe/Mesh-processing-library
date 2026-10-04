@@ -156,7 +156,7 @@ class SphereMapper::Implementation {
   }
 
   [[nodiscard]] Frame frame_aligning_sphmap_to_surface_normals() const {
-    // Compute the rotation that best aligns each faces's centroid sphere point to its surface face normal.
+    // Compute the rotation that best aligns each face's centroid sphere point to its surface face normal.
     // Uses Horn's closed form solution with unit quaternions.
     SGrid<float, 3, 3> cov{};  // Weighted covariance matrix.
     for_int(f, _pmi._faces.num()) {
@@ -636,7 +636,7 @@ class SphereMapper::Implementation {
   }
 
   void set_stretch_scaling() {
-    // Surface area is introduced here is to induce a scale-invariant weighting of the conformal_weight term.
+    // Surface area is introduced here to induce a scale-invariant weighting of the conformal_weight term.
     _stretch_scaling1 = Precision(.5 / _surface_area * (2 * D_TAU) * .5);
     _stretch_scaling2 = Precision(_conformal_weight * std::pow(1.f / (2 * D_TAU) * _surface_area, 3.) * .5);
     _stretch_scaling3 = Precision(.5 / (2 * D_TAU) * _surface_area);
@@ -849,7 +849,7 @@ SphereMapper::SphereMapper(PMeshIter& pmi, Options options)
 
 SphereMapper::~SphereMapper() = default;
 
-void SphereMapper::SphereMapper::show_parameters() const { _impl->show_parameters(); }
+void SphereMapper::show_parameters() const { _impl->show_parameters(); }
 
 CArrayView<Point> SphereMapper::compute(CArrayView<Point> base_sphmap) { return _impl->compute(base_sphmap); }
 

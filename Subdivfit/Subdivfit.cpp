@@ -50,7 +50,7 @@ float areafac = 0.f;
 int verb = 1;
 
 std::optional<WFile> wf_record;
-constexpr float k_min_cos = -1.f / 3.f;  // Value acos(109.471) == tetrahedron angle.
+constexpr float k_min_cos = -1.f / 3.f;  // Equals cos(109.471 degrees), the tetrahedral angle.
 
 Array<Point> co;  // Points.
 GMesh gmesh;      // Current control mesh.
@@ -1061,8 +1061,8 @@ EResult try_esha(Edge eg, double& edrss) {
   is_sharp = !is_sharp;
   gmesh.flags(eg).flag(GMesh::eflag_sharp) = is_sharp;
   if (wf_record) {
-    (*wf_record)() << "Edge " << gmesh.vertex_id(gmesh.vertex1(e)) << " " << gmesh.vertex_id(gmesh.vertex2(e)) << " {"
-                   << (is_sharp ? "sharp" : "") << "}\n";
+    (*wf_record)() << "Edge " << gmesh.vertex_id(gmesh.vertex1(eg)) << " " << gmesh.vertex_id(gmesh.vertex2(eg))
+                   << " {" << (is_sharp ? "sharp" : "") << "}\n";
   }
   for (Vertex v : gmesh.vertices(eg)) {
     for (Edge ee : gmesh.edges(v)) ecand.add(ee);
@@ -1396,7 +1396,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(nsubdiv, "i : number of subdivision iters");
   HH_ARGSF(nolimit, ": do not send final vertices to limit");
   HH_ARGSC("", ":");
-  HH_ARGSP(selective, "deg : refine sharpe edges and others > deg");
+  HH_ARGSP(selective, "deg : refine sharp edges and others > deg");
   HH_ARGSF(s222, ": use s222 mask instead of n222");
   HH_ARGSP(weighta, "a : override interior extraord. weight");
   HH_ARGSP(xformsize, "s : override internal xform");

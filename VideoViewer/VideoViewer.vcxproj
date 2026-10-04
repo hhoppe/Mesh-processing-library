@@ -32,6 +32,7 @@
     <ClCompile Include="VideoViewer.cpp">
       <AssemblerOutput>$(HhAssemblerOutputValue)</AssemblerOutput>
     </ClCompile>
+    <ClInclude Include="GradientDomainLoop.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(MeshRoot)\libHh\libHh.vcxproj">

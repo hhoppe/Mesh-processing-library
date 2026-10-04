@@ -148,7 +148,7 @@ struct S_op_stat {
 
 constexpr float k_gim_diagonal_factor = 1.0f;  // Was 1.1f.
 constexpr bool k_simp96 = true;                // Improvements.
-constexpr float k_mincos = -1.f / 3.f;         // Equals acos(109.471) == tetrahedron angle.
+constexpr float k_mincos = -1.f / 3.f;         // Equals cos(109.471 degrees), the tetrahedral angle.
 constexpr auto k_spring_sched = V(1e-2f, 1e-3f, 1e-4f, 1e-8f);
 constexpr int k_max_gfit_iter = 30;
 std::optional<WFile> file_spawn;
@@ -1465,7 +1465,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(quicksimplify, ": fast simplification");
   HH_ARGSD(zippysimplify, ": faster simplification");
   HH_ARGSC("", ":");
-  HH_ARGSP(spring, "tension : set sprint constant");
+  HH_ARGSP(spring, "tension : set spring constant");
   HH_ARGSP(dihfac, "val : set edge dihedral energy factor");
   HH_ARGSP(dihpower, "pow : set edge dihedral energy exponent");
   HH_ARGSP(restrictfproject, "int : 0=never, 1=first_iter, 2=always");

@@ -176,8 +176,8 @@ void do_diff_corners(Args& args) {
   Map<int, int> mapfoldf;
   string str;
   for (Face f2 : mesh2.faces()) {
-    const int oldfid = to_int(assertx(GMesh::string_key(str, mesh.get_string(f2), "oldfid")));
-    mapfoldf.enter(oldfid, mesh.face_id(f2));
+    const int oldfid = to_int(assertx(GMesh::string_key(str, mesh2.get_string(f2), "oldfid")));
+    mapfoldf.enter(oldfid, mesh2.face_id(f2));
   }
   string str2;
   for (Vertex v : mesh.vertices()) {
@@ -1516,7 +1516,7 @@ int main(int argc, const char** argv) {
   // HH_ARGSD(meshify1,       ": advancing front (simulate, heuristic)");
   // HH_ARGSD(meshify2,       ": advancing front (simulate, 1dof restart)");
   // HH_ARGSD(meshify4,       ": like 2, but better nverts sim");
-  HH_ARGSD(meshify5, ": like 2, cleaner (~results in 1999 paper)");
+  HH_ARGSD(meshify5, ": advancing front with lookahead (~results in 1999 paper)");
   // HH_ARGSD(meshify6,       ": fast heuristic");
   // HH_ARGSD(meshify7,       ": obsolete");
   HH_ARGSD(meshify8, ": fast heuristic per ring");

@@ -113,7 +113,6 @@ void gnomonic_search_bary(const Point& p, const GMesh& mesh, Face& f, Bary& bary
     int nfchanges = 0;
     for (;;) {
       triangle = mesh.triangle_points(f);
-      // Adapted from MeshSearch.cpp .
       Vec3<bool> outside;
       for_int(i, 3) {
         const Point& p1 = triangle[mod3(i + 1)];

@@ -28,7 +28,7 @@ class Stat {
  public:
   explicit Stat(string name_ = "", bool print = false, bool is_static = false);
   explicit Stat(const char* name_, bool print = false, bool is_static = false);
-  Stat(Stat&& s) noexcept : _print(false) { zero(); swap(*this, s); }  // Not "= default".
+  Stat(Stat&& s) noexcept : _print(false) { zero(), swap(*this, s); }
   template <ranges::input_range R> requires std::is_arithmetic_v<range_value_t<R>> explicit Stat(R&& range);
   ~Stat();
   Stat& operator=(Stat&& s) noexcept;
@@ -210,7 +210,7 @@ template <ranges::forward_range R> R standardize_rms(R&& range) {
   const Stat stat = range_stat(range);
   const float rms = stat.rms();
   if (!rms) {
-    Warning("standardize() of range with zero rms");
+    Warning("standardize_rms() of range with zero rms");
   } else {
     const float rrms = 1.f / rms;
     for (auto& e : range) e *= rrms;

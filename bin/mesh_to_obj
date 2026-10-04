@@ -6,15 +6,15 @@ use strict;
 
 binmode(STDOUT);
 
-my $gid;
+my $gid = 0;
+my %mvv;  # Mesh vertex id -> obj vertex index (1-based), so that the input need not be renumbered.
 
 while (<>) {
   if (/^\#/) { print; next; }
   if (/^Vertex /) {
     my ($n,$x,$y,$z,$info)=/^Vertex (\d+)\s+(\S+)\s+(\S+)\s+(\S+)\s*(\{.*\})?\s*$/ or die "?";
-    die "not renumbered?" unless $n=++$gid;
+    $mvv{$n} = ++$gid;
     printf("v %g %g %g\n",$x,$y,$z);
-    # $mvv{$n}=$vnum++;
     next;
   }
   if (/^Face /) {
@@ -22,7 +22,7 @@ while (<>) {
     # warn "verts='$verts' info='$info'\n";
     my @verts=split(' ',$verts);
     print "f";
-    for (@verts) { printf(" %d",$_); } # $mvv{$_}
+    for (@verts) { printf(" %d", $mvv{$_} // die "Face refers to undefined vertex $_\n"); }
     print "\n";
     next;
   }

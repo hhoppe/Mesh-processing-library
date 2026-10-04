@@ -135,7 +135,6 @@ Point slerp(const Point& p1, const Point& p2, float ba) {
 float spherical_triangle_area(const Vec3<Point>& triangle) {
   for_int(i, 3) ASSERTXX(is_unit(triangle[i]));
   const float sang = solid_angle(Point(0.f, 0.f, 0.f), triangle);
-  ASSERTX(sang >= -1e-6f && sang <= TAU * 2);
   if (sang < 0.f) {
     assertx(sang >= -1e-6f);
     return 0.f;

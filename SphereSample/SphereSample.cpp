@@ -39,7 +39,7 @@ string param_file;               // Filename for sphparam mesh (M -> S) which is
 string rotate_s3d;               // Filename for s3d file.
 Array<string> key_names{"sph"};  // Set of string attributes written to output mesh.
 string signal_;                  // Surface signal ("G", "N", "C", "T", "V").
-int voxel_grid_resolution = 50;  // 3D checkboard grid resolution for "V" signal.
+int voxel_grid_resolution = 50;  // 3D checkerboard grid resolution for "V" signal.
 int supersample = 1;             // 1 signifies no supersampling.
 bool feather_texture = true;     // Blend texture discontinuities in do_write_texture().
 Matrix<Vector4> texture_image_vector4;
@@ -597,6 +597,7 @@ void split_quad_8tris(const Vec4<Point>& po, float fi, float fj, Vec3<Point>& tr
   // Split quadrant into two triangles.
   if (t <= s) {
     triangle = V(po[q], normalized(interp(po[q], po[(q + 1) % 4])), normalized(bilerp(po, .5f, .5f)));
+    bary = Bary(max(0.f, 1.f - s), s - t, t);
   } else {
     // Flip the triangle to obtain symmetry --- that is OK with most triangle_map functions.
     triangle = V(po[q], normalized(interp(po[q], po[(q + 3) % 4])), normalized(bilerp(po, .5f, .5f)));
@@ -1217,7 +1218,7 @@ void internal_remesh() {
       assertx(is_unit(sph));
       const auto [param_f, bary] = mesh_search.search_on_sphere(sph, hint_f);
       hint_f = param_f;
-      const Vec3<Point> triangle = transformed(g_mesh.triangle_vertices(param_f), v_domainp);
+      const Vec3<Point> triangle = transformed(param_mesh.triangle_vertices(param_f), v_domainp);
       const Point newp = interp(triangle, bary);
       g_mesh.set_point(v, newp);
       v_normal(v) = interp_f_normal(param_mesh, param_f, bary);
@@ -1863,7 +1864,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(remesh, ": resample mesh and triangulate");
   HH_ARGSD(signal, "ch : select G=geometry, N=normal, C=color, T=texture, V=voxel");
   HH_ARGSD(texture_file, "imagefile : source content for 'T' signal");
-  HH_ARGSP(voxel_grid_resolution, "n : resolution of 3D checkboard grid for 'V' signal");
+  HH_ARGSP(voxel_grid_resolution, "n : resolution of 3D checkerboard grid for 'V' signal");
   HH_ARGSP(supersample, "n : sample n * n times for each output texel");
   HH_ARGSP(feather_texture, "bool : blend across texture border discontinuities");
   HH_ARGSD(write_texture, "image : resample signal as texturemap (dual sampling)");

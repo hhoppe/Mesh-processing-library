@@ -65,7 +65,7 @@ namespace hh {
 // Modify frame by setting v[0..2] according to Euler angles, keeping origin and axes scaling of prev_frame.
 [[nodiscard]] Frame frame_from_euler_angles(const Vec3<float>& ang, const Frame& prev_frame);
 
-// Modify frame so that its x axis points towards p and its y axis is vertical;
+// Modify frame so that its x axis points along direction v and its y axis is horizontal (zero roll);
 // frame.p() is ignored and unchanged.
 void frame_aim_at(Frame& frame, const Vector& v);
 
@@ -75,7 +75,7 @@ void frame_aim_at(Frame& frame, const Vector& v);
 // Modify frame so that its x and y axes lie in the xy plane.
 [[nodiscard]] Frame make_horiz(const Frame& frame);
 
-// Affinely broaden the triangle (in all directions) by the factor 1.f + eps * .5f .
+// Affinely broaden the triangle about its centroid by the factor 1.f + 1.5f * eps.
 [[nodiscard]] Vec3<Point> widen_triangle(const Vec3<Point>& triangle, float eps);
 
 // *** Intersections

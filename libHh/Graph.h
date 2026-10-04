@@ -36,7 +36,7 @@ template <typename T> class Graph : noncopyable {
   // Enter and remove domain vertices.
   void enter(T v) { _m.enter(v, atype()); }  // The vertex v must be new.
   [[nodiscard]] bool contains(T v) const { return _m.contains(v); }
-  bool remove(T v);  // Must have 0 out_degree, ret: was_there.
+  bool remove(T v);  // Must have 0 out_degree; returns was_there.
   // Enter an edge.
   void enter(T v1, T v2) { ASSERTXX(!contains(v1, v2)), _m.get(v1).push(v2); }
   // Enter an undirected edge; v1 and v2 must be present and the edge must be new.

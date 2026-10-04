@@ -526,7 +526,7 @@ int retriangulate_one_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDG
   const hash_edge he{mesh};
   SetEdge sete(he);
   sete.enter(e);
-  return retriangulate(mesh, sete, true, nullptr, mincos, fdoswap, fdel, fadd);
+  return retriangulate(mesh, sete, false, nullptr, mincos, fdoswap, fdel, fadd);
 }
 
 bool circum_radius_swap_criterion(const GMesh& mesh, Edge e) {

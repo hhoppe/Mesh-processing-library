@@ -2120,7 +2120,8 @@ void do_gdfill() {
   for_coords(image.dims(), [&](const Vec2<int>& yx) {  // Sequential because of reduction.
     if (!masked(yx)) vmean += Vector4(image[yx]);
   });
-  vmean /= vmean[3];  // SHOW(vmean);
+  assertx(vmean[3] > 0.f);  // At least one unmasked pixel.
+  vmean /= vmean[3];        // SHOW(vmean);
   parallel_for_coords(image.dims(), [&](const Vec2<int>& yx) {
     if (masked(yx)) grid_orig[yx] = vmean;
   });
@@ -2986,7 +2987,7 @@ void do_compare(Args& args) {
   allerr2 /= image1.zsize();
   allmssim /= image1.zsize();
   const double psnr = 20. * std::log10(255. / (my_sqrt(allerr2) + 1e-10));
-  showf("all: RMSE=%f PSNR=%f MAXE=%d MSSIM=%f\n", allerr2, psnr, allmax, allmssim);
+  showf("all: RMSE=%f PSNR=%f MAXE=%d MSSIM=%f\n", my_sqrt(allerr2), psnr, allmax, allmssim);
   nooutput = true;
 }
 
@@ -3514,13 +3515,13 @@ int main(int argc, const char** argv) {
   HH_ARGSD(scaletoy, "y : uniform scale to y height");
   HH_ARGSD(scaletodims, "x y : non-uniform scale");
   HH_ARGSD(scaleinside, "x y : uniform scale to become no larger than rectangle");
-  HH_ARGSD(scalehalf2n1, ": subsample 4**n + 1 -> 2**n + 1 on each axis");
+  HH_ARGSD(scalehalf2n1, ": subsample 2**(n + 1) + 1 -> 2**n + 1 on each axis");
   HH_ARGSC("", ":");
   HH_ARGSD(flipvertical, ": reverse rows");
   HH_ARGSD(fliphorizontal, ": reverse columns");
   HH_ARGSD(rot180, ": rotate by 180 degrees");
   HH_ARGSD(rotate, "ang : rotate ccw by ang degrees");
-  HH_ARGSD(gtransf, "'frame' : geometrically remap using (y, x, 0) coords)");
+  HH_ARGSD(gtransf, "'frame' : geometrically remap using (y, x, 0) coords");
   HH_ARGSD(tile, "nx ny : grid repeat");
   HH_ARGSD(disassemble, "tilex tiley root_name : break up into multiple image files of this size");
   HH_ARGSD(gridcrop, "nx ny sizex sizey : assemble grid of regions (with as_cropsides)");
@@ -3572,7 +3573,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(gscale, "fac : scale image gradient (eg. for unconstrained regions)");
   HH_ARGSD(niter, "n : number of iterations of linear Poisson");
   HH_ARGSD(poisson, ": output poisson warping mesh");
-  HH_ARGSD(procedure, "name... : performed named operation");
+  HH_ARGSD(procedure, "name... : perform named operation");
   HH_ARGSD(diff, "image2 : compute difference 128 + image - image2");
   HH_ARGSD(maxdiff, "fthresh image2 : die if image value diff > fthresh (range 0..255)");
   HH_ARGSD(maxrmsdiff, "fthresh image2 : die if rms image diff > fthresh (range 0..255)");

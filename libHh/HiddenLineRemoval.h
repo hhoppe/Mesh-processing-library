@@ -98,7 +98,7 @@ class HiddenLineRemoval {
       if (z0 >= 0.f && z1 >= 0.f) continue;
       if (z0 < 0.f && z1 < 0.f) continue;
       if (y0 < 0.f && y1 < 0.f) continue;
-      if (y0 >= 0.f && y1 >= 1.f) {
+      if (y0 >= 0.f && y1 >= 0.f) {
         nint++;
         continue;
       }

@@ -17,6 +17,8 @@ Everything is in namespace `hh`.
   for small arrays.
 - `GeneralArray<T, n>`: the class of which `Array<T>` (with `n == 0`) and `InlinedArray<T, n>` are aliases; code
   names it directly only when it is generic over `n`, e.g. in a function that resizes any such array.
+- `CStridedArrayView<T>`, `StridedArrayView<T>`: views whose elements are separated by a stride, e.g. a column of a
+  `Matrix`.
 
 The arrays derive from the views, so an array can be passed wherever a view is expected (solid lines show
 derivation, and dashed lines show aliases):
@@ -60,6 +62,7 @@ CGridView<D, T>             (const elements)
 - `UnionFind<T>`: equivalence classes of elements, as pairs of elements are unified.
 - `IntrusiveList`: doubly linked list of `IntrusiveListNode` members embedded within other objects.
 - `Pool`: custom memory allocation pool for the objects of a class.
+- `STree<T>`: ordered set, a wrapper around `std::set`.
 
 ## Geometry
 
@@ -67,18 +70,38 @@ CGridView<D, T>             (const elements)
 - `Frame`: affine transformation of 3D points and vectors, as a 4x3 matrix applied to row vectors.
 - `Bbox<T, dim>`: axis-aligned bounding box in `dim` dimensions.
 - `Kdtree<T, D>`: k-d tree of elements represented by bounding boxes in `D` dimensions.
+- `Bary`, `Uv`: barycentric coordinates within a triangle, and 2D texture coordinates.
+- `Polygon`: array of `Point`s, with normal, area, clipping, and intersection operations.
+- `Quaternion`: unit quaternion representing a 3D rotation, with `slerp()` and `squad()` interpolation.
+- `PointSpatial<T>`, `ObjectSpatial`, `SpatialSearch<T>`: uniform grid over the unit cube, for finding the elements
+  nearest to a query point.
+- `Vector4`, `VectorF<n>`: vectors of `float` accelerated using SSE or NEON instructions.
+- `Lls`, `SparseLls`: linear least-squares solvers (dense QR or SVD, and sparse conjugate gradient).
 
 ## Meshes, images, and video
 
 - `Mesh`: vertices, faces, and edges of a polygon mesh, with their topological relations.
 - `GMesh`: geometric mesh (hence the "G"), a `Mesh` with a `Point` at each vertex and string attributes on its
   elements.
+- `MeshSearch`: spatial index over a `GMesh`, for closest-point queries.
+- `SubMesh`: subdivides a `GMesh`, maintaining the relationship between the subdivided mesh and the base mesh.
+- `PMesh`: progressive mesh, a base mesh (`AWMesh`) with a sequence of `Vsplit` records; `PMeshIter` traverses its
+  levels of detail.
+- `SrMesh`: selectively refinable progressive mesh, for view-dependent refinement.
+- `RA3dStream`, `WA3dStream`: reading and writing streams of polygons, polylines, and points (`*.a3d`).
 - `Pixel`: RGBA color with 8-bit channels (a `Vec4<uint8_t>`).
 - `Image`: 2D grid of `Pixel`s (a `Matrix<Pixel>`) with file input and output.
 - `Video`: 3D grid of `Pixel`s with attributes such as frame rate, bit rate, and compression type.
+- `RVideo`, `WVideo`: reading or writing a video one frame at a time; `VideoNv12` stores frames in YUV 4:2:0 (NV12).
+- `Audio`: 2D grid of `float` samples (channels by samples), with a sample rate and bit rate.
 
 ## Utilities
 
 - `Stat`: accumulates statistics (count, min, max, mean, deviation) of a stream of values.
 - `Timer`: measures and reports elapsed and CPU times.
 - `parallel_for()`: runs a loop body in parallel over a range, using a pool of threads.
+- `ParseArgs`: parses command-line options and generates their usage text.
+- `RFile`, `WFile`: input and output file streams, which also accept `-` (stdin/stdout), pipe commands, and
+  compressed files.
+- `Random`: deterministic random-number generator, so that results are reproducible across platforms.
+- `HH_STAT(S)`, `HH_SSTAT(S, v)`: macros that accumulate a `Stat`, reported at program exit.

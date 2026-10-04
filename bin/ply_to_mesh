@@ -16,7 +16,7 @@ my $date = strftime("%Y-%m-%d %H:%M:%S", localtime);
 my $script_name = basename($0);
 print("# Created on $date using: $script_name @original_argv\n");
 
-open(FILE, "<@ARGV");
+open(FILE, "<@ARGV") or die "Cannot open '@ARGV': $!";
 binmode(FILE);
 
 # Not handled:

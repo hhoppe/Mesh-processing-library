@@ -146,7 +146,7 @@ bool parse_key_vec(const char* ss, const char* key, ArrayView<float> ar);
 //   Vertex 1  1.5e2 0 1.5 {normal=(0,1,0)}
 //   Vertex 2  0 1.5 0
 //   Face 1  1 2 3
-//   Face 2  2 3 4 5 {color=red, phong=2}
+//   Face 2  2 3 4 5 {color=red phong=2}
 //  Here fi may be zero, in which case a number is assigned.
 
 class StringKeyIter {

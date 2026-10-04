@@ -273,12 +273,12 @@ void for_coordsL_raster(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, FuncRa
     for_intL(d0, uL[0], uU[0]) func_raster(d0);
   } else if constexpr (D == 2) {
     for_intL(d0, uL[0], uU[0]) {
-      const size_t i0 = d0 * dims[1];
+      const size_t i0 = size_t(d0) * dims[1];
       for_intL(d1, uL[1], uU[1]) func_raster(i0 + d1);
     }
   } else if constexpr (D == 3) {  // Speed does not increase much.
     for_intL(d0, uL[0], uU[0]) for_intL(d1, uL[1], uU[1]) {
-      const size_t i0 = (d0 * dims[1] + d1) * dims[2];
+      const size_t i0 = (size_t(d0) * dims[1] + d1) * dims[2];
       for_intL(d2, uL[2], uU[2]) func_raster(i0 + d2);
     }
   } else {  // This generic case is already quite fast.

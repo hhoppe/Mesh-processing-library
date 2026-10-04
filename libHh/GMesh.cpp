@@ -173,7 +173,7 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
   } else if (ch == '"') {
     send = str_chr(_s + nch + 2, '"');
     if (!send) assertnever("No matching '\"' " + SSHOW(_s, _s + nch + 2));
-  } else if (std::isalnum(ch) || ch == '-') {
+  } else if (std::isalnum(static_cast<unsigned char>(ch)) || ch == '-') {
     send = str_last_non_space(_s + nch + 2);
   } else {
     if (Warning("Cannot parse StringKey value")) SHOW(_str, _s + nch + 1);
@@ -346,7 +346,7 @@ void GMesh::update_string(Corner c, const char* key, const char* val) { update_s
 // I/O
 
 void GMesh::read(std::istream& is) {
-  for (string line; my_getline(is, line);) read_line(const_cast<char*>(line.c_str()));
+  for (string line; my_getline(is, line);) read_line(line.data());
   if (debug() >= 1) ok();
 }
 
@@ -354,7 +354,7 @@ void GMesh::read(std::istream& is) {
 // This function is copied elsewhere too.
 static const char* get_sinfo(const char* s_const) {
   char* s = const_cast<char*>(s_const);
-  while (std::isspace(*s)) s++;
+  while (std::isspace(static_cast<unsigned char>(*s))) s++;
   if (!*s) return nullptr;
   if (*s != '{') assertnever("Unexpected character (not '{') at start of '" + string(s) + "'");
   char* s2 = strchr(s + 1, '}');
@@ -399,7 +399,7 @@ void GMesh::read_line(char* sline) {
         const int fi = int_from_chars(s);
         InlinedArray<Vertex, 6> va;
         for (;;) {
-          while (std::isspace(*s)) s++;
+          while (std::isspace(static_cast<unsigned char>(*s))) s++;
           if (!*s || *s == '{') break;
           const int vi = int_from_chars(s);
           Vertex v = id_retrieve_vertex(vi);
@@ -775,7 +775,7 @@ Vertex GMesh::split_vertex(Vertex v1, Vertex vs1, Vertex vs2, int v2i) {
   if (tos) {
     _os = tos;
     *_os << "Vspl " << vertex_id(v1) << ' ' << (vs1 ? vertex_id(vs1) : 0) << ' ' << (vs2 ? vertex_id(vs2) : 0) << ' '
-         << v2i << '\n';
+         << vertex_id(vn) << '\n';
   }
   return vn;
 }

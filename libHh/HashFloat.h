@@ -19,7 +19,7 @@ class HashFloat : noncopyable {
  private:
   Map<uint32_t, float> _m;  // Encoded float bucket -> float representative.
   int _nignorebits;         // Number of least significant bits to ignore in the floating-point representation.
-  float _small;             // Numbers with absolute value < _small are grouped at 0.
+  float _small;             // Numbers with absolute value <= _small are grouped at 0.
   float _factor;            // Used to access the previous and next buckets.
   float _recip;             // 1 / _factor
   [[nodiscard]] uint32_t encode(float f) const;

@@ -31,7 +31,7 @@ class Mklib : noncopyable {
   void capU(int n);                                     // Height 1, radius 1, bottom at origin, peak at (0, 0, 1).
   void coneU(int n);                                    // Cone == cap with closed bottom.
   void sphere(int nlat, int nlong);                     // Radius 1, #latitudes (>= 2), #longitudes (>= 3).
-  void hemisphere(int nlat, int nlong);                 // Radius 1, #latitudes (>= 2), #longitudes (>= 2).
+  void hemisphere(int nlat, int nlong);                 // Radius 1, #latitudes (>= 1), #longitudes (>= 3).
   void tetra();                                         // Centered at centroid, edge = 1, height = sqrt(2 / 3).
   void tetraU();                                        // Bottom face centroid at origin, top at (0, 0, sqrt(2 / 3)).
   // Transformation on object: (-.5, -.5, -.5)..(.5, .5, .5) with primary axis +x, secondary axis +y ("O")

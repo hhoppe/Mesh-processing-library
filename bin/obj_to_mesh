@@ -140,12 +140,12 @@ sub main() {
       # ...
       # End of MRGB block
       s/^#MRGB // or die "? '$_'";
-      while (s/([0-9a-f][0-9a-f])([0-9a-f][0-9a-f])([0-9a-f][0-9a-f])//) {
+      while (s/^[0-9a-f]{2}([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})//) {  # Skip the mask byte MM.
         my @rgb = ($1, $2, $3);
         for my $ch (@rgb) {
           $ch = ord(pack("H2", $ch)) / 255.0;
         }
-        push @ar_vrgb, sprintf("%g %g %g", @rgb);
+        push @ar_vrgb, sprintf("(%g %g %g)", @rgb);
       }
     } elsif (/^\#/) {             # Ignore comment.
     } elsif (/^\s*$/) {           # Ignore blank lines.

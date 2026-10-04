@@ -287,19 +287,19 @@ template <typename T, size_t n>
   }(std::make_index_sequence<n>());
 }
 
-// Construct an Vec with two identical elements, e.g. twice(v) == V(v, v).
+// Construct a Vec with two identical elements, e.g. twice(v) == V(v, v).
 template <typename T>
 [[nodiscard]] constexpr Vec2<T> twice(const T& v) noexcept(std::is_nothrow_copy_constructible_v<T>) {
   return {v, v};
 }
 
-// Construct an Vec with three identical elements, e.g. thrice(v) == V(v, v, v).
+// Construct a Vec with three identical elements, e.g. thrice(v) == V(v, v, v).
 template <typename T>
 [[nodiscard]] constexpr Vec3<T> thrice(const T& v) noexcept(std::is_nothrow_copy_constructible_v<T>) {
   return {v, v, v};
 }
 
-// Construct an Vec with identical elements, e.g. ntimes<4>(.5f) == V(.5f, .5f, .5f, .5f).
+// Construct a Vec with identical elements, e.g. ntimes<4>(.5f) == V(.5f, .5f, .5f, .5f).
 template <int n, typename T>
 [[nodiscard]] constexpr Vec<T, n> ntimes(const T& v) noexcept(std::is_nothrow_copy_constructible_v<T>) {
   return Vec<T, n>::all(v);

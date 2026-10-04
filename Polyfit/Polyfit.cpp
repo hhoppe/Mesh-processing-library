@@ -612,7 +612,7 @@ void do_stoc() {
   const int nat = narrow_cast<int>(sum(op_stat.na));
   const int nst = narrow_cast<int>(sum(op_stat.ns));
   if (verb >= 2) {
-    showdf("Endstoc:  (col=%d/%d, espl=%d/%d tot=%d/%d)\n",  //
+    showdf("Endstoc:  (ecol=%d/%d, espl=%d/%d tot=%d/%d)\n",  //
            op_stat.ns[OP_ecol], op_stat.na[OP_ecol], op_stat.ns[OP_espl], op_stat.na[OP_espl], nst, nat);
     showdf("Result of %d attempted operations:\n", nat);
     for_int(i, R_NUM) showdf("  %5d %s\n", op_stat.nor[i], op_result_name[i].c_str());
@@ -691,7 +691,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(reconstruct, ": apply reconstruction schedule");
   HH_ARGSD(simplify, ": apply simplification schedule");
   HH_ARGSC("", ":");
-  HH_ARGSP(spring, "tension : set sprint constant");
+  HH_ARGSP(spring, "tension : set spring constant");
   HH_ARGSC("", ":");
   HH_ARGSD(gfit, "niter : do global fit (0=until convergence)");
   HH_ARGSD(stoc, ": do stochastic operations");

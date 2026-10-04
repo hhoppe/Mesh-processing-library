@@ -56,7 +56,7 @@ int64_t get_precise_counter() {
   // https://stackoverflow.com/questions/2414359/microsecond-resolution-timestamps-on-windows
   // https://learn.microsoft.com/en-us/windows/win32/api/profileapi/nf-profileapi-queryperformancefrequency
   //  The high frequency counter need not be tied to the CPU frequency at all.  It will only resemble the CPU
-  //  frequency is the system actually uses the TSC (TimeStampCounter) underneath.  As the TSC is generally
+  //  frequency if the system actually uses the TSC (TimeStampCounter) underneath.  As the TSC is generally
   //  unreliable on multicore systems it tends not to be used.  When the TSC is not used the ACPI Power
   //  Management Timer (pmtimer) may be used.  You can tell if your system uses the ACPI PMT by checking if
   //  QueryPerformanceFrequency returns the signature value of 3'579'545 (ie 3.57MHz).
@@ -218,7 +218,7 @@ string get_host_name() {
   string host;
 #if !defined(_WIN32)
   {
-    char host_name[100];
+    char host_name[256]{};  // Zero-initialized, as gethostname() need not terminate a truncated name.
     assertx(!gethostname(host_name, sizeof(host_name) - 1));
     host = host_name;
   }

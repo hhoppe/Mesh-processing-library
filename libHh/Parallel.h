@@ -163,7 +163,6 @@ void parallel_for_chunk(const ParallelOptions& options, R&& range, int num_threa
   if (num_threads < 1) assertnever(SSHOW(num_threads));
   // Note: we access `range` as an lvalue; ranges::begin() on an rvalue non-borrowed range would be ill-formed.
   const auto begin_range = ranges::begin(range);
-  // Note that num_elements may be larger than size_t (e.g., uint64_t on win32).
   const auto num_elements = ranges::size(range);
   using Size = ranges::range_size_t<R>;
   using Difference = ranges::range_difference_t<R>;
@@ -221,14 +220,14 @@ void parallel_for_chunk(R&& range, const ProcessChunk& process_chunk) {
 // from all threads; any shared mutable state within it must be synchronized by the caller.
 // Parallelism is disabled if the estimated cost (options.cycles_per_elem * size(range)) is less than some
 // internal threshold, or if we are already executing (nested) within another parallel_for_*() loop.
-// Exceptions within process_chunk() cause program termination as they are not caught.  One drawback over OpenMP
-// is that if an exception or abort occurs within process_chunk(), the stack trace will not include the functions
-// that called parallel_for_chunk() because these lie in the stack frames of a different thread.
+// Exceptions within process_element() cause program termination as they are not caught.  One drawback over OpenMP
+// is that if an exception or abort occurs within process_element(), the stack trace will not include the functions
+// that called parallel_for() because these lie in the stack frames of a different thread.
 // Environment variable OMP_NUM_THREADS overrides the default parallelism (even though OpenMP is not used).
 template <ranges::forward_range R, typename ProcessElement>
 requires ranges::sized_range<R> && std::invocable<const ProcessElement&, ranges::range_reference_t<R>>
 void parallel_for(const ParallelOptions& options, R&& range, const ProcessElement& process_element) {
-  const auto num_elements = ranges::size(range);  // Could be size_t or larger (e.g., uint64_t on win32).
+  const auto num_elements = ranges::size(range);
   if (num_elements == 0) return;
   const int max_num_threads = get_max_threads();
   const int num_threads = int(std::min<std::uintmax_t>(max_num_threads, num_elements));

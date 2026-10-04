@@ -493,7 +493,7 @@ static bool isafile(int fd) {
   return true;
 #else   // Cygwin or Unix.
   struct stat statbuf;
-  assertx(!fstat(fd, &statbuf));
+  if (fstat(fd, &statbuf)) return false;  // E.g., the descriptor is closed.
   return !HH_POSIX(isatty)(fd) && !S_ISFIFO(statbuf.st_mode) && !S_ISSOCK(statbuf.st_mode);
 #endif  // defined(_WIN32)
 }
@@ -632,7 +632,7 @@ double double_from_chars(const char*& s) {
 }
 
 void assert_no_more_chars(const char* s) {
-  while (std::isspace(*s)) s++;
+  while (std::isspace(static_cast<unsigned char>(*s))) s++;
   if (*s) assertnever("Unexpected extra characters in '" + string(s) + "'");
 }
 

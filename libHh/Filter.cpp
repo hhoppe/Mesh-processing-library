@@ -337,7 +337,7 @@ const LUfactorization& FilterBnd::lu_factorization() const {
     case Bndrule::border:
       assertnever("Bndrule::border not supported in generalized-filter scale operation; could pad data first");
     case Bndrule::reflected101:
-      assertnever("Bndrule::reflecte101 not supported in generalized-filter scale operation");
+      assertnever("Bndrule::reflected101 not supported in generalized-filter scale operation");
     default: assertnever("");
   }
 }

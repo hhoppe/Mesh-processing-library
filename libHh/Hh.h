@@ -494,10 +494,10 @@ extern int g_unoptimized_zero;
 #endif
 
 // With one expression `expr1`, show "expr1 = value1\n" on std::cerr and return expr.
-// With multiple expressions, show "expr1=value1 expr2=value ...\n" on std::cerr and return void.
+// With multiple expressions, show "expr1=value1 expr2=value2 ...\n" on std::cerr and return void.
 #define SHOW(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, false, __VA_ARGS__)
 
-// Show expression(s) on stcerr like SHOW(...) but with more digits of floating-point precision.
+// Show expression(s) on std::cerr like SHOW(...) but with more digits of floating-point precision.
 #define SHOW_PRECISE(...) HH_PRIMITIVE_CAT((HH_SHOW_, HH_GT1_ARGS(__VA_ARGS__)))(#__VA_ARGS__, true, __VA_ARGS__)
 
 // SSHOW(expr1, ...) returns a string "expr1 = value1" (single arg) or "expr1=value1 expr2=value2 ..." (multiple args).

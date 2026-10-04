@@ -83,7 +83,7 @@ class A3dElem {
   [[nodiscard]] Vector pnormal() const;  // May be degenerate (zero)!
   void get_polygon(Polygon& poly) const;
 
-  // For TComment:
+  // For EType::comment:
   void set_comment(string str);  // Here, str may start with ' '.
   [[nodiscard]] const string& comment() const;
 
@@ -166,9 +166,9 @@ class WA3dStream : noncopyable {
  private:
   bool _first{true};  // The first write.
   A3dVertexColor _curcol;
-  bool _force_choice_binary;  // Force the choice one way or the other.
-  bool _choice_binary;        // Which way is forced.
-  bool _pblank{false};        // The previous element left a blank line.
+  bool _force_choice_binary{false};  // Force the choice one way or the other.
+  bool _choice_binary{false};        // Which way is forced.
+  bool _pblank{false};               // The previous element left a blank line.
 };
 
 class WSA3dStream : public WA3dStream {  // Write to a stream.

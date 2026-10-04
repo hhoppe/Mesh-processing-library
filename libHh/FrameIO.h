@@ -60,10 +60,10 @@ enum class ERecognize { parse_error, no, partial, yes };
 //   Thus, zoom == 1.f for a square window corresponds to a horizontal field-of-view of 90 degrees.
 //   The zoom value is typically used only for object 0 (the eye frame).
 //
-//   In many contexts, the X, Y, Z world axes area associated with "forward", "left", and "up" directions,
+//   In many contexts, the X, Y, Z world axes are associated with "forward", "left", and "up" directions,
 //   consistent with the ordering of the axes represented by the frame.
 //
-//   The identify frame is
+//   The identity frame is
 //   F 0  1 0 0  0 1 0  0 0 1  0 0 0  0
 //   where the object_id == 0 and zoom == 0 values are often unused.
 //

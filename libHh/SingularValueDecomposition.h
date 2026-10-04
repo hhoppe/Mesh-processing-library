@@ -13,7 +13,7 @@ namespace hh {
 // Returns success.
 // Approach: one-sided Jacobi iterative algorithm,
 //  based on 1989 report by James Demmel and Kresimir Veselic, Algorithm 4.1, p32.
-// Implicitly computes the product A*A^T and then uses a sequence of Jacobi rotations to diagonalize it.
+// Implicitly computes the product A^T*A and then uses a sequence of Jacobi rotations to diagonalize it.
 // Singular values are not sorted.
 template <typename T>
 [[nodiscard]] bool singular_value_decomposition(CMatrixView<T> A, MatrixView<T> U, ArrayView<T> S, MatrixView<T> VT);

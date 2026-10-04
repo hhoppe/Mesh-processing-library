@@ -221,7 +221,7 @@ template <int D, typename T> class [[HH_NO_DANGLING]] GridView : public CGridVie
 template <typename T> [[nodiscard]] CGridView<1, T> CGrid1View(const T& e) { return CGridView<1, T>(&e, V(1)); }
 template <typename T> CGridView<1, T> CGrid1View(const T&&) = delete;
 
-// Create an GridView<1, T> referencing the single specified element.
+// Create a GridView<1, T> referencing the single specified element.
 template <typename T> [[nodiscard]] GridView<1, T> Grid1View(T& e) { return GridView<1, T>(&e, V(1)); }
 
 // Heap-allocated D-dimensional contiguous grid.  Any or all of the dimensions may be zero.

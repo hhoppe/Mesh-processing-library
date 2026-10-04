@@ -93,7 +93,6 @@ RCS/
 
 # Claude Code local state (e.g. worktrees), personal settings, and private instructions
 .claude/
-/.claude/settings.local.json
 /CLAUDE.md
 
 # Specific paths

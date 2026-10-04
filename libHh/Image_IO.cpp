@@ -71,7 +71,8 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
           if (i == string::npos) break;
           if (sscanf(line.c_str() + i, ", %dx%d", &dims[1], &dims[0]) == 2) break;
         }
-        if (line.contains(", rgba,")) has_alpha = true;
+        for (const char* s : {", rgba", ", bgra", ", argb", ", abgr", ", ya8", ", ya16", ", yuva"})
+          if (line.contains(s)) has_alpha = true;
       }
     }
     if (ldebug) SHOW(nlines, nimages, dims, container, has_alpha);
@@ -80,7 +81,6 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     assertt(container != "");
     init(dims);
     if (container == "mjpeg") container = "jpg";
-    if (container == "mjpeg (Baseline)") container = "jpg";
     if (container == "sgi") container = "rgb";
     if (container == "av1") container = "avif";
     const string suffix = to_lower(get_path_extension(filename));

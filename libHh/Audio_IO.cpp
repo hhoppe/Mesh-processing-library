@@ -166,7 +166,8 @@ void Audio::read_file(const string& pfilename) {
           string::size_type i;
           i = line.find(" Hz");
           assertx(i != string::npos);
-          if (audio_samplerate >= 0.) assertnever("Multiple audio streams inside media container");
+          if (audio_samplerate >= 0.)
+            throw std::runtime_error("Multiple audio streams inside media container '" + filename + "'");
           i = line.rfind(", ", i);
           assertx(i != string::npos);
           assertx(sscanf(line.c_str() + i, ", %d H%c", &audio_samplerate, &vch) == 2 && vch == 'z');

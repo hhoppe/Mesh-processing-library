@@ -21,7 +21,7 @@ extern string statefile;
 
 namespace {
 
-constexpr int k_max_object = 1024;  // Should be >= objects::MAX.
+constexpr int k_max_object = 2048;  // Should be >= objects::MAX.
 
 const FlagMask fflag_invisible = Mesh::allocate_Face_flag();
 // const string k_default_geometry = "700x700+0+0";
@@ -1161,7 +1161,7 @@ highlight<v>ertices  show_sharp<e>dges
 <f>isheyelens
 <h>lr_mode  button<H>lr  <q>uickmode  button<Q>uick  <[>, <]>:change_quicki
 <P>sg3d  <d>oublebuffer
-</>setstatefile  <cntrl-C>quit
+</>setstatefile  <esc>quit
 )"[1];
       std::cerr << s;
       break;

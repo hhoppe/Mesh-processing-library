@@ -100,7 +100,7 @@ view:
 	@status=0; \
 	timeout=; if [[ -n "$$DEMOS_HIDDEN" ]] && type -P timeout >/dev/null; then timeout='timeout 300'; fi; \
 	for i in $(view_scripts); do \
-          echo '**' $$i; \
+	  echo '**' $$i; \
 	  $$timeout $$i || { s=$$?; echo "*** $$i exited with status $$s." >&2; status=$$s; }; \
 	done; \
 	exit $$status

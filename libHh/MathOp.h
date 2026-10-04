@@ -70,11 +70,11 @@ template <typename T> [[nodiscard]] T my_mod(T a, T b) {
   return ret;
 }
 
-// Evaluate a B-spline function; x lies in [0, 1] which spans over all coefficients in ar.
+// Evaluate a B-spline function; t lies in [0, 1] which spans over all coefficients in ar.
 // The B-spline construction interpolates ar[0] at t == 0.f and ar.last() at t == 1.f.
 [[nodiscard]] float eval_uniform_bspline(CArrayView<float> ar, int deg, float t);
 
-// Evaluate a smooth-step function; x in [0, 1] -> ret: [0, 1]  (with zero derivatives at x == 0 and x == 1).
+// Evaluate a smooth-step function; x in [0, 1] -> [0, 1] (with zero derivatives at x == 0 and x == 1).
 template <typename T> [[nodiscard]] constexpr T smooth_step(T x) {
   static_assert(std::is_floating_point_v<T>);
   return x * x * (T{3} - T{2} * x);
@@ -117,7 +117,7 @@ template <typename T> [[nodiscard]] T my_sqrt(T a) {
   return sqrt(a);
 }
 
-// Is the integer i an even power of two?
+// Is the integer i an exact power of two?
 [[nodiscard]] constexpr bool is_pow2(unsigned i) { return i > 0 && (i & (i - 1)) == 0; }
 
 // Fast version of int(floor(std::log2(x))).
@@ -176,7 +176,7 @@ inline float funcn(int i, int k, float u, int n, int gk) {
 }
 }  // namespace details
 
-// Adapted from Micheal Mortenson, Geometric Modeling; very inefficient.
+// Adapted from Michael Mortenson, Geometric Modeling; very inefficient.
 inline float eval_uniform_bspline(CArrayView<float> ar, int deg, float t) {
   assertw(t >= 0.f && t <= 1.f);
   const int n = ar.num() - 1;

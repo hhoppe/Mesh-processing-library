@@ -217,6 +217,7 @@ void WMesh::read(std::istream& is, const PMeshInfo& pminfo) {
   }
   for_int(f, nfaces) {
     assertx(read_binary_std(is, _faces[f].wedges));
+    for_int(j, 3) assertx(_wedges.ok(_faces[f].wedges[j]));
     ushort lmatid;
     assertx(read_binary_std(is, ArView(lmatid)));
     int& matid = _faces[f].attrib.matid;

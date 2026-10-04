@@ -150,7 +150,7 @@ void delay_element() {
 }
 
 bool is_degenerate(const A3dElem& el) {
-  if (!assertw(el.num() < 3)) return true;
+  if (!assertw(el.num() >= 3)) return true;
   Vector vt{};
   for_intL(i, 1, el.num() - 1) vt += cross(el[0].p, el[i].p, el[i + 1].p);
   const float area = .5f * mag(vt);
@@ -690,6 +690,7 @@ void compute_outlier() {
     SPp.enter(i, &g_outlier.pa[i]);
   }
   int num_outliers = 0;
+  assertx(g_outlier.pa.num() > outliern);  // Else the search below advances past the end.
   for_int(i, g_outlier.pa.num()) {
     SpatialSearch<int> ss(&SPp, g_outlier.pa[i]);
     // The first search result is this point itself, so advancing outliern times reaches its outliern'th neighbor.
@@ -808,7 +809,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(tessellate, "n : subdivide each triangle into n*n faces");
   HH_ARGSC("", ":");
   HH_ARGSF(info, ": print statistics");
-  HH_ARGSF(stat, ": print statistics");
+  HH_ARGSF(stat, ": print statistics only (no a3d output)");
   HH_ARGSF(box, ": show bounding box");
   HH_ARGSF(boxframe, ": output frame that will box data");
   HH_ARGSF(nooutput, ": turn off a3d output");

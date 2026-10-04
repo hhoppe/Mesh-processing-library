@@ -29,7 +29,7 @@ template <typename T> [[nodiscard]] Vec3<T> cross(const Vec3<T>& p1, const Vec3<
 class Frame;
 struct Point;
 
-// My Vector, Point, Frame classes assumes row vectors (rather than column vectors).
+// My Vector, Point, Frame classes assume row vectors (rather than column vectors).
 // This is similar to RenderMan.
 // https://en.wikipedia.org/wiki/Row_vector
 // https://community.khronos.org/t/transpose/43582
@@ -156,7 +156,7 @@ struct Bary : Vec3<float> {
 
 // 2D coordinates, often used to represent texture coordinates; usually defined over unit square [0, 1]^2.
 // In DirectX, Metal, and Vulkan, the Uv origin is at the top left corner of a texture image, whereas
-// in OpenGL the Uv origin at the lower left.
+// in OpenGL the Uv origin is at the lower left.
 // Unfortunately, my code/results uses the OpenGL convention (even though my yx pixel coordinates have their
 // origin at the top left of the image).
 struct Uv : Vec2<float> {

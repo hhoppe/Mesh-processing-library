@@ -86,6 +86,6 @@ HH_REFERENCE_LIB("libI77.lib");
 
 #endif  // !(defined(_WIN32) || defined(__CYGWIN__))
 
-#endif  // defined(HAVE_LAPACK)
+#endif  // defined(HH_HAVE_LAPACK)
 
 #endif  // MESH_PROCESSING_LIBHH_MY_LAPACK_H_

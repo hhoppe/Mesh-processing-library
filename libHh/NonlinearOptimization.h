@@ -13,7 +13,7 @@ namespace hh {
 //  - a container vector x,
 //  - a function eval that evaluates both f(x) and \grad f(x) == (df / dx_1, df / dx_2, ..., df / dx_n);
 //     its signature is: double eval(ArrayView<double> ret_grad), where the return value is f(x).
-// The member function solve() iteratively calls eval to minimizes f, starting from some initial guess x_0
+// The member function solve() iteratively calls eval to minimize f, starting from some initial guess x_0
 //  provided in x, and places the obtained minimum in x.  It returns false if the solution fails to converge.
 // The optimization iterates until machine-precision convergence, or until a maximum number of evaluations
 //  provided using set_max_neval().
@@ -70,7 +70,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
     assertx(_n > 0 && _m > 0);
   }
   // Backtracking line search to find approximate minimum of f=_eval() along direction p,
-  //  with initial step size alpha.  Updates number of evaluations neval.  Ret: success.
+  //  with initial step size alpha.  Updates number of evaluations neval.  Returns success.
   [[nodiscard]] bool line_search(double& f, CArrayView<double> p, double& alpha, int& neval, int iter) {
     // https://en.wikipedia.org/wiki/Backtracking_line_search
     const double finit = f;  // The initial f.

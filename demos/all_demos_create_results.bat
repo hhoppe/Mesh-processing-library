@@ -19,7 +19,7 @@ if .==. (
 
   call create_sr_office.bat
   call create_sr_terrain.bat
-  
+
   call create_terrain_hierarchy.bat
 
   call create_topologically_simplified.bat

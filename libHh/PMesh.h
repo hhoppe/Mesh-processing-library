@@ -108,8 +108,8 @@ struct Vsplit {
   void ok() const;
   [[nodiscard]] bool adds_two_faces() const;
   // This format provides these limits:
-  // - maximum number of faces: 1ull << 32.
-  // - maximum vertex valence:  1u << 16.
+  // - maximum number of faces: 1u << 31.
+  // - maximum vertex valence:  1u << 15.
   // - maximum number of materials: 1u << 16.
 
   // ** Encoding of vertices vs, vl, vr:
@@ -119,7 +119,7 @@ struct Vsplit {
   //  vr is the (vlr_offset1 - 1)'th vertex when rotating CLW about vs from vl
   // Special cases:
   // - vlr_offset1 == 1 : no_vr and no_fr
-  // - vlr_offest1 == 0 : no flclw! vspl.flclw is actually flccw.
+  // - vlr_offset1 == 0 : no flclw! vspl.flclw is actually flccw.
   int flclw;          // 0 .. (mesh.num_faces() - 1)
   short vlr_offset1;  // 0 .. (max_vertex_valence) (prob < valence / 2)
   ushort code;        // (vs_index (2), ii (2), ws (3), wt (3), wl (2), wr (2), fl_matid >= 0 (1), fr_matid >= 0 (1))
@@ -172,7 +172,7 @@ struct Vsplit {
     FRN_MASK = 1u << FRN_SHIFT,
   };
   // *** Documentation:
-  // vs_index: 0..2: index of vs within flace flclw
+  // vs_index: 0..2: index of vs within face flclw
   // ii: 0..2: == alpha(1.0, 0.5, 0.0)
   //   ii = 2: a = 0.0 (old_vs = ~new_vs)
   //   ii = 1: a = 0.5
@@ -193,7 +193,7 @@ struct Vsplit {
   //  vs_index: 0..2 (prob. uniform)
   //  ii: ii == 2 prob. low/med   (med if 'MeshSimplify -nominii1')
   //      ii == 0 prob. low/med
-  //      ii == 1 prob. high/zero (zero if 'MeshSimplify -monminii1')
+  //      ii == 1 prob. high/zero (zero if 'MeshSimplify -nominii1')
   //  {S,T}LSAME: prob. high
   //  {S,T}RSAME: prob. high
   //  {S,T}CSAME: prob. low
@@ -381,15 +381,15 @@ class AWMesh : public WMesh {
 };
 
 struct PMeshInfo {
-  int _read_version;
-  bool _has_rgb;
-  bool _has_uv;
-  bool _has_resid;
-  bool _has_wad2;
-  int _tot_nvsplits;
-  int _full_nvertices;
-  int _full_nwedges;
-  int _full_nfaces;
+  int _read_version{0};
+  bool _has_rgb{false};
+  bool _has_uv{false};
+  bool _has_resid{false};
+  bool _has_wad2{false};
+  int _tot_nvsplits{0};
+  int _full_nvertices{0};
+  int _full_nwedges{0};
+  int _full_nfaces{0};
   Bbox<float, 3> _full_bbox;
 };
 
@@ -441,7 +441,7 @@ class PMeshRStream : noncopyable {
   PMesh* _pm;               // May be nullptr.
   int _vspliti{-1};         // Defined if _pm; next to read from _pm->_vsplits; -1 before base_mesh is read.
   Vsplit _tmp_vspl;         // Defined if !_pm.
-  bool _vspl_ready{false};  // Defined if !_pm; true if _vspl is only peeked.
+  bool _vspl_ready{false};  // Defined if !_pm; true if _tmp_vspl is only peeked.
   AWMesh _lbase_mesh;       // Used to store the base mesh if !_pm.
 };
 

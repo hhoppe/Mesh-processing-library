@@ -26,8 +26,8 @@ inline bool remove_at_end(string& s, std::string_view suffix) {
 }
 
 // Replace all instances of substring with the replacement substring.
-[[nodiscard]] static inline string replace_all(std::string_view str, std::string_view substring,
-                                               std::string_view sreplacement) {
+[[nodiscard]] inline string replace_all(std::string_view str, std::string_view substring,
+                                        std::string_view sreplacement) {
   assertx(substring != "");  // An empty substring would match endlessly.
   string result;
   std::string_view::size_type i = 0;

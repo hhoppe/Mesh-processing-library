@@ -132,6 +132,7 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
     // assertw(!rgbi.wastebytes);
     assertt(rgbi.colormap == 0);
     image.init(V(int(rgbi.ysize), int(rgbi.xsize)));
+    assertt(rgbi.zsize == 1 || rgbi.zsize == 3 || rgbi.zsize == 4);
     image.set_zsize(rgbi.zsize);
   }
   if (!product(image.dims())) return;
@@ -164,13 +165,17 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
       offset = rowstart[z * image.ysize() + y] + row.num();
       int i = 0, x = 0;
       for (;;) {
+        assertt(i < row.num());  // Guard against malformed run-length data.
         ushort pixel = row[i++];
         int count;
         count = pixel & 0x7f;
         if (!count) break;
+        assertt(x + count <= image.xsize());
         if (pixel & 0x80) {
+          assertt(i + count <= row.num());
           while (count--) image[y, x++][z] = row[i++];
         } else {
+          assertt(i < row.num());
           pixel = row[i++];
           while (count--) image[y, x++][z] = uchar(pixel);
         }
@@ -891,10 +896,9 @@ void ImageLibs::write_bmp(const Image& image, FILE* file) {
     to_dos(&bmfh.bfOffBits);
     int rowsize = image.xsize() * ncomp;
     while ((rowsize & 3) != 0) rowsize++;
-    assertw(int64_t{rowsize} * image.ysize() < (1ll << 32));
-    bmfh.bfSize = headers2size + rowsize * image.ysize();
+    bmfh.bfSize = assert_narrow_cast<uint32_t>(headers2size + int64_t{rowsize} * image.ysize());
     to_dos(&bmfh.bfSize);
-    bmih.biSizeImage = rowsize * image.ysize();
+    bmih.biSizeImage = assert_narrow_cast<uint32_t>(int64_t{rowsize} * image.ysize());
     to_dos(&bmih.biSizeImage);
     assertt(write_raw(file, V(bmfh)));
     assertt(write_raw(file, V(bmih)));
@@ -940,6 +944,7 @@ void ImageLibs::read_ppm(Image& image, FILE* file) {
   }
   assertt(numfields == 3);
   assertt(width >= 0 && height >= 0);
+  assertt(mask > 0 && mask <= 255);  // Two-byte samples (mask > 255) are unsupported.
   assertw(mask == 255);
   image.init(V(height, width));
   image.set_zsize(!is_gray ? 3 : 1);
@@ -984,7 +989,7 @@ static void my_png_user_error_fn(png_structp png_ptr, png_const_charp error_msg)
 
 static void my_png_user_warning_fn(png_structp png_ptr, png_const_charp warning_msg) {
   dummy_use(png_ptr);
-  showf("PNG lib warning : %s", warning_msg);
+  showf("PNG lib warning: %s\n", warning_msg);
 }
 
 void ImageLibs::read_png(Image& image, FILE* file) {
@@ -1066,14 +1071,15 @@ void ImageLibs::read_png(Image& image, FILE* file) {
     if (bit_depth != 1 && bit_depth != 8 && bit_depth != 16) SHOW(bit_depth);
     if (bit_depth > 8) {
       assertt(bit_depth == 16);
-      Warning("Reading 16-bit png image\n");
+      Warning("Reading 16-bit png image");
     }
     if (color_type == PNG_COLOR_TYPE_PALETTE) {
       png_set_palette_to_rgb(png_ptr);
       assertw(ncomp == 1);
       ncomp = 3;
     }
-    if (0) png_set_bgr(png_ptr);  // Retrieve data as BGR or BGRA.
+    if (color_type == PNG_COLOR_TYPE_GRAY_ALPHA) ncomp = 4;  // Expanded to RGBA by png_set_gray_to_rgb().
+    if (0) png_set_bgr(png_ptr);                             // Retrieve data as BGR or BGRA.
     image.init(V(height, width));
     image.set_zsize(ncomp);
     if (bit_depth == 16) png_set_strip_16(png_ptr);

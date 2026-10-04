@@ -521,9 +521,7 @@ bool bigfont() { return HB::get_font_dims()[1] > 9; }
 
 void invalidate_dls() { svalid_dl.clear(); }
 
-inline Vector interp_normal(const Vector& n1, const Vector& n2, float f1, float f2) {
-  return ok_normalized(f1 * n1 + f2 * n2);
-}
+inline Vector interp_normal(const Vector& n1, const Vector& n2, float f1) { return ok_normalized(interp(n1, n2, f1)); }
 
 inline Pixel interp_color(const Pixel& c1, const Pixel& c2, int f1, int f2) {
   ASSERTX(f1 + f2 == 256);
@@ -2394,11 +2392,10 @@ void GxObject::morph(float finterp) {  // Here, finterp == 1.f is new,   finterp
   const bool has_c_color = mesh.gflags().flag(mflag_c_colors);
   const bool has_only_v_color = has_v_color && !has_c_color;
   const bool has_either_color = has_v_color || has_c_color;
-  const float f1 = finterp, f2 = 1.f - f1;
   const int if1 = int(finterp * 256.f), if2 = 256 - if1;
   for (Vertex v : mesh.vertices()) {
     const VertexLOD& vlod = v_lod(v);
-    mesh.set_point(v, interp(vlod.Npos, vlod.Opos, f1));
+    mesh.set_point(v, interp(vlod.Npos, vlod.Opos, finterp));
     if (has_only_v_color) {
       v_color(v) = interp_color(vlod.Nd, vlod.Od, if1, if2);
     } else if (has_either_color) {
@@ -2413,19 +2410,17 @@ void GxObject::morph(float finterp) {  // Here, finterp == 1.f is new,   finterp
     }
     if (lsmooth) {
       if (mesh.flags(v).flag(vflag_unique_nors)) {
-        const Vector nnor = interp_normal(vlod.Nnor, vlod.Onor, f1, f2);
+        const Vector nnor = interp_normal(vlod.Nnor, vlod.Onor, finterp);
         for (Corner c : mesh.corners(v)) c_nor(c) = nnor;
       } else {
         for (Corner c : mesh.corners(v)) {
           const CornerLOD& clod = c_lod(c);
-          c_nor(c) = interp_normal(clod.Nnor, clod.Onor, f1, f2);
+          c_nor(c) = interp_normal(clod.Nnor, clod.Onor, finterp);
         }
       }
     }
     if (texture_active) {
-      Uv uv;
-      uv[0] = f1 * vlod.Nuv[0] + f2 * vlod.Ouv[0];
-      uv[1] = f1 * vlod.Nuv[1] + f2 * vlod.Ouv[1];
+      const Uv uv = interp(vlod.Nuv, vlod.Ouv, finterp);
       for (Corner c : mesh.corners(v)) c_uv(c) = uv;
     }
   }

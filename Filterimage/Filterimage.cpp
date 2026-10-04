@@ -1688,7 +1688,7 @@ void do_composite(Args& args) {
       // Cannot use "switch (op)" because Op_* are not compile-time constants.
       if (0) {
       } else if (op == Op_blend) {
-        vr = vf * weight + vb * (1 - weight);
+        vr = interp(vf, vb, weight);
       } else if (op == Op_special) {
         const int fred = image[yx][2] < 200;
         const int bblue = background_image[yx][0] < 50;

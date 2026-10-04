@@ -1139,12 +1139,12 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
     string str;
     Vector nor1, nor2;
     if (get_vertex_normal(v1, nor1) && get_vertex_normal(v2, nor2)) {
-      const Vector nnor = normalized(w1 * nor1 + (1.f - w1) * nor2);
+      const Vector nnor = normalized(interp(nor1, nor2, w1));
       mesh.update_string(v1, "normal", csform_vec(str, nnor));
     }
     Uv uv1, uv2;
     if (get_vertex_uv(v1, uv1) && get_vertex_uv(v2, uv2)) {
-      const Uv uvn{w1 * uv1[0] + (1.f - w1) * uv2[0], w1 * uv1[1] + (1.f - w1) * uv2[1]};
+      const Uv uvn = interp(uv1, uv2, w1);
       mesh.update_string(v1, "uv", csform_vec(str, uvn));
     }
   }

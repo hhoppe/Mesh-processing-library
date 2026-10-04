@@ -131,7 +131,8 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
     float fm;
     if (!_vertex_tol) {
       fm = vp / (vp - vn);
-      pm = interp(pn, pp, fm);
+      const float b0 = vn / (vn - vp);
+      pm = interp(pp, pn, b0);
     } else {
       float v0 = vp, v1 = vn;
       DPoint p0 = pp, p1 = pn;
@@ -139,10 +140,10 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
       int neval = 0;
       for (;;) {
         ASSERTX(v0 >= 0.f && v1 < 0.f && f0 < f1);
-        float b1 = v0 / (v0 - v1);
-        b1 = clamp(b1, .05f, .95f);  // Guarantee quick convergence.
-        fm = f0 * (1.f - b1) + f1 * b1;
-        pm = interp(p1, p0, b1);
+        float b0 = v1 / (v1 - v0);
+        b0 = clamp(b0, .05f, .95f);  // Guarantee quick convergence.
+        fm = interp(f0, f1, b0);
+        pm = interp(p0, p1, b0);
         const float vm = eval(pm);
         neval++;
         if (neval > 20) break;

@@ -85,7 +85,7 @@ bool process_frame(ObjectFrame& object_frame) {
     static float zoom_prev;
     if (icount > 1) {
       frame = frame_prev * pow(~frame_prev * frame, lowpass);
-      object_frame.zoom = zoom_prev * (1.f - lowpass) + object_frame.zoom * lowpass;
+      object_frame.zoom = interp(zoom_prev, object_frame.zoom, 1.f - lowpass);
     }
     frame_prev = frame;
     zoom_prev = object_frame.zoom;
@@ -108,7 +108,7 @@ bool process_frame(ObjectFrame& object_frame) {
     if (icount > 1) {
       Frame frame_new = frame_prev * pow(~frame_prev * frame, .5f);
       frame_new.p() = interp(frame_prev.p(), frame.p(), .5f);
-      const float zoom_new = (object_frame.zoom + zoom_prev) * .5f;
+      const float zoom_new = interp(zoom_prev, object_frame.zoom);
       const ObjectFrame object_frame_new{frame_new, object_frame.obn, zoom_new, object_frame.binary};
       if (!FrameIO::write(std::cout, object_frame_new)) return true;
     }

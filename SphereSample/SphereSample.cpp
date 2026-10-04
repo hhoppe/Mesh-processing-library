@@ -100,7 +100,7 @@ float angle_between_unit_vectors_and_sincos(const Vector& v1, const Vector& v2, 
 
 Point spheremap_linear_reproject(const Point& pa, const Point& pb, const Point& pc, const Bary& b) {
   ASSERTX(b.is_convex());
-  return ok_normalized(b[0] * pa + b[1] * pb + b[2] * pc);
+  return ok_normalized(interp(pa, pb, pc, b));
 }
 
 [[maybe_unused]] Point spheremap_inverse_linear_reproject(const Point& pa, const Point& pb, const Point& pc,
@@ -361,7 +361,7 @@ Point spheremap_sym_arvo(const Point& pa, const Point& pb, const Point& pc, cons
 Point spheremap_sym_buss_fillmore(const Point& pa, const Point& pb, const Point& pc, const Bary& b) {
   ASSERTX(b.is_convex());
   const Vec3<Point> triangle = V(pa, pb, pc);
-  Point p = ok_normalized(b[0] * pa + b[1] * pb + b[2] * pc);
+  Point p = ok_normalized(interp(pa, pb, pc, b));
   SGrid<float, 3, 3> tp;
   const float eps = 1e-4f;
   for_int(i, 100) {

@@ -322,7 +322,7 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
   int pen = -1;
   for (int i = 0;; i++) {
     // Compute each sample directly (exactly p2 when i == ni), as accumulating steps would drift from p2.
-    const Point p = interp(p2, p1, float(i) / float(ni));
+    const Point p = interp(p1, p2, float(ni - i) / float(ni));
     Ind cci = indices_from_point(p);
     ASSERTX(indices_inbounds(cci));
     Vec2<Ind> bi;

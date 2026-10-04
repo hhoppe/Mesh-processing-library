@@ -313,7 +313,7 @@ void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // Alpha 
   for (const auto& [s, narea] : anew) {
     assertx(s->isPrincipal());
     const float oarea = aold.retrieve(s);  // Returns 0.f if s is absent.
-    s->setArea(alpha * narea + (1.f - alpha) * oarea);
+    s->setArea(interp(narea, oarea, alpha));
   }
 
   for (const auto& [s, oarea] : aold) {
@@ -337,7 +337,7 @@ void ScGeomorph::update(float alpha, ArrayView<Vector> corner_nors) {  // Alpha 
     if (on[0] == -2.f && on[1] == -2.f && on[2] == -2.f) {
       corner_nors[i] = nnew[i];
     } else {
-      corner_nors[i] = ok_normalized(alpha * nnew[i] + (1.f - alpha) * nold[i]);
+      corner_nors[i] = ok_normalized(interp(nnew[i], nold[i], alpha));
     }
   }
 }

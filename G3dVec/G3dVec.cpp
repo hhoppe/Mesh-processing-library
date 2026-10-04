@@ -395,11 +395,12 @@ void draw_segment(coord* c1, coord* c2);  // Forward declaration.
 
 void draw_fisheye(const coord* c1, const coord* c2) {
   assertx(quicki > 0);
-  Point p1 = c1->pt, p2 = c2->pt;
-  const Vector vd = (p2 - p1) / float(quicki);
+  const Point& p1 = c1->pt;
+  const Point& p2 = c2->pt;
   coord o1, o2;
   for_int(i, quicki + 1) {
-    Vector v = p1 - Point(0.f, 0.f, 0.f);
+    const Point p = interp(p1, p2, float(quicki - i) / float(quicki));
+    Vector v = p - Point(0.f, 0.f, 0.f);
     assertw(v.normalize());
     v[0] = 1.f;
     v *= 1.0001f * hither / v[0];
@@ -408,7 +409,6 @@ void draw_fisheye(const coord* c1, const coord* c2) {
     assertx(!(o2.ccode & (k_code_hither | k_code_yonder)));
     if (i) draw_segment(&o1, &o2);
     o1 = o2;
-    p1 += vd;
   }
 }
 

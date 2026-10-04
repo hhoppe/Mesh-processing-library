@@ -249,8 +249,8 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
   const auto split_edge = [&](Edge e, int axis) -> Vertex {
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
     const Point sph1 = v_sph(v1), sph2 = v_sph(v2);
-    const float sph_frac1 = sph1[axis] / (sph1[axis] - sph2[axis]);
-    const Point sph_new = snap_normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2);
+    const float sph1_weight = sph2[axis] / (sph2[axis] - sph1[axis]);
+    const Point sph_new = snap_normalized(interp(sph1, sph2, sph1_weight));
     const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
     Vertex v = split_mesh_edge(mesh, e, frac1);
     new_vertices.enter(v);
@@ -327,8 +327,8 @@ void split_mesh_along_octa(GMesh& mesh) {
   const auto split_edge = [&](Edge e, int axis) {
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
     const Point sph1 = v_sph(v1), sph2 = v_sph(v2);
-    const float sph_frac1 = sph1[axis] / (sph1[axis] - sph2[axis]);
-    const Point sph_new = snap_normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2);
+    const float sph1_weight = sph2[axis] / (sph2[axis] - sph1[axis]);
+    const Point sph_new = snap_normalized(interp(sph1, sph2, sph1_weight));
     const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
     Vertex v = split_mesh_edge(mesh, e, frac1);
     new_vertices.enter(v);
@@ -722,8 +722,8 @@ void split_awmesh_faces_along_meridian(AWMesh& awmesh) {
         const bool edge_crosses_meridian =
             (sph1[k_axis0] < -eps && sph2[k_axis0] > eps) || (sph2[k_axis0] < -eps && sph1[k_axis0] > eps);
         if (edge_crosses_meridian) {
-          const float sph_frac1 = sph1[k_axis0] / (sph1[k_axis0] - sph2[k_axis0]);
-          const Point sph_new = snap_normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2);
+          const float sph1_weight = sph2[k_axis0] / (sph2[k_axis0] - sph1[k_axis0]);
+          const Point sph_new = snap_normalized(interp(sph1, sph2, sph1_weight));
           const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
           awmesh.split_edge(f, j, frac1);
           awmesh._wedges.last().attrib.uv = lonlat_from_sph(sph_new);
@@ -737,8 +737,8 @@ void split_awmesh_faces_along_meridian(AWMesh& awmesh) {
         const bool edge_crosses_pole =
             abs(sph1[k_axis0]) < eps && abs(sph2[k_axis0]) < eps && (sph1[k_axis1] < -eps && sph2[k_axis1] > eps);
         if (edge_crosses_pole) {
-          const float sph_frac1 = sph1[k_axis1] / (sph1[k_axis1] - sph2[k_axis1]);
-          const Point sph_new = snap_normalized((1.f - sph_frac1) * sph1 + sph_frac1 * sph2);
+          const float sph1_weight = sph2[k_axis1] / (sph2[k_axis1] - sph1[k_axis1]);
+          const Point sph_new = snap_normalized(interp(sph1, sph2, sph1_weight));
           const float frac1 = angle_between_unit_vectors(sph_new, sph2) / angle_between_unit_vectors(sph1, sph2);
           awmesh.split_edge(f, j, frac1);
           awmesh._wedges.last().attrib.uv = lonlat_from_sph(sph_new);

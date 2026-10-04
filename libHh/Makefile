@@ -22,6 +22,11 @@ ifeq ($(use_pch),1)
     $(abs_pch_file).gch : built_ob.$(extobj).$(build_variant) $(pch_root).$(extobj)
     # Omit precompiled header when compiling precompiled header file.
     $(abs_pch_file).gch : cxxall := $(filter-out -include $(MeshRoot)/libHh/precompiled_libHh.h,$(cxxall))
+    # Likewise when compiling $(pch_root).cpp, which is built before the *.gch, so in an incremental build it would
+    #  find the previous *.gch.  Its #include rejects that *.gch because PRECOMPILED_LIBHH_CPP is defined, which
+    #  -Winvalid-pch reports (an error with -Werror).
+    $(pch_root).$(extobj) : cxxall := \
+      $(filter-out -include $(MeshRoot)/libHh/precompiled_libHh.h -Winvalid-pch,$(cxxall))
   endif
   ifeq ($(CXX),clang++)
     abs_pch_file = $(pch_root).h

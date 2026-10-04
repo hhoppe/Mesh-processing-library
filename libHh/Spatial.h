@@ -318,11 +318,11 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
   }
   const float maxe = max_abs_element(p2 - p1);
   const int ni = index_from_float(maxe) + 2;  // Add 2 there just to be safe.
-  const Vector v = (p2 - p1) * ((1.f + 1e-7f) / float(ni));
-  Point p = p1;
-  Ind pci = indices_from_point(p);
+  Ind pci = indices_from_point(p1);
   int pen = -1;
   for (int i = 0;; i++) {
+    // Compute each sample directly (exactly p2 when i == ni), as accumulating steps would drift from p2.
+    const Point p = interp(p2, p1, float(i) / float(ni));
     Ind cci = indices_from_point(p);
     ASSERTX(indices_inbounds(cci));
     Vec2<Ind> bi;
@@ -338,10 +338,7 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
       for (Univ e : *cell)
         if (set.add(e)) fmin = min(fmin, ftest(e));
     }
-    if (i == ni) {
-      assertw(std::is_eq(compare(p, p2, 1e-6f)));
-      break;
-    }
+    if (i == ni) break;
     if (fmin != BIGFLOAT) {
       // The cells visited so far contain the segment up to its exit from the cell cci (which contains p), so any
       // object not yet tested can only intersect the segment beyond that parametric position.
@@ -354,7 +351,6 @@ void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point
     }
     pci = cci;
     pen = encode(pci);
-    p += v;
   }
 }
 

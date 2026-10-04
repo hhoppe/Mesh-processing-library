@@ -297,7 +297,9 @@ built_as.$(extasm).$(build_variant):
 	@touch built_as.$(extasm).$(build_variant)
 .DEFAULT_GOAL := $(prev_goal)#  The rule above must not become the default goal.
 
-ifeq ($(use_pch)$(is_win_base),11)
+# libHh/Makefile adds this dependency itself, naming the object without the ../libHh/ prefix.  Here that second
+#  name would be a distinct make target for the same file, built concurrently and without -Yc (error C1854).
+ifeq ($(use_pch)$(is_win_base)$(filter libHh,$(notdir $(CURDIR))),11)
   # Objects compiled with -Yu reference the type information in the PCH object.  If that object is newer,
   # the linker reports LNK4206 and discards their debug info.  We let all obj files (except precompiled_libHh.obj)
   # depend on precompiled_libHh.obj.  The $(wildcard) allows it to not exist (for a from-scratch build).

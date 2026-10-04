@@ -17,14 +17,21 @@ using namespace hh;
 
 namespace {
 
+int vertex_next_id = 0;
 struct mvertex;
 using vertex = mvertex*;
 struct mvertex {
   Point p;         // Position of the vertex.
   Vec2<vertex> v;  // { previous_vertex, next_vertex }; either may be nullptr
   Set<int> pts;    // Points projecting onto the associated edge (defined if v[1] != nullptr).
+  // Creation order; hashing it rather than the pointer makes the results independent of the memory layout.
+  int id{vertex_next_id++};
 };
-Set<vertex> verts;
+struct hash_vertex {
+  size_t operator()(vertex v) const { return v->id; }
+};
+using SetVertex = Set<vertex, hash_vertex>;
+SetVertex verts;
 
 struct S_pt {
   int n;
@@ -33,7 +40,7 @@ struct S_pt {
   Array<float> dis2;  // Squared distance to the closest edge.
 } pt;
 
-Set<vertex> ecand;  // Set of candidate edges in stoc.
+SetVertex ecand;  // Set of candidate edges in stoc.
 
 float spring = 0.f;
 float fliter = 1;
@@ -136,7 +143,7 @@ void output_poly(WSA3dStream& oa3d, bool clearobject = false) {
   poly_transform(xform_inverse);
   if (clearobject) oa3d.write_clear_object();
   A3dElem el;
-  Set<vertex> setv;
+  SetVertex setv;
   for (vertex v : verts) setv.enter(v);
   while (!setv.empty()) {
     vertex vf = setv.get_one(), vf0 = vf;

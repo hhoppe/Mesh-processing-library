@@ -1,16 +1,16 @@
 # clang-tidy --verify-config --config-file=.clang-tidy  # An older clang-tidy reports newer check names as unknown.
 # clang-tidy --dump-config --config-file=.clang-tidy libHh/Grid.cpp -- -I.
-# clang-tidy --enable-check-profile --checks='-*,bugprone-*' Filterframe/Filterframe.cpp -- -I. 1>/dev/null  # Timings.
-# clang-tidy --enable-check-profile Filterframe/Filterframe.cpp -- -I.  # Timings.
-# clang-tidy --checks='-*,modernize-use-nodiscard' Filterframe/Filterframe.cpp -- -I.
+# clang-tidy --enable-check-profile --checks='-*,bugprone-*' progs/Filterframe/Filterframe.cpp -- -I. 1>/dev/null  # Timings.
+# clang-tidy --enable-check-profile progs/Filterframe/Filterframe.cpp -- -I.  # Timings.
+# clang-tidy --checks='-*,modernize-use-nodiscard' progs/Filterframe/Filterframe.cpp -- -I.
 #   To run only particular checks, start --checks with '-*', which disables all the checks listed below (including
 #   the compiler diagnostics and the static analyzer); without it, the named checks are added to the full set.
-# cd ~/git/mesh_processing; export PATH="/cygdrive/c/progra~1/LLVM/bin/:$PATH"; clang-tidy Filterimage/Filterimage.cpp -- -I.
+# cd ~/git/mesh_processing; export PATH="/cygdrive/c/progra~1/LLVM/bin/:$PATH"; clang-tidy progs/Filterimage/Filterimage.cpp -- -I.
 # ... | grep --line-buffered -E '^[^[:space:]].*:[0-9]+:[0-9]+: (warning|error|note):' | sort -u
 #
-# cd ~/git/mesh_processing; exclude1="libHwX|" exclude2="" params="-I./libHwWindows"; export PATH="/cygdrive/c/progra~1/LLVM/bin/:$PATH"; (ls **/*.cpp | grep -vE "${exclude1}precompiled_libHh"; ls ../hh_src/**/*.cpp | grep -vE "${exclude2}/test/|_old/|_other/|G3dOGL_notes|Repository|/ptc|/streamonfile") | xargs -P 24 -I {} clang-tidy --config-file="$HOME/git/mesh_processing/.clang-tidy" --quiet {} -- -I. $params |& grep -v --line-buffered -E "^[0-9]+ warnings generated"; (exit ${PIPESTATUS[1]})
+# (cd ~/git/mesh_processing; shopt -s globstar; exclude1="libHwX|" exclude2="" params="-I./libHwWindows"; export PATH="/cygdrive/c/progra~1/LLVM/bin/:$PATH"; (ls **/*.cpp | grep -vE "${exclude1}precompiled_libHh"; ls ../hh_src/**/*.cpp | grep -vE "${exclude2}/test/|_old/|_other/|G3dOGL_notes|Repository|/ptc|/streamonfile") | xargs -P 24 -I {} clang-tidy --config-file="$HOME/git/mesh_processing/.clang-tidy" --quiet {} -- -I. $params |& grep -v --line-buffered -E "^[0-9]+ warnings generated"; (exit ${PIPESTATUS[1]}))
 #
-# b 'cd ~/git/mesh_processing; exclude1="libHwWindows|" exclude2="clip.cpp|hlaunch.cpp|Filterterrain.cpp|TerrainIO.cpp|" params="-I./libHwX"; (ls **/*.cpp | grep -vE "${exclude1}precompiled_libHh"; ls ../hh_src/**/*.cpp | grep -vE "${exclude2}/test/|_old/|_other/|G3dOGL_notes|Repository|/ptc|/streamonfile") | xargs -P 24 -I {} clang-tidy --config-file="$HOME/git/mesh_processing/.clang-tidy" --quiet {} -- -I. $params |& grep -v --line-buffered -E "^[0-9]+ warnings generated"; (exit ${PIPESTATUS[1]})'
+# b 'cd ~/git/mesh_processing; shopt -s globstar; exclude1="libHwWindows|" exclude2="clip.cpp|hlaunch.cpp|Filterterrain.cpp|TerrainIO.cpp|" params="-I./libHwX"; (ls **/*.cpp | grep -vE "${exclude1}precompiled_libHh"; ls ../hh_src/**/*.cpp | grep -vE "${exclude2}/test/|_old/|_other/|G3dOGL_notes|Repository|/ptc|/streamonfile") | xargs -P 24 -I {} clang-tidy --config-file="$HOME/git/mesh_processing/.clang-tidy" --quiet {} -- -I. $params |& grep -v --line-buffered -E "^[0-9]+ warnings generated"; (exit ${PIPESTATUS[1]})'
 
 Checks:
   - 'clang-diagnostic-*'  # Listed explicitly because newer clang-tidy no longer enables all default groups.

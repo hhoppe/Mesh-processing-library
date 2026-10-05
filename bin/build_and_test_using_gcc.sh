@@ -34,8 +34,8 @@ fi
 for lib in $libs; do (cd $lib && echo Building $lib && $cpp $cppflags -c *.cpp && $ar rc $lib.a *.o && $ranlib $lib.a); done
 
 mkdir -p ./bin/gcc
-for prog in $progs; do (cd $prog && echo Building $prog && $cpp -o ../bin/gcc/$prog$exe $cppflags *.cpp *.c $ldflags); done
-prog=Filtervideo; (cd $prog && echo Building $prog && $cpp -o ../bin/gcc/$prog$exe $cppflags *.cpp ../VideoViewer/GradientDomainLoop.cpp $ldflags)
-prog=G3dVec; (cd $prog && echo Building $prog && $cpp -o ../bin/gcc/$prog$exe $cppflags *.cpp ../G3dOGL/{G3d,G3ddraw,G3devent,G3dio}.cpp $ldflags)
+for prog in $progs; do (cd progs && echo Building $prog && $cpp -o ../bin/gcc/$prog$exe $cppflags $prog/*.cpp $prog/*.c $ldflags); done
+prog=Filtervideo; (cd progs && echo Building $prog && $cpp -o ../bin/gcc/$prog$exe $cppflags $prog/*.cpp VideoViewer/GradientDomainLoop.cpp $ldflags)
+prog=G3dVec; (cd progs && echo Building $prog && $cpp -o ../bin/gcc/$prog$exe $cppflags $prog/*.cpp G3dOGL/{G3d,G3ddraw,G3devent,G3dio}.cpp $ldflags)
 
 for test in $tests; do (cd test && echo Testing $test && $cpp -o $test$exe $cppflags $test.cpp $ldflags && ../bin/hcheck $test); done

@@ -914,6 +914,10 @@ define different implementations of a simple windowing interface (class `Hw`),
 under `Win32` and the X Window System, respectively.
 Both implementations support `OpenGL` rendering.
 
+Each program (e.g., `Filtermesh`) lives in its own subdirectory of
+<a href="https://github.com/hhoppe/Mesh-processing-library/tree/main/progs">`progs`</a>
+and links against these libraries.
+
 
 ## Code details
 

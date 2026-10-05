@@ -21,7 +21,7 @@
 #  make CONFIG=unix release=0 PEDANTIC=1 sanitize=address,undefined -C ~/git/mesh_processing -j12 test
 #  make CONFIG=unix release=0 PEDANTIC=1 sanitize=thread -C ~/git/mesh_processing -j12 test
 #  make CONFIG=unix release=0 PEDANTIC=1 sanitize=address,undefined -C ~/git/mesh_processing -j12 demos
-#  make -C SphereParam SphereParam.s
+#  make -C progs/SphereParam SphereParam.s
 #  make CONFIG=clang -C ~/git/mesh_processing/demos -j12 create check
 #  make CONFIG=clang DEMOS_HIDDEN=1 -C ~/git/mesh_processing/demos -j12 view
 
@@ -51,6 +51,8 @@ prog_dirs = \
   Filtermesh Filtera3d Filterframe Filterimage Filtervideo \
   G3dOGL G3dVec VideoViewer \
 
+dir_of = $(if $(filter $1,$(prog_dirs)),progs/)$1#  The directory of a library, program, test, or demos.
+
 dirs = $(lib_dirs) $(prog_dirs)
 dirs+test = $(dirs) test demos
 dirs+test+all = $(sort $(dirs+test) libHwWindows libHwX)#  Sort to remove duplicates.
@@ -66,7 +68,7 @@ libs: $(lib_dirs)               # Build all libraries.
 test: $(lib_dirs)               # Run all unit tests (after building libraries).
 
 $(dirs+test):                   # Build any subproject by running make in its subdirectory.
-	$(MAKE) -C $@
+	$(MAKE) -C $(call dir_of,$@)
 
 $(prog_dirs): $(lib_dirs)       # Building a program first requires building the libraries.
 
@@ -75,30 +77,30 @@ ifeq ($(use_pch),1)             # If using precompiler headers, build libHh befo
 endif
 
 G3dVec: G3dOGL                  # Compile the shared files in G3dOGL first.
-# (To make G3dVec without HH_OGLX, run "make -C ./G3dVec".)
+# (To make G3dVec without HH_OGLX, run "make -C ./progs/G3dVec".)
 
 Filtervideo: VideoViewer        # Compile shared files in VideoViewer first.
 
 mostlyclean_dirs = $(foreach n,$(dirs+test),mostlyclean_$(n))  # Pseudo-dep. for "make -j mostlyclean" parallelism.
 mostlyclean: $(mostlyclean_dirs)
 $(mostlyclean_dirs):
-	$(MAKE) -C $(@:mostlyclean_%=%) -s mostlyclean
+	$(MAKE) -C $(call dir_of,$(@:mostlyclean_%=%)) -s mostlyclean
 
 clean_dirs = $(foreach n,$(dirs+test),clean_$(n))  # Pseudo-dependency to enable "make -j clean" parallelism.
 clean: $(clean_dirs)
 $(clean_dirs):
-	$(MAKE) -C $(@:clean_%=%) -s clean
+	$(MAKE) -C $(call dir_of,$(@:clean_%=%)) -s clean
 
 deepclean_dirs = $(foreach n,$(dirs+test),deepclean_$(n))  # Pseudo-dep. to enable "make -j deepclean" parallelism.
 deepclean: $(deepclean_dirs)
 $(deepclean_dirs):
-	$(MAKE) -C $(@:deepclean_%=%) -s deepclean
+	$(MAKE) -C $(call dir_of,$(@:deepclean_%=%)) -s deepclean
 
 depend_dirs = $(foreach n,$(dirs+test+all),depend_$(n))  # Pseudo-dep. to enable "make -j depend" parallelism.
 depend: $(depend_dirs)
 $(depend_dirs):                 # Enables "make -j" parallelism.
-	rm -f $(@:depend_%=%)/$(make_dep)
-	$(MAKE) -C $(@:depend_%=%) $(make_dep)
+	rm -f $(call dir_of,$(@:depend_%=%))/$(make_dep)
+	$(MAKE) -C $(call dir_of,$(@:depend_%=%)) $(make_dep)
 
 debug:
 #	$(info LDLIBS=$(LDLIBS) value(LDLIBS)=$(value LDLIBS))

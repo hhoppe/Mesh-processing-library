@@ -6,47 +6,47 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libHh", "libHh\libHh.vcxpro
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libHwWindows", "libHwWindows\libHwWindows.vcxproj", "{345BB510-E14C-4FDD-8375-0895FEDB342B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Recon", "Recon\Recon.vcxproj", "{71F5D634-6F90-49C9-8622-80AAF3599CC1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Recon", "progs\Recon\Recon.vcxproj", "{71F5D634-6F90-49C9-8622-80AAF3599CC1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Meshfit", "Meshfit\Meshfit.vcxproj", "{FC76D6BC-2EFD-4E4A-BDD9-5EDB5CDCD1FE}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Meshfit", "progs\Meshfit\Meshfit.vcxproj", "{FC76D6BC-2EFD-4E4A-BDD9-5EDB5CDCD1FE}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Subdivfit", "Subdivfit\Subdivfit.vcxproj", "{509B9CA1-C422-4061-9052-27762F77CBD1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Subdivfit", "progs\Subdivfit\Subdivfit.vcxproj", "{509B9CA1-C422-4061-9052-27762F77CBD1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Polyfit", "Polyfit\Polyfit.vcxproj", "{E977CAF6-8D5E-468A-8F1E-579638BBDC69}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Polyfit", "progs\Polyfit\Polyfit.vcxproj", "{E977CAF6-8D5E-468A-8F1E-579638BBDC69}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshDistance", "MeshDistance\MeshDistance.vcxproj", "{DAEBDCB0-2427-4FAB-AF01-1267CDB2AAD9}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshDistance", "progs\MeshDistance\MeshDistance.vcxproj", "{DAEBDCB0-2427-4FAB-AF01-1267CDB2AAD9}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshSimplify", "MeshSimplify\MeshSimplify.vcxproj", "{40B5A230-42A0-4801-A149-C65A932DCC12}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshSimplify", "progs\MeshSimplify\MeshSimplify.vcxproj", "{40B5A230-42A0-4801-A149-C65A932DCC12}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filterprog", "Filterprog\Filterprog.vcxproj", "{E53621EE-41DC-4371-BBD7-FBD912304028}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filterprog", "progs\Filterprog\Filterprog.vcxproj", "{E53621EE-41DC-4371-BBD7-FBD912304028}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FilterPM", "FilterPM\FilterPM.vcxproj", "{73504DF2-9608-46DD-9608-E478F3C53DAB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "FilterPM", "progs\FilterPM\FilterPM.vcxproj", "{73504DF2-9608-46DD-9608-E478F3C53DAB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StitchPM", "StitchPM\StitchPM.vcxproj", "{248CD9A7-114E-4951-99C7-550F7F684D8F}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "StitchPM", "progs\StitchPM\StitchPM.vcxproj", "{248CD9A7-114E-4951-99C7-550F7F684D8F}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MinCycles", "MinCycles\MinCycles.vcxproj", "{6F88B646-02AF-4DA1-8E48-3B320B215124}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MinCycles", "progs\MinCycles\MinCycles.vcxproj", "{6F88B646-02AF-4DA1-8E48-3B320B215124}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshReorder", "MeshReorder\MeshReorder.vcxproj", "{8D512247-5FC5-486E-B1D1-A5CDB96F9B1A}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "MeshReorder", "progs\MeshReorder\MeshReorder.vcxproj", "{8D512247-5FC5-486E-B1D1-A5CDB96F9B1A}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filtermesh", "Filtermesh\Filtermesh.vcxproj", "{66207B9E-F247-4A29-B4EA-190C333FDE2C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filtermesh", "progs\Filtermesh\Filtermesh.vcxproj", "{66207B9E-F247-4A29-B4EA-190C333FDE2C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filtera3d", "Filtera3d\Filtera3d.vcxproj", "{0FE80075-72B2-4B73-B78A-00CF7633EED1}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filtera3d", "progs\Filtera3d\Filtera3d.vcxproj", "{0FE80075-72B2-4B73-B78A-00CF7633EED1}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filterframe", "Filterframe\Filterframe.vcxproj", "{166E65CE-A447-4E84-911F-931F6C3851FA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filterframe", "progs\Filterframe\Filterframe.vcxproj", "{166E65CE-A447-4E84-911F-931F6C3851FA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filterimage", "Filterimage\Filterimage.vcxproj", "{81787C67-4356-4EEE-B5D4-DC2C8A016D7E}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filterimage", "progs\Filterimage\Filterimage.vcxproj", "{81787C67-4356-4EEE-B5D4-DC2C8A016D7E}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filtervideo", "Filtervideo\Filtervideo.vcxproj", "{59C3F137-EAC0-41AC-866A-84E29CFC26DB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Filtervideo", "progs\Filtervideo\Filtervideo.vcxproj", "{59C3F137-EAC0-41AC-866A-84E29CFC26DB}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "G3dOGL", "G3dOGL\G3dOGL.vcxproj", "{94DE8222-004F-444E-9E7C-F1F9F2863BD6}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "G3dOGL", "progs\G3dOGL\G3dOGL.vcxproj", "{94DE8222-004F-444E-9E7C-F1F9F2863BD6}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "G3dVec", "G3dVec\G3dVec.vcxproj", "{E4024360-90A4-470F-A6B1-105ACBF90FFA}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "G3dVec", "progs\G3dVec\G3dVec.vcxproj", "{E4024360-90A4-470F-A6B1-105ACBF90FFA}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoViewer", "VideoViewer\VideoViewer.vcxproj", "{CEA9C771-F7F8-49E3-B4A3-890A535B122B}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "VideoViewer", "progs\VideoViewer\VideoViewer.vcxproj", "{CEA9C771-F7F8-49E3-B4A3-890A535B122B}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphereParam", "SphereParam\SphereParam.vcxproj", "{F9C9B174-63A0-48C1-BCF9-41CBDFD1538C}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphereParam", "progs\SphereParam\SphereParam.vcxproj", "{F9C9B174-63A0-48C1-BCF9-41CBDFD1538C}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphereSample", "SphereSample\SphereSample.vcxproj", "{DF51891E-02B6-4C42-A8E3-F4141F089378}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SphereSample", "progs\SphereSample\SphereSample.vcxproj", "{DF51891E-02B6-4C42-A8E3-F4141F089378}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

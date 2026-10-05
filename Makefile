@@ -17,6 +17,7 @@
 #  make CC=gcc CXX_STD=c++26 PEDANTIC=1 -j12
 #  make CONFIG=all debug  # Show the compiler paths and versions.
 #  make SHELL='bash -x -v'  # Show all executed commands.
+#  make -j12 mostlyclean    # Remove intermediates but keep the executables (see "Cleaning" below).
 #  make CONFIG=unix release=0 PEDANTIC=1 sanitize=address,undefined -C ~/git/mesh_processing -j12 test
 #  make CONFIG=unix release=0 PEDANTIC=1 sanitize=thread -C ~/git/mesh_processing -j12 test
 #  make CONFIG=unix release=0 PEDANTIC=1 sanitize=address,undefined -C ~/git/mesh_processing -j12 demos
@@ -26,6 +27,11 @@
 
 #  LSAN_OPTIONS=print_suppressions=1:symbolize=1:detect_leaks=0:log_path=PATH:log_exe_name=1:abort_on_error=1
 #  ASAN_OPTIONS=abort_on_error=1 UBSAN_OPTIONS=print_stacktrace=1:halt_on_error=1:exitcode=1
+
+# Cleaning, in three tiers (for the current CONFIG; prefix CONFIG=all for all of them, as "make cleanall" does):
+#  make mostlyclean  # Objects, libHh.{a,lib}, test outputs, and crumbs; the executables and their .pdb stay usable.
+#  make clean        # Also the executables and their .pdb files (like "hmake clean" for the MSBuild build).
+#  make deepclean    # Also the Makefile.dep header-dependency files (regenerating them takes several seconds).
 
 MeshRoot ?= .#  This current file is located in the root directory of the package.
 
@@ -72,6 +78,11 @@ G3dVec: G3dOGL                  # Compile the shared files in G3dOGL first.
 # (To make G3dVec without HH_OGLX, run "make -C ./G3dVec".)
 
 Filtervideo: VideoViewer        # Compile shared files in VideoViewer first.
+
+mostlyclean_dirs = $(foreach n,$(dirs+test),mostlyclean_$(n))  # Pseudo-dep. for "make -j mostlyclean" parallelism.
+mostlyclean: $(mostlyclean_dirs)
+$(mostlyclean_dirs):
+	$(MAKE) -C $(@:mostlyclean_%=%) -s mostlyclean
 
 clean_dirs = $(foreach n,$(dirs+test),clean_$(n))  # Pseudo-dependency to enable "make -j clean" parallelism.
 clean: $(clean_dirs)
@@ -122,7 +133,7 @@ timingtest: Filterimage Filtervideo
 	           if (k < 2) { print "timingtest: a measurement is missing." > "/dev/stderr"; exit 1; } }'
 #	GDLOOP_USE_VECTOR4=1 $(rel_exe_dir)/Filtervideo -create 215 1920 1080 -framerate 30 -end 7sec -start -5sec -trimend -1 -loadvlp ~/prevproj/2013/videoloops/data/ReallyFreakinAll/out/HDgiant_loop.vlp -gdloop 5sec -noo 2>&1 | grep '(_gdloop:'
 
-phony_targets = all progs libs $(dirs+test) clean $(clean_dirs) \
+phony_targets = all progs libs $(dirs+test) mostlyclean $(mostlyclean_dirs) clean $(clean_dirs) \
   deepclean $(deepclean_dirs) depend $(depend_dirs) debug timingtest makeall cleanall debug_path
 .PHONY: $(phony_targets)
 $(check_goals)

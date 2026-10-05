@@ -39,8 +39,10 @@ built_ou.$(build_variant):
 	@rm -f $(obj) $(exes) $(CRUMBS) $(outputs) $(outputs:%.ou=%.diff) built_ou.*
 	@touch built_ou.$(build_variant)
 
-clean:
-	rm -f $(obj) $(exes) built_ou.* $(outputs) $(outputs:%.ou=%.diff) built_as.$(extasm).* $(CRUMBS)
+mostlyclean:
+	rm -f $(obj) built_ou.* $(outputs) $(outputs:%.ou=%.diff) built_as.$(extasm).* $(CRUMBS)
+clean: mostlyclean
+	rm -f $(exes)
 deepclean: clean
 	rm -f $(make_dep)
 
@@ -50,7 +52,7 @@ debug:
 	@echo $(filter %.$(extlib),$(LDLIBS))
 	@echo PATH="$(PATH)"
 
-phony_targets += all depend libs progs test clean deepclean debug
+phony_targets += all depend libs progs test mostlyclean clean deepclean debug
 goal_patterns += $(make_dep) $(exes) %.$(extobj) %.$(extasm) %.ou %.diff
 .PHONY: $(phony_targets)
 $(check_goals)

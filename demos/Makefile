@@ -105,13 +105,13 @@ view:
 	done; \
 	exit $$status
 
-clean deepclean:
+mostlyclean clean deepclean:
 # (Use a relative pathname because prepend_PATH does not update PATH when make goal is clean.)
 	./all_demos_clean.sh
 
 debug:
 	which Recon
 
-.PHONY: all create check view clean deepclean $(create_scripts) $(view_scripts) debug depend $(make_dep)
+.PHONY: all create check view mostlyclean clean deepclean $(create_scripts) $(view_scripts) debug depend $(make_dep)
 
 endif  # ifneq ($(CONFIG),all)

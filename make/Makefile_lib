@@ -25,12 +25,13 @@ built_ob.$(extobj).$(build_variant):
 	@rm -f $(obj) $(tlib) $(CRUMBS) built_ob.$(extobj).*
 	@touch built_ob.$(extobj).$(build_variant)
 
-clean:
+mostlyclean:
 	rm -f $(obj) $(tlib) built_ob.$(extobj).* built_as.$(extasm).* $(CRUMBS)
+clean: mostlyclean
 deepclean: clean
 	rm -f $(make_dep)
 
-phony_targets += all depend clean deepclean
+phony_targets += all depend mostlyclean clean deepclean
 goal_patterns += $(make_dep) $(tlib) %.$(extobj) %.$(extasm)
 .PHONY: $(phony_targets)
 $(check_goals)

@@ -175,7 +175,7 @@ endif
 override_goal := $(if $(MAKECMDGOALS),$(MAKECMDGOALS),$(if $(.DEFAULT_GOAL),$(.DEFAULT_GOAL),dummy_all))
 # $(info have CONFIG=all override_goal=$(override_goal))
 # Non-empty when the requested goals are only cleaning targets.
-cleaning = $(filter clean deepclean,$(MAKECMDGOALS))
+cleaning = $(filter mostlyclean clean deepclean,$(MAKECMDGOALS))
 # The configurations to iterate over for the current goals.
 recurse_configs = $(if $(cleaning),$(configs),$(build_configs))
 # The shell text that builds one configuration and accumulates its exit status.
@@ -268,7 +268,7 @@ ifneq ($(want_plain_compiler),1)
   includes += -I$(MeshRoot)
 endif
 
-include_make_dep = $(if $(filter depend clean deepclean cleanall,$(MAKECMDGOALS)),,1)
+include_make_dep = $(if $(filter depend mostlyclean clean deepclean cleanall,$(MAKECMDGOALS)),,1)
 
 absdrive ?= $(if $(is_mswin:0=),c:)
 

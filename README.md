@@ -48,21 +48,20 @@ The code requires C++23.
 Continuous integration verifies Microsoft Visual Studio 2026,
 `gcc` 15, `clang` 20 and 21, and Apple `clang` 21 (Xcode 26),
 on Linux (x86-64 and ARM64), macOS (ARM64), and Windows;
-Visual Studio 2022 is also supported.
+Visual Studio 2022 is also supported.<!--
 Older compilers lack needed features:
 `gcc` 13 lacks explicit object parameters (`this auto&& self`),
 `clang` 18 lacks class template argument deduction for alias templates,
-and `clang` 19 and 20 fail with the older `libstdc++` 14 (though `clang` 20 works with `libstdc++` 15).
+and `clang` 19 and 20 fail with the older `libstdc++` 14 (though `clang` 20 works with `libstdc++` 15). -->
 GNU `make` 3.81 (as shipped with macOS) suffices.
 The `make` builds compile with `-march=native`, so their executables are tuned to (and may require) the CPU of the
 building machine; the Visual Studio builds require AVX2 (`/arch:AVX2`).
 
 Reading/writing of images and videos is enabled using several options.
-If available, image I/O can use `libpng`/`libjpeg` or Windows Imaging Component (WIC).
-Video I/O can use Windows Media Foundation (WMF).
-Across all platforms, if the command <a href="https://ffmpeg.org/">`ffmpeg`</a>
-is present in the `PATH`,
-it is spawned in a piped subprocess for both image and video I/O.
+Video I/O spawns the command <a href="https://ffmpeg.org/">`ffmpeg`</a> in a piped subprocess
+whenever it is present in the `PATH`, and otherwise uses Windows Media Foundation (WMF) if available.
+Image I/O uses Windows Imaging Component (WIC) in Visual Studio builds, `libpng`/`libjpeg` on Linux
+and Cygwin, and `ffmpeg` elsewhere (e.g., macOS) or for formats the former lack.
 A file specified as a URL is read by spawning the command `wget`.
 
 On macOS, it is necessary to install

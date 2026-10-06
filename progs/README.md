@@ -14,7 +14,9 @@ The programs `Filterimage`, `Filtermesh`, `Filtervideo`,
 - perform operations specified by arguments, and
 - write media to `stdout` (unless `-nooutput` is specified).
 
-For example, the **`Filterimage`** command<a id="prog_Filterimage"></a>
+### <a id="prog_Filterimage"></a>Filterimage
+
+Processes an image.  For example, the command
 ```shell
 Filterimage demos/data/gaudipark.png -rotate 20 -cropl 100 -cropr 100 \
   -filter lanczos6 -scaletox 100 -color 0 0 255 255 -boundary border -cropall -20 \
@@ -31,7 +33,9 @@ Filterimage demos/data/gaudipark.png -rotate 20 -cropl 100 -cropr 100 \
 - outputs some statistics on pixel colors (to `stderr`), and
 - writes the result to a file under a different encoding.
 
-As another example, the **`FilterPM`** command<a id="prog_FilterPM"></a>
+### <a id="prog_FilterPM"></a>FilterPM
+
+Processes a progressive mesh (`*.pm`).  For example, the command
 ```shell
 FilterPM demos/data/standingblob.pm -info -nfaces 1000 -outmesh | \
   Filtermesh -info -signeddistcontour 60 -genus | \
@@ -44,7 +48,9 @@ FilterPM demos/data/standingblob.pm -info -nfaces 1000 -outmesh | \
 - shows the result in an interactive viewer,
   simulating the keypresses <kbd>Dm</kbd> to enable flat shading and <kbd>De</kbd> to make mesh edges visible.
 
-The **`Filtermesh`** command<a id="prog_Filtermesh"></a>
+### <a id="prog_Filtermesh"></a>Filtermesh
+
+Processes a mesh (`*.m`).  For example, the command
 ```shell
 FilterPM demos/data/spheretext.pm -nf 2000 -outmesh | \
   Filtermesh -angle 35 -silsubdiv -silsubdiv -mark | \
@@ -56,7 +62,9 @@ FilterPM demos/data/spheretext.pm -nf 2000 -outmesh | \
   without backface culling (<kbd>Db</kbd>), spinning (<kbd>J</kbd>) somewhat slowly (<kbd>----</kbd>),
 - starting from the view parameters stored in the `spheretext.s3d` file.
 
-The **`Filtervideo`** command<a id="prog_Filtervideo"></a>
+### <a id="prog_Filtervideo"></a>Filtervideo
+
+Processes a video.  For example, the command
 ```shell
 Filtervideo demos/data/palmtrees_small.mp4 -filter keys -scaleu 1.5 >palmtrees_small.scale1.5.mp4
 ```
@@ -81,6 +89,15 @@ Filtervideo demos/data/palmtrees_small.mp4 -info -trimbeg 4 -boundary clamped -t
 - shows the result (`-` for `stdin`) together with the original video in an interactive viewer,
 - with keypress <kbd>=</kbd> to scale the window by 2, <kbd>a</kbd> to loop all (two) videos,
   and <kbd>n</kbd> to initially select the next video.
+
+### <a id="prog_Filtera3d"></a>Filtera3d
+
+Processes a geometry stream (`*.a3d`) of polygons, polylines, and points,
+e.g., to cull, split, or join its elements; see the examples under [Recon](#prog_recon).
+
+### <a id="prog_Filterframe"></a>Filterframe
+
+Processes a stream of coordinate frames (`*.frame`), e.g., to transform, invert, or subsample them.
 
 
 ## Surface reconstruction
@@ -194,10 +211,11 @@ Filtermesh distcap.opt.m -angle 52 -mark | \
 To view the result,
 ```shell
 G3dOGL distcap.sub0.m "Subdivfit -mf distcap.sub0.m -nsub 2 -outn |" \
-  -st demos/data/distcap.s3d -key NDmDe -hwdelay 5 -hwkey N
+  -st demos/data/distcap.s3d -key DbNDmDe -hwdelay 5 -hwkey N
 ```
 - reads the base mesh together with a second mesh obtained by applying two iterations of subdivision,
-- shows the first mesh (<kbd>N</kbd>) with flat-shaded faces and edges (<kbd>DmDe</kbd>),
+- disables backface culling (<kbd>Db</kbd>), and
+  shows the first mesh (<kbd>N</kbd>) with flat-shaded faces and edges (<kbd>DmDe</kbd>),
 - waits for 5 seconds, and displays the second mesh (<kbd>N</kbd>) as a smooth surface without edges.
 
 ### <a id="prog_MeshDistance"></a>MeshDistance
@@ -238,7 +256,7 @@ obtained by reading the stored edge collapses in reverse order:<a id="prog_Filte
 Filterprog -fbase club.base.m -fprog club.prog -pm_encode >club.pm
 ```
 
-The complete process from the original mesh to the progressive mesh is implemented by the script call
+Alternatively, the last two steps can be expressed using the script call:
 ```shell
 bin/mesh_to_pm demos/data/club.orig.m >club.pm
 ```
@@ -246,10 +264,11 @@ bin/mesh_to_pm demos/data/club.orig.m >club.pm
 
 Given a progressive mesh, we can interactively traverse its continuous levels of detail:
 ```shell
-G3dOGL -pm_mode club.pm -st demos/data/club.s3d -lightambient .4
+PM_LOD_LEVEL=0.05 G3dOGL -pm_mode club.pm -st demos/data/club.s3d -lightambient .4 -key De
 ```
-- by dragging the left vertical slider using the left or right mouse button, and
-- toggling mesh edges using the <kbd>De</kbd> key sequence.
+- starting at the level of detail `0.05` (set using the environment variable `PM_LOD_LEVEL`),
+- with mesh edges shown (toggled using the <kbd>De</kbd> key sequence), and
+- by dragging the left vertical slider using the left or right mouse button.
 
 We can also define geomorphs between discrete levels of detail, for example:
 ```shell
@@ -359,7 +378,7 @@ FilterPM demos/data/office.pm -nf 200000 -outmesh | \
   G3dOGL -st demos/data/office.s3d -key DeDEJ---- -thickboundary 0 -lightambient .9
 ```
 - extracts a mesh of 200000 faces from a progressive mesh,
-- closes 46 nonseparating cycles (33 handles and 13 tunnels), reducing the mesh genus from 50 to 4,
+- closes 46 nonseparating cycles (a mix of handles and tunnels), reducing the mesh genus from 50 to 4,
 - stops when every remaining nonseparating cycle has a length greater than `0.10`,
 - speeds up the process by identifying approximately shortest nonseparating cycles
   within a factor 1.2 of optimal, and
@@ -373,8 +392,8 @@ to exploit GPU vertex caching and thereby minimize memory bandwidth and shading 
 
 For example, within `demos/create_vertexcache_bunny`,
 ```shell
-MeshReorder data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -color_corners 1 -analyze \
-    >results/bunny.vertexcache.m
+MeshReorder demos/data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -color_corners 1 -analyze \
+    >bunny.vertexcache.m
 ```
 - simulates traversal using a FIFO cache of 16 vertices and reports cache miss rates,
 - optimizes the triangle face ordering,
@@ -383,7 +402,7 @@ MeshReorder data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -color_cor
 
 Then, within `demos/view_vertexcache_bunny`,
 ```shell
-G3dOGL results/bunny.vertexcache.m -st data/bunny.s3d -key DmDTDC
+G3dOGL bunny.vertexcache.m -st demos/data/bunny.s3d -key DmDTDC
 ```
 visualizes the resulting sequence of triangle strips and cache misses.
 
@@ -395,8 +414,8 @@ so as to minimize parametric stretch from the sphere to the surface mesh.
 
 For example, within `demos/create_spherical_param_bunny`,
 ```shell
-mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow | \
-  SphereParam - -rot data/bunny.s3d -split_meridian >results/bunny.sphparam.m
+mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow | \
+  SphereParam - -rot demos/data/bunny.s3d -split_meridian >demos/results/bunny.sphparam.m
 ```
 - creates a progressive mesh (`*.pm`) stream minimizing a quadric error metric (`qem`),
 - runs a coarse-to-fine spherical parameterization optimization,
@@ -405,7 +424,7 @@ mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow | \
 
 Then, within `demos/view_spherical_param_bunny`,
 ```shell
-mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow | \
+mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow | \
   SphereParam - -visualize -wait_on_visualizer -nooutput
 ```
 - reruns the same spherical parameterization, piping its progress to an interactive `G3dOGL` viewer, and
@@ -413,8 +432,8 @@ mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow | \
 
 Alternatively, to view the parameterization as a triangulated sphere,
 ```shell
-Filtermesh results/bunny.sphparam.m -renamekey v sph P | \
-  G3dOGL - -st data/unitsphere_ang.s3d -key DeoJ
+Filtermesh demos/results/bunny.sphparam.m -renamekey v sph P | \
+  G3dOGL - -st demos/data/unitsphere_ang.s3d -key DeoJ
 ```
 - transfers each vertex's spherical coordinates `sph` to its position `P`,
 - visualizes the resulting triangulated sphere domain,
@@ -427,9 +446,9 @@ The program **`SphereSample`** computes uniform samplings of a spherically param
 
 For example, within `demos/create_spherical_param_bunny`,
 ```shell
-SphereSample -domain octaflat -egrid 128 -sample_map results/octaflat_eg128.uv.sphparam.m \
-    -param results/bunny.sphparam.m -rot data/bunny.s3d -keys imageuv -remesh | \
-  Filtermesh -renamekey v imageuv uv >results/bunny.spheresample.remesh.m
+SphereSample -domain octaflat -egrid 128 -sample_map demos/results/octaflat_eg128.uv.sphparam.m \
+    -param demos/results/bunny.sphparam.m -rot demos/data/bunny.s3d -keys imageuv -remesh | \
+  Filtermesh -renamekey v imageuv uv >demos/results/bunny.spheresample.remesh.m
 ```
 - defines an effective 128&times;128 regular grid on a flat-octahedron domain,
 - maps it onto the sphere using a domain-to-sphere map computed earlier in the script,
@@ -440,9 +459,9 @@ SphereSample -domain octaflat -egrid 128 -sample_map results/octaflat_eg128.uv.s
 
 Also,
 ```shell
-SphereSample -domain octaflat -grid 1024 -domain_file results/octaflat_eg128.uv.sphparam.m \
-    -param results/bunny.sphparam.m -signal N -write_texture \
-    results/bunny.spheresample.octaflat.unrotated.normalmap.png
+SphereSample -domain octaflat -grid 1024 -domain_file demos/results/octaflat_eg128.uv.sphparam.m \
+    -param demos/results/bunny.sphparam.m -signal N -write_texture \
+    demos/results/bunny.spheresample.octaflat.unrotated.normalmap.png
 ```
 - defines a 1024&times;1024 grid over the same flat-octahedron domain and domain-to-sphere map,
 - maps these samples onto the bunny mesh using its spherical parameterization,
@@ -451,8 +470,8 @@ SphereSample -domain octaflat -grid 1024 -domain_file results/octaflat_eg128.uv.
 
 Then, within `demos/view_spherical_param_bunny`,
 ```shell
-G3dOGL results/bunny.spheresample.remesh.m -st data/bunny.s3d \
-    -texturemap results/bunny.spheresample.octaflat.unrotated.normalmap.png \
+G3dOGL demos/results/bunny.spheresample.remesh.m -st demos/data/bunny.s3d \
+    -texturemap demos/results/bunny.spheresample.octaflat.unrotated.normalmap.png \
     -texturenormal 1 -key DmDe -hwkey '(DtDe)' -hwdelay 1.0
 ```
 - renders the remesh using flat shading (`Dm`) and mesh edges (`De`), and
@@ -516,7 +535,7 @@ To record a 6-second (360-frame) video of a rotating mesh and then view the resu
 
 ```shell
 G3dOGL demos/data/standingblob.orig.m -st demos/data/standingblob.s3d -key iioJ \
-  -video 360 output_video.mp4
+  -hidden -video 360 output_video.mp4
 VideoViewer output_video.mp4
 ```
 
@@ -537,7 +556,7 @@ Audio is not currently supported.
 
 ### Mesh (`*.m`)
 
-See the documentation at the end of `libHh/GMesh.h`.
+See the documentation at the end of [`libHh/GMesh.h`](../libHh/GMesh.h).
 
 A mesh is a set of vertices and faces.  These in turn also define edges and corners.
 Arbitrary string tuples can be associated with vertices, faces, edges, and corners.
@@ -549,7 +568,7 @@ in hindsight that was a poor choice.
 
 ### Geometry stream (`*.a3d`, `*.pts`)
 
-See the documentation at the end of `libHh/A3dStream.h`.
+See the documentation at the end of [`libHh/A3dStream.h`](../libHh/A3dStream.h).
 
 The stream contains polygons, polylines, points, and control codes
 (like end-of-frame, end-of-input, change-of-object).
@@ -557,7 +576,7 @@ Unlike in a mesh, these primitives do not share vertices.  The stream can be eit
 
 ### Frame stream (`*.frame`, `*.s3d`)
 
-See the documentation at the end of `libHh/FrameIO.h`.
+See the documentation at the end of [`libHh/FrameIO.h`](../libHh/FrameIO.h).
 
 This text or binary format encodes a 4&times;3 affine transformation
 (plus an object id and a scalar field-of-view zoom).
@@ -572,4 +591,4 @@ This is a binary representation that consists of a coarse base mesh and a sequen
 ### Edge collapse / vertex split records (`*.prog`)
 
 This is a temporary text file containing verbose information for a sequence of edge collapse / vertex split records,
-written by `MeshSimplify` and read by `Filterprog` to create a progressive mesh.
+written by `MeshSimplify` and read by `Filterprog` (in reverse line order) to create a progressive mesh.

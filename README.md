@@ -42,7 +42,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/recon/">Surface reconstruction from unorganized points</a></b>.</div>
-   <div>Hugues Hoppe, Tony DeRose, Tom Duchamp, John McDonald, Werner Stuetzle.</div>
+   <div>Hoppe, DeRose, Duchamp, McDonald, Stuetzle.</div>
    <div><cite>ACM SIGGRAPH 1992 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div><em>Signed-distance field estimated from a set of unoriented noisy points.</em></div>
    <div>Programs: <a href="progs/README.md#prog_recon"><code>Recon</code></a></div>
@@ -56,9 +56,9 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/meshopt/">Mesh optimization</a></b>.</div>
-   <div>Hugues Hoppe, Tony DeRose, Tom Duchamp, John McDonald, Werner Stuetzle.</div>
+   <div>Hoppe, DeRose, Duchamp, McDonald, Stuetzle.</div>
    <div><cite>ACM SIGGRAPH 1993 Proceedings</cite>.</div>
-   <div><em>Traversing the space of triangle meshes to optimize model fidelity and conciseness.</em></div>
+   <div><em>Exploration of the space of triangle meshes to balance model fidelity and conciseness.</em></div>
    <div>Programs: <a href="progs/README.md#prog_Meshfit"><code>Meshfit</code></a></div>
    <div>Demos: <code>create_recon_*</code>, <code>view_recon_*</code>, <code>create_simplified_using_meshopt</code>, <code>view_simplified_using_meshopt</code></div>
   </td>
@@ -70,7 +70,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/psrecon/">Piecewise smooth surface reconstruction</a></b>.</div>
-   <div>Hugues Hoppe, Tony DeRose, Tom Duchamp, Michael Halstead, Hubert Jin, John McDonald, Jean Schweitzer, Werner Stuetzle.</div>
+   <div>Hoppe, DeRose, Duchamp, Halstead, Jin, McDonald, Schweitzer, Stuetzle.</div>
    <div><cite>ACM SIGGRAPH 1994 Proceedings</cite>.</div>
    <div><em>Subdivision surfaces with sharp features, and their automatic creation by data fitting.</em></div>
    <div>Programs: <a href="progs/README.md#prog_Subdivfit"><code>Subdivfit</code></a></div>
@@ -84,7 +84,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/pm/">Progressive meshes</a></b>.</div>
-   <div>Hugues Hoppe.</div>
+   <div>Hoppe.</div>
    <div><cite>ACM SIGGRAPH 1996 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div><em>Efficient, lossless, continuous-resolution representation of surface triangulations.</em></div>
    <div>Programs: <a href="progs/README.md#prog_MeshSimplify"><code>MeshSimplify</code></a>, <a href="progs/README.md#prog_Filterprog"><code>Filterprog</code></a></div>
@@ -98,7 +98,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/efficientpm/">Efficient implementation of progressive meshes</a></b>.</div>
-   <div>Hugues Hoppe.</div>
+   <div>Hoppe.</div>
    <div><cite>Computers &amp; Graphics</cite>, 22(1), 1998.</div>
    <div><em>Progressive mesh data structures compatible with GPU vertex buffers.</em></div>
    <div>Programs: <a href="progs/README.md#prog_FilterPM"><code>FilterPM</code></a>, <a href="progs/README.md#prog_G3dOGL"><code>G3dOGL</code></a></div>
@@ -112,7 +112,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
      </td>
      <td>
       <div><b><a href="https://hhoppe.com/proj/newqem/">New quadric metric for simplifying meshes with appearance attributes</a></b>.</div>
-      <div>Hugues Hoppe.</div>
+      <div>Hoppe.</div>
       <div><cite>IEEE Visualization 1999 Conference</cite>.</div>
       <div><em>Efficient simplification metric designed around correspondence in 3D space.</em></div>
       <div>Programs: <a href="progs/README.md#prog_MeshSimplify"><code>MeshSimplify</code></a></div>
@@ -126,9 +126,9 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/vdrpm/">View-dependent refinement of progressive meshes</a></b>.</div>
-   <div>Hugues Hoppe.</div>
+   <div>Hoppe.</div>
    <div><cite>ACM SIGGRAPH 1997 Proceedings</cite>.</div>
-   <div><em>Lossless multiresolution structure for incremental local refinement/coarsening.</em></div>
+   <div><em>Lossless multiresolution structure for incremental selective refinement/coarsening.</em></div>
    <div>Programs: <a href="progs/README.md#prog_FilterPM"><code>FilterPM</code></a>, <a href="progs/README.md#prog_G3dOGL"><code>G3dOGL</code></a></div>
    <div>Demos: <code>create_sr_office</code>, <code>view_sr_office</code></div>
   </td>
@@ -140,7 +140,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/svdlod/">Smooth view-dependent level-of-detail control and its application to terrain rendering</a></b>.</div>
-   <div>Hugues Hoppe.</div>
+   <div>Hoppe.</div>
    <div><cite>IEEE Visualization 1998 Conference</cite>. (<a href="https://ieeevis.org/year/2023/info/awards/test-of-time-awards#scivis"><em>2023 Test of Time Award</em></a>.)</div>
    <div><em>Visually smooth adaptation of mesh refinement using cascaded temporal geomorphs.</em></div>
    <div>Programs: <a href="progs/README.md#prog_StitchPM"><code>StitchPM</code></a>, <a href="progs/README.md#prog_G3dOGL"><code>G3dOGL</code></a></div>
@@ -154,7 +154,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/psc/">Progressive simplicial complexes</a></b>.</div>
-   <div>Jovan Popovic, Hugues Hoppe.</div>
+   <div>Popovic, Hoppe.</div>
    <div><cite>ACM SIGGRAPH 1997 Proceedings</cite>.</div>
    <div><em>Progressive encoding of both topology and geometry.</em></div>
    <div>Programs: <a href="progs/README.md#prog_G3dOGL"><code>G3dOGL</code></a></div>
@@ -168,7 +168,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/tvc/">Optimization of mesh locality for transparent vertex caching</a></b>.</div>
-   <div>Hugues Hoppe.</div>
+   <div>Hoppe.</div>
    <div><cite>ACM SIGGRAPH 1999 Proceedings</cite>.</div>
    <div><em>Face reordering for efficient GPU vertex cache, advocating a FIFO policy.</em></div>
    <div>Programs: <a href="progs/README.md#prog_MeshReorder"><code>MeshReorder</code></a></div>
@@ -182,7 +182,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/sphereparam/">Spherical parameterization and remeshing</a></b>.</div>
-   <div>Emil Praun, Hugues Hoppe.</div>
+   <div>Praun, Hoppe.</div>
    <div><cite>ACM SIGGRAPH 2003 Proceedings</cite>.</div>
    <div><em>Robust mapping of a surface onto a sphere, allowing 2D-grid resampling.</em></div>
    <div>Programs: <a href="progs/README.md#prog_SphereParam"><code>SphereParam</code></a>, <a href="progs/README.md#prog_SphereSample"><code>SphereSample</code></a></div>
@@ -197,6 +197,9 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
 
 The code compiles with any recent C++23 compiler (`gcc`, `clang`, or Microsoft Visual C++)
 on most platforms (Windows, Linux, WSL, macOS), or within a Docker container.
+The steps are summarized here; see [`make/README.md`](make/README.md) for the requirements,
+the build configurations and options, the [unit tests](make/README.md#unit-tests),
+and more on the [demos](make/README.md#demos).
 
 On **Linux, WSL, or macOS**, using GNU `make`:
 
@@ -228,9 +231,7 @@ docker run -it --rm mesh-processing                   # Start a shell with the p
 ```
 
 Pressing the <kbd>Esc</kbd> key closes any open program window.
-See [`make/README.md`](make/README.md) for the requirements, the build configurations and options,
-and more on [running the demos](make/README.md#demos).
-The demo scripts are in [`demos`](demos#demos).
+The demo scripts are in [`demos`](https://github.com/hhoppe/Mesh-processing-library/tree/main/demos#demos).
 
 
 ## Programs
@@ -288,8 +289,8 @@ reports the genus of the new mesh, and shows it in an interactive viewer.
 [`Filtermesh`]: progs/README.md#prog_Filtermesh
 [`Filterimage`]: progs/README.md#prog_Filterimage
 [`Filtervideo`]: progs/README.md#prog_Filtervideo
-[`Filtera3d`]: progs/README.md#filter-programs
-[`Filterframe`]: progs/README.md#filter-programs
+[`Filtera3d`]: progs/README.md#prog_Filtera3d
+[`Filterframe`]: progs/README.md#prog_Filterframe
 [`G3dOGL`]: progs/README.md#prog_G3dOGL
 [`G3dVec`]: progs/README.md#prog_G3dOGL
 [`VideoViewer`]: progs/README.md#prog_VideoViewer
@@ -307,7 +308,8 @@ and for the [file formats](progs/README.md#file-formats).
 
 ## Libraries
 
-The library [`libHh`](libHh#libhh) contains the main reusable classes, which its `README.md` summarizes.
+The library [`libHh`](https://github.com/hhoppe/Mesh-processing-library/tree/main/libHh#libhh)
+contains the main reusable classes, which its `README.md` summarizes.
 All files include `Hh.h` which sets up a common cross-platform environment.
 
 The libraries [`libHwWindows`](libHwWindows) and [`libHwX`](libHwX)
@@ -315,7 +317,8 @@ define implementations of a simple windowing interface (class `Hw`),
 under `Win32` and the X Window System, respectively.
 Both implementations support `OpenGL` rendering.
 
-Each program (e.g., `Filtermesh`) lives in its own subdirectory of [`progs`](progs#programs)
+Each program (e.g., `Filtermesh`) lives in its own subdirectory of
+[`progs`](https://github.com/hhoppe/Mesh-processing-library/tree/main/progs#programs)
 and links against these libraries.
 
 

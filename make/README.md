@@ -1,7 +1,7 @@
 # Building, testing, and running the demos
 
 This page gives the requirements of the [Mesh Processing Library](../README.md), and explains how to build it
-(using Microsoft Visual Studio, GNU `make`, or Docker), run its unit tests, and run its [demos](#demos).
+(using Microsoft Visual Studio, GNU `make`, or Docker), run its [unit tests](#unit-tests), and run its [demos](#demos).
 
 
 ## Requirements / dependencies
@@ -32,9 +32,14 @@ Image I/O uses Windows Imaging Component (WIC) in Visual Studio builds, `libpng`
 and Cygwin, and `ffmpeg` elsewhere (e.g., macOS) or for formats the former lack.
 A file specified as a URL is read by spawning the command `wget`.
 
+On Ubuntu 26.04, the needed packages are installed using
+`sudo apt install make clang libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev ffmpeg`
+(or `g++` instead of `clang`, to build using `make CC=gcc`).
+
 On macOS, it is necessary to install
 <a href="https://www.xquartz.org/">`XQuartz`</a> for `X11` support and
-<a href="https://evermeet.cx/ffmpeg/">`ffmpeg`</a> for image/video I/O.
+<a href="https://evermeet.cx/ffmpeg/">`ffmpeg`</a> for image/video I/O,
+e.g., using `brew install --cask xquartz && brew install ffmpeg`.
 
 
 ## Code compilation
@@ -49,40 +54,47 @@ depending on the build configuration.
 
 ### Build using GNU `make`
 
-The `CONFIG` environment variable determines
-which `make/Makefile_config_*` definition file is loaded.
-On Windows, `CONFIG` can be chosen among `{win, mingw, clang, cygwin}`,
-defaulting to `win` if undefined.
+The variable `CONFIG` selects one of five build configurations.
+Each is defined in a file `make/Makefile_config_*` and places its executables in the directory `bin/<CONFIG>`:
+
+| `CONFIG` | Platform | Compiler | C++ library | Default |
+| --- | --- | --- | --- | --- |
+| `unix` | Linux, WSL, macOS | `clang` (or `gcc` using `CC=gcc`) | `libstdc++` (`libc++` on macOS) | release |
+| `win` | Windows | Microsoft `cl` | MSVC STL | debug |
+| `clang` | Windows | `clang` | MSVC STL | release |
+| `mingw` | Windows | MinGW-w64 `gcc` | `libstdc++` | release |
+| `cygwin` | Windows (Cygwin) | `gcc` (or `clang` using `CC=clang`) | `libstdc++` | release |
+
 On Unix platforms (Linux, macOS, WSL), `CONFIG=unix` is the unique and default setting.
+On Windows, `CONFIG` defaults to `win`, and `make` must be run within a Cygwin shell
+(or an MSYS2 shell, which continuous integration uses for `CONFIG=win`),
+to provide GNU `make`, `bash`, `perl`, `diff`, and `g++` (used only to determine the header dependencies).
 
-For example, to build using the Microsoft `cl` compiler (a debug build, placing `*.exe` into directory `bin/win`):
-<br/>`make -j8`<br/>
+For example:
 
-To build all programs (into either `bin/unix` or `bin/win`) and run all unit tests:
-<br/>`make -j`
+```shell
+make -j                          # Build all programs and run all unit tests.
+make -j test                     # Build just the libraries and run all unit tests.
+make -j Filtermesh               # Build a single program.
+make -j demos                    # Build all programs and run all demos.
+make CC=gcc -j                   # On Unix, use the gcc compiler (the default is clang).
+make release=0 -j                # Create a debug build (or release=1 for a release build).
+make CXX_STD=c++26 -j            # Compile for a different C++ standard (the default is c++23).
+make CONFIG=mingw -j libHh       # On Windows, build just the main library using the mingw gcc compiler.
+make CONFIG=clang -j Filtermesh  # On Windows, build Filtermesh (into bin/clang) using the clang compiler.
+make CONFIG=cygwin -j demos      # Under Cygwin, build all programs and run all demos using the gcc compiler.
+make CONFIG=all -j               # Run each configuration of the current platform in turn.
+make CONFIG=all -j deepclean     # Clean up all files in all configurations.
+```
 
-To build just the libraries and run all unit tests:
-<br/>`make -j test`
+The settings that affect compilation (`CONFIG`, the compiler, the C++ standard, and debug or release) are recorded,
+so that changing any of them rebuilds the affected files.
+The `win` configuration creates `*.obj` and `*.lib` files whereas the other four share `*.o` and `*.a` files,
+so alternating between `win` and one other configuration requires no rebuilding.
 
-To build on Unix, forcing the use of the `gcc` compiler (default is `clang`):
-<br/>`make CC=gcc -j`
+The targets `mostlyclean`, `clean`, and `deepclean` remove progressively more:
+the intermediate files, then also the executables, and then also the header-dependency files.
 
-To build just the main library using the `mingw gcc` compiler on Windows:
-<br/>`make CONFIG=mingw -j libHh`
-
-To build the `Filtermesh` program (into `bin/clang`) using the `clang` compiler on Windows:
-<br/>`make CONFIG=clang -j Filtermesh`
-
-To build all programs (into `bin/cygwin`) and run all demos using the `gcc` compiler under Cygwin:
-<br/>`make CONFIG=cygwin -j demos`
-
-To clean up all files in all configurations:
-<br/>`make CONFIG=all -j deepclean`
-
-Note that additional options such as debug/release and
-compiler parameters are set in the various `make/Makefile_*` files.
-For instance, the line
-`"release ?= 0"` in `make/Makefile_config_win` specifies a debug (non-release) build.
 The compiler tool paths are discovered automatically;
 to override them, set the variables named in `make/Makefile_base_vc` and `make/Makefile_config_*`
 (e.g., `vs_instance`, `MINGW_ROOT`, or `LLVM_ROOT`) in a file `Makefile_local_defs` at the repository root.
@@ -99,6 +111,22 @@ To then start a shell in which the programs are in the `PATH`:
 
 To create and check the demo results (`xvfb-run` provides an X display, and requires `--init`):
 <br/>`docker run --init --rm mesh-processing xvfb-run -a make -C demos create check`
+
+
+## Unit tests
+
+The directory `test` contains the unit tests (`*_test.cpp`), which exercise the classes of `libHh`.
+They are run using `make` (the Visual Studio solution does not include them):
+
+```shell
+make -j test                # Build the libraries and run all unit tests.
+make -C test Array_test.ou  # Run a single unit test.
+```
+
+For each test `X_test`, the script `bin/hcheck` runs the program, saves its output in `test/X_test.ou`,
+and compares that output with the expected output in `test/X_test.ref`.
+On a mismatch, the differences are shown and saved in `test/X_test.diff`, and `make` reports a failure
+(as it does on every later run until the test passes).
 
 
 ## Demos

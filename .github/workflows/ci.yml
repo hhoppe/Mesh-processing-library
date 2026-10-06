@@ -62,7 +62,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y make ${{ matrix.compiler }} libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev
 
-      # XQuartz provides the X11 headers and libraries in /opt/X11, and ffmpeg provides image I/O (see README.md).
+      # XQuartz provides the X11 headers and libraries in /opt/X11, and ffmpeg provides image I/O (see make/README.md).
       - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: brew install --cask xquartz && brew install ffmpeg

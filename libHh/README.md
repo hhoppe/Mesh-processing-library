@@ -105,3 +105,25 @@ CGridView<D, T>             (const elements)
   compressed files.
 - `Random`: deterministic random-number generator, so that results are reproducible across platforms.
 - `HH_STAT(S)`, `HH_SSTAT(S, v)`: macros that accumulate a `Stat`, reported at program exit.
+
+## Code details
+
+The include file <code>libHh/<b>RangeOp</b>.h</code> defines many functions that act on <em>ranges</em>,
+which are containers or views for which `begin()` and `end()` are defined.
+For example, the function call `hh::fill(ar, 1.f)` assigns the value `1.f` to all
+elements in the array named `ar`,
+and the function call `hh::mean(matrix)` computes the average value of all entries in the
+named `matrix`.
+
+The debugging macro <code><b>SHOW</b>(expr)</code> outputs `expr = ...` on `stderr`
+and also returns `expr`.
+It also accepts multiple arguments in which case it returns `void`.
+For example, `SHOW(min(1, 2), "hello", 3*2)` outputs the line `min(1, 2)=1 hello 3*2=6`.
+Note the special treatment of literal string values.
+
+Unicode strings are stored using <b>UTF-8</b> encoding into ordinary `std::string` variables.
+The functions `hh::utf16_from_utf8()` and `hh::utf8_from_utf16()` convert to and from the
+`std::wstring` UTF-16 encodings used in `Win32` system calls.
+
+All files use end-of-line encodings based on Unix `'\n'` LF (rather than DOS `'\r\n'` CR+LF).
+All streams are opened in binary mode.  This allows text and binary to coexist in the same file.

@@ -122,9 +122,9 @@ to override them, set the variables named in `make/Makefile_base_vc` and `make/M
 
 ### Build using Docker
 
-The file `docker/Dockerfile` defines a Linux environment (Ubuntu with `clang`, GNU `make`, and the libraries above)
+The file `make/Dockerfile` defines a Linux environment (Ubuntu with `clang`, GNU `make`, and the libraries above)
 in which all programs are built and the unit tests are run, without installing anything else:
-<br/>`docker build -f docker/Dockerfile -t mesh-processing .`
+<br/>`docker build -f make/Dockerfile -t mesh-processing .`
 
 To then start a shell in which the programs are in the `PATH`:
 <br/>`docker run -it --rm mesh-processing`

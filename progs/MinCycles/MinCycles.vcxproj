@@ -23,10 +23,10 @@
     <LocalRoot>..\..</LocalRoot>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
-  <Import Project="$(LocalRoot)\msvc\hhmain_first.props" />
+  <Import Project="$(LocalRoot)\make\hhmain_first.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" />
-  <Import Project="$(LocalRoot)\msvc\hhmain.props" />
+  <Import Project="$(LocalRoot)\make\hhmain.props" />
   <ItemGroup>
     <ClCompile Include="MinCycles.cpp" />
     <ClCompile Include="CloseMinCycles.cpp" />

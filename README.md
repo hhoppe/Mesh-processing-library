@@ -201,34 +201,33 @@ The steps are summarized here; see [`make/README.md`](make/README.md) for the re
 the build configurations and options, the [unit tests](make/README.md#unit-tests),
 and more on the [demos](make/README.md#demos).
 
-On **Linux, WSL, or macOS**, using GNU `make`:
+- On **Linux, WSL, or macOS**, using GNU `make`:
 
-```shell
-make -j        # Build all programs (into bin/unix) and run the unit tests.
-make -j demos  # Also create the demo results (in parallel), check them, and view them in turn.
-```
+  ```shell
+  make -j        # Build all programs (into bin/unix) and run the unit tests.
+  make -j demos  # Also create the demo results (in parallel), check them, and view them in turn.
+  ```
 
-The prerequisites are, on Ubuntu 26.04,
-`sudo apt install make clang libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev ffmpeg`,
-and on macOS, `brew install --cask xquartz && brew install ffmpeg`.
+  Prerequisites:
+  - Ubuntu: `sudo apt install make clang libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev ffmpeg`
+  - macOS: `brew install --cask xquartz && brew install ffmpeg`
 
-On **Windows**, open `mesh_processing.sln` in Microsoft Visual Studio and build the solution
-(typically as `ReleaseMD - x64`, into `bin/msbuild`), then create and view the demo results:
+- On **Windows**, open `mesh_processing.sln` in Microsoft Visual Studio and build the solution
+  (typically as `ReleaseMD - x64`, into `bin/msbuild`), then create and view the demo results:
 
-```shell
-demos\all_demos_create_results.bat
-demos\all_demos_view_results.bat
-```
+  ```shell
+  demos\all_demos_create_results.bat
+  demos\all_demos_view_results.bat
+  ```
 
-The `make` commands above also work on Windows, within a Cygwin or MSYS2 shell,
-with a choice of four compiler configurations.
+  The `make` commands also work on Windows, in a Cygwin or MSYS2 shell, with a choice of four configurations.
 
-With **Docker**, on any platform:
+- With **Docker**, on any platform:
 
-```shell
-docker build -f make/Dockerfile -t mesh-processing .  # Build all programs and run the unit tests.
-docker run -it --rm mesh-processing                   # Start a shell with the programs in the PATH.
-```
+  ```shell
+  docker build -f make/Dockerfile -t mesh-processing .  # Build all programs and run the unit tests.
+  docker run -it --rm mesh-processing                   # Start a shell with the programs in the PATH.
+  ```
 
 Pressing the <kbd>Esc</kbd> key closes any open program window.
 The demo scripts are in [`demos`](https://github.com/hhoppe/Mesh-processing-library/tree/main/demos#demos).
@@ -309,7 +308,7 @@ and for the [file formats](progs/README.md#file-formats).
 ## Libraries
 
 The library [`libHh`](https://github.com/hhoppe/Mesh-processing-library/tree/main/libHh#libhh)
-contains the main reusable classes, which its `README.md` summarizes.
+contains the main reusable classes.
 All files include `Hh.h` which sets up a common cross-platform environment.
 
 The libraries [`libHwWindows`](libHwWindows) and [`libHwX`](libHwX)

@@ -66,8 +66,7 @@ Each is defined in a file `make/Makefile_config_*` and places its executables in
 | `cygwin` | Windows (Cygwin) | `gcc` (or `clang` using `CC=clang`) | `libstdc++` | release |
 
 On Unix platforms (Linux, macOS, WSL), `CONFIG=unix` is the unique and default setting.
-On Windows, `CONFIG` defaults to `win`, and `make` must be run within a Cygwin shell
-(or an MSYS2 shell, which continuous integration uses for `CONFIG=win`),
+On Windows, `CONFIG` defaults to `win`, and `make` must be run within a Cygwin or MSYS2 shell,
 to provide GNU `make`, `bash`, `perl`, `diff`, and `g++` (used only to determine the header dependencies).
 
 For example:

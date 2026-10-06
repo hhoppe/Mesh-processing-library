@@ -3,37 +3,41 @@
 # clang-format -i `allC`
 
 BasedOnStyle: Google
-ColumnLimit: 119                            # default is 80; Google default is 80.
 
-Language: Cpp                               # default is Cpp; Google default is Cpp.
-# Standard: Latest                          # default is Latest; Google default is Auto; also: Cpp17, Cpp20.
-BreakTemplateDeclarations: MultiLine        # default is Multiline; Google default is Yes.
-AllowShortCaseLabelsOnASingleLine: true     # default is true; Google default is false.
-DerivePointerAlignment: false               # default is false; Google default is true.
-ReflowComments: false                       # default is Always; Google default is Always.
-IncludeBlocks: Preserve                     # default is Preserve; Google default is Regroup.
-RequiresClausePosition: SingleLine          # default is OwnLine; Google default is OwnLine.
-AttributeMacros: ['_Inout_']                # default is []; keeps the space in "_Inout_ ::Name".
+ColumnLimit: 119                            # Default is 80; Google default is 80.
+
+Language: Cpp                               # Default is Cpp; Google default is Cpp; keep to reject other file types.
+BreakTemplateDeclarations: MultiLine        # Default is MultiLine; Google default is Yes.
+AllowShortCaseLabelsOnASingleLine: true     # Default is false; Google default is false.
+ReflowComments: false                       # Default is Always; Google default is Always.
+IncludeBlocks: Preserve                     # Default is Preserve; Google default is Regroup.
+RequiresClausePosition: SingleLine          # Default is OwnLine; Google default is OwnLine.
+DerivePointerAlignment: false               # Default is false; Google default is false (true before v21, e.g. VS).
+
+# AttributeMacros: Default is ['__capability']; Google default appends 'absl_nonnull', 'absl_nullable', and
+# 'absl_nullability_unknown'.  The list below replaces only the first entry of Google's list, so the absl
+# entries remain.
+AttributeMacros: ['_Inout_']                # Keeps the space in "_Inout_ ::Name".
 
 # ForEachMacros: ['for_int', 'for_intL']
-# # Avoid 'for_int (' using the following:
+# # But then avoid 'for_int (' using the following:
 # SpaceBeforeParens: Custom
 # SpaceBeforeParensOptions:
 #   AfterControlStatements: true
 #   AfterForeachMacros: false
 #   AfterIfMacros: true
-# # However, "for_int(y, ny) for_int(x, nx)" no longer fits on one line, so give up on this.
+# # However, "for_int(y, ny) for_int(x, nx)" no longer fits on one line, so I give up on this approach.
 
-# AllowShortBlocksOnASingleLine: Always       # default is Never; Google default is Never.
-# AllowShortCompoundRequirementOnASingleLine: true
+# AllowShortBlocksOnASingleLine: Always     # Default is Never; Google default is Never.
+
 # ForEachMacros: ['foreach', 'Q_FOREACH', 'BOOST_FOREACH']
 # SpaceBeforeParens: Custom
 # SpaceBeforeParensOptions:
 #   AfterForeachMacros: false
 
-# AllowShortFunctionsOnASingleLine: Inline  # default is All
-# CommentPragmas: '^///'                    # default is '^ IWYU pragma:'; however, it still indents it.
-# Standard: Latest                          # default is Auto  # not recognized by Visual Studio
+# AllowShortFunctionsOnASingleLine: Inline  # Default is All; Google default is All.
+# CommentPragmas: '^///'                    # Default is '^ IWYU pragma:'; however, it still indents it.
+# Standard: Latest                          # Default is Latest; Google default is Auto (fine).
 
 # StatementMacros: ['Q_UNUSED', 'QT_REQUIRE_VERSION']
 # MaxEmptyLinesToKeep: 1

@@ -205,7 +205,7 @@ and more on the [demos](make/README.md#demos).
 
   ```shell
   make -j        # Build all programs (into bin/unix) and run the unit tests.
-  make -j demos  # Also create the demo results (in parallel), check them, and view them in turn.
+  make -j demos  # Also create, check, and view the demo results.
   ```
 
   Prerequisites:
@@ -226,7 +226,7 @@ and more on the [demos](make/README.md#demos).
 
   ```shell
   docker build -f make/Dockerfile -t mesh-processing .  # Build all programs and run the unit tests.
-  docker run -it --rm mesh-processing                   # Start a shell with the programs in the PATH.
+  docker run -it --rm mesh-processing                   # Start a shell with programs in the PATH.
   ```
 
 Pressing the <kbd>Esc</kbd> key closes any open program window.

@@ -107,9 +107,9 @@ After the code is compiled, the demos can be run as follows.
 
 On Windows, create, view, and clean up all the results using the batch scripts:
 ```shell
-demos/all_demos_create_results.bat
-demos/all_demos_view_results.bat
-demos/all_demos_clean.bat
+demos\all_demos_create_results.bat
+demos\all_demos_view_results.bat
+demos\all_demos_clean.bat
 ```
 
 On Unix-based systems (Linux, macOS, WSL, Cygwin), either run the `bash` scripts:

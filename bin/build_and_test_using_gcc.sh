@@ -28,7 +28,7 @@ fi
 if [[ -d /Applications ]]; then  # on Mac
   # Note that on Mac, gcc/g++ gets mapped to clang.
   cppflags="$cppflags -I/opt/X11/include"
-  ldflags="-L/opt/X11/lib $ldflags"
+  ldflags="-L/opt/X11/lib ${ldflags% -lstdc++exp}"  # Mac uses libc++, which lacks stacktrace and libstdc++exp.
 fi
 
 for lib in $libs; do (cd $lib && echo Building $lib && $cpp $cppflags -c *.cpp && $ar rc $lib.a *.o && $ranlib $lib.a); done

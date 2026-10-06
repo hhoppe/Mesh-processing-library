@@ -21,12 +21,12 @@ else                            # on Unix
   cpp=clang++ ar=ar ranlib=ranlib
   cppflags="-I.. -I../libHwX -std=c++23 -O3 -DNDEBUG -pthread"
   libs="libHh libHwX"
-  ldflags="../libHwX/libHwX.a ../libHh/libHh.a -lGL -lX11 -ljpeg -lpng -lz"
+  ldflags="../libHwX/libHwX.a ../libHh/libHh.a -lGL -lX11 -ljpeg -lpng -lz -lstdc++exp"
   exe=""
 fi
 if [[ -d /Applications ]]; then  # on Mac
   cppflags="$cppflags -I/opt/X11/include"
-  ldflags="-L/opt/X11/lib $ldflags"
+  ldflags="-L/opt/X11/lib ${ldflags% -lstdc++exp}"  # Mac uses libc++, which lacks stacktrace and libstdc++exp.
 fi
 
 for lib in $libs; do (cd $lib && echo Building $lib && $cpp $cppflags -c *.cpp && $ar rc $lib.a *.o && $ranlib $lib.a); done

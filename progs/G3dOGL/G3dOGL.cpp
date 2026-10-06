@@ -1500,11 +1500,11 @@ void mesh_init(GMesh& mesh) {
           c_color(c) = pack_color(co);
           if (g3d::lod_mode) {
             c_lod(c).Nd = c_color(c);
-            if (parse_key_vec(mesh.get_string(c), "Orgb", co)) {
-              c_lod(c).Od = pack_color(co);
-            } else {
-              c_lod(c).Od = pack_color(A3dColor(1.f, .8f, .5f));  // Orange.
-            }
+            constexpr A3dColor k_orange(1.f, .8f, .5f);
+            // Assign a local Pixel: gcc (without -march=native) would otherwise split pack_color() into four byte
+            // stores into the Sac storage and misreport them as overflowing BaseSac::_a[k_dummy].
+            const Pixel pixel = pack_color(parse_key_vec(mesh.get_string(c), "Orgb", co) ? co : k_orange);
+            c_lod(c).Od = pixel;
           }
         }
       }

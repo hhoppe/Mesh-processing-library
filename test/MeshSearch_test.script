@@ -1,4 +1,4 @@
 #!/bin/bash
 
-MeshSearch_test 2>&1 | grep -v Sssncellsv
+MeshSearch_test 2>&1
 exit 0

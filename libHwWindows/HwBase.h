@@ -494,20 +494,16 @@ bool gl_report_errors();  // Returns true if errors (only call after init() and 
 // Returns a string containing all the supported OpenGL extensions.
 const string& gl_extensions_string();
 
-// GCC warns on casts between incompatible function pointer types, which is inherent to the wglGetProcAddress()
-// pattern; the alternative of casting through `void*` is less portable.
-#if defined(__GNUC__) || defined(__clang__)
-#pragma GCC diagnostic ignored "-Wcast-function-type"  // We do not use push/pop as it is too awkward within a macro.
-#endif
-
-#define USE_GL_EXT_MAYBE_AUX(func, type, GetProc) \
-  using Type##func = type;                        \
-  static Type##func func;                         \
-  static bool is_init_##func;                     \
-  if (!is_init_##func) {                          \
-    is_init_##func = true;                        \
-    func = reinterpret_cast<Type##func>(GetProc); \
-  }                                               \
+// Converting through uintptr_t avoids the warnings on a direct cast between the incompatible function pointer
+// types (-Wcast-function-type-strict) and the clang-tidy warnings on a cast through void* or a std::bit_cast<>().
+#define USE_GL_EXT_MAYBE_AUX(func, type, GetProc)                              \
+  using Type##func = type;                                                     \
+  static Type##func func;                                                      \
+  static bool is_init_##func;                                                  \
+  if (!is_init_##func) {                                                       \
+    is_init_##func = true;                                                     \
+    func = reinterpret_cast<Type##func>(reinterpret_cast<uintptr_t>(GetProc)); \
+  }                                                                            \
   HH_EAT_SEMICOLON
 
 #if defined(_WIN32)

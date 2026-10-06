@@ -90,7 +90,8 @@ void testmesh() {
   {
     Contour3dMesh<feval3d> contour(10, &mesh);
     if (0) contour.big_mesh_faces();
-    contour.set_vertex_tolerance(1e-4f);
+    // Much smaller than the 1e-4 rounding below, so that solver noise does not change the rounded vertices.
+    contour.set_vertex_tolerance(1e-6f);
     const int nc1 = contour.march_from(Point(.35f, .3f, .3f));
     const int nc2 = contour.march_from(Point(.25f, .65f, .7f));
     SHOW(nc1, nc2);

@@ -185,3 +185,13 @@ jobs:
             test/*.diff
             test/*.ou
           if-no-files-found: ignore
+
+  # Check that the relative links and anchors of the README.md pages resolve.
+  readme-links:
+    runs-on: ubuntu-26.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Check the README links
+        run: .github/scripts/check_readme_links.py

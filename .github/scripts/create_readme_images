@@ -1,0 +1,61 @@
+#!/bin/bash
+# Creates the overview image of the root README.md (.github/images/overview.jpg) by rendering demo data and results
+# using G3dOGL and assembling the renderings using Filterimage.
+#
+# Usage: .github/scripts/create_readme_images [dark]
+#
+# With "dark", it instead creates overview_dark.jpg on the background color of GitHub's dark theme.
+# The programs must be built (any CONFIG), and the demos create_recon_cactus, create_spherical_param_bunny, and
+# create_pm_cessna must have been run (e.g., using "make -C demos create").
+
+set -e -o pipefail
+cd "$(dirname "${BASH_SOURCE[0]}")/../.."
+for dir in unix cygwin clang mingw win msbuild; do PATH=$PWD/bin/$dir:$PATH; done; PATH=$PWD/bin:$PATH
+
+if [[ $1 == dark ]]; then
+  output=.github/images/overview_dark.jpg
+  background='#0d1117'; rgb='13 17 23'; foreground='.85 .85 .85'
+  viewer_args="-back $background -edgecolor #d8d8d8"
+else
+  output=.github/images/overview.jpg
+  background='#ffffff'; rgb='255 255 255'; foreground='0 0 0'
+  viewer_args=''
+fi
+
+tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
+height=600  # Height of the tiles within a row.
+width=1760  # Width of each row (and of the image).
+gap=8       # Half the spacing between tiles.
+export ASSERTW_IGNORE='fl,fr._matid ignored|Isolated vertex has undefined normal|Display lists should be off'
+
+# render name geometry [args...] : render a view into $tmp/name.png, cropped to its content and scaled to $height.
+render() {
+  local name=$1 geometry=$2; shift 2
+  G3dOGL "$@" -noinfo 1 $viewer_args -geom "$geometry" -offscreen "$tmp/$name.raw.png" >&/dev/null </dev/null
+  Filterimage "$tmp/$name.raw.png" -color $rgb 255 -cropmatte -scaletoy $height -boundaryrule border \
+    -cropall -$gap -to png >"$tmp/$name.png" 2>/dev/null
+}
+
+# Top row: surface reconstruction (points, initial mesh, subdivision surface), spherical remesh, simplicial complex.
+Filtera3d demos/data/cactus.pts -diff $foreground 2>/dev/null >"$tmp/cactus.a3d"
+render cactus_points 640x960 "$tmp/cactus.a3d" -st demos/data/cactus.s3d
+render cactus_recon 640x960 demos/results/cactus.recon.m -st demos/data/cactus.s3d -key DmDe
+render cactus_subdiv 640x960 demos/results/cactus.sub2limit.m -st demos/data/cactus.s3d
+render bunny_remesh 1100x1100 demos/results/bunny.spheresample.remesh.m -st demos/data/bunny.s3d -key DmDe
+PSC_LOD_LEVEL=1.0 render drumset 1280x960 -psc_mode demos/data/drumset_trunc.psc demos/data/drumset.box.a3d \
+  -st demos/data/drumset.s3d -key , -lightambient .4
+# Bottom row: progressive mesh at a coarse and at its full resolution, and view-dependent terrain refinement.
+PM_LOD_LEVEL=0.01 render cessna_coarse 1280x960 -pm_mode demos/results/cessna.pm -st demos/data/cessna.s3d \
+  -key ,De -lightambient .4
+PM_LOD_LEVEL=1.0 render cessna_full 1280x960 -pm_mode demos/results/cessna.pm -st demos/data/cessna.s3d \
+  -key , -lightambient .4
+render canyon 1280x960 -eyeob demos/data/unit_frustum.a3d -sr_mode demos/data/gcanyon_4k2k.l1.srm \
+  -texturemap demos/data/gcanyon_color_4k2k.png -sr_screen_thresh 0.003846 -lightambient .7 \
+  -st demos/data/gcanyon_4k2k_fly2.s3d -key Dt
+
+(cd "$tmp" && Filterimage -assemble 5 1 cactus_points.png cactus_recon.png cactus_subdiv.png bunny_remesh.png \
+  drumset.png -scaletox $width -to png >row1.png 2>/dev/null)
+(cd "$tmp" && Filterimage -assemble 3 1 cessna_coarse.png cessna_full.png canyon.png -scaletox $width -to png \
+  >row2.png 2>/dev/null)
+JPG_QUALITY=88 Filterimage -assemble 1 2 "$tmp/row1.png" "$tmp/row2.png" -to jpg >"$output" 2>/dev/null
+echo "Created $output ($(stat -c %s "$output") bytes)."

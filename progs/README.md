@@ -249,6 +249,9 @@ MeshSimplify demos/data/club.orig.m -prog club.prog -simplify >club.base.m
 - progressively simplifies it by examining point residual distances, while recording changes to a `*.prog` file, and
 - writes the resulting base mesh.
 
+(Because the simplification is multithreaded, repeated runs produce slightly different results;
+setting the environment variable `OMP_NUM_THREADS=1` makes them deterministic.)
+
 We construct a concise <em>progressive mesh</em> by encoding the base mesh together
 with the sequence of <em>vertex splits</em> that exactly recover the original mesh,
 obtained by reading the stored edge collapses in reverse order:<a id="prog_Filterprog"></a>
@@ -415,7 +418,7 @@ so as to minimize parametric stretch from the sphere to the surface mesh.
 For example, within `demos/create_spherical_param_bunny`,
 ```shell
 mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow | \
-  SphereParam - -rot demos/data/bunny.s3d -split_meridian >demos/results/bunny.sphparam.m
+  SphereParam - -rot demos/data/bunny.s3d -split_meridian >bunny.sphparam.m
 ```
 - creates a progressive mesh (`*.pm`) stream minimizing a quadric error metric (`qem`),
 - runs a coarse-to-fine spherical parameterization optimization,
@@ -432,7 +435,7 @@ mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow | \
 
 Alternatively, to view the parameterization as a triangulated sphere,
 ```shell
-Filtermesh demos/results/bunny.sphparam.m -renamekey v sph P | \
+Filtermesh bunny.sphparam.m -renamekey v sph P | \
   G3dOGL - -st demos/data/unitsphere_ang.s3d -key DeoJ
 ```
 - transfers each vertex's spherical coordinates `sph` to its position `P`,
@@ -447,8 +450,8 @@ The program **`SphereSample`** computes uniform samplings of a spherically param
 For example, within `demos/create_spherical_param_bunny`,
 ```shell
 SphereSample -domain octaflat -egrid 128 -sample_map demos/results/octaflat_eg128.uv.sphparam.m \
-    -param demos/results/bunny.sphparam.m -rot demos/data/bunny.s3d -keys imageuv -remesh | \
-  Filtermesh -renamekey v imageuv uv >demos/results/bunny.spheresample.remesh.m
+    -param bunny.sphparam.m -rot demos/data/bunny.s3d -keys imageuv -remesh | \
+  Filtermesh -renamekey v imageuv uv >bunny.spheresample.remesh.m
 ```
 - defines an effective 128&times;128 regular grid on a flat-octahedron domain,
 - maps it onto the sphere using a domain-to-sphere map computed earlier in the script,
@@ -460,8 +463,8 @@ SphereSample -domain octaflat -egrid 128 -sample_map demos/results/octaflat_eg12
 Also,
 ```shell
 SphereSample -domain octaflat -grid 1024 -domain_file demos/results/octaflat_eg128.uv.sphparam.m \
-    -param demos/results/bunny.sphparam.m -signal N -write_texture \
-    demos/results/bunny.spheresample.octaflat.unrotated.normalmap.png
+    -param bunny.sphparam.m -signal N -write_texture \
+    bunny.spheresample.octaflat.unrotated.normalmap.png
 ```
 - defines a 1024&times;1024 grid over the same flat-octahedron domain and domain-to-sphere map,
 - maps these samples onto the bunny mesh using its spherical parameterization,
@@ -470,8 +473,8 @@ SphereSample -domain octaflat -grid 1024 -domain_file demos/results/octaflat_eg1
 
 Then, within `demos/view_spherical_param_bunny`,
 ```shell
-G3dOGL demos/results/bunny.spheresample.remesh.m -st demos/data/bunny.s3d \
-    -texturemap demos/results/bunny.spheresample.octaflat.unrotated.normalmap.png \
+G3dOGL bunny.spheresample.remesh.m -st demos/data/bunny.s3d \
+    -texturemap bunny.spheresample.octaflat.unrotated.normalmap.png \
     -texturenormal 1 -key DmDe -hwkey '(DtDe)' -hwdelay 1.0
 ```
 - renders the remesh using flat shading (`Dm`) and mesh edges (`De`), and

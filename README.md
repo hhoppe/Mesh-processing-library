@@ -37,8 +37,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
 <table id="publications">
 
  <tr id="pub_recon">
-  <td>
-   <img src=".github/thumbnails/recon.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/recon.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/recon/">Surface reconstruction from unorganized points</a></b>.</div>
@@ -51,8 +51,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>
 
  <tr id="pub_meshopt">
-  <td>
-   <img src=".github/thumbnails/meshopt.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/meshopt.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/meshopt/">Mesh optimization</a></b>.</div>
@@ -65,8 +65,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>
 
  <tr id="pub_psrecon">
-  <td>
-   <img src=".github/thumbnails/psrecon.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/psrecon.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/psrecon/">Piecewise smooth surface reconstruction</a></b>.</div>
@@ -79,8 +79,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>
 
  <tr id="pub_pm">
-  <td>
-   <img src=".github/thumbnails/pm.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/pm.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/pm/">Progressive meshes</a></b>.</div>
@@ -93,8 +93,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>
 
  <tr id="pub_efficientpm">
-  <td>
-   <img src=".github/thumbnails/efficientpm.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/efficientpm.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/efficientpm/">Efficient implementation of progressive meshes</a></b>.</div>
@@ -107,8 +107,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>
 
  <!--<tr id="pub_newqem">
-     <td>
-      <img src=".github/thumbnails/newqem.red.jpg" alt=""/>
+     <td width="266">
+      <img src=".github/images/newqem.red.jpg" alt=""/>
      </td>
      <td>
       <div><b><a href="https://hhoppe.com/proj/newqem/">New quadric metric for simplifying meshes with appearance attributes</a></b>.</div>
@@ -121,8 +121,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>-->
 
  <tr id="pub_vdrpm">
-  <td>
-   <img src=".github/thumbnails/vdrpm.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/vdrpm.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/vdrpm/">View-dependent refinement of progressive meshes</a></b>.</div>
@@ -135,8 +135,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>
 
  <tr id="pub_svdlod">
-  <td>
-   <img src=".github/thumbnails/svdlod.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/svdlod.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/svdlod/">Smooth view-dependent level-of-detail control and its application to terrain rendering</a></b>.</div>
@@ -149,8 +149,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>
 
  <tr id="pub_psc">
-  <td>
-   <img src=".github/thumbnails/psc.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/psc.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/psc/">Progressive simplicial complexes</a></b>.</div>
@@ -163,8 +163,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>
 
  <tr id="pub_tvc">
-  <td>
-   <img src=".github/thumbnails/tvc.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/tvc.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/tvc/">Optimization of mesh locality for transparent vertex caching</a></b>.</div>
@@ -177,8 +177,8 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
  </tr>
 
  <tr id="pub_sphereparam">
-  <td>
-   <img src=".github/thumbnails/sphereparam.red.jpg" alt=""/>
+  <td width="266">
+   <img src=".github/images/sphereparam.red.jpg" alt=""/>
   </td>
   <td>
    <div><b><a href="https://hhoppe.com/proj/sphereparam/">Spherical parameterization and remeshing</a></b>.</div>
@@ -195,7 +195,7 @@ Bottom: a progressive mesh at a coarse and at its full resolution; view-dependen
 
 ## Building
 
-The code compiles with any recent C++23 compiler (`gcc`, `clang`, or Microsoft Visual C++)
+The code compiles with recent C++23 compilers (`gcc`, `clang`, or Microsoft Visual C++)
 on most platforms (Windows, Linux, WSL, macOS), or within a Docker container.
 The steps are summarized here; see [`make/README.md`](make/README.md) for the requirements,
 the build configurations and options, the [unit tests](make/README.md#unit-tests),
@@ -225,7 +225,7 @@ and more on the [demos](make/README.md#demos).
 - With **Docker**, on any platform:
 
   ```shell
-  docker build -f make/Dockerfile -t mesh-processing .  # Build all programs and run the unit tests.
+  docker build -f make/Dockerfile -t mesh-processing .  # Build programs and run the unit tests.
   docker run -it --rm mesh-processing                   # Start a shell with programs in the PATH.
   ```
 

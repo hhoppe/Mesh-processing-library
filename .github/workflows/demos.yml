@@ -1,5 +1,6 @@
 # Build all programs and run the demos: create their results, check these against reference statistics, and run
-# the viewing demos without showing any window.  This is slow, so it runs nightly and on demand, not on every push.
+# the viewing demos without showing any window, and run the examples of progs/README.md.  This is slow, so it
+# runs nightly and on demand, not on every push.
 name: Demos
 
 on:
@@ -99,6 +100,11 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: DEMOS_HIDDEN=1 make -C demos view 2>&1 | tee view.log
 
+      # Run the examples of progs/README.md (which use the demo results), saving a sheet of their screenshots.
+      - name: Run the README examples
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: .github/scripts/run_readme_examples.py --screenshots readme_examples.jpg 2>&1 | tee examples.log
+
       - name: Upload results and logs
         if: always()
         uses: actions/upload-artifact@v7
@@ -106,5 +112,6 @@ jobs:
           name: ${{ matrix.name }}-results
           path: |
             *.log
+            readme_examples.jpg
             demos/results/
           if-no-files-found: ignore

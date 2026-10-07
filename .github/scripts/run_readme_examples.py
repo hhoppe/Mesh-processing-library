@@ -4,9 +4,10 @@
 Each ```shell block is run (in order, since later blocks read files written by earlier ones) in a
 scratch directory containing links to the repository's demos/ and bin/ directories, with the built
 programs in the PATH.  Each viewer (G3dOGL, G3dVec, VideoViewer) is made to run without a window and
-to quit after a moment.
+to quit after a moment, or with --screenshots, to save an image once its input is read; the images
+are then assembled into a single sheet (in reading order of the examples) for visual inspection.
 
-Usage: .github/scripts/run_readme_examples.py [--dir DIR] [--only N,M,...] [--keep]
+Usage: run_readme_examples.py [--dir DIR] [--only N,M,...] [--keep] [--screenshots FILE]
 The programs must be built, and the demo results created (make -C demos create).
 """
 
@@ -22,6 +23,8 @@ import time
 
 VIEWERS = ('G3dOGL', 'G3dVec', 'VideoViewer')
 HIDDEN = " -hidden -hwdelay 1 -hwkey '\\2\\c'"
+TILE = (640, 480)  # Size of each screenshot in the sheet.
+COLUMNS = 6  # Number of screenshots per row of the sheet.
 # Blocks containing these strings are not run, for the given reasons.
 SKIP = {
     '-wait_on_visualizer': 'interactive',
@@ -43,8 +46,12 @@ def blocks(page: pathlib.Path) -> list[tuple[int, str]]:
   return result
 
 
-def hide_viewers(text: str) -> str:
-  """Append window-less, self-terminating arguments to each viewer command of the text."""
+def hide_viewers(text: str, screenshots: list[pathlib.Path] | None = None) -> str:
+  """Append window-less, self-terminating arguments to each viewer command of the text.
+
+  With a list (its first element naming the block), each G3dOGL or G3dVec instead saves a screenshot
+  (G3dOGL after reading all its input), whose path is appended to the list.
+  """
   text = text.replace('\\\n', ' ')
   segments, segment, quote = [], '', ''
   for char in text:
@@ -64,9 +71,50 @@ def hide_viewers(text: str) -> str:
     command = next((word for word in words if '=' not in word), '')
     if command in VIEWERS:
       hidden = ' -hidden' if '-video' in words else HIDDEN
+      # (VideoViewer takes no screenshot: a hidden window cannot be resized, as its "=" key does.)
+      if screenshots is not None and '-video' not in words and command != 'VideoViewer':
+        path = screenshots[0].parent / f'{screenshots[0].stem}_{len(screenshots)}.png'
+        screenshots.append(path)
+        capture = f' -imagename {path} -picture' if command == 'G3dOGL' else f' -offscreen {path}'
+        hidden = f' -hidden -geom {TILE[0]}x{TILE[1]}' + capture
       segments[i] = (segment.rstrip()[:-1] + hidden + ')' if segment.rstrip().endswith(')') else
                      segment.rstrip() + hidden) + ' '  # fmt: skip
   return ''.join(segments)
+
+
+def assemble(
+    paths: list[pathlib.Path], output: pathlib.Path, env: dict[str, str], scratch: pathlib.Path
+):
+  """Assemble the screenshots into a sheet of COLUMNS columns, padding each to the TILE size."""
+  w, h = TILE
+
+  def run(args: list[str], out: pathlib.Path) -> None:
+    with open(out, 'wb') as f:
+      subprocess.run(args, env=env, stdout=f, stderr=subprocess.DEVNULL, check=True)
+
+  tiles = []
+  for path in paths:
+    tile = path.with_suffix('.tile.png')
+    run(['Filterimage', str(path), '-color', '255', '255', '255', '255', '-boundaryrule', 'border',
+         '-croptodims', str(w), str(h), '-to', 'png'], tile)  # fmt: skip
+    tiles.append(tile)
+  rows = []
+  for r in range(0, len(tiles), COLUMNS):
+    chunk = tiles[r : r + COLUMNS]
+    row = scratch / f'row{r // COLUMNS}.png'
+    pad = -(COLUMNS - len(chunk)) * w  # A negative crop extends the row to the full width.
+    run(
+        ['Filterimage', '-assemble', str(len(chunk)), '1', *map(str, chunk)]
+        + ['-color', '255', '255', '255', '255', '-boundaryrule', 'border']
+        + ['-cropsides', '0', str(pad), '0', '0', '-to', 'png'],
+        row,
+    )
+    rows.append(row)
+  run(
+      ['Filterimage', '-assemble', '1', str(len(rows)), *map(str, rows), '-to', output.suffix[1:]],
+      output,
+  )
+  print(f'Assembled {len(paths)} screenshots into {output} ({", ".join(p.stem for p in paths)})')
 
 
 def main() -> int:
@@ -74,6 +122,7 @@ def main() -> int:
   parser.add_argument('--dir', help='scratch directory (default: a temporary directory)')
   parser.add_argument('--only', help='comma-separated block numbers to run')
   parser.add_argument('--keep', action='store_true', help='keep the scratch directory')
+  parser.add_argument('--screenshots', help='assemble the viewer screenshots into this image file')
   args = parser.parse_args()
   root = pathlib.Path(__file__).resolve().parent.parent.parent
   page = root / 'progs' / 'README.md'
@@ -96,6 +145,7 @@ def main() -> int:
   only = {int(n) for n in args.only.split(',')} if args.only else None
   print(f'Running the examples of {page.relative_to(root)} in {scratch}', flush=True)
   num_failed = 0
+  all_screenshots: list[pathlib.Path] = []
   for i, (line, text) in enumerate(blocks(page), 1):
     label = f'block {i} (line {line}, "{text.split()[0]}")'
     if only and i not in only:
@@ -103,7 +153,8 @@ def main() -> int:
     if reason := next((reason for key, reason in SKIP.items() if key in text), None):
       print(f'{label}: skipped ({reason})', flush=True)
       continue
-    script = hide_viewers(text)
+    screenshots = [scratch / f'block{i:02}'] if args.screenshots else None
+    script = hide_viewers(text, screenshots)
     start = time.time()
     log = scratch / f'block{i:02}.log'
     with open(log, 'w', encoding='utf-8') as f:
@@ -126,12 +177,16 @@ def main() -> int:
     # (status 141), which the demo scripts also accept as success.
     if status in (0, 141):
       print(f'{label}: ok ({elapsed:.1f} s)', flush=True)
+      if screenshots:
+        all_screenshots += [path for path in screenshots[1:] if path.exists()]
     else:
       num_failed += 1
       print(
           f'{page}:{line}: error: {label} failed (status {status}, {elapsed:.1f} s); see {log}',
           flush=True,
       )
+  if args.screenshots and all_screenshots:
+    assemble(all_screenshots, pathlib.Path(args.screenshots), env, scratch)
   if not args.keep and not args.dir:
     shutil.rmtree(scratch)
   print(f'{num_failed} failed')

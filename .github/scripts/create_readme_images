@@ -1,32 +1,24 @@
 #!/bin/bash
-# Creates the overview image of the root README.md (.github/images/overview.jpg) by rendering demo data and results
-# using G3dOGL and assembling the renderings using Filterimage.
+# Creates the images of the README pages (in .github/images/) by rendering demo data and results using G3dOGL and
+# assembling the renderings using Filterimage.  Each image is created in a light variant (NAME.jpg) and in a dark
+# variant (NAME_dark.jpg) on the background color of GitHub's dark theme.
 #
-# Usage: .github/scripts/create_readme_images [dark]
+# Usage: .github/scripts/create_readme_images
 #
-# With "dark", it instead creates overview_dark.jpg on the background color of GitHub's dark theme.
 # The programs must be built (any CONFIG), and the demos create_recon_cactus, create_spherical_param_bunny, and
 # create_pm_cessna must have been run (e.g., using "make -C demos create").
 
 set -e -o pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 for dir in unix cygwin clang mingw win msbuild; do PATH=$PWD/bin/$dir:$PATH; done; PATH=$PWD/bin:$PATH
-
-if [[ $1 == dark ]]; then
-  output=.github/images/overview_dark.jpg
-  background='#0d1117'; rgb='13 17 23'; foreground='.85 .85 .85'
-  viewer_args="-back $background -edgecolor #d8d8d8"
-else
-  output=.github/images/overview.jpg
-  background='#ffffff'; rgb='255 255 255'; foreground='0 0 0'
-  viewer_args=''
-fi
-
+images=.github/images
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 height=600  # Height of the tiles within a row.
-width=1760  # Width of each row (and of the image).
+width=1760  # Width of each row (and of the images).
 gap=8       # Half the spacing between tiles.
 export ASSERTW_IGNORE='fl,fr._matid ignored|Isolated vertex has undefined normal|Display lists should be off'
+export JPG_QUALITY=88
+data=demos/data; results=demos/results
 
 # render name geometry [args...] : render a view into $tmp/name.png, cropped to its content and scaled to $height.
 render() {
@@ -36,26 +28,58 @@ render() {
     -cropall -$gap -to png >"$tmp/$name.png" 2>/dev/null
 }
 
-# Top row: surface reconstruction (points, initial mesh, subdivision surface), spherical remesh, simplicial complex.
-Filtera3d demos/data/cactus.pts -diff $foreground 2>/dev/null >"$tmp/cactus.a3d"
-render cactus_points 640x960 "$tmp/cactus.a3d" -st demos/data/cactus.s3d
-render cactus_recon 640x960 demos/results/cactus.recon.m -st demos/data/cactus.s3d -key DmDe
-render cactus_subdiv 640x960 demos/results/cactus.sub2limit.m -st demos/data/cactus.s3d
-render bunny_remesh 1100x1100 demos/results/bunny.spheresample.remesh.m -st demos/data/bunny.s3d -key DmDe
-PSC_LOD_LEVEL=1.0 render drumset 1280x960 -psc_mode demos/data/drumset_trunc.psc demos/data/drumset.box.a3d \
-  -st demos/data/drumset.s3d -key , -lightambient .4
-# Bottom row: progressive mesh at a coarse and at its full resolution, and view-dependent terrain refinement.
-PM_LOD_LEVEL=0.01 render cessna_coarse 1280x960 -pm_mode demos/results/cessna.pm -st demos/data/cessna.s3d \
-  -key ,De -lightambient .4
-PM_LOD_LEVEL=1.0 render cessna_full 1280x960 -pm_mode demos/results/cessna.pm -st demos/data/cessna.s3d \
-  -key , -lightambient .4
-render canyon 1280x960 -eyeob demos/data/unit_frustum.a3d -sr_mode demos/data/gcanyon_4k2k.l1.srm \
-  -texturemap demos/data/gcanyon_color_4k2k.png -sr_screen_thresh 0.003846 -lightambient .7 \
-  -st demos/data/gcanyon_4k2k_fly2.s3d -key Dt
+# row name tiles... : assemble the tiles into a row of width $width in $tmp/name.png.
+row() {
+  local name=$1; shift
+  (cd "$tmp" && Filterimage -assemble $# 1 "${@/%/.png}" -scaletox $width -to png >"$name.png" 2>/dev/null)
+}
 
-(cd "$tmp" && Filterimage -assemble 5 1 cactus_points.png cactus_recon.png cactus_subdiv.png bunny_remesh.png \
-  drumset.png -scaletox $width -to png >row1.png 2>/dev/null)
-(cd "$tmp" && Filterimage -assemble 3 1 cessna_coarse.png cessna_full.png canyon.png -scaletox $width -to png \
-  >row2.png 2>/dev/null)
-JPG_QUALITY=88 Filterimage -assemble 1 2 "$tmp/row1.png" "$tmp/row2.png" -to jpg >"$output" 2>/dev/null
-echo "Created $output ($(stat -c %s "$output") bytes)."
+for variant in light dark; do
+  if [[ $variant == dark ]]; then
+    suffix=_dark; rgb='13 17 23'; foreground='.85 .85 .85'; viewer_args='-back #0d1117 -edgecolor #d8d8d8'
+  else
+    suffix=''; rgb='255 255 255'; foreground='0 0 0'; viewer_args=''
+  fi
+
+  # Surface reconstruction: points, initial mesh, optimized mesh, and fitted subdivision surface.
+  Filtera3d $data/cactus.pts -diff $foreground 2>/dev/null >"$tmp/cactus.a3d"
+  render cactus_points 640x960 "$tmp/cactus.a3d" -st $data/cactus.s3d
+  render cactus_recon 640x960 $results/cactus.recon.m -st $data/cactus.s3d -key DmDe
+  render cactus_opt 640x960 $results/cactus.opt.m -st $data/cactus.s3d -key DmDe
+  render cactus_subdiv 640x960 $results/cactus.sub2limit.m -st $data/cactus.s3d
+  # Progressive mesh at three levels of detail.
+  for lod in 0.01 0.05 1.0; do
+    PM_LOD_LEVEL=$lod render cessna_edges_$lod 1280x960 -pm_mode $results/cessna.pm -st $data/cessna.s3d \
+      -key ,De -lightambient .4
+  done
+  PM_LOD_LEVEL=1.0 render cessna_full 1280x960 -pm_mode $results/cessna.pm -st $data/cessna.s3d -key , \
+    -lightambient .4
+  # View-dependent refinement of a terrain, textured and as a mesh.
+  canyon="-eyeob $data/unit_frustum.a3d -sr_mode $data/gcanyon_4k2k.l1.srm -texturemap $data/gcanyon_color_4k2k.png
+    -sr_screen_thresh 0.003846 -lightambient .7 -st $data/gcanyon_4k2k_fly2.s3d"
+  render canyon_tex 1280x960 $canyon -key Dt
+  render canyon_mesh 1280x960 $canyon -key De
+  # Spherical parameterization: original bunny, remesh, and normal-mapped remesh.
+  render bunny_orig 1100x1100 $data/bunny.orig.m -st $data/bunny.s3d
+  render bunny_remesh 1100x1100 $results/bunny.spheresample.remesh.m -st $data/bunny.s3d -key DmDe
+  render bunny_normalmap 1100x1100 $results/bunny.spheresample.remesh.m -st $data/bunny.s3d \
+    -texturemap $results/bunny.spheresample.octaflat.unrotated.normalmap.png -texturenormal 1 -key Dt
+  # Progressive simplicial complex at a coarse and at its full resolution.
+  for lod in 0.05 1.0; do
+    PSC_LOD_LEVEL=$lod render drumset_$lod 1280x960 -psc_mode $data/drumset_trunc.psc $data/drumset.box.a3d \
+      -st $data/drumset.s3d -key , -lightambient .4
+  done
+
+  row overview1 cactus_points cactus_recon cactus_subdiv bunny_remesh drumset_1.0
+  row overview2 cessna_edges_0.01 cessna_full canyon_tex
+  Filterimage -assemble 1 2 "$tmp/overview1.png" "$tmp/overview2.png" -to jpg >$images/overview$suffix.jpg 2>/dev/null
+  row reconstruction cactus_points cactus_recon cactus_opt cactus_subdiv
+  row progressive_mesh cessna_edges_0.01 cessna_edges_0.05 cessna_edges_1.0
+  row terrain canyon_tex canyon_mesh
+  row spherical bunny_orig bunny_remesh bunny_normalmap
+  row simplicial_complex drumset_0.05 drumset_1.0
+  for name in reconstruction progressive_mesh terrain spherical simplicial_complex; do
+    Filterimage "$tmp/$name.png" -to jpg >$images/$name$suffix.jpg 2>/dev/null
+  done
+done
+ls -l $images/*.jpg | grep -vE '\.red\.jpg'

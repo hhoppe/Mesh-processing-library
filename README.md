@@ -23,13 +23,17 @@ mesh simplification, progressive meshes and geomorphs, view-dependent mesh refin
 progressive simplicial complexes, optimized mesh traversal, and spherical parameterization.
 The source code has been updated to modern C++ style and for cross-platform use.
 
-![Renderings of results: reconstruction of a cactus from points, a remeshed bunny, a drum set,
-an airplane at two levels of detail, and a terrain.](.github/images/overview.jpg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/images/overview_dark.jpg">
+  <img src=".github/images/overview.jpg" alt="Renderings of results: reconstruction of a cactus from points, a remeshed bunny, a drum set, an airplane at two levels of detail, and a terrain.">
+</picture>
 
 <em>Results rendered by the viewer `G3dOGL`.
 Top: a set of points, the mesh reconstructed from it, and the fitted subdivision surface;
 a spherical remesh; a progressive simplicial complex.
 Bottom: a progressive mesh at a coarse and at its full resolution; view-dependent refinement of a terrain.</em>
+
+The [programs page](progs/README.md) shows these and other results together with the commands that create them.
 
 
 ## Publications and associated programs/demos

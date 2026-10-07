@@ -35,7 +35,7 @@ def main() -> int:
     for number, line in enumerate(page.read_text(encoding='utf-8').split('\n'), 1):
       targets = (
           re.findall(r'\]\(([^)\s]+)\)', line)
-          + re.findall(r'(?:href|src)="([^"]+)"', line)
+          + re.findall(r'(?:href|src|srcset)="([^"]+)"', line)
           + re.findall(r'^\[[^\]]+\]:\s*(\S+)', line)
       )
       for target in targets:

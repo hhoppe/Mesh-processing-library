@@ -102,6 +102,14 @@ Processes a stream of coordinate frames (`*.frame`), e.g., to transform, invert,
 
 ## Surface reconstruction
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../.github/images/reconstruction_dark.jpg">
+  <img src="../.github/images/reconstruction.jpg" alt="Points sampled near a cactus, the mesh reconstructed from them (Recon), the optimized mesh (Meshfit), and the fitted subdivision surface (Subdivfit).">
+</picture>
+
+<em>Points sampled near a cactus, the mesh reconstructed from them (`Recon`), the optimized mesh (`Meshfit`),
+and the fitted subdivision surface (`Subdivfit`).</em>
+
 ### <a id="prog_recon"></a>Recon
 
 This program reads a list of 3D (x, y, z) points assumed to be sampled near some unknown manifold surface,
@@ -234,6 +242,13 @@ MeshDistance -mfile distcap.recon.m -mfile distcap.opt.m -bothdir 1 -maxerror 1 
 
 ## Mesh simplification
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../.github/images/progressive_mesh_dark.jpg">
+  <img src="../.github/images/progressive_mesh.jpg" alt="A progressive mesh of an airplane, at three of its continuous levels of detail.">
+</picture>
+
+<em>A progressive mesh of an airplane, at three of its continuous levels of detail.</em>
+
 Given a mesh, `MeshSimplify` applies a sequence of <em>edge collapse</em> operations
 to simplify it to a coarse <em>base mesh</em> while trying to best preserve the appearance of the original model.
 It supports many different simplification criteria, as well as face properties,
@@ -325,6 +340,13 @@ or in the top view (key <kbd>Dr</kbd>).  Drag the mouse buttons to rotate, pan, 
 
 
 ## Terrain level-of-detail control
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../.github/images/terrain_dark.jpg">
+  <img src="../.github/images/terrain.jpg" alt="View-dependent refinement of a Grand Canyon terrain, textured and as a mesh.">
+</picture>
+
+<em>View-dependent refinement of a Grand Canyon terrain, textured and as a mesh.</em>
 
 Within `demos/create_sr_terrain.{sh,bat}`,
 ```shell
@@ -445,6 +467,14 @@ Filtermesh bunny.sphparam.m -renamekey v sph P | \
 
 ## <a id="prog_SphereSample"></a>Spherical resampling
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../.github/images/spherical_dark.jpg">
+  <img src="../.github/images/spherical.jpg" alt="The original bunny mesh, its remesh obtained by resampling the spherical parameterization, and the remesh with a normal map sampled from the original mesh.">
+</picture>
+
+<em>The original bunny mesh, its remesh obtained by resampling the spherical parameterization,
+and the remesh with a normal map sampled from the original mesh.</em>
+
 The program **`SphereSample`** computes uniform samplings of a spherically parameterized mesh.
 
 For example, within `demos/create_spherical_param_bunny`,
@@ -482,6 +512,13 @@ G3dOGL bunny.spheresample.remesh.m -st demos/data/bunny.s3d \
 
 
 ## <a id="prog_G3dOGL"></a>Geometry viewer
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../.github/images/simplicial_complex_dark.jpg">
+  <img src="../.github/images/simplicial_complex.jpg" alt="A progressive simplicial complex of a drum set, at a coarse and at its full resolution.">
+</picture>
+
+<em>A progressive simplicial complex of a drum set, at a coarse and at its full resolution.</em>
 
 The **`G3dOGL`** program shows interactive rasterized renderings of 3D (and 2D) geometry,
 represented as

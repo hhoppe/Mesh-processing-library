@@ -20,12 +20,13 @@ export ASSERTW_IGNORE='fl,fr._matid ignored|Isolated vertex has undefined normal
 export JPG_QUALITY=88
 data=demos/data; results=demos/results
 
-# render name geometry [args...] : render a view into $tmp/name.png, cropped to its content and scaled to $height.
+# render name geometry [args...] : render a view into $tmp/name.png, cropped to its content and scaled to $height,
+# with a margin of $gap pixels (horizontally $hgap if set).
 render() {
   local name=$1 geometry=$2; shift 2
   G3dOGL "$@" -noinfo 1 $viewer_args -geom "$geometry" -offscreen "$tmp/$name.raw.png" >&/dev/null </dev/null
   Filterimage "$tmp/$name.raw.png" -color $rgb 255 -cropmatte -scaletoy $height -boundaryrule border \
-    -cropall -$gap -to png >"$tmp/$name.png" 2>/dev/null
+    -cropsides -${hgap:-$gap} -${hgap:-$gap} -$gap -$gap -to png >"$tmp/$name.png" 2>/dev/null
 }
 
 # row name tiles... : assemble the tiles into a row of width $row_width (default $width) in $tmp/name.png.
@@ -47,10 +48,10 @@ for variant in light dark; do
   render cactus_points 640x960 "$tmp/cactus.a3d" -st $data/cactus.s3d
   render cactus_recon 640x960 $results/cactus.recon.m -st $data/cactus.s3d -key DmDe
   render cactus_subdiv 640x960 $results/cactus.sub2limit.m -st $data/cactus.s3d
-  gap=40 render cactus_points_wide 640x960 "$tmp/cactus.a3d" -st $data/cactus.s3d
-  gap=40 render cactus_recon_wide 640x960 $results/cactus.recon.m -st $data/cactus.s3d -key DmDe
-  gap=40 render cactus_opt_wide 640x960 $results/cactus.opt.m -st $data/cactus.s3d -key DmDe
-  gap=40 render cactus_subdiv_wide 640x960 $results/cactus.sub2limit.m -st $data/cactus.s3d
+  hgap=40 render cactus_points_wide 640x960 "$tmp/cactus.a3d" -st $data/cactus.s3d
+  hgap=40 render cactus_recon_wide 640x960 $results/cactus.recon.m -st $data/cactus.s3d -key DmDe
+  hgap=40 render cactus_opt_wide 640x960 $results/cactus.opt.m -st $data/cactus.s3d -key DmDe
+  hgap=40 render cactus_subdiv_wide 640x960 $results/cactus.sub2limit.m -st $data/cactus.s3d
   # Progressive mesh at three levels of detail.
   for lod in 0.01 0.05 1.0; do
     PM_LOD_LEVEL=$lod render cessna_edges_$lod 1280x960 -pm_mode $results/cessna.pm -st $data/cessna.s3d \

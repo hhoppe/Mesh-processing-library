@@ -41,7 +41,7 @@ The [programs page](progs/README.md) shows these and other results together with
 <table id="publications">
 
  <tr id="pub_recon">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/recon.red.jpg" alt=""/>
   </td>
   <td>
@@ -55,7 +55,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>
 
  <tr id="pub_meshopt">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/meshopt.red.jpg" alt=""/>
   </td>
   <td>
@@ -69,7 +69,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>
 
  <tr id="pub_psrecon">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/psrecon.red.jpg" alt=""/>
   </td>
   <td>
@@ -83,7 +83,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>
 
  <tr id="pub_pm">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/pm.red.jpg" alt=""/>
   </td>
   <td>
@@ -97,7 +97,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>
 
  <tr id="pub_efficientpm">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/efficientpm.red.jpg" alt=""/>
   </td>
   <td>
@@ -111,7 +111,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>
 
  <!--<tr id="pub_newqem">
-     <td width="226">
+     <td width="216">
       <img src=".github/images/newqem.red.jpg" alt=""/>
      </td>
      <td>
@@ -125,7 +125,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>-->
 
  <tr id="pub_vdrpm">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/vdrpm.red.jpg" alt=""/>
   </td>
   <td>
@@ -139,7 +139,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>
 
  <tr id="pub_svdlod">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/svdlod.red.jpg" alt=""/>
   </td>
   <td>
@@ -153,7 +153,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>
 
  <tr id="pub_psc">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/psc.red.jpg" alt=""/>
   </td>
   <td>
@@ -167,7 +167,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>
 
  <tr id="pub_tvc">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/tvc.red.jpg" alt=""/>
   </td>
   <td>
@@ -181,7 +181,7 @@ The [programs page](progs/README.md) shows these and other results together with
  </tr>
 
  <tr id="pub_sphereparam">
-  <td width="226">
+  <td width="216">
    <img src=".github/images/sphereparam.red.jpg" alt=""/>
   </td>
   <td>

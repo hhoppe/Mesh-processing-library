@@ -79,11 +79,16 @@ def hide_viewers(text: str, screenshots: list[pathlib.Path] | None = None) -> st
         capture = f' -imagename {path} -picture' if command == 'G3dOGL' else f' -offscreen {path}'
         geometry = f' -geom {TILE[0] * SUPERSAMPLE}x{TILE[1] * SUPERSAMPLE}'
         hidden = ' -hidden' + geometry + capture
-        segment = segment.replace(
-            ' -async', ''
-        )  # So that the picture is taken after reading the input.
-      segments[i] = (segment.rstrip()[:-1] + hidden + ')' if segment.rstrip().endswith(')') else
-                     segment.rstrip() + hidden) + ' '  # fmt: skip
+        segment = segment.replace(' -async', '')  # So the picture is taken after reading the input.
+      # Insert the arguments before any trailing comment and closing parenthesis.
+      comment = re.search(r'\s#.*$', segment)
+      command_part = segment[: comment.start()] if comment else segment
+      rest = segment[comment.start() :] if comment else ''
+      if command_part.rstrip().endswith(')'):
+        command_part = command_part.rstrip()[:-1] + hidden + ')'
+      else:
+        command_part = command_part.rstrip() + hidden
+      segments[i] = command_part + ' ' + rest.strip() + ' '
   return ''.join(segments)
 
 

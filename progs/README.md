@@ -102,12 +102,12 @@ Processes a stream of coordinate frames (`*.frame`), e.g., to transform, invert,
 
 ## Surface reconstruction
 
-<p align="center">
+<div align="center">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../.github/images/reconstruction_dark.jpg">
   <img src="../.github/images/reconstruction.jpg" alt="Points sampled near a cactus, the mesh reconstructed from them (Recon), the optimized mesh (Meshfit), and the fitted subdivision surface (Subdivfit)." width="660">
 </picture>
-</p>
+</div>
 
 <em>Points sampled near a cactus, the mesh reconstructed from them (`Recon`), the optimized mesh (`Meshfit`),
 and the fitted subdivision surface (`Subdivfit`).</em>
@@ -583,7 +583,11 @@ VideoViewer output_video.mp4
 ```
 
 The related program **`G3dVec`** shows wireframe hidden-line-removed renderings of `*.a3d` streams and `*.m` meshes.
-It can write vector-based PostScript figures (see `demos/view_hidden_line_removed`).
+It can write vector-based PostScript figures (see `demos/view_hidden_line_removed`):
+```shell
+G3dVec demos/data/spheretext.orig.m -st demos/data/spheretext_closeup.s3d \
+  -thicksharp 4 -psfile spheretext.ps -key hDP  # 'DP' saves spheretext.ps file.
+```
 
 In both programs, the keys <kbd>?</kbd> and <kbd>D?</kbd> show a list of available keyboard commands.
 

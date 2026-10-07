@@ -273,7 +273,7 @@ reports the genus of the new mesh, and shows it in an interactive viewer.
 | [`Filtera3d`] | Process a geometry stream of polygons, polylines, and points (`*.a3d`). |
 | [`Filterframe`] | Process a stream of coordinate frames (`*.frame`). |
 | [`G3dOGL`] | Show meshes, progressive meshes, and geometry streams interactively; save images and videos. |
-| [`G3dVec`] | Show hidden-line-removed wireframe renderings; save vector PostScript figures. |
+| [`G3dVec`] | Show hidden-line-removed wireframe renderings; save vector figures as SVG or PostScript. |
 | [`VideoViewer`] | Show images and videos in an interactive viewer, with simple editing. |
 
 [`Recon`]: progs/README.md#prog_recon

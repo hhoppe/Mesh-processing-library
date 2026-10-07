@@ -105,6 +105,7 @@ CGridView<D, T>             (const elements)
   compressed files.
 - `Random`: deterministic random-number generator, so that results are reproducible across platforms.
 - `HH_STAT(S)`, `HH_SSTAT(S, v)`: macros that accumulate a `Stat`, reported at program exit.
+- `PostscriptPlot`, `SvgPlot`: write a 2D line drawing as a PostScript or SVG file.
 
 ## Code details
 

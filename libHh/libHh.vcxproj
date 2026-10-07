@@ -153,7 +153,7 @@
     <ClInclude Include="Pixel.h" />
     <ClInclude Include="Polygon.h" />
     <ClInclude Include="Pool.h" />
-    <ClInclude Include="Postscript.h" />
+    <ClInclude Include="Plot.h" />
     <ClInclude Include="PriorityQueue.h" />
     <ClInclude Include="Primes.h" />
     <ClInclude Include="Principal.h" />

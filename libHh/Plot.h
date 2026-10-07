@@ -1,28 +1,81 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
-#ifndef MESH_PROCESSING_LIBHH_POSTSCRIPT_H_
-#define MESH_PROCESSING_LIBHH_POSTSCRIPT_H_
+#ifndef MESH_PROCESSING_LIBHH_PLOT_H_
+#define MESH_PROCESSING_LIBHH_PLOT_H_
 
 #include "libHh/Geometry.h"
 
 namespace hh {
 
-// Output Postscript graphics with lines and points.
-class Postscript : noncopyable {
+// Output of a 2D line drawing (lines and points) as vector graphics, in Postscript or SVG.
+class Plot : noncopyable {
  public:
-  explicit Postscript(std::ostream& os, int nxpix, int nypix) : _os(os), _nxpix(nxpix), _nypix(nypix) { init(); }
-  ~Postscript() { clear(); }
+  virtual ~Plot() = default;
+  // All parameters x, y are in the range [0, 1], with (x = 0, y = 0) at the lower-left corner.
+  virtual void line(float x1, float y1, float x2, float y2) = 0;
+  virtual void point(float x, float y) = 0;
+  virtual void edge_width(float w) = 0;  // Relative to the default width 1.
+  virtual void comment(const string& s) = 0;
+
+ protected:
+  // Clip the segment to the square [-1, 1]^2, returning false if nothing of it remains.
+  static bool clip_line(float& x1, float& y1, float& x2, float& y2) {
+    const bool c1x = abs(x1) > 1.f;
+    const bool c2x = abs(x2) > 1.f;
+    if (c1x && c2x && x1 * x2 > 0.f) return false;
+    bool c1y = abs(y1) > 1.f;
+    bool c2y = abs(y2) > 1.f;
+    if (c1y && c2y && y1 * y2 > 0.f) return false;
+    if (c1x || c2x || c1y || c2y) {
+      const float m = x1 == x2 ? 1e6f : y1 == y2 ? 1e-6f : (y2 - y1) / (x2 - x1);
+      float a;
+      if (c1x) {
+        a = sign(x1);
+        y1 = (a - x1) * m + y1;
+        x1 = a;
+      }
+      if (c2x) {
+        a = sign(x2);
+        y2 = (a - x2) * m + y2;
+        x2 = a;
+      }
+      c1y = abs(y1) > 1.f;
+      c2y = abs(y2) > 1.f;
+      if (c1y && c2y && y1 * y2 > 0.f) return false;
+      if (c1y) {
+        a = sign(y1);
+        x1 = (a - y1) / m + x1;
+        y1 = a;
+      }
+      if (abs(x1) > 1.f) return false;
+      if (c2y) {
+        a = sign(y2);
+        x2 = (a - y2) / m + x2;
+        y2 = a;
+      }
+      if (abs(x2) > 1.f) return false;
+    }
+    return true;
+  }
+};
+
+// Output Postscript graphics with lines and points.
+class PostscriptPlot : public Plot {
+ public:
+  explicit PostscriptPlot(std::ostream& os, int nxpix, int nypix) : _os(os), _nxpix(nxpix), _nypix(nypix) { init(); }
+  ~PostscriptPlot() override { clear(); }
   // All parameters x, y are in range [0, 1] in postscript coordinate system: (x = 0, y = 0) at left bottom.
   // Note that this is different from hps.c which had y reversed.
-  void line(float x1p, float y1p, float x2p, float y2p) { line_i(x1p, y1p, x2p, y2p); }
-  void point(float xp, float yp) { point_i(xp, yp); }
-  void edge_width(float w) {
+  void line(float x1p, float y1p, float x2p, float y2p) override { line_i(x1p, y1p, x2p, y2p); }
+  void point(float xp, float yp) override { point_i(xp, yp); }
+  void edge_width(float w) override {
     if (w == _curw) return;
     _curw = w;
     set_state(EState::undef);
     set_state(EState::line);
     _os << sform("wline%s setlinewidth\n", _curw == 1.f ? "" : sform(" %g mul", _curw).c_str());
   }
-  void flush_write(const string& s) { set_state(EState::undef), _os << s; }  // Include linefeeds in s.
+  void comment(const string& s) override { set_state(EState::undef), _os << "% " << s << "\n"; }
+
  private:
   static constexpr int k_max = 15000;
   std::ostream& _os;
@@ -87,7 +140,7 @@ class Postscript : noncopyable {
                  frame[0, 0], frame[0, 1], frame[1, 0], frame[1, 1], frame.p()[0], frame.p()[1]);
     _ctm = frame;
     _os << "%%EndPageSetup\n";
-    _os << "% hps.c created from Postscript.h in libHh\n";
+    _os << "% Created from class PostscriptPlot in libHh\n";
     _os << "% Initialize procedures\n";
     _os << "/m { moveto } bind def\n";
     _os << "/l { lineto } bind def\n";
@@ -123,41 +176,7 @@ class Postscript : noncopyable {
   void line_i(float x1p, float y1p, float x2p, float y2p) {
     float x1 = x1p * 2.f - 1.f, y1 = y1p * 2.f - 1.f;
     float x2 = x2p * 2.f - 1.f, y2 = y2p * 2.f - 1.f;
-    const bool c1x = abs(x1) > 1.f;
-    const bool c2x = abs(x2) > 1.f;
-    if (c1x && c2x && x1 * x2 > 0.f) return;
-    bool c1y = abs(y1) > 1.f;
-    bool c2y = abs(y2) > 1.f;
-    if (c1y && c2y && y1 * y2 > 0.f) return;
-    if (c1x || c2x || c1y || c2y) {
-      const float m = x1 == x2 ? 1e6f : y1 == y2 ? 1e-6f : (y2 - y1) / (x2 - x1);
-      float a;
-      if (c1x) {
-        a = sign(x1);
-        y1 = (a - x1) * m + y1;
-        x1 = a;
-      }
-      if (c2x) {
-        a = sign(x2);
-        y2 = (a - x2) * m + y2;
-        x2 = a;
-      }
-      c1y = abs(y1) > 1.f;
-      c2y = abs(y2) > 1.f;
-      if (c1y && c2y && y1 * y2 > 0.f) return;
-      if (c1y) {
-        a = sign(y1);
-        x1 = (a - y1) / m + x1;
-        y1 = a;
-      }
-      if (abs(x1) > 1.f) return;
-      if (c2y) {
-        a = sign(y2);
-        x2 = (a - y2) / m + x2;
-        y2 = a;
-      }
-      if (abs(x2) > 1.f) return;
-    }
+    if (!clip_line(x1, y1, x2, y2)) return;
     int px1, py1;
     convert(x1, y1, px1, py1);
     int px2, py2;
@@ -210,6 +229,83 @@ class Postscript : noncopyable {
   }
 };
 
+// Output SVG (Scalable Vector Graphics) with lines and points.
+class SvgPlot : public Plot {
+ public:
+  // The image has nxpix * nypix pixel units; lines have width 1 (times edge_width()) and points diameter 4.
+  explicit SvgPlot(std::ostream& os, int nxpix, int nypix) : _os(os), _nxpix(nxpix), _nypix(nypix) { init(); }
+  ~SvgPlot() override { clear(); }
+  // All parameters x, y are in the range [0, 1], with (x = 0, y = 0) at the lower-left corner.
+  void line(float x1p, float y1p, float x2p, float y2p) override {
+    float x1 = x1p * 2.f - 1.f, y1 = y1p * 2.f - 1.f;
+    float x2 = x2p * 2.f - 1.f, y2 = y2p * 2.f - 1.f;
+    if (!clip_line(x1, y1, x2, y2)) return;
+    const Vec2<float> p1 = convert(x1, y1), p2 = convert(x2, y2);
+    // Continue the current polyline if the segment starts (or ends) at its last vertex.
+    if (_in_path && p1 == _last) {
+      _os << " L " << coords(p2);
+      _last = p2;
+    } else if (_in_path && p2 == _last) {
+      _os << " L " << coords(p1);
+      _last = p1;
+    } else {
+      end_path();
+      _os << "<path" << (_curw == 1.f ? string() : sform(" stroke-width=\"%g\"", _wline * _curw)) << " d=\"M "
+          << coords(p1) << " L " << coords(p2);
+      _in_path = true;
+      _last = p2;
+    }
+  }
+  void point(float xp, float yp) override {
+    const float x = xp * 2.f - 1.f, y = yp * 2.f - 1.f;
+    if (abs(x) > 1.f || abs(y) > 1.f) return;
+    end_path();
+    const Vec2<float> p = convert(x, y);
+    _os << sform("<circle cx=\"%.2f\" cy=\"%.2f\" r=\"%g\" fill=\"black\" stroke=\"none\"/>\n", p[0], p[1],
+                 _wpoint / 2);
+  }
+  void edge_width(float w) override {
+    if (w == _curw) return;
+    end_path();
+    _curw = w;
+  }
+  void comment(const string& s) override { end_path(), _os << "<!-- " << s << " -->\n"; }
+
+ private:
+  std::ostream& _os;
+  int _nxpix;
+  int _nypix;
+  static constexpr float _wline = 1.f;   // The default line width, in pixel units.
+  static constexpr float _wpoint = 4.f;  // The diameter of points, in pixel units.
+  float _curw{1.f};                      // The current line width, relative to _wline.
+  bool _in_path{false};
+  Vec2<float> _last;  // The last vertex of the current polyline if _in_path.
+
+  void init() {
+    _os << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n";
+    _os << sform("<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"%d\" height=\"%d\" viewBox=\"0 0 %d %d\">\n",
+                 _nxpix, _nypix, _nxpix, _nypix);
+    _os << "<!-- Created from class SvgPlot in libHh -->\n";
+    _os << sform("<rect width=\"%d\" height=\"%d\" fill=\"white\"/>\n", _nxpix, _nypix);
+    _os << sform(
+        "<g fill=\"none\" stroke=\"black\" stroke-width=\"%g\" stroke-linecap=\"round\""
+        " stroke-linejoin=\"round\">\n",
+        _wline);
+  }
+  void clear() {
+    end_path();
+    _os << "</g>\n</svg>\n";
+  }
+  // Convert from the range [-1, 1]^2 to pixel units, with y pointing down.
+  Vec2<float> convert(float x, float y) const { return V((x + 1.f) * .5f * _nxpix, (1.f - y) * .5f * _nypix); }
+  static string coords(const Vec2<float>& p) { return sform("%.2f %.2f", p[0], p[1]); }
+  void end_path() {
+    if (!_in_path) return;
+    _os << "\"/>\n";
+    _in_path = false;
+  }
+};
+
 }  // namespace hh
 
-#endif  // MESH_PROCESSING_LIBHH_POSTSCRIPT_H_
+#endif  // MESH_PROCESSING_LIBHH_PLOT_H_

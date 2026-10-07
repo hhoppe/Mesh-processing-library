@@ -9,8 +9,8 @@
 #include "libHh/HiddenLineRemoval.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"  // floor(Vec<>)
+#include "libHh/Plot.h"
 #include "libHh/Polygon.h"
-#include "libHh/Postscript.h"
 #include "libHh/Set.h"
 #include "progs/G3dOGL/HB.h"
 using namespace hh;
@@ -86,12 +86,13 @@ float trclip1, trclip2;
 int frame_index = 0;  // Current frame number.
 Frame tcur;           // Current transform: object -> viewing.
 Point conor;          // Point to use in computing normal culling.
-bool want_plot;       // The user wants a postscript plot.
-string psfile;
-unique_ptr<Postscript> postscript;  // Currently drawing postscript.
+bool want_plot;       // The user wants a vector graphics plot.
+string plotfile;
+string plotformat;      // "ps", "svg", or "" (by the extension of plotfile).
+unique_ptr<Plot> plot;  // Currently drawing a plot.
 HiddenLineRemoval hlr;
 bool dbuffer;
-float thicksharp = 5.f;  // For postscript output (0.f = none, 1.f = normal).
+float thicksharp = 5.f;  // For plot output (0.f = none, 1.f = normal).
 float thicknormal = 1.f;
 
 struct coord {
@@ -388,7 +389,7 @@ void draw_point(coord* c) {
     hw.draw_point(V(c1s1 - 1.f, c1s0 + 1.f));
     hw.draw_point(V(c1s1 + 1.f, c1s0 + 1.f));
   }
-  if (postscript) postscript->point(.5f - tzp1 * c->pp[1], .5f + tzp2 * c->pp[2]);
+  if (plot) plot->point(.5f - tzp1 * c->pp[1], .5f + tzp2 * c->pp[2]);
 }
 
 void draw_segment(coord* c1, coord* c2);  // Forward declaration.
@@ -461,8 +462,7 @@ void slow_draw_seg(coord* c1, coord* c2) {
     hw.draw_segment(V(c2s1 - 1.f, c2s0 - 1.f), V(c2s1 + 1.f, c2s0 + 1.f));
     hw.draw_segment(V(c2s1 + 1.f, c2s0 - 1.f), V(c2s1 - 1.f, c2s0 + 1.f));
   }
-  if (postscript)
-    postscript->line(.5f - tzp1 * c1->pp[1], .5f + tzp2 * c1->pp[2], .5f - tzp1 * c2->pp[1], .5f + tzp2 * c2->pp[2]);
+  if (plot) plot->line(.5f - tzp1 * c1->pp[1], .5f + tzp2 * c1->pp[2], .5f - tzp1 * c2->pp[1], .5f + tzp2 * c2->pp[2]);
 }
 
 void fast_draw_seg(coord* c1, coord* c2) {
@@ -499,7 +499,7 @@ void fast_draw_seg(coord* c1, coord* c2) {
 }
 
 void draw_segment(coord* c1, coord* c2) {
-  if (fisheye || lhlrmode || highlight_vertices || postscript)
+  if (fisheye || lhlrmode || highlight_vertices || plot)
     slow_draw_seg(c1, c2);
   else
     fast_draw_seg(c1, c2);
@@ -560,7 +560,7 @@ void draw_node(const Node* un) {
 
 void draw_list(CArrayView<unique_ptr<Node>> arn) {
   for_int(i, arn.num()) {
-    if (i % interval_check_stop == 0 && !postscript && hw.suggests_stop()) break;
+    if (i % interval_check_stop == 0 && !plot && hw.suggests_stop()) break;
     if (lquickmode && i % quicki != 0) continue;
     const Node* n = arn[i].get();
     draw_node(n);
@@ -600,7 +600,7 @@ void enter_hidden_polygon(Polygon& poly, int and_codes, int or_codes) {
 void enter_hidden_polygons(CArrayView<unique_ptr<Node>> arn) {
   Polygon poly;
   for_int(i, arn.num()) {
-    if (i % interval_check_stop == 0 && !postscript && hw.suggests_stop()) break;
+    if (i % interval_check_stop == 0 && !plot && hw.suggests_stop()) break;
     Node* un = arn[i].get();
     if (un->_type == Node::EType::polygon) {
       auto* n = down_cast<NodePolygon*>(un);
@@ -660,7 +660,7 @@ void enter_mesh_hidden_polygons(GMesh& mesh) {
   int i = 0;
   Polygon poly;
   for (Face f : mesh.faces()) {
-    if (i++ % interval_check_stop == 0 && !postscript && hw.suggests_stop()) break;
+    if (i++ % interval_check_stop == 0 && !plot && hw.suggests_stop()) break;
     if (cullface && mesh.flags(f).flag(fflag_invisible)) continue;
     poly.init(0);
     ConditionCode and_codes = k_code_hither | k_code_yonder | k_code_right | k_code_left | k_code_down | k_code_up;
@@ -680,7 +680,7 @@ void draw_mesh(GMesh& mesh) {
   mesh_transform(mesh);
   mesh_visibility(mesh);
   int i = 0;
-  if (!postscript && !show_sharp && !lquickmode && thicksharp && thicknormal) {
+  if (!plot && !show_sharp && !lquickmode && thicksharp && thicknormal) {
     for (Edge e : mesh.edges()) {
       if (i++ % interval_check_stop == 0 && hw.suggests_stop()) break;
       Face f2 = mesh.face2(e);
@@ -689,9 +689,9 @@ void draw_mesh(GMesh& mesh) {
       draw_segment(&v_coord(mesh.vertex1(e)), &v_coord(mesh.vertex2(e)));
     }
   } else {
-    if (postscript) postscript->edge_width(1.f);
+    if (plot) plot->edge_width(1.f);
     for (Edge e : mesh.edges()) {
-      if (i++ % interval_check_stop == 0 && !postscript && hw.suggests_stop()) break;
+      if (i++ % interval_check_stop == 0 && !plot && hw.suggests_stop()) break;
       if (lquickmode && i % quicki != 0) continue;
       Face f2 = mesh.face2(e);
       if (cullface && mesh.flags(mesh.face1(e)).flag(fflag_invisible) && (!f2 || mesh.flags(f2).flag(fflag_invisible)))
@@ -700,15 +700,15 @@ void draw_mesh(GMesh& mesh) {
       const float curthick = is_sharp ? thicksharp : thicknormal;
       if (!curthick) continue;
       if (show_sharp && !is_sharp) continue;
-      if (postscript) {
-        postscript->edge_width(curthick);
+      if (plot) {
+        plot->edge_width(curthick);
         if (silhouette && f2 && !mesh.flags(mesh.face1(e)).flag(fflag_invisible) &&
             !mesh.flags(mesh.face2(e)).flag(fflag_invisible))
           continue;
       }
       draw_segment(&v_coord(mesh.vertex1(e)), &v_coord(mesh.vertex2(e)));
     }
-    if (postscript) postscript->edge_width(1.f);
+    if (plot) plot->edge_width(1.f);
   }
 }
 
@@ -735,7 +735,7 @@ void draw_all() {
     hlr.clear();
     hlr.set_draw_seg_cb(hlr_draw_seg);
     for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
-      if (!postscript && hw.suggests_stop()) break;
+      if (!plot && hw.suggests_stop()) break;
       if (!g_xobs.defined(i) || !g_xobs.vis[i]) continue;
       if (!setup_ob(i)) continue;
       frame_index++;
@@ -745,13 +745,13 @@ void draw_all() {
     frame_index = oldframe;
   }
   for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
-    if (!postscript && hw.suggests_stop()) break;
+    if (!plot && hw.suggests_stop()) break;
     if (!g_xobs.defined(i) || !g_xobs.vis[i]) continue;
     if (!setup_ob(i)) continue;
     frame_index++;
     draw_list(g_xobs[i].traverse());
     if (g_xobs[i]._mesh) draw_mesh(*g_xobs[i]._mesh);
-    if (postscript) postscript->flush_write("% EndG3dObject\n");
+    if (plot) plot->comment("EndG3dObject");
   }
   if (lhlrmode) {
     lhlrmode = false;
@@ -983,13 +983,14 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   fbutp = assertx(pfbutp);
   fwheel = assertx(pfwheel);
   fdraw = assertx(pfdraw);
-  psfile = "g3d.ps";
+  plotfile = "g3d.ps";
   quicki = 4;
   hither = k_default_hither;
   const bool hw_success = hw.init(aargs);
   ParseArgs args(aargs, "HB_X");
   HH_ARGSF(datastat, ": geometric hashing stats");
-  HH_ARGSP(psfile, "file.ps : set postscript output");
+  HH_ARGSP(plotfile, "file.{ps,svg} : set plot output (Postscript or SVG by extension)");
+  HH_ARGSP(plotformat, "ps|svg : set plot format regardless of the extension");
   HH_ARGSF(nohash, ": turn off vertex hashing");
   args.p("-thicks[harp]", thicksharp, "f : width of sharp edges");
   args.p("-thickn[ormal]", thicknormal, "f : width of edges");
@@ -1071,12 +1072,18 @@ void HB::draw_space() {
   if (want_plot) {
     want_plot = false;
     SHOW("starting plot...");
-    pwf = make_unique<WFile>(psfile);
-    postscript = make_unique<Postscript>((*pwf)(), win_dims[1], win_dims[0]);
+    pwf = make_unique<WFile>(plotfile);
+    const string format = plotformat != "" ? plotformat : plotfile.ends_with(".svg") ? "svg" : "ps";
+    if (format == "svg")
+      plot = make_unique<SvgPlot>((*pwf)(), win_dims[1], win_dims[0]);
+    else if (format == "ps")
+      plot = make_unique<PostscriptPlot>((*pwf)(), win_dims[1], win_dims[0]);
+    else
+      assertnever("plotformat '" + plotformat + "' is not 'ps' or 'svg'");
   }
   draw_all();
-  if (postscript) {
-    postscript = nullptr;
+  if (plot) {
+    plot = nullptr;
     pwf = nullptr;
     SHOW("...plot finished");
   }

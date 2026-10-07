@@ -34,7 +34,7 @@
 % Setup CTM
 [0.01872 0  0 0.01872  20 112.2] concat
 %%EndPageSetup
-% hps.c created from Postscript.h in libHh
+% Created from class PostscriptPlot in libHh
 % Initialize procedures
 /m { moveto } bind def
 /l { lineto } bind def
@@ -119,7 +119,7 @@ showpage
 % Setup CTM
 [0 0.0252  -0.0168 0  563.2 15] concat
 %%EndPageSetup
-% hps.c created from Postscript.h in libHh
+% Created from class PostscriptPlot in libHh
 % Initialize procedures
 /m { moveto } bind def
 /l { lineto } bind def
@@ -222,7 +222,7 @@ showpage
 % Setup CTM
 [0.0126 0  0 0.0252  111.8 15] concat
 %%EndPageSetup
-% hps.c created from Postscript.h in libHh
+% Created from class PostscriptPlot in libHh
 % Initialize procedures
 /m { moveto } bind def
 /l { lineto } bind def
@@ -253,3 +253,41 @@ showpage
 
 %%Trailer
 %TightBoundingBox: 20 112  582 674
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200">
+<!-- Created from class SvgPlot in libHh -->
+<rect width="200" height="200" fill="white"/>
+<g fill="none" stroke="black" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+<circle cx="40.00" cy="180.00" r="2" fill="black" stroke="none"/>
+<circle cx="60.00" cy="180.00" r="2" fill="black" stroke="none"/>
+<circle cx="80.00" cy="176.00" r="2" fill="black" stroke="none"/>
+<path d="M 120.00 160.00 L 120.00 80.00"/>
+<path d="M 120.00 160.00 L 160.00 160.00 L 160.00 154.00 L 154.00 154.00"/>
+<path d="M 0.00 172.50 L 44.00 200.00"/>
+<circle cx="80.00" cy="170.00" r="2" fill="black" stroke="none"/>
+</g>
+</svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+<!-- Created from class SvgPlot in libHh -->
+<rect width="300" height="200" fill="white"/>
+<g fill="none" stroke="black" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+<path d="M 30.00 180.00 L 270.00 180.00 L 270.00 20.00 L 150.00 100.00"/>
+<path d="M 60.00 140.00 L 120.00 140.00"/>
+<path d="M 0.00 100.00 L 300.00 100.00"/>
+<path d="M 0.00 140.00 L 150.00 120.00"/>
+<path d="M 150.00 100.00 L 160.00 0.00"/>
+<path d="M 140.00 200.00 L 150.00 100.00"/>
+<circle cx="150.00" cy="100.00" r="2" fill="black" stroke="none"/>
+<path stroke-width="2" d="M 60.00 40.00 L 240.00 40.00"/>
+<!-- A comment. -->
+<path d="M 60.00 60.00 L 240.00 60.00"/>
+</g>
+</svg>
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="100" height="200" viewBox="0 0 100 200">
+<!-- Created from class SvgPlot in libHh -->
+<rect width="100" height="200" fill="white"/>
+<g fill="none" stroke="black" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+</g>
+</svg>

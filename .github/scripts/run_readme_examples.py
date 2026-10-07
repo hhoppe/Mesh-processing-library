@@ -24,6 +24,7 @@ import time
 VIEWERS = ('G3dOGL', 'G3dVec', 'VideoViewer')
 HIDDEN = " -hidden -hwdelay 1 -hwkey '\\2\\c'"
 TILE = (640, 480)  # Size of each screenshot in the sheet.
+SUPERSAMPLE = 2  # The screenshots are rendered at this multiple of the tile size, then downsampled.
 COLUMNS = 6  # Number of screenshots per row of the sheet.
 # Blocks containing these strings are not run, for the given reasons.
 SKIP = {
@@ -76,7 +77,11 @@ def hide_viewers(text: str, screenshots: list[pathlib.Path] | None = None) -> st
         path = screenshots[0].parent / f'{screenshots[0].stem}_{len(screenshots)}.png'
         screenshots.append(path)
         capture = f' -imagename {path} -picture' if command == 'G3dOGL' else f' -offscreen {path}'
-        hidden = f' -hidden -geom {TILE[0]}x{TILE[1]}' + capture
+        geometry = f' -geom {TILE[0] * SUPERSAMPLE}x{TILE[1] * SUPERSAMPLE}'
+        hidden = ' -hidden' + geometry + capture
+        segment = segment.replace(
+            ' -async', ''
+        )  # So that the picture is taken after reading the input.
       segments[i] = (segment.rstrip()[:-1] + hidden + ')' if segment.rstrip().endswith(')') else
                      segment.rstrip() + hidden) + ' '  # fmt: skip
   return ''.join(segments)
@@ -85,7 +90,7 @@ def hide_viewers(text: str, screenshots: list[pathlib.Path] | None = None) -> st
 def assemble(
     paths: list[pathlib.Path], output: pathlib.Path, env: dict[str, str], scratch: pathlib.Path
 ):
-  """Assemble the screenshots into a sheet of COLUMNS columns, padding each to the TILE size."""
+  """Assemble the screenshots into a sheet of COLUMNS columns, each downsampled to the TILE size."""
   w, h = TILE
 
   def run(args: list[str], out: pathlib.Path) -> None:
@@ -95,8 +100,12 @@ def assemble(
   tiles = []
   for path in paths:
     tile = path.with_suffix('.tile.png')
-    run(['Filterimage', str(path), '-color', '255', '255', '255', '255', '-boundaryrule', 'border',
-         '-croptodims', str(w), str(h), '-to', 'png'], tile)  # fmt: skip
+    run(
+        ['Filterimage', str(path), '-filter', 'lanczos6', '-scaleunif', str(1 / SUPERSAMPLE)]
+        + ['-color', '255', '255', '255', '255', '-boundaryrule', 'border']
+        + ['-croptodims', str(w), str(h), '-to', 'png'],
+        tile,
+    )
     tiles.append(tile)
   rows = []
   for r in range(0, len(tiles), COLUMNS):

@@ -96,7 +96,8 @@ for variant in light dark; do
     Filterimage "$tmp/$name.png" -to jpg >$images/$name$suffix.jpg 2>/dev/null
   done
 done
-# The hidden-line-removed figure of the G3dVec example in progs/README.md, as a small SVG image.
-G3dVec $data/spheretext.orig.m -st $data/spheretext_closeup.s3d -thicksharp 4 -plotfile $images/spheretext.svg \
-  -key hDP -geom 300x300 -hidden -hwdelay 1 -hwkey '\2\c' >&/dev/null </dev/null
+# The hidden-line-removed figure of the G3dVec example in progs/README.md, as an SVG image.
+FilterPM $data/spheretext.pm -nf 4000 -outmesh 2>/dev/null | Filtermesh -proc sharp_from_wid -mark 2>/dev/null |
+  G3dVec -st $data/spheretext_closeup.s3d -thicksharp 3 -plotfile $images/spheretext.svg -key hDP \
+    -hidden -hwdelay 1 -hwkey '\2\c' >&/dev/null
 ls -l $images/*.jpg $images/*.svg | grep -vE '\.red\.jpg'

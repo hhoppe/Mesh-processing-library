@@ -3302,6 +3302,27 @@ void do_procedure(Args& args) {
   if (0) {
     //
 
+  } else if (name == "sharp_from_wid") {
+    string str;
+    const auto wid_of = [&](Corner c) {
+      const char* s = mesh.corner_key(str, c, "wid");
+      return !s ? -1 : to_int(s);
+    };
+    const auto edge_v_different_wid = [&](Edge e, Vertex v) {
+      return wid_of(mesh.ccw_corner(v, e)) != wid_of(mesh.clw_corner(v, e));
+    };
+    const auto edge_different_wid = [&](Edge e) {
+      return edge_v_different_wid(e, mesh.vertex1(e)) || edge_v_different_wid(e, mesh.vertex2(e));
+    };
+    int nfound = 0;
+    for (Edge e : mesh.edges()) {
+      if (!mesh.is_boundary(e) && (edge_matbnd(e) || edge_different_wid(e))) {
+        mesh.flags(e).flag(GMesh::eflag_sharp) = true;
+        nfound++;
+      }
+    }
+    showdf("Tagged %d edges as sharp\n", nfound);
+
   } else if (name == "add_original_vertex_id") {
     string str;
     for (Vertex v : mesh.vertices()) mesh.update_string(v, "original", csform(str, "%d", mesh.vertex_id(v)));

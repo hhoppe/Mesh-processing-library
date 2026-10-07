@@ -582,13 +582,15 @@ G3dOGL demos/data/standingblob.orig.m -st demos/data/standingblob.s3d -key iioJ 
 VideoViewer output_video.mp4
 ```
 
-<img src="../.github/images/spheretext.svg" alt="Hidden-line-removed rendering of text on a sphere" align="right" width="260" hspace="12">
+<img src="../.github/images/spheretext.svg" alt="Hidden-line-removed rendering of text on a sphere" align="right" width="240" hspace="12">
 
 The related program **`G3dVec`** shows wireframe hidden-line-removed renderings of `*.a3d` streams and `*.m` meshes.
 It can write vector-based figures as SVG or PostScript files (see `demos/view_hidden_line_removed`):
 ```shell
-G3dVec demos/data/spheretext.orig.m -st demos/data/spheretext_closeup.s3d \
-  -thicksharp 4 -plotfile spheretext.svg -key hDP  # 'DP' saves the file.
+FilterPM demos/data/spheretext.pm -nf 4000 -outmesh | \
+  Filtermesh -proc sharp_from_wid -mark | \
+  G3dVec -st demos/data/spheretext_closeup.s3d -thicksharp 3 \
+    -plotfile spheretext.svg -key hDP  # 'DP' saves the file.
 ```
 
 In both programs, the keys <kbd>?</kbd> and <kbd>D?</kbd> show a list of available keyboard commands.

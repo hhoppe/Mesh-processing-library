@@ -28,10 +28,11 @@ render() {
     -cropall -$gap -to png >"$tmp/$name.png" 2>/dev/null
 }
 
-# row name tiles... : assemble the tiles into a row of width $width in $tmp/name.png.
+# row name tiles... : assemble the tiles into a row of width $row_width (default $width) in $tmp/name.png.
 row() {
   local name=$1; shift
-  (cd "$tmp" && Filterimage -assemble $# 1 "${@/%/.png}" -scaletox $width -to png >"$name.png" 2>/dev/null)
+  (cd "$tmp" && Filterimage -assemble $# 1 "${@/%/.png}" -scaletox ${row_width:-$width} -to png >"$name.png" \
+    2>/dev/null)
 }
 
 for variant in light dark; do
@@ -45,8 +46,11 @@ for variant in light dark; do
   Filtera3d $data/cactus.pts -diff $foreground 2>/dev/null >"$tmp/cactus.a3d"
   render cactus_points 640x960 "$tmp/cactus.a3d" -st $data/cactus.s3d
   render cactus_recon 640x960 $results/cactus.recon.m -st $data/cactus.s3d -key DmDe
-  render cactus_opt 640x960 $results/cactus.opt.m -st $data/cactus.s3d -key DmDe
   render cactus_subdiv 640x960 $results/cactus.sub2limit.m -st $data/cactus.s3d
+  gap=40 render cactus_points_wide 640x960 "$tmp/cactus.a3d" -st $data/cactus.s3d
+  gap=40 render cactus_recon_wide 640x960 $results/cactus.recon.m -st $data/cactus.s3d -key DmDe
+  gap=40 render cactus_opt_wide 640x960 $results/cactus.opt.m -st $data/cactus.s3d -key DmDe
+  gap=40 render cactus_subdiv_wide 640x960 $results/cactus.sub2limit.m -st $data/cactus.s3d
   # Progressive mesh at three levels of detail.
   for lod in 0.01 0.05 1.0; do
     PM_LOD_LEVEL=$lod render cessna_edges_$lod 1280x960 -pm_mode $results/cessna.pm -st $data/cessna.s3d \
@@ -59,11 +63,20 @@ for variant in light dark; do
     -sr_screen_thresh 0.003846 -lightambient .7 -st $data/gcanyon_4k2k_fly2.s3d"
   render canyon_tex 1280x960 $canyon -key Dt
   render canyon_mesh 1280x960 $canyon -key De
-  # Spherical parameterization: original bunny, remesh, and normal-mapped remesh.
+  # Spherical parameterization: original bunny, its parameterization on the sphere (shaded using the original
+  # normals), the remesh, the normal-mapped remesh, and the normal map itself.
   render bunny_orig 1100x1100 $data/bunny.orig.m -st $data/bunny.s3d
+  Filtermesh $results/bunny.sphparam.m -renamekey v sph P \
+    -normaltransf "$(Filterframe $data/bunny.s3d -snap_to_axes -inverse 2>/dev/null)" >"$tmp/bunny_sphere.m" \
+    2>/dev/null
+  render bunny_sphere 1100x1100 "$tmp/bunny_sphere.m" -st $data/unitsphere_ang.s3d
   render bunny_remesh 1100x1100 $results/bunny.spheresample.remesh.m -st $data/bunny.s3d -key DmDe
+  normalmap=$results/bunny.spheresample.octaflat.unrotated.normalmap.png
   render bunny_normalmap 1100x1100 $results/bunny.spheresample.remesh.m -st $data/bunny.s3d \
-    -texturemap $results/bunny.spheresample.octaflat.unrotated.normalmap.png -texturenormal 1 -key Dt
+    -texturemap $normalmap -texturenormal 1 -key Dt
+  side=$((height * 9 / 10)); pad=$(((height - side) / 2))  # The normal map, as a square slightly smaller.
+  Filterimage $normalmap -filter lanczos6 -scaletoy $side -color $rgb 255 -boundaryrule border \
+    -cropsides -$gap -$gap -$pad -$pad -to png >"$tmp/normalmap.png" 2>/dev/null
   # Progressive simplicial complex at a coarse and at its full resolution.
   for lod in 0.05 1.0; do
     PSC_LOD_LEVEL=$lod render drumset_$lod 1280x960 -psc_mode $data/drumset_trunc.psc $data/drumset.box.a3d \
@@ -73,10 +86,10 @@ for variant in light dark; do
   row overview1 cactus_points cactus_recon cactus_subdiv bunny_remesh drumset_1.0
   row overview2 cessna_edges_0.01 cessna_full canyon_tex
   Filterimage -assemble 1 2 "$tmp/overview1.png" "$tmp/overview2.png" -to jpg >$images/overview$suffix.jpg 2>/dev/null
-  row reconstruction cactus_points cactus_recon cactus_opt cactus_subdiv
+  row_width=1440 row reconstruction cactus_points_wide cactus_recon_wide cactus_opt_wide cactus_subdiv_wide
   row progressive_mesh cessna_edges_0.01 cessna_edges_0.05 cessna_edges_1.0
   row terrain canyon_tex canyon_mesh
-  row spherical bunny_orig bunny_remesh bunny_normalmap
+  row spherical bunny_orig bunny_sphere bunny_remesh bunny_normalmap normalmap
   row simplicial_complex drumset_0.05 drumset_1.0
   for name in reconstruction progressive_mesh terrain spherical simplicial_complex; do
     Filterimage "$tmp/$name.png" -to jpg >$images/$name$suffix.jpg 2>/dev/null

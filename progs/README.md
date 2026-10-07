@@ -102,10 +102,12 @@ Processes a stream of coordinate frames (`*.frame`), e.g., to transform, invert,
 
 ## Surface reconstruction
 
+<p align="center">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../.github/images/reconstruction_dark.jpg">
-  <img src="../.github/images/reconstruction.jpg" alt="Points sampled near a cactus, the mesh reconstructed from them (Recon), the optimized mesh (Meshfit), and the fitted subdivision surface (Subdivfit).">
+  <img src="../.github/images/reconstruction.jpg" alt="Points sampled near a cactus, the mesh reconstructed from them (Recon), the optimized mesh (Meshfit), and the fitted subdivision surface (Subdivfit)." width="660">
 </picture>
+</p>
 
 <em>Points sampled near a cactus, the mesh reconstructed from them (`Recon`), the optimized mesh (`Meshfit`),
 and the fitted subdivision surface (`Subdivfit`).</em>
@@ -434,6 +436,15 @@ visualizes the resulting sequence of triangle strips and cache misses.
 
 ## <a id="prog_SphereParam"></a>Spherical parameterization
 
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="../.github/images/spherical_dark.jpg">
+  <img src="../.github/images/spherical.jpg" alt="The original bunny mesh, its parameterization on the sphere, the remesh obtained by resampling the parameterization, the remesh with a normal map, and the normal map itself.">
+</picture>
+
+<em>The original bunny mesh; its spherical parameterization, shaded using the original surface normals;
+the remesh obtained by resampling the parameterization over a flat-octahedron domain;
+the remesh rendered with a normal map; and the normal map itself.</em>
+
 The program **`SphereParam`** computes spherical coordinates `sph` at the mesh vertices
 so as to minimize parametric stretch from the sphere to the surface mesh.
 
@@ -466,14 +477,6 @@ Filtermesh bunny.sphparam.m -renamekey v sph P | \
 
 
 ## <a id="prog_SphereSample"></a>Spherical resampling
-
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="../.github/images/spherical_dark.jpg">
-  <img src="../.github/images/spherical.jpg" alt="The original bunny mesh, its remesh obtained by resampling the spherical parameterization, and the remesh with a normal map sampled from the original mesh.">
-</picture>
-
-<em>The original bunny mesh, its remesh obtained by resampling the spherical parameterization,
-and the remesh with a normal map sampled from the original mesh.</em>
 
 The program **`SphereSample`** computes uniform samplings of a spherically parameterized mesh.
 

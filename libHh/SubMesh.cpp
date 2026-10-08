@@ -366,9 +366,10 @@ void SubMesh::refine(Mvcvh& mconv) {
   }
   // Remove the old triangulation.
   for (Face f : arf) {
-    _m.destroy_face(f);
+    // Remove the face from the maps before destroying it, as their hash reads the face id.
     assertx(_mforigf.remove(f));
     _mfindex.remove(f);  // Can be index 0.
+    _m.destroy_face(f);
   }
 }
 

@@ -156,12 +156,7 @@ float gdiam;
 Bary dummy_bary;
 bool have_quads = false;
 
-struct hash_edge {
-  size_t operator()(Edge e) const {
-    return mesh.vertex_id(mesh.vertex1(e)) + intptr_t{mesh.vertex_id(mesh.vertex2(e))} * 76541;
-  }
-};
-Set<Edge, hash_edge> ecand;  // Set of candidate edges in stoc; hash without pointers for portable random.
+Set<Edge> ecand;  // Set of candidate edges in stoc.
 
 // *** DataPts
 

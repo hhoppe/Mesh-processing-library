@@ -19,15 +19,7 @@ namespace hh {
 
 namespace {
 
-struct hash_edge {
-  size_t operator()(Edge e) const {
-    return _mesh.vertex_id(_mesh.vertex1(e)) + intptr_t{_mesh.vertex_id(_mesh.vertex2(e))} * 76541;
-  }
-  const GMesh& _mesh;
-};
-using SetEdge = Set<Edge, hash_edge>;  // Hashing does not use pointer values, for portable random.
-
-int retriangulate(GMesh& mesh, SetEdge& sete, bool recurse, Set<Vertex>* setvr, float mincos, EDGEF fdoswap,
+int retriangulate(GMesh& mesh, Set<Edge>& sete, bool recurse, Set<Vertex>* setvr, float mincos, EDGEF fdoswap,
                   EDGEF fdel, EDGEF fadd) {
   assertx(fdoswap);
   int neswapped = 0;
@@ -215,8 +207,7 @@ bool triangulate_face(GMesh& mesh, Face f) {
   for_int(i, nv - 2) mesh.create_face(va[0], va[i + 1], va[i + 2]);
   Set<Vertex> setvr;  // Vertices on the ring of the original face.
   for_int(i, nv) setvr.enter(va[i]);
-  const hash_edge he{mesh};
-  SetEdge sete(he);  // Initially, the inner edges.
+  Set<Edge> sete;  // Initially, the inner edges.
   for_intL(i, 2, nv - 1) sete.enter(mesh.edge(va[0], va[i]));
   retriangulate(mesh, sete, true, &setvr, -2, circum_radius_swap_criterion, nullptr, nullptr);
   return true;
@@ -508,23 +499,20 @@ void split_valence(GMesh& mesh, int max_valence) {
 // *** Retriangulate
 
 int retriangulate_all(GMesh& mesh, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
-  const hash_edge he{mesh};
-  SetEdge sete(he);
+  Set<Edge> sete;
   for (Edge e : mesh.edges())
     if (!mesh.is_boundary(e)) sete.enter(e);
   return retriangulate(mesh, sete, true, nullptr, mincos, fdoswap, fdel, fadd);
 }
 
 int retriangulate_from_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
-  const hash_edge he{mesh};
-  SetEdge sete(he);
+  Set<Edge> sete;
   sete.enter(e);
   return retriangulate(mesh, sete, true, nullptr, mincos, fdoswap, fdel, fadd);
 }
 
 int retriangulate_one_edge(GMesh& mesh, Edge e, float mincos, EDGEF fdoswap, EDGEF fdel, EDGEF fadd) {
-  const hash_edge he{mesh};
-  SetEdge sete(he);
+  Set<Edge> sete;
   sete.enter(e);
   return retriangulate(mesh, sete, false, nullptr, mincos, fdoswap, fdel, fadd);
 }

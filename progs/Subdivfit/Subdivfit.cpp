@@ -83,12 +83,7 @@ enum EResult { R_success, R_energy, R_dih, R_sharp, R_illegal, R_NUM };
 const Vec<string, R_NUM> op_result_name = {"success", "positive_energy", "bad_dihedral", "bad_sharp", "illegal_move"};
 SGrid<int, OP_NUM, R_NUM> op_stat;
 
-struct hash_edge {
-  size_t operator()(Edge e) const {
-    return gmesh.vertex_id(gmesh.vertex1(e)) + intptr_t{gmesh.vertex_id(gmesh.vertex2(e))} * 76541;
-  }
-};
-Set<Edge, hash_edge> ecand;  // Set of candidate edges in stoc; hash without pointers for portable random.
+Set<Edge> ecand;  // Set of candidate edges in stoc.
 
 void mark_mesh(GMesh& m) {
   for (Vertex v : m.vertices()) m.update_string(v, "cusp", m.flags(v).flag(GMesh::vflag_cusp) ? "" : nullptr);

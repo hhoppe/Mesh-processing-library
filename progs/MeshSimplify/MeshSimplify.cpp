@@ -491,15 +491,6 @@ Array<int> ar_vt_indices;
 
 EdgeCostQueue pqecost;  // Conservative estimate of cost of ecol.
 
-// Hash an edge on its vertex ids rather than its address, so that the iteration order of a set of edges (and therefore
-// the tie-breaking among equal costs) does not vary from run to run.
-struct hash_edge {
-  size_t operator()(Edge e) const {
-    return mesh.vertex_id(mesh.vertex1(e)) + intptr_t{mesh.vertex_id(mesh.vertex2(e))} * 76541;
-  }
-};
-using SetEdge = Set<Edge, hash_edge>;
-
 Matrix<float> g_gridf;   // If terrain, grid of height values.
 Matrix<ushort> g_gridu;  // If -gridushorts.
 
@@ -4496,7 +4487,7 @@ void get_tvc_cost_edir(Edge e, float& tvccost, bool& edir) {
 void consider_tvc(Edge& edefault, float costdefault) {
   Edge ebest = nullptr;
   float costbest = costdefault;
-  SetEdge sete;
+  Set<Edge> sete;
   for (const CacheEntry& ce : tvc_cache) {
     const int wid = ce.wid, owid = ce.owid;
     assertx((wid < 0) == (owid < 0));
@@ -4768,8 +4759,8 @@ void optimize() {
         //  it only slows things down a little bit in consider_tvc().
       }
     }
-    // Enter replacement edges.  (SetEdge iterates in the same order in every run, unlike Set<Edge>.)
-    SetEdge seterecompute;
+    // Enter replacement edges.
+    Set<Edge> seterecompute;
     if (!invertexorder) {
       for (Edge ee : mesh.edges(vs)) {
         pqecost.enter(ee, k_bad_cost);

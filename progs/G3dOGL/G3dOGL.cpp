@@ -1933,15 +1933,16 @@ void draw_mesh(GMesh& mesh) {
         if (cull) continue;
       }
       int ithick;
+      const Pixel* pcolor;
       if (mesh.is_boundary(e)) {
         ithick = thickboundary;
-        if (ithick) update_cur_color(pix_bndedgecolor);
+        pcolor = &pix_bndedgecolor;
       } else if (mesh.flags(e).flag(GMesh::eflag_sharp)) {
         ithick = thicksharp;
-        if (ithick) update_cur_color(pix_sharpedgecolor);
+        pcolor = &pix_sharpedgecolor;
       } else {
         ithick = thicknormal;
-        if (ithick) update_cur_color(pix_edgecolor);
+        pcolor = &pix_edgecolor;
       }
       if (!ithick) continue;
       if (ithick != g_pthick && nedges) {
@@ -1953,6 +1954,9 @@ void draw_mesh(GMesh& mesh) {
         glEnd();
         nedges = 0;
       }
+      // Set the color only after any glEnd(), so that it never follows the last vertex of a glBegin()/glEnd() block:
+      //  in a display list, Mesa (26.0) loses such a trailing attribute if the state changes before the next block.
+      update_cur_color(*pcolor);
       if (!nedges) glBegin(GL_LINES);
       nedges++;
       if (uvtopos && mesh.gflags().flag(mflag_uv)) {

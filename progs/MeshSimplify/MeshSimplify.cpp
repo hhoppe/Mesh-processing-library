@@ -1100,19 +1100,25 @@ void parse_mesh_material_identifiers() {
   // If matid keys present in input file, use them, else add new ones after the maximum found.
   // This is useful if the output of simplification is re-simplified.
   Array ar_faces(mesh.faces());
-  Set<string> unique_strings;
+  // Gather the distinct face strings in their order of first occurrence (rather than in the iteration order of a
+  // hash set merged from per-thread sets), so that the new matids are independent of the number of threads.
+  Array<string> unique_strings;
   {
     const int num_threads = get_max_threads();
-    Array<Set<string>> chunk_unique_strings(num_threads);
+    Array<Array<string>> chunk_unique_strings(num_threads);
     parallel_for_chunk(ar_faces, num_threads, [&](const int thread_index, auto subrange) {
-      Set<string>& unique_strings2 = chunk_unique_strings[thread_index];
+      Set<string> set_strings;
+      Array<string>& unique_strings2 = chunk_unique_strings[thread_index];
       for (Face f : subrange) {
         assertx(mesh.is_triangle(f));
         if (!mesh.get_string(f)) mesh.set_string(f, "");
-        unique_strings2.add(mesh.get_string(f));
+        if (set_strings.add(mesh.get_string(f))) unique_strings2.push(mesh.get_string(f));
       }
     });
-    for (Set<string>& set : chunk_unique_strings) unique_strings.merge(set);
+    Set<string> set_strings;
+    for (const Array<string>& unique_strings2 : chunk_unique_strings)
+      for (const string& face_str : unique_strings2)
+        if (set_strings.add(face_str)) unique_strings.push(face_str);
   }
   Map<string, int> matid_of_string;
   for (const string& face_str : unique_strings) {
@@ -1169,10 +1175,14 @@ void parse_mesh_wedge_identifiers() {
   assertx(!nwidfound || nwidfound == mesh.num_faces() * 3);
   // Initial gwinfo based on wid; more entries are added later if !nwidfound and vertices have multiple wedges.
   gwinfo.init(1 + (nwidfound ? maxwidfound : max_vid));  // Skip gwinfo[0] (wid start at 1).
-  std::mutex mutex;
-  Array<int> chunk_nccolors(num_threads, 0);
-  parallel_for_chunk(mesh.vertices(), [&](auto subrange) {
+  // Without existing wids, the additional wedges of a vertex need new wids beyond the vertex ids.  For construction
+  // determinism, each chunk gathers its new wedges into its own array and marks their corners with negative
+  // placeholders, and the chunk arrays are then appended to gwinfo in order.  The resulting numbering is
+  // deterministic and identical to that of a sequential traversal, for any number of threads.
+  Array<Array<WedgeInfo>> chunk_new_wi(num_threads);
+  parallel_for_chunk(mesh.vertices(), num_threads, [&](const int thread_index, auto subrange) {
     string str;
+    Array<WedgeInfo>& new_wi = chunk_new_wi[thread_index];
     for (Vertex v : subrange) {
       // Vnors will get normals from vertex and corner strings if present.
       // Remove normals which are explicitly zero.
@@ -1198,17 +1208,14 @@ void parse_mesh_wedge_identifiers() {
         const WedgeInfo wi = construct_wi(crep, vnors);
         int wid;
         if (nwidfound) {
-          // If nwidfound, Array gwinfo is never resized, so locking is unnecessary.
           wid = assertx(to_int(mesh.corner_key(str, crep, "wid")));
           gwinfo[wid] = wi;
-        } else {
-          std::scoped_lock lock(mutex);
-          if (setcvis.num() == 1) {
-            wid = mesh.vertex_id(v);
-          } else {
-            wid = gwinfo.add(1);
-          }
+        } else if (setcvis.num() == 1) {
+          wid = mesh.vertex_id(v);
           gwinfo[wid] = wi;
+        } else {
+          wid = -1 - new_wi.num();  // Placeholder, replaced by the final wid in the second loop below.
+          new_wi.push(wi);
         }
         c_wedge_id(crep) = wid;
         const int matid = f_matid(mesh.corner_face(crep));
@@ -1242,12 +1249,25 @@ void parse_mesh_wedge_identifiers() {
       }
     }
   });
-  // The reads of gwinfo in c_winfo() must not overlap with the gwinfo.add() calls above, so we use a second loop.
+  Array<int> chunk_first_new_wid(num_threads);
+  for_int(i, num_threads) {
+    chunk_first_new_wid[i] = gwinfo.num();
+    gwinfo.push_array(std::move(chunk_new_wi[i]));
+  }
+  // Replace the placeholders by the final wids, and count the corners with colors.  This second loop must have the
+  // same chunks as the first one (same range and num_threads), and its reads of gwinfo in c_winfo() must not
+  // overlap with the resizing of gwinfo above.
+  Array<int> chunk_nccolors(num_threads, 0);
   parallel_for_chunk(mesh.vertices(), num_threads, [&](const int thread_index, auto subrange) {
+    const int first_new_wid = chunk_first_new_wid[thread_index];
     int& nccolors = chunk_nccolors[thread_index];
-    for (Vertex v : subrange)
-      for (Corner c : mesh.corners(v))
+    for (Vertex v : subrange) {
+      for (Corner c : mesh.corners(v)) {
+        int& wid = c_wedge_id(c);
+        if (wid < 0) wid = first_new_wid + (-1 - wid);
         if (c_winfo(c).col[0] != k_undefined) nccolors++;
+      }
+    }
   });
   const int nccolors = sum<int>(chunk_nccolors);
   if (nccolors) {
@@ -4616,7 +4636,8 @@ void optimize() {
   }
   if (get_max_threads() > 1) {
     const bool qem_compatible = minii2;  // The only Qem method used is evaluate() which is thread-safe.
-    const bool can_use_parallelism = !invertexorder && !tvcfac && (!minqem || qem_compatible);
+    // With -minrandom, try_ecol() draws from the shared Random::G, which cannot be used concurrently.
+    const bool can_use_parallelism = !invertexorder && !tvcfac && !minrandom && (!minqem || qem_compatible);
     if (can_use_parallelism) {
       parallel_optimize();
       return;

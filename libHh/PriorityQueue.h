@@ -127,6 +127,12 @@ template <typename T, int inline_capacity = 0> class PriorityQueue : noncopyable
 template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
 class UpdatablePriorityQueue : noncopyable {
   static_assert(Copyable<T> && Hashable<T, Hash, Equal>);
+  // The map and the set below are only used for lookups (rebuild() traverses the heap array instead), so their hash
+  // does not affect the order of the elements.  If T is a pointer and the Hash parameter is left at its default
+  // std::hash<T> (possibly specialized, as for mesh elements), they use hash_address instead, which, unlike a hash
+  // that reads the element, remains valid for the stale keys of destroyed elements that the lazy deletion looks up.
+  using LookupHash =
+      std::conditional_t<std::is_pointer_v<T> && std::is_same_v<Hash, std::hash<T>>, hash_address, Hash>;
 
  public:
   void clear() { _pq.clear(), _m.clear(); }
@@ -193,8 +199,8 @@ class UpdatablePriorityQueue : noncopyable {
   }
 
  private:
-  PriorityQueue<T> _pq;           // Nodes of current elements, plus stale nodes (never at the top).
-  Map<T, float, Hash, Equal> _m;  // Element -> current priority.
+  PriorityQueue<T> _pq;                 // Nodes of current elements, plus stale nodes (never at the top).
+  Map<T, float, LookupHash, Equal> _m;  // Element -> current priority.
 
   void set_priority(float& cur_pri, const T& e, float pri) {  // cur_pri is the entry of e in _m.
     cur_pri = pri;
@@ -216,7 +222,7 @@ class UpdatablePriorityQueue : noncopyable {
   // of the remaining nodes in the underlying array (see PriorityQueue::remove_if()), rather than traversing the hash
   // map, so that the order of equal priorities does not depend on the hash values of the elements.
   void rebuild() {
-    Set<T, Hash, Equal> kept;  // (A removed and re-entered element may have two current nodes.)
+    Set<T, LookupHash, Equal> kept;  // (A removed and re-entered element may have two current nodes.)
     _pq.remove_if([&](const T& e, float pri) { return !is_current(e, pri) || !kept.add(e); });
   }
 };

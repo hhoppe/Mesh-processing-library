@@ -66,9 +66,11 @@ const FlagMask eflag_cut = Mesh::allocate_Edge_flag();
 Array<float> gdis2;  // Squared distance associated with each point.
 
 // For stoc.
-Map<Face, Set<int>> mfpts;  // Maps Face in gmesh -> Set of point indices.
-Array<Face> gcmf;           // Maps pi -> Face in gmesh.
-Array<int> gscmfi;          // The smesh closest face index (in face gcmf).
+// The map is never iterated, and a face is removed from it only after it is destroyed (e.g. in try_eswa()), so it
+// uses hash_address rather than the default hash, which reads the face.
+Map<Face, Set<int>, hash_address> mfpts;  // Maps Face in gmesh -> Set of point indices.
+Array<Face> gcmf;                         // Maps pi -> Face in gmesh.
+Array<int> gscmfi;                        // The smesh closest face index (in face gcmf).
 
 // For general procedures.
 Array<Face> gscmf;  // Face that the point projects to in some_smesh.

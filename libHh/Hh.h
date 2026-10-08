@@ -405,6 +405,13 @@ concept Hashable = requires(const Hash& hash, const Equal& equal, const T& e) {
   { equal(e, e) } -> std::convertible_to<bool>;
 };
 
+// Hash of a pointer by its address, for a container that is never iterated (e.g. a lookup table); the iteration
+// order of a container using it depends on the memory layout.  Unlike a hash that reads the element (e.g. the
+// std::hash of a mesh element, which uses its id), it is also valid for a stale key whose element was destroyed.
+struct hash_address {
+  [[nodiscard]] size_t operator()(const void* p) const noexcept { return std::hash<const void*>{}(p); }
+};
+
 // Range whose elements are readable as T (accepts proxies, conversions).
 template <typename R, typename T>
 concept input_range_to = ranges::input_range<R> && std::convertible_to<ranges::range_reference_t<R>, T>;

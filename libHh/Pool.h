@@ -137,6 +137,7 @@ class Pool : noncopyable {
     // NOLINTNEXTLINE(clang-analyzer-core.FixedAddressDereference,clang-analyzer-optin.core.FixedAddressDereference)
     p->next = _h;
     _h = p;
+    poison(p, _esize);
   }
   // Allocate based on the size of the first alloc_size() call.
   [[nodiscard]] void* alloc_size(int align, size_t s64) {
@@ -147,15 +148,25 @@ class Pool : noncopyable {
     return p;
   }
   void free_size(void* pp, size_t s) {
-    dummy_use(s);
     // Pool::free(pp);
     if (!pp) return;
     Link* p = static_cast<Link*>(pp);
     p->next = _h;
     _h = p;
+    poison(p, s);
   }
 
  private:
+  // In debug builds, overwrite a freed element (beyond its free-list link) with a pattern, so that a later access
+  // to the destroyed element fails loudly rather than silently reading its stale contents.  For instance, the
+  // std::hash of a mesh element reads its id (see Mesh.h), so a hash container that still holds a destroyed
+  // element as a key would otherwise keep working until the pool reuses the memory.  The pattern makes such an id
+  // a large negative value and such a pointer a non-canonical address.
+  static void poison(void* p, size_t size) {
+    if constexpr (k_debug)
+      std::fill_n(static_cast<std::byte*>(p) + sizeof(Link), size - sizeof(Link), std::byte{0xDB});
+    dummy_use(p, size);
+  }
   static constexpr int k_pagesize = 16 * 1024;  // We could refer to getpagesize().
   static constexpr int k_malloc_overhead = 64;  // High just to be safe; a multiple of 16; was 32.
   static constexpr int k_chunksize = k_pagesize - k_malloc_overhead;

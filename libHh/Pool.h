@@ -4,6 +4,10 @@
 
 #include "libHh/Hh.h"
 
+#if HH_HAS_ASAN
+#include <sanitizer/asan_interface.h>
+#endif
+
 #if 0
 {
   // *.h
@@ -112,6 +116,7 @@ class Pool : noncopyable {
     for (Chunk* chunk = _chunkh; chunk;) {
       uint8_t* p = reinterpret_cast<uint8_t*>(chunk);
       chunk = chunk->next;
+      unpoison(p - _offset, k_chunksize);  // Clear any user poisoning before returning the memory.
       aligned_free(p - _offset);
     }
     _name = nullptr;
@@ -127,6 +132,7 @@ class Pool : noncopyable {
     if (!_h) grow();
     Link* p = _h;
     _h = p->next;
+    unpoison(p, _esize);
     return p;
   }
   void free(void* pp) {
@@ -145,6 +151,7 @@ class Pool : noncopyable {
     if (!_h) grow_size(s, align);
     Link* p = _h;
     _h = p->next;
+    unpoison(p, _esize);
     return p;
   }
   void free_size(void* pp, size_t s) {
@@ -162,9 +169,20 @@ class Pool : noncopyable {
   // std::hash of a mesh element reads its id (see Mesh.h), so a hash container that still holds a destroyed
   // element as a key would otherwise keep working until the pool reuses the memory.  The pattern makes such an id
   // a large negative value and such a pointer a non-canonical address.
+  // Under AddressSanitizer, which cannot otherwise see that a pool element is freed, the same region is also
+  // marked as poisoned, so that any access to it is reported immediately with a stack trace.
   static void poison(void* p, size_t size) {
-    if constexpr (k_debug)
-      std::fill_n(static_cast<std::byte*>(p) + sizeof(Link), size - sizeof(Link), std::byte{0xDB});
+    std::byte* const after_link = static_cast<std::byte*>(p) + sizeof(Link);
+    if constexpr (k_debug) std::fill_n(after_link, size - sizeof(Link), std::byte{0xDB});
+#if HH_HAS_ASAN
+    ASAN_POISON_MEMORY_REGION(after_link, size - sizeof(Link));
+#endif
+    dummy_use(after_link, size);
+  }
+  static void unpoison(void* p, size_t size) {
+#if HH_HAS_ASAN
+    ASAN_UNPOISON_MEMORY_REGION(p, size);
+#endif
     dummy_use(p, size);
   }
   static constexpr int k_pagesize = 16 * 1024;  // We could refer to getpagesize().

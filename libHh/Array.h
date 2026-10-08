@@ -4,6 +4,10 @@
 
 #include "libHh/Hh.h"
 
+#if HH_HAS_ASAN
+#include <sanitizer/common_interface_defs.h>  // __sanitizer_annotate_contiguous_container()
+#endif
+
 // Array is a dynamically resizable 1D array like std::vector, but it is derived from CArrayView and ArrayView
 // and it constructs/destructs elements based on capacity() rather than num().
 //
@@ -169,7 +173,31 @@ template <typename T> [[nodiscard]] constexpr bool have_overlap(CArrayView<T> v1
   return v1.begin() < v2.end() && v2.begin() < v1.end();
 }
 
+// Under AddressSanitizer, evaluate an annotation of the array storage (see details::annotate_array_storage());
+// otherwise remove it entirely, because even a call to an empty inline function was measured to change the code that
+// clang -O3 generates for GeneralArray.
+#if HH_HAS_ASAN
+#define HH_ARRAY_ANNOTATE(...) __VA_ARGS__
+#else
+#define HH_ARRAY_ANNOTATE(...) void(0)
+#endif
+
 namespace details {
+
+// Tell AddressSanitizer that, of the array storage a[0, cap), the elements a[0, new_n) are now in use (addressable)
+// and the elements a[new_n, cap) are not (poisoned), where a[0, old_n) were in use before.  The bytes before
+// unannotated_end are left alone (always addressable).
+#if HH_HAS_ASAN
+template <typename T>
+void annotate_array_storage(const T* a, int cap, int old_n, int new_n, const void* unannotated_end = nullptr) {
+  const char* beg = reinterpret_cast<const char*>(a);
+  const char* const end = reinterpret_cast<const char*>(a + cap);
+  if (unannotated_end) beg = std::max(beg, static_cast<const char*>(unannotated_end));
+  const char* const old_mid = std::max(beg, reinterpret_cast<const char*>(a + old_n));
+  const char* const new_mid = std::max(beg, reinterpret_cast<const char*>(a + new_n));
+  if (beg < end && old_mid != new_mid) __sanitizer_annotate_contiguous_container(beg, end, old_mid, new_mid);
+}
+#endif
 
 // The built-in storage of Array<T, inline_capacity>.  It is a class between ArrayView<T> and Array in a single chain
 // of inheritance, rather than a second (private) base class of Array such as Vec<T, inline_capacity>, because:
@@ -179,8 +207,19 @@ namespace details {
 // (3) keeping _cap in Array itself, initialized after this base, leaves the code generated for Array<T> unchanged.
 template <typename T, int inline_capacity> class ArrayStorage : public ArrayView<T> {
  protected:
-  ArrayStorage() : ArrayView<T>(_builtin, 0) {}
+  ArrayStorage() : ArrayView<T>(_builtin, 0) {
+    HH_ARRAY_ANNOTATE(annotate_builtin(inline_capacity, 0));  // No element is in use.
+  }
   T _builtin[inline_capacity];
+#if HH_HAS_ASAN
+  // Annotation of _builtin.  Its first bytes may lie in the tail padding of the base ArrayView<T>, which a copy of
+  // the base reads (e.g. a memcpy of sizeof(ArrayView<T>) bytes when converting the array to a CArrayView<T>), so
+  // the annotation starts after the base.
+  void annotate_builtin(int old_n, int new_n) const {
+    annotate_array_storage(_builtin, inline_capacity, old_n, new_n,
+                           reinterpret_cast<const char*>(this) + sizeof(ArrayView<T>));
+  }
+#endif
 };
 
 template <typename T> class ArrayStorage<T, 0> : public ArrayView<T> {  // Without built-in storage.
@@ -197,6 +236,9 @@ template <typename T> class ArrayStorage<T, 0> : public ArrayView<T> {  // Witho
 // inline_capacity (e.g., a function that resizes any such array) and in explicit instantiations.
 // Type T must have a public operator= (which may be operator=(&&)).
 // Unlike std::vector<T>, Array<T> constructs/destructs elements based on capacity() rather than num().
+// Under AddressSanitizer, the elements beyond num() are marked as unaddressable, so that an access to them (e.g.
+// through a pointer or view obtained before the array shrank) is reported.  For an array whose storage is on the
+// heap, the unused built-in storage is entirely unaddressable.
 template <typename T, int inline_capacity = 0> class GeneralArray;
 
 // Heap-allocated resizable 1D array with elements of type T.
@@ -219,7 +261,11 @@ template <typename T, int inline_capacity> class GeneralArray : public details::
   }
   explicit GeneralArray(int n) requires(inline_capacity > 0) {
     ASSERTX(n >= 0);
-    if (n > inline_capacity) _a = new T[narrow_cast<size_t>(n)], _cap = n;
+    if (n > inline_capacity) {
+      _a = new T[narrow_cast<size_t>(n)], _cap = n;
+    } else {
+      HH_ARRAY_ANNOTATE(annotate(_n, n));
+    }
     _n = n;
   }
   explicit GeneralArray(int n, const T& v) requires Copyable<T> : GeneralArray(n) { for_int(i, n) _a[i] = v; }
@@ -245,8 +291,12 @@ template <typename T, int inline_capacity> class GeneralArray : public details::
     }
   }
   ~GeneralArray() {
+    HH_ARRAY_ANNOTATE(annotate(_n, _cap));  // Unpoison all elements, which get destroyed.
     if constexpr (inline_capacity > 0) {
-      if (_a != this->_builtin) delete[] _a;
+      if (_a != this->_builtin) {
+        delete[] _a;
+        HH_ARRAY_ANNOTATE(this->annotate_builtin(0, inline_capacity));
+      }
     } else {
       delete[] _a;
     }
@@ -264,11 +314,13 @@ template <typename T, int inline_capacity> class GeneralArray : public details::
   type& operator=(type&& ar) noexcept {
     if constexpr (inline_capacity > 0) {
       clear();
-      if (ar._a != ar._builtin) {  // Take over its heap storage.
+      if (ar._a != ar._builtin) {  // Take over its heap storage (whose annotation moves with it).
         _a = ar._a, _n = ar._n, _cap = ar._cap;
         ar._a = ar._builtin, ar._n = 0, ar._cap = inline_capacity;
       } else {
+        HH_ARRAY_ANNOTATE(annotate(0, ar._n));
         std::move(ar._builtin, ar._builtin + ar._n, this->_builtin);
+        HH_ARRAY_ANNOTATE(ar.annotate(ar._n, 0));
         _n = ar._n, ar._n = 0;
       }
       return *this;
@@ -278,12 +330,15 @@ template <typename T, int inline_capacity> class GeneralArray : public details::
   }
   void clear() {
     if constexpr (inline_capacity > 0) {
+      // Heap elements get destroyed, so unpoison them; the built-in elements are then all poisoned, as for _n == 0.
+      HH_ARRAY_ANNOTATE(annotate(_n, _a != this->_builtin ? _cap : 0));
       _n = 0;
       if (_a != this->_builtin) {
         delete[] _a;
         _a = this->_builtin, _cap = inline_capacity;
       }
     } else {
+      HH_ARRAY_ANNOTATE(annotate(_n, _cap));
       delete[] _a;
       _a = nullptr, _n = 0, _cap = 0;
     }
@@ -296,6 +351,7 @@ template <typename T, int inline_capacity> class GeneralArray : public details::
   void resize(int n) {  // Allocate n, RETAIN old values (using move if too small).
     ASSERTX(n >= 0);
     if (n > _cap) grow_to_at_least(n);
+    HH_ARRAY_ANNOTATE(annotate(_n, n));
     _n = n;
   }
   void access(int i);  // Allocate at least i + 1, RETAIN old values (using move if too small).
@@ -307,6 +363,7 @@ template <typename T, int inline_capacity> class GeneralArray : public details::
   }
   void sub(int n) {
     ASSERTX(n >= 0);
+    HH_ARRAY_ANNOTATE(annotate(_n, _n - n));
     _n -= n;
     ASSERTX(_n >= 0);
   }
@@ -332,10 +389,12 @@ template <typename T, int inline_capacity> class GeneralArray : public details::
   Array<T> pop(int n);
   void push(const T& e) requires Copyable<T> {  // Avoid a.push(a[..])!
     if (_n >= _cap) grow_to_at_least(_n + 1);
+    HH_ARRAY_ANNOTATE(annotate(_n, _n + 1));
     _a[_n++] = e;
   }
   void push(T&& e) {
     if (_n >= _cap) grow_to_at_least(_n + 1);
+    HH_ARRAY_ANNOTATE(annotate(_n, _n + 1));
     _a[_n++] = std::move(e);
   }
   template <ranges::input_range R> requires std::assignable_from<T&, ranges::range_reference_t<R>>
@@ -374,6 +433,15 @@ template <typename T, int inline_capacity> class GeneralArray : public details::
   int _cap{inline_capacity};
   void set_capacity(int ncap);
   void grow_to_at_least(int n) { set_capacity(max(_n + (_n / 2) + 3, n)); }
+#if HH_HAS_ASAN
+  // Annotation of the current storage; see details::annotate_array_storage().
+  void annotate(int old_n, int new_n) const {
+    if constexpr (inline_capacity > 0) {
+      if (_a == this->_builtin) return this->annotate_builtin(old_n, new_n);
+    }
+    details::annotate_array_storage(_a, _cap, old_n, new_n);
+  }
+#endif
   void insert_i(int i, int n) {
     add(n);
     for (int j = _n - n - 1; j >= i; --j) _a[j + n] = std::move(_a[j]);
@@ -518,12 +586,20 @@ template <typename T, int inline_capacity> void GeneralArray<T, inline_capacity>
   ASSERTX(n >= 0);
   if (n > _cap) {
     if constexpr (inline_capacity > 0) {
-      if (_a != this->_builtin) delete[] _a;
+      if (_a != this->_builtin) {
+        HH_ARRAY_ANNOTATE(annotate(_n, _cap));
+        delete[] _a;
+      } else {
+        HH_ARRAY_ANNOTATE(annotate(_n, 0));  // The built-in storage becomes unused.
+      }
     } else {
+      HH_ARRAY_ANNOTATE(annotate(_n, _cap));
       delete[] _a;
     }
     _a = new T[narrow_cast<size_t>(n)];
     _cap = n;
+  } else {
+    HH_ARRAY_ANNOTATE(annotate(_n, n));
   }
   _n = n;
 }
@@ -532,7 +608,7 @@ template <typename T, int inline_capacity> void GeneralArray<T, inline_capacity>
   ASSERTXX(i >= 0);
   const int n = i + 1;
   if (n > _cap) grow_to_at_least(n);
-  if (n > _n) _n = n;
+  if (n > _n) HH_ARRAY_ANNOTATE(annotate(_n, n)), _n = n;
 }
 
 template <typename T, int inline_capacity> void GeneralArray<T, inline_capacity>::set_capacity(int ncap) {
@@ -540,22 +616,32 @@ template <typename T, int inline_capacity> void GeneralArray<T, inline_capacity>
     ASSERTX(_n <= ncap);
     if (ncap <= inline_capacity) {  // Move the elements back into the built-in storage.
       if (_a == this->_builtin) return;
+      HH_ARRAY_ANNOTATE(this->annotate_builtin(0, _n));
       std::move(_a, _a + _n, this->_builtin);
+      HH_ARRAY_ANNOTATE(annotate(_n, _cap));
       delete[] _a;
       _a = this->_builtin, _cap = inline_capacity;
     } else {
       T* na = new T[narrow_cast<size_t>(ncap)];
       std::move(_a, _a + _n, na);
-      if (_a != this->_builtin) delete[] _a;
+      if (_a != this->_builtin) {
+        HH_ARRAY_ANNOTATE(annotate(_n, _cap));
+        delete[] _a;
+      } else {
+        HH_ARRAY_ANNOTATE(annotate(_n, 0));  // The built-in storage becomes unused.
+      }
       _a = na, _cap = ncap;
+      HH_ARRAY_ANNOTATE(annotate(_cap, _n));
     }
   } else {
+    HH_ARRAY_ANNOTATE(annotate(_n, _cap));
     _cap = ncap;
     ASSERTX(_n <= _cap);
     T* na = _cap ? new T[narrow_cast<size_t>(_cap)] : nullptr;
     if (na) std::move(_a, _a + _n, na);
     delete[] _a;
     _a = na;
+    HH_ARRAY_ANNOTATE(annotate(_cap, _n));
   }
 }
 

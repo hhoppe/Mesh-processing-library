@@ -4,6 +4,10 @@
 #include <print>  // std::println.
 #include <vector>
 
+#if HH_HAS_ASAN
+#include <sanitizer/asan_interface.h>  // __asan_address_is_poisoned()
+#endif
+
 #include "libHh/ArrayOp.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
@@ -536,6 +540,63 @@ void test_construction() {
   }
 }
 
+#if HH_HAS_ASAN
+// Verify the AddressSanitizer annotations of the elements beyond num(); this prints nothing.
+void test_asan_annotations() {
+  const auto poisoned = [](const void* p) { return __asan_address_is_poisoned(p) != 0; };
+  {
+    Array<int> ar;
+    for_int(i, 10) ar.push(i);
+    const int* p = ar.data();
+    assertx(ar.capacity() > 10 && !poisoned(p + 9) && poisoned(p + 10));
+    ar.sub(5);
+    assertx(!poisoned(p + 4) && poisoned(p + 5));
+    ar.init(0);
+    assertx(poisoned(p));
+    ar.init(3);
+    assertx(!poisoned(p + 2) && poisoned(p + 3));
+    ar.pop();
+    assertx(poisoned(p + 2));
+  }
+  {
+    InlinedArray<double, 3> ar;
+    const double* p = ar.data();
+    assertx(poisoned(p));
+    ar.push(1.);
+    assertx(!poisoned(p) && poisoned(p + 1));
+    for (const double v : {2., 3., 4.}) ar.push(v);  // Moves the elements to the heap.
+    assertx(ar.data() != p && poisoned(p) && !poisoned(ar.data() + 3) && poisoned(ar.data() + 4));
+    ar.sub(3);
+    ar.shrink_to_fit();  // Moves the element back into the built-in storage.
+    assertx(ar.data() == p && !poisoned(p) && poisoned(p + 1));
+    ar.clear();
+    assertx(poisoned(p));
+  }
+  {
+    // The first element of the built-in storage lies in the tail padding of the base ArrayView, which converting
+    // the array to a CArrayView copies, so it must remain addressable; the next element is poisoned.
+    InlinedArray<int, 3> ar;
+    const CArrayView<int> view = ar;
+    assertx(view.num() == 0 && poisoned(ar.data() + 1));
+  }
+  {
+    InlinedArray<std::string, 2> ar1, ar2;
+    ar1.push("x");
+    ar2 = std::move(ar1);
+    assertx(!poisoned(ar2.data()) && poisoned(ar2.data() + 1) && poisoned(ar1.data()));
+    swap(ar1, ar2);
+    assertx(ar1[0] == "x" && poisoned(ar1.data() + 1) && poisoned(ar2.data()));
+  }
+  {
+    // The last granule of the built-in storage is shared with the member _cap, which must remain addressable.
+    InlinedArray<char, 5> ar;
+    assertx(ar.capacity() == 5);
+    ar.push('a');
+    assertx(ar.capacity() == 5 && ar.num() == 1);
+  }
+}
+#endif
+
 }  // namespace
 
 int main() {
@@ -706,6 +767,9 @@ int main() {
   test_boundary_rules();
   test_operations();
   test_construction();
+#if HH_HAS_ASAN
+  test_asan_annotations();
+#endif
   {
     // (1) Move-only elements from a source that is not an Array<T>, so push_array(type&&) does not apply.
     std::vector<std::unique_ptr<int>> src;

@@ -26,6 +26,7 @@ HIDDEN = " -hidden -hwdelay 1 -hwkey '\\2\\c'"
 TILE = (640, 480)  # Size of each screenshot in the sheet.
 SUPERSAMPLE = 2  # The screenshots are rendered at this multiple of the tile size, then downsampled.
 COLUMNS = 6  # Number of screenshots per row of the sheet.
+TAIL_LINES = 40  # Number of final log lines shown for a failed block.
 # Blocks containing these strings are not run, for the given reasons.
 SKIP = {
     '-wait_on_visualizer': 'interactive',
@@ -72,6 +73,9 @@ def hide_viewers(text: str, screenshots: list[pathlib.Path] | None = None) -> st
     command = next((word for word in words if '=' not in word), '')
     if command in VIEWERS:
       hidden = ' -hidden' if '-video' in words else HIDDEN
+      if command == 'VideoViewer':
+        # Resizing the hidden window with the "=" key crashes the X server of XQuartz (macOS).
+        segment = re.sub(r'-key \S+', lambda m: m.group().replace('=', ''), segment)
       # (VideoViewer takes no screenshot: a hidden window cannot be resized, as its "=" key does.)
       if screenshots is not None and '-video' not in words and command != 'VideoViewer':
         path = screenshots[0].parent / f'{screenshots[0].stem}_{len(screenshots)}.png'
@@ -199,6 +203,9 @@ def main() -> int:
           f'{page}:{line}: error: {label} failed (status {status}, {elapsed:.1f} s); see {log}',
           flush=True,
       )
+      # Show the end of the log, where the error or assertion message lies.
+      tail = log.read_text(encoding='utf-8', errors='replace').splitlines()[-TAIL_LINES:]
+      print('\n'.join(f'    {t}' for t in tail), flush=True)
   if args.screenshots and all_screenshots:
     assemble(all_screenshots, pathlib.Path(args.screenshots), env, scratch)
   if not args.keep and not args.dir:

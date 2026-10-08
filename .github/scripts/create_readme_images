@@ -52,13 +52,14 @@ for variant in light dark; do
   hgap=40 render cactus_recon_wide 640x960 $results/cactus.recon.m -st $data/cactus.s3d -key DmDe
   hgap=40 render cactus_opt_wide 640x960 $results/cactus.opt.m -st $data/cactus.s3d -key DmDe
   hgap=40 render cactus_subdiv_wide 640x960 $results/cactus.sub2limit.m -st $data/cactus.s3d
-  # Progressive mesh at three levels of detail.
-  for lod in 0.01 0.05 1.0; do
-    PM_LOD_LEVEL=$lod render cessna_edges_$lod 1280x960 -pm_mode $results/cessna.pm -st $data/cessna.s3d \
-      -key ,De -lightambient .4
+  # Progressive mesh at three levels of detail: 800 faces, 3000 faces, and its full resolution.
+  for nf in 800 3000; do
+    FilterPM $results/cessna.pm -nf $nf -outmesh >"$tmp/cessna_$nf.m" 2>/dev/null
+    render cessna_edges_$nf 1280x960 "$tmp/cessna_$nf.m" -st $data/cessna.s3d -key De -lightambient .4
   done
-  PM_LOD_LEVEL=1.0 render cessna_full 1280x960 -pm_mode $results/cessna.pm -st $data/cessna.s3d -key , \
-    -lightambient .4
+  FilterPM $results/cessna.pm -finest -outmesh >"$tmp/cessna_full.m" 2>/dev/null
+  render cessna_edges_full 1280x960 "$tmp/cessna_full.m" -st $data/cessna.s3d -key De -lightambient .4
+  render cessna_full 1280x960 "$tmp/cessna_full.m" -st $data/cessna.s3d -lightambient .4
   # View-dependent refinement of a terrain, textured and as a mesh.
   canyon="-eyeob $data/unit_frustum.a3d -sr_mode $data/gcanyon_4k2k.l1.srm -texturemap $data/gcanyon_color_4k2k.png
     -sr_screen_thresh 0.003846 -lightambient .7 -st $data/gcanyon_4k2k_fly2.s3d"
@@ -85,10 +86,10 @@ for variant in light dark; do
   done
 
   row overview1 cactus_points cactus_recon cactus_subdiv bunny_remesh drumset_1.0
-  row overview2 cessna_edges_0.01 cessna_full canyon_tex
+  row overview2 cessna_edges_800 cessna_full canyon_tex
   Filterimage -assemble 1 2 "$tmp/overview1.png" "$tmp/overview2.png" -to jpg >$images/overview$suffix.jpg 2>/dev/null
   row_width=1440 row reconstruction cactus_points_wide cactus_recon_wide cactus_opt_wide cactus_subdiv_wide
-  row progressive_mesh cessna_edges_0.01 cessna_edges_0.05 cessna_edges_1.0
+  row progressive_mesh cessna_edges_800 cessna_edges_3000 cessna_edges_full
   row terrain canyon_tex canyon_mesh
   row spherical bunny_orig bunny_sphere bunny_remesh bunny_normalmap normalmap
   row simplicial_complex drumset_0.05 drumset_1.0

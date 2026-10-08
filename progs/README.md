@@ -249,7 +249,8 @@ MeshDistance -mfile distcap.recon.m -mfile distcap.opt.m -bothdir 1 -maxerror 1 
   <img src="../.github/images/progressive_mesh.jpg" alt="A progressive mesh of an airplane, at three of its continuous levels of detail.">
 </picture>
 
-<em>A progressive mesh of an airplane, at three of its continuous levels of detail.</em>
+<em>A progressive mesh of an airplane, at three of its continuous levels of detail
+(800, 3000, and 13,546 faces).</em>
 
 Given a mesh, `MeshSimplify` applies a sequence of <em>edge collapse</em> operations
 to simplify it to a coarse <em>base mesh</em> while trying to best preserve the appearance of the original model.

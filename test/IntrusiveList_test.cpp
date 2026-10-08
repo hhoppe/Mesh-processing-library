@@ -79,7 +79,7 @@ int main() {
     assertx(list.begin() == list.end());
     assertx(list.delim()->next() == list.delim() && list.delim()->prev() == list.delim());
     assertx(values(list).num() == 0);
-    A a(0);
+    const A a(0);
     assertx(!a._node.linked());
     a._node.ok();  // An unlinked node is trivially consistent.
   }
@@ -137,8 +137,8 @@ int main() {
       if (i % 2) b._node_odd.link_after(list_odd.delim());
     }
     Array<int> all, odd;
-    for (B* pb : HH_INTRUSIVE_LIST_RANGE(list_all, B, _node_all)) all.push(pb->_i);
-    for (B* pb : HH_INTRUSIVE_LIST_RANGE(list_odd, B, _node_odd)) odd.push(pb->_i);
+    for (const B* pb : HH_INTRUSIVE_LIST_RANGE(list_all, B, _node_all)) all.push(pb->_i);
+    for (const B* pb : HH_INTRUSIVE_LIST_RANGE(list_odd, B, _node_odd)) odd.push(pb->_i);
     SHOW(all, odd);
     // Modify the elements through the range.
     for (B* pb : HH_INTRUSIVE_LIST_RANGE(list_odd, B, _node_odd)) pb->_i *= 10;

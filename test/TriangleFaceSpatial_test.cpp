@@ -132,7 +132,7 @@ int main() {
     const Vec2<TriangleFace> trianglefaces2 =
         V(TriangleFace{V(Point(.02f, .5f, .61f), Point(.98f, .3f, .49f), Point(.98f, .7f, .49f)), f1},
           TriangleFace{V(Point(.5f, .45f, .45f), Point(.5f, .55f, .45f), Point(.5f, .5f, .55f)), f2});
-    TriangleFaceSpatial spatial2(trianglefaces2, 10);
+    const TriangleFaceSpatial spatial2(trianglefaces2, 10);
     const auto result = spatial2.first_along_segment(Point(.05f, .5f, .5f), Point(.95f, .5f, .5f));
     assertx(result && result->triangleface->face == f2 && abs(result->pint[0] - .5f) < 1e-6f);
   }

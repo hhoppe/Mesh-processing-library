@@ -123,13 +123,13 @@ int main() {
     assertx(count == n / 2);
     // After clear(), a search finds nothing.
     sp.clear();
-    SpatialSearch<int> ss(&sp, query);
+    const SpatialSearch<int> ss(&sp, query);
     assertx(ss.empty() && ranges::empty(ss));
   }
   {
     // An empty PointSpatial.
     PointSpatial<int> sp(10);
-    SpatialSearch<int> ss(&sp, Point(.5f, .5f, .5f));
+    const SpatialSearch<int> ss(&sp, Point(.5f, .5f, .5f));
     assertx(ss.empty());
   }
   {
@@ -155,7 +155,7 @@ int main() {
     Array<Point> pa(300);
     for (Point& p : pa) for_int(c, 3) p[c] = random.unif();
     for (const int gridn : {1, 2, 7, 30}) {
-      IPointSpatial sp(gridn, pa);
+      const IPointSpatial sp(gridn, pa);
       for_int(iquery, 20) {
         Point query;
         for_int(c, 3) query[c] = random.unif();

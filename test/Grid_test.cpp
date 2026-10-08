@@ -423,7 +423,7 @@ int main() {
     Grid<2, int> grid2b = reduce_grid_rank(std::move(grid3));
     assertx(grid2b.dims() == V(3, 2) && grid2b.data() == p);
     assertx(grid3.size() == 0 && grid3.data() == nullptr);  // NOLINT(bugprone-use-after-move)
-    Grid<1, int> grid1 = reduce_grid_rank(Grid<2, int>(V(1, 4), 2));
+    const Grid<1, int> grid1 = reduce_grid_rank(Grid<2, int>(V(1, 4), 2));
     assertx(grid1.dims() == V(4) && sum(grid1) == 8);
     grid2b.special_reduce_dim0(2);  // Retains the allocation but shrinks the first dimension.
     assertx(grid2b.dims() == V(2, 2) && grid2b[1, 1] == 3);

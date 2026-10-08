@@ -47,7 +47,7 @@ int main() {
   {
     // A non-const lvalue Bbox is copied rather than treated as a range of two points.
     Bbox bb(V(1.f, 2.f), V(3.f, 5.f));
-    Bbox bb2(bb);
+    const Bbox bb2(bb);
     assertx(bb2 == bb);
     const Bbox<float, 2> bb3 = bb;
     assertx(bb3 == bb);

@@ -113,7 +113,7 @@ void test_io() {
 }
 
 void test_geometry() {
-  GMesh mesh = mesh_from_string(k_mesh_fan);
+  const GMesh mesh = mesh_from_string(k_mesh_fan);
   const Face f1 = mesh.id_face(1);
   SHOW(mesh.triangle_points(f1), mesh.area(f1));
   Polygon poly;

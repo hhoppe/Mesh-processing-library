@@ -174,7 +174,7 @@ int main() {
   }
   {
     // Intersection of two polygons: a horizontal square and a vertical square crossing it.
-    Polygon horiz = square();
+    const Polygon horiz = square();
     const Polygon vert{Point(1.f, -1.f, -1.f), Point(1.f, 3.f, -1.f), Point(1.f, 3.f, 1.f), Point(1.f, -1.f, 1.f)};
     SHOW(intersect_poly_poly(horiz, vert));
     SHOW(intersect_poly_poly(vert, horiz));

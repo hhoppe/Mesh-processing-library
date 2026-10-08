@@ -139,7 +139,7 @@ void test_inlined_array() {
     // Moves from the built-in storage and from the heap, and changes of capacity across its boundary.
     InlinedArray<int, 3> ar1{1, 2};
     InlinedArray<int, 3> ar2{3, 4, 5, 6};
-    InlinedArray<int, 3> ar3 = std::move(ar1);
+    const InlinedArray<int, 3> ar3 = std::move(ar1);
     // NOLINTNEXTLINE(bugprone-use-after-move, clang-analyzer-cplusplus.Move): it checks the moved-from state.
     SHOW(ar3, ar1.num(), ar3.capacity());
     InlinedArray<int, 3> ar4 = std::move(ar2);

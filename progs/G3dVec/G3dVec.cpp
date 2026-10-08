@@ -17,6 +17,7 @@ using namespace hh;
 
 namespace g3d {
 extern string statefile;
+extern int info;  // To hide the info line (-noinfo).
 }  // namespace g3d
 
 namespace {
@@ -62,6 +63,7 @@ bool nohash;     // Do not share vertex geometry.
 bool datastat;
 bool fisheye;  // Fisheye view mode.
 bool silhouette;
+bool noinfo;  // Do not show the info line.
 float hither;
 bool is_yonder;
 float yonder;
@@ -997,11 +999,13 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   args.p("-thicks[harp]", thicksharp, "f : width of sharp edges");
   args.p("-thickn[ormal]", thicknormal, "f : width of edges");
   HH_ARGSF(silhouette, ": in hidden-line, draw only silhoutte");
+  HH_ARGSP(noinfo, "bool : do not show the info line");
   args.other_args_ok();
   args.other_options_ok();
   args.disallow_prefixes();
   if (!args.parse_and_extract(aargs)) return false;  // After showing the help for "-?".
   if (!hw_success) exit(1);                          // Hw has reported why it could not open the display.
+  if (noinfo) g3d::info = 0;
   return true;
 }
 

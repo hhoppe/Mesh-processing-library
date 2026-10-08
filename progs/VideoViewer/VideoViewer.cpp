@@ -3437,7 +3437,9 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
     process_keystring(g_keystring);
   }
   if (!product(g_win_dims)) return;
-  {
+  // Within a query(), the key_press() that issued it already holds g_mutex_obs (and references into g_obs), so defer
+  //  publishing the loop objects to the next redraw.
+  if (!within_query()) {
     std::unique_lock<std::mutex> lock(g_mutex_obs);
     // The second disjunct lets us give up if loop creation completes without producing an object.
     if (g_request_loop && g_request_loop_synchronously && g_working_on_loop_creation)

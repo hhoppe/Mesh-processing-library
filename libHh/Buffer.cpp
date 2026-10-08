@@ -118,7 +118,8 @@ RBuffer::ERefill RBuffer::refill() {
     shift();
   else if (_n == _ar.num())
     expand();
-  int ntoread = min(_ar.num() - _beg - _n, k_read_size), nread;
+  const int ntoread = min(_ar.num() - _beg - _n, k_read_size);
+  int nread;
   assertx(ntoread);
 #if defined(BUFFER_USE_WIN32_THREAD)
   if (_fd == 0) {

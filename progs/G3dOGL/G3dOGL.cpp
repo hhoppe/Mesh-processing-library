@@ -3215,7 +3215,7 @@ void pm_set_lod(float lod) {
   if (lod_use_nvertices) {
     const int nv = int(lod);
     const int nv0 = pmesh._base_mesh._vertices.num();
-    int nvsplits = pmesh._info._tot_nvsplits;
+    const int nvsplits = pmesh._info._tot_nvsplits;
     if (!assertw(nvsplits)) return;
     pm_lod_level = (float(nv) - nv0) / nvsplits;
   } else {

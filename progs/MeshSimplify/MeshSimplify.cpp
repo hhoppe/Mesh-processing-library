@@ -835,7 +835,7 @@ void init_qem() {
 void gather_nn_qem(Edge e, NewMeshNei& nn) {
   assertx(minqem);
   Vertex v2 = mesh.vertex2(e);
-  int nw = nn.ar_rwid_v1.num();
+  const int nw = nn.ar_rwid_v1.num();
   assertx(nw);
   nn.ar_wq.init(nw);
   for_int(i, nw) {
@@ -2400,9 +2400,9 @@ void replace_wi(const NewMeshNei& nn, CArrayView<WedgeInfo> ar_wi, CArrayView<in
 
 // Project the points onto the faces described by nn and newp, and store the results as param.
 void project_fpts(const NewMeshNei& nn, const Point& newp, Param& param) {
-  int nf = nn.ar_corners.num();
+  const int nf = nn.ar_corners.num();
   assertx(nf);  // At least one face.
-  int np = nn.ar_fpts.num();
+  const int np = nn.ar_fpts.num();
   assertw(np);
   Array<Bbox<float, 3>> ar_bbox(nf);
   for_int(i, nf) ar_bbox[i] = Bbox{V(newp, mesh.point(nn.va[i]), mesh.point(nn.va[i + 1]))};

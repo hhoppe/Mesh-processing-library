@@ -195,7 +195,7 @@ inline float Stat::rms() const {
 template <ranges::input_range R> Stat range_stat(const R& range) { return Stat(range); }
 
 template <ranges::forward_range R> R standardize(R&& range) {
-  Stat stat = range_stat(range);
+  const Stat stat = range_stat(range);
   const float sdv = stat.sdv();
   if (!sdv) {
     Warning("standardize() of range with zero sdv");

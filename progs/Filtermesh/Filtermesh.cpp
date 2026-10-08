@@ -957,7 +957,7 @@ void do_segment() {
 
 void record_segment(Face f, Map<Face, int>& mfseg) {
   Queue<Face> queuef;
-  int segnum = mfseg.remove(f);
+  const int segnum = mfseg.remove(f);
   assertx(segnum);
   string str;
   for (;;) {
@@ -4092,13 +4092,13 @@ void do_transferwidkeysfrom(Args& args) {
   Map<int, const char*> mwidstring;
   string str;
   for (Vertex ov : omesh.vertices()) {
-    int wid = to_int(assertx(GMesh::string_key(str, assertx(mesh.get_string(ov)), "wid")));
+    const int wid = to_int(assertx(GMesh::string_key(str, assertx(mesh.get_string(ov)), "wid")));
     assertx(wid);
     mwidstring.enter(wid, omesh.get_string(ov));
   }
   Array<char> key, val;
   for (Vertex v : mesh.vertices()) {
-    int wid = to_int(assertx(GMesh::string_key(str, assertx(mesh.get_string(v)), "wid")));
+    const int wid = to_int(assertx(GMesh::string_key(str, assertx(mesh.get_string(v)), "wid")));
     assertx(wid);
     for_cstring_key_value(mwidstring.get(wid), key, val, [&] { mesh.update_string(v, key.data(), val.data()); });
   }

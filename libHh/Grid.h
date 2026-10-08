@@ -147,7 +147,7 @@ template <int D, typename T> class CGridView {
   // Returns false if bndrule == Border and (y, x) is outside.
   bool map_inside(int& y, int& x, Bndrule bndrule) const requires(D == 2);
   [[nodiscard]] auto& inside(this auto&& self, int y, int x, Bndrule bndrule) requires(D == 2) {
-    bool b = self.map_inside(y, x, bndrule);
+    const bool b = self.map_inside(y, x, bndrule);
     ASSERTX(b);
     return self[y, x];
   }

@@ -981,7 +981,7 @@ void do_scaleifgtmax(Args& args) {
   HH_TIMER("_scale");
   const int n = args.get_int();
   assertx(n > 0);
-  int cn = max(video.spatial_dims());
+  const int cn = max(video.spatial_dims());
   if (cn <= n) return;
   apply_scale(twice(float(n) / assertx(cn)));
 }

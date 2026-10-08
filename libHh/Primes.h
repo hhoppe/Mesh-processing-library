@@ -10,7 +10,7 @@ namespace hh {
 
 [[nodiscard]] inline int smallest_factor_gt1(int i) {
   assertx(i > 1);
-  int isqr = int(sqrt(float(i)));
+  const int isqr = int(sqrt(float(i)));
   for_intL(j, 2, isqr + 1) {
     if (i % j == 0) return j;
   }
@@ -47,14 +47,14 @@ namespace hh {
   static Array<int> primes;  // Not thread-safe.
   if (!primes.num()) primes.push(2);
   while (primes.last() < n) primes.push(next_prime(primes.last()));
-  int i = discrete_binary_search(primes, 0, primes.num() - 1, n - 1);
+  const int i = discrete_binary_search(primes, 0, primes.num() - 1, n - 1);
   return primes[random.get_unsigned(i + 1)];
 }
 
 [[nodiscard]] inline bool are_coprime(int i1, int i2) {
   assertx(i1 > 0 && i2 > 0);
   // Very inefficient.
-  int m = min(i1, i2);
+  const int m = min(i1, i2);
   for_intL(i, 2, m + 1) {
     if (i1 % i == 0 && i2 % i == 0) return false;
   }

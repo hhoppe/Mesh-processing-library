@@ -152,7 +152,7 @@ void parse_aux(const char* s, ArrayView<float> ar) {
 
 bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
   if (!_s || !*_s) return false;
-  int nch = str_key_nchars(_s);
+  const int nch = str_key_nchars(_s);
   if (!assertw(nch)) {
     SHOW(_str, _s);
     return false;

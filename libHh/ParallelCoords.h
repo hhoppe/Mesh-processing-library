@@ -13,12 +13,12 @@ namespace hh {
 template <typename Func = void(int), typename FuncInterior = void(int)>
 void for_1dL_interior(int x0, int xn, Func func, FuncInterior func_interior) {
   {
-    int x = x0;
+    const int x = x0;
     if (x0 < xn) func(x);
   }
   for_intL(x, x0 + 1, xn - 1) func_interior(x);
   {
-    int x = max(x0 + 1, xn - 1);
+    const int x = max(x0 + 1, xn - 1);
     if (x < xn) func(x);
   }
 }

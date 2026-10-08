@@ -935,7 +935,7 @@ void process_vsplit() {
   {
     Corner cl = mesh.ccw_corner(save.vs, e);
     Corner cr = mesh.clw_corner(save.vs, e);
-    int wid_vsfl = retrieve_wid(cl);
+    const int wid_vsfl = retrieve_wid(cl);
     const int wid_vsfr = retrieve_wid(cr);
     assertx(wid_vsfl);
     assertx(!wid_vsfr == !save.vr);
@@ -946,7 +946,7 @@ void process_vsplit() {
   {
     Corner cl = mesh.clw_corner(save.vt, e);
     Corner cr = mesh.ccw_corner(save.vt, e);
-    int wid_vtfl = retrieve_wid(cl);
+    const int wid_vtfl = retrieve_wid(cl);
     const int wid_vtfr = retrieve_wid(cr);
     assertx(wid_vtfl);
     assertx(!wid_vtfr == !save.vr);

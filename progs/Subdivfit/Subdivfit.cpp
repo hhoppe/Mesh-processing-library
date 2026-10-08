@@ -725,8 +725,9 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
 }
 
 // Optimization of setmv given setpts, gscmf, mvcvih.
-void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, const Mvcvih& mvcvih,
-                    double& rss1) {
+// Returns false if the least-squares system is rank-deficient, leaving the vertex positions unchanged.
+[[nodiscard]] bool optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts,
+                                  const Mvcvih& mvcvih, double& rss1) {
   HH_STIMER("___loptimize");
   update_local(smesh, mvcvih);
   const GMesh& mesh = smesh.mesh();
@@ -775,7 +776,7 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
   }
   {
     HH_STIMER("____lsolve");
-    assertx(lls.solve(nullptr, &rss1));
+    if (!lls.solve(nullptr, &rss1)) return false;  // Rare; the caller then rejects the move.
   }
   if (0) SHOW("local optimization", m, n, rss1);
   for_int(i, n) {
@@ -783,6 +784,7 @@ void optimize_local(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& se
     lls.get_x_r(i, p);
     omesh.set_point(mvcvih.iv[i], p);
   }
+  return true;
 }
 
 void build_lmesh1(const Set<Vertex>& setgmv, const Set<Face>& setbadfg, GMesh& lmesh, Set<int>& setpts,
@@ -887,7 +889,7 @@ bool try_opt(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, c
   // It is worthwhile investing into the fit since it may eliminate future operations.
   int ni;
   for (ni = 0; ni < maxtni; ni++) {
-    optimize_local(smesh, setmv, setpts, mvcvih, rss1);
+    if (!optimize_local(smesh, setmv, setpts, mvcvih, rss1)) return edrss = BIGFLOAT, false;
     ni++;
     if (rss1 - (lrss - rss1) * anticipation > threshrss) break;
     lrss = rss1;
@@ -897,7 +899,7 @@ bool try_opt(SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, c
   if (edrss >= 0.) return false;
   // Do some more fitting.
   while (ni < maxni) {
-    optimize_local(smesh, setmv, setpts, mvcvih, rss1);
+    if (!optimize_local(smesh, setmv, setpts, mvcvih, rss1)) return edrss = BIGFLOAT, false;
     ni++;
     if (ni < minni) continue;
     if (lrss - rss1 < wcrep * .1) break;
@@ -976,10 +978,11 @@ EResult try_ecol(Edge eg, double& edrss) {
     float mina = min_dihedral_about_vertices(lmesh, v1);
     if (mina < k_min_cos && mina < minb) continue;  // Disallow.
     double rss1;
-    optimize_local(smesh, setmv, setpts, mvcvih, rss1);
+    const bool solved = optimize_local(smesh, setmv, setpts, mvcvih, rss1);
     mina = min_dihedral_about_vertices(lmesh, v1);
     // Return to initial state.
     for (Vertex v : setmv) lmesh.set_point(v, gmesh.point(trvmm(v, lmesh, gmesh)));
+    if (!solved) continue;                          // Disallow.
     if (mina < k_min_cos && mina < minb) continue;  // Disallow.
     if (rss1 < minrss) {
       minrss = rss1;

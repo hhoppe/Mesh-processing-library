@@ -1,10 +1,13 @@
-# Reference values for the files that the create scripts write into results/, read by check_created_outputs.sh:
-# per-channel "mean sd" for an image or video, else the file size in bytes.
+# Reference values for the files that the create scripts write into results/, read by check_created_outputs.sh
+# (using ../bin/check_reference_values): per-channel "mean sd" for an image or video, the errors "dL2 nL2 dLi nLi"
+# of MeshDistance output, else the file size in bytes, each optionally followed by a tolerance "tol=...".
 # Update them with "check_created_outputs.sh --update".
 cactus.recon.m 33831
 cactus.opt.m 15827
 cactus.sub0.m 15512
-cactus.sub2limit.m 136328
+# The size of this file is proportional to the face count of the mesh fitted by Subdivfit, whose stochastic
+# optimization reaches different face counts across configurations (e.g., 196 to 229 faces, up to +22% in size).
+cactus.sub2limit.m 136328 tol=0.35
 distcap.recon.m 520356
 distcap.opt.m 66472
 curve1.opt.a3d 3560

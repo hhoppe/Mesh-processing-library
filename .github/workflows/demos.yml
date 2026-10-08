@@ -1,6 +1,7 @@
 # Build all programs and run the demos: create their results, check these against reference statistics, and run
-# the viewing demos without showing any window, and run the examples of progs/README.md.  This is slow, so it
-# runs nightly and on demand, not on every push.
+# the viewing demos without showing any window; run the examples of progs/README.md, checking the statistics of
+# their screenshots; and recreate the README images, checking theirs.  This is slow, so it runs nightly and on
+# demand, not on every push.
 name: Demos
 
 on:
@@ -104,6 +105,11 @@ jobs:
       - name: Run the README examples
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         run: .github/scripts/run_readme_examples.py --screenshots readme_examples.jpg 2>&1 | tee examples.log
+
+      # Recreate the images of the README pages (in a temporary directory) and check their statistics.
+      - name: Check the README images
+        if: ${{ !cancelled() && steps.build.outcome == 'success' }}
+        run: .github/scripts/create_readme_images --check 2>&1 | tee images.log
 
       - name: Upload results and logs
         if: always()

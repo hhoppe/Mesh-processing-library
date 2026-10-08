@@ -5,13 +5,17 @@ Each ```shell block is run (in order, since later blocks read files written by e
 scratch directory containing links to the repository's demos/ and bin/ directories, with the built
 programs in the PATH.  Each viewer (G3dOGL, G3dVec, VideoViewer) is made to run without a window and
 to quit after a moment, or with --screenshots, to save an image once its input is read; the images
-are then assembled into a single sheet (in reading order of the examples) for visual inspection.
+are then assembled into a single sheet (in reading order of the examples) for visual inspection, and
+their statistics are checked against the reference values in readme_examples_reference.txt (using
+bin/check_reference_values).  Each image is named after a hash of the text of its block, so editing
+an example requires updating the reference values (with --update), but inserting one does not.
 
-Usage: run_readme_examples.py [--dir DIR] [--only N,M,...] [--keep] [--screenshots FILE]
+Usage: run_readme_examples.py [--dir DIR] [--only N,M,...] [--keep] [--screenshots FILE] [--update]
 The programs must be built, and the demo results created (make -C demos create).
 """
 
 import argparse
+import hashlib
 import os
 import pathlib
 import re
@@ -27,6 +31,8 @@ TILE = (640, 480)  # Size of each screenshot in the sheet.
 SUPERSAMPLE = 2  # The screenshots are rendered at this multiple of the tile size, then downsampled.
 COLUMNS = 6  # Number of screenshots per row of the sheet.
 TAIL_LINES = 40  # Number of final log lines shown for a failed block.
+REFERENCE = pathlib.Path(__file__).parent / 'readme_examples_reference.txt'
+CHECK = pathlib.Path(__file__).resolve().parents[2] / 'bin' / 'check_reference_values'
 # Blocks containing these strings are not run, for the given reasons.
 SKIP = {
     '-wait_on_visualizer': 'interactive',
@@ -135,13 +141,64 @@ def assemble(
   print(f'Assembled {len(paths)} screenshots into {output} ({", ".join(p.stem for p in paths)})')
 
 
+def update_reference(shots: dict[str, str], directory: pathlib.Path, env: dict[str, str]) -> int:
+  """Rewrite REFERENCE to list exactly the given screenshots (mapped to a description), then fill
+  in their values.
+
+  The header (up to the first empty line) is kept, as are the comments preceding each entry and its
+  tol= field for each screenshot that is still produced.  A new screenshot is preceded by a comment
+  with its description.
+  """
+  lines = REFERENCE.read_text(encoding='utf-8').splitlines() if REFERENCE.exists() else []
+  header = lines[: lines.index('') + 1] if '' in lines else ['']
+  kept: dict[str, list[str]] = {}
+  comments: list[str] = []
+  for line in lines[len(header) :]:
+    if line.startswith('#') or not line.strip():
+      comments.append(line)
+      continue
+    name, *fields = line.split()
+    kept[name] = comments + [' '.join([name] + [f for f in fields if f.startswith('tol=')])]
+    comments = []
+  output = list(header)
+  for name, description in shots.items():
+    output += kept.get(name) or [f'# {description}', name]
+  REFERENCE.write_text('\n'.join(output) + '\n', encoding='utf-8', newline='\n')
+  args = ['bash', CHECK.as_posix(), '--update', REFERENCE.as_posix(), directory.as_posix()]
+  return subprocess.run(args, env=env).returncode
+
+
+def check_reference(shots: dict[str, str], directory: pathlib.Path, env: dict[str, str]) -> int:
+  """Check the screenshots against REFERENCE, and return the number of failures."""
+  num_failed = 0
+  listed = {
+      line.split()[0]
+      for line in REFERENCE.read_text(encoding='utf-8').splitlines()
+      if line.strip() and not line.startswith('#')
+  }
+  for name, description in shots.items():
+    if name not in listed:
+      num_failed += 1
+      print(f'*** {name} ({description}) is not in {REFERENCE.name}; rerun with --update.')
+  args = ['bash', CHECK.as_posix(), REFERENCE.as_posix(), directory.as_posix()]
+  sys.stdout.flush()
+  if subprocess.run(args, env=env).returncode:
+    num_failed += 1
+  return num_failed
+
+
 def main() -> int:
   parser = argparse.ArgumentParser()
   parser.add_argument('--dir', help='scratch directory (default: a temporary directory)')
   parser.add_argument('--only', help='comma-separated block numbers to run')
   parser.add_argument('--keep', action='store_true', help='keep the scratch directory')
   parser.add_argument('--screenshots', help='assemble the viewer screenshots into this image file')
+  parser.add_argument(
+      '--update', action='store_true', help='update the reference values of the screenshots'
+  )
   args = parser.parse_args()
+  if args.update and args.only:
+    parser.error('--update requires running all the blocks')
   root = pathlib.Path(__file__).resolve().parent.parent.parent
   page = root / 'progs' / 'README.md'
   scratch = (
@@ -164,6 +221,11 @@ def main() -> int:
   print(f'Running the examples of {page.relative_to(root)} in {scratch}', flush=True)
   num_failed = 0
   all_screenshots: list[pathlib.Path] = []
+  shots: dict[str, str] = {}  # The description of each screenshot, by file name.
+  shots_dir = scratch / 'screenshots'
+  take_screenshots = bool(args.screenshots or args.update)
+  if take_screenshots:
+    shots_dir.mkdir(exist_ok=True)
   for i, (line, text) in enumerate(blocks(page), 1):
     label = f'block {i} (line {line}, "{text.split()[0]}")'
     if only and i not in only:
@@ -171,7 +233,8 @@ def main() -> int:
     if reason := next((reason for key, reason in SKIP.items() if key in text), None):
       print(f'{label}: skipped ({reason})', flush=True)
       continue
-    screenshots = [scratch / f'block{i:02}'] if args.screenshots else None
+    digest = hashlib.sha1(text.encode()).hexdigest()[:8]
+    screenshots = [shots_dir / digest] if take_screenshots else None
     script = hide_viewers(text, screenshots)
     start = time.time()
     log = scratch / f'block{i:02}.log'
@@ -197,6 +260,10 @@ def main() -> int:
       print(f'{label}: ok ({elapsed:.1f} s)', flush=True)
       if screenshots:
         all_screenshots += [path for path in screenshots[1:] if path.exists()]
+        first_line = text.split('\n')[0].rstrip(' \\')
+        for k, path in enumerate(screenshots[1:], 1):
+          if path.exists():
+            shots[path.name] = f'{first_line} (screenshot {k})'
     else:
       num_failed += 1
       print(
@@ -208,6 +275,12 @@ def main() -> int:
       print('\n'.join(f'    {t}' for t in tail), flush=True)
   if args.screenshots and all_screenshots:
     assemble(all_screenshots, pathlib.Path(args.screenshots), env, scratch)
+  if args.update and num_failed:
+    print('The reference values are not updated, because some blocks failed.')
+  elif args.update:
+    num_failed += update_reference(shots, shots_dir, env) != 0
+  elif take_screenshots and not args.only:
+    num_failed += check_reference(shots, shots_dir, env)
   if not args.keep and not args.dir:
     shutil.rmtree(scratch)
   print(f'{num_failed} failed')

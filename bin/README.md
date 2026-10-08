@@ -13,6 +13,9 @@ built by Visual Studio.
   the material colors used by `obj_to_mesh`.
 - `hcheck` runs the [unit tests](../make/README.md#unit-tests) and compares their outputs (`*.ou`)
   with the expected reference files (`*.ref`).
+- `check_reference_values` checks generated files against reference values (statistics of images and videos,
+  sizes of other files) within tolerances; it checks the demo results (`demos/check_created_outputs.sh`) and the
+  screenshots and images of the README pages.
 - `ensure_x11_server` starts an X server under Cygwin, for the viewers of the `cygwin` build.
 - `build_and_test_using_clang` and `build_and_test_using_gcc` are simple alternatives to `make`,
   compiling all files sequentially.

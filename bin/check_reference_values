@@ -1,0 +1,110 @@
+#!/bin/bash
+# (This script must run under bash 3.2, the /bin/bash of macOS.)
+
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: check_reference_values [--update] REFERENCE_FILE DIR
+
+Check that each file named in REFERENCE_FILE, found in DIR, looks reasonable by measuring some values from it and
+comparing these with the reference values listed on its line, "name value... [tol=T1,T2,...]".  The measured values
+are the per-channel "mean sd" for an image (png, bmp, jpg) or video (mp4); the errors "dL2 nL2 dLi nLi" from the
+both-directions ("B") rows of MeshDistance output (*.approximation_error.txt); and the size in bytes for any other
+file.  Each value must lie within a relative tolerance of its reference value: by default 2% for an image or video
+(so a blank rendering fails); 20%, 20%, 50%, and 50% for MeshDistance output, because a maximum error depends on a
+single worst point and so varies more across compilers; and 20% for any other file.  An optional field tol=T1,T2,...
+overrides these, its last entry also applying to any remaining values.  Lines starting with '#' are comments.
+
+  --update: rewrite the reference values from the files in DIR, keeping the comments and tol= fields; a line
+    naming a file without any values is thus filled in.
+
+Examples:
+  check_reference_values demos/results_reference.txt demos/results
+  check_reference_values --update demos/results_reference.txt demos/results
+END_USAGE_EXAMPLES
+
+update=0
+if [[ ${1-} == --help ]]; then echo "$usage"; exit 0; fi
+if [[ ${1-} == --update ]]; then update=1; shift; fi
+if (($# != 2)); then echo "$usage" >&2; exit 2; fi
+reference=$1
+dir=$2
+if [[ ! -f $reference ]]; then echo "check_reference_values: cannot read '$reference'." >&2; exit 2; fi
+
+# Print the values measured for the file $dir/$1.
+measure() {
+  local file=$dir/$1
+  case $1 in
+    # In each "#  B(" row, print the value of each dL2=, nL2=, dLi=, and nLi= field (without "%" or a trailing CR).
+    *.approximation_error.txt) awk '/^#  B\(/ {
+        for (i = 1; i <= NF; i++) if ($i ~ /^[dn]L[2i]=/) {
+          v = $i; sub(/^[dn]L[2i]=%?/, "", v); sub(/\r$/, "", v); printf "%s%s", sep, v; sep = " " } }' "$file" ;;
+    # The -stat statistics go to stderr, so pipe only stderr (discarding stdout); for each "ComponentN: ... av=X sd=Y"
+    #  line, print X and Y (the last two fields without their "av=" and "sd=" prefixes).
+    *.png | *.bmp | *.jpg) Filterimage "$file" -stat 2>&1 >/dev/null | awk '/^Component/ {
+        printf "%s%.2f %.2f", sep, substr($(NF - 1), 4), substr($NF, 4); sep = " " }' ;;
+    *.mp4) Filtervideo "$file" -stat 2>&1 >/dev/null | awk '/^Component/ {
+        printf "%s%.2f %.2f", sep, substr($(NF - 1), 4), substr($NF, 4); sep = " " }' ;;
+    *) echo $(($(wc -c <"$file"))) ;;
+  esac
+}
+
+status=0
+num_checked=0
+new_list=()
+while IFS= read -r line || [[ -n $line ]]; do
+  read -r name fields <<<"$line"
+  if [[ -z $name || $name == \#* ]]; then
+    new_list+=("$line")
+    continue
+  fi
+  refs=
+  tolerance=
+  for field in $fields; do
+    if [[ $field == tol=* ]]; then tolerance=${field#tol=}; else refs+=${refs:+ }$field; fi
+  done
+  if [[ ! -f $dir/$name ]]; then
+    echo "*** $dir/$name is missing." >&2
+    status=1
+    new_list+=("$line")
+    continue
+  fi
+  if ! values=$(measure "$name") || [[ -z $values ]]; then
+    echo "*** $dir/$name could not be read." >&2
+    status=1
+    new_list+=("$line")
+    continue
+  fi
+  if ((update)); then
+    new_list+=("$name $values${tolerance:+ tol=$tolerance}")
+    continue
+  fi
+  if [[ -z $refs ]]; then
+    echo "*** $dir/$name has no reference values in $reference (measured '$values')." >&2
+    status=1
+    continue
+  fi
+  if [[ -z $tolerance ]]; then
+    case $name in
+      *.png | *.bmp | *.jpg | *.mp4) tolerance=0.02 ;;
+      *.approximation_error.txt) tolerance=0.20,0.20,0.50,0.50 ;;
+      *) tolerance=0.20 ;;
+    esac
+  fi
+  if ! awk -v v="$values" -v r="$refs" -v t="$tolerance" 'BEGIN {
+      n = split(v, va, " "); if (n != split(r, ra, " ")) exit 1
+      nt = split(t, ta, ",")
+      for (i = 1; i <= n; i++) {
+        tol = ta[i <= nt ? i : nt]
+        if (va[i] < ra[i] * (1 - tol) || va[i] > ra[i] * (1 + tol)) exit 1 } }'; then
+    echo "*** $dir/$name: measured '$values'; reference '$refs' (tolerance $tolerance)." >&2
+    status=1
+  fi
+  num_checked=$((num_checked + 1))
+done <"$reference"
+
+if ((update)); then
+  printf '%s\n' "${new_list[@]}" >"$reference"
+  echo "Updated the reference values in $reference."
+elif ((status == 0)); then
+  echo "All $num_checked files in $dir match their reference values."
+fi
+exit $status

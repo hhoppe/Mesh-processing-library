@@ -6,7 +6,8 @@ scratch directory containing links to the repository's demos/ and bin/ directori
 programs in the PATH.  Each viewer (G3dOGL, G3dVec, VideoViewer) is made to run without a window and
 to quit after a moment, or with --screenshots, to save an image once its input is read; the images
 are then assembled into a single sheet (in reading order of the examples) for visual inspection, and
-their statistics are checked against the reference values in readme_examples_reference.txt (using
+their statistics are checked against the reference values of the platform (Linux, using Mesa's
+llvmpipe software renderer, or macOS) in readme_examples_reference_PLATFORM.txt (using
 bin/check_reference_values).  Each image is named after a hash of the text of its block, so editing
 an example requires updating the reference values (with --update), but inserting one does not.
 
@@ -31,7 +32,9 @@ TILE = (640, 480)  # Size of each screenshot in the sheet.
 SUPERSAMPLE = 2  # The screenshots are rendered at this multiple of the tile size, then downsampled.
 COLUMNS = 6  # Number of screenshots per row of the sheet.
 TAIL_LINES = 40  # Number of final log lines shown for a failed block.
-REFERENCE = pathlib.Path(__file__).parent / 'readme_examples_reference.txt'
+# The reference values differ across renderers, so they are kept for the two platforms run in CI.
+PLATFORM = {'linux': 'linux', 'darwin': 'macos'}.get(sys.platform)
+REFERENCE = pathlib.Path(__file__).parent / f'readme_examples_reference_{PLATFORM}.txt'
 CHECK = pathlib.Path(__file__).resolve().parents[2] / 'bin' / 'check_reference_values'
 # Blocks containing these strings are not run, for the given reasons.
 SKIP = {
@@ -88,8 +91,10 @@ def hide_viewers(text: str, screenshots: list[pathlib.Path] | None = None) -> st
         screenshots.append(path)
         capture = f' -imagename {path} -picture' if command == 'G3dOGL' else f' -offscreen {path}'
         geometry = f' -geom {TILE[0] * SUPERSAMPLE}x{TILE[1] * SUPERSAMPLE}'
-        hidden = ' -hidden' + geometry + capture
+        hidden = ' -hidden -noinfo 1' + geometry + capture
         segment = segment.replace(' -async', '')  # So the picture is taken after reading the input.
+        # Omit the key 'J' (automatic flight), whose motion until the picture depends on the timing.
+        segment = re.sub(r'\s-key\s+(\S+)', lambda m: unflown(m.group(1)), segment)
       # Insert the arguments before any trailing comment and closing parenthesis.
       comment = re.search(r'\s#.*$', segment)
       command_part = segment[: comment.start()] if comment else segment
@@ -100,6 +105,12 @@ def hide_viewers(text: str, screenshots: list[pathlib.Path] | None = None) -> st
         command_part = command_part.rstrip() + hidden
       segments[i] = command_part + ' ' + rest.strip() + ' '
   return ''.join(segments)
+
+
+def unflown(keys: str) -> str:
+  """Return the argument ' -key KEYS' without the key 'J', or '' if no other key remains."""
+  keys = keys.replace('J', '')
+  return f' -key {keys}' if keys.strip('\'"') else ''
 
 
 def assemble(
@@ -199,6 +210,8 @@ def main() -> int:
   args = parser.parse_args()
   if args.update and args.only:
     parser.error('--update requires running all the blocks')
+  if args.update and not PLATFORM:
+    parser.error(f'there are no reference values for platform {sys.platform}')
   root = pathlib.Path(__file__).resolve().parent.parent.parent
   page = root / 'progs' / 'README.md'
   scratch = (
@@ -211,6 +224,8 @@ def main() -> int:
     if not (scratch / name).exists():
       os.symlink(root / name, scratch / name, target_is_directory=True)
   env = dict(os.environ)
+  if PLATFORM == 'linux':
+    env['GALLIUM_DRIVER'] = 'llvmpipe'  # The renderer of the reference values (rather than a GPU).
   dirs = [
       root / 'bin' / config for config in ('unix', 'cygwin', 'clang', 'mingw', 'win', 'msbuild')
   ]
@@ -279,8 +294,10 @@ def main() -> int:
     print('The reference values are not updated, because some blocks failed.')
   elif args.update:
     num_failed += update_reference(shots, shots_dir, env) != 0
-  elif take_screenshots and not args.only:
+  elif take_screenshots and not args.only and PLATFORM:
     num_failed += check_reference(shots, shots_dir, env)
+  elif take_screenshots and not args.only:
+    print(f'The screenshots are not checked: there are no reference values for {sys.platform}.')
   if not args.keep and not args.dir:
     shutil.rmtree(scratch)
   print(f'{num_failed} failed')

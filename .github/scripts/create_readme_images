@@ -1,11 +1,13 @@
 #!/bin/bash
 # Creates the images of the README pages (in .github/images/) by rendering demo data and results using G3dOGL and
 # assembling the renderings using Filterimage.  Each image is created in a light variant (NAME.jpg) and in a dark
-# variant (NAME_dark.jpg) on the background color of GitHub's dark theme.  It then updates the statistics of the
-# images in .github/scripts/readme_images_reference.txt, read by bin/check_reference_values.
+# variant (NAME_dark.jpg) on the background color of GitHub's dark theme.
 #
-# Usage: .github/scripts/create_readme_images [--check]
-#  --check: instead create the images in a temporary directory and check them against these reference values.
+# Usage: .github/scripts/create_readme_images [--check DIR | --update DIR]
+#  --check DIR: instead create the images in DIR, using the renderer of the reference values of the platform (Mesa's
+#    llvmpipe on Linux, or macOS) in .github/scripts/readme_images_reference_PLATFORM.txt, and check them against
+#    these values (using bin/check_reference_values).
+#  --update DIR: likewise create the images in DIR, and update these reference values.
 #
 # The programs must be built (any CONFIG), and the demos create_recon_cactus, create_spherical_param_bunny, and
 # create_pm_cessna must have been run (e.g., using "make -C demos create").
@@ -13,12 +15,18 @@
 set -e -o pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
 for dir in unix cygwin clang mingw win msbuild; do PATH=$PWD/bin/$dir:$PATH; done; PATH=$PWD/bin:$PATH
-check=0
-if [[ ${1-} == --check ]]; then check=1; fi
-reference=.github/scripts/readme_images_reference.txt
 tmp=$(mktemp -d); trap 'rm -rf "$tmp"' EXIT
 images=.github/images
-if ((check)); then images=$tmp/images; mkdir "$images"; fi
+mode=
+if [[ ${1-} == --check || ${1-} == --update ]]; then
+  mode=$1; images=${2:?"Usage: $0 [--check DIR | --update DIR]"}; mkdir -p "$images"
+  case $(uname -s) in
+    Linux) platform=linux; export GALLIUM_DRIVER=llvmpipe ;;  # Rather than any GPU.
+    Darwin) platform=macos ;;
+    *) echo "$0: there are no reference values for platform $(uname -s)." >&2; exit 1 ;;
+  esac
+  reference=.github/scripts/readme_images_reference_$platform.txt
+fi
 height=600  # Height of the tiles within a row.
 width=1760  # Width of each row (and of the images).
 gap=8       # Half the spacing between tiles.
@@ -107,9 +115,10 @@ done
 FilterPM $data/spheretext.pm -nf 4000 -outmesh 2>/dev/null | Filtermesh -proc sharp_from_wid -mark 2>/dev/null |
   G3dVec -st $data/spheretext_closeup.s3d -thicksharp 3 -plotfile $images/spheretext.svg -key hDP \
     -hidden -hwdelay 1 -hwkey '\2\c' >&/dev/null
-if ((check)); then
+if [[ $mode == --check ]]; then
   check_reference_values $reference "$images"
+elif [[ $mode == --update ]]; then
+  check_reference_values --update $reference "$images"
 else
   ls -l $images/*.jpg $images/*.svg | grep -vE '\.red\.jpg'
-  check_reference_values --update $reference $images
 fi

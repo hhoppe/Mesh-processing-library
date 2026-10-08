@@ -104,12 +104,14 @@ jobs:
       # Run the examples of progs/README.md (which use the demo results), saving a sheet of their screenshots.
       - name: Run the README examples
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: .github/scripts/run_readme_examples.py --screenshots readme_examples.jpg 2>&1 | tee examples.log
+        run: |
+          .github/scripts/run_readme_examples.py --screenshots readme_examples.jpg --dir readme_examples 2>&1 |
+            tee examples.log
 
-      # Recreate the images of the README pages (in a temporary directory) and check their statistics.
+      # Recreate the images of the README pages (in readme_images/) and check their statistics.
       - name: Check the README images
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        run: .github/scripts/create_readme_images --check 2>&1 | tee images.log
+        run: .github/scripts/create_readme_images --check readme_images 2>&1 | tee images.log
 
       - name: Upload results and logs
         if: always()
@@ -119,5 +121,8 @@ jobs:
           path: |
             *.log
             readme_examples.jpg
+            readme_examples/screenshots/
+            !readme_examples/screenshots/*.tile.png
+            readme_images/
             demos/results/
           if-no-files-found: ignore

@@ -45,6 +45,10 @@ Checks:
   # filtered by hand.  Its analysis misses writes through `*p++`, in `if constexpr` branches, and in fold expressions,
   # and pointers that are returned or stored as non-const, leaving about 50 false positives: too many for NOLINT.
   # Views, scope guards, and file handles are also intentionally left non-const.
+  # The check also misses a local that is later passed as the whole argument of assertx(), assertw(), or assertt(),
+  # whose helpers take T&& (a non-const reference for an lvalue).  To audit those, temporarily constrain the three
+  # helpers in Hh.h with `requires(!std::is_lvalue_reference_v<T>)` and add `const T&` overloads, rerun the check,
+  # and compare with a run without the patch.
   - '-misc-const-correctness'
   - '-misc-non-private-member-variables-in-classes'
   - '-misc-use-anonymous-namespace'

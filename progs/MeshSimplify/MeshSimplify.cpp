@@ -296,7 +296,14 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, bool, v_global);  // The vertex is a feature
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);  // Spherical parameterization.
 
-HH_SAC_ALLOCATE_FUNC(Mesh::MEdge, int, e_index);  // Index into sorted array.
+// Index of an edge into the sorted array of parallel_optimize(), or -1 if it is not there (e.g. an edge created by a
+// collapse).  It is constructed (unlike plain SAC data), so that every edge has a defined value.
+struct EdgeIndex {
+  int index{-1};
+};
+HH_SACABLE(EdgeIndex);
+HH_SAC_ALLOCATE_CD_FUNC(Mesh::MEdge, EdgeIndex, e_edge_index);
+int& e_index(Edge e) { return e_edge_index(e).index; }
 
 // Information relating to the mesh neighborhood following a speculative edge collapse.
 // Note that this information is independent of orientation of edge (v1, v2).
@@ -4572,13 +4579,15 @@ void parallel_optimize() {
     const float k_fraction_edges = 0.15f;
     const bool vs_never_changes = minqem && minii2 && no_fit_geom;
     int num_edges_considered = 0, num_edges_collapsed = 0;
+    Array<bool> invalidated(ar_edgecost.num(), false);
     for_int(index, ar_edgecost.num()) {
       if (num_edges_collapsed > 0 && index > int(k_fraction_edges * ar_edgecost.num())) break;
       const auto& [e, cost, min_ii] = ar_edgecost[index];
       if (cost == k_bad_cost) break;
       if (mesh.num_faces() <= nfaces || mesh.num_vertices() <= nvertices) break;
       num_edges_considered++;
-      if (e_index(e) != index) continue;  // Edge was invalidated.
+      // An invalidated edge may since have been destroyed by a collapse, so we must not access it.
+      if (invalidated[index]) continue;
       // COMMIT.
       if (k_debug) mesh.valid(e);
       num_edges_collapsed++;
@@ -4588,7 +4597,8 @@ void parallel_optimize() {
       for (Vertex v : V(v1, v2)) {
         if (vs_never_changes && v == vs) continue;
         for (Vertex vv : mesh.vertices(v))
-          for (Edge ee : mesh.edges(vv)) e_index(ee) = -1;  // Invalidate the edge.
+          for (Edge ee : mesh.edges(vv))
+            if (const int i = e_index(ee); i >= 0) invalidated[i] = true;  // Invalidate the edge.
       }
       const EcolResult ecol_result = try_ecol(e, true);
       // Note: Edge e is now undefined.

@@ -743,4 +743,34 @@ inline Vec3<Corner> Mesh::triangle_corners(Face f) const {
 
 }  // namespace hh
 
+//----------------------------------------------------------------------------
+
+// Hash mesh elements by their ids rather than by their addresses, so that the iteration order of a Set or Map of
+// mesh elements (and hence any output that depends on this order, e.g. the ids of newly created elements or the
+// tie-breaking in a priority queue) does not vary with the memory layout, which depends on address-space
+// randomization and on the number of threads.  (With libstdc++, the iteration order happens to be invariant under a
+// uniform shift of all pointer keys, but the MSVC STL hashes the pointer bytes.)
+// These hashes read the element, so they must not be applied to a destroyed element; a container that looks up
+// possibly stale keys, such as the lookup tables of UpdatablePriorityQueue, must instead use hash_address.
+template <> struct std::hash<hh::Mesh::MVertex*> {
+  [[nodiscard]] size_t operator()(hh::Vertex v) const noexcept { return size_t(v->_id); }
+};
+
+template <> struct std::hash<hh::Mesh::MFace*> {
+  [[nodiscard]] size_t operator()(hh::Face f) const noexcept { return size_t(f->_id); }
+};
+
+template <> struct std::hash<hh::Mesh::MEdge*> {
+  [[nodiscard]] size_t operator()(hh::Edge e) const noexcept {
+    const hh::Mesh::HEdge he = e->_herep;
+    return size_t(he->_prev->_vert->_id) + size_t(he->_vert->_id) * 76541;
+  }
+};
+
+template <> struct std::hash<hh::Mesh::MHEdge*> {
+  [[nodiscard]] size_t operator()(hh::Corner c) const noexcept {
+    return size_t(c->_vert->_id) + size_t(c->_face->_id) * 76541;
+  }
+};
+
 #endif  // MESH_PROCESSING_LIBHH_MESH_H_

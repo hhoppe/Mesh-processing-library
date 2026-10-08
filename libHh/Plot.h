@@ -297,7 +297,9 @@ class SvgPlot : public Plot {
     _os << "</g>\n</svg>\n";
   }
   // Convert from the range [-1, 1]^2 to pixel units, with y pointing down.
-  Vec2<float> convert(float x, float y) const { return V((x + 1.f) * .5f * _nxpix, (1.f - y) * .5f * _nypix); }
+  [[nodiscard]] Vec2<float> convert(float x, float y) const {
+    return V((x + 1.f) * .5f * _nxpix, (1.f - y) * .5f * _nypix);
+  }
   static string coords(const Vec2<float>& p) { return sform("%.2f %.2f", p[0], p[1]); }
   void end_path() {
     if (!_in_path) return;

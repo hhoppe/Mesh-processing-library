@@ -87,6 +87,7 @@ int frame_index = 0;  // Current frame number.
 Frame tcur;           // Current transform: object -> viewing.
 Point conor;          // Point to use in computing normal culling.
 bool want_plot;       // The user wants a vector graphics plot.
+bool plot_and_exit;   // Write the plot after the first frame and exit (option -plot).
 string plotfile;
 string plotformat;      // "ps", "svg", or "" (by the extension of plotfile).
 unique_ptr<Plot> plot;  // Currently drawing a plot.
@@ -991,6 +992,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   HH_ARGSF(datastat, ": geometric hashing stats");
   HH_ARGSP(plotfile, "file.{ps,svg} : set plot output (Postscript or SVG by extension)");
   HH_ARGSP(plotformat, "ps|svg : set plot format regardless of the extension");
+  args.f("-plot", plot_and_exit, ": write the plot after the first frame and exit");
   HH_ARGSF(nohash, ": turn off vertex hashing");
   args.p("-thicks[harp]", thicksharp, "f : width of sharp edges");
   args.p("-thickn[ormal]", thicknormal, "f : width of edges");
@@ -1069,6 +1071,7 @@ void HB::draw_space() {
   if (is_yonder && yonder < hither) yonder = hither * 1.001f;
   adjust_viewing();
   unique_ptr<WFile> pwf;
+  if (plot_and_exit) want_plot = true;
   if (want_plot) {
     want_plot = false;
     SHOW("starting plot...");
@@ -1086,6 +1089,10 @@ void HB::draw_space() {
     plot = nullptr;
     pwf = nullptr;
     SHOW("...plot finished");
+    if (plot_and_exit) {
+      plot_and_exit = false;
+      hw.quit();
+    }
   }
 }
 

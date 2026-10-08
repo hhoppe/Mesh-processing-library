@@ -591,8 +591,10 @@ It can write vector-based figures as SVG or PostScript files (see `demos/view_hi
 FilterPM demos/data/spheretext.pm -nf 4000 -outmesh | \
   Filtermesh -proc sharp_from_wid -mark | \
   G3dVec -st demos/data/spheretext_closeup.s3d -thicksharp 3 \
-    -plotfile spheretext.svg -key hDP  # 'DP' saves the file.
+    -plotfile spheretext.svg -key hDP  # 'DP' saves the svg file.
 ```
+
+The option `-plot` instead writes the plot of the first frame and exits (without any window if also `-hidden`).
 
 In both programs, the keys <kbd>?</kbd> and <kbd>D?</kbd> show a list of available keyboard commands.
 <br clear="all">

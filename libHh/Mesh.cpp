@@ -74,7 +74,8 @@ void Mesh::clear() {
     for (Face f : _id2face.values()) {
       HEdge he = assertx(herep(f)), he_first = he;
       for (;;) {
-        if (he->_edge->_herep == he) delete he->_edge;
+        // Delete each edge once, from one of its half-edges, without reading an edge that may already be deleted.
+        if (!he->_sym || std::less<HEdge>{}(he, he->_sym)) delete he->_edge;
         HEdge hen = he->_next;
         delete he;
         he = hen;

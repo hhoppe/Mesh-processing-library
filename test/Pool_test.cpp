@@ -77,7 +77,7 @@ int main() {
   {
     static_assert(!std::is_copy_constructible_v<Pool> && !std::is_copy_assignable_v<Pool>);
     // Allocate enough elements to span several chunks of the pool.
-    constexpr int n = 3000;
+    constexpr int n = 50'000;
     Array<P*> ps(n);
     for_int(i, n) ps[i] = new P(i);
     for_int(i, n) assertx(ps[i]->_i == i && ps[i]->_d == i * .5 && is_aligned(ps[i], alignof(P)));
@@ -91,6 +91,16 @@ int main() {
     delete ps[1234];
     ps[1234] = new P(-1);
     assertx(reinterpret_cast<uintptr_t>(ps[1234]) == freed && ps[1234]->_i == -1);
+    // Once all elements are freed (here in a scattered order), the pool hands out its chunks again in address order,
+    // rather than in the reverse order of the frees, so consecutive allocations are adjacent except across chunks.
+    Array<P*> scattered(ps);
+    for_int(i, n) std::swap(scattered[i], scattered[(i * 7919) % n]);
+    for (P* p : scattered) delete p;
+    for_int(i, n) ps[i] = new P(i);
+    int num_jumps = 0;
+    for_intL(i, 1, n) num_jumps +=
+        reinterpret_cast<uintptr_t>(ps[i]) - reinterpret_cast<uintptr_t>(ps[i - 1]) != sizeof(P);
+    assertx(num_jumps <= 5);
     for (P* p : ps) delete p;         // Return all elements, so that the pool reports no outstanding elements at exit.
     delete static_cast<P*>(nullptr);  // Deleting a null pointer is a no-op.
     // A unique_ptr also uses the class-specific operator new and operator delete.

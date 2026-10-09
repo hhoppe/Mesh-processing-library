@@ -79,10 +79,12 @@ jobs:
           make -k -j"$(getconf _NPROCESSORS_ONLN)" ${{ matrix.make_args }} PEDANTIC=1 ignore_compile_warnings=0 2>&1 |
             tee build.log
 
-      # Warnings that -Werror does not cover (e.g., from the linker) also count as failures.
+      # Warnings that -Werror does not cover (e.g., from the linker) also count as failures, except for the notice of
+      # GCC 14.3 to 15.x that "'-mavx10.1' is aliased to 512 bit", which -march=native triggers on the runners whose
+      # CPU has AVX10.1 (and which GCC 16 drops).
       - name: Check the log for warnings
         run: |
-          if grep -n -i -E 'warning|error' build.log; then exit 1; fi
+          if grep -n -i -E 'warning|error' build.log | grep -v -F 'is aliased to 512 bit'; then exit 1; fi
 
       - name: Show test differences
         if: failure()

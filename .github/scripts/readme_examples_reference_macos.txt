@@ -34,7 +34,7 @@ eb40eefc_1.png
 7551c05c_1.png
 # G3dOGL -eyeob demos/data/unit_frustum.a3d -sr_mode office.sr.pm -st demos/data/office_srfig.s3d (screenshot 1)
 dd707799_1.png
-# (common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcanyon_fly_v98.s3d (screenshot 1)
+# (common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcany (screenshot 1)
 1ce9dfe6_1.png
 # FilterPM demos/data/office.pm -nf 200000 -outmesh | (screenshot 1)
 4e13147d_1.png

@@ -215,7 +215,7 @@ def main() -> int:
   root = pathlib.Path(__file__).resolve().parent.parent.parent
   page = root / 'progs' / 'README.md'
   scratch = (
-      pathlib.Path(args.dir)
+      pathlib.Path(args.dir).resolve()  # The blocks run within it, so their paths must be absolute.
       if args.dir
       else pathlib.Path(tempfile.mkdtemp(prefix='readme_examples_'))
   )
@@ -225,7 +225,9 @@ def main() -> int:
       os.symlink(root / name, scratch / name, target_is_directory=True)
   env = dict(os.environ)
   if PLATFORM == 'linux':
-    env['GALLIUM_DRIVER'] = 'llvmpipe'  # The renderer of the reference values (rather than a GPU).
+    # The renderer of the reference values (rather than a GPU), without multisampling, which depends
+    # on the visuals offered by the X server (e.g., WSLg offers it, but Xvfb does not).
+    env.update(GALLIUM_DRIVER='llvmpipe', MULTISAMPLE='1')
   dirs = [
       root / 'bin' / config for config in ('unix', 'cygwin', 'clang', 'mingw', 'win', 'msbuild')
   ]
@@ -275,7 +277,7 @@ def main() -> int:
       print(f'{label}: ok ({elapsed:.1f} s)', flush=True)
       if screenshots:
         all_screenshots += [path for path in screenshots[1:] if path.exists()]
-        first_line = text.split('\n')[0].rstrip(' \\')
+        first_line = text.split('\n')[0].rstrip(' \\')[:90]
         for k, path in enumerate(screenshots[1:], 1):
           if path.exists():
             shots[path.name] = f'{first_line} (screenshot {k})'

@@ -21,7 +21,8 @@ mode=
 if [[ ${1-} == --check || ${1-} == --update ]]; then
   mode=$1; images=${2:?"Usage: $0 [--check DIR | --update DIR]"}; mkdir -p "$images"
   case $(uname -s) in
-    Linux) platform=linux; export GALLIUM_DRIVER=llvmpipe ;;  # Rather than any GPU.
+    # Rather than any GPU, and without multisampling, which depends on the visuals of the X server.
+    Linux) platform=linux; export GALLIUM_DRIVER=llvmpipe MULTISAMPLE=1 ;;
     Darwin) platform=macos ;;
     *) echo "$0: there are no reference values for platform $(uname -s)." >&2; exit 1 ;;
   esac

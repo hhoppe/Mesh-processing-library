@@ -563,6 +563,12 @@ void do_texturemap(Args& args) {
 bool DerivedHw::key_press(string s) { return fkeyp(s); }
 
 void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
+  // Control-left acts as the middle button (e.g., on a laptop trackpad), also on the matching button release.
+  static bool control_left = false;
+  if (butnum == 1) {
+    if (pressed) control_left = get_key_modifier(EModifier::control);
+    if (control_left) butnum = 2;
+  }
   const Vec2<float> yxf = convert<float>(yx) / convert<float>(win_dims);
   if (pressed) yx_pointer_old = yxf;
   const bool shift = get_key_modifier(EModifier::shift);

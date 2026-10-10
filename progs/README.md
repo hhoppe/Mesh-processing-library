@@ -545,11 +545,13 @@ The mouse/keyboard UI controls include:
 <pre>
  Mouse movements:
  left mouse:          rotate
- middle mouse:        pan
- right mouse:         dolly
+ right mouse:         pan
+ middle mouse, wheel: dolly
  shift-left:          pan
- shift-middle mouse:  roll
- shift-right mouse:   zoom
+ shift-right mouse:   roll
+ shift-middle mouse:  zoom (or dolly-zoom)
+ control-left:        dolly (control-left acts as the middle mouse button)
+ control-shift-left:  zoom
  (mouse movements are with respect to current object; see '0-9' below)
 
  Important key strokes:

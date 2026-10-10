@@ -596,12 +596,13 @@ f       fly                     J       auto-rotate
 DISPLACEMENT Modes (mutually exclusive):
 p       position        m       motion          s       step      $ expo
 MOUSE BUTTON DRAG:
-left:           yaw & pitch (z&y rotation)
-middle:         pan (left/right/up/down translation)
-right:          dolly (front/back translation)
+left:           rotate (z-axis yaw & y-axis pitch)
+right:          pan (left/right/up/down translation)
+middle, wheel:  dolly (front/back translation)
 shift-left:     pan (left/right/up/down translation)
-shift-middle:   roll (x rotation)
-shift-right:    zoom (change focal length)
+shift-right:    roll (x rotation)
+shift-middle:   zoom (change focal length; dolly-zoom unless eye is current object)
+control-left acts as middle (control-left: dolly, control-shift-left: zoom)
 " "\
 OTHER KEYS:
 - =     movement magnitude (x2) _ +     bigger increments (x10)

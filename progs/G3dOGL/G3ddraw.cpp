@@ -293,18 +293,7 @@ static void act_button1(const Vec2<float>& yxq) {
   }
 }
 
-static void act_button2(const Vec2<float>& pyxq) {
-  Vec2<float> yxq = pyxq;
-  if (selected.shift) {  // Rotation x.
-    yxq[0] *= -1.f;      // Since moving to shift key.
-    if (cob != obview) yxq[0] *= -1.f;
-    Applyq(Frame::rotation(0, yxq[0]));
-  } else {  // Pan.
-    pan(yxq);
-  }
-}
-
-static void act_button3(const Vec2<float>& yxq) {
+static void act_button2(const Vec2<float>& yxq) {
   if (selected.shift) {  // Zoom.
     const float a = std::exp(-yxq[0]);
     zoom *= a;
@@ -315,6 +304,16 @@ static void act_button3(const Vec2<float>& yxq) {
     }
   } else {  // Dolly (translation on x).
     Dolly(yxq);
+  }
+}
+
+static void act_button3(Vec2<float> yxq) {
+  if (selected.shift) {  // Roll (rotation in x).
+    yxq[0] *= -1.f;      // Since moving to shift key.
+    if (cob != obview) yxq[0] *= -1.f;
+    Applyq(Frame::rotation(0, yxq[0]));
+  } else {  // Pan.
+    pan(yxq);
   }
 }
 

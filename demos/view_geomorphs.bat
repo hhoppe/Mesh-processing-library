@@ -9,7 +9,7 @@ echo Move slider up and down to see geomorphs.
 echo .
 echo Move slider to bottom, press 'PDe' to toggle edges off.  Again move slider up and down.
 echo .
-echo Move slider to top.  Move object backward/forward (dragging right button), adjusting LOD using slider.
+echo Move slider to top.  Move object backward/forward (middle button or wheel), adjusting LOD using slider.
 echo .
 
 :: Could use -hwkey but problem is that mesh_init() gets called later,

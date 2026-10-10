@@ -106,6 +106,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   T remove_random(Random& r) {
     auto it = crand(r);
     auto node = _set.extract(it);
+    if (_set.size() < _set.bucket_count() / 16) _set.rehash(0);  // As in remove_i().
     return std::move(node.value());
   }
   [[nodiscard]] auto begin(this auto&& self) { return self._set.begin(); }
@@ -120,35 +121,45 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   }
   bool remove_i(const T& e) {
     if (_set.erase(e) == 0) return false;
-    if (1 && _set.size() < _set.bucket_count() / 16) _set.rehash(0);
+    // Shrink the table, which also bounds the expected number of attempts in crand().
+    if (_set.size() < _set.bucket_count() / 16) _set.rehash(0);
     return true;
   }
   const_iterator crand(Random& r) const {  // See also similar code in Map.
     assertx(!empty());
-    if (0) {
-      return std::next(begin(), r.get_size_t() % _set.size());  // Likely slow; no improvement.
-    } else {
-      const size_t nbuckets = _set.bucket_count();
-      size_t bn = r.get_size_t() % nbuckets;
+    // Rejection sampling: uniformly draw (1) a bucket and (2) a position in [0, _crand_bound), and retry if the
+    // bucket has no element at that position.  Every element is then equally likely, provided that _crand_bound is
+    // at least the size of every bucket.  (Walking from a random bucket to the next element instead favors the
+    // elements that follow empty buckets, whose number grows as random elements are removed.)  The bound is
+    // recomputed after each rehash, and a bucket that has since grown beyond it raises it when drawn, discarding
+    // that attempt.
+    const size_t nbuckets = _set.bucket_count();
+    if (nbuckets != _crand_nbuckets) {
+      _crand_nbuckets = nbuckets;
+      _crand_bound = 1;
+      for (const size_t bn : range(nbuckets)) _crand_bound = max(_crand_bound, _set.bucket_size(bn));
+      // A large bound indicates a poor hash function, which slows every lookup and proportionally increases the
+      // expected number of rejection samples.  With good hashing, _crand_bound stays below about 12 even with 1e8
+      // elements.
+      assertw(_crand_bound <= 32);
+    }
+    for (;;) {
+      const size_t bn = r.get_size_t() % nbuckets;
       const size_t ne = _set.bucket_size(bn);
-      size_t nskip = r.get_size_t() % (20 + ne);
-      while (nskip >= _set.bucket_size(bn)) {
-        nskip -= _set.bucket_size(bn);
-        bn++;
-        if (bn == nbuckets) bn = 0;
+      if (ne > _crand_bound) {
+        _crand_bound = ne;
+        assertw(_crand_bound <= 32);
+        continue;
       }
+      const size_t i = r.get_size_t() % _crand_bound;
+      if (i >= ne) continue;
       auto li = _set.begin(bn);
-      while (nskip--) {
-        ASSERTXX(li != _set.end(bn));
-        ++li;
-      }
-      ASSERTXX(li != _set.end(bn));
-      // Convert from const_local_iterator to const_iterator.
-      auto it = _set.find(*li);
-      ASSERTXX(it != _set.end());
-      return it;
+      std::advance(li, i);
+      return _set.find(*li);  // Convert from const_local_iterator to const_iterator.
     }
   }
+  mutable size_t _crand_nbuckets{0};  // Bucket count when _crand_bound was computed.
+  mutable size_t _crand_bound{0};     // Upper bound on the bucket sizes, for crand().
   // Default operator=() and copy_constructor are safe.
 };
 

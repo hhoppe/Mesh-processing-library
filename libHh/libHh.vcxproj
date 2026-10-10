@@ -100,6 +100,7 @@
     <ClInclude Include="BinaryIO.h" />
     <ClInclude Include="BinarySearch.h" />
     <ClInclude Include="BoundingSphere.h" />
+    <ClInclude Include="BrentMinimize.h" />
     <ClInclude Include="Buffer.h" />
     <ClInclude Include="BufferedA3dStream.h" />
     <ClInclude Include="Color_ramp.h" />

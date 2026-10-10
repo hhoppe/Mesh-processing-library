@@ -32,7 +32,6 @@
     <ClCompile Include="SphereMapper.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="boost_minima.h" />
     <ClInclude Include="SphereMapper.h" />
   </ItemGroup>
   <ItemGroup>

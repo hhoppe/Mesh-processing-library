@@ -1,10 +1,11 @@
 // -*- C++ -*-
-#ifndef MESH_PROCESSING_SPHEREPARAM_BOOST_MINIMA_H_
-#define MESH_PROCESSING_SPHEREPARAM_BOOST_MINIMA_H_
+#ifndef MESH_PROCESSING_LIBHH_BRENTMINIMIZE_H_
+#define MESH_PROCESSING_LIBHH_BRENTMINIMIZE_H_
 // Brent algorithm to find the minimum of a 1D function, adapted from Boost.
 
 // Doc: https://www.boost.org/doc/libs/1_84_0/libs/math/doc/html/math_toolkit/brent_minima.html
-// Original source code: https://www.boost.org/doc/libs/1_84_0/boost/math/tools/minima.hpp
+// Source: https://github.com/boostorg/math/blob/develop/include/boost/math/tools/minima.hpp
+//  (adapted from Boost 1.84; the algorithm is unchanged upstream, which has only added GPU and noexcept macros).
 
 // (C) Copyright John Maddock 2006.
 // Use, modification and distribution are subject to the Boost Software License, Version 1.0.
@@ -36,17 +37,20 @@
 
 #include <cmath>
 #include <cstdint>
-#include <utility>
+#include <type_traits>
 
-namespace boost_minima {
+namespace hh {
 
 template <typename T> struct BrentResult {
   T min_x;
   T min_f_x;
 };
 
+// Returns the abscissa x within [min, max] that locally minimizes the 1D function f, together with f(x).
+// The relative precision of x is 2^(1 - bits); bits should not exceed half the number of mantissa bits in T.
+// On input, max_iter bounds the number of iterations; on output, it holds the number of iterations performed.
 template <typename F, typename T>
-BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& max_iter) noexcept {
+BrentResult<T> brent_minimize(F f, T min, T max, int bits, std::uintmax_t& max_iter) noexcept {
   static_assert(std::is_floating_point_v<T>);
   // bits = (std::min)(policies::digits<T, policies::policy<> >() / 2, bits);  // 12 for T == float.
   // 2**(1 - bits); equals 4.8828125e-4 for bits=12.
@@ -66,7 +70,7 @@ BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& ma
   x = w = v = max;
   fw = fv = fx = f(x);
   delta2 = delta = 0;
-  uintmax_t count = max_iter;
+  std::uintmax_t count = max_iter;
 
   do {
     // get midpoint
@@ -147,6 +151,6 @@ BrentResult<T> brent_find_minima(F f, T min, T max, int bits, std::uintmax_t& ma
   return {x, fx};
 }
 
-}  // namespace boost_minima
+}  // namespace hh
 
-#endif  // MESH_PROCESSING_SPHEREPARAM_BOOST_MINIMA_H_
+#endif  // MESH_PROCESSING_LIBHH_BRENTMINIMIZE_H_

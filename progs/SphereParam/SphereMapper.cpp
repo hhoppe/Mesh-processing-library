@@ -3,8 +3,7 @@
 
 #include <csignal>  // std::signal(), SIGPIPE.
 
-#include "boost_minima.h"
-
+#include "libHh/BrentMinimize.h"
 #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"
 #include "libHh/GMesh.h"
@@ -445,7 +444,7 @@ class SphereMapper::Implementation {
 
       const int bits = 12;  // Should not exceed half the number of bits in the mantissa of T (thus, 12 for float).
       std::uintmax_t max_iter = _optim_line_search_iter;
-      const auto [tbest, fmin] = boost_minima::brent_find_minima(stretch_on_neighborhood, tmin, tmax, bits, max_iter);
+      const auto [tbest, fmin] = brent_minimize(stretch_on_neighborhood, tmin, tmax, bits, max_iter);
       // const int num_iterations = int(_optim_line_search_iter - max_iter);
 
       if (fmin > stretch_on_neighborhood(0.f)) {

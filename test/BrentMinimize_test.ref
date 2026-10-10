@@ -1,0 +1,5 @@
+round_fraction_digits(min_x)=0.3 round_fraction_digits(min_f_x)=2
+round_fraction_digits(min_x, 1e3f) = -0.7
+round_fraction_digits(min_x, 1e3) = 1
+max_iter = 3
+round_fraction_digits(min_x2)=3.14159 round_fraction_digits(min_f_x2)=-1

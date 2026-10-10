@@ -238,7 +238,7 @@ Graph: edges {
  edge (3, 4)
 }  (cost=3)
 do_random
-graph_mst: 60 vertices, 133/150 edges considered, 59 output
+graph_mst: 60 vertices, 100/151 edges considered, 59 output
 GraphQuickEmst: had to do 7 approximate Emst's
 round_fraction_digits(prim_weight, 1e4) = 10.1399
 graph_mst: 60 vertices, 187/1770 edges considered, 59 output

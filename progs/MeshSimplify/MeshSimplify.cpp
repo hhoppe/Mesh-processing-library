@@ -1509,23 +1509,23 @@ void sample_pts() {
   }
   // Random sampling.
   if (numpts) {
-    Array<Face> fface;    // Face of this index (nf).
-    Array<float> fcarea;  // Cumulative area (nf + 1).
+    Array<Face> fface;     // Face of this index (nf).
+    Array<double> fcarea;  // Cumulative area (nf + 1); double, so that each face has its exact probability.
     fface.reserve(mesh.num_faces());
     fcarea.reserve(mesh.num_faces() + 1);
     {
-      double sumarea = 0.;  // For accuracy.
+      double sumarea = 0.;
       for (Face f : mesh.faces()) {
         const float area = mesh.area(f);
         fface.push(f);
-        fcarea.push(float(sumarea));
+        fcarea.push(sumarea);
         sumarea += area;
       }
-      for_int(i, fface.num()) fcarea[i] /= mesh_area;
-      fcarea.push(1.00001f);
+      for_int(i, fface.num()) fcarea[i] /= sumarea;
+      fcarea.push(1.);
     }
     for_int(i, numpts) {
-      const int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.unif());
+      const int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.dunif());
       Face f = fface[fi];
       float a = Random::G.unif(), b = Random::G.unif();
       if (a + b > 1.f) {
@@ -1587,20 +1587,20 @@ void sample_pts() {
     const bool edge_regular_sampling = true;
     const bool edge_random_sampling = false;
     float mesh_elen;
-    Array<Edge> eedge;   // Edge of this index.
-    Array<float> eclen;  // Cumulative length.
+    Array<Edge> eedge;    // Edge of this index.
+    Array<double> eclen;  // Cumulative length; double, so that each edge has its exact probability.
     {
       double sumlen = 0.;
       for (Edge e : mesh.edges()) {
         if (!edge_sharp(e)) continue;
         const float len = mesh.length(e);
         eedge.push(e);
-        eclen.push(float(sumlen));
+        eclen.push(sumlen);
         sumlen += len;
       }
       mesh_elen = float(sumlen);
-      for_int(i, eedge.num()) eclen[i] /= mesh_elen;
-      eclen.push(1.00001f);
+      for_int(i, eedge.num()) eclen[i] /= sumlen;
+      eclen.push(1.);
     }
     {  // For a square patch, perimeter_ratio is 4.
       const float perimeter_ratio = mesh_elen / my_sqrt(mesh_area);
@@ -1628,7 +1628,7 @@ void sample_pts() {
       }
     } else if (edge_random_sampling) {
       for_int(i, np) {
-        const int ei = discrete_binary_search(eclen, 0, eedge.num(), Random::G.unif());
+        const int ei = discrete_binary_search(eclen, 0, eedge.num(), Random::G.dunif());
         Edge e = eedge[ei];
         add_edge_point(e, Random::G.unif());
       }

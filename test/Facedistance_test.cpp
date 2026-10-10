@@ -128,7 +128,8 @@ void test3() {
       Vec3<Point> triangle{random_point(), random_point(), random_point()};
       if (name == "near_plane") {
         const Vector nor = normalized(cross(triangle[0], triangle[1], triangle[2]));
-        const float b1 = Random::G.unif(), b2 = Random::G.unif() * (1.f - b1);
+        float b1 = Random::G.unif(), b2 = Random::G.unif();
+        if (b1 + b2 > 1.f) b1 = 1.f - b1, b2 = 1.f - b2;
         p = interp(triangle, Bary(b1, b2, 1.f - b1 - b2)) + nor * ((Random::G.unif() - .5f) * 2e-3f);
       } else if (name == "offset_1000") {
         const Vector offset(1000.f, 1000.f, 1000.f);

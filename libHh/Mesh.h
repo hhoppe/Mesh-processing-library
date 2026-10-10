@@ -199,7 +199,7 @@ class Mesh : noncopyable {
   // ** Random access (fast), assert there exist at least one:
   [[nodiscard]] Vertex random_vertex(Random& r) const;
   [[nodiscard]] Face random_face(Random& r) const;
-  [[nodiscard]] Edge random_edge(Random& r) const;  // Unbiased for a closed triangle mesh.
+  [[nodiscard]] Edge random_edge(Random& r) const;  // The mesh must contain only triangles.
 
   // ** Flags:
   [[nodiscard]] static FlagMask allocate_flag() {

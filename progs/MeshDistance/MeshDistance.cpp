@@ -152,24 +152,24 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
   if (numpts) {
     PStats pstats;
     // showdf("- random sampling of %d points\n", numpts);
-    Array<Face> fface;    // Face of this index (nf).
-    Array<float> fcarea;  // Cumulative area (nf + 1).
+    Array<Face> fface;     // Face of this index (nf).
+    Array<double> fcarea;  // Cumulative area (nf + 1); double, so that each face has its exact probability.
     fface.reserve(mesh_s.num_faces());
     fcarea.reserve(mesh_s.num_faces() + 1);
     {
-      double sum_area = 0.;  // For accuracy.
+      double sum_area = 0.;
       for (Face f : mesh_s.faces()) {
         const float area = mesh_s.area(f);
         fface.push(f);
-        fcarea.push(float(sum_area));
+        fcarea.push(sum_area);
         sum_area += area;
       }
-      for_int(face_index, fface.num()) fcarea[face_index] /= float(sum_area);
-      fcarea.push(1.00001f);
+      for_int(face_index, fface.num()) fcarea[face_index] /= sum_area;
+      fcarea.push(1.);
     }
-    Array<float> randoms;
+    Array<double> randoms;
     randoms.reserve(numpts * 3);
-    for_int(i, numpts * 3) randoms.push(Random::G.unif());
+    for_int(i, numpts * 3) randoms.push(Random::G.dunif());
     const int num_threads = use_parallelism ? get_max_threads() : 1;
     Array<PStats> ar_pstats(num_threads);
     parallel_for_chunk(range(numpts), num_threads, [&](int thread_index, auto subrange) {
@@ -177,7 +177,7 @@ void compute_mesh_distance(GMesh& mesh_s, const GMesh& mesh_d, PStats& pastats) 
       for (const int i : subrange) {
         const int face_index = discrete_binary_search(fcarea, 0, fface.num(), randoms[i * 3 + 0]);
         Face f = fface[face_index];
-        float a = randoms[i * 3 + 1], b = randoms[i * 3 + 2];
+        float a = float(randoms[i * 3 + 1]), b = float(randoms[i * 3 + 2]);
         if (a + b > 1.f) a = 1.f - a, b = 1.f - b;
         const Bary bary(a, b, 1.f - a - b);
         project_point(mesh_s, f, bary, mesh_d, mesh_search, str, ar_pstats[thread_index]);

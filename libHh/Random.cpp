@@ -62,20 +62,18 @@ Random::result_type Random::operator()() { return get_int<sizeof(result_type)>()
 
 unsigned Random::get_unsigned(unsigned ub) {
   ASSERTX(ub);
-  if (0) {  // Unfortunately, implementation-dependent.
-    std::uniform_int_distribution<unsigned> distrib(0, ub - 1);
-    return distrib(*this);
-  } else {
-    const bool ub_is_pow2 = (ub & (ub - 1)) == 0;
-    if (ub_is_pow2) return get_unsigned() & (ub - 1);                   // Fast case: no need for loop or remainder.
-    const unsigned nspans = std::numeric_limits<unsigned>::max() / ub;  // Number of whole spans of length ub.
-    const unsigned maxv = nspans * ub;
-    for (;;) {
-      const unsigned v = get_unsigned();
-      if (v >= maxv) continue;
-      return v % ub;
-    }
+  // Lemire's method (D. Lemire, "Fast random integer generation in an interval", ACM TOMACS 2019): the high 32 bits of
+  // v * ub are a value in [0, ub - 1].  Each value arises from either floor(2^32 / ub) or that plus one values of v;
+  // rejecting the v whose low 32 bits fall below 2^32 % ub leaves exactly floor(2^32 / ub) for each, so the result is
+  // unbiased.  It usually needs no division: the remainder is computed only when the low bits are below ub.  It is as
+  // fast as masking for a power-of-two ub, and faster than the earlier rejection method (draws below the largest
+  // multiple of ub, then v % ub) except for ub above 2^31.
+  uint64_t m = uint64_t{get_unsigned()} * ub;
+  if (unsigned(m) < ub) {
+    const unsigned threshold = (0u - ub) % ub;  // Equals 2^32 % ub.
+    while (unsigned(m) < threshold) m = uint64_t{get_unsigned()} * ub;
   }
+  return unsigned(m >> 32);
 }
 
 // The result approximates the nearest float (or double) to the uniform real (i + 1/2) / 2^32 (or (i + 1/2) / 2^64),

@@ -52,7 +52,7 @@ template <int D> Vec<float, D> MultigridMetricAnisotropic<D>::_metricw;
 inline Pixel random_color(Random& random) {
   Pixel pixel;
   pixel[3] = 255;
-  for_int(c, 3) pixel[c] = uint8_t(80.f + random.unif() * 150.f + .5f);
+  for_int(c, 3) pixel[c] = uint8_t(80 + random.get_unsigned(151));  // Range [80, 230].
   return pixel;
 }
 
@@ -1915,7 +1915,7 @@ void process_gen(Args& args) {
       auto& pixel = ar_color[i];
       if (0) {
         for (;;) {
-          for_int(c, 3) pixel[c] = uint8_t(20.f + Random::G.unif() * 235.f + .5f);
+          for_int(c, 3) pixel[c] = uint8_t(20 + Random::G.get_unsigned(236));  // Range [20, 255].
           if (mag(pixel) > 350 && max(pixel) > 150 && min(pixel) < 100) break;
         }
       } else {

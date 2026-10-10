@@ -444,16 +444,15 @@ Face Mesh::random_face(Random& r) const {
 }
 
 Edge Mesh::random_edge(Random& r) const {
-  Face f = random_face(r);
-  int vi = r.get_unsigned(num_vertices(f));
-  HEdge he_first = nullptr;
-  for (HEdge he : corners(f)) {
-    if (!vi--) {
-      he_first = he;
-      break;
-    }
+  for (;;) {
+    Face f = random_face(r);
+    assertx(is_triangle(f));
+    const Vec3<HEdge> vec_he = triangle_corners(f);
+    const int n_he = r.get_unsigned(3);
+    HEdge he = vec_he[n_he];
+    const bool is_representative = he->_edge->_herep == he;
+    if (is_representative) return he->_edge;
   }
-  return assertx(he_first)->_edge;
 }
 
 // *** Mesh operations

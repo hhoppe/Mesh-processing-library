@@ -28,4 +28,4 @@ sort(InlinedArray<int, 1>(map.values() | views::transform([](int i) { return 100
   101
   102
 }
-m.num() = 151
+m.num() = 157

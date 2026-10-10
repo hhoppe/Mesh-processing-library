@@ -115,10 +115,11 @@ int main() {
     SHOW(Random::min(), Random::max(), Random::default_seed);
   }
   {
-    // For a power-of-two bound, get_unsigned(ub) keeps the low bits of get_unsigned().
+    // For a power-of-two bound, get_unsigned(ub) keeps the high bits of get_unsigned(), since Lemire's method then
+    // never rejects a draw.
     Random r3(11), r4(11);
     for (const unsigned ub : {1u, 2u, 8u, 1u << 20, 1u << 31}) {
-      for_int(i, 100) assertx(r3.get_unsigned(ub) == (r4.get_unsigned() & (ub - 1)));
+      for_int(i, 100) assertx(r3.get_unsigned(ub) == unsigned((uint64_t{r4.get_unsigned()} * ub) >> 32));
     }
     // For other bounds, the values are in range and, for small bounds, all occur.
     for (const unsigned ub : {3u, 7u, 1000u, std::numeric_limits<unsigned>::max()}) {

@@ -1,4 +1,4 @@
-stree.num() = 48
+stree.num() = 52
 stree.min()=30 stree.max()=10
 stree.pred(25)=30 stree.succ(25)=20 stree.pred_eq(20)=20 stree.succ_eq(20)=20 stree.pred(30)=0 stree.succ(10)=0
 ar = Array<int>(3) {

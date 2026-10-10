@@ -1417,7 +1417,7 @@ Vec2<Vertex> find_diameter_of_boundary_vertices() {
     for_int(iter, 100) {
       Vec2<Vertex> vbt;
       {
-        Vector dir;
+        Vector dir;  // The sampling is biased but that does not matter here.
         for_int(c, 3) dir[c] = Random::G.unif() * 2 - 1;
         assertx(dir.normalize());
         float mindot = BIGFLOAT, maxdot = -BIGFLOAT;
@@ -2752,28 +2752,28 @@ void do_randpts(Args& args) {
   fface.reserve(nf);
   Array<float> farea;  // Area of the face.
   farea.reserve(nf);
-  Array<float> fcarea;  // Cumulative area.
+  Array<double> fcarea;  // Cumulative area; double, so that each face has its exact probability.
   fcarea.reserve(nf + 1);
   for (Face f : mesh.faces()) {
     if (!assertw(mesh.is_triangle(f))) continue;
     fface.push(f);
     farea.push(mesh.area(f));
   }
-  const float sumarea = float(sum(farea));
+  const double sumarea = sum<double>(farea);
   showdf("Total area %g over %d faces\n", sumarea, fface.num());
   {
-    double area = 0.;  // For accuracy.
+    double area = 0.;
     for_int(i, fface.num()) {
-      fcarea.push(float(area));
+      fcarea.push(area);
       area += farea[i] / sumarea;
     }
-    assertx(abs(area - 1.f) < 1e-5f);
+    assertx(abs(area - 1.) < 1e-10);
   }
-  fcarea.push(1.00001f);
+  fcarea.push(1.00001);
   Map<Vertex, Vnors> mvnors;
   for (Vertex v : mesh.vertices()) mvnors.enter(v, Vnors(mesh, v));
   for_int(i, npoints) {
-    const int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.unif());
+    const int fi = discrete_binary_search(fcarea, 0, fface.num(), Random::G.dunif());
     Face f = fface[fi];
     Bary bary(Random::G.unif(), Random::G.unif(), 0.f);
     if (bary[0] + bary[1] > 1.f) {

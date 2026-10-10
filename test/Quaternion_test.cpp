@@ -33,6 +33,7 @@ float rotation_dist(const Quaternion& q1, const Quaternion& q2) {
 }
 
 // A random unit quaternion, from a random axis and a random angle in [0, max_angle).
+// The sampling is biased but that is OK for these tests.
 Quaternion random_quaternion(Random& random, float max_angle) {
   const Vector axis(random.unif() - .5f, random.unif() - .5f, random.unif() - .5f);
   return Quaternion(axis, random.unif() * max_angle);
@@ -178,6 +179,7 @@ void test_interpolation() {
 void test_from_two_vectors() {
   Random random{3};
   for_int(iter, 100) {
+    // The sampling is biased but that is OK for this test.
     const Vector vf = normalized(Vector(random.unif() - .5f, random.unif() - .5f, random.unif() - .5f));
     Vector vt = normalized(Vector(random.unif() - .5f, random.unif() - .5f, random.unif() - .5f));
     if (dot(vf, vt) < -.9f) vt = normalized(vt + vf);  // Avoid nearly opposite vectors.

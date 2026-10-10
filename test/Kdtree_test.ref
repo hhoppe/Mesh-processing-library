@@ -198,11 +198,11 @@ partition of axis 0 along 0.5 <<
   <nil>
   <nil>
 
-D=1 maxlevel=8 fsize=0 num_found=12807 num_reports=12807
-D=2 maxlevel=8 fsize=0 num_found=2278 num_reports=2278
-D=2 maxlevel=5 fsize=1 num_found=2278 num_reports=2737
-D=3 maxlevel=6 fsize=0 num_found=325 num_reports=325
-D=3 maxlevel=6 fsize=0.5 num_found=325 num_reports=348
+D=1 maxlevel=8 fsize=0 num_found=12572 num_reports=12572
+D=2 maxlevel=8 fsize=0 num_found=2105 num_reports=2105
+D=2 maxlevel=5 fsize=1 num_found=2105 num_reports=2549
+D=3 maxlevel=6 fsize=0 num_found=305 num_reports=305
+D=3 maxlevel=6 fsize=0.5 num_found=305 num_reports=322
 found = Array<int>(2) {
   5
   4
@@ -218,8 +218,8 @@ partition of axis 0 along 0.5 <<
    <nil>
   <nil>
  <nil>
-D=1 maxlevel=8 fsize=0 num_found=28718
-D=1 maxlevel=8 fsize=1 num_found=28718
-D=2 maxlevel=8 fsize=0 num_found=2468
-D=2 maxlevel=8 fsize=1 num_found=2468
-D=3 maxlevel=6 fsize=0.5 num_found=284
+D=1 maxlevel=8 fsize=0 num_found=31280
+D=1 maxlevel=8 fsize=1 num_found=31280
+D=2 maxlevel=8 fsize=0 num_found=2984
+D=2 maxlevel=8 fsize=1 num_found=2984
+D=3 maxlevel=6 fsize=0.5 num_found=288

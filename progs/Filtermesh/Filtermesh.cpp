@@ -3169,6 +3169,24 @@ void do_keepfmatid(Args& args) {
   for (Face f : arf) mesh.destroy_face(f);
 }
 
+// Assign each face a color that is a deterministic function of its material id ("matid=%d"), e.g. to visualize the
+// charts of a texture atlas.
+void do_colormatid() {
+  string str;
+  int num_missing = 0;
+  for (Face f : mesh.faces()) {
+    const char* s = GMesh::string_key(str, mesh.get_string(f), "matid");
+    if (!s) {
+      num_missing++;
+      continue;
+    }
+    const uint32_t hash = uint32_t(to_int(s) + 1) * 2654435761u;  // Knuth's multiplicative hash.
+    const Vec3<float> rgb(float((hash >> 0) & 255u), float((hash >> 8) & 255u), float((hash >> 16) & 255u));
+    mesh.update_string(f, "rgb", csform_vec(str, rgb * (.7f / 255.f) + .3f));
+  }
+  if (num_missing) showdf("Found %d faces without any matid\n", num_missing);
+}
+
 void do_uvtopos() {
   const bool keep_uv = getenv_bool("KEEPUV");
   for (Vertex v : mesh.vertices()) {
@@ -4526,6 +4544,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(rmfarea, "area : remove faces with < area");
   HH_ARGSD(rmflarea, "area : remove faces with > area");
   HH_ARGSD(keepfmatid, "id : keep only faces with matid=id");
+  HH_ARGSD(colormatid, ": assign face rgb based on matid");
   HH_ARGSD(uvtopos, ": replace vertex positions by uv");
   HH_ARGSD(perturbz, "scale : perturb z positions by [-1, 1]*scale");
   HH_ARGSD(signeddistcontour, "grid : contour signed distance to mesh");

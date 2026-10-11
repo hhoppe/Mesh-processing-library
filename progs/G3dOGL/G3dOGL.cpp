@@ -3277,7 +3277,21 @@ void draw_pm() {
     initialize_unlit();
     set_thickness(thicknormal);
     update_cur_color(pix_edgecolor);
-    wmesh.ogl_render_edges();
+    if (uvtopos && pmesh._info._has_uv) {
+      // Draw the edges in the uv domain, as for a mesh (an inefficient path that draws interior edges twice).
+      glBegin(GL_LINES);
+      for_int(f, wmesh._faces.num()) {
+        for_int(j, 3) {
+          const Uv& uv0 = wmesh._wedges[wmesh._faces[f].wedges[j]].attrib.uv;
+          const Uv& uv1 = wmesh._wedges[wmesh._faces[f].wedges[mod3(j + 1)]].attrib.uv;
+          glVertex3f(uv0[0], uv0[1], 0.f);
+          glVertex3f(uv1[0], uv1[1], 0.f);
+        }
+      }
+      glEnd();
+    } else {
+      wmesh.ogl_render_edges();
+    }
     set_thickness(thicka3d);
   }
 }

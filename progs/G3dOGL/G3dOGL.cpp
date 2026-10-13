@@ -2710,7 +2710,7 @@ void HB::set_camera(const Frame& p_real_t, float p_real_zoom, const Frame& p_vie
   real_zoom = p_real_zoom;
   view_zoom = p_view_zoom;
   if (uvtopos) {
-    tpos = Frame(Vector(0.f, 0.f, -1.f), Vector(0.f, 1.f, 0.f), Vector(1.f, 0.f, 0.f), Point(0.5f, 0.5f, 2.5f));
+    tpos = Frame(Vector(0.f, 0.f, -1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Point(0.5f, 0.5f, 2.5f));
     real_zoom = 0.2f;
     tcam = tpos;
     view_zoom = real_zoom;
@@ -2925,8 +2925,16 @@ bool HB::special_keypress(char ch) {
       break;
     case 'U':
       uvtopos = !uvtopos;
-      special_keypress('s');
-      special_keypress('e');
+      static bool prev_edges, prev_shading;
+      if (uvtopos) {
+        prev_edges = g_xobs.edges[cob];
+        prev_shading = g_xobs.shading[cob];
+        if (!prev_edges) toggle_attribute(g_xobs.edges);
+        if (prev_shading) toggle_attribute(g_xobs.shading);
+      } else {
+        if (g_xobs.edges[cob] != prev_edges) toggle_attribute(g_xobs.edges);
+        if (g_xobs.shading[cob] != prev_shading) toggle_attribute(g_xobs.shading);
+      }
       invalidate_dls();
       hw.redraw_now();
       break;
@@ -3284,8 +3292,8 @@ void draw_pm() {
         for_int(j, 3) {
           const Uv& uv0 = wmesh._wedges[wmesh._faces[f].wedges[j]].attrib.uv;
           const Uv& uv1 = wmesh._wedges[wmesh._faces[f].wedges[mod3(j + 1)]].attrib.uv;
-          glVertex3f(uv0[0], uv0[1], 0.f);
-          glVertex3f(uv1[0], uv1[1], 0.f);
+          glVertex2fv(uv0.data());
+          glVertex2fv(uv1.data());
         }
       }
       glEnd();

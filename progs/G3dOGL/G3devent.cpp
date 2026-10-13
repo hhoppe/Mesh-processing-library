@@ -690,7 +690,11 @@ void DoJump() {
     const float a = mind * .5f + maxd * .5f / zoom * 1.1f;
     newvp[minc] += (minc == 2 ? 1 : -1) * a;
     g_obs[obview].tm().p() = newvp * g_obs[cob].t();
-    aim_towards(centerbb * g_obs[cob].t());
+    if (diag[2] == 0.f) {  // Special case for view of 2D dataset in XY plane: roll appropriately.
+      g_obs[obview].tm() = Frame(Vector(0.f, 0.f, -1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), newvp);
+    } else {
+      aim_towards(centerbb * g_obs[cob].t());
+    }
   } else {
     zoom = .2f;
     Vector v = diag * (.55f / zoom);

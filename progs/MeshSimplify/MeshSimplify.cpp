@@ -466,6 +466,9 @@ bool dihallow = false;        // Penalize but allow bad dihedral angles.
 int invertexorder = 0;        // Remove vertices in reverse order (2=fix_edges).
 bool wedge_materials = true;  // Material boundaries imply wedge boundaries; introduced for DirectX 1996-07-25.
 string original_indices;      // Write the PM's original vertex indices in order to a file.
+// With strict_sharp 2, the minimum number of boundary vertices of each chart (material id), e.g., 4 to keep the charts
+// from becoming single triangles.
+int min_chart_boundary_vertices = 0;
 
 // Failed attempt at signed_dihedral_angle():
 //  constexpr float gmindih = -rad_from_deg(109.471);
@@ -3428,6 +3431,32 @@ void tvc_update_cache(Edge e) {
   }
 }
 
+// For min_chart_boundary_vertices, the current number of boundary vertices of each chart (material id).
+Map<int, int> chart_num_boundary_vertices;
+
+// Returns the charts (material ids) whose boundary contains vertex v, i.e., all its adjacent charts if it is
+// adjacent to two or more charts or if it lies on the mesh boundary.
+Array<int> charts_with_boundary_vertex(Vertex v) {
+  Array<int> charts;
+  for (Face f : mesh.faces(v))
+    if (!contains(charts, f_matid(f))) charts.push(f_matid(f));
+  if (charts.num() < 2 && !mesh.is_boundary(v)) charts.init(0);
+  return charts;
+}
+
+// Returns false if removing vertex v would leave some chart with fewer than min_chart_boundary_vertices.
+bool can_remove_chart_boundary_vertex(Vertex v) {
+  for (const int chart : charts_with_boundary_vertex(v))
+    if (chart_num_boundary_vertices.get(chart) <= min_chart_boundary_vertices) return false;
+  return true;
+}
+
+void initialize_chart_num_boundary_vertices() {
+  chart_num_boundary_vertices.clear();
+  for (Vertex v : mesh.vertices())
+    for (const int chart : charts_with_boundary_vertex(v)) chart_num_boundary_vertices[chart]++;
+}
+
 bool try_ecol_legal(Edge e, Vertex v1, Vertex v2, int v1nse, int v2nse) {
   if (no_simp_bnd && (mesh.is_boundary(v1) || mesh.is_boundary(v2))) return false;
   if (maxvalence && mesh.degree(v1) + mesh.degree(v2) - (mesh.is_boundary(e) ? 3 : 4) > maxvalence) return false;
@@ -3890,6 +3919,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       if (ii == 0) std::swap(tv1, tv2);
       // Here, tv1 is kept and tv2 is lost.
       const bool ok = [&] {
+        if (min_chart_boundary_vertices && !can_remove_chart_boundary_vertex(tv2)) return false;  // From lambda.
         for (Face f : mesh.faces(e)) {
           Vertex vv = mesh.opp_vertex(e, f);  // Either side_vertex1 or side_vertex2.
           Face fc = mesh.opp_face(f, mesh.edge(tv2, vv));
@@ -4324,6 +4354,12 @@ EcolResult try_ecol(Edge e, bool commit) {
   }
   if (tvcfac) tvc_update_cache(e);
   if (original_indices != "") ar_vt_indices.push(mesh.vertex_id(vt));
+  if (min_chart_boundary_vertices) {
+    for (const int chart : charts_with_boundary_vertex(vt)) {
+      assertx(chart_num_boundary_vertices[chart] > 0);
+      chart_num_boundary_vertices[chart]--;
+    }
+  }
   // ***DO IT
   mesh.collapse_edge_vertex(e, vs);  // Here, vs is kept.
   mesh.set_point(vs, min_p);
@@ -4588,12 +4624,14 @@ void parallel_optimize() {
       num_edges_considered++;
       // An invalidated edge may since have been destroyed by a collapse, so we must not access it.
       if (invalidated[index]) continue;
-      // COMMIT.
       if (k_debug) mesh.valid(e);
-      num_edges_collapsed++;
       const bool bswap = desire_edge_orientation_swap(e, min_ii);
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       Vertex vs = !bswap ? v1 : v2;
+      // The chart boundary-vertex counts may have changed since the evaluation, due to other collapses in the charts.
+      if (min_chart_boundary_vertices && !can_remove_chart_boundary_vertex(!bswap ? v2 : v1)) continue;
+      // COMMIT.
+      num_edges_collapsed++;
       for (Vertex v : V(v1, v2)) {
         if (vs_never_changes && v == vs) continue;
         for (Vertex vv : mesh.vertices(v))
@@ -4622,6 +4660,10 @@ void parallel_optimize() {
 // Simplify the mesh until it has <= nfaces or <= nvertices.
 void optimize() {
   if (minii2 && minqem) assertx(no_fit_geom);
+  if (min_chart_boundary_vertices) {
+    assertx(strict_sharp >= 2);
+    initialize_chart_num_boundary_vertices();
+  }
   if (strict_sharp == 2) {
     for (Face f : mesh.faces()) {
       const Vec3<Face> fn = transformed(mesh.triangle_vertices(f), [&](Vertex v) { return mesh.opp_face(v, f); });
@@ -4958,6 +5000,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(invertexorder, "i : remove vertices in rev. order, 2=fix edges");
   HH_ARGSC("", ":");
   HH_ARGSP(strict_sharp, "i : preserve topology of discont. curves");
+  HH_ARGSP(min_chart_boundary_vertices, "n : with strict_sharp 2, keep >= n boundary vertices per chart");
   HH_ARGSF(no_fit_geom, ": do not optimize over geometry");
   HH_ARGSP(fit_colors, "bool : modify colors (wad2)");
   HH_ARGSP(fit_normals, "bool : modify normals (wad2)");

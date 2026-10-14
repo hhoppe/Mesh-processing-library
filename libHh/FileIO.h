@@ -81,6 +81,9 @@ inline void assert_reached_eof(std::istream& is) {
 // Check if filename would be read using a pipe stream ("-", ".Z", ".gz", "| command", "command |", "https://").
 [[nodiscard]] bool file_requires_pipe(const string& name);
 
+// Retrieve size of file in bytes, or -1 if it does not exist.
+[[nodiscard]] int64_t get_file_size(const string& name);
+
 // Retrieve modification time of file or directory.
 [[nodiscard]] uint64_t get_path_modification_time(const string& name);
 

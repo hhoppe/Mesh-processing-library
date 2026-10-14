@@ -18,7 +18,7 @@
 #include "libHh/Bbox.h"
 #include "libHh/BinarySearch.h"  // discrete_binary_search()
 #include "libHh/Color_ramp.h"    // k_color_ramp
-#include "libHh/FileIO.h"        // my_sh()
+#include "libHh/FileIO.h"        // my_sh(), get_file_size()
 #include "libHh/Geometry.h"
 #include "libHh/GridOp.h"       // crop()
 #include "libHh/GridPixelOp.h"  // spatially_scale_Grid_Pixel()
@@ -64,6 +64,7 @@ const bool k_no_dos_eol_warnings = false;  // Ignore end-of-line warnings when r
 const bool k_prefer_nv12 = 1;  // Read videos using NV12 format (if even dimensions) to save memory and improve speed.
 const bool k_use_bgra = 1;     // Read images using BGRA (rather than RGBA) channel order to improve speed.
 const Pixel k_background_color = Pixel::black();
+constexpr int64_t k_max_prefetch_size = 10'000'000;  // Do not prefetch image files larger than this (bytes).
 constexpr auto k_speeds = to_Vec({
     // Video playback speed factors.
     0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1., 1.1, 1.2, 1.3, 1.4, 1.5, 2., 3., 4., 5., 10.,
@@ -697,6 +698,7 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
     for (const int increment : {1, -1}) {
       string filename = next_image_in_directory(o._filename, increment);
       if (filename == "") continue;
+      if (const int64_t size = get_file_size(filename); size < 0 || size > k_max_prefetch_size) continue;
       const int i = (1 - increment) / 2;  // 0 == next, 1 == prev
       std::scoped_lock lock(g_mutex_prefetch);
       if (ranges::none_of(g_prefetch_image, [&](const PrefetchImage& p) { return p.filename == filename; })) {

@@ -518,6 +518,18 @@ bool file_requires_pipe(const string& name) {
   return name == "-" || name.ends_with(".Z") || name.ends_with(".gz") || is_pipe(name) || is_url(name);
 }
 
+// Returns the size in bytes, or -1 on error.
+int64_t get_file_size(const string& name) {
+#if defined(_WIN32)
+  struct _stati64 fstat;
+  if (_wstati64(utf16_from_utf8(name).c_str(), &fstat)) return -1;
+#else
+  struct stat fstat;
+  if (stat(name.c_str(), &fstat)) return -1;
+#endif
+  return fstat.st_size;
+}
+
 // Returns the modification time, or 0 on error.
 uint64_t get_path_modification_time(const string& name) {
 #if defined(_WIN32)

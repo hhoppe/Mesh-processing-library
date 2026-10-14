@@ -108,12 +108,14 @@ int main() {
     const string filename = "FileIO_test.tmp.txt";
     assertx(!file_exists(filename));
     assertx(get_path_modification_time(filename) == 0);
+    assertx(get_file_size(filename) == -1);
     {
       WFile fo(filename);
       fo() << "line1\n\nline 3\n";
     }
     assertx(file_exists(filename) && !directory_exists(filename));
     assertx(read_all(filename) == "line1\n\nline 3\n");
+    assertx(get_file_size(filename) == 14);
     {
       RFile fi(filename);
       string line;

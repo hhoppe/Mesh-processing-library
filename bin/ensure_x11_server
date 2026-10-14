@@ -19,17 +19,23 @@ if [[ $1 == --help ]]; then echo "$usage"; exit 0; fi
 [[ $OSTYPE == cygwin ]] || exit 0
 
 export DISPLAY=${DISPLAY:-:0}
-for program in xset XWin; do
+for program in xset XWin flock; do
   type -P $program >/dev/null || { echo "ensure_x11_server: $program is not installed." >&2; exit 1; }
 done
 server_is_up() { xset q >&/dev/null; }
 server_is_up && exit 0
 
+# The demos run in parallel and may all find no server; a lock lets only the first start one (a second XWin on the
+# same display fails with an error dialog), and the others then find it up.  XWin must not inherit the lock.
+exec 9>/tmp/ensure_x11_server.lock
+flock 9
+server_is_up && exit 0
+
 echo "ensure_x11_server: starting an X server on display $DISPLAY." >&2
 if type -P run >/dev/null; then
-  run XWin "$DISPLAY" -multiwindow -noclipboard  # The run program detaches XWin without a console window.
+  run XWin "$DISPLAY" -multiwindow -noclipboard 9>&-  # The run program detaches XWin without a console window.
 else
-  setsid XWin "$DISPLAY" -multiwindow -noclipboard >&/dev/null </dev/null &
+  setsid XWin "$DISPLAY" -multiwindow -noclipboard >&/dev/null </dev/null 9>&- &
 fi
 for ((i = 0; i < 100; i++)); do
   server_is_up && exit 0

@@ -447,7 +447,10 @@ class SphereMapper::Implementation {
       const auto [tbest, fmin] = brent_minimize(stretch_on_neighborhood, tmin, tmax, bits, max_iter);
       // const int num_iterations = int(_optim_line_search_iter - max_iter);
 
-      if (fmin > stretch_on_neighborhood(0.f)) {
+      // An infinite fmin means that some face stays degenerate or flipped over the whole interval; then tbest is
+      // arbitrary, and accepting it (as fmin == f(0) == inf would) lets two adjacent vertices displace each other
+      // indefinitely, which was observed on the 9-vertex base mesh of the octaflat demo under MSVC debug.
+      if (!std::isfinite(fmin) || fmin > stretch_on_neighborhood(0.f)) {
         if (0) Warning("Objective function increased");  // Due to k_pad_fraction or !(tmin <= 0.f && tmax >= 0.f).
       } else {
         x0 = normalized(interp_on_arc(x0, dir, tbest));

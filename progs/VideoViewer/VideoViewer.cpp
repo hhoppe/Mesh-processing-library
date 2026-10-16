@@ -4108,7 +4108,7 @@ void background_work(bool asynchronous) {
         message("Here is the resulting seamless video loop (press <p><p> to select original video)", 5.);
         unique_ptr<Object> vlp_obj, loop_obj;  // Built here, then published together under g_mutex_obs.
         if (1) {
-          string filename = get_path_root(getob()._filename) + "_vlp.png";
+          string filename = get_path_root(ob._filename) + "_vlp.png";
           Image image_vlp(g_lp.mat_start.dims());
           // See also Filterimage.cpp vlp_mask_to_color.
           const int num_input_frames = odims[0];
@@ -4129,7 +4129,7 @@ void background_work(bool asynchronous) {
           vlp_obj = make_unique<Object>(std::move(image_vlp), std::move(filename), bgra);
         }
         {
-          const string filename = append_to_filename(getob()._filename, "_loop");
+          const string filename = append_to_filename(ob._filename, "_loop");
           loop_obj = make_unique<Object>(ob, std::move(videoloop), std::move(videoloop_nv12), filename);
           loop_obj->_video.attrib().audio.clear();  // Open research problem.
         }

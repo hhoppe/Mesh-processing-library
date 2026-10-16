@@ -68,6 +68,8 @@ Each is defined in a file `make/Makefile_config_*` and places its executables in
 On Unix platforms (Linux, macOS, WSL), `CONFIG=unix` is the unique and default setting.
 On Windows, `CONFIG` defaults to `win`, and `make` must be run within a Cygwin or MSYS2 shell,
 to provide GNU `make`, `bash`, `perl`, `diff`, and `g++` (used only to determine the header dependencies).
+The variable `CC` may be given either on the `make` command line or in the environment;
+for `CONFIG=unix`, its value must then be `clang` or `gcc`.
 
 For example:
 

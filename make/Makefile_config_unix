@@ -4,13 +4,16 @@ ifeq ($(is_mac),1)
   cppinc += -DHH_NO_IMAGE_LIBS#  To avoid installing libjpeg and libpng; instead just use ffmpeg.
   includes += -isystem /opt/X11/include#  For XQuartz X11 on Mac; a system directory, so that its headers do not warn.
   LDFLAGS += -L/opt/X11/lib#  For XQuartz X11 on Mac.
-  CC = clang#  Set default choice of compiler (clang or gcc); on Mac, gcc/g++ gets mapped to clang anyway.
   # Mac uses libc++ (rather than libstdc++) and it does not currently have stacktrace.
 else
-  CC = clang#  Set default choice of compiler (clang or gcc); override using "make CC=gcc ...".
   last_libs += -lstdc++exp#  For stacktrace.
 endif
 
+# Default choice of compiler (clang or gcc); override using "make CC=gcc ..." or CC=gcc in the environment.
+ifeq ($(origin CC),default)
+  CC = clang#  (On Mac, gcc/g++ gets mapped to clang anyway.)
+endif
+$(if $(filter clang gcc,$(CC)),,$(error CC=$(CC) is neither clang nor gcc))
 include $(dir $(lastword $(MAKEFILE_LIST)))Makefile_base_$(CC)
 
 # libstdc++ implements partial_ordering::equivalent as a nullptr and gives false-positive warnings.

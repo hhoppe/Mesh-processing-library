@@ -123,6 +123,13 @@ void test_move_only_values() {
   assertx(!m.remove(1));  // Removing an absent key returns a default (null) value.
   for (unique_ptr<int>& p : m.values()) p = make_unique<int>(*p + 1);
   assertx(*m.get(2) == 22);
+  bool is_new;
+  unique_ptr<int> p = make_unique<int>(30);
+  // A present key leaves p intact; an absent key moves from it.
+  // NOLINTNEXTLINE(bugprone-use-after-move, clang-analyzer-cplusplus.Move): it checks the moved-from state.
+  assertx(*m.enter(2, std::move(p), is_new) == 22 && !is_new && p && *p == 30);
+  // NOLINTNEXTLINE(bugprone-use-after-move, clang-analyzer-cplusplus.Move): it checks the moved-from state.
+  assertx(*m.enter(3, std::move(p), is_new) == 30 && is_new && !p);
 }
 
 void test_stateful_functors() {  // Hash and equality functors with state, passed to the constructor.

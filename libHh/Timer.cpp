@@ -142,7 +142,7 @@ class Timers {
     // Timers may run concurrently in different threads (e.g., the background thread of VideoViewer).
     std::scoped_lock lock(instance()._mutex);
     const auto& [it, is_new] =
-        instance()._map.emplace(timer._name, narrow_cast<int>(instance()._vec_timer_info.size()));
+        instance()._map.try_emplace(timer._name, narrow_cast<int>(instance()._vec_timer_info.size()));
     const auto& [_, i] = *it;
     if (is_new) instance()._vec_timer_info.emplace_back(timer._name);
     Timers::TimerInfo& timer_info = instance()._vec_timer_info[i];

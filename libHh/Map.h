@@ -57,28 +57,33 @@ class Map {
       : _map(std::move(l)) {}
   void clear() { _map.clear(); }
   void enter(const Key& key, const Value& value) requires Copyable<Key> && Copyable<Value> {  // Key must be new!
-    const auto [_, is_new] = _map.emplace(key, value);
+    const auto [_, is_new] = _map.try_emplace(key, value);
     ASSERTX(is_new);
   }
   void enter(Key&& key, const Value& value) requires Copyable<Value> {
-    const auto [_, is_new] = _map.emplace(std::move(key), value);
+    const auto [_, is_new] = _map.try_emplace(std::move(key), value);
     ASSERTX(is_new);
   }
   void enter(const Key& key, Value&& value) requires Copyable<Key> {
-    const auto [_, is_new] = _map.emplace(key, std::move(value));
+    const auto [_, is_new] = _map.try_emplace(key, std::move(value));
     ASSERTX(is_new);
   }
   void enter(Key&& key, Value&& value) {
-    const auto [_, is_new] = _map.emplace(std::move(key), std::move(value));
+    const auto [_, is_new] = _map.try_emplace(std::move(key), std::move(value));
     ASSERTX(is_new);
   }
-  Value& enter(const Key& key, const Value& value, bool& is_new) requires Copyable<Key> && Copyable<Value>
-  {  // Does not modify element if it already exists.
-    const auto [it, is_new_] = _map.emplace(key, value);
+  // Does not modify element if it already exists.
+  Value& enter(const Key& key, const Value& value, bool& is_new) requires Copyable<Key> && Copyable<Value> {
+    const auto [it, is_new_] = _map.try_emplace(key, value);
     is_new = is_new_;
     return it->second;
   }
-  // Omit "Value& enter(const Key& key, Value&& value, bool& is_new)" because value could be lost if !is_new.
+  // Does not modify element (nor move from value) if it already exists.
+  Value& enter(const Key& key, Value&& value, bool& is_new) requires Copyable<Key> {
+    const auto [it, is_new_] = _map.try_emplace(key, std::move(value));
+    is_new = is_new_;
+    return it->second;
+  }
   // Note: force_enter using: { map[key] = std::move(value); }.
   [[nodiscard]] bool contains(const Key& key) const { return _map.find(key) != end(); }
   [[nodiscard]] const Value& retrieve(const Key& key) const {

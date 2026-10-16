@@ -1287,12 +1287,14 @@ void do_texture_file(Args& args) {
 
 void project_to_cube(Vector& normal) { normal /= max_abs_element(normal); }
 
-Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& rotate_frame, Face f,
-                    const Bary& bary) {
+// The parameter `signal` (i.e., signal_) is const because a non-const operator[] on a copy-on-write string (as in
+// Cygwin libstdc++) may reallocate its shared buffer, which would be a data race across the parallel threads.
+Pixel assign_signal(const string& signal, const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& rotate_frame,
+                    Face f, const Bary& bary) {
   if (GMesh::string_has_key(mesh.get_string(f), "filled")) return k_color_zero_alpha;
   if (GMesh::string_has_key(mesh.get_string(f), "hole")) return k_color_zero_alpha;
   Pixel pixel(255, 255, 255, 255);
-  switch (signal_[0]) {
+  switch (signal[0]) {
     case 'G': {
       const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
       Point p_m{};
@@ -1330,7 +1332,7 @@ Pixel assign_signal(const GMesh& mesh, const Bbox<float, 3>& bbox, const Frame& 
       pixel = is_on ? Pixel(250, 250, 250) : Pixel(30, 30, 30);
       break;
     }
-    default: assertnever("signal '" + signal_ + "' not recognized");
+    default: assertnever("signal '" + signal + "' not recognized");
   }
   return pixel;
 }
@@ -1527,7 +1529,7 @@ void do_write_texture(Args& args) {
           }
           const auto [f, bary] = msearch_s.search_on_sphere(p_s, hint_f_s);
           hint_f_s = f;
-          pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
+          pixel = assign_signal(signal_, param_mesh, bbox, rotate_frame, f, bary);
           if (anisotropic_filtering) image_surface_points[yy, x] = get_surface_point(param_mesh, f, bary);
         }
       }
@@ -1640,7 +1642,7 @@ void do_write_lonlat_texture(Args& args) {
         const Point sph = sph_from_lonlat(lonlat);
         const auto [f, bary] = mesh_search.search_on_sphere(sph, hint_f);
         hint_f = f;
-        pixel = assign_signal(param_mesh, bbox, rotate_frame, f, bary);
+        pixel = assign_signal(signal_, param_mesh, bbox, rotate_frame, f, bary);
       }
     }
   });

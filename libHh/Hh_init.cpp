@@ -168,6 +168,10 @@ LONG WINAPI my_top_level_exception_filter(EXCEPTION_POINTERS* ExceptionInfo) {
 
 [[noreturn]] void my_abort_handler(int signal_num) {
   dummy_use(signal_num);
+  // Under Cygwin, malloc() calls abort() while holding a non-recursive lock when it detects heap corruption, so the
+  // allocations in show_call_stack() then deadlock, and the process ignores all signals.  We keep this hang because
+  // it allows debugging: "gdb -p <winpid>" (from /proc/<pid>/winpid) with "thread apply all bt".  Afterwards, only
+  // "taskkill /F /PID <winpid>" terminates the process (not "kill -9").
   show_call_stack();
 #if defined(_WIN32)
   if (IsDebuggerPresent()) DebugBreak();
@@ -221,7 +225,10 @@ void assign_my_signal_handler() {
 
 #if defined(_MSVC_STL_VERSION)
 int __cdecl my_CrtDbgHook(int nReportType, char* szMsg, int* pnRet) {
-  // The heap may be corrupt, so cannot do any dynamic allocation here.
+  // When the debug heap detects corruption (e.g., "_CrtIsValidHeapPointer(block)"), it calls this hook while holding
+  // the CRT heap lock, and show_call_stack() then deadlocks: DbgEng waits for the loader lock, which is held by an
+  // exiting thread that waits for the heap lock.  We keep this hang because it allows debugging: attach a debugger to
+  // see the call stack of the offending free().
   if (0) std::cerr << "my_CrtDbgHook with no debugger present\n";
   if (strcmp(szMsg, "abort() has been called") != 0)
     std::cerr << "No debugger present; failure message: " << szMsg << "\n";

@@ -11,7 +11,7 @@ HH_REFERENCE_LIB("advapi32.lib");  // RegOpenKeyExA()
 
 #include <array>
 #include <cctype>  // isdigit()
-#include <mutex>   // once_flag, call_once()
+#include <mutex>   // once_flag, call_once(), mutex, scoped_lock
 #include <thread>  // thread::hardware_concurrency()
 #include <unordered_map>
 #include <vector>
@@ -139,7 +139,8 @@ string create_parallelism_string(double process_time, double real_time, int64_t 
 class Timers {
  public:
   static bool record(const Timer& timer, Timer::EMode cmode) {
-    // Note: not threadsafe.  (Any timers must be created outside multithreading sections.)
+    // Timers may run concurrently in different threads (e.g., the background thread of VideoViewer).
+    std::scoped_lock lock(instance()._mutex);
     const auto& [it, is_new] =
         instance()._map.emplace(timer._name, narrow_cast<int>(instance()._vec_timer_info.size()));
     const auto& [_, i] = *it;
@@ -157,7 +158,10 @@ class Timers {
     std::call_once(flag, [] { showff("(Timing on %s)\n", timing_host().c_str()); });
     return false;
   }
-  static void flush() { instance().flush_internal(); }
+  static void flush() {
+    std::scoped_lock lock(instance()._mutex);
+    instance().flush_internal();
+  }
   ~Timers() = delete;
 
  private:
@@ -204,6 +208,7 @@ class Timers {
   };
   std::vector<TimerInfo> _vec_timer_info;  // In order encountered at runtime; avoid dependency on Array.h.
   bool _have_some_mult{false};
+  std::mutex _mutex;
 };
 
 #endif  // !defined(HH_NO_TIMERS_CLASS)

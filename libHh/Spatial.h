@@ -15,9 +15,7 @@
 
 namespace hh {
 
-namespace details {
-class BaseSpatialSearch;
-}
+namespace details { class BaseSpatialSearch; }
 
 // Spatial data structure for efficient queries like "closest_elements" or "find_elements_intersecting_ray".
 class Spatial : noncopyable {  // An abstract class.

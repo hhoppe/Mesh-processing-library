@@ -6,9 +6,7 @@
 #include "libHh/Flags.h"
 #include "libHh/Geometry.h"
 
-namespace g3d {
-extern const hh::FlagMask mflag_ok;
-}  // namespace g3d
+namespace g3d { extern const hh::FlagMask mflag_ok; }
 
 namespace hh {
 

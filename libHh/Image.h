@@ -32,9 +32,7 @@
 
 namespace hh {
 
-namespace details {
-struct ImageLibs;
-}
+namespace details { struct ImageLibs; }
 
 class Image : public Matrix<Pixel> {
   using base = Matrix<Pixel>;

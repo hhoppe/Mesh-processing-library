@@ -9,6 +9,7 @@ ColumnLimit: 119                            # Default is 80; Google default is 8
 Language: Cpp                               # Default is Cpp; Google default is Cpp; keep to reject other file types.
 BreakTemplateDeclarations: MultiLine        # Default is MultiLine; Google default is Yes.
 AllowShortCaseLabelsOnASingleLine: true     # Default is false; Google default is false.
+AllowShortNamespacesOnASingleLine: true     # Default is false; Google default is false.
 ReflowComments: false                       # Default is Always; Google default is Always.
 IncludeBlocks: Preserve                     # Default is Preserve; Google default is Regroup.
 RequiresClausePosition: SingleLine          # Default is OwnLine; Google default is OwnLine.

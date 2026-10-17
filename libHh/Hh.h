@@ -346,9 +346,7 @@ using ushort = unsigned short;
 
 // *** Forward declaration of implementation details
 
-namespace details {
-template <typename T> struct sum_type;
-}  // namespace details
+namespace details { template <typename T> struct sum_type; }
 
 // *** Generalized casting
 

@@ -405,6 +405,11 @@ concept Hashable = requires(const Hash& hash, const Equal& equal, const T& e) {
   { equal(e, e) } -> std::convertible_to<bool>;
 };
 
+// Callable F that accepts arguments Args and returns a result convertible to R (any result if R is void); it is the
+// concept counterpart of std::is_invocable_r_v, just as std::invocable is that of std::is_invocable_v.
+template <typename F, typename R, typename... Args>
+concept invocable_r = std::invocable<F, Args...> && std::is_invocable_r_v<R, F, Args...>;
+
 // Hash of a pointer by its address, for a container that is never iterated (e.g. a lookup table); the iteration
 // order of a container using it depends on the memory layout.  Unlike a hash that reads the element (e.g. the
 // std::hash of a mesh element, which uses its id), it is also valid for a stale key whose element was destroyed.

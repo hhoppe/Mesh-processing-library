@@ -121,7 +121,9 @@ class IPointSpatial : public Spatial {
 };
 
 // Spatial data structure for more general objects.
-template <typename Approx2 = float(const Point& p, Univ id), typename Exact2 = float(const Point& p, Univ id)>
+// Approx2 and Exact2 are default-constructed functors called as approx2(p, id) and exact2(p, id); each returns the
+// squared distance from point p to object id, where approx2 gives a lower bound that exact2 then refines.
+template <invocable_r<float, const Point&, Univ> Approx2, invocable_r<float, const Point&, Univ> Exact2>
 class ObjectSpatial : public Spatial {
  public:
   explicit ObjectSpatial(int gn) : Spatial(gn) {}
@@ -132,7 +134,7 @@ class ObjectSpatial : public Spatial {
   // Die unless id != 0.
   // Enter an object that comes with a containment function: the function returns true if the object lies
   // within a given bounding box.  A starting point is also given.
-  template <typename Func = bool(const Bbox<float, 3>&)> void enter(Univ id, const Point& startp, Func fcontains);
+  template <invocable_r<bool, const Bbox<float, 3>&> Func> void enter(Univ id, const Point& startp, Func fcontains);
 
   // Find the objects that could possibly intersect the segment (p1, p2), calling ftest(id) on each one once.
   // The function ftest returns the parametric position f of the object's intersection along the segment, i.e. the
@@ -140,7 +142,7 @@ class ObjectSpatial : public Spatial {
   // The objects are not tested in the exact order of intersection!
   // However, the procedure stops only after calling ftest with all the objects that could intersect the segment at
   // a position smaller than the minimum f returned so far.
-  template <typename Func = float(Univ)> void search_segment(const Point& p1, const Point& p2, Func ftest) const;
+  template <invocable_r<float, Univ> Func> void search_segment(const Point& p1, const Point& p2, Func ftest) const;
 
  private:
   Map<int, Array<Univ>> _map;  // Encoded cube index -> vector.
@@ -248,7 +250,7 @@ inline Spatial::Ind Spatial::decode(int en) const {
   return ci;
 }
 
-template <typename Approx2, typename Exact2>
+template <invocable_r<float, const Point&, Univ> Approx2, invocable_r<float, const Point&, Univ> Exact2>
 void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter,
                                               SpatialVisitedSet& set) const {
   const int en = encode(ci);
@@ -261,7 +263,7 @@ void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, SpatialPriorityQueu
   }
 }
 
-template <typename Approx2, typename Exact2>
+template <invocable_r<float, const Point&, Univ> Approx2, invocable_r<float, const Point&, Univ> Exact2>
 void ObjectSpatial<Approx2, Exact2>::pq_refine(SpatialPriorityQueue& pq, const Point& pcenter) const {
   Univ id = pq.min();
   const float oldv = pq.min_priority();
@@ -273,8 +275,8 @@ void ObjectSpatial<Approx2, Exact2>::pq_refine(SpatialPriorityQueue& pq, const P
   pq.enter(id, newv);
 }
 
-template <typename Approx2, typename Exact2>
-template <typename Func>
+template <invocable_r<float, const Point&, Univ> Approx2, invocable_r<float, const Point&, Univ> Exact2>
+template <invocable_r<bool, const Bbox<float, 3>&> Func>
 void ObjectSpatial<Approx2, Exact2>::enter(Univ id, const Point& startp, Func fcontains) {
   Set<int> set;
   Queue<int> queue;
@@ -306,8 +308,8 @@ void ObjectSpatial<Approx2, Exact2>::enter(Univ id, const Point& startp, Func fc
   HH_SSTAT(Sospobcells, ncubes);
 }
 
-template <typename Approx2, typename Exact2>
-template <typename Func>
+template <invocable_r<float, const Point&, Univ> Approx2, invocable_r<float, const Point&, Univ> Exact2>
+template <invocable_r<float, Univ> Func>
 void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point& p2, Func ftest) const {
   static_assert(std::is_same_v<std::invoke_result_t<Func&, Univ>, float>);
   Set<Univ> set;

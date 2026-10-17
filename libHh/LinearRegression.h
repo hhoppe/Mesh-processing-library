@@ -35,7 +35,9 @@ template <int N> struct LinearRegressionPolynomialOrder {
 //  each multiplied by an unknown coefficient c.
 // The goal is to find c by least-squares minimization.
 // The default Eval is a pointer to a function, which must then be passed to the constructor.
-template <int N, int D, typename Eval = Vec<float, N> (*)(const Vec<float, D>&)> class LinearRegression {
+template <int N, int D,
+          invocable_r<Vec<float, N>, const Vec<float, D>&> Eval = Vec<float, N> (*)(const Vec<float, D>&)>
+class LinearRegression {
  public:
   explicit LinearRegression(int m, Eval eval = Eval{}) : _lls(m, N, 1), _eval(std::move(eval)) {
     if constexpr (std::is_pointer_v<Eval>) assertx(_eval);

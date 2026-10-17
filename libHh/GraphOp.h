@@ -25,7 +25,8 @@ template <typename T> void graph_symmetric_closure(Graph<T>& g) {
 // Given a graph (possibly directed), return vertices in order of increasing graph distance from vs.
 // Single-pass iteration: "for (const auto& [v, dist] : dijkstra) ...".  (Vertex vs itself is the first element.)
 // The default Distance is a pointer to a function, which must then be passed to the constructor.
-template <typename T, typename Distance = float (*)(const T& v1, const T& v2)> class Dijkstra : noncopyable {
+template <typename T, invocable_r<float, const T&, const T&> Distance = float (*)(const T& v1, const T& v2)>
+class Dijkstra : noncopyable {
  public:
   explicit Dijkstra(const Graph<T>* g, T vs, Distance fdist = Distance{}) : _g(*assertx(g)), _fdist(fdist) {
     if constexpr (std::is_pointer_v<Distance>) assertx(_fdist);
@@ -78,7 +79,7 @@ template <typename T> struct MstResult {
 
 // Returns [gnew, is_connected] where gnew is the minimum spanning tree of undirectedg under the cost metric fdist.
 // Implementation: Kruskal's algorithm, O(e log(e)).  (Prim's is recommended when e is O(n^2); see below.)
-template <typename T, typename Func = float(const T&, const T&)>
+template <typename T, invocable_r<float, const T&, const T&> Func>
 [[nodiscard]] auto graph_mst(const Graph<T>& undirectedg, Func fdist) -> MstResult<T> {
   MstResult<T> result;
   Graph<T>& gnew = result.tree;
@@ -119,7 +120,7 @@ template <typename T, typename Func = float(const T&, const T&)>
 // Returns a undirected graph that is the minimum spanning tree of the full graph
 //  between the num points, where the cost metric between two points v1 and v2 is fdist(v1, v2).
 // Implementation: Prim's algorithm, complexity O(n^2)!
-template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(int num, Func fdist) {
+template <invocable_r<float, int, int> Func> [[nodiscard]] Graph<int> graph_mst(int num, Func fdist) {
   assertx(num > 0);
   const float k_inf = 1e30f;
   Array<float> lowcost(num);
@@ -200,7 +201,7 @@ template <typename Func = float(int, int)> [[nodiscard]] Graph<int> graph_mst(in
 }
 
 // Returns statistics about the graph edge lengths.  If the graph is undirected, the edge stats are duplicated.
-template <typename T, typename Func = float(const T&, const T&)>
+template <typename T, invocable_r<float, const T&, const T&> Func>
 [[nodiscard]] Stat graph_edge_stats(const Graph<T>& g, Func fdist) {
   Stat stat;
   for (const T& v1 : g.vertices())

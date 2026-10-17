@@ -10,7 +10,7 @@ namespace hh {
 // *** Iterate over {1, 2, D}-dimensional grids, with/without parallelism,
 //    with/without function optimized for grid interior.
 
-template <typename Func = void(int), typename FuncInterior = void(int)>
+template <std::invocable<int> Func, std::invocable<int> FuncInterior>
 void for_1dL_interior(int x0, int xn, Func func, FuncInterior func_interior) {
   {
     const int x = x0;
@@ -23,23 +23,23 @@ void for_1dL_interior(int x0, int xn, Func func, FuncInterior func_interior) {
   }
 }
 
-template <typename Func = void(int, int)> void for_2d(int yn, int xn, Func func) {
+template <std::invocable<int, int> Func> void for_2d(int yn, int xn, Func func) {
   for_int(y, yn) for_int(x, xn) func(y, x);
 }
 
-template <typename Func = void(int, int)> void for_2dL(int y0, int yn, int x0, int xn, Func func) {
+template <std::invocable<int, int> Func> void for_2dL(int y0, int yn, int x0, int xn, Func func) {
   for_intL(y, y0, yn) for_intL(x, x0, xn) func(y, x);
 }
 
-template <typename Func = void(int, int)> void parallel_for_2d(int yn, int xn, Func func) {
+template <std::invocable<int, int> Func> void parallel_for_2d(int yn, int xn, Func func) {
   parallel_for(range(yn), [&](const int y) { for_int(x, xn) func(y, x); });
 }
 
-template <typename Func = void(int, int)> void parallel_for_2dL(int y0, int yn, int x0, int xn, Func func) {
+template <std::invocable<int, int> Func> void parallel_for_2dL(int y0, int yn, int x0, int xn, Func func) {
   parallel_for(range(y0, yn), [&](const int y) { for_intL(x, x0, xn) func(y, x); });
 }
 
-template <typename Func = void(int, int), typename FuncInterior = void(int, int)>
+template <std::invocable<int, int> Func, std::invocable<int, int> FuncInterior>
 void for_2dL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior func_interior) {
   {
     const int y = y0;
@@ -62,7 +62,7 @@ void for_2dL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior fu
   }
 }
 
-template <typename Func = void(int, int), typename FuncInterior = void(int, int)>
+template <std::invocable<int, int> Func, std::invocable<int, int> FuncInterior>
 void parallel_for_2dL_interior(int y0, int yn, int x0, int xn, Func func, FuncInterior func_interior) {
   {
     const int y = y0;
@@ -87,16 +87,15 @@ void parallel_for_2dL_interior(int y0, int yn, int x0, int xn, Func func, FuncIn
 
 // *** for_coords
 
-template <int D, typename Func = void(const Vec<int, D>&)>
-void for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func) {
+template <int D, std::invocable<const Vec<int, D>&> Func> void for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func) {
   for (const auto& u : range(uL, uU)) func(u);
 }
 
-template <typename Func = void(const Vec1<int>&)> void for_coordsL(Vec1<int> uL, Vec1<int> uU, Func func) {
+template <std::invocable<const Vec1<int>&> Func> void for_coordsL(Vec1<int> uL, Vec1<int> uU, Func func) {
   for_intL(x, uL[0], uU[0]) func(V(x));
 }
 
-template <typename Func = void(const Vec2<int>&)> void for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func) {
+template <std::invocable<const Vec2<int>&> Func> void for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func) {
   Vec2<int> yx;
   for_intL(y, uL[0], uU[0]) {
     yx[0] = y;
@@ -107,7 +106,7 @@ template <typename Func = void(const Vec2<int>&)> void for_coordsL(Vec2<int> uL,
   }
 }
 
-template <typename Func = void(const Vec3<int>&)> void for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func) {
+template <std::invocable<const Vec3<int>&> Func> void for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func) {
   Vec3<int> u;
   for_intL(z, uL[0], uU[0]) {
     u[0] = z;
@@ -121,13 +120,13 @@ template <typename Func = void(const Vec3<int>&)> void for_coordsL(Vec3<int> uL,
   }
 }
 
-template <int D, typename Func = void(const Vec<int, D>&)> void for_coords(Vec<int, D> dims, Func func) {
+template <int D, std::invocable<const Vec<int, D>&> Func> void for_coords(Vec<int, D> dims, Func func) {
   for_coordsL(ntimes<D>(0), dims, func);
 }
 
 // *** General D
 
-template <int D, typename Func = void(const Vec<int, D>&)>
+template <int D, std::invocable<const Vec<int, D>&> Func>
 void parallel_for_coordsL(const ParallelOptions& options, Vec<int, D> uL, Vec<int, D> uU, Func func) {
   const Vec<int, D> dims = uU - uL;
   if (options.cycles_per_elem >= k_parallel_many_cycles_per_elem) {
@@ -143,14 +142,14 @@ void parallel_for_coordsL(const ParallelOptions& options, Vec<int, D> uL, Vec<in
   }
 }
 
-template <int D, typename Func = void(const Vec<int, D>&)>
+template <int D, std::invocable<const Vec<int, D>&> Func>
 void parallel_for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func) {
   parallel_for_coordsL({}, uL, uU, func);
 }
 
 // *** D = 1
 
-template <typename Func = void(const Vec1<int>&)>
+template <std::invocable<const Vec1<int>&> Func>
 void parallel_for_coordsL(const ParallelOptions& options, Vec1<int> uL, Vec1<int> uU, Func func) {
   const int dim0 = uU[0] - uL[0];
   if (dim0 * options.cycles_per_elem >= k_parallel_thresh) {
@@ -160,13 +159,13 @@ void parallel_for_coordsL(const ParallelOptions& options, Vec1<int> uL, Vec1<int
   }
 }
 
-template <typename Func = void(const Vec1<int>&)> void parallel_for_coordsL(Vec1<int> uL, Vec1<int> uU, Func func) {
+template <std::invocable<const Vec1<int>&> Func> void parallel_for_coordsL(Vec1<int> uL, Vec1<int> uU, Func func) {
   parallel_for_coordsL({}, uL, uU, func);
 }
 
 // *** D = 2
 
-template <typename Func = void(const Vec2<int>&)>
+template <std::invocable<const Vec2<int>&> Func>
 void parallel_for_coordsL(const ParallelOptions& options, Vec2<int> uL, Vec2<int> uU, Func func) {
   const Vec2<int> dims = uU - uL;
   if (options.cycles_per_elem >= k_parallel_many_cycles_per_elem) {
@@ -191,13 +190,13 @@ void parallel_for_coordsL(const ParallelOptions& options, Vec2<int> uL, Vec2<int
   }
 }
 
-template <typename Func = void(const Vec2<int>&)> void parallel_for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func) {
+template <std::invocable<const Vec2<int>&> Func> void parallel_for_coordsL(Vec2<int> uL, Vec2<int> uU, Func func) {
   parallel_for_coordsL({}, uL, uU, func);
 }
 
 // *** D = 3
 
-template <typename Func = void(const Vec3<int>&)>
+template <std::invocable<const Vec3<int>&> Func>
 void parallel_for_coordsL(const ParallelOptions& options, Vec3<int> uL, Vec3<int> uU, Func func) {
   const Vec3<int> dims = uU - uL;
   if (options.cycles_per_elem >= k_parallel_many_cycles_per_elem) {
@@ -236,22 +235,22 @@ void parallel_for_coordsL(const ParallelOptions& options, Vec3<int> uL, Vec3<int
   }
 }
 
-template <typename Func = void(const Vec3<int>&)> void parallel_for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func) {
+template <std::invocable<const Vec3<int>&> Func> void parallel_for_coordsL(Vec3<int> uL, Vec3<int> uU, Func func) {
   parallel_for_coordsL({}, uL, uU, func);
 }
 
 // *** Others
 
-template <int D, typename Func = void(const Vec<int, D>&)>
+template <int D, std::invocable<const Vec<int, D>&> Func>
 void parallel_for_coords(const ParallelOptions& options, Vec<int, D> dims, Func func) {
   parallel_for_coordsL(options, ntimes<D>(0), dims, func);
 }
 
-template <int D, typename Func = void(const Vec<int, D>&)> void parallel_for_coords(Vec<int, D> dims, Func func) {
+template <int D, std::invocable<const Vec<int, D>&> Func> void parallel_for_coords(Vec<int, D> dims, Func func) {
   parallel_for_coords({}, dims, func);
 }
 
-template <int D, typename Func = void(const Vec<int, D>&)>
+template <int D, std::invocable<const Vec<int, D>&> Func>
 void parallel_tiled_for_coordsL(const ParallelOptions& options, Vec<int, D> uL, Vec<int, D> uU, Func func) {
   if (product(uU - uL) * options.cycles_per_elem >= k_parallel_thresh) {
     assertnever("TODO");
@@ -260,12 +259,12 @@ void parallel_tiled_for_coordsL(const ParallelOptions& options, Vec<int, D> uL, 
   }
 }
 
-template <int D, typename Func = void(const Vec<int, D>&)>
+template <int D, std::invocable<const Vec<int, D>&> Func>
 void parallel_tiled_for_coordsL(Vec<int, D> uL, Vec<int, D> uU, Func func) {
   parallel_tiled_for_coordsL({}, uL, uU, func);
 }
 
-template <int D, typename FuncRaster = void(size_t)>
+template <int D, std::invocable<size_t> FuncRaster>
 void for_coordsL_raster(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, FuncRaster func_raster) {
   if (min(uU - uL) < 1) return;  // To allow uL[c] == uU[c] == dims[c].
   ASSERTX(uL.in_range(dims) && uU.in_range(dims + 1));
@@ -286,7 +285,7 @@ void for_coordsL_raster(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, FuncRa
   }
 }
 
-template <int D, typename Func = void(const Vec<int, D>&), typename FuncInterior = void(size_t)>
+template <int D, std::invocable<const Vec<int, D>&> Func, std::invocable<size_t> FuncInterior>
 void for_coordsL_interior(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, Func func, FuncInterior func_interior) {
   if (min(uU - uL) < 1) return;  // To allow uL[c] == uU[c] == dims[c].
   ASSERTX(uL.in_range(dims) && uU.in_range(dims + 1));
@@ -304,7 +303,7 @@ void for_coordsL_interior(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, Func
   for_coordsL_raster(dims, uL, uU, func_interior);
 }
 
-template <int D, typename Func = void(const Vec<int, D>&), typename FuncInterior = void(size_t)>
+template <int D, std::invocable<const Vec<int, D>&> Func, std::invocable<size_t> FuncInterior>
 void parallel_d0_for_coordsL_interior(Vec<int, D> dims, Vec<int, D> uL, Vec<int, D> uU, Func func,
                                       FuncInterior func_interior) {
   if (min(uU - uL) < 1) return;  // To allow uL[c] == uU[c] == dims[c].

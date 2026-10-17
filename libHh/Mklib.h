@@ -36,7 +36,7 @@ class Mklib : noncopyable {
   void tetraU();                                        // Bottom face centroid at origin, top at (0, 0, sqrt(2 / 3)).
   // Transformation on object: (-.5, -.5, -.5)..(.5, .5, .5) with primary axis +x, secondary axis +y ("O")
   //                        -->  (-.5, -.5, 0)..(.5, .5, 1)  with primary axis +z, secondary axis +x ("U")
-  template <typename Func = void(int)> void OtoU(Func func, int n) {
+  template <std::invocable<int> Func> void OtoU(Func func, int n) {
     const MkSave mk_save(mk);
     mk.rotate(Mk3d::Axis::y, TAU / 4);
     mk.rotate(Mk3d::Axis::x, -TAU / 4);
@@ -45,7 +45,7 @@ class Mklib : noncopyable {
   }
   // Radius 1 along +x axis, calls func with +x axis normal to circle;  s = sin(TAU / 2 / n) h = cos(TAU / 2 / n);
   //  scaled to touch at (0, -s, 0) & (0, +s, 0) and center of circle at (-h, 0, 0).
-  template <typename Func = void(int)> void circle_of(Func func, int n) {
+  template <std::invocable<int> Func> void circle_of(Func func, int n) {
     const float a = TAU / n, h = std::cos(a * .5f);
     const MkSave mk_save(mk);
     mk.rotate(Mk3d::Axis::y, TAU / 4);
@@ -60,7 +60,7 @@ class Mklib : noncopyable {
       mk.rotate(Mk3d::Axis::z, a);
     }
   }
-  template <typename Func = void(int)> void circle_ofU(Func func, int n) {
+  template <std::invocable<int> Func> void circle_ofU(Func func, int n) {
     const float a = TAU / n, h = std::cos(a * .5f);
     const MkSave mk_save(mk);
     mk.rotate(Mk3d::Axis::z, a * .5f);
@@ -75,7 +75,7 @@ class Mklib : noncopyable {
   }
   // Radius 1 along +z axis, calls func with +x axis normal to circle;
   //  not scaled -> center of circle @(-1, 0, 0).
-  template <typename Func = void(int)> void radius_ofU(Func func, int n) {
+  template <std::invocable<int> Func> void radius_ofU(Func func, int n) {
     const float a = TAU / n;
     const MkSave mk_save(mk);
     for_int(i, n) {

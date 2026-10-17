@@ -32,13 +32,19 @@ template <typename T, int D> class Kdtree : noncopyable {
   }
   void enter(T&& id, const Vec<float, D>& bb0, const Vec<float, D>& bb1) { enter_i(std::move(id), bb0, bb1); }
   // The search is reentrant (for HiddenLineRemoval).
-  // Start searching at loc (default _root) for objects whose bb intersect the one given.
-  // For each object found, call cbfunc with id, bb, and current location in the tree.
-  //  cbfunc may modify the bb by shrinking it.
+  // The value returned by the callback of search(): `nothing` continues the search; `bbshrunk` also continues it and
+  // reports that the callback has shrunk the query box (bb0, bb1); `stop` ends the search.  Because search() rereads
+  // the box after every callback, it treats `bbshrunk` like `nothing`; the distinction serves a callback that wraps
+  // another one, as in HiddenLineRemoval.
   enum class ECallbackReturn { nothing, bbshrunk, stop };
+  // A location in the tree, as a node index (0 is the root).  The location cbloc passed to the callback is the deepest
+  // node whose subtree holds the remainder of the search; the elements stored at its ancestors have already been
+  // tested.  A nested search from within the callback (e.g., for a box inside the current one) may start at cbloc.
   using CBloc = int;
+  // Starting at location loc (by default the root), find the elements whose bb overlaps the query box (bb0, bb1) and
+  // call cbfunc(id, bb0, bb1, cbloc) for each one; cbfunc may shrink the box.
   // Returns: was_stopped.
-  template <typename Func = ECallbackReturn(const T& id, Vec<float, D>& bb0, Vec<float, D>& bb1, CBloc floc)>
+  template <invocable_r<ECallbackReturn, const T&, Vec<float, D>&, Vec<float, D>&, CBloc> Func>
   bool search(Vec<float, D>& bb0, Vec<float, D>& bb1, Func cbfunc, CBloc loc = 0) const {
     return search_i(bb0, bb1, cbfunc, loc);
   }

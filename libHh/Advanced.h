@@ -11,7 +11,7 @@ template <int n, typename Func> constexpr void unroll(Func func) {
   [&]<int... Is>(std::integer_sequence<int, Is...>) { (func(Is), ...); }(std::make_integer_sequence<int, n>());
 }
 
-template <int n, int nmax, typename Func = void(int)> void unroll_max(Func func) {
+template <int n, int nmax, std::invocable<int> Func> void unroll_max(Func func) {
   if constexpr (n <= nmax) {
     unroll<n>(func);
   } else {

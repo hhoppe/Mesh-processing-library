@@ -8,7 +8,7 @@ namespace hh {
 
 // Given xl < xh, feval(xl) <= y_desired < feval(xh), find x such that feval(x) == y_desired within some tolerance.
 // More precisely, find x such that exists x' with x <= x' < x + xtol and feval(x') == y_desired .
-template <typename T1, typename T2, typename Func = T2(const T1&)>
+template <typename T1, typename T2, invocable_r<T2, const T1&> Func>
 [[nodiscard]] T1 continuous_binary_search_func(Func feval, T1 xl, T1 xh, T1 xtol, T2 y_desired) {
   static_assert(std::is_floating_point_v<T1>);
   assertx(xl < xh);
@@ -26,7 +26,7 @@ template <typename T1, typename T2, typename Func = T2(const T1&)>
 }
 
 // Given xl < xh, feval(xl) <= y_desired < feval(xh), find x such that feval(x) <= y_desired < feval(x + 1) .
-template <typename T1, typename T2, typename Func = T2(const T1&)>
+template <typename T1, typename T2, invocable_r<T2, const T1&> Func>
 [[nodiscard]] T1 discrete_binary_search_func(Func feval, T1 xl, T1 xh, T2 y_desired) {
   static_assert(std::is_integral_v<T1>);
   using U = std::make_unsigned_t<T1>;

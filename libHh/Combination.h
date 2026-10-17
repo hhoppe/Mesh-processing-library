@@ -30,7 +30,7 @@ template <typename T> class Combination : public Map<T, float> {
   using base::values;
 };
 
-template <typename T, typename Func = void(const T& e, float val)>
+template <typename T, std::invocable<const T&, float> Func>
 void for_combination(const Combination<T>& combination, Func func) {
   for (auto& [key, value] : combination) func(key, value);
 }

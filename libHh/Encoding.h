@@ -114,7 +114,7 @@ template <typename T> class Encoding : noncopyable {
     // Include coding of probability table.
   }
 
-  template <typename Func = string(const T&)>
+  template <invocable_r<string, const T&> Func>
   void print_top_entries(const string& name, int ntop, Func cb_entry_name) const {
     float tot_prob = sum<float>(_map.values());
     showdf("Encoding: %s (nunique=%d, tot_prob=%g) {\n", name.c_str(), _map.num(), tot_prob);

@@ -44,17 +44,17 @@ template <int D> void test_random_searches(int maxlevel, float fsize) {
     VecD q0, q1;
     random_box(q0, q1);
     Array<int> found;
-    const auto func = [&](const int& id, VecD& bb0, VecD& bb1, KD::CBloc floc) {
+    const auto func = [&](const int& id, VecD& bb0, VecD& bb1, KD::CBloc cbloc) {
       assertx(bb0 == q0 && bb1 == q1);
       found.push(id);
-      if (found.num() == 1) {  // A nested search starting from location floc also finds this element.
+      if (found.num() == 1) {  // A nested search starting from location cbloc also finds this element.
         bool found_again = false;
         const auto func2 = [&](const int& id2, VecD&, VecD&, KD::CBloc) {
           found_again |= id2 == id;
           return KD::ECallbackReturn::nothing;
         };
         VecD bb0_copy = bb0, bb1_copy = bb1;
-        assertx(!kd.search(bb0_copy, bb1_copy, func2, floc));
+        assertx(!kd.search(bb0_copy, bb1_copy, func2, cbloc));
         assertx(found_again);
       }
       return KD::ECallbackReturn::nothing;
@@ -180,8 +180,8 @@ int main() {
   {
     struct cbf {
       Kdtree<int, 1>::ECallbackReturn operator()(const int& id, Vec<float, 1>& bb0, Vec<float, 1>& bb1,
-                                                 Kdtree<int, 1>::CBloc floc) const {
-        dummy_use(bb0, bb1, floc);
+                                                 Kdtree<int, 1>::CBloc cbloc) const {
+        dummy_use(bb0, bb1, cbloc);
         showf("found index %d\n", id);
         return Kdtree<int, 1>::ECallbackReturn::nothing;
       }

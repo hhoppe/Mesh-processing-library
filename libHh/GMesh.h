@@ -161,7 +161,7 @@ class StringKeyIter {
 };
 
 // Iterate through an info string, calling func for each attribute with the char* and length of its key and value.
-template <typename Func = bool(const char* keystr, int keylen, const char* valstr, int vallen)>
+template <invocable_r<bool, const char*, int, const char*, int> Func>
 void for_cstring_key_value_ptr(const char* str, Func func) {
   StringKeyIter ski(str);
   const char* keystr;
@@ -174,7 +174,7 @@ void for_cstring_key_value_ptr(const char* str, Func func) {
 }
 
 // Iterate through an info string, calling func for each attribute after setting arrays key and val appropriately.
-template <typename Func = void()>
+template <std::invocable<> Func>
 void for_cstring_key_value(const char* str, Array<char>& key, Array<char>& val, Func func) {
   for_cstring_key_value_ptr(str, [&](const char* keystr, int keylen, const char* valstr, int vallen) {
     key.init(keylen + 1);

@@ -125,7 +125,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
     }
     return dp;
   }
-  template <bool avoid_degen, typename Eval = float(const DPoint&)>
+  template <bool avoid_degen, invocable_r<float, const DPoint&> Eval>
   [[nodiscard]] DPoint compute_point(const DPoint& pp, const DPoint& pn, float vp, float vn, Eval& eval) {
     DPoint pm;
     float fm;
@@ -188,9 +188,9 @@ struct VertexData3dMesh {
   Vec3<Vertex> _verts{ntimes<3>(implicit_cast<Vertex>(nullptr))};
 };
 
-template <typename VertexData = Vec0<int>,
-          typename Derived = void,  // For contour_cube().
-          typename Eval = float(const Vec3<float>&), typename Border = Contour3dNoBorder>
+template <typename VertexData,
+          typename Derived,  // For contour_cube().
+          invocable_r<float, const Vec3<float>&> Eval, typename Border = Contour3dNoBorder>
 class BaseContour3d : public ContourBase<3, VertexData> {
  protected:
   static constexpr int D = 3;
@@ -351,7 +351,7 @@ class BaseContour3d : public ContourBase<3, VertexData> {
   }
 };
 
-template <typename Eval = float(const Vec3<float>&), typename Border = Contour3dNoBorder>
+template <invocable_r<float, const Vec3<float>&> Eval, typename Border = Contour3dNoBorder>
 class Contour3dMesh : public BaseContour3d<VertexData3dMesh, Contour3dMesh<Eval, Border>, Eval, Border> {
   using base = BaseContour3d<VertexData3dMesh, Contour3dMesh<Eval, Border>, Eval, Border>;
 
@@ -476,7 +476,7 @@ class Contour3dMesh : public BaseContour3d<VertexData3dMesh, Contour3dMesh<Eval,
   }
 };
 
-template <typename Eval = float(const Vec3<float>&), typename Contour = float(CArrayView<Vec3<float>>),
+template <invocable_r<float, const Vec3<float>&> Eval, std::invocable<CArrayView<Vec3<float>>> Contour,
           typename Border = Contour3dNoBorder>
 class Contour3d : public BaseContour3d<Vec0<int>, Contour3d<Eval, Contour, Border>, Eval, Border> {
   using base = BaseContour3d<Vec0<int>, Contour3d<Eval, Contour, Border>, Eval, Border>;
@@ -559,7 +559,7 @@ struct Contour2dNoBorder {  // A special type to indicate that no border output 
   }
 };
 
-template <typename Eval = float(const Vec2<float>&), typename Contour = void(CArrayView<Vec2<float>>),
+template <invocable_r<float, const Vec2<float>&> Eval, std::invocable<CArrayView<Vec2<float>>> Contour,
           typename Border = Contour2dNoBorder>
 class Contour2d : public ContourBase<2> {
   static constexpr int D = 2;

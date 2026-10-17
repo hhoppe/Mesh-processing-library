@@ -19,14 +19,6 @@ namespace details {
 class BaseSpatialSearch;
 }
 
-// Set of the elements already entered into the priority queue of a spatial search.  Its built-in storage avoids
-// heap allocation in most searches, which visit only a few elements.
-using SpatialVisitedSet = InlinedSet<Univ, 8>;
-
-// Priority queue of the elements of a spatial search, ordered by distance.  Its built-in storage likewise avoids heap
-// allocation in most searches.
-using SpatialPriorityQueue = PriorityQueue<Univ, 20>;
-
 // Spatial data structure for efficient queries like "closest_elements" or "find_elements_intersecting_ray".
 class Spatial : noncopyable {  // An abstract class.
  public:
@@ -62,13 +54,19 @@ class Spatial : noncopyable {  // An abstract class.
   [[nodiscard]] Ind decode(int en) const;
 
   // For BaseSpatialSearch:
+  // Set of the elements already entered into the DistanceQueue of a spatial search.  Its built-in storage avoids
+  // heap allocation in most searches, which visit only a few elements.
+  using VisitedSet = InlinedSet<Univ, 8>;
+  // Priority queue of the elements of a spatial search, ordered by distance.  Its built-in storage likewise avoids
+  // heap allocation in most searches.
+  using DistanceQueue = PriorityQueue<Univ, 20>;
+
   // Add elements from cell ci to priority queue with priority equal to distance from pcenter squared.
   // May use set to avoid duplication.
-  virtual void add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter,
-                        SpatialVisitedSet& set) const = 0;
+  virtual void add_cell(const Ind& ci, DistanceQueue& pq, const Point& pcenter, VisitedSet& set) const = 0;
 
   // Refine the distance estimate of the first entry in pq (optional).
-  virtual void pq_refine(SpatialPriorityQueue& pq, const Point& pcenter) const { dummy_use(pq, pcenter); }
+  virtual void pq_refine(DistanceQueue& pq, const Point& pcenter) const { dummy_use(pq, pcenter); }
 
   virtual Univ pq_id(Univ pqe) const = 0;  // Given a pq entry, return the id.
 };
@@ -86,7 +84,7 @@ class BasePointSpatial : public Spatial {
   void shrink_to_fit();                   // Often just fragments memory.
 
  private:
-  void add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter, SpatialVisitedSet& set) const override;
+  void add_cell(const Ind& ci, DistanceQueue& pq, const Point& pcenter, VisitedSet& set) const override;
   [[nodiscard]] Univ pq_id(Univ pqe) const override;
   struct Node {
     Univ id;
@@ -113,7 +111,7 @@ class IPointSpatial : public Spatial {
   void clear() override;
 
  private:
-  void add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter, SpatialVisitedSet& set) const override;
+  void add_cell(const Ind& ci, DistanceQueue& pq, const Point& pcenter, VisitedSet& set) const override;
   [[nodiscard]] Univ pq_id(Univ pqe) const override;
 
   const Point* _pp;
@@ -147,8 +145,8 @@ class ObjectSpatial : public Spatial {
  private:
   Map<int, Array<Univ>> _map;  // Encoded cube index -> vector.
 
-  void add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter, SpatialVisitedSet& set) const override;
-  void pq_refine(SpatialPriorityQueue& pq, const Point& pcenter) const override;
+  void add_cell(const Ind& ci, DistanceQueue& pq, const Point& pcenter, VisitedSet& set) const override;
+  void pq_refine(DistanceQueue& pq, const Point& pcenter) const override;
   [[nodiscard]] Univ pq_id(Univ pqe) const override { return pqe; }
 };
 
@@ -179,12 +177,12 @@ class BaseSpatialSearch : noncopyable {
   const Spatial& _spatial;
   const Point _pcenter;
   float _maxdis;
-  SpatialPriorityQueue _pq;    // The pq of entries by distance.
-  Vec2<Ind> _ssi;              // Search space indices (extents).
-  float _disbv2{0.f};          // Distance to the search space boundary.
-  int _axis{-1};               // Axis to expand next.
-  int _dir{-1};                // Direction in which to expand next (0, 1).
-  SpatialVisitedSet _setevis;  // May be used by add_cell().
+  Spatial::DistanceQueue _pq;    // The pq of entries by distance.
+  Vec2<Ind> _ssi;                // Search space indices (extents).
+  float _disbv2{0.f};            // Distance to the search space boundary.
+  int _axis{-1};                 // Axis to expand next.
+  int _dir{-1};                  // Direction in which to expand next (0, 1).
+  Spatial::VisitedSet _setevis;  // May be used by add_cell().
   int _ncellsv{0};
   int _nelemsv{0};
 
@@ -251,8 +249,8 @@ inline Spatial::Ind Spatial::decode(int en) const {
 }
 
 template <invocable_r<float, const Point&, Univ> Approx2, invocable_r<float, const Point&, Univ> Exact2>
-void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter,
-                                              SpatialVisitedSet& set) const {
+void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, DistanceQueue& pq, const Point& pcenter,
+                                              VisitedSet& set) const {
   const int en = encode(ci);
   const auto* cell = _map.find_ptr(en);
   if (!cell) return;
@@ -264,7 +262,7 @@ void ObjectSpatial<Approx2, Exact2>::add_cell(const Ind& ci, SpatialPriorityQueu
 }
 
 template <invocable_r<float, const Point&, Univ> Approx2, invocable_r<float, const Point&, Univ> Exact2>
-void ObjectSpatial<Approx2, Exact2>::pq_refine(SpatialPriorityQueue& pq, const Point& pcenter) const {
+void ObjectSpatial<Approx2, Exact2>::pq_refine(DistanceQueue& pq, const Point& pcenter) const {
   Univ id = pq.min();
   const float oldv = pq.min_priority();
   Exact2 exact2;

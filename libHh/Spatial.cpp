@@ -64,8 +64,7 @@ void BasePointSpatial::shrink_to_fit() {
   for (auto& cell : _map.values()) cell.shrink_to_fit();
 }
 
-void BasePointSpatial::add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter,
-                                SpatialVisitedSet& /*set*/) const {
+void BasePointSpatial::add_cell(const Ind& ci, DistanceQueue& pq, const Point& pcenter, VisitedSet& /*set*/) const {
   // SHOW("add_cell", ci);
   const int en = encode(ci);
   const auto* cell = _map.find_ptr(en);
@@ -186,8 +185,7 @@ void IPointSpatial::clear() {
   _map.clear();
 }
 
-void IPointSpatial::add_cell(const Ind& ci, SpatialPriorityQueue& pq, const Point& pcenter,
-                             SpatialVisitedSet& /*set*/) const {
+void IPointSpatial::add_cell(const Ind& ci, DistanceQueue& pq, const Point& pcenter, VisitedSet& /*set*/) const {
   const int en = encode(ci);
   const auto* cell = _map.find_ptr(en);
   if (!cell) return;

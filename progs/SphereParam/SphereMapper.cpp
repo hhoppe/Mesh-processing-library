@@ -731,15 +731,26 @@ class SphereMapper::Implementation {
     const Precision tkj = (dpdq * dot(perp, pd[k]) - dot(dq, pd[k])) / (dq2 - square(dpdq));  // Not arc-length.
     const Vec3<Precision>& perp_d = perp;
     const Vec3<Precision> perp_s = ps[j] * tkj + ps[k] * (1.f - tkj);  // interp(ps[j], ps[k], float(tkj));
-    Precision total_stretch;
-    if (_options.optimize_inverse)
-      total_stretch = (naive_inverse_stretch(perp_d, pd[i], pd[j], perp_s, ps[i], ps[j]) +
-                       naive_inverse_stretch(perp_d, pd[k], pd[i], perp_s, ps[k], ps[i]));
-    else
-      total_stretch = (naive_stretch(perp_d, pd[i], pd[j], perp_s, ps[i], ps[j]) +
-                       naive_stretch(perp_d, pd[k], pd[i], perp_s, ps[k], ps[i]));
-    // Surprisingly, the following line does not result in any compiled code under clang.
-    if (!std::isfinite(total_stretch)) total_stretch = std::numeric_limits<Precision>::infinity();
+    Precision stretch1, stretch2;
+    if (_options.optimize_inverse) {
+      stretch1 = naive_inverse_stretch(perp_d, pd[i], pd[j], perp_s, ps[i], ps[j]);
+      stretch2 = naive_inverse_stretch(perp_d, pd[k], pd[i], perp_s, ps[k], ps[i]);
+    } else {
+      stretch1 = naive_stretch(perp_d, pd[i], pd[j], perp_s, ps[i], ps[j]);
+      stretch2 = naive_stretch(perp_d, pd[k], pd[i], perp_s, ps[k], ps[i]);
+    }
+    Precision total_stretch = stretch1 + stretch2;
+    if (!std::isfinite(total_stretch)) {
+      // If the foot of the perpendicular coincides with vertex j (tkj == 1) or k (tkj == 0), the corresponding
+      // sub-triangle has zero area on both the domain and the surface, so it contributes nothing, but evaluating it
+      // may divide 0 by 0.  The resulting infinity let a vertex jump along its sharp arc in every update iteration,
+      // so that optimize_all() reached assertw(update_iter < 2000).  An exact coincidence arises in a spherical
+      // triangle with two right angles, whose two longest arcs tie, as in the octaflat step of
+      // create_spherical_param_bunny.sh, where a vertex lies on a sharp arc through a fixed octahedron vertex.
+      if (tkj == 1.f) total_stretch = stretch2;
+      if (tkj == 0.f) total_stretch = stretch1;
+      if (!std::isfinite(total_stretch)) total_stretch = std::numeric_limits<Precision>::infinity();
+    }
     return total_stretch;
   }
 

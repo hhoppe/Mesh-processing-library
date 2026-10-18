@@ -37,8 +37,8 @@ Filterimage demos/data/gaudipark.png -rotate 20 -cropl 100 -cropr 100 \
 
 Processes a progressive mesh (`*.pm`).  For example, the command
 ```shell
-FilterPM demos/data/standingblob.pm -info -nfaces 1000 -outmesh | \
-  Filtermesh -info -signeddistcontour 60 -genus | \
+FilterPM demos/data/standingblob.pm -info -nfaces 1000 -outmesh |
+  Filtermesh -info -signeddistcontour 60 -genus |
   G3dOGL -key DmDe
 ```
 - reads a <em>progressive mesh</em> stream to construct a mesh with 1000 faces,
@@ -52,8 +52,8 @@ FilterPM demos/data/standingblob.pm -info -nfaces 1000 -outmesh | \
 
 Processes a mesh (`*.m`).  For example, the command
 ```shell
-FilterPM demos/data/spheretext.pm -nf 2000 -outmesh | \
-  Filtermesh -angle 35 -silsubdiv -silsubdiv -mark | \
+FilterPM demos/data/spheretext.pm -nf 2000 -outmesh |
+  Filtermesh -angle 35 -silsubdiv -silsubdiv -mark |
   G3dOGL -key DmDeDbJ---- -st demos/data/spheretext.s3d
 ```
 - reads a 2000-face mesh, marks all edges with dihedral angle greater than 35 degrees as sharp,
@@ -75,7 +75,7 @@ Filtervideo demos/data/palmtrees_small.mp4 -filter keys -scaleu 1.5 >palmtrees_s
 The command
 ```shell
 Filtervideo demos/data/palmtrees_small.mp4 -info -trimbeg 4 -boundary clamped -trimend -20% \
-    -tscale 1.5 -framerate 150% -croprectangle 50% 50% 400 240 -gamma 1.5 -bitrate 10m | \
+    -tscale 1.5 -framerate 150% -croprectangle 50% 50% 400 240 -gamma 1.5 -bitrate 10m |
   VideoViewer demos/data/palmtrees_small.mp4 - -key =an
 ```
 - reads the video (entirely into memory),
@@ -118,8 +118,8 @@ This program reads a list of 3D (x, y, z) points assumed to be sampled near some
 and reconstructs an approximating triangle mesh.
 For example,
 ```shell
-Recon <demos/data/distcap.pts -samplingd 0.02 | \
-  Filtermesh -genus -rmcomp 100 -fillholes 30 -triangulate -genus | tee distcap.recon.m | \
+Recon <demos/data/distcap.pts -samplingd 0.02 |
+  Filtermesh -genus -rmcomp 100 -fillholes 30 -triangulate -genus | tee distcap.recon.m |
   G3dOGL -st demos/data/distcap.s3d -key DmDe
 ```
 - reads the text file of points,
@@ -134,7 +134,7 @@ Recon <demos/data/distcap.pts -samplingd 0.02 | \
 
 To show the progression of the Marching Cubes algorithm,
 ```shell
-Recon <demos/data/distcap.pts -samplingd 0.02 -what c | \
+Recon <demos/data/distcap.pts -samplingd 0.02 -what c |
   Filtera3d -split 30 | G3dOGL -key DCDb -st demos/data/distcap_backside.s3d -terse
 ```
 - selects the 'c' (cubes) output stream,
@@ -143,8 +143,8 @@ Recon <demos/data/distcap.pts -samplingd 0.02 -what c | \
 
 To show a similar streaming reconstruction of the surface mesh,
 ```shell
-Recon <demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d | \
-  Filtera3d -split 30 | \
+Recon <demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d |
+  Filtera3d -split 30 |
   G3dOGL demos/data/distcap.pts -key DCDb -st demos/data/distcap_backside.s3d -terse -input -key _Jo
 ```
 - selects the default 'm' (mesh) output stream,
@@ -154,8 +154,8 @@ Recon <demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d | \
 
 The same program can also read a list of 2D (y, z) points to reconstruct an approximating curve:
 ```shell
-Recon <demos/data/curve1.pts -samplingd 0.06 -grid 30 | \
-  Filtera3d -joinlines | tee curve1.a3d | \
+Recon <demos/data/curve1.pts -samplingd 0.06 -grid 30 |
+  Filtera3d -joinlines | tee curve1.a3d |
   G3dOGL demos/data/curve1.pts -input -st demos/data/curve1.s3d
 ```
 
@@ -165,7 +165,7 @@ Given an initial mesh and a list of 3D points, this program optimizes both the m
 geometry to improve the fit, i.e., to minimize the squared distances from the points to the surface.
 For example,
 ```shell
-Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts -crep 1e-5 -reconstruct | \
+Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts -crep 1e-5 -reconstruct |
   tee distcap.opt.m | G3dOGL -st demos/data/distcap.s3d -key DmDe
 ```
 - reads the previously reconstructed mesh and the original list of points,
@@ -176,15 +176,15 @@ Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts -crep 1e-5 -reconstr
 
 The input points can also be sampled from an existing surface, for example:
 ```shell
-Filtermesh demos/data/blob5.orig.m -randpts 10000 -vertexpts | \
-  Meshfit -mfile demos/data/blob5.orig.m -file - -crep 1e-6 -simplify | \
+Filtermesh demos/data/blob5.orig.m -randpts 10000 -vertexpts |
+  Meshfit -mfile demos/data/blob5.orig.m -file - -crep 1e-6 -simplify |
   G3dOGL -st demos/data/blob5.s3d -key DmDe
 ```
 
 To view the real-time fitting optimization,
 ```shell
 Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts \
-  -crep 1e-5 -outmesh - -record -reconstruct | \
+  -crep 1e-5 -outmesh - -record -reconstruct |
   G3dOGL -st demos/data/distcap.s3d -key DmDeDC -async -terse
 ```
 - writes both the initial mesh and the stream of mesh modifications, and
@@ -195,7 +195,7 @@ Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts \
 This related program performs a similar optimization of a 1D polyline (either open or closed)
 to fit a set of 2D points.  For example,
 ```shell
-Polyfit -pfile curve1.a3d -file demos/data/curve1.pts -crep 3e-4 -spring 1 -reconstruct | \
+Polyfit -pfile curve1.a3d -file demos/data/curve1.pts -crep 3e-4 -spring 1 -reconstruct |
   G3dOGL demos/data/curve1.pts -input -st demos/data/curve1.s3d
 ```
 - reads the previously reconstructed polyline and the original list of points,
@@ -208,7 +208,7 @@ In a subdivision surface representation, a coarse base mesh tagged with <em>shar
 defines a <em>piecewise smooth</em> surface as the limit of a subdivision process.
 Such a representation both improves geometric fidelity and leads to a more concise description.
 ```shell
-Filtermesh distcap.opt.m -angle 52 -mark | \
+Filtermesh distcap.opt.m -angle 52 -mark |
   Subdivfit -mfile - -file demos/data/distcap.pts -crep 1e-5 -csharp .2e-5 -reconstruct >distcap.sub0.m
 ```
 - reads the previously optimized mesh and tags all edges with dihedral angle greater than 52 degrees as <em>sharp</em>,
@@ -293,8 +293,8 @@ PM_LOD_LEVEL=0.05 G3dOGL -pm_mode club.pm -st demos/data/club.s3d -lightambient 
 
 We can also define geomorphs between discrete levels of detail, for example:
 ```shell
-FilterPM club.pm -nfaces 2000 -geom_nfaces 3300 -geom_nfaces 5000 -geom_nfaces 8000 | \
-  G3dOGL -st demos/data/club.s3d -key SPDeN -lightambient .5 -thickboundary 1 -video 101 - | \
+FilterPM club.pm -nfaces 2000 -geom_nfaces 3300 -geom_nfaces 5000 -geom_nfaces 8000 |
+  G3dOGL -st demos/data/club.s3d -key SPDeN -lightambient .5 -thickboundary 1 -video 101 - |
   VideoViewer - -key m
 ```
 - creates a geomorph between 2000 and 3300 faces, another between 3300 and 5000 faces,
@@ -307,15 +307,15 @@ FilterPM club.pm -nfaces 2000 -geom_nfaces 3300 -geom_nfaces 5000 -geom_nfaces 8
 
 This example displays a progressive mesh after truncating all detail below 300 faces and above 10000 faces:
 ```shell
-FilterPM demos/data/standingblob.pm -nf 300 -truncate_prior -nf 10000 -truncate_beyond | \
+FilterPM demos/data/standingblob.pm -nf 300 -truncate_prior -nf 10000 -truncate_beyond |
   G3dOGL -pm_mode - -st demos/data/standingblob.s3d
 ```
 
 As an example of simplifying meshes with appearance attributes,
 <!-- MeshSimplify - -nfaces 4000 -minqem -norfac 0. -colfac 1. -neptfac 1e5 -simplify | \ -->
 ```shell
-Filterimage demos/data/gaudipark.png -scaletox 200 -tomesh | \
-  MeshSimplify - -nfaces 4000 -simplify | \
+Filterimage demos/data/gaudipark.png -scaletox 200 -tomesh |
+  MeshSimplify - -nfaces 4000 -simplify |
   G3dOGL -st demos/data/imageup.s3d -key De -lightambient 1 -lightsource 0
 ```
 - forms a planar grid mesh whose 200&times;200 vertices have colors sampled from a downsampled image,
@@ -354,7 +354,7 @@ or in the top view (key <kbd>Dr</kbd>).  Drag the mouse buttons to rotate, pan, 
 Within `demos/create_sr_terrain.{sh,bat}`,
 ```shell
 Filterimage demos/data/gcanyon_elev_crop.bw.png -tobw -elevation -step 6 -scalez 0.000194522 \
-    -removekinks -tomesh | \
+    -removekinks -tomesh |
   Filtermesh -assign_normals >gcanyon_sq200.orig.m
 mesh_to_pm gcanyon_sq200.orig.m -vsgeom -terrain >gcanyon_sq200.pm
 ```
@@ -365,9 +365,9 @@ Then, within `demos/view_sr_terrain.sh`,
 ```shell
 (common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcanyon_fly_v98.s3d \
    -texturemap demos/data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 \
-   -lightambient .5"; \
- export G3D_REV_AUTO=1; \
- G3dOGL $common -geom 800x820+150+10 -key "&O" -key ,o----J | \
+   -lightambient .5"
+ export G3D_REV_AUTO=1
+ G3dOGL $common -geom 800x820+150+10 -key "&O" -key ,o----J |
    G3dOGL $common -geom 800x820+970+10 -async -killeof -input -key Dg)
 ```
 
@@ -401,8 +401,8 @@ specified criterion (cycle length, number of cycle edges, number of cycles, or m
 
 For example, within `demos/create_topologically_simplified.{sh,bat}`, <a id="prog_MinCycles"></a>
 ```shell
-FilterPM demos/data/office.pm -nf 200000 -outmesh | \
-  MinCycles - -frac_cycle_length 1.2 -max_cycle_length 0.10 | \
+FilterPM demos/data/office.pm -nf 200000 -outmesh |
+  MinCycles - -frac_cycle_length 1.2 -max_cycle_length 0.10 |
   G3dOGL -st demos/data/office.s3d -key DeDEJ---- -thickboundary 0 -lightambient .9
 ```
 - extracts a mesh of 200000 faces from a progressive mesh,
@@ -451,7 +451,7 @@ so as to minimize parametric stretch from the sphere to the surface mesh.
 
 For example, within `demos/create_spherical_param_bunny`,
 ```shell
-mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow | \
+mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow |
   SphereParam - -rot demos/data/bunny.s3d -split_meridian >bunny.sphparam.m
 ```
 - creates a progressive mesh (`*.pm`) stream minimizing a quadric error metric (`qem`),
@@ -461,7 +461,7 @@ mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow | \
 
 Then, within `demos/view_spherical_param_bunny`,
 ```shell
-mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow | \
+mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow |
   SphereParam - -visualize -wait_on_visualizer -nooutput
 ```
 - reruns the same spherical parameterization, piping its progress to an interactive `G3dOGL` viewer, and
@@ -469,7 +469,7 @@ mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow | \
 
 Alternatively, to view the parameterization as a triangulated sphere,
 ```shell
-Filtermesh bunny.sphparam.m -renamekey v sph P | \
+Filtermesh bunny.sphparam.m -renamekey v sph P |
   G3dOGL - -st demos/data/unitsphere_ang.s3d -key DeoJ
 ```
 - transfers each vertex's spherical coordinates `sph` to its position `P`,
@@ -484,7 +484,7 @@ The program **`SphereSample`** computes uniform samplings of a spherically param
 For example, within `demos/create_spherical_param_bunny`,
 ```shell
 SphereSample -domain octaflat -egrid 128 -sample_map demos/results/octaflat_eg128.uv.sphparam.m \
-    -param bunny.sphparam.m -rot demos/data/bunny.s3d -keys imageuv -remesh | \
+    -param bunny.sphparam.m -rot demos/data/bunny.s3d -keys imageuv -remesh |
   Filtermesh -renamekey v imageuv uv >bunny.spheresample.remesh.m
 ```
 - defines an effective 128&times;128 regular grid on a flat-octahedron domain,
@@ -590,8 +590,8 @@ VideoViewer output_video.mp4
 The related program **`G3dVec`** shows wireframe hidden-line-removed renderings of `*.a3d` streams and `*.m` meshes.
 It can write vector-based figures as SVG or PostScript files (see `demos/view_hidden_line_removed`):
 ```shell
-FilterPM demos/data/spheretext.pm -nf 4000 -outmesh | \
-  Filtermesh -proc sharp_from_wid -mark | \
+FilterPM demos/data/spheretext.pm -nf 4000 -outmesh |
+  Filtermesh -proc sharp_from_wid -mark |
   G3dVec -st demos/data/spheretext_closeup.s3d -thicksharp 3 \
     -plotfile spheretext.svg -key hDP  # 'DP' saves the svg file.
 ```

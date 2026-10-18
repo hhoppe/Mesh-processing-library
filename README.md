@@ -244,8 +244,8 @@ The programs read from `stdin` (or from files) and write to `stdout`, so that th
 For example, the command
 
 ```shell
-FilterPM demos/data/standingblob.pm -info -nfaces 1000 -outmesh | \
-  Filtermesh -info -signeddistcontour 60 -genus | \
+FilterPM demos/data/standingblob.pm -info -nfaces 1000 -outmesh |
+  Filtermesh -info -signeddistcontour 60 -genus |
   G3dOGL -key DmDe
 ```
 

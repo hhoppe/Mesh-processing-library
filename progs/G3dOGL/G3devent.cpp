@@ -1089,7 +1089,7 @@ void ButtonPressed(int butnum, bool pressed, bool shift, const Vec2<float>& yx) 
 }
 
 void WheelTurned(float v) {
-  const float yq = v * -.15f;
+  const float yq = v * .15f;  // Turning the wheel forward moves toward the scene.
   Dolly(V(yq, 0.f));
   HB::redraw_later();
 }

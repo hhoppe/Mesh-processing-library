@@ -294,16 +294,19 @@ static void act_button1(const Vec2<float>& yxq) {
 }
 
 static void act_button2(const Vec2<float>& yxq) {
-  if (selected.shift) {  // Zoom.
-    const float a = std::exp(-yxq[0]);
+  const float dy = -yxq[0];  // Upward pointer motion moves toward the scene.
+  if (selected.shift) {      // Zoom.
+    // In a dolly-zoom, upward motion moves the eye closer (widening the view); otherwise it narrows the view.
+    const bool dolly_zoom = object_mode && cob != obview;
+    const float a = std::exp(dolly_zoom ? dy : -dy);
     zoom *= a;
-    if (object_mode && cob != obview) {
+    if (dolly_zoom) {
       const float d = dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t());
       const float dnew = d / a, disp = d - dnew;
       g_obs[obview].tm() = Frame::translation(V(disp, 0.f, 0.f)) * g_obs[obview].t();
     }
   } else {  // Dolly (translation on x).
-    Dolly(yxq);
+    Dolly(V(dy, yxq[1]));
   }
 }
 

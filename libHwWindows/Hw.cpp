@@ -5,11 +5,11 @@
 #include <ShellScalingApi.h>  // SetProcessDpiAwareness(), if (NTDDI_VERSION >= NTDDI_WINBLUE)
 #endif
 #include <commdlg.h>   // GetOpenFileNameW()
-#include <dwmapi.h>    // DwmGetWindowAttribute(), DwmSetWindowAttribute()
+#include <dwmapi.h>    // DwmFlush(), DwmGetWindowAttribute(), DwmSetWindowAttribute()
 #include <shellapi.h>  // DragAcceptFiles()
 
 HH_REFERENCE_LIB("comdlg32.lib");  // GetOpenFilenameW(), GetSaveFileNameW()
-HH_REFERENCE_LIB("dwmapi.lib");    // DwmGetWindowAttribute(), DwmSetWindowAttribute()
+HH_REFERENCE_LIB("dwmapi.lib");    // DwmFlush(), DwmGetWindowAttribute(), DwmSetWindowAttribute()
 HH_REFERENCE_LIB("opengl32.lib");
 HH_REFERENCE_LIB("shcore.lib");   // SetProcessDpiAwareness()
 HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
@@ -70,7 +70,7 @@ static Hw* g_hw;
 
 // Print the screen dimensions, the work area (which excludes the taskbar), the visible window frame (left, top,
 //  right, bottom) around the client area, and the offset from a "-geom" position to the visible frame, in pixels.
-//  The frame is measured on a window that is never shown.
+//  The frame is measured on a window that is shown invisibly.
 static void print_hwquery() {
   RECT wa_rect;
   assertx(SystemParametersInfo(SPI_GETWORKAREA, 0, &wa_rect, 0));
@@ -78,8 +78,16 @@ static void print_hwquery() {
   const DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
   RECT rect = {0, 0, 400, 400};  // Left, top, right, bottom.
   assertx(AdjustWindowRect(&rect, style, 0));
-  const HWND hwnd = assertx(CreateWindowW(L"Static", L"", style, 0, 0, rect.right - rect.left, rect.bottom - rect.top,
-                                          nullptr, nullptr, GetModuleHandle(nullptr), nullptr));
+  // Windows 10 reports the extended frame bounds only for a window that has been shown, so show the window
+  //  invisibly: fully transparent, not activated, and owned by a hidden window so that it has no taskbar button.
+  const HWND owner =
+      assertx(CreateWindowW(L"Static", L"", 0, 0, 0, 0, 0, nullptr, nullptr, GetModuleHandle(nullptr), nullptr));
+  const HWND hwnd =
+      assertx(CreateWindowExW(WS_EX_LAYERED | WS_EX_NOACTIVATE, L"Static", L"", style, 0, 0, rect.right - rect.left,
+                              rect.bottom - rect.top, owner, nullptr, GetModuleHandle(nullptr), nullptr));
+  assertx(SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA));
+  ShowWindow(hwnd, SW_SHOWNOACTIVATE);
+  void(DwmFlush());
   RECT win_rect, visible_rect, client_rect;
   assertx(GetWindowRect(hwnd, &win_rect));
   // The visible frame excludes the invisible resize borders.
@@ -89,6 +97,7 @@ static void print_hwquery() {
   POINT origin = {0, 0};
   assertx(ClientToScreen(hwnd, &origin));
   assertx(DestroyWindow(hwnd));
+  assertx(DestroyWindow(owner));
   std::cout << sform("screen %d %d workarea %d %d %d %d frame %d %d %d %d offset %d %d\n",
                      GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), int(wa_rect.left), int(wa_rect.top),
                      int(wa_rect.right - wa_rect.left), int(wa_rect.bottom - wa_rect.top),

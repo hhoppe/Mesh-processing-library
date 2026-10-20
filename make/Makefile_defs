@@ -37,15 +37,18 @@ $(if $(call file_exists,$(MeshRoot)/mesh_processing.sln),, \
 
 $(if $(rel),$(error Variable 'rel' was renamed to 'release'))
 
+# Machine-specific settings (e.g. toolchain paths, or a reduced build_configs), read early so that
+#  they also apply when CONFIG=all.
+-include $(MeshRoot)/Makefile_local_defs
+
 # Define the set of possible CONFIG configurations.
 ifeq ($(is_mswin),1)
   # We place "win" last so that the last-built libraries are for the default config.
-  build_configs ?= mingw clang cygwin win#  Default set for "make makeall" or "make CONFIG=all".
-  configs ?=       $(build_configs) $(nonworking_configs)
+  configs ?= mingw clang cygwin win
 else
-  build_configs ?= unix
-  configs ?=       unix
+  configs ?= unix
 endif
+build_configs ?= $(configs)#  Set for "make makeall" or "make CONFIG=all"; may be reduced in Makefile_local_defs.
 # Set CONFIG to a default if not already set.
 # export CONFIG ?= $(word 1,$(build_configs))# Select the first config as default.
 export CONFIG ?= $(word $(words $(build_configs)),$(build_configs))# Select the last config as default.
@@ -217,7 +220,6 @@ dummy_goal:  # Introduce a dummy goal so that we can reset the .DEFAULT_GOAL bel
 
 # Avoid setting per-CONFIG variables (especially LIB) at a cross-config stage.
 ifeq ($(filter $(config_setting_goals),$(MAKECMDGOALS)),)
-  -include $(MeshRoot)/Makefile_local_defs
   -include $(MeshRoot)/../hh_src/Makefile_local_defs
   include $(MeshRoot)/make/Makefile_config_$(CONFIG)
 endif

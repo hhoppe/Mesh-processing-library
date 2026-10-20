@@ -99,6 +99,8 @@ the intermediate files, then also the executables, and then also the header-depe
 The compiler tool paths are discovered automatically;
 to override them, set the variables named in `make/Makefile_base_vc` and `make/Makefile_config_*`
 (e.g., `vs_instance`, `MINGW_ROOT`, or `LLVM_ROOT`) in a file `Makefile_local_defs` at the repository root.
+On a machine lacking some toolchains, that file can also set `build_configs` (e.g., `build_configs = cygwin win`)
+to restrict the configurations that `make CONFIG=all` builds.
 
 
 ### Build using Docker

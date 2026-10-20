@@ -55,7 +55,7 @@ LDFLAGS += -Wl,-debug#  Write a *.pdb file (adjacent to *.exe) to enable stacktr
 
 cxxall += -D_CRT_SECURE_NO_WARNINGS#  Because the C++ library is _MSVC_STL_VERSION.
 
-graphics_libs ?= -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
+graphics_libs ?= -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -ldwmapi -luser32
 
 # c:/Progra~1/LLVM/bin/clang++ --version:
 #  Target: x86_64-pc-windows-msvc

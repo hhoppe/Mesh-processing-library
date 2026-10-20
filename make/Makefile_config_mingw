@@ -18,7 +18,7 @@ $(if $(and $(MINGW_ROOT),$(call file_exists,$(MINGW_ROOT)/bin/$(CXX).exe)),,$(er
   Install mingw-w64 and/or set these variables in '$(MeshRoot)/Makefile_local_defs'))
 $(call prepend_PATH,$(MINGW_ROOT)/bin)
 
-graphics_libs = -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -luser32
+graphics_libs = -lopengl32 -lwinmm -lgdi32 -lcomdlg32 -ldwmapi -luser32
 
 # Note: no <stacktrace>: libstdc++ is built without libbacktrace and g++ leaves __cpp_lib_stacktrace undefined.
 # Recheck using: echo '#include <version>' | g++ -x c++ -std=c++23 -dM -E - | grep stacktrace

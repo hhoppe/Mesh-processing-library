@@ -78,15 +78,72 @@ Hw::Hw() {
 #endif
 }
 
+// Print the screen dimensions, the work area (which excludes panels and docks), the window frame (left, top, right,
+//  bottom) around the client area, and the offset from a "-geom" position to the frame, in pixels.  The frame comes
+//  from the window manager's answer for a window that is never mapped (_NET_REQUEST_FRAME_EXTENTS); it is zero if
+//  the window manager does not support that request (e.g., WSLg).  The offset is zero because a window manager
+//  places the frame at the "-geom" position (ICCCM NorthWestGravity).
+// The frame request is untested, as no window manager that supports it was available.
+static void print_hwquery(Display* display, int screen) {
+  const Window root = RootWindow(display, screen);
+  // Return the first n values of a window property of the given type, or an empty array if they are absent.
+  const auto get_property = [&](Window window, const char* name, Atom type, int n) {
+    Array<long> values;
+    Atom actual_type;
+    int actual_format;
+    unsigned long nitems, bytes_after;
+    unsigned char* data = nullptr;
+    if (XGetWindowProperty(display, window, XInternAtom(display, name, False), 0, n, False, type, &actual_type,
+                           &actual_format, &nitems, &bytes_after, &data) == Success &&
+        data) {
+      if (actual_format == 32) {
+        const long* p = reinterpret_cast<const long*>(data);  // Format-32 data is returned as an array of long.
+        values.push_array(CArrayView<long>(p, int(nitems)));
+      }
+      XFree(data);
+    }
+    return values;
+  };
+  const int screen_width = DisplayWidth(display, screen), screen_height = DisplayHeight(display, screen);
+  Array<long> work_area = get_property(root, "_NET_WORKAREA", XA_CARDINAL, 4);  // X, Y, width, height.
+  if (work_area.num() != 4) work_area = {0, 0, screen_width, screen_height};
+  Array<long> frame = {0, 0, 0, 0};  // Left, right, top, bottom, as in _NET_FRAME_EXTENTS.
+  const Atom request_atom = XInternAtom(display, "_NET_REQUEST_FRAME_EXTENTS", False);
+  if (contains(get_property(root, "_NET_SUPPORTED", XA_ATOM, 1000), long(request_atom))) {
+    const Window window = XCreateSimpleWindow(display, root, 0, 0, 400, 400, 0, 0, 0);
+    XEvent event = {};
+    event.xclient.type = ClientMessage;
+    event.xclient.window = window;
+    event.xclient.message_type = request_atom;
+    event.xclient.format = 32;
+    assertx(XSendEvent(display, root, False, SubstructureNotifyMask | SubstructureRedirectMask, &event));
+    // Wait up to one second for the window manager to set the property.
+    for_int(i, 100) {
+      if (Array<long> extents = get_property(window, "_NET_FRAME_EXTENTS", XA_CARDINAL, 4); extents.num() == 4) {
+        frame = std::move(extents);
+        break;
+      }
+      my_sleep(0.01);
+    }
+    XDestroyWindow(display, window);
+  }
+  std::cout << sform("screen %d %d workarea %ld %ld %ld %ld frame %ld %ld %ld %ld offset 0 0\n", screen_width,
+                     screen_height, work_area[0], work_area[1], work_area[2], work_area[3], frame[0], frame[2],
+                     frame[1], frame[3])
+            << std::flush;
+}
+
 bool Hw::init_aux(Array<string>& aargs) {
   assertx(_state == EState::uninit);
   _state = EState::init;
   string display_name;
   bool iconic = false;
   bool minimize = false;
+  bool hwquery = false;
   ParseArgs args(aargs, "Hw");
   args.p("-disp[lay", display_name, "name : set DISPLAY");
   args.p("-geom[etry", _user_geometry, "geom : set window geometry (e.g. 640x480)");
+  args.f("-hwquery", hwquery, ": print the screen, work area, and window frame sizes, and exit");
   args.f("-icon[ic", iconic, ": set initial window state");
   args.p("-back[ground", _backcolor, "color : set backcolor (e.g. white or #5987B3)");
   args.p("-fore[ground", _forecolor, "color : set forecolor (e.g. black)");
@@ -144,6 +201,7 @@ bool Hw::init_aux(Array<string>& aargs) {
     return false;
   }
   _screen = DefaultScreen(_display);
+  if (hwquery) print_hwquery(_display, _screen), std::exit(0);
   _depth = DisplayPlanes(_display, _screen);
   if (_hwdebug) SHOW(_screen, _depth, XDisplayCells(_display, _screen));
   _cmap = DefaultColormap(_display, _screen);

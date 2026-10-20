@@ -5,9 +5,11 @@
 #include <ShellScalingApi.h>  // SetProcessDpiAwareness(), if (NTDDI_VERSION >= NTDDI_WINBLUE)
 #endif
 #include <commdlg.h>   // GetOpenFileNameW()
+#include <dwmapi.h>    // DwmGetWindowAttribute(), DwmSetWindowAttribute()
 #include <shellapi.h>  // DragAcceptFiles()
 
 HH_REFERENCE_LIB("comdlg32.lib");  // GetOpenFilenameW(), GetSaveFileNameW()
+HH_REFERENCE_LIB("dwmapi.lib");    // DwmGetWindowAttribute(), DwmSetWindowAttribute()
 HH_REFERENCE_LIB("opengl32.lib");
 HH_REFERENCE_LIB("shcore.lib");   // SetProcessDpiAwareness()
 HH_REFERENCE_LIB("shell32.lib");  // CommandLineToArgvW()
@@ -66,12 +68,45 @@ extern HANDLE g_buf_event_data_available;  // From Buffer.cpp.
 //  seems too complicated.  We can assume a single-window model.
 static Hw* g_hw;
 
+// Print the screen dimensions, the work area (which excludes the taskbar), the visible window frame (left, top,
+//  right, bottom) around the client area, and the offset from a "-geom" position to the visible frame, in pixels.
+//  The frame is measured on a window that is never shown.
+static void print_hwquery() {
+  RECT wa_rect;
+  assertx(SystemParametersInfo(SPI_GETWORKAREA, 0, &wa_rect, 0));
+  // Use the window style of ogl_create_window().
+  const DWORD style = WS_OVERLAPPEDWINDOW | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
+  RECT rect = {0, 0, 400, 400};  // Left, top, right, bottom.
+  assertx(AdjustWindowRect(&rect, style, 0));
+  const HWND hwnd = assertx(CreateWindowW(L"Static", L"", style, 0, 0, rect.right - rect.left, rect.bottom - rect.top,
+                                          nullptr, nullptr, GetModuleHandle(nullptr), nullptr));
+  RECT win_rect, visible_rect, client_rect;
+  assertx(GetWindowRect(hwnd, &win_rect));
+  // The visible frame excludes the invisible resize borders.
+  if (DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, &visible_rect, sizeof(visible_rect)) != S_OK)
+    visible_rect = win_rect;
+  assertx(GetClientRect(hwnd, &client_rect));
+  POINT origin = {0, 0};
+  assertx(ClientToScreen(hwnd, &origin));
+  assertx(DestroyWindow(hwnd));
+  std::cout << sform("screen %d %d workarea %d %d %d %d frame %d %d %d %d offset %d %d\n",
+                     GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), int(wa_rect.left), int(wa_rect.top),
+                     int(wa_rect.right - wa_rect.left), int(wa_rect.bottom - wa_rect.top),
+                     int(origin.x - visible_rect.left), int(origin.y - visible_rect.top),
+                     int(visible_rect.right - (origin.x + client_rect.right)),
+                     int(visible_rect.bottom - (origin.y + client_rect.bottom)),
+                     int(visible_rect.left - win_rect.left), int(visible_rect.top - win_rect.top))
+            << std::flush;
+}
+
 bool Hw::init_aux(Array<string>& aargs) {
   assertx(_state == EState::uninit);
   _state = EState::init;
   bool minimize = false;
+  bool hwquery = false;
   ParseArgs args(aargs, "Hw");
   args.p("-geom[etry", _user_geometry, "geom : set window geometry (e.g. 640x480)");
+  args.f("-hwquery", hwquery, ": print the screen, work area, and window frame sizes, and exit");
   args.f("-icon[ic", _iconic, ": set initial window state");
   args.p("-back[ground", _backcolor, "color : set backcolor (e.g. white or #5987B3)");
   args.p("-fore[ground", _forecolor, "color : set forecolor (e.g. black)");
@@ -142,6 +177,7 @@ bool Hw::init_aux(Array<string>& aargs) {
     // assertx(SetProcessDPIAware());  // This older API is available; should be in user32.lib but not found.
 #endif
   }
+  if (hwquery) print_hwquery(), std::exit(0);
   set_window_title(_argv0);
   set_double_buffering(true);
   if (!win_started_from_console()) _extra_console_visible = true;
@@ -1069,6 +1105,13 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
                           nullptr);    // Creation parameters.
     // Make sure we were able to create the window.
     assertx(_hwnd);
+    {
+      // Request square corners so that adjacent windows (e.g., from G3dcmp) abut without gaps.  Windows 10 lacks
+      //  this attribute (rounded corners began with Windows 11), so the call fails there and its result is ignored.
+      const DWORD k_dwmwa_window_corner_preference = 33, k_dwmwcp_donotround = 1;
+      void(DwmSetWindowAttribute(_hwnd, k_dwmwa_window_corner_preference, &k_dwmwcp_donotround,
+                                 sizeof(k_dwmwcp_donotround)));
+    }
     // Get a DC for the window (for convenience; let's only do it once).
     _hDC = assertx(GetDC(_hwnd));
     _hRenderDC = _hDC;

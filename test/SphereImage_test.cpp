@@ -22,7 +22,7 @@ int64_t checksum(const Image& image) {
 
 void show_row(const Image& image, int y) {
   string s;
-  for_int(x, image.xsize()) s += " " + std::to_string(image[y][x][0]) + "," + std::to_string(image[y][x][1]);
+  for_int(x, image.xsize()) s += " " + std::to_string(image[y, x][0]) + "," + std::to_string(image[y, x][1]);
   showf("row %d:%s\n", y, s.c_str());
 }
 
@@ -38,8 +38,8 @@ void test_octaflat() {
   feather_sphere_image(image, "octaflat");
   for (const int border : {0, size - 1}) {
     for_int(i, size) {
-      assertx(image[border][i] == image[border][size - 1 - i]);
-      assertx(image[i][border] == image[size - 1 - i][border]);
+      assertx(image[border, i] == image[border, size - 1 - i]);
+      assertx(image[i, border] == image[size - 1 - i, border]);
     }
   }
   show_row(image, 0);

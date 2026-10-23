@@ -20,6 +20,7 @@
 #include "libHh/Polygon.h"
 #include "libHh/Random.h"
 #include "libHh/Spatial.h"
+#include "libHh/SphereImage.h"
 #include "libHh/Stat.h"
 #include "libHh/Timer.h"
 #include "libHh/Vector4.h"
@@ -38,8 +39,8 @@ string domain_file;              // Filename for domain_mesh (D -> S).
 string param_file;               // Filename for sphparam mesh (M -> S) which is later inverted to param_mesh (S -> M).
 string rotate_s3d;               // Filename for s3d file.
 Array<string> key_names{"sph"};  // Set of string attributes written to output mesh.
-string signal_;                  // Surface signal ("G", "N", "C", "T", "V").
-int voxel_grid_resolution = 50;  // 3D checkerboard grid resolution for "V" signal.
+string signal_;                  // Surface signal {position, normal, rgb, texture, voxel} (unique first letters).
+int voxel_grid_resolution = 50;  // 3D checkerboard grid resolution for "voxel" signal.
 int supersample = 1;             // 1 signifies no supersampling.
 bool feather_texture = true;     // Blend texture discontinuities in do_write_texture().
 Matrix<Vector4> texture_image_vector4;
@@ -1274,8 +1275,9 @@ void do_remesh() {
 }
 
 void do_signal(Args& args) {
-  signal_ = args.get_string();
-  assertx(contains(V<std::string_view>("G", "N", "C", "T", "V"), signal_));
+  signal_ = args.get_string();  // (The same names as in "AtlasSample".)
+  if (!contains(V<std::string_view>("position", "normal", "rgb", "texture", "voxel"), signal_))
+    assertnever("Signal '" + signal_ + "' not recognized");
 }
 
 void do_texture_file(Args& args) {
@@ -1295,25 +1297,25 @@ Pixel assign_signal(const string& signal, const GMesh& mesh, const Bbox<float, 3
   if (GMesh::string_has_key(mesh.get_string(f), "hole")) return k_color_zero_alpha;
   Pixel pixel(255, 255, 255, 255);
   switch (signal[0]) {
-    case 'G': {
+    case 'p': {
       const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
       Point p_m{};
       for_int(i, 3) p_m += bary[i] * v_domainp(face_vertices[i]);
       pixel.head<3>() = transformed((p_m - bbox[0]) / (bbox[1] - bbox[0]), uint8_from_unit);
       break;
     }
-    case 'N': {
+    case 'n': {
       Vector normal = interp_f_normal(mesh, f, bary) * rotate_frame;
       if (0) project_to_cube(normal);  // An idea to improve compression quality; it does not help.
       pixel.head<3>() = transformed(normal * .5f + .5f, uint8_from_unit);
       break;
     }
-    case 'C': {
+    case 'r': {
       const Vector rgb = interp_f_rgb(mesh, f, bary);
       pixel.head<3>() = transformed(rgb, uint8_from_unit);
       break;
     }
-    case 'T': {
+    case 't': {
       assertx(texture_image_vector4.ysize());
       const Uv uv = interp_f_uv(mesh, f, bary);
       // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
@@ -1323,7 +1325,7 @@ Pixel assign_signal(const string& signal, const GMesh& mesh, const Bbox<float, 3
       pixel = sample_domain(texture_image_vector4, yx, filterbs).pixel();
       break;
     }
-    case 'V': {
+    case 'v': {
       const Vec3<Vertex> face_vertices = mesh.triangle_vertices(f);
       Point p_m{};
       for_int(i, 3) p_m += bary[i] * v_domainp(face_vertices[i]);
@@ -1376,73 +1378,6 @@ void handle_zero_alpha_pixels_for_filled_faces(Image& image) {
     set_filled_pixels_using_voronoi_dilate(image);
 }
 
-void blend_pixels(Pixel& pixel0, Pixel& pixel1) {
-  const Pixel average_pixel = interp(Vector4(pixel0), Vector4(pixel1)).pixel();
-  pixel0 = pixel1 = average_pixel;
-}
-
-void apply_feathering(Image& image) {
-  const int ny = image.ysize(), nx = image.xsize();
-  const bool expecting_periodic_texturing_mode = false;  // By default, the texturing mode is often GL_CLAMP_TO_EDGE.
-  if (0) {
-  } else if (domain == "tetra") {
-    assertx(ny == nx && ny % 2 == 0);
-    const int h = ny / 2;
-    // Blend across the left and right sides of the image.
-    if (!expecting_periodic_texturing_mode)
-      for (const int i : range(h)) blend_pixels(image[h + i, 0], image[h + i, h * 2 - 1]);
-    // Assign pixel values above the rectangle.
-    for (const int i : range(h * 2)) image[h - 1, i] = image[h, h * 2 - 1 - i];
-    // Blend pixel values in the lowest row of the rectangle.
-    for (const int i : range(h)) blend_pixels(image[h * 2 - 1, i], image[h * 2 - 1, h * 2 - 1 - i]);
-
-  } else if (domain == "octa" || domain == "octaflat") {
-    // For each of the four image boundaries, we must establish mirror symmetry within the pixels on the boundary.
-    // This leads to a narrow (1-texel width) band of zero-derivative signal across the texture boundary, but this
-    // is much better than leaving a visible discontinuity.
-    for (const int axis : {0, 1})
-      for (const int column_index : {0, image.dim(axis) - 1}) {  // (General "column" is either row or col.)
-        StridedArrayView<Pixel> single_border = grid_column(image, 1 - axis, twice(0).with(axis, column_index));
-        const int num = single_border.num();
-        for (const int i : range(num / 2)) blend_pixels(single_border[i], single_border[num - 1 - i]);
-      }
-
-  } else if (domain == "cube") {
-    // Blend across the left and right sides of the image.
-    assertx(ny == nx && ny % 4 == 0);
-    const int q = ny / 4;
-    if (!expecting_periodic_texturing_mode)
-      for (const int i : range(q)) blend_pixels(image[q * 2 + i, 0], image[q * 2 + i, q * 4 - 1]);
-    // Assign pixel values in the horizontal segment above the top of the "+" shape in the image.
-    for (const int i : range(q)) image[q - 1, q + i] = image[q * 2, q * 4 - 1 - i];
-    // Blend the horizontal segment at the base of the "+" (lowest image row) with the adjacent cube face.
-    for (const int i : range(q)) blend_pixels(image[q * 4 - 1, q + i], image[q * 3 - 1, q * 4 - 1 - i]);  // (A).
-    // Assign pixel values above the left side of the "+" shape.
-    for (const int i : range(q)) image[q * 2 - 1, i] = image[q * 2 - 1 - i, q];
-    // Assign pixel values below the left side of the "+" shape.
-    for (const int i : range(q)) image[q * 3, i] = image[q * 4 - 1 - i, q];
-    // Assign pixel values above the right side of the "+" shape.
-    for (const int i : range(q)) image[q * 2 - 1, q * 2 + i] = image[q * 2 - 1 - i, q * 2 - 1];
-    for (const int i : range(q)) image[q * 2 - 1, q * 3 + i] = image[q, q * 2 - 1 - i];
-    // Assign pixel values below the right side of the "+" shape.
-    for (const int i : range(q)) image[q * 3, q * 2 + i] = image[q * 4 - 1 - i, q * 2 - 1];
-    for (const int i : range(q)) image[q * 3, q * 3 + i] = image[q * 4 - 1, q * 2 - 1 - i];  // Already blended in (A).
-    // Assign pixel values left of the top part of the "+" shape.
-    for (const int i : range(q)) image[q + i, q - 1] = image[q * 2, i];
-    // Assign pixel values left of the bottom part of the "+" shape.
-    for (const int i : range(q)) image[q * 3 + i, q - 1] = image[q * 3 - 1, q - 1 - i];
-    // Assign pixel values right of the top part of the "+" shape.
-    for (const int i : range(q)) image[q + i, q * 2] = image[q * 2, q * 3 - 1 - i];
-    // Assign pixel values right of the bottom part of the "+" shape.
-    for (const int i : range(q)) image[q * 3 + i, q * 2] = image[q * 3 - 1, q * 2 + i];
-    // Assign two leftover pixels.
-    image[q - 1, q - 1] = image[q * 2, q * 4 - 1];
-    image[q - 1, q * 2] = image[q * 2, q * 3];
-  } else {
-    assertnever("domain name '" + domain + "' not recognized");
-  }
-}
-
 // Define map: image I -> domain D  (v -> v_domainp(v)).
 GMesh get_map_from_image_to_domain() {
   const int orig_gridn = std::exchange(gridn, 1);  // Create an untessellated domain mesh.
@@ -1492,7 +1427,7 @@ void do_write_texture(Args& args) {
   const MeshSearch msearch_s(param_mesh, options_s);   // Map: sphere S -> mesh M (v -> v_domainp(v)).
 
   const Bbox tight_bbox{param_mesh.vertices() | views::transform([&](Vertex v) { return v_domainp(v); })};
-  const Bbox bbox = signal_ == "V" ? tight_bbox.enclosing_hypercube() : tight_bbox;
+  const Bbox bbox = signal_ == "voxel" ? tight_bbox.enclosing_hypercube() : tight_bbox;
   const Frame rotate_frame = get_rotate_frame();
 
   Image image(twice(gridn * supersample));
@@ -1539,7 +1474,7 @@ void do_write_texture(Args& args) {
   handle_zero_alpha_pixels_for_filled_faces(image);
   if (anisotropic_filtering) apply_anisotropic_filtering(image, image_surface_points);
   if (supersample > 1) image.scale(twice(1.f / supersample), k_downsampling_filter);
-  if (feather_texture) apply_feathering(image);
+  if (feather_texture) feather_sphere_image(image, domain);
   image.write_file(image_name);
   nooutput = true;
 
@@ -1582,22 +1517,22 @@ void do_write_primal_texture(Args& args) {
     Pixel pixel;
     pixel[3] = 255;
     switch (signal_[0]) {
-      case 'G': {
+      case 'p': {
         const Point& p = g_mesh.point(v);
         pixel.head<3>() = transformed((p - bbox[0]) / (bbox[1] - bbox[0]), uint8_from_unit);
         break;
       }
-      case 'N': {
+      case 'n': {
         const Vector normal = v_normal(v) * rotate_frame;
         pixel.head<3>() = transformed(normal * .5f + .5f, uint8_from_unit);
         break;
       }
-      case 'C': {
+      case 'r': {
         const Vector& rgb = v_rgb(v);
         pixel.head<3>() = transformed(rgb, uint8_from_unit);
         break;
       }
-      case 'T': assertnever("Unsupported");
+      case 't': assertnever("Unsupported");
       default: assertnever("signal '" + signal_ + "' not recognized");
     }
     if (x == image.xsize()) {
@@ -1864,9 +1799,9 @@ int main(int argc, const char** argv) {
   HH_ARGSD(keys, "comma_separated_keys : fields to write in output mesh (default: sph)");
   HH_ARGSC("   possible keys: domainp,stretchuv,imageuv,sph,ll,domaincorner,domainf");
   HH_ARGSD(remesh, ": resample mesh and triangulate");
-  HH_ARGSD(signal, "ch : select G=geometry, N=normal, C=color, T=texture, V=voxel");
-  HH_ARGSD(texture_file, "imagefile : source content for 'T' signal");
-  HH_ARGSP(voxel_grid_resolution, "n : resolution of 3D checkerboard grid for 'V' signal");
+  HH_ARGSD(signal, "name : select {position, normal, rgb, texture, voxel}");
+  HH_ARGSD(texture_file, "imagefile : source content for 'texture' signal");
+  HH_ARGSP(voxel_grid_resolution, "n : resolution of 3D checkerboard grid for 'voxel' signal");
   HH_ARGSP(supersample, "n : sample n * n times for each output texel");
   HH_ARGSP(feather_texture, "bool : blend across texture border discontinuities");
   HH_ARGSD(write_texture, "image : resample signal as texturemap (dual sampling)");

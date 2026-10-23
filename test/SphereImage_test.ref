@@ -1,0 +1,11 @@
+is_sphere_image_domain("tetra") = 1
+is_sphere_image_domain("octa") = 1
+is_sphere_image_domain("octaflat") = 1
+is_sphere_image_domain("cube") = 1
+is_sphere_image_domain("sphere") = 0
+is_sphere_image_domain("") = 0
+row 0: 56,56 0,56 0,56 0,56 0,56 0,56 0,56 56,56
+row 1: 56,0 16,16 16,32 16,48 16,64 16,80 16,96 56,112
+row 7: 56,56 112,56 112,56 112,56 112,56 112,56 112,56 56,56
+domain=tetra sum_before=43232 checksum(image)=43880
+domain=cube sum_before=43232 checksum(image)=44297

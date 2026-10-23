@@ -64,6 +64,7 @@
     <ClCompile Include="Image_libs.cpp" />
     <ClCompile Include="Image_wic.cpp" />
     <ClCompile Include="Lls.cpp" />
+    <ClCompile Include="MappedFile.cpp" />
     <ClCompile Include="Mesh.cpp" />
     <ClCompile Include="MeshOp.cpp" />
     <ClCompile Include="MeshSearch.cpp" />
@@ -74,6 +75,7 @@
     <ClCompile Include="Principal.cpp" />
     <ClCompile Include="Principal_em.cpp" />
     <ClCompile Include="Random.cpp" />
+    <ClCompile Include="SphereImage.cpp" />
     <ClCompile Include="SrMesh.cpp" />
     <ClCompile Include="Spatial.cpp" />
     <ClCompile Include="Stat.cpp" />
@@ -136,6 +138,7 @@
     <ClInclude Include="LinearFunc.h" />
     <ClInclude Include="LinearRegression.h" />
     <ClInclude Include="Map.h" />
+    <ClInclude Include="MappedFile.h" />
     <ClInclude Include="Materials.h" />
     <ClInclude Include="MathOp.h" />
     <ClInclude Include="Matrix.h" />
@@ -162,6 +165,7 @@
     <ClInclude Include="Queue.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="RangeOp.h" />
+    <ClInclude Include="SphereImage.h" />
     <ClInclude Include="SrMesh.h" />
     <ClInclude Include="STree.h" />
     <ClInclude Include="Sac.h" />

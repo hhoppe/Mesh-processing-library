@@ -497,7 +497,7 @@ SphereSample -domain octaflat -egrid 128 -sample_map demos/results/octaflat_eg12
 Also,
 ```shell
 SphereSample -domain octaflat -grid 1024 -domain_file demos/results/octaflat_eg128.uv.sphparam.m \
-    -param bunny.sphparam.m -signal N -write_texture \
+    -param bunny.sphparam.m -signal normal -write_texture \
     bunny.spheresample.octaflat.unrotated.normalmap.png
 ```
 - defines a 1024&times;1024 grid over the same flat-octahedron domain and domain-to-sphere map,

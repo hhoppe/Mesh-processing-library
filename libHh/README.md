@@ -91,6 +91,8 @@ CGridView<D, T>             (const elements)
 - `RA3dStream`, `WA3dStream`: reading and writing streams of polygons, polylines, and points (`*.a3d`).
 - `Pixel`: RGBA color with 8-bit channels (a `Vec4<uint8_t>`).
 - `Image`: 2D grid of `Pixel`s (a `Matrix<Pixel>`) with file input and output.
+- `feather_sphere_image()`: blends the pixels across the discontinuities of the image of a spherical domain (tetra,
+  octa, octaflat, or cube), as created by `SphereSample`.
 - `Video`: 3D grid of `Pixel`s with attributes such as frame rate, bit rate, and compression type.
 - `RVideo`, `WVideo`: reading or writing a video one frame at a time; `VideoNv12` stores frames in YUV 4:2:0 (NV12).
 - `Audio`: 2D grid of `float` samples (channels by samples), with a sample rate and bit rate.
@@ -103,6 +105,7 @@ CGridView<D, T>             (const elements)
 - `ParseArgs`: parses command-line options and generates their usage text.
 - `RFile`, `WFile`: input and output file streams, which also accept `-` (stdin/stdout), pipe commands, and
   compressed files.
+- `MappedFile`: read-only view of the entire contents of a file, memory-mapped where possible.
 - `Random`: deterministic random-number generator, so that results are reproducible across platforms.
 - `HH_STAT(S)`, `HH_SSTAT(S, v)`: macros that accumulate a `Stat`, reported at program exit.
 - `PostscriptPlot`, `SvgPlot`: write a 2D line drawing as a PostScript or SVG file.

@@ -1,0 +1,4 @@
+filename=MappedFile_test.empty.tmp view.size()=0
+filename=MappedFile_test.binary.tmp view.size()=259
+filename=MappedFile_test.binary.tmp.gz view.size()=259
+filename=MappedFile_test.text.tmp view.size()=4088895

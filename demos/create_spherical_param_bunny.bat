@@ -24,12 +24,12 @@ echo Resample the bunny spherical parameterization into a remesh and an associat
 
 SphereSample -domain octaflat -egrid 128 -sample_map results/octaflat_eg128.uv.sphparam.m -param results/bunny.sphparam.m -rot data/bunny.s3d -keys imageuv -remesh | Filtermesh -renamekey v imageuv uv >results/bunny.spheresample.remesh.m
 
-SphereSample -domain octaflat -grid 1024 -domain_file results/octaflat_eg128.uv.sphparam.m -param results/bunny.sphparam.m -signal N -write_texture results/bunny.spheresample.octaflat.unrotated.normalmap.png
+SphereSample -domain octaflat -grid 1024 -domain_file results/octaflat_eg128.uv.sphparam.m -param results/bunny.sphparam.m -signal normal -write_texture results/bunny.spheresample.octaflat.unrotated.normalmap.png
 
 
 echo Create a longitude-latitude normal map to use on the original mesh.
 
-SphereSample -grid 1024 -param results/bunny.sphparam.m -signal N -write_lonlat_texture results/bunny.lonlat.unrotated.normalmap.png
+SphereSample -grid 1024 -param results/bunny.sphparam.m -signal normal -write_lonlat_texture results/bunny.lonlat.unrotated.normalmap.png
 
 echo Create a progressive mesh by minimizing an "Appearance-preserving simplification" (APS) metric.
 

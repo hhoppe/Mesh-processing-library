@@ -686,8 +686,8 @@ inline void HwBase::flush_seg_ogl() {
   for (const auto& s : _ar_seg) {
     // glVertex2fv(s[0].rev().data());
     // glVertex2fv(s[1].rev().data());
-    glVertex2f(s[0][1], s[0][0]);
-    glVertex2f(s[1][1], s[1][0]);
+    glVertex2f(s[0, 1], s[0, 0]);
+    glVertex2f(s[1, 1], s[1, 0]);
   }
   glEnd();
   _ar_seg.init(0);

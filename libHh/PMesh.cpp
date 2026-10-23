@@ -1587,7 +1587,7 @@ PMeshInfo PMesh::read_header(std::istream& is) {
       continue;
     }
     if (const char* s = after_prefix(sline, "bbox ")) {
-      for_int(i, 2) for_int(j, 3) pminfo._full_bbox[i][j] = float_from_chars(s);
+      for_int(i, 2) for_int(j, 3) pminfo._full_bbox[i, j] = float_from_chars(s);
       assert_no_more_chars(s);
       continue;
     }

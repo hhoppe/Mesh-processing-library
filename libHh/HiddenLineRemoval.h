@@ -71,7 +71,7 @@ class HiddenLineRemoval {
     Vec2<float> t{p[1], p[2]};
     const auto func_hlr_point_consider_poly = [&](const int& pn, ArrayView<float>, ArrayView<float>, KD::CBloc) {
       const HlrPolygon& hp = _polygons[pn];
-      if (p[0] < hp.bbox[0][0]) return KD::ECallbackReturn::nothing;  // Point in front of the bbox of the polygon.
+      if (p[0] < hp.bbox[0, 0]) return KD::ECallbackReturn::nothing;  // Point in front of the bbox of the polygon.
       const Polygon& poly = hp.poly;
       const float d = dot(p, hp.nor) - hp.d;
       if (d <= hp.tol) return KD::ECallbackReturn::nothing;  // Point in front of the plane of the polygon.
@@ -116,7 +116,7 @@ class HiddenLineRemoval {
     bbox[1][1] = max(s.p[0][2], s.p[1][2]);
     const auto func_hlr_seg_consider_poly = [&](const int& pn, ArrayView<float> bb0, ArrayView<float> bb1,
                                                 KD::CBloc kdloc2) {
-      if (bbxmax < _polygons[pn].bbox[0][0]) return KD::ECallbackReturn::nothing;
+      if (bbxmax < _polygons[pn].bbox[0, 0]) return KD::ECallbackReturn::nothing;
       auto ret = handle_polygon(s, pn, kdloc2);
       if (ret == KD::ECallbackReturn::bbshrunk) {
         bbxmax = max(s.p[0][0], s.p[1][0]);

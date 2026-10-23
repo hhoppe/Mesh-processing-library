@@ -96,8 +96,8 @@ void object::update_stats() {
   for_int(c, 3) {
     _pavg[c] = _stat_coord[c].avg();
     _radius += _stat_coord[c].num() > 1 ? _stat_coord[c].sdv() : 0.f;
-    _bbox[0][c] = _stat_coord[c].min();
-    _bbox[1][c] = _stat_coord[c].max();
+    _bbox[0, c] = _stat_coord[c].min();
+    _bbox[1, c] = _stat_coord[c].max();
   }
 }
 
@@ -160,14 +160,14 @@ objects g_obs;
 // A hook from HB.
 void UpdateOb1Bbox(const Bbox<float, 3>& bbox) {
   assertx(!g_obs[1].defined());
-  g_obs[1].enter_point(Point(bbox[0][0], bbox[0][1], bbox[0][2]));
-  g_obs[1].enter_point(Point(bbox[0][0], bbox[0][1], bbox[1][2]));
-  g_obs[1].enter_point(Point(bbox[0][0], bbox[1][1], bbox[0][2]));
-  g_obs[1].enter_point(Point(bbox[0][0], bbox[1][1], bbox[1][2]));
-  g_obs[1].enter_point(Point(bbox[1][0], bbox[0][1], bbox[0][2]));
-  g_obs[1].enter_point(Point(bbox[1][0], bbox[0][1], bbox[1][2]));
-  g_obs[1].enter_point(Point(bbox[1][0], bbox[1][1], bbox[0][2]));
-  g_obs[1].enter_point(Point(bbox[1][0], bbox[1][1], bbox[1][2]));
+  g_obs[1].enter_point(Point(bbox[0, 0], bbox[0, 1], bbox[0, 2]));
+  g_obs[1].enter_point(Point(bbox[0, 0], bbox[0, 1], bbox[1, 2]));
+  g_obs[1].enter_point(Point(bbox[0, 0], bbox[1, 1], bbox[0, 2]));
+  g_obs[1].enter_point(Point(bbox[0, 0], bbox[1, 1], bbox[1, 2]));
+  g_obs[1].enter_point(Point(bbox[1, 0], bbox[0, 1], bbox[0, 2]));
+  g_obs[1].enter_point(Point(bbox[1, 0], bbox[0, 1], bbox[1, 2]));
+  g_obs[1].enter_point(Point(bbox[1, 0], bbox[1, 1], bbox[0, 2]));
+  g_obs[1].enter_point(Point(bbox[1, 0], bbox[1, 1], bbox[1, 2]));
   g_obs[1].update_stats();
   g_obs.last = 1;
   HB::open_segment(1);

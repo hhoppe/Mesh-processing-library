@@ -655,7 +655,7 @@ void do_fbasemesh(Args& args) {
         continue;
       }
       if (const char* s = after_prefix(sline, "# PM: bounding box ")) {
-        for_int(i, 2) for_int(j, 3) pm_bbox[i][j] = float_from_chars(s);
+        for_int(i, 2) for_int(j, 3) pm_bbox[i, j] = float_from_chars(s);
         assert_no_more_chars(s);
         continue;
       }

@@ -768,7 +768,7 @@ void SrMesh::write_srm(std::ostream& os) const {
      << " nvsplits=" << _vsplits.num() << '\n';
   // Write out bounding box.
   os << "bbox " << _bbox[0][0] << ' ' << _bbox[0][1] << ' ' << _bbox[0][2] << "  " << _bbox[1][0] << ' ' << _bbox[1][1]
-     << ' ' << _bbox[1][2] << '\n';
+     << ' ' << _bbox[1, 2] << '\n';
   // Write out materials.
   _materials.write(os);
   // Write out base mesh.
@@ -847,7 +847,7 @@ void SrMesh::read_srm(std::istream& is) {
     string line;
     assertx(my_getline(is, line));
     const char* s = assertx(after_prefix(line.c_str(), "bbox "));
-    for_int(i, 2) for_int(j, 3) _bbox[i][j] = float_from_chars(s);
+    for_int(i, 2) for_int(j, 3) _bbox[i, j] = float_from_chars(s);
     assert_no_more_chars(s);
   }
   // Read in materials.

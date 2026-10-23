@@ -140,10 +140,10 @@ int main() {
     {
       // Each value rounds to the nearest level, like Vector4::pixel().
       Matrix<float> matrixf(V(1, 256));
-      for_int(x, 256) matrixf[0][x] = (x + .49f) / 255.f;
+      for_int(x, 256) matrixf[0, x] = (x + .49f) / 255.f;
       const Image imagef = as_image(matrixf);
       for_int(x, 256) assertx(imagef[0, x] == Pixel::gray(uint8_t(x)));
-      for_int(x, 256) assertx(rgb_equal(imagef[0, x], Vector4(matrixf[0][x]).pixel()));
+      for_int(x, 256) assertx(rgb_equal(imagef[0, x], Vector4(matrixf[0, x]).pixel()));
     }
     const Matrix<float> matrixf = {{.5f, .5f}};
     SHOW(as_image(matrixf)[0][1]);
@@ -207,11 +207,11 @@ int main() {
     const Image image4(V(4, 4), Pixel(200, 100, 50));
     Nv12 nv12b(image4.dims());
     convert_Image_to_Nv12(image4, nv12b);
-    assertx(nv12b.get_UV()[1][1] == V(U_from_RGB(image4[0][0]), V_from_RGB(image4[0][0])));
+    assertx(nv12b.get_UV()[1][1] == V(U_from_RGB(image4[0, 0]), V_from_RGB(image4[0, 0])));
     Image image5(image4.dims());
     convert_Nv12_to_Image(CNv12View(nv12b), image5);
     SHOW(image5[3][3], rgb_dist2(image5[3][3], image4[3][3]));
-    for (const Pixel& pixel : image5) assertx(pixel == image5[0][0]);
+    for (const Pixel& pixel : image5) assertx(pixel == image5[0, 0]);
     // Views onto an Nv12.
     Nv12View nv12v(nv12b);
     assertx(nv12v.get_Y().data() == nv12b.get_Y().data());
@@ -229,7 +229,7 @@ int main() {
     image.set_zsize(4);
     const Image image2 = scale(image, V(2.f, .5f), twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected)));
     SHOW(image2.dims(), image2.zsize());
-    for (const Pixel& pixel : image2) assertx(pixel == image[0][0]);
+    for (const Pixel& pixel : image2) assertx(pixel == image[0, 0]);
     image.scale(V(.5f, 1.5f), twice(FilterBnd(Filter::get("box"), Bndrule::clamped)));
     SHOW(image.dims());
     for (const Pixel& pixel : image) assertx(pixel == Pixel(200, 100, 50, 255));

@@ -71,7 +71,7 @@ inline float lb_dist_point_bbox(const Point& p, const Bbox<float, 3>& bbox) {
   float d = 0.f;
   for_int(c, 3) {
     const float v = p[c];
-    if (const float a1 = v - bbox[1][c]; a1 > d) {
+    if (const float a1 = v - bbox[1, c]; a1 > d) {
       d = a1;
     } else if (const float a2 = bbox[0][c] - v; a2 > d) {
       d = a2;

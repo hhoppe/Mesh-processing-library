@@ -566,13 +566,13 @@ class SphereMapper::Implementation {
         if (!assertw(update_iter < 2000) || !num_active) break;
 
         ArrayView<int> active_vertices = ar_vertex.head(num_active);
-        for (const int v : active_vertices) for_int(c, 2) ar_random[v][c] = Random::G.unif();
+        for (const int v : active_vertices) for_int(c, 2) ar_random[v, c] = Random::G.unif();
 
         // The cost estimate (measured as the fastest of 500 to 10'000) enables parallelism only for >= ~30 active
         // vertices; for fewer, the overhead of waking the thread pool in each update iteration exceeds the benefit.
         parallel_for({.cycles_per_elem = 3'000}, range(num_active), [&](int i) {
           const int v = active_vertices[i];
-          ar_sph[v] = optimize_vertex_rand(v, someface[v], ar_random[v][0], ar_random[v][1]);
+          ar_sph[v] = optimize_vertex_rand(v, someface[v], ar_random[v, 0], ar_random[v, 1]);
           ar_displacement[v] += dist(ar_sph[v], _sphmap[v]);
         });
 

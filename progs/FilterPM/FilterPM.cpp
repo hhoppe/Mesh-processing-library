@@ -404,8 +404,8 @@ void quantize_mesh(WMesh& mesh, const PMeshInfo& pminfo) {
   for_int(v, mesh._vertices.num()) {
     Point& p = mesh._vertices[v].attrib.point;
     for_int(c, 3) {
-      p[c] = (int((p[c] - pmesh._info._full_bbox[0][c]) / obj_diameter * k_point_qf) / k_point_qf * obj_diameter +
-              pmesh._info._full_bbox[0][c]);
+      p[c] = (int((p[c] - pmesh._info._full_bbox[0, c]) / obj_diameter * k_point_qf) / k_point_qf * obj_diameter +
+              pmesh._info._full_bbox[0, c]);
     }
   }
   assertx(!pminfo._has_rgb);
@@ -423,7 +423,7 @@ void quantize_mesh_int(WMesh& mesh, const PMeshInfo& pminfo) {
   const float obj_diameter = pmesh._info._full_bbox.max_side();
   for_int(v, mesh._vertices.num()) {
     Point& p = mesh._vertices[v].attrib.point;
-    for_int(c, 3) p[c] = floor((p[c] - pmesh._info._full_bbox[0][c]) / obj_diameter * k_point_qf);
+    for_int(c, 3) p[c] = floor((p[c] - pmesh._info._full_bbox[0, c]) / obj_diameter * k_point_qf);
   }
   assertx(!pminfo._has_rgb);
   for_int(w, mesh._wedges.num()) {
@@ -528,7 +528,7 @@ int wrap_dflclw(int dflclw, int nfaces) {
 
 void do_compression() {
   HH_TIMER("_compression");
-  assertx(pmesh._info._full_bbox[0][0] != BIGFLOAT);
+  assertx(pmesh._info._full_bbox[0, 0] != BIGFLOAT);
   assertx(!pmesh._info._has_rgb);
   pmi->goto_nvertices(0);
   const int base_nv = pmi->_vertices.num();
@@ -694,7 +694,7 @@ void do_compression() {
 
 void do_gcompression() {
   HH_TIMER("_gcompression");
-  assertx(pmesh._info._full_bbox[0][0] != BIGFLOAT);
+  assertx(pmesh._info._full_bbox[0, 0] != BIGFLOAT);
   pmi->goto_nvertices(0);
   ensure_pm_loaded();
   DeltaEncoding de_p;     // Here, vad_l, before prediction, using 3 * max_bits(coord).

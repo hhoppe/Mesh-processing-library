@@ -293,7 +293,7 @@ void ObjectSpatial<Approx2, Exact2>::enter(Univ id, const Point& startp, Func fc
     ncubes++;
     Vec2<Ind> bi;
     for_int(c, 3) {
-      bi[0][c] = max(ci[c] - 1, 0);
+      bi[0, c] = max(ci[c] - 1, 0);
       bi[1][c] = min(ci[c] + 1, _gn - 1);
     }
     for (const Ind& cit : range(bi[0], bi[1] + 1)) {

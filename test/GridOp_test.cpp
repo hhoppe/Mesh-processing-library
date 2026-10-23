@@ -432,14 +432,14 @@ int main() {
     assertx((grid1[0, 0]) == 5.f);
     // The inverse convolution along dimension 0 commutes with the extraction of a column.
     Grid<2, float> grid2(V(6, 2));
-    for_int(y, 6) grid2[y][0] = grid2[y][1] = float(y * y);
+    for_int(y, 6) grid2[y, 0] = grid2[y, 1] = float(y * y);
     Grid<1, float> column = grid_from_flat(V(6), grid_column<0>(CGridView<2, float>(grid2), V(0, 0)));
     inverse_convolution(grid2, V(FilterBnd(Filter::get("spline"), Bndrule::reflected),
                                  FilterBnd(Filter::get("spline"), Bndrule::reflected)));
     inverse_convolution(column, V(FilterBnd(Filter::get("spline"), Bndrule::reflected)));
     for_int(y, 6) {
       const float tolerance = 1e-5f * (1.f + abs(column[y]));
-      assertx(abs(grid2[y][0] - column[y]) < tolerance && abs(grid2[y][1] - column[y]) < tolerance);
+      assertx(abs(grid2[y, 0] - column[y]) < tolerance && abs(grid2[y, 1] - column[y]) < tolerance);
     }
   }
 }

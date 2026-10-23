@@ -43,7 +43,7 @@ void test_brute_force() {
   Random random(1);
   for_int(i, 200) {
     Point p;
-    for_int(c, 3) p[c] = bbox[0][c] + random.unif() * (bbox[1][c] - bbox[0][c]);
+    for_int(c, 3) p[c] = bbox[0, c] + random.unif() * (bbox[1, c] - bbox[0, c]);
     const auto [f, bary, clp, d2] = mesh_search.search(p, nullptr);
     assertx(f && bary.is_convex() && abs(bary[0] + bary[1] + bary[2] - 1.f) < 1e-5f);
     assertx(dist(interp(mesh.triangle_points(f), bary), clp) < 1e-5f && abs(dist2(p, clp) - d2) < 1e-5f);

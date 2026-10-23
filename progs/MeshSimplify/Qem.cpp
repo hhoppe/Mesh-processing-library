@@ -612,7 +612,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
       voa[1] = cross(voa[0], vlf);
       assertx(voa[1].normalize());
     }
-    for_int(i, 2) for_int(c, 3) zt[i, c] = voa[i][c];
+    for_int(i, 2) for_int(c, 3) zt[i, c] = voa[i, c];
     for_intL(i, 3, msize) zt[i - 1, i] = 1.f;
   }
   for_int(i, msize - 1) for_int(j, msize) {

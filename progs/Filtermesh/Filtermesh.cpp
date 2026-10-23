@@ -2164,7 +2164,7 @@ void do_smootha3d() {
 
 void do_bbox() {
   const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
-  showdf("Bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
+  showdf("Bbox %g %g %g  %g %g %g\n", bbox[0, 0], bbox[0, 1], bbox[0, 2], bbox[1, 0], bbox[1, 1], bbox[1, 2]);
   nooutput = true;
 }
 
@@ -2405,7 +2405,7 @@ void do_info() {
   }
   {
     const Bbox bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
-    showdf("Bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
+    showdf("Bbox %g %g %g  %g %g %g\n", bbox[0, 0], bbox[0, 1], bbox[0, 2], bbox[1, 0], bbox[1, 1], bbox[1, 2]);
   }
   {
     HH_STAT(Sdiha);
@@ -3059,8 +3059,8 @@ void do_colorbizarre() {
   for (Vertex v : mesh.vertices()) {
     for_int(i, 3) {
       const float a = lf[i].eval(mesh.point(v));
-      lfb[i][0] = min(lfb[i][0], a);
-      lfb[i][1] = max(lfb[i][1], a);
+      lfb[i, 0] = min(lfb[i, 0], a);
+      lfb[i, 1] = max(lfb[i, 1], a);
     }
   }
   string str;
@@ -3069,7 +3069,7 @@ void do_colorbizarre() {
     float sum = 0.f;
     for_int(i, 3) {
       float a = lf[i].eval(mesh.point(v));
-      a = (a - lfb[i][0]) / (lfb[i][1] - lfb[i][0]);
+      a = (a - lfb[i, 0]) / (lfb[i, 1] - lfb[i, 0]);
       float c;
       switch (i) {
         case 0: c = a < .25f ? 0.f + a * 4.f : a < .50f ? 0.f : 1.f - square(a - .75f) * 16.f; break;
@@ -3666,10 +3666,10 @@ Point compute_hull_point(Vertex v, float offset) {
   int* izrov = ivector(1, n);
   int icase;
   // Maximize the linear functional: -x*link_normal[0]-y*link_normal[1]...
-  a[1][1] = 0.f;  // Always.
-  a[1][2] = -link_normal[0];
-  a[1][3] = -link_normal[1];
-  a[1][4] = -link_normal[2];
+  a[1, 1] = 0.f;  // Always.
+  a[1, 2] = -link_normal[0];
+  a[1, 3] = -link_normal[1];
+  a[1, 4] = -link_normal[2];
   // Subject to the constraint: lf.eval(Point(x, y, z)) >= 0
   //  equivalently, lf.v[0] * x + lf.v[1] * y + lf.v[2] * z >= -lf.offset
   //  or possibly, -lf.v[0] * x - lf.v[1] * y - lf.v[2] * z <= lf.offset
@@ -3678,20 +3678,20 @@ Point compute_hull_point(Vertex v, float offset) {
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
       if (!(lf.offset > 0.f)) continue;
-      a[2 + nr][1] = lf.offset;
-      a[2 + nr][2] = lf.v[0];
-      a[2 + nr][3] = lf.v[1];
-      a[2 + nr][4] = lf.v[2];
+      a[2 + nr, 1] = lf.offset;
+      a[2 + nr, 2] = lf.v[0];
+      a[2 + nr, 3] = lf.v[1];
+      a[2 + nr, 4] = lf.v[2];
       nr++;
     }
     assertx(nr == m1);
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
       if (lf.offset > 0.f) continue;
-      a[2 + nr][1] = -lf.offset;
-      a[2 + nr][2] = -lf.v[0];
-      a[2 + nr][3] = -lf.v[1];
-      a[2 + nr][4] = -lf.v[2];
+      a[2 + nr, 1] = -lf.offset;
+      a[2 + nr, 2] = -lf.v[0];
+      a[2 + nr, 3] = -lf.v[1];
+      a[2 + nr, 4] = -lf.v[2];
       nr++;
     }
     assertx(nr == m);
@@ -3717,7 +3717,7 @@ Point compute_hull_point(Vertex v, float offset) {
     Point pnew(0.f, 0.f, 0.f);  // Must be initialized to zero's.
     for_intL(i, 1, m + 1) {
       assertx(iposv[i] >= 1);
-      if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i][1]);
+      if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i, 1]);
     }
     if (1) {
       for_int(i, ar_lf.num()) {
@@ -3793,7 +3793,7 @@ void output_alignment_frame(Args& args, bool assume_related) {
   float scale;
   {
     HH_STAT(Sscale);
-    for_int(c, 3) Sscale.enter((nbb[1][c] - nbb[0][c]) / assertx(cbb[1][c] - cbb[0][c]));
+    for_int(c, 3) Sscale.enter((nbb[1, c] - nbb[0, c]) / assertx(cbb[1, c] - cbb[0, c]));
     // float scale = Sscale.max();
     scale = Sscale.avg();
     showdf("Sscale.max() / Sscale.min() = %g\n", Sscale.max() / Sscale.min());

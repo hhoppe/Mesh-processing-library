@@ -611,7 +611,7 @@ static void set_viewing() {
     const int firstobn = g_obs.first == 0 && (is_view || obview != 0) ? 0 : 1;
     for (int obn = firstobn; obn <= g_obs.last; obn++)
       gbb.union_with(g_obs[obn].bbox().transform(g_obs[obn].t() * frame_camera_inv));
-    float minx = gbb[0][0];          // Could be negative.
+    float minx = gbb[0, 0];          // Could be negative.
     if (minx > 0.f) minx *= .9999f;  // For -key ojo on zero-height data.
     const float diam = gbb.max_side();
     // float thresh = diam*1e-4;

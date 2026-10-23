@@ -1698,7 +1698,7 @@ void perhaps_initialize() {
   if (!have_ccolors || !gcolc) fit_colors = false;
   if (!have_cnormals || !gnorc) fit_normals = false;
   showff("PM: bounding box %g %g %g  %g %g %g\n",  //
-         gbbox[0][0], gbbox[0][1], gbbox[0][2], gbbox[1][0], gbbox[1][1], gbbox[1][2]);
+         gbbox[0, 0], gbbox[0, 1], gbbox[0, 2], gbbox[1, 0], gbbox[1, 1], gbbox[1, 2]);
   showdf("parameters: diam=%g fitcol=%d colfac=%g fitnor=%d norfac=%g\n",  //
          gdiam, fit_colors, colfac, fit_normals, norfac);
   if ((fit_colors || fit_normals) || attrib_project) {
@@ -1747,14 +1747,14 @@ void perhaps_initialize() {
         grid_dims = twice(0);
         break;
       }
-      assertx(p11[0] == gbbox[0][0]);
-      assertx(p11[1] == gbbox[0][1]);
-      assertx(pn1[0] == gbbox[1][0]);
-      assertx(pn1[1] == gbbox[0][1]);
-      assertx(p1n[0] == gbbox[0][0]);
-      assertx(p1n[1] == gbbox[1][1]);
-      assertx(pnn[0] == gbbox[1][0]);
-      assertx(pnn[1] == gbbox[1][1]);
+      assertx(p11[0] == gbbox[0, 0]);
+      assertx(p11[1] == gbbox[0, 1]);
+      assertx(pn1[0] == gbbox[1, 0]);
+      assertx(pn1[1] == gbbox[0, 1]);
+      assertx(p1n[0] == gbbox[0, 0]);
+      assertx(p1n[1] == gbbox[1, 1]);
+      assertx(pnn[0] == gbbox[1, 0]);
+      assertx(pnn[1] == gbbox[1, 1]);
     }
     showdf("Original mesh is likely grid of %dx%d\n", grid_dims[1], grid_dims[0]);
     showdf("Grid boundaries_first=%d\n", boundaries_first);
@@ -1812,9 +1812,9 @@ void perhaps_initialize() {
     }
   }
   if (product(grid_dims) && (g_gridf.ysize() || g_gridu.ysize())) {
-    grid_frame = Frame(Vector((gbbox[1][0] - gbbox[0][0]) / (grid_dims[1] - 1.f), 0.f, 0.f),
-                       Vector(0.f, (gbbox[1][1] - gbbox[0][1]) / (grid_dims[0] - 1.f), 0.f), Vector(0.f, 0.f, 1.f),
-                       Point(gbbox[0][0], gbbox[0][1], 0.f));
+    grid_frame = Frame(Vector((gbbox[1, 0] - gbbox[0, 0]) / (grid_dims[1] - 1.f), 0.f, 0.f),
+                       Vector(0.f, (gbbox[1, 1] - gbbox[0, 1]) / (grid_dims[0] - 1.f), 0.f), Vector(0.f, 0.f, 1.f),
+                       Point(gbbox[0, 0], gbbox[0, 1], 0.f));
     inv_grid_frame00 = 1.f / grid_frame[0, 0];
     inv_grid_frame11 = 1.f / grid_frame[1, 1];
     if (1) {
@@ -3153,10 +3153,10 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   int* izrov = ivector(1, n);
   int icase;
   // Maximize the linear functional: -x*link_normal[0]-y*link_normal[1]...
-  a[1][1] = 0.f;  // Always.
-  a[1][2] = -link_normal[0];
-  a[1][3] = -link_normal[1];
-  a[1][4] = -link_normal[2];
+  a[1, 1] = 0.f;  // Always.
+  a[1, 2] = -link_normal[0];
+  a[1, 3] = -link_normal[1];
+  a[1, 4] = -link_normal[2];
   // Subject to the constraint: lf.eval(Point(x, y, z)) >= 0;
   //  equivalently, lf[0] * x + lf[1] * y + lf[2] * z >= -lf[3].
   //  or possibly, -lf[0] * x - lf[1] * y - lf[2] * z <= lf[3].
@@ -3165,20 +3165,20 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
       if (!(lf.offset > 0.f)) continue;
-      a[2 + nr][1] = lf.offset;
-      a[2 + nr][2] = lf.v[0];
-      a[2 + nr][3] = lf.v[1];
-      a[2 + nr][4] = lf.v[2];
+      a[2 + nr, 1] = lf.offset;
+      a[2 + nr, 2] = lf.v[0];
+      a[2 + nr, 3] = lf.v[1];
+      a[2 + nr, 4] = lf.v[2];
       nr++;
     }
     assertx(nr == m1);
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
       if (lf.offset > 0.f) continue;
-      a[2 + nr][1] = -lf.offset;
-      a[2 + nr][2] = -lf.v[0];
-      a[2 + nr][3] = -lf.v[1];
-      a[2 + nr][4] = -lf.v[2];
+      a[2 + nr, 1] = -lf.offset;
+      a[2 + nr, 2] = -lf.v[0];
+      a[2 + nr, 3] = -lf.v[1];
+      a[2 + nr, 4] = -lf.v[2];
       nr++;
     }
     assertx(nr == m);
@@ -3202,7 +3202,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     Point pnew(0.f, 0.f, 0.f);  // Must be initialized to zero's.
     for_intL(i, 1, m + 1) {
       assertx(iposv[i] >= 1);
-      if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i][1]);
+      if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i, 1]);
     }
     if (1) {
       for_int(i, ar_lf.num()) {

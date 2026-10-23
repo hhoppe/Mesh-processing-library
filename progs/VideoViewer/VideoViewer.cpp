@@ -399,7 +399,7 @@ template <typename T> Vec4<Vec2<T>> bbox_corners(const Bbox<T, 2>& bbox) {
 }
 
 bool is_ccw(const Vec3<Vec2<float>>& pts) {
-  return (pts[1][0] - pts[0][0]) * (pts[2][1] - pts[0][1]) > (pts[2][0] - pts[0][0]) * (pts[1][1] - pts[0][1]);
+  return (pts[1, 0] - pts[0, 0]) * (pts[2, 1] - pts[0, 1]) > (pts[2, 0] - pts[0, 0]) * (pts[1, 1] - pts[0, 1]);
 }
 
 bool is_convex_ccw(CArrayView<Vec2<float>> poly) {
@@ -3537,7 +3537,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
                      g_win_dims[c] - g_frame_dims[c] * g_view[c][c]);
                 SHOW_PRECISE(g_view[c][c]);
                 SHOW_PRECISE(g_view[3][c]);
-                SHOW_PRECISE(float(g_win_dims[c] - double(g_frame_dims[c]) * g_view[c][c]));
+                SHOW_PRECISE(float(g_win_dims[c] - double(g_frame_dims[c]) * g_view[c, c]));
               }
               g_view[3, c] = clamp(g_view[3, c], float(g_win_dims[c] - double(g_frame_dims[c]) * g_view[c, c]), 0.f);
               if (0) SHOW_PRECISE((g_view[3, c]));

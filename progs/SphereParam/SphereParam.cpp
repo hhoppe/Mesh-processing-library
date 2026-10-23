@@ -266,7 +266,7 @@ void split_mesh_along_prime_meridian(GMesh& mesh) {
     Face f = to_visit.remove_one();
     const Vec3<Point> sphs = transformed(mesh.triangle_vertices(f), v_sph);
     const Bbox bbox{sphs};
-    const bool face_overlaps_meridian = bbox[0][k_axis0] < -eps && bbox[1][k_axis0] > eps && bbox[1][k_axis1] > eps;
+    const bool face_overlaps_meridian = bbox[0, k_axis0] < -eps && bbox[1, k_axis0] > eps && bbox[1, k_axis1] > eps;
     if (!face_overlaps_meridian) continue;
     for (Edge e : mesh.edges(f)) {
       const Vector sph1 = v_sph(mesh.vertex1(e)), sph2 = v_sph(mesh.vertex2(e));
@@ -340,7 +340,7 @@ void split_mesh_along_octa(GMesh& mesh) {
     Set<Edge> edges_to_split;
     for (Edge e : mesh.edges()) {
       const Bbox bbox{V(v_sph(mesh.vertex1(e)), v_sph(mesh.vertex2(e)))};
-      if (bbox[0][axis] < -eps && bbox[1][axis] > eps) edges_to_split.add(e);
+      if (bbox[0, axis] < -eps && bbox[1, axis] > eps) edges_to_split.add(e);
     }
     for (Edge e : edges_to_split) split_edge(e, axis);
   }
@@ -786,9 +786,9 @@ void split_awmesh_faces_along_meridian(AWMesh& awmesh) {
     })};
     const Bbox bbox{sphs};
     bool changed = false;
-    const bool face_overlaps_meridian = bbox[0][k_axis0] < -eps && bbox[1][k_axis0] > eps && bbox[1][k_axis1] > eps;
+    const bool face_overlaps_meridian = bbox[0, k_axis0] < -eps && bbox[1, k_axis0] > eps && bbox[1, k_axis1] > eps;
     const bool face_is_adjacent_to_pole =
-        bbox[0][k_axis0] < eps && bbox[1][k_axis0] > -eps && bbox[0][k_axis1] < -eps && bbox[1][k_axis1] > eps;
+        bbox[0, k_axis0] < eps && bbox[1, k_axis0] > -eps && bbox[0, k_axis1] < -eps && bbox[1, k_axis1] > eps;
     if (face_overlaps_meridian) {
       for_int(j, 3) {
         const Point sph1 = sphs[j], sph2 = sphs[mod3(j + 1)];

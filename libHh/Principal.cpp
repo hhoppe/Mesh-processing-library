@@ -20,12 +20,10 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
   // Note that this builds on version of compute_eigenvectors() specialized to n = 3.
   const int n = 3;
   SGrid<float, n, n> a;
-  for_int(c0, n) {
-    for_int(c1, c0 + 1) {
-      double sum = 0.;
-      for_int(i, va.num()) sum += (va[i][c0] - avgp[c0]) * (va[i][c1] - avgp[c1]);
-      a[c0, c1] = a[c1, c0] = float(sum / va.num());
-    }
+  for_int(c0, n) for_int(c1, c0 + 1) {
+    double sum = 0.;
+    for_int(i, va.num()) sum += (va[i][c0] - avgp[c0]) * (va[i][c1] - avgp[c1]);
+    a[c0, c1] = a[c1, c0] = float(sum / va.num());
   }
   Vec<float, n> val;
   for_int(i, n) val[i] = a[i, i];
@@ -199,12 +197,10 @@ void principal_components(CMatrixView<float> mi, MatrixView<float> mo, ArrayView
       }
       for_int(c0, n) for_int(c1, c0 + 1) a[c0, c1] = a[c1, c0] = float(t[c0, c1] / m);
     } else {
-      for_int(c0, n) {
-        for_int(c1, c0 + 1) {
-          double sum = 0.;
-          for_int(i, m) sum += mi[i, c0] * mi[i, c1];
-          a[c0, c1] = a[c1, c0] = float(sum / m);
-        }
+      for_int(c0, n) for_int(c1, c0 + 1) {
+        double sum = 0.;
+        for_int(i, m) sum += mi[i, c0] * mi[i, c1];
+        a[c0, c1] = a[c1, c0] = float(sum / m);
       }
     }
   }
@@ -290,12 +286,10 @@ void incr_principal_components(CMatrixView<float> mi, MatrixView<float> mo, Arra
     swap_elements(mo[i], mo[imax]);
   }
   // Orthogonalize the approximate eigenvectors.
-  for_int(i, ne) {
-    for_int(j, i) {
-      // vi = vi - dot(vi, vj / mag(vj)) * vj / mag(vj)  or  = vi - dot(vi, vj) / mag2(vj) * vj
-      const float d = float(dot(mo[i], mo[j]) / mag2(mo[j]));
-      for_int(c, n) mo[i, c] -= d * mo[j, c];
-    }
+  for_int(i, ne) for_int(j, i) {
+    // vi = vi - dot(vi, vj / mag(vj)) * vj / mag(vj)  or  = vi - dot(vi, vj) / mag2(vj) * vj
+    const float d = float(dot(mo[i], mo[j]) / mag2(mo[j]));
+    for_int(c, n) mo[i, c] -= d * mo[j, c];
   }
   // Normalize them, using their norms after the orthogonalization (rather than the eigenvalue estimates vnorm).
   const Array<float> all1(n, 1.f);

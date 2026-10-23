@@ -35,11 +35,9 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
   Array<T> row_scale(n, T{0});
   for_int(i, n) for_int(j, n) row_scale[i] = max(row_scale[i], abs(mi[i, j]));
   Matrix<T> t(n, 2 * n);
-  for_int(i, n) {
-    for_int(j, n) {
-      t[i, j] = mi[i, j];
-      t[i, n + j] = T{0};
-    }
+  for_int(i, n) for_int(j, n) {
+    t[i, j] = mi[i, j];
+    t[i, n + j] = T{0};
   }
   for_int(i, n) { t[i, n + i] = T{1}; }
   for_int(i, n) {

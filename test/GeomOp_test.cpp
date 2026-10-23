@@ -32,18 +32,15 @@ int main() {
     double max_mag_error = 0.;
     float max_lat_error = 0.f, max_lon_error = 0.f;
     const int n = 400;
-    for_int(i, n + 1) {
-      for_int(j, n + 1) {
-        const float lat = j == 1 ? .0004f : j == n - 1 ? .9996f : float(j) / n;
-        const Uv lonlat(float(i) / n, lat);
-        const Point sph = sph_from_lonlat(lonlat);
-        max_mag_error = max(max_mag_error, abs(mag<double>(sph) - 1.));
-        const Uv lonlat2 = lonlat_from_sph(sph);
-        max_lat_error = max(max_lat_error, abs(lonlat2[1] - lonlat[1]));
-        // The longitude is undefined at the poles and ill-conditioned near them, and it wraps at the prime meridian.
-        if (i > 0 && i < n)
-          max_lon_error = max(max_lon_error, abs(lonlat2[0] - lonlat[0]) * std::sin(lat * (TAU / 2)));
-      }
+    for_int(i, n + 1) for_int(j, n + 1) {
+      const float lat = j == 1 ? .0004f : j == n - 1 ? .9996f : float(j) / n;
+      const Uv lonlat(float(i) / n, lat);
+      const Point sph = sph_from_lonlat(lonlat);
+      max_mag_error = max(max_mag_error, abs(mag<double>(sph) - 1.));
+      const Uv lonlat2 = lonlat_from_sph(sph);
+      max_lat_error = max(max_lat_error, abs(lonlat2[1] - lonlat[1]));
+      // The longitude is undefined at the poles and ill-conditioned near them, and it wraps at the prime meridian.
+      if (i > 0 && i < n) max_lon_error = max(max_lon_error, abs(lonlat2[0] - lonlat[0]) * std::sin(lat * (TAU / 2)));
     }
     SHOW(max_mag_error < 4e-7);
     SHOW(max_lat_error < 1e-6f);

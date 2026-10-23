@@ -262,22 +262,20 @@ void pass2(const A3dElem& el) {
   const int nt = tessellate;
   g_tess.ntrib++;
   A3dElem el2(el.type(), el.binary(), 3);
-  for_int(i, nt) {
-    for_int(j, nt - i) {
-      const A3dVertex v0 = get_vertex_combination(el, nt - i - j, j, i, nt);
-      const A3dVertex v1 = get_vertex_combination(el, nt - i - j - 1, j + 1, i, nt);
-      const A3dVertex vn = get_vertex_combination(el, nt - i - j - 1, j, i + 1, nt);
-      el2[0] = v0;
-      el2[1] = v1;
-      el2[2] = vn;
+  for_int(i, nt) for_int(j, nt - i) {
+    const A3dVertex v0 = get_vertex_combination(el, nt - i - j, j, i, nt);
+    const A3dVertex v1 = get_vertex_combination(el, nt - i - j - 1, j + 1, i, nt);
+    const A3dVertex vn = get_vertex_combination(el, nt - i - j - 1, j, i + 1, nt);
+    el2[0] = v0;
+    el2[1] = v1;
+    el2[2] = vn;
+    pass3(el2);
+    if (i) {
+      const A3dVertex vp = get_vertex_combination(el, nt - i - j, j + 1, i - 1, nt);
+      el2[0] = v1;
+      el2[1] = v0;
+      el2[2] = vp;
       pass3(el2);
-      if (i) {
-        const A3dVertex vp = get_vertex_combination(el, nt - i - j, j + 1, i - 1, nt);
-        el2[0] = v1;
-        el2[1] = v0;
-        el2[2] = vp;
-        pass3(el2);
-      }
     }
   }
   g_tess.ntria += nt * nt;

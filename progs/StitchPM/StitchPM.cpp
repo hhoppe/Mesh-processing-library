@@ -20,31 +20,27 @@ PMesh pmesh;
 
 void read_pms() {
   pmeshes.init(blockx, blocky);
-  for_int(bx, blockx) {
-    for_int(by, blocky) {
-      const string filename = sform("%s.x%d.y%d.pm", rootname.c_str(), bx, by);
-      RFile fi(filename);
-      if (!bx && !by) {
-        for (string line; fi().peek() == '#';) {
-          assertx(my_getline(fi(), line));
-          if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
-        }
+  for_int(bx, blockx) for_int(by, blocky) {
+    const string filename = sform("%s.x%d.y%d.pm", rootname.c_str(), bx, by);
+    RFile fi(filename);
+    if (!bx && !by) {
+      for (string line; fi().peek() == '#';) {
+        assertx(my_getline(fi(), line));
+        if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
       }
-      pmeshes[bx, by].read(fi());
     }
+    pmeshes[bx, by].read(fi());
   }
   // Other assertions.
-  for_int(bx, blockx) {
-    for_int(by, blocky) {
-      const PMesh& pmxy = pmeshes[bx, by];
-      const AWMesh& bmeshxy = pmxy._base_mesh;
-      // Assert all vertices have one wedge.
-      for_int(wi, bmeshxy._wedges.num()) assertx(bmeshxy._wedges[wi].vertex == wi);
-      // Assert that we have all info.
-      assertx(pmxy._info._full_nvertices);
-      assertx(pmxy._info._full_nwedges);
-      assertx(pmxy._info._full_nfaces);
-    }
+  for_int(bx, blockx) for_int(by, blocky) {
+    const PMesh& pmxy = pmeshes[bx, by];
+    const AWMesh& bmeshxy = pmxy._base_mesh;
+    // Assert all vertices have one wedge.
+    for_int(wi, bmeshxy._wedges.num()) assertx(bmeshxy._wedges[wi].vertex == wi);
+    // Assert that we have all info.
+    assertx(pmxy._info._full_nvertices);
+    assertx(pmxy._info._full_nwedges);
+    assertx(pmxy._info._full_nfaces);
   }
 }
 
@@ -111,22 +107,20 @@ void do_stitch() {
   m_basematid.init(blockx, blocky);
   assertx(!bmesh._materials.num());
   string str;
-  for_int(bx, blockx) {
-    for_int(by, blocky) {
-      const PMesh& pmxy = pmeshes[bx, by];
-      const AWMesh& bmeshxy = pmxy._base_mesh;
-      m_basematid[bx, by] = bmesh._materials.num();
-      for_int(matid, bmeshxy._materials.num()) {
-        string s = bmeshxy._materials.get(matid);
-        const int nmatid = bmesh._materials.num();
-        s = GMesh::string_update(s, "matid", csform(str, "%d", nmatid));
-        if (!GMesh::string_has_key(s.c_str(), "rgb")) {
-          const int odd = (bx + by) % 2;
-          const Vector rgb(.6f + .2f * odd, .6f + .2f * !odd, .6f);
-          s = GMesh::string_update(s, "rgb", csform_vec(str, rgb));
-        }
-        bmesh._materials.set(nmatid, s);
+  for_int(bx, blockx) for_int(by, blocky) {
+    const PMesh& pmxy = pmeshes[bx, by];
+    const AWMesh& bmeshxy = pmxy._base_mesh;
+    m_basematid[bx, by] = bmesh._materials.num();
+    for_int(matid, bmeshxy._materials.num()) {
+      string s = bmeshxy._materials.get(matid);
+      const int nmatid = bmesh._materials.num();
+      s = GMesh::string_update(s, "matid", csform(str, "%d", nmatid));
+      if (!GMesh::string_has_key(s.c_str(), "rgb")) {
+        const int odd = (bx + by) % 2;
+        const Vector rgb(.6f + .2f * odd, .6f + .2f * !odd, .6f);
+        s = GMesh::string_update(s, "rgb", csform_vec(str, rgb));
       }
+      bmesh._materials.set(nmatid, s);
     }
   }
   Matrix<Array<int>> f_renumber;  // Maps [bx, by][old_face_id] -> new_face_id.
@@ -138,36 +132,34 @@ void do_stitch() {
   const int tot_bnd_vertices = (blocky + 1) * (blockx * blocks + 1) + (blockx + 1) * (blocky * (blocks - 1));
   bmesh._vertices.init(tot_bnd_vertices);
   bmesh._wedges.init(tot_bnd_vertices);
-  for_int(bx, blockx) {
-    for_int(by, blocky) {
-      const PMesh& pmxy = pmeshes[bx, by];
-      const AWMesh& bmeshxy = pmxy._base_mesh;
-      const int vertex_offset = bmesh._vertices.num();
-      const int nbnd_vertices = 4 * blocks;
-      const int nint_vertices = bmeshxy._vertices.num() - nbnd_vertices;
-      bmesh._vertices.add(nint_vertices);
-      bmesh._wedges.add(nint_vertices);
-      f_renumber[bx, by].init(pmxy._info._full_nfaces);
-      for_int(fi, bmeshxy._faces.num()) {
-        const int nfi = bmesh._faces.add(1);
-        f_renumber[bx, by][fi] = nfi;
-        for_int(j, 3) {
-          const int vi = bmeshxy._faces[fi].wedges[j];
-          int nvi;
-          if (vi >= 4 * blocks) {  // A vertex internal to the block.
-            nvi = vertex_offset + vi - (4 * blocks);
-          } else {  // Vertex on block boundary.
-            nvi = compute_nvi(bx, by, vi);
-          }
-          bmesh._faces[nfi].wedges[j] = nvi;
-          // Next are inefficient (done many times!). ok for now.
-          bmesh._vertices[nvi].attrib = bmeshxy._vertices[vi].attrib;
-          // Copy *one* of the normals.
-          //  (will have different normals at stitch boundary, so this is inexact!)
-          bmesh._wedges[nvi].attrib = bmeshxy._wedges[vi].attrib;
+  for_int(bx, blockx) for_int(by, blocky) {
+    const PMesh& pmxy = pmeshes[bx, by];
+    const AWMesh& bmeshxy = pmxy._base_mesh;
+    const int vertex_offset = bmesh._vertices.num();
+    const int nbnd_vertices = 4 * blocks;
+    const int nint_vertices = bmeshxy._vertices.num() - nbnd_vertices;
+    bmesh._vertices.add(nint_vertices);
+    bmesh._wedges.add(nint_vertices);
+    f_renumber[bx, by].init(pmxy._info._full_nfaces);
+    for_int(fi, bmeshxy._faces.num()) {
+      const int nfi = bmesh._faces.add(1);
+      f_renumber[bx, by][fi] = nfi;
+      for_int(j, 3) {
+        const int vi = bmeshxy._faces[fi].wedges[j];
+        int nvi;
+        if (vi >= 4 * blocks) {  // A vertex internal to the block.
+          nvi = vertex_offset + vi - (4 * blocks);
+        } else {  // Vertex on block boundary.
+          nvi = compute_nvi(bx, by, vi);
         }
-        bmesh._faces[nfi].attrib.matid = bmeshxy._faces[fi].attrib.matid + m_basematid[bx, by];
+        bmesh._faces[nfi].wedges[j] = nvi;
+        // Next are inefficient (done many times!). ok for now.
+        bmesh._vertices[nvi].attrib = bmeshxy._vertices[vi].attrib;
+        // Copy *one* of the normals.
+        //  (will have different normals at stitch boundary, so this is inexact!)
+        bmesh._wedges[nvi].attrib = bmeshxy._wedges[vi].attrib;
       }
+      bmesh._faces[nfi].attrib.matid = bmeshxy._faces[fi].attrib.matid + m_basematid[bx, by];
     }
   }
   for_int(vi, bmesh._vertices.num()) bmesh._wedges[vi].vertex = vi;
@@ -181,27 +173,25 @@ void do_stitch() {
   // Finally, collect together all vertex split records.
   int pmesh_nvertices = bmesh._vertices.num();
   int pmesh_nfaces = bmesh._faces.num();
-  for_int(bx, blockx) {
-    for_int(by, blocky) {
-      const PMesh& pmxy = pmeshes[bx, by];
-      int pmxy_nfaces = pmxy._base_mesh._faces.num();
-      for_int(vspli, pmxy._vsplits.num()) {
-        const Vsplit& vspl = pmxy._vsplits[vspli];
-        pmesh._vsplits.push(vspl);
-        pmesh._vsplits.last().flclw = f_renumber[bx, by][vspl.flclw];
-        for_int(count, vspl.adds_two_faces() ? 2 : 1) f_renumber[bx, by][pmxy_nfaces++] = pmesh_nfaces++;
-        pmesh_nvertices++;
-      }
-      assertx(pmxy_nfaces == pmxy._info._full_nfaces);
-      pmesh._info._full_bbox.union_with(pmxy._info._full_bbox);
-      if (1) {  // Optional (saves memory).
-        f_renumber[bx, by].init(0);
-        pmeshes[bx, by]._base_mesh._vertices.clear();
-        pmeshes[bx, by]._base_mesh._wedges.clear();
-        pmeshes[bx, by]._base_mesh._faces.clear();
-        pmeshes[bx, by]._base_mesh._fnei.clear();
-        pmeshes[bx, by]._vsplits.clear();
-      }
+  for_int(bx, blockx) for_int(by, blocky) {
+    const PMesh& pmxy = pmeshes[bx, by];
+    int pmxy_nfaces = pmxy._base_mesh._faces.num();
+    for_int(vspli, pmxy._vsplits.num()) {
+      const Vsplit& vspl = pmxy._vsplits[vspli];
+      pmesh._vsplits.push(vspl);
+      pmesh._vsplits.last().flclw = f_renumber[bx, by][vspl.flclw];
+      for_int(count, vspl.adds_two_faces() ? 2 : 1) f_renumber[bx, by][pmxy_nfaces++] = pmesh_nfaces++;
+      pmesh_nvertices++;
+    }
+    assertx(pmxy_nfaces == pmxy._info._full_nfaces);
+    pmesh._info._full_bbox.union_with(pmxy._info._full_bbox);
+    if (1) {  // Optional (saves memory).
+      f_renumber[bx, by].init(0);
+      pmeshes[bx, by]._base_mesh._vertices.clear();
+      pmeshes[bx, by]._base_mesh._wedges.clear();
+      pmeshes[bx, by]._base_mesh._faces.clear();
+      pmeshes[bx, by]._base_mesh._fnei.clear();
+      pmeshes[bx, by]._vsplits.clear();
     }
   }
   // Fill in the PMesh information fields.

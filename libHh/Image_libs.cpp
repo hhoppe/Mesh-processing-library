@@ -200,12 +200,10 @@ void ImageLibs::read_rgb(Image& image, FILE* file) {
   } else {
     ConsoleProgress cprogress("Iread", image._silent_io_progress);
     Array<uchar> row(image.xsize());
-    for_int(z, image.zsize()) {
-      for_int(y, image.ysize()) {
-        cprogress.update(frac_zy(z, y, image));
-        assertt(read_raw(file, row));
-        for_int(x, image.xsize()) image[y, x][z] = row[x];
-      }
+    for_int(z, image.zsize()) for_int(y, image.ysize()) {
+      cprogress.update(frac_zy(z, y, image));
+      assertt(read_raw(file, row));
+      for_int(x, image.xsize()) image[y, x][z] = row[x];
     }
   }
   if (image.zsize() == 1)
@@ -237,12 +235,10 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
     rgbi.colormap = 0;  // (NORMAL)
     for_int(y, image.ysize()) {
       cprogress.update(float(y) / image.ysize() * .333f + 0.f);
-      for_int(x, image.xsize()) {
-        for_int(z, image.zsize()) {
-          const unsigned v = image[y, x][z];
-          rgbi.vmin = min(rgbi.vmin, v);
-          rgbi.vmax = max(rgbi.vmax, v);
-        }
+      for_int(x, image.xsize()) for_int(z, image.zsize()) {
+        const unsigned v = image[y, x][z];
+        rgbi.vmin = min(rgbi.vmin, v);
+        rgbi.vmax = max(rgbi.vmax, v);
       }
     }
     for_int(i, 6) to_std((&rgbi.imagic) + i);
@@ -263,39 +259,37 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
     rowsize.reserve(nrows);
     Array<uchar> buf;
     buf.reserve(int(nrows * image.xsize() * .8f));  // A rough conservative guess; will grow if insufficient.
-    for_int(z, image.zsize()) {
-      for_int(y, image.ysize()) {
-        cprogress.update(frac_zy(z, y, image) * .333f + .333f);
-        rowstart.push(buf.num());
-        const int yy = image.ysize() - 1 - y;  // Because *.rgb format has image origin at lower-left.
-        for_int(x, image.xsize()) row[x] = image[yy, x][z];
-        for (int x = 0; x < row.num();) {
-          int xs = x;
-          x += 2;
-          while (x < row.num() && ((row[x - 2] != row[x - 1]) || (row[x - 1] != row[x]))) x++;
-          x -= 2;
-          int count = x - xs;
-          while (count) {
-            int n = count > 126 ? 126 : count;
-            count -= n;
-            buf.push(narrow_cast<uchar>(0x80 | n));
-            while (n--) buf.push(row[xs++]);
-          }
-          xs = x;
-          const uchar cc = row[x++];
-          while (x < row.num() && row[x] == cc) x++;
-          count = x - xs;
-          while (count) {
-            int n = count > 126 ? 126 : count;
-            count -= n;
-            buf.push(uchar(n));
-            buf.push(cc);
-          }
+    for_int(z, image.zsize()) for_int(y, image.ysize()) {
+      cprogress.update(frac_zy(z, y, image) * .333f + .333f);
+      rowstart.push(buf.num());
+      const int yy = image.ysize() - 1 - y;  // Because *.rgb format has image origin at lower-left.
+      for_int(x, image.xsize()) row[x] = image[yy, x][z];
+      for (int x = 0; x < row.num();) {
+        int xs = x;
+        x += 2;
+        while (x < row.num() && ((row[x - 2] != row[x - 1]) || (row[x - 1] != row[x]))) x++;
+        x -= 2;
+        int count = x - xs;
+        while (count) {
+          int n = count > 126 ? 126 : count;
+          count -= n;
+          buf.push(narrow_cast<uchar>(0x80 | n));
+          while (n--) buf.push(row[xs++]);
         }
-        buf.push(0);
-        rowsize.push(buf.num() - rowstart.last());
-        rowstart.last() += k_rgb_header_length + 2 * size_t(nrows) * sizeof(rowstart[0]);
+        xs = x;
+        const uchar cc = row[x++];
+        while (x < row.num() && row[x] == cc) x++;
+        count = x - xs;
+        while (count) {
+          int n = count > 126 ? 126 : count;
+          count -= n;
+          buf.push(uchar(n));
+          buf.push(cc);
+        }
       }
+      buf.push(0);
+      rowsize.push(buf.num() - rowstart.last());
+      rowstart.last() += k_rgb_header_length + 2 * size_t(nrows) * sizeof(rowstart[0]);
     }
     assertt(rowstart.num() == nrows && rowsize.num() == nrows);
     for (auto& v : rowstart) to_std(&v);
@@ -315,13 +309,11 @@ void ImageLibs::write_rgb(const Image& image, FILE* file) {
       }
     }
   } else {
-    for_int(z, image.zsize()) {
-      for_int(y, image.ysize()) {
-        cprogress.update(frac_zy(z, y, image) * .667f + .333f);
-        const int yy = image.ysize() - 1 - y;  // Because *.rgb format has image origin at lower-left.
-        for_int(x, image.xsize()) row[x] = image[yy, x][z];
-        assertt(write_raw(file, row));
-      }
+    for_int(z, image.zsize()) for_int(y, image.ysize()) {
+      cprogress.update(frac_zy(z, y, image) * .667f + .333f);
+      const int yy = image.ysize() - 1 - y;  // Because *.rgb format has image origin at lower-left.
+      for_int(x, image.xsize()) row[x] = image[yy, x][z];
+      assertt(write_raw(file, row));
     }
   }
 }

@@ -638,29 +638,27 @@ void select_frel() {
     assertw(frame_cob.v(i).normalize());
     assertw(frame_view.v(i).normalize());
   }
-  for_int(i, 3) {
-    for_int(j, 3) {
-      float v = dot(frame_cob.v(i), frame_view.v(j));
-      int sign = 1;
-      if (v < 0) {
-        v = -v;
-        sign = -1;
-      }
-      if (v > f1) {
-        f2 = f1;
-        oax2 = oax1;
-        vax2 = vax1;
-        sign2 = sign1;
-        f1 = v;
-        oax1 = i;
-        vax1 = j;
-        sign1 = sign;
-      } else if (v > f2) {
-        f2 = v;
-        oax2 = i;
-        vax2 = j;
-        sign2 = sign;
-      }
+  for_int(i, 3) for_int(j, 3) {
+    float v = dot(frame_cob.v(i), frame_view.v(j));
+    int sign = 1;
+    if (v < 0) {
+      v = -v;
+      sign = -1;
+    }
+    if (v > f1) {
+      f2 = f1;
+      oax2 = oax1;
+      vax2 = vax1;
+      sign2 = sign1;
+      f1 = v;
+      oax1 = i;
+      vax1 = j;
+      sign1 = sign;
+    } else if (v > f2) {
+      f2 = v;
+      oax2 = i;
+      vax2 = j;
+      sign2 = sign;
     }
   }
   assertx(oax1 != oax2 && vax1 != vax2);  // -> unique correspondence

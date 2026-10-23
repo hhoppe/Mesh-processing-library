@@ -796,40 +796,38 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
       if (videoloop_nv12.size()) sframe.init(sdims);
       ConsoleProgress cprogress("Video assembly");
       if (disable_write && pwvideo) pwvideo->write(Grid<2, Pixel>(sdims, Pixel::white()));
-      for_int(iloop, num_loops) {
-        for_int(f, nnf) {
-          cprogress.update(float(f) / nnf);
-          if (pwvideo) queue_frames.enqueue(Matrix<Pixel>{sdims});
-          MatrixView<Pixel> nframe(videoloop.size()        ? videoloop[f]
-                                   : videoloop_nv12.size() ? sframe
-                                                           : queue_frames.rear());
-          parallel_for(range(hny), [&](const int hy) {
-            for_int(hx, hnx) {
-              const int fi = get_framei(f * hmat_deltatime[hy, hx], hmat_start[hy, hx], hmat_period[hy, hx]);
-              const Vector4i offset = Vector4i(hvideo_offset[f / DT, hy, hx]) - 128;
-              const CMatrixView<Pixel> videofi = video[fi];
-              MatrixView<Pixel> lnframe = nframe;  // Local view to help optimizer.
-              for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
-                const Pixel& pixel = videofi[y, x];
-                Pixel& npix = lnframe[y, x];
-                npix = (Vector4i(pixel) + offset).pixel();  // OPT:recon2
-              }
-            }
-          });
-          // Note: using pwvideo stream is actually slower than saving to memory and then writing to
-          //  disk all at once, probably because of memory thrashing, so buffer two frames at a time.
-          const int buffer_nframes = 2;
-          if (pwvideo && (queue_frames.length() >= buffer_nframes || f == nnf - 1)) {  // Flush.
-            while (!queue_frames.empty()) {
-              if (disable_write) {
-                queue_frames.dequeue();
-              } else {
-                pwvideo->write(queue_frames.dequeue());
-              }
+      for_int(iloop, num_loops) for_int(f, nnf) {
+        cprogress.update(float(f) / nnf);
+        if (pwvideo) queue_frames.enqueue(Matrix<Pixel>{sdims});
+        MatrixView<Pixel> nframe(videoloop.size()        ? videoloop[f]
+                                 : videoloop_nv12.size() ? sframe
+                                                         : queue_frames.rear());
+        parallel_for(range(hny), [&](const int hy) {
+          for_int(hx, hnx) {
+            const int fi = get_framei(f * hmat_deltatime[hy, hx], hmat_start[hy, hx], hmat_period[hy, hx]);
+            const Vector4i offset = Vector4i(hvideo_offset[f / DT, hy, hx]) - 128;
+            const CMatrixView<Pixel> videofi = video[fi];
+            MatrixView<Pixel> lnframe = nframe;  // Local view to help optimizer.
+            for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
+              const Pixel& pixel = videofi[y, x];
+              Pixel& npix = lnframe[y, x];
+              npix = (Vector4i(pixel) + offset).pixel();  // OPT:recon2
             }
           }
-          if (videoloop_nv12.size()) convert_Image_to_Nv12(sframe, videoloop_nv12[f]);
+        });
+        // Note: using pwvideo stream is actually slower than saving to memory and then writing to
+        //  disk all at once, probably because of memory thrashing, so buffer two frames at a time.
+        const int buffer_nframes = 2;
+        if (pwvideo && (queue_frames.length() >= buffer_nframes || f == nnf - 1)) {  // Flush.
+          while (!queue_frames.empty()) {
+            if (disable_write) {
+              queue_frames.dequeue();
+            } else {
+              pwvideo->write(queue_frames.dequeue());
+            }
+          }
         }
+        if (videoloop_nv12.size()) convert_Image_to_Nv12(sframe, videoloop_nv12[f]);
       }
     } else {  // Nv12 YUV representation
       assertx(video_nv12.size());
@@ -852,69 +850,67 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
       // SHOW(YUV_zero_offset);  // Pixel(126, 128, 128, 255)
       const int DSh = DS / 2;
       assertx(DSh * 2 == DS);
-      for_int(iloop, num_loops) {
-        for_int(f, nnf) {
-          cprogress.update(float(f) / nnf);
-          if (pwvideo) queue_frames.enqueue(Nv12{sdims});
-          Nv12View nframe(videoloop_nv12.size() ? videoloop_nv12[f] : videoloop.size() ? sframe : queue_frames.rear());
-          if (0) {
-            parallel_for(range(hny), [&](const int hy) {
-              for_int(hx, hnx) {
-                const int fi = get_framei(f * hmat_deltatime[hy, hx], hmat_start[hy, hx], hmat_period[hy, hx]);
-                const Pixel& poff = hvideo_offset[f / DT, hy, hx];
-                Vector4i offset_YUV = YUV_Vector4i_from_RGB(poff[0], poff[1], poff[2]) - YUV_zero_offset;
-                for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
-                  nframe.get_Y()[y, x] = clamp_to_uint8(video_nv12.get_Y()[fi, y, x] + offset_YUV[0]);
-                }
-                for_intL(y, hy * DSh, hy * DSh + DSh) for_intL(x, hx * DSh, hx * DSh + DSh) for_int(c, 2) {
-                  nframe.get_UV()[y, x][c] = clamp_to_uint8(video_nv12.get_UV()[fi, y, x][c] + offset_YUV[1 + c]);
-                }
+      for_int(iloop, num_loops) for_int(f, nnf) {
+        cprogress.update(float(f) / nnf);
+        if (pwvideo) queue_frames.enqueue(Nv12{sdims});
+        Nv12View nframe(videoloop_nv12.size() ? videoloop_nv12[f] : videoloop.size() ? sframe : queue_frames.rear());
+        if (0) {
+          parallel_for(range(hny), [&](const int hy) {
+            for_int(hx, hnx) {
+              const int fi = get_framei(f * hmat_deltatime[hy, hx], hmat_start[hy, hx], hmat_period[hy, hx]);
+              const Pixel& poff = hvideo_offset[f / DT, hy, hx];
+              Vector4i offset_YUV = YUV_Vector4i_from_RGB(poff[0], poff[1], poff[2]) - YUV_zero_offset;
+              for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
+                nframe.get_Y()[y, x] = clamp_to_uint8(video_nv12.get_Y()[fi, y, x] + offset_YUV[0]);
               }
-            });
-          } else {
-            parallel_for(range(hny), [&](const int hy) {
-              auto hmat_deltatimehy = hmat_deltatime[hy];
-              auto hmat_starthy = hmat_start[hy];
-              auto hmat_periodhy = hmat_period[hy];
-              auto hvideo_offsethy = hvideo_offset[f / DT, hy];
-              auto lvideo_nv12_Y = video_nv12.get_Y();
-              auto lvideo_nv12_UV = video_nv12.get_UV();
-              for_int(hx, hnx) {
-                const int fi = get_framei(f * hmat_deltatimehy[hx], hmat_starthy[hx], hmat_periodhy[hx]);
-                const Pixel& poff = hvideo_offsethy[hx];
-                Vector4i offset_YUV = YUV_Vector4i_from_RGB(poff[0], poff[1], poff[2]) - YUV_zero_offset;
-                auto video_nv12_Yfi = lvideo_nv12_Y[fi];
-                for_intL(y, hy * DS, hy * DS + DS) {
-                  auto* nframeYy = nframe.get_Y()[y].data();
-                  const auto* video_nv12_Yy = video_nv12_Yfi[y].data();
-                  for_intL(x, hx * DS, hx * DS + DS) {
-                    nframeYy[x] = clamp_to_uint8(video_nv12_Yy[x] + offset_YUV[0]);  // OPT:nv12Y
-                  }
-                }
-                auto video_nv12_UVfi = lvideo_nv12_UV[fi];
-                for_intL(y, hy * DSh, hy * DSh + DSh) {
-                  auto* nframeUVy = nframe.get_UV()[y].data();
-                  const auto* video_nv12_UVy = video_nv12_UVfi[y].data();
-                  for_intL(x, hx * DSh, hx * DSh + DSh) {
-                    nframeUVy[x][0] = clamp_to_uint8(video_nv12_UVy[x][0] + offset_YUV[1]);
-                    nframeUVy[x][1] = clamp_to_uint8(video_nv12_UVy[x][1] + offset_YUV[2]);
-                  }
-                }
-              }
-            });
-          }
-          const int buffer_nframes = 2;
-          if (pwvideo && (queue_frames.length() >= buffer_nframes || f == nnf - 1)) {  // Flush.
-            while (!queue_frames.empty()) {
-              if (disable_write) {
-                queue_frames.dequeue();
-              } else {
-                pwvideo->write(queue_frames.dequeue());
+              for_intL(y, hy * DSh, hy * DSh + DSh) for_intL(x, hx * DSh, hx * DSh + DSh) for_int(c, 2) {
+                nframe.get_UV()[y, x][c] = clamp_to_uint8(video_nv12.get_UV()[fi, y, x][c] + offset_YUV[1 + c]);
               }
             }
-          }
-          if (videoloop.size()) convert_Nv12_to_Image(sframe, videoloop[f]);
+          });
+        } else {
+          parallel_for(range(hny), [&](const int hy) {
+            auto hmat_deltatimehy = hmat_deltatime[hy];
+            auto hmat_starthy = hmat_start[hy];
+            auto hmat_periodhy = hmat_period[hy];
+            auto hvideo_offsethy = hvideo_offset[f / DT, hy];
+            auto lvideo_nv12_Y = video_nv12.get_Y();
+            auto lvideo_nv12_UV = video_nv12.get_UV();
+            for_int(hx, hnx) {
+              const int fi = get_framei(f * hmat_deltatimehy[hx], hmat_starthy[hx], hmat_periodhy[hx]);
+              const Pixel& poff = hvideo_offsethy[hx];
+              Vector4i offset_YUV = YUV_Vector4i_from_RGB(poff[0], poff[1], poff[2]) - YUV_zero_offset;
+              auto video_nv12_Yfi = lvideo_nv12_Y[fi];
+              for_intL(y, hy * DS, hy * DS + DS) {
+                auto* nframeYy = nframe.get_Y()[y].data();
+                const auto* video_nv12_Yy = video_nv12_Yfi[y].data();
+                for_intL(x, hx * DS, hx * DS + DS) {
+                  nframeYy[x] = clamp_to_uint8(video_nv12_Yy[x] + offset_YUV[0]);  // OPT:nv12Y
+                }
+              }
+              auto video_nv12_UVfi = lvideo_nv12_UV[fi];
+              for_intL(y, hy * DSh, hy * DSh + DSh) {
+                auto* nframeUVy = nframe.get_UV()[y].data();
+                const auto* video_nv12_UVy = video_nv12_UVfi[y].data();
+                for_intL(x, hx * DSh, hx * DSh + DSh) {
+                  nframeUVy[x][0] = clamp_to_uint8(video_nv12_UVy[x][0] + offset_YUV[1]);
+                  nframeUVy[x][1] = clamp_to_uint8(video_nv12_UVy[x][1] + offset_YUV[2]);
+                }
+              }
+            }
+          });
         }
+        const int buffer_nframes = 2;
+        if (pwvideo && (queue_frames.length() >= buffer_nframes || f == nnf - 1)) {  // Flush.
+          while (!queue_frames.empty()) {
+            if (disable_write) {
+              queue_frames.dequeue();
+            } else {
+              pwvideo->write(queue_frames.dequeue());
+            }
+          }
+        }
+        if (videoloop.size()) convert_Nv12_to_Image(sframe, videoloop[f]);
       }
     }
     return;
@@ -958,101 +954,99 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   if (!videoloop_nv12.size()) sframe.init(sdims);
   ConsoleProgress cprogress("Multistream video assembly and write");
   // TODO: Use seek functionality of IMFSourceReader::SetCurrentPosition() method.
-  for_int(iloop, num_loops) {
-    for_int(f, nnf) {
-      cprogress.update(float(f) / nnf);
-      if (verbose) showf("For output frame f=%d\n", f);
-      // TODO: Let any read stream skip ahead if no content is used from it.
-      Array<int> ar_fi0(periods.num());  // Input frame for first stream of each period.
-      for_int(pi, periods.num()) {
-        if (pi == 0) {
-          assertx(periods[pi] == 1);
-          continue;  // Static frame is handled separately.
+  for_int(iloop, num_loops) for_int(f, nnf) {
+    cprogress.update(float(f) / nnf);
+    if (verbose) showf("For output frame f=%d\n", f);
+    // TODO: Let any read stream skip ahead if no content is used from it.
+    Array<int> ar_fi0(periods.num());  // Input frame for first stream of each period.
+    for_int(pi, periods.num()) {
+      if (pi == 0) {
+        assertx(periods[pi] == 1);
+        continue;  // Static frame is handled separately.
+      }
+      const int period = periods[pi];
+      const int wrap = (onf_actual + period - 1) / period * period;
+      const int nstreams = ar_nstreams[pi];
+      ar_fi0[pi] = int(f * ar_deltatime[pi] + .5f);
+      // The input frames corresponding to output frame f are ar_fi0[pi] + k * period  (signed k)
+      //  with si = my_mod(k, nstreams).
+      for_int(streami, nstreams) {
+        const int si = func_get_si(pi, streami);
+        int fi = my_mod(ar_fi0[pi] + streami * period, wrap);
+        // SHOW(pi, streami, si, fi, period, wrap, onf_actual);
+        // if fi is in range [onf_actual, wrap), the streami is not useful.
+        if (fi >= onf_actual) {
+          fi = -1;
+          if (prvideos[si]) {
+            if (verbose) showf(" closing stream\n");
+            prvideos[si] = nullptr;
+            rvideo_fi[si] = std::numeric_limits<int>::max();
+          }
         }
-        const int period = periods[pi];
-        const int wrap = (onf_actual + period - 1) / period * period;
-        const int nstreams = ar_nstreams[pi];
-        ar_fi0[pi] = int(f * ar_deltatime[pi] + .5f);
-        // The input frames corresponding to output frame f are ar_fi0[pi] + k * period  (signed k)
-        //  with si = my_mod(k, nstreams).
-        for_int(streami, nstreams) {
-          const int si = func_get_si(pi, streami);
-          int fi = my_mod(ar_fi0[pi] + streami * period, wrap);
-          // SHOW(pi, streami, si, fi, period, wrap, onf_actual);
-          // if fi is in range [onf_actual, wrap), the streami is not useful.
-          if (fi >= onf_actual) {
-            fi = -1;
-            if (prvideos[si]) {
-              if (verbose) showf(" closing stream\n");
-              prvideos[si] = nullptr;
-              rvideo_fi[si] = std::numeric_limits<int>::max();
-            }
+        if (verbose)
+          showf(" stream %d (%d of %d for period[%d]==%-3d): input %-3d->%-3d (%d)\n",  //
+                si, streami, nstreams, pi, period, rvideo_fi[si], fi, fi - rvideo_fi[si]);
+        if (fi >= 0 && fi < rvideo_fi[si]) {
+          prvideos[si] = make_unique<RVideo>(video_filename, use_nv12);  // Open or re-open at beginning.
+          rvideo_fi[si] = -1;
+        }
+        while (rvideo_fi[si] < fi) {
+          rvideo_fi[si]++;
+          if (1 && rvideo_fi[si] < fi) {
+            assertx(prvideos[si]->discard_frame());
+            continue;
           }
-          if (verbose)
-            showf(" stream %d (%d of %d for period[%d]==%-3d): input %-3d->%-3d (%d)\n",  //
-                  si, streami, nstreams, pi, period, rvideo_fi[si], fi, fi - rvideo_fi[si]);
-          if (fi >= 0 && fi < rvideo_fi[si]) {
-            prvideos[si] = make_unique<RVideo>(video_filename, use_nv12);  // Open or re-open at beginning.
-            rvideo_fi[si] = -1;
-          }
-          while (rvideo_fi[si] < fi) {
-            rvideo_fi[si]++;
-            if (1 && rvideo_fi[si] < fi) {
-              assertx(prvideos[si]->discard_frame());
-              continue;
-            }
-            if (verbose >= 3) showf("  reading stream frame %d\n", rvideo_fi[si]);
-            assertx(prvideos[si]->read(rvideoframes[si]));
-          }
+          if (verbose >= 3) showf("  reading stream frame %d\n", rvideo_fi[si]);
+          assertx(prvideos[si]->read(rvideoframes[si]));
         }
       }
-      Nv12View nframe(videoloop_nv12.size() ? videoloop_nv12[f] : sframe);
-      const Vector4i YUV_zero_offset(YUV_Vector4i_from_RGB(128, 128, 128));
-      const int DSh = DS / 2;
-      assertx(DS == 1 || DSh * 2 == DS);
-      parallel_for(range(hny), [&](const int hy) {
-        for_int(hx, hnx) {
-          const int period = hmat_period[hy, hx];
-          const int pi = index(periods, period);
-          int si;
-          {
-            if (pi == 0) {
-              si = -1;  // If period == 1, access static frame.
-            } else {
-              const int fi = get_framei(f * ar_deltatime[pi], hmat_start[hy, hx], period);
-              const int dfi = fi - ar_fi0[pi];
-              // if (!(my_mod(dfi, period) == 0)) SHOW(f, hy, hx, period, pi, fi, ar_fi0[pi], dfi);
-              ASSERTX(my_mod(dfi, period) == 0);
-              const int nstreams = ar_nstreams[pi];
-              const int streami = my_mod(dfi / period, nstreams);
-              si = func_get_si(pi, streami);
-              // if (rvideo_fi[si] != fi) SHOW(f, hy, hx, period, fi, dfi, streami, si, rvideo_fi);
-              ASSERTX(rvideo_fi[si] == fi);
-            }
-          }
-          const Pixel& hpix = hvideo_offset[f / DT, hy, hx];
-          MatrixView<uint8_t> nframeY = nframe.get_Y();
-          MatrixView<Vec2<uint8_t>> nframeUV = nframe.get_UV();
-          const CNv12View videofi(si < 0 ? static_frame : rvideoframes[si]);
-          const Vector4i offset_YUV = YUV_Vector4i_from_RGB(hpix[0], hpix[1], hpix[2]) - YUV_zero_offset;
-          for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
-            nframeY[y, x] = clamp_to_uint8(videofi.get_Y()[y, x] + offset_YUV[0]);  // OPT:reconY
-          }
-          if (DS > 1) {
-            for_intL(y, hy * DSh, hy * DSh + DSh) for_intL(x, hx * DSh, hx * DSh + DSh) {
-              nframeUV[y, x] = V(clamp_to_uint8(videofi.get_UV()[y, x][0] + offset_YUV[1]),
-                                 clamp_to_uint8(videofi.get_UV()[y, x][1] + offset_YUV[2]));  // OPT:reconU
-            }
+    }
+    Nv12View nframe(videoloop_nv12.size() ? videoloop_nv12[f] : sframe);
+    const Vector4i YUV_zero_offset(YUV_Vector4i_from_RGB(128, 128, 128));
+    const int DSh = DS / 2;
+    assertx(DS == 1 || DSh * 2 == DS);
+    parallel_for(range(hny), [&](const int hy) {
+      for_int(hx, hnx) {
+        const int period = hmat_period[hy, hx];
+        const int pi = index(periods, period);
+        int si;
+        {
+          if (pi == 0) {
+            si = -1;  // If period == 1, access static frame.
           } else {
-            if (hy % 2 + hx % 2 == 0)
-              nframeUV[hy / 2, hx / 2] = V(clamp_to_uint8(videofi.get_UV()[hy / 2, hx / 2][0] + offset_YUV[1]),
-                                           clamp_to_uint8(videofi.get_UV()[hy / 2, hx / 2][1] + offset_YUV[2]));
+            const int fi = get_framei(f * ar_deltatime[pi], hmat_start[hy, hx], period);
+            const int dfi = fi - ar_fi0[pi];
+            // if (!(my_mod(dfi, period) == 0)) SHOW(f, hy, hx, period, pi, fi, ar_fi0[pi], dfi);
+            ASSERTX(my_mod(dfi, period) == 0);
+            const int nstreams = ar_nstreams[pi];
+            const int streami = my_mod(dfi / period, nstreams);
+            si = func_get_si(pi, streami);
+            // if (rvideo_fi[si] != fi) SHOW(f, hy, hx, period, fi, dfi, streami, si, rvideo_fi);
+            ASSERTX(rvideo_fi[si] == fi);
           }
         }
-      });
-      if (pwvideo) pwvideo->write(sframe);
-      if (videoloop.size()) convert_Nv12_to_Image(sframe, videoloop[f]);
-    }
+        const Pixel& hpix = hvideo_offset[f / DT, hy, hx];
+        MatrixView<uint8_t> nframeY = nframe.get_Y();
+        MatrixView<Vec2<uint8_t>> nframeUV = nframe.get_UV();
+        const CNv12View videofi(si < 0 ? static_frame : rvideoframes[si]);
+        const Vector4i offset_YUV = YUV_Vector4i_from_RGB(hpix[0], hpix[1], hpix[2]) - YUV_zero_offset;
+        for_intL(y, hy * DS, hy * DS + DS) for_intL(x, hx * DS, hx * DS + DS) {
+          nframeY[y, x] = clamp_to_uint8(videofi.get_Y()[y, x] + offset_YUV[0]);  // OPT:reconY
+        }
+        if (DS > 1) {
+          for_intL(y, hy * DSh, hy * DSh + DSh) for_intL(x, hx * DSh, hx * DSh + DSh) {
+            nframeUV[y, x] = V(clamp_to_uint8(videofi.get_UV()[y, x][0] + offset_YUV[1]),
+                               clamp_to_uint8(videofi.get_UV()[y, x][1] + offset_YUV[2]));  // OPT:reconU
+          }
+        } else {
+          if (hy % 2 + hx % 2 == 0)
+            nframeUV[hy / 2, hx / 2] = V(clamp_to_uint8(videofi.get_UV()[hy / 2, hx / 2][0] + offset_YUV[1]),
+                                         clamp_to_uint8(videofi.get_UV()[hy / 2, hx / 2][1] + offset_YUV[2]));
+        }
+      }
+    });
+    if (pwvideo) pwvideo->write(sframe);
+    if (videoloop.size()) convert_Nv12_to_Image(sframe, videoloop[f]);
   }
 }
 
@@ -1316,18 +1310,16 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
       if (video.size()) {  // Use Image (RGB) representation.
         Matrix<Pixel> sframe;
         if (!videoloop.size()) sframe.init(sdims);
-        for_int(iloop, num_loops) {
-          for_int(f, nnf) {
-            auto frame = videoloop.size() ? videoloop[f] : sframe;
-            parallel_for(range(ny), [&](const int y) {  //
-              for_int(x, nx) {
-                const int fi = grid_framei[f, y, x];
-                frame[y, x] = video[fi, y, x];
-              }
-            });
-            if (pwvideo) pwvideo->write(sframe);
-            if (videoloop_nv12.size()) convert_Image_to_Nv12(sframe, videoloop_nv12[f]);
-          }
+        for_int(iloop, num_loops) for_int(f, nnf) {
+          auto frame = videoloop.size() ? videoloop[f] : sframe;
+          parallel_for(range(ny), [&](const int y) {  //
+            for_int(x, nx) {
+              const int fi = grid_framei[f, y, x];
+              frame[y, x] = video[fi, y, x];
+            }
+          });
+          if (pwvideo) pwvideo->write(sframe);
+          if (videoloop_nv12.size()) convert_Image_to_Nv12(sframe, videoloop_nv12[f]);
         }
       } else {  // Use Nv12 (YUV) representation.
         VideoNv12 tvideo;
@@ -1338,20 +1330,18 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         CVideoNv12View ivideo = video_nv12.size() ? video_nv12 : tvideo;
         Nv12 sframe;
         if (!videoloop_nv12.size()) sframe.init(sdims);
-        for_int(iloop, num_loops) {
-          for_int(f, nnf) {
-            auto frame = videoloop_nv12.size() ? videoloop_nv12[f] : sframe;
-            parallel_for(range(ny), [&](const int y) {
-              for_int(x, nx) {
-                const int fi = grid_framei[f, y, x];
-                frame.get_Y()[y, x] = ivideo.get_Y()[fi, y, x];
-                const int hy = y / 2, hx = x / 2;
-                frame.get_UV()[hy, hx] = ivideo.get_UV()[fi, hy, hx];  // If (hy * 2 == y && hx * 2 == x).
-              }
-            });
-            if (pwvideo) pwvideo->write(sframe);
-            if (videoloop.size()) convert_Nv12_to_Image(sframe, videoloop[f]);
-          }
+        for_int(iloop, num_loops) for_int(f, nnf) {
+          auto frame = videoloop_nv12.size() ? videoloop_nv12[f] : sframe;
+          parallel_for(range(ny), [&](const int y) {
+            for_int(x, nx) {
+              const int fi = grid_framei[f, y, x];
+              frame.get_Y()[y, x] = ivideo.get_Y()[fi, y, x];
+              const int hy = y / 2, hx = x / 2;
+              frame.get_UV()[hy, hx] = ivideo.get_UV()[fi, hy, hx];  // If (hy * 2 == y && hx * 2 == x).
+            }
+          });
+          if (pwvideo) pwvideo->write(sframe);
+          if (videoloop.size()) convert_Nv12_to_Image(sframe, videoloop[f]);
         }
       }
       break;

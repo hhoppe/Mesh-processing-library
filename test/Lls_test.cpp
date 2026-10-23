@@ -139,37 +139,35 @@ void test3() {
 // Singular value decomposition of random and identity matrices, with or without normalized columns.
 template <typename Real> void test4() {
   const Real tolerance = std::is_same_v<Real, float> ? Real(2e-6f) : Real(1e-14);
-  for_int(imode, 2) {
-    for_int(inormalize, 2) {
-      for_intL(m, 1, 11) for_intL(n, 1, 11) {
-        if (m < n) continue;
-        Matrix<Real> A(m, n);
-        switch (imode) {
-          case 0:
-            for (Real& v : A) v = possible_cast<Real>(Random::G.dunif());
-            break;
-          case 1: identity_mat(A); break;
-          default: assertnever("");
-        }
-        if (inormalize) for_int(i, n) normalize(column(A, i));  // Possibly normalize the columns.
-        Matrix<Real> U(m, n);
-        Array<Real> S(n);
-        Matrix<Real> VT(n, n);
-        const bool success = singular_value_decomposition(A, U, S, VT);
-        sort_singular_values(U, S, VT);
-        const Matrix<Real> R = mat_mul(mat_mul(U, diag_mat(S)), transpose(VT));
-        const Matrix<Real> UTU = mat_mul(transpose(U), U);
-        const Matrix<Real> VTV = mat_mul(transpose(VT), VT);
-        const Real Rerr = max_abs_element(R - A);
-        const Real UTUerr = max_abs_element(UTU - identity_mat<Real>(n));
-        const Real VTVerr = max_abs_element(VTV - identity_mat<Real>(n));
-        if (!(success && Rerr < tolerance && UTUerr < tolerance && VTVerr < tolerance)) {
-          SHOW(imode, inormalize, m, n, success, Rerr, UTUerr, VTVerr);
-          assertnever("SVD is inaccurate");
-        }
-        for_int(i, n) assertx(S[i] >= Real{0} && (i == 0 || S[i] <= S[i - 1]));  // Sorted in decreasing order.
-        if (imode == 1) for_int(i, n) assertx(abs(S[i] - Real{1}) < tolerance);  // The identity has unit values.
+  for_int(imode, 2) for_int(inormalize, 2) {
+    for_intL(m, 1, 11) for_intL(n, 1, 11) {
+      if (m < n) continue;
+      Matrix<Real> A(m, n);
+      switch (imode) {
+        case 0:
+          for (Real& v : A) v = possible_cast<Real>(Random::G.dunif());
+          break;
+        case 1: identity_mat(A); break;
+        default: assertnever("");
       }
+      if (inormalize) for_int(i, n) normalize(column(A, i));  // Possibly normalize the columns.
+      Matrix<Real> U(m, n);
+      Array<Real> S(n);
+      Matrix<Real> VT(n, n);
+      const bool success = singular_value_decomposition(A, U, S, VT);
+      sort_singular_values(U, S, VT);
+      const Matrix<Real> R = mat_mul(mat_mul(U, diag_mat(S)), transpose(VT));
+      const Matrix<Real> UTU = mat_mul(transpose(U), U);
+      const Matrix<Real> VTV = mat_mul(transpose(VT), VT);
+      const Real Rerr = max_abs_element(R - A);
+      const Real UTUerr = max_abs_element(UTU - identity_mat<Real>(n));
+      const Real VTVerr = max_abs_element(VTV - identity_mat<Real>(n));
+      if (!(success && Rerr < tolerance && UTUerr < tolerance && VTVerr < tolerance)) {
+        SHOW(imode, inormalize, m, n, success, Rerr, UTUerr, VTVerr);
+        assertnever("SVD is inaccurate");
+      }
+      for_int(i, n) assertx(S[i] >= Real{0} && (i == 0 || S[i] <= S[i - 1]));  // Sorted in decreasing order.
+      if (imode == 1) for_int(i, n) assertx(abs(S[i] - Real{1}) < tolerance);  // The identity has unit values.
     }
   }
 }

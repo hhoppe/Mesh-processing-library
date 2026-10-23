@@ -1416,23 +1416,19 @@ void AWMesh::ok() const {
     int count = 0;
     // Vertex -> most clw face (or beginning of wedge (or any face)).
     Array<int> mvf(_vertices.num(), k_undefined);
-    for_int(f, _faces.num()) {
-      for_int(j, 3) {
-        const int w = _faces[f].wedges[j];
-        const int v = _wedges[w].vertex;
-        const int fclw = _fnei[f].faces[mod3(j + 2)];
-        const bool is_beg_wedge = fclw >= 0 && get_wvf(v, fclw) != w;
-        if (is_beg_wedge || mvf[v] == k_undefined) mvf[v] = f;
-      }
+    for_int(f, _faces.num()) for_int(j, 3) {
+      const int w = _faces[f].wedges[j];
+      const int v = _wedges[w].vertex;
+      const int fclw = _fnei[f].faces[mod3(j + 2)];
+      const bool is_beg_wedge = fclw >= 0 && get_wvf(v, fclw) != w;
+      if (is_beg_wedge || mvf[v] == k_undefined) mvf[v] = f;
     }
-    for_int(f, _faces.num()) {
-      for_int(j, 3) {
-        const int w = _faces[f].wedges[j];
-        const int v = _wedges[w].vertex;
-        const int fclw = _fnei[f].faces[mod3(j + 2)];
-        const bool is_most_clw = fclw == k_undefined;
-        if (is_most_clw) mvf[v] = f;
-      }
+    for_int(f, _faces.num()) for_int(j, 3) {
+      const int w = _faces[f].wedges[j];
+      const int v = _wedges[w].vertex;
+      const int fclw = _fnei[f].faces[mod3(j + 2)];
+      const bool is_most_clw = fclw == k_undefined;
+      if (is_most_clw) mvf[v] = f;
     }
     for_int(v, _vertices.num()) {
       const int f0 = mvf[v];
@@ -1493,22 +1489,18 @@ void AWMesh::split_edge(int f, int j, float frac1) {
 void AWMesh::construct_adjacency() {
   _fnei.init(_faces.num());
   Map<std::pair<int, int>, int> mvv_face;  // Maps (Vertex, Vertex) -> Face.
-  for_int(f, _faces.num()) {
-    for_int(j, 3) {
-      const int j1 = mod3(j + 1), j2 = mod3(j + 2);
-      const int v0 = _wedges[_faces[f].wedges[j1]].vertex;
-      const int v1 = _wedges[_faces[f].wedges[j2]].vertex;
-      mvv_face.enter(std::pair(v0, v1), f);
-    }
+  for_int(f, _faces.num()) for_int(j, 3) {
+    const int j1 = mod3(j + 1), j2 = mod3(j + 2);
+    const int v0 = _wedges[_faces[f].wedges[j1]].vertex;
+    const int v1 = _wedges[_faces[f].wedges[j2]].vertex;
+    mvv_face.enter(std::pair(v0, v1), f);
   }
-  for_int(f, _faces.num()) {
-    for_int(j, 3) {
-      const int j1 = mod3(j + 1), j2 = mod3(j + 2);
-      const int v0 = _wedges[_faces[f].wedges[j1]].vertex;
-      const int v1 = _wedges[_faces[f].wedges[j2]].vertex;
-      const int* fn = mvv_face.find_ptr(std::pair(v1, v0));
-      _fnei[f].faces[j] = fn ? *fn : k_undefined;
-    }
+  for_int(f, _faces.num()) for_int(j, 3) {
+    const int j1 = mod3(j + 1), j2 = mod3(j + 2);
+    const int v0 = _wedges[_faces[f].wedges[j1]].vertex;
+    const int v1 = _wedges[_faces[f].wedges[j2]].vertex;
+    const int* fn = mvv_face.find_ptr(std::pair(v1, v0));
+    _fnei[f].faces[j] = fn ? *fn : k_undefined;
   }
 }
 

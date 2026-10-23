@@ -361,13 +361,11 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
   }
   static SvdDoubleLls lls(n, n, 1);
   lls.clear();
-  for_int(i, n - 1) {
-    for_int(j, n) {
-      // Row i of Z^T times column j of A.
-      double v = 0.;
-      for_int(k, n) v += zt[i, k] * a[k, j];
-      lls.enter_a_rc(i, j, float(v));
-    }
+  for_int(i, n - 1) for_int(j, n) {
+    // Row i of Z^T times column j of A.
+    double v = 0.;
+    for_int(k, n) v += zt[i, k] * a[k, j];
+    lls.enter_a_rc(i, j, float(v));
   }
   for_int(i, n - 1) {
     // Row i of Z^T times -b.
@@ -617,13 +615,11 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
     for_int(i, 2) for_int(c, 3) zt[i, c] = voa[i][c];
     for_intL(i, 3, msize) zt[i - 1, i] = 1.f;
   }
-  for_int(i, msize - 1) {
-    for_int(j, msize) {
-      // Row i of Z^T times column j of A.
-      double v = 0.;
-      for_int(k, msize) v += zt[i, k] * a[k, j];
-      lls.enter_a_rc(i, j, v);
-    }
+  for_int(i, msize - 1) for_int(j, msize) {
+    // Row i of Z^T times column j of A.
+    double v = 0.;
+    for_int(k, msize) v += zt[i, k] * a[k, j];
+    lls.enter_a_rc(i, j, v);
   }
   for_int(i, msize - 1) {
     // Row i of Z^T times -b.

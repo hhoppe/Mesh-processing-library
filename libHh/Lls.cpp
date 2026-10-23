@@ -224,12 +224,10 @@ bool LudLls::solve_aux() {
   auto up_ta = _m != _n ? make_unique<Matrix<float>>(_n, _n) : nullptr;
   MatrixView<float> a = up_ta ? *up_ta : _a;
   if (_m != _n) {
-    for_int(i, _n) {
-      for_int(j, _n) {
-        double s = 0.;
-        for_int(k, _m) s += double(_a[k, i]) * _a[k, j];
-        a[i, j] = float(s);
-      }
+    for_int(i, _n) for_int(j, _n) {
+      double s = 0.;
+      for_int(k, _m) s += double(_a[k, i]) * _a[k, j];
+      a[i, j] = float(s);
     }
   }
   Array<int> rindx(_n);

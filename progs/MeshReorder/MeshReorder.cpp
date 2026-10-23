@@ -268,13 +268,11 @@ void replace_mesh() {
   }
   Map<int, int> movivi;  // Maps 1..num_vertices() --> 1..num_vertices().
   if (reorder_vertices) {
-    for_int(fi, mesh.num_faces()) {
-      for_int(j, 3) {
-        const int ovi = ar_verts[fi * 3 + j];
-        bool is_new;
-        movivi.enter(ovi, movivi.num() + 1, is_new);
-        dummy_use(is_new);
-      }
+    for_int(fi, mesh.num_faces()) for_int(j, 3) {
+      const int ovi = ar_verts[fi * 3 + j];
+      bool is_new;
+      movivi.enter(ovi, movivi.num() + 1, is_new);
+      dummy_use(is_new);
     }
   } else {
     for_int(i, mesh.num_vertices()) movivi.enter(i + 1, i + 1);
@@ -554,12 +552,10 @@ void do_fixup_indices() {
       face_vertices_neighbors(f, va, fa);
       for_int(k, 3) ASSERTX(contains(va, mesh.id_vertex(ar_verts[fi * 3 + k])));
       int j = 3;
-      for_int(kc, 3) {
-        for_int(kp, 3) {
-          if (va[mod3(kc + 0)] == ov[mod3(kp + 1)] && va[mod3(kc + 1)] == ov[mod3(kp + 0)]) {
-            j = kc;
-            break;
-          }
+      for_int(kc, 3) for_int(kp, 3) {
+        if (va[mod3(kc + 0)] == ov[mod3(kp + 1)] && va[mod3(kc + 1)] == ov[mod3(kp + 0)]) {
+          j = kc;
+          break;
         }
       }
       if (j < 3) {  // Have a connection with the previous face.

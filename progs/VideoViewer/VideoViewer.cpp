@@ -1083,19 +1083,17 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
     const float luminance_thresh = 210.f;
     SGrid<int, 2, 2> borderw;
     fill(borderw.grid_view(), 0);  // Crop widths; [L == 0 | U == 1][axis].
-    for_int(axis, 2) {
-      for_int(side, 2) {
-        const int col_d = 1 - axis;  // Axis == 0 -> column;  axis == 1 -> row.
-        const int wmax = image.dim(axis), len = image.dim(col_d);
-        dummy_use(len);
-        int w = 0;
-        for (; w < wmax; w++) {
-          const int j = side == 0 ? w : wmax - 1 - w;
-          auto range = grid_column(image, col_d, twice(0).with(axis, j));
-          if (rankf_element(luminances(range), .1) < luminance_thresh) break;
-        }
-        borderw[side, axis] = w;
+    for_int(axis, 2) for_int(side, 2) {
+      const int col_d = 1 - axis;  // Axis == 0 -> column;  axis == 1 -> row.
+      const int wmax = image.dim(axis), len = image.dim(col_d);
+      dummy_use(len);
+      int w = 0;
+      for (; w < wmax; w++) {
+        const int j = side == 0 ? w : wmax - 1 - w;
+        auto range = grid_column(image, col_d, twice(0).with(axis, j));
+        if (rankf_element(luminances(range), .1) < luminance_thresh) break;
       }
+      borderw[side, axis] = w;
     }
     if (ldebug) SHOW(borderw);
     if (!is_zero(borderw.const_grid_view())) image = crop(image, borderw[0], borderw[1]);
@@ -1106,32 +1104,30 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
     if (ldebug) SHOW(image.dims());
     // Remove mostly white borders on all sides.
     const float luminance_thresh = 220.f;
-    for_int(axis, 2) {
-      for_int(side, 2) {
-        const int col_d = 1 - axis;  // Axis == 0 -> column;  axis == 1 -> row.
-        const int wmax = image.dim(axis), len = image.dim(col_d);
-        auto outermost_column = grid_column(image, col_d, twice(0).with(axis, side == 0 ? 0 : wmax - 1));
-        const float outermost_luminance = median(luminances(outermost_column));
-        if (outermost_luminance < luminance_thresh) continue;  // Outermost column is not white enough.
-        Array<int> ar_w(len);
-        for_int(i, len) {
-          Vec2<int> u;
-          u[col_d] = i;
-          int w = 0;
-          for (; w < wmax; w++) {
-            u[axis] = side == 0 ? w : wmax - 1 - w;
-            if (Y_from_RGB(image[u]) < luminance_thresh) break;
-          }
-          ar_w[i] = w;
+    for_int(axis, 2) for_int(side, 2) {
+      const int col_d = 1 - axis;  // Axis == 0 -> column;  axis == 1 -> row.
+      const int wmax = image.dim(axis), len = image.dim(col_d);
+      auto outermost_column = grid_column(image, col_d, twice(0).with(axis, side == 0 ? 0 : wmax - 1));
+      const float outermost_luminance = median(luminances(outermost_column));
+      if (outermost_luminance < luminance_thresh) continue;  // Outermost column is not white enough.
+      Array<int> ar_w(len);
+      for_int(i, len) {
+        Vec2<int> u;
+        u[col_d] = i;
+        int w = 0;
+        for (; w < wmax; w++) {
+          u[axis] = side == 0 ? w : wmax - 1 - w;
+          if (Y_from_RGB(image[u]) < luminance_thresh) break;
         }
-        // int w = rankf_element(ar_w, .95);
-        const int w = rankf_element(ar_w, .70);
-        if (ldebug) {
-          SHOW(axis, side, wmax, len, w);
-          if (0) SHOW(ar_w);
-        }
-        borderw[side, axis] = w;
+        ar_w[i] = w;
       }
+      // int w = rankf_element(ar_w, .95);
+      const int w = rankf_element(ar_w, .70);
+      if (ldebug) {
+        SHOW(axis, side, wmax, len, w);
+        if (0) SHOW(ar_w);
+      }
+      borderw[side, axis] = w;
     }
     if (ldebug) SHOW(borderw);
     if (!is_zero(borderw.const_grid_view())) image = crop(image, borderw[0], borderw[1]);
@@ -1141,23 +1137,21 @@ Matrix<Pixel> compute_wcrop(Matrix<Pixel> image) {
     fill(borderw.grid_view(), 0);  // Crop widths; [L == 0 | U == 1][axis].
     if (ldebug) SHOW(image.dims());
     // Examine abnormal change in luminace on outermost columns.
-    for_int(axis, 2) {
-      for_int(side, 2) {
-        const int col_d = 1 - axis;  // Axis == 0 -> column;  axis == 1 -> row.
-        const int wmax = image.dim(axis), len = image.dim(col_d);
-        dummy_use(len);
-        Array<float> ar_luminance;
-        for_int(w, min(30, wmax)) {
-          const int j = side == 0 ? w : wmax - 1 - w;
-          auto range = grid_column(image, col_d, twice(0).with(axis, j));
-          ar_luminance.push(mean(luminances(range)));
-        }
-        if (ldebug) SHOW(ar_luminance);
-        for_int(w, ar_luminance.num()) {
-          if (ar_luminance[w] < ar_luminance.last() * 1.1f) {
-            borderw[side, axis] = w;
-            break;
-          }
+    for_int(axis, 2) for_int(side, 2) {
+      const int col_d = 1 - axis;  // Axis == 0 -> column;  axis == 1 -> row.
+      const int wmax = image.dim(axis), len = image.dim(col_d);
+      dummy_use(len);
+      Array<float> ar_luminance;
+      for_int(w, min(30, wmax)) {
+        const int j = side == 0 ? w : wmax - 1 - w;
+        auto range = grid_column(image, col_d, twice(0).with(axis, j));
+        ar_luminance.push(mean(luminances(range)));
+      }
+      if (ldebug) SHOW(ar_luminance);
+      for_int(w, ar_luminance.num()) {
+        if (ar_luminance[w] < ar_luminance.last() * 1.1f) {
+          borderw[side, axis] = w;
+          break;
         }
       }
     }
@@ -3357,16 +3351,14 @@ void render_image() {
           gridp[u] = Point(concat(convert<float>(u * g_frame_dims), V(0.f))) * g_view;
           gridp[u].head<2>() += convert<float>(u * 2 - 1) * 1.f;  // Move points outwards by 1 window pixel.
         }
-        for_int(c, 2) {
-          for_int(idir, 2) {
-            const Vec2<int> u0 = twice(idir).with(1 - c, 0);
-            const Vec2<int> u1 = twice(idir).with(1 - c, 1);
-            if (!view_has_rotation() &&
-                ((idir == 0 && gridp[u0][c] < 0.f) || (idir == 1 && gridp[u0][c] > g_win_dims[c] - 1.f)))
-              continue;
-            glVertex2fv(gridp[u0].head<2>().rev().data());
-            glVertex2fv(gridp[u1].head<2>().rev().data());
-          }
+        for_int(c, 2) for_int(idir, 2) {
+          const Vec2<int> u0 = twice(idir).with(1 - c, 0);
+          const Vec2<int> u1 = twice(idir).with(1 - c, 1);
+          if (!view_has_rotation() &&
+              ((idir == 0 && gridp[u0][c] < 0.f) || (idir == 1 && gridp[u0][c] > g_win_dims[c] - 1.f)))
+            continue;
+          glVertex2fv(gridp[u0].head<2>().rev().data());
+          glVertex2fv(gridp[u1].head<2>().rev().data());
         }
         glEnd();
       } else {

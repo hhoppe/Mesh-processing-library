@@ -56,11 +56,9 @@ std::optional<ObjectFrame> read(std::istream& is) {
     assertx(buf.magic[1] == 0);
     from_std(&buf.short_obn);
     object_frame.obn = buf.short_obn;
-    for_int(i, 4) {
-      for_int(j, 3) {
-        from_std(&buf.f[i, j]);
-        object_frame.frame[i, j] = buf.f[i, j];
-      }
+    for_int(i, 4) for_int(j, 3) {
+      from_std(&buf.f[i, j]);
+      object_frame.frame[i, j] = buf.f[i, j];
     }
     from_std(&buf.zoom);
     object_frame.zoom = buf.zoom;
@@ -101,11 +99,9 @@ bool write(std::ostream& os, const ObjectFrame& object_frame) {
     buf.magic[1] = 0;
     buf.short_obn = assert_narrow_cast<ushort>(object_frame.obn);
     to_std(&buf.short_obn);
-    for_int(i, 4) {
-      for_int(j, 3) {
-        buf.f[i, j] = object_frame.frame[i, j];
-        to_std(&buf.f[i, j]);
-      }
+    for_int(i, 4) for_int(j, 3) {
+      buf.f[i, j] = object_frame.frame[i, j];
+      to_std(&buf.f[i, j]);
     }
     buf.zoom = object_frame.zoom;
     to_std(&buf.zoom);

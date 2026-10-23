@@ -1279,11 +1279,9 @@ int analyze_mesh(int cs) {
   auto up_vcache = VertexCache::make(cache_type, 1 + pmi->_wedges.num(), cs);
   VertexCache& vcache = *up_vcache;
   int nmiss = 0;
-  for_int(fi, pmi->_faces.num()) {
-    for_int(j, 3) {
-      const int wi = pmi->_faces[fi].wedges[j];
-      nmiss += !vcache.access_hits(1 + wi);
-    }
+  for_int(fi, pmi->_faces.num()) for_int(j, 3) {
+    const int wi = pmi->_faces[fi].wedges[j];
+    nmiss += !vcache.access_hits(1 + wi);
   }
   if (0)
     showdf("cs=%-6d nmiss=%-6d %5.1f%%  v/t=%5.3f  v/v=%5.3f\n",  //

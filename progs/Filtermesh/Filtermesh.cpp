@@ -3429,46 +3429,42 @@ void do_procedure(Args& args) {
     const int nlat = 31, nlon = 60;
     Matrix<Vertex> mv(nlat, nlon);
     string str;
-    for_int(i, nlat) {
-      for_int(j, nlon) {
-        if ((i == 0 || i == nlat - 1) && j > 0) {
-          mv[i, j] = mv[i, j - 1];
-          continue;
-        }
-        Vertex v = mesh.create_vertex();
-        mv[i, j] = v;
-        const float anglat = float(i) / (nlat - 1.f) * (TAU / 2);
-        const float anglon = float(j) / (nlon - 0.f) * TAU;
-        const Point p(std::cos(anglon) * std::sin(anglat), std::sin(anglon) * std::sin(anglat), std::cos(anglat));
-        mesh.set_point(v, p);
-        const Uv uv(float(j) / (nlon - 1.f), float(i) / (nlat - 1.f));
-        mesh.update_string(v, "uv", csform_vec(str, uv));
-        if (i == 0) {
-          assertx(dist2(mesh.point(v), Point(0.f, 0.f, 1.f)) < 1e-6f);
-          mesh.set_point(v, Point(0.f, 0.f, 1.f));
-        }
-        if (i == nlat - 1) {
-          assertx(dist2(mesh.point(v), Point(0.f, 0.f, -1.f)) < 1e-6f);
-          mesh.set_point(v, Point(0.f, 0.f, -1.f));
-        }
+    for_int(i, nlat) for_int(j, nlon) {
+      if ((i == 0 || i == nlat - 1) && j > 0) {
+        mv[i, j] = mv[i, j - 1];
+        continue;
+      }
+      Vertex v = mesh.create_vertex();
+      mv[i, j] = v;
+      const float anglat = float(i) / (nlat - 1.f) * (TAU / 2);
+      const float anglon = float(j) / (nlon - 0.f) * TAU;
+      const Point p(std::cos(anglon) * std::sin(anglat), std::sin(anglon) * std::sin(anglat), std::cos(anglat));
+      mesh.set_point(v, p);
+      const Uv uv(float(j) / (nlon - 1.f), float(i) / (nlat - 1.f));
+      mesh.update_string(v, "uv", csform_vec(str, uv));
+      if (i == 0) {
+        assertx(dist2(mesh.point(v), Point(0.f, 0.f, 1.f)) < 1e-6f);
+        mesh.set_point(v, Point(0.f, 0.f, 1.f));
+      }
+      if (i == nlat - 1) {
+        assertx(dist2(mesh.point(v), Point(0.f, 0.f, -1.f)) < 1e-6f);
+        mesh.set_point(v, Point(0.f, 0.f, -1.f));
       }
     }
     const bool center_split = getenv_bool("CENTER_SPLIT");
-    for_int(i, nlat - 1) {
-      for_int(j, nlon) {
-        const int j1 = (j + 1) % nlon;
-        if (0) {
-        } else if (mv[i, j] == mv[i, j1]) {
-          mesh.create_face(mv[i, j1], mv[i + 1, j], mv[i + 1, j1]);
-        } else if (mv[i + 1, j] == mv[i + 1, j1]) {
-          mesh.create_face(mv[i, j], mv[i + 1, j], mv[i, j1]);
-        } else if (!center_split) {  // 2 triangles
-          mesh.create_face(mv[i, j], mv[i + 1, j], mv[i, j1]);
-          mesh.create_face(mv[i, j1], mv[i + 1, j], mv[i + 1, j1]);
-        } else {  // 4 triangles
-          Face f = mesh.create_face(V(mv[i, j], mv[i + 1, j], mv[i + 1, j1], mv[i, j1]));
-          mesh.center_split_face(f);
-        }
+    for_int(i, nlat - 1) for_int(j, nlon) {
+      const int j1 = (j + 1) % nlon;
+      if (0) {
+      } else if (mv[i, j] == mv[i, j1]) {
+        mesh.create_face(mv[i, j1], mv[i + 1, j], mv[i + 1, j1]);
+      } else if (mv[i + 1, j] == mv[i + 1, j1]) {
+        mesh.create_face(mv[i, j], mv[i + 1, j], mv[i, j1]);
+      } else if (!center_split) {  // 2 triangles
+        mesh.create_face(mv[i, j], mv[i + 1, j], mv[i, j1]);
+        mesh.create_face(mv[i, j1], mv[i + 1, j], mv[i + 1, j1]);
+      } else {  // 4 triangles
+        Face f = mesh.create_face(V(mv[i, j], mv[i + 1, j], mv[i + 1, j1], mv[i, j1]));
+        mesh.center_split_face(f);
       }
     }
 
@@ -3838,25 +3834,19 @@ auto smoothgim_subdiv(CMatrixView<Point> opoints) {
   for_int(y, nn + 1) {
     for_int(x, nn) npoints[y * 2, x * 2 + 1] = interp(npoints[y * 2, x * 2 + 0], npoints[y * 2, x * 2 + 2]);
   }
-  for_int(y, nn) {
-    for_int(x, nn * 2 + 1) npoints[y * 2 + 1, x] = interp(npoints[y * 2 + 0, x], npoints[y * 2 + 2, x]);
-  }
+  for_int(y, nn) for_int(x, nn * 2 + 1) npoints[y * 2 + 1, x] = interp(npoints[y * 2 + 0, x], npoints[y * 2 + 2, x]);
   // Averaging step.
   nn = nn * 2;
   Matrix<Point> tpoints(nn + 1, nn + 1);
   for_int(y, nn + 1) for_int(x, nn + 1) tpoints[y, x] = npoints[y, x];
-  for_int(y, nn + 1) {
-    for_int(x, nn + 1) {
-      npoints[y, x] = avg_cubic(x > 0 ? tpoints[y, x - 1] : tpoints[nn - y, x + 1], tpoints[y, x],
-                                x < nn ? tpoints[y, x + 1] : tpoints[nn - y, x - 1]);
-    }
+  for_int(y, nn + 1) for_int(x, nn + 1) {
+    npoints[y, x] = avg_cubic(x > 0 ? tpoints[y, x - 1] : tpoints[nn - y, x + 1], tpoints[y, x],
+                              x < nn ? tpoints[y, x + 1] : tpoints[nn - y, x - 1]);
   }
   for_int(y, nn + 1) for_int(x, nn + 1) tpoints[y, x] = npoints[y, x];
-  for_int(y, nn + 1) {
-    for_int(x, nn + 1) {
-      npoints[y, x] = avg_cubic(y > 0 ? tpoints[y - 1, x] : tpoints[y + 1, nn - x], tpoints[y, x],
-                                y < nn ? tpoints[y + 1, x] : tpoints[y - 1, nn - x]);
-    }
+  for_int(y, nn + 1) for_int(x, nn + 1) {
+    npoints[y, x] = avg_cubic(y > 0 ? tpoints[y - 1, x] : tpoints[y + 1, nn - x], tpoints[y, x],
+                              y < nn ? tpoints[y + 1, x] : tpoints[y - 1, nn - x]);
   }
   return npoints;
 }
@@ -3902,41 +3892,39 @@ void do_smoothgim(Args& args) {
   mesh.clear();
   Matrix<Vertex> vertices(nn + 1, nn + 1);
   string str;
-  for_int(y, nn + 1) {
-    for_int(x, nn + 1) {
-      Vertex v = mesh.create_vertex();
-      vertices[y, x] = v;
-      mesh.set_point(v, points[y, x]);
-      Vector nor;
-      if (0) {
-      } else if (y == nn / 2 && (x == 0 || x == nn)) {
-        // Are border points really just simply reflections?
-        assertx(std::is_eq(compare(points[y - 1, x], points[y + 1, x], 1e-6f)));
-        const int xr = x == 0 ? x + 1 : x - 1;
-        const Vector tb = points[y, xr] - points[y - 1, x];
-        Vector tc = points[y - 1, xr] - points[y + 1, xr];
-        if (x == 0) tc = -tc;
-        nor = cross(tb, tc);
-      } else if (x == nn / 2 && (y == 0 || y == nn)) {
-        assertx(std::is_eq(compare(points[y, x - 1], points[y, x + 1], 1e-6f)));
-        const int yr = y == 0 ? y + 1 : y - 1;
-        const Vector tb = points[yr, x] - points[y, x - 1];
-        Vector tc = points[yr, x - 1] - points[yr, x + 1];
-        if (y == nn) tc = -tc;
-        nor = cross(tb, tc);
-      } else {
-        const Vector tx =
-            ((x > 0 ? points[y, x - 1] : points[nn - y, x + 1]) - (x < nn ? points[y, x + 1] : points[nn - y, x - 1]));
-        const Vector ty =
-            ((y > 0 ? points[y - 1, x] : points[y + 1, nn - x]) - (y < nn ? points[y + 1, x] : points[y - 1, nn - x]));
-        nor = cross(tx, ty);
-      }
-      assertw(nor.normalize());
-      mesh.update_string(v, "normal", csform_vec(str, nor));
-      if (y * x > 0)
-        mesh.create_face(
-            V(vertices[y - 1, x - 1], vertices[y - 1, x - 0], vertices[y - 0, x - 0], vertices[y - 0, x - 1]));
+  for_int(y, nn + 1) for_int(x, nn + 1) {
+    Vertex v = mesh.create_vertex();
+    vertices[y, x] = v;
+    mesh.set_point(v, points[y, x]);
+    Vector nor;
+    if (0) {
+    } else if (y == nn / 2 && (x == 0 || x == nn)) {
+      // Are border points really just simply reflections?
+      assertx(std::is_eq(compare(points[y - 1, x], points[y + 1, x], 1e-6f)));
+      const int xr = x == 0 ? x + 1 : x - 1;
+      const Vector tb = points[y, xr] - points[y - 1, x];
+      Vector tc = points[y - 1, xr] - points[y + 1, xr];
+      if (x == 0) tc = -tc;
+      nor = cross(tb, tc);
+    } else if (x == nn / 2 && (y == 0 || y == nn)) {
+      assertx(std::is_eq(compare(points[y, x - 1], points[y, x + 1], 1e-6f)));
+      const int yr = y == 0 ? y + 1 : y - 1;
+      const Vector tb = points[yr, x] - points[y, x - 1];
+      Vector tc = points[yr, x - 1] - points[yr, x + 1];
+      if (y == nn) tc = -tc;
+      nor = cross(tb, tc);
+    } else {
+      const Vector tx =
+          ((x > 0 ? points[y, x - 1] : points[nn - y, x + 1]) - (x < nn ? points[y, x + 1] : points[nn - y, x - 1]));
+      const Vector ty =
+          ((y > 0 ? points[y - 1, x] : points[y + 1, nn - x]) - (y < nn ? points[y + 1, x] : points[y - 1, nn - x]));
+      nor = cross(tx, ty);
     }
+    assertw(nor.normalize());
+    mesh.update_string(v, "normal", csform_vec(str, nor));
+    if (y * x > 0)
+      mesh.create_face(
+          V(vertices[y - 1, x - 1], vertices[y - 1, x - 0], vertices[y - 0, x - 0], vertices[y - 0, x - 1]));
   }
 }
 
@@ -3950,17 +3938,15 @@ void do_subsamplegim(Args& args) {
   Matrix<Vertex> vertices(nn + 1, nn + 1);
   const GMesh& omesh = mesh;
   GMesh nmesh;
-  for_int(y, nn + 1) {
-    for_int(x, nn + 1) {
-      Vertex vn = nmesh.create_vertex();
-      vertices[y, x] = vn;
-      Vertex vo = omesh.id_vertex(y * nsubsamp * (nn * nsubsamp + 1) + x * nsubsamp + 1);
-      nmesh.set_point(vn, omesh.point(vo));
-      nmesh.set_string(vn, omesh.get_string(vo));
-      if (y * x > 0)
-        nmesh.create_face(
-            V(vertices[y - 1, x - 1], vertices[y - 1, x - 0], vertices[y - 0, x - 0], vertices[y - 0, x - 1]));
-    }
+  for_int(y, nn + 1) for_int(x, nn + 1) {
+    Vertex vn = nmesh.create_vertex();
+    vertices[y, x] = vn;
+    Vertex vo = omesh.id_vertex(y * nsubsamp * (nn * nsubsamp + 1) + x * nsubsamp + 1);
+    nmesh.set_point(vn, omesh.point(vo));
+    nmesh.set_string(vn, omesh.get_string(vo));
+    if (y * x > 0)
+      nmesh.create_face(
+          V(vertices[y - 1, x - 1], vertices[y - 1, x - 0], vertices[y - 0, x - 0], vertices[y - 0, x - 1]));
   }
   mesh.copy(nmesh);
 }

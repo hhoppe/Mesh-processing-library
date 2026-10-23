@@ -167,11 +167,9 @@ void convert_Nv12_to_Image(CNv12View nv12v, MatrixView<Pixel> frame) {
             (clamp_to_uint8(d) << 24));
   };
   if (0) {
-    for_int(y, frame.ysize()) {
-      for_int(x, frame.xsize()) {
-        frame[y, x] =
-            RGB_Pixel_from_YUV(nv12v.get_Y()[y, x], nv12v.get_UV()[y / 2, x / 2][0], nv12v.get_UV()[y / 2, x / 2][1]);
-      }
+    for_int(y, frame.ysize()) for_int(x, frame.xsize()) {
+      frame[y, x] =
+          RGB_Pixel_from_YUV(nv12v.get_Y()[y, x], nv12v.get_UV()[y / 2, x / 2][0], nv12v.get_UV()[y / 2, x / 2][1]);
     }
   } else if (0) {
     for_int(y, frame.ysize()) {

@@ -31,6 +31,6 @@ int main() {
   swap(flags, flags2);
   SHOW(FlagMask(flags), FlagMask(flags2));
   // All the flags of the mask type can be allocated.
-  while (counter < std::numeric_limits<FlagMask>::digits) dummy_use(Flags::allocate(counter));
+  while (counter < std::numeric_limits<FlagMask>::digits) (void)Flags::allocate(counter);
   SHOW(counter);
 }

@@ -87,7 +87,7 @@ static void print_hwquery() {
                               rect.bottom - rect.top, owner, nullptr, GetModuleHandle(nullptr), nullptr));
   assertx(SetLayeredWindowAttributes(hwnd, 0, 0, LWA_ALPHA));
   ShowWindow(hwnd, SW_SHOWNOACTIVATE);
-  void(DwmFlush());
+  (void)DwmFlush();
   RECT win_rect, visible_rect, client_rect;
   assertx(GetWindowRect(hwnd, &win_rect));
   // The visible frame excludes the invisible resize borders.

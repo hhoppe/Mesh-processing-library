@@ -84,7 +84,7 @@ int main() {
   {
     // The input range is not modified.
     const Array<int> ar{5, 1, 4, 2, 3};
-    dummy_use(median(ar), rank_element(ar, 2), rankf_element(ar, .5), sort_unique(ar));
+    (void)median(ar), (void)rank_element(ar, 2), (void)rankf_element(ar, .5), (void)sort_unique(ar);
     assertx(ar == Array<int>{5, 1, 4, 2, 3});
   }
   {

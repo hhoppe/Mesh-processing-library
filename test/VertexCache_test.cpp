@@ -79,9 +79,9 @@ void test_against_model(VertexCache::EType type, int nverts, int cs) {
 void test_copy_and_init(VertexCache::EType type) {
   const int nverts1 = 10, cs = 4;
   const auto vc1 = VertexCache::make(type, nverts1, cs);
-  for (const int vi : {1, 2, 3, 2, 5, 6}) dummy_use(vc1->access_hits(vi));
+  for (const int vi : {1, 2, 3, 2, 5, 6}) (void)vc1->access_hits(vi);
   const auto vc2 = VertexCache::make(type, nverts1, cs);
-  dummy_use(vc2->access_hits(9));
+  (void)vc2->access_hits(9);
   vc2->copy(*vc1);
   for_intL(vi, 1, nverts1) assertx(vc2->location(vi) == vc1->location(vi));
   SHOW(VertexCache::type_string(type), *vc1, *vc2);

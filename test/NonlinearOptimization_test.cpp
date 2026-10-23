@@ -42,7 +42,7 @@ double feval(ArrayView<double> ret_grad) {
 // The magnitude of the gradient of feval() at g_x.
 double gradient_magnitude() {
   Array<double> grad(g_x.num());
-  dummy_use(feval(grad));
+  (void)feval(grad);
   return mag(grad);
 }
 

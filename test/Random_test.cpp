@@ -108,7 +108,7 @@ int main() {
     }
     for_int(i, 10) assertx(r3.get_size_t() == r4.get_uint64());
     r3.discard(1000);
-    for_int(i, 1000) dummy_use(r4.get_unsigned());
+    for_int(i, 1000) { (void)r4.get_unsigned(); }
     assertx(r3.get_unsigned() == r4.get_unsigned());
     r3.discard(0);
     assertx(r3.get_unsigned() == r4.get_unsigned());

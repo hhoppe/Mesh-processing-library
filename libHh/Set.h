@@ -74,7 +74,7 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   }
   // Omit "bool add(T&& e)" because e could be lost if !is_new.
   bool remove(const T& e) { return remove_i(e); }  // Returns true if e was found.
-  [[nodiscard]] bool contains(const T& e) const { return _set.find(e) != end(); }
+  [[nodiscard]] bool contains(const T& e) const { return _set.contains(e); }
   [[nodiscard]] int num() const { return narrow_cast<int>(_set.size()); }
   [[nodiscard]] size_t size() const { return _set.size(); }
   [[nodiscard]] bool empty() const { return _set.empty(); }

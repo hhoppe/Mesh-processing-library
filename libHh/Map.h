@@ -85,28 +85,21 @@ class Map {
     return it->second;
   }
   // Note: force_enter using: { map[key] = std::move(value); }.
-  [[nodiscard]] bool contains(const Key& key) const { return _map.find(key) != end(); }
+  [[nodiscard]] bool contains(const Key& key) const { return _map.contains(key); }
   [[nodiscard]] const Value& retrieve(const Key& key) const {
-    auto it = _map.find(key);
-    if (it == end()) return def();
-    return it->second;
+    const Value* pvalue = find_ptr_i(_map, key);
+    return pvalue ? *pvalue : def();
   }
-  [[nodiscard]] auto& get(this auto&& self, const Key& key) {
-    auto it = self._map.find(key);
-    ASSERTXX(it != self.end());
-    return it->second;
-  }
-  // const Value& get(const Key& key) const { return (*this)[key]; } // Bad: throws exception if absent.
-  [[nodiscard]] auto* find_ptr(this auto&& self, const Key& key) {  // Returns nullptr if key is absent.
-    auto it = self._map.find(key);
-    return it != self.end() ? &it->second : nullptr;
-  }
+  // Returns the value of key (const or not), which must exist.
+  [[nodiscard]] auto& get(this auto&& self, const Key& key) { return get_i(self._map, key); }
+  // Returns a pointer to the value of key (const or not), or nullptr if key is absent.
+  [[nodiscard]] auto* find_ptr(this auto&& self, const Key& key) { return find_ptr_i(self._map, key); }
   Value remove(const Key& key) { return remove_i(key); }
   Value replace(const Key& key, const Value& value) requires Copyable<Key> && Copyable<Value> {
-    auto it = _map.find(key);
-    if (it == end()) return Value();
-    Value vo = it->second;
-    it->second = value;
+    Value* pvalue = find_ptr_i(_map, key);
+    if (!pvalue) return Value();
+    Value vo = *pvalue;
+    *pvalue = value;
     return vo;
   }
   // Omit "Value replace(const Key& key, Value&& value)" because value could be lost if !present.
@@ -116,8 +109,8 @@ class Map {
   // Introduced for Combination:
   [[nodiscard]] Value& operator[](const Key& key) requires Copyable<Key> && Copyable<Value> { return _map[key]; }
   [[nodiscard]] const Value& operator[](const Key& key) const requires Copyable<Value> {
-    auto it = _map.find(key);
-    return it != end() ? it->second : def();
+    const Value* pvalue = find_ptr_i(_map, key);
+    return pvalue ? *pvalue : def();
   }
   [[nodiscard]] const Key& get_one_key() const { return ASSERTXX(!empty()), begin()->first; }
   [[nodiscard]] const Value& get_one_value() const { return ASSERTXX(!empty()), begin()->second; }
@@ -133,6 +126,29 @@ class Map {
  private:
   // See my experiments in ~/git/hh_src/test/misc/test_hash_buckets.cpp.
   base _map;
+  // Each MSVC debug iterator registers with its container under a global lock, which serializes concurrent lookups
+  // (e.g., 24 threads were 1000x slower than one), so find_ptr_i() and get_i() then use contains() and at(), which
+  // create no iterator.  Elsewhere they use find(), whose code is unchanged.
+  static auto* find_ptr_i(auto& map, const Key& key) {
+#if defined(_MSC_VER) && _ITERATOR_DEBUG_LEVEL == 2
+    return map.contains(key) ? &map.at(key) : nullptr;
+#else
+    auto it = map.find(key);
+    return it != map.end() ? &it->second : nullptr;
+#endif
+  }
+  // Defining get() as *find_ptr_i() would incur a runtime cost: in a release build, the compiler keeps the test for
+  // nullptr (and its branch), even with [[assume(ptr)]], whereas this find() is dereferenced directly.
+  static auto& get_i(auto& map, const Key& key) {
+#if defined(_MSC_VER) && _ITERATOR_DEBUG_LEVEL == 2
+    ASSERTXX(map.contains(key));
+    return map.at(key);
+#else
+    auto it = map.find(key);
+    ASSERTXX(it != map.end());
+    return it->second;
+#endif
+  }
   static const Value& def() {
     static const Value key_default = Value();
     return key_default;

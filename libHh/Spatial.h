@@ -52,9 +52,10 @@ class Spatial : noncopyable {  // An abstract class.
   [[nodiscard]] Ind decode(int en) const;
 
   // For BaseSpatialSearch:
-  // Set of the elements already entered into the DistanceQueue of a spatial search.  Its built-in storage avoids
-  // heap allocation in most searches, which visit only a few elements.
-  using VisitedSet = InlinedSet<Univ, 8>;
+  // Set of the elements already entered into the DistanceQueue of a spatial search.  A search for the closest
+  // triangle near a surface typically enters tens of elements (up to a few hundred), and up to this capacity a
+  // linear search of the built-in storage (2 KB) is faster than a hash Set, which must allocate.
+  using VisitedSet = InlinedSet<Univ, 256>;
   // Priority queue of the elements of a spatial search, ordered by distance.  Its built-in storage likewise avoids
   // heap allocation in most searches.
   using DistanceQueue = PriorityQueue<Univ, 20>;

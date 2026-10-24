@@ -56,9 +56,9 @@ class Spatial : noncopyable {  // An abstract class.
   // triangle near a surface typically enters tens of elements (up to a few hundred), and up to this capacity a
   // linear search of the built-in storage (2 KB) is faster than a hash Set, which must allocate.
   using VisitedSet = InlinedSet<Univ, 256>;
-  // Priority queue of the elements of a spatial search, ordered by distance.  Its built-in storage likewise avoids
-  // heap allocation in most searches.
-  using DistanceQueue = PriorityQueue<Univ, 20>;
+  // Priority queue of the elements of a spatial search, ordered by distance.  Its built-in storage (1 KB) likewise
+  // avoids heap allocation in most searches, which enter tens of elements.
+  using DistanceQueue = PriorityQueue<Univ, 64>;
 
   // Add elements from cell ci to priority queue with priority equal to distance from pcenter squared.
   // May use set to avoid duplication.

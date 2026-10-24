@@ -1,0 +1,10 @@
+lf0 = LinearFunc(v=[0, 0, 0], offset=0)
+lf0.eval(Point(1.f, 2.f, 3.f)) = 0
+lf = LinearFunc(v=[1, 2, 3], offset=-6)
+lf.eval(Point(1.f, 1.f, 1.f)) = 0
+lf.eval(Point(2.f, 0.f, 0.f)) = -4
+lf.eval(Point(0.f, 0.f, 0.f)) = -6
+lf = LinearFunc(v=[1, 0, 4], offset=2)
+p=[0, 0, 0] lf.eval(p)=2
+p=[1, 5, 2] lf.eval(p)=11
+p=[-3, 1, 0.5] lf.eval(p)=1

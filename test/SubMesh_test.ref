@@ -1,0 +1,42 @@
+smesh.mesh().num_vertices()=10 smesh.mesh().num_faces()=16
+v1   h=0:  1:0.4375  2:0.1875  3:0.1875  4:0.1875
+v2   h=0:  1:0.1875  2:0.4375  3:0.1875  4:0.1875
+v3   h=0:  1:0.1875  2:0.1875  3:0.4375  4:0.1875
+v4   h=0:  1:0.1875  2:0.1875  3:0.1875  4:0.4375
+new  h=0:  1:0.125  2:0.125  3:0.375  4:0.375
+new  h=0:  1:0.125  2:0.375  3:0.125  4:0.375
+new  h=0:  1:0.125  2:0.375  3:0.375  4:0.125
+new  h=0:  1:0.375  2:0.125  3:0.125  4:0.375
+new  h=0:  1:0.375  2:0.125  3:0.375  4:0.125
+new  h=0:  1:0.375  2:0.375  3:0.125  4:0.125
+v1   (0.25 0.25 0.25)
+v2   (0.25 -0.25 -0.25)
+v3   (-0.25 0.25 -0.25)
+v4   (-0.25 -0.25 0.25)
+new  (-0.5 0 0)
+new  (0 -0.5 0)
+new  (0 0 -0.5)
+new  (0 0 0.5)
+new  (0 0.5 0)
+new  (0.5 0 0)
+transformed(comb2.evaluate(omesh), rounded) = [1.25, 2, 3]
+smesh.mesh().num_vertices()=34 smesh.mesh().num_faces()=64
+id=1 transformed(p, rounded)=[0.2, 0.2, 0.2] transformed(p2, rounded)=[0.2031, 0.2031, 0.2031]
+id=2 transformed(p, rounded)=[0.2, -0.2, -0.2] transformed(p2, rounded)=[0.2031, -0.2031, -0.2031]
+id=3 transformed(p, rounded)=[-0.2, 0.2, -0.2] transformed(p2, rounded)=[-0.2031, 0.2031, -0.2031]
+id=4 transformed(p, rounded)=[-0.2, -0.2, 0.2] transformed(p2, rounded)=[-0.2031, -0.2031, 0.2031]
+v1   h=0.4375:  2:0.1875  3:0.1875  4:0.1875
+v2   h=0.1875:  2:0.4375  3:0.1875  4:0.1875
+v3   h=0.1875:  2:0.1875  3:0.4375  4:0.1875
+v4   h=0.1875:  2:0.1875  3:0.1875  4:0.4375
+new  h=0.125:  2:0.125  3:0.375  4:0.375
+new  h=0.125:  2:0.375  3:0.125  4:0.375
+new  h=0.125:  2:0.375  3:0.375  4:0.125
+new  h=0.375:  2:0.125  3:0.125  4:0.375
+new  h=0.375:  2:0.125  3:0.375  4:0.125
+new  h=0.375:  2:0.375  3:0.125  4:0.125
+smesh.mesh().num_vertices()=128 smesh.mesh().num_faces()=256
+id=1 transformed(smesh.mesh().point(smesh.mesh().id_vertex(id)), rounded)=[2.0625, 0, 0]
+id=2 transformed(smesh.mesh().point(smesh.mesh().id_vertex(id)), rounded)=[1.5, 0, 0.75]
+id=3 transformed(smesh.mesh().point(smesh.mesh().id_vertex(id)), rounded)=[0.9375, 0, 0]
+id=4 transformed(smesh.mesh().point(smesh.mesh().id_vertex(id)), rounded)=[1.5, 0, -0.75]

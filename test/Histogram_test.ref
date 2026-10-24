@@ -1,0 +1,21 @@
+# Hist(Histogram_test.tmp.txt): (17     )           0:16           av=8              sd=5.0497525
+  -2.5 1
+  4.5 7
+  11.5 7
+  18.5 2
+show_histogram_file() = 17
+# Hist(Histogram_test.tmp.txt): (7      )           1:4            av=2.5714286      sd=0.97590007
+  0.53125 1
+  1.84375 2
+  3.15625 3
+  4.46875 1
+show_histogram_file() = 7
+assertion warning: assertw(max < avg + sdv * max_sdv) in line 32 of file ...
+# Hist(Histogram_test.tmp.txt): (41     )           0:1000         av=25.853659      sd=155.94351
+  0
+  40
+  0
+  0
+  1
+# Summary of warnings:
+#      1 'assertw(max < avg + sdv * max_sdv) in line 32 of file ...

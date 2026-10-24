@@ -3914,7 +3914,8 @@ EcolResult try_ecol(Edge e, bool commit) {
       }
     }
     if (strict_sharp >= 2) {  // Chart-compliant.
-      assertx(ii != 1);       // 0 or 2.
+      // The new vertex must be one of the two edge vertices; use -nominii1, -minii2, or -vsgeom (which sets -minii2).
+      assertx(ii != 1);  // 0 or 2.
       Vertex tv1 = v1, tv2 = v2;
       if (ii == 0) std::swap(tv1, tv2);
       // Here, tv1 is kept and tv2 is lost.

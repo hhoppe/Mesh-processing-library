@@ -134,6 +134,11 @@ int main() {
     assertx(vec_pop(vec) == 7);
     assertx(vec_pop(vec) == 5);
     assertx(vec == std::vector<int>{6});
+    vec = {3, 4, 1};
+    assertx(vec_remove_ordered(vec, 1));  // The last element.
+    assertx(vec == (std::vector<int>{3, 4}));
+    assertx(vec_remove_ordered(vec, 3) && vec_remove_ordered(vec, 4));
+    assertx(vec.empty() && !vec_remove_ordered(vec, 4));  // An empty vector.
     std::vector<unique_ptr<int>> vecp;
     vecp.push_back(make_unique<int>(3));
     const unique_ptr<int> p = vec_pop(vecp);

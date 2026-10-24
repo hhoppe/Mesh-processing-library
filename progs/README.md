@@ -289,7 +289,8 @@ PM_LOD_LEVEL=0.05 G3dOGL -pm_mode club.pm -st demos/data/club.s3d -lightambient 
 ```
 - starting at the level of detail `0.05` (set using the environment variable `PM_LOD_LEVEL`),
 - with mesh edges shown (toggled using the <kbd>De</kbd> key sequence), and
-- by dragging the left vertical slider using the left or right mouse button.
+- by dragging the left vertical slider using the left mouse button (where the slider position is logarithmic in
+  the number of vertices, with tick marks at powers of ten).
 
 We can also define geomorphs between discrete levels of detail, for example:
 ```shell

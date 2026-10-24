@@ -7,7 +7,7 @@ call ./_initdemos.bat
 echo .
 echo Press 'De' to toggle edges on/off.
 echo .
-echo Use right button to drag slider exponentially.
+echo Use left button to drag slider (logarithmic in #vertices).
 echo .
 
 set PM_LOD_LEVEL=0.03

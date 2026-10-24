@@ -3118,6 +3118,69 @@ void* HB::escape(int code, void* data) {
 
 namespace {
 
+// *** LOD slider with a logarithmic scale, for PM and PSC modes
+
+// The LOD fraction is linear in the number of vertices (from nv0 to nv1 = nv0 * nv_ratio), whereas the slider
+// position t is linear in its logarithm, i.e., nv = nv0 * nv_ratio^t.
+float lod_from_slider(float t, float nv_ratio) {
+  return nv_ratio > 1.f ? (std::pow(nv_ratio, t) - 1.f) / (nv_ratio - 1.f) : t;
+}
+
+float slider_from_lod(float lod, float nv_ratio) {
+  return nv_ratio > 1.f ? std::log1p(lod * (nv_ratio - 1.f)) / std::log(nv_ratio) : lod;
+}
+
+// Return the LOD fraction updated by the active mouse button: the left button sets the slider position, and the
+// middle button moves it at a rate given by the pointer offset from the window center.
+float drag_lod_slider(float lod, float nv_ratio) {
+  const Vec2<float> yxf = HB::get_pointer().value();
+  switch (button_active) {
+    case 1: return lod_from_slider(clamp(1.1f - yxf[0] * 1.2f, 0.f, 1.f), nv_ratio);
+    case 2: {
+      const float a = (yxf[0] - 0.5f) * -3.f;
+      const float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange;
+      if (!a2) return lod;
+      return lod_from_slider(clamp(slider_from_lod(lod, nv_ratio) + a2, 0.f, 1.f), nv_ratio);
+    }
+    case 3: return lod;  // The right button does not act on the slider.
+    default: assertnever("");
+  }
+}
+
+// Draw the slider with the LOD fraction lod and with tick marks on one side at the powers of ten among the vertex
+// counts nv0..nv1, which are distinct from the two-sided interval marks of the geomorph slider in G3ddraw.cpp.
+void draw_lod_slider(float lod, int nv0, int nv1) {
+  const float nv_ratio = float(nv1) / nv0;
+  const auto y_of_slider = [](float t) { return (1.1f - t) / 1.2f; };
+  const float yline = .004f, xleft = .05f;
+  {  // Current level.
+    const float y1 = y_of_slider(slider_from_lod(clamp(lod, 0.f, 1.f), nv_ratio)) - .002f, y2 = y1 + yline;
+    const float x1 = xleft + .01f, x2 = xleft + .05f;
+    HB::draw_segment(V(y1, x1), V(y1, x2));
+    HB::draw_segment(V(y2, x1), V(y2, x2));
+    HB::draw_segment(V(y1, x1), V(y2, x1));
+    HB::draw_segment(V(y1, x2), V(y2, x2));
+  }
+  {  // Slider.
+    const float y1 = y_of_slider(0.f) + .004f, y2 = y_of_slider(1.f) - .004f, yd = .01f;
+    const float x1 = xleft + .02f, x2 = xleft + .04f, xm = xleft + .03f;
+    HB::draw_segment(V(y1 + yd, x1), V(y1, xm));
+    HB::draw_segment(V(y1 + yd, x2), V(y1, xm));
+    HB::draw_segment(V(y1 + yd, x1), V(y1 + yd, x2));
+    HB::draw_segment(V(y2 - yd, x1), V(y2, xm));
+    HB::draw_segment(V(y2 - yd, x2), V(y2, xm));
+    HB::draw_segment(V(y2 - yd, x1), V(y2 - yd, x2));
+    HB::draw_segment(V(y1, xm), V(y2, xm));
+  }
+  if (nv_ratio > 1.f) {  // Tick marks.
+    for (float nv = 1.f; nv <= nv1; nv *= 10.f) {
+      if (nv < nv0) continue;
+      const float y = y_of_slider(std::log(nv / nv0) / std::log(nv_ratio));
+      HB::draw_segment(V(y, xleft + .03f), V(y, xleft + .037f));
+    }
+  }
+}
+
 // *** PM mode
 
 #if defined(DEF_PM)
@@ -3152,6 +3215,8 @@ void read_pm(const string& filename) {
   if (g3d::g_filename == "") g3d::g_filename = filename;
 }
 
+float pm_nv_ratio() { return float(pmesh._info._full_nvertices) / pmesh._base_mesh._vertices.num(); }
+
 void pm_update_lod() {
   const float flevel = min(pm_lod_level, 1.f);
   const int nv0 = pmesh._base_mesh._vertices.num();
@@ -3169,29 +3234,8 @@ void pm_wrap_draw(bool show) {
   if (!slidermode) return;
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
-      const Vec2<float> yxf = HB::get_pointer().value();
       const float oldval = pm_lod_level;
-      switch (button_active) {
-        case 1: {
-          pm_lod_level = 1.1f - yxf[0] * 1.2f;
-          break;
-        }
-        case 2: {
-          const float a = (yxf[0] - 0.5f) * -3.f;
-          const float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
-          pm_lod_level += a2;
-          break;
-        }
-        case 3: {
-          const float factor = 5.f;
-          float val = 1.1f - yxf[0] * 1.2f;
-          val = max(val, 0.f);
-          pm_lod_level = (std::exp(factor * val) - 1.0f) / (std::exp(factor) - 1.0f);
-          break;
-        }
-        default: assertnever("");
-      }
-      pm_lod_level = clamp(pm_lod_level, 0.f, 1.f);
+      pm_lod_level = drag_lod_slider(pm_lod_level, pm_nv_ratio());
       if (pm_lod_level != oldval) pm_update_lod();
       hw.redraw_later();
     }
@@ -3204,28 +3248,7 @@ void pm_wrap_draw(bool show) {
     HB::draw_row_col_text(V(2, lmargin + 8), sform(" %d", pmi->_faces.num()));
     // HB::draw_row_col_text(V(4, 21), "#Verts");
     // HB::draw_row_col_text(V(5, 22), std::to_string(pmi->_vertices.num()));
-    const float yline = .004f, xleft = .05f;
-    {  // Current level.
-      const float lod = clamp(pm_lod_level, 0.f, 1.f);
-      float x1 = xleft + .01f, x2 = xleft + .05f;
-      const float y1 = (1.1f - lod) / 1.2f - .002f;
-      const float y2 = y1 + yline;
-      HB::draw_segment(V(y1, x1), V(y1, x2));
-      HB::draw_segment(V(y2, x1), V(y2, x2));
-      HB::draw_segment(V(y1, x1), V(y2, x1));
-      HB::draw_segment(V(y1, x2), V(y2, x2));
-    }
-    {  // Slider.
-      const float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
-      float x1 = xleft + .02f, x2 = xleft + .04f, xm = xleft + .03f;
-      HB::draw_segment(V(y1 + yd, x1), V(y1, xm));
-      HB::draw_segment(V(y1 + yd, x2), V(y1, xm));
-      HB::draw_segment(V(y1 + yd, x1), V(y1 + yd, x2));
-      HB::draw_segment(V(y2 - yd, x1), V(y2, xm));
-      HB::draw_segment(V(y2 - yd, x2), V(y2, xm));
-      HB::draw_segment(V(y2 - yd, x1), V(y2 - yd, x2));
-      HB::draw_segment(V(y1, xm), V(y2, xm));
-    }
+    draw_lod_slider(pm_lod_level, pmesh._base_mesh._vertices.num(), pmesh._info._full_nvertices);
   }
 }
 
@@ -4162,28 +4185,7 @@ void psc_wrap_draw(bool show) {
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
       const float oldval = psc_lod_level;
-      const Vec2<float> yxf = HB::get_pointer().value();
-      switch (button_active) {
-        case 1: {
-          psc_lod_level = 1.1f - yxf[0] * 1.2f;
-          break;
-        }
-        case 2: {
-          const float a = (yxf[0] - 0.5f) * -3.f;
-          const float a2 = pow(abs(a), 4.f) * sign(a) * g3d::fchange * 1.f;
-          psc_lod_level += a2;
-          break;
-        }
-        case 3: {
-          const float factor = 5.f;
-          float val = 1.1f - yxf[0] * 1.2f;
-          val = max(val, 0.f);
-          psc_lod_level = (std::exp(factor * val) - 1.0f) / (std::exp(factor) - 1.0f);
-          break;
-        }
-        default: assertnever("");
-      }
-      psc_lod_level = clamp(psc_lod_level, 0.f, 1.f);
+      psc_lod_level = drag_lod_slider(psc_lod_level, float(psc_lod_list.num()));
       if (psc_lod_level != oldval) psc_update_lod();
       hw.redraw_later();
     }
@@ -4219,28 +4221,7 @@ void psc_wrap_draw(bool show) {
       HB::draw_row_col_text(V(5, lmargin), "#0s");
       HB::draw_row_col_text(V(5, lmargin + 4), std::to_string(psc_orphan_nverts));
     }
-    const float yline = .004f, xleft = .05f;
-    {  // Current level.
-      const float lod = clamp(psc_lod_level, 0.f, 1.f);
-      float x1 = xleft + .01f, x2 = xleft + .05f;
-      const float y1 = (1.1f - lod) / 1.2f - .002f;
-      const float y2 = y1 + yline;
-      HB::draw_segment(V(y1, x1), V(y1, x2));
-      HB::draw_segment(V(y2, x1), V(y2, x2));
-      HB::draw_segment(V(y1, x1), V(y2, x1));
-      HB::draw_segment(V(y1, x2), V(y2, x2));
-    }
-    {  // Slider.
-      const float y1 = (1.1f - 0) / 1.2f + .004f, y2 = (1.1f - 1) / 1.2f - .004f, yd = .01f;
-      float x1 = xleft + .02f, x2 = xleft + .04f, xm = xleft + .03f;
-      HB::draw_segment(V(y1 + yd, x1), V(y1, xm));
-      HB::draw_segment(V(y1 + yd, x2), V(y1, xm));
-      HB::draw_segment(V(y1 + yd, x1), V(y1 + yd, x2));
-      HB::draw_segment(V(y2 - yd, x1), V(y2, xm));
-      HB::draw_segment(V(y2 - yd, x2), V(y2, xm));
-      HB::draw_segment(V(y2 - yd, x1), V(y2 - yd, x2));
-      HB::draw_segment(V(y1, xm), V(y2, xm));
-    }
+    draw_lod_slider(psc_lod_level, 1, psc_lod_list.num());
   }
 }
 

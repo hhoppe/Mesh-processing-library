@@ -7,7 +7,7 @@ echo '.'
 echo 'Press "De" to toggle edges on/off.'
 echo 'Or, press "Ds" to toggle faces on/off.'
 echo '.'
-echo 'Use right button to drag slider exponentially.'
+echo 'Use left button to drag slider (logarithmic in #vertices).'
 echo '.'
 
 export PM_LOD_LEVEL="0.1"

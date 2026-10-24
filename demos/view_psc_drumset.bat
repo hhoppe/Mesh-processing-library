@@ -5,7 +5,7 @@ cd "%~p0"
 call ./_initdemos.bat
 
 echo .
-echo Use right button to drag slider up/down.
+echo Use left button to drag slider up/down.
 echo .
 
 set PSC_LOD_LEVEL=0.1

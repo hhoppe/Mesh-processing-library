@@ -44,11 +44,12 @@ render() {
     -cropsides -${hgap:-$gap} -${hgap:-$gap} -$gap -$gap -to png >"$tmp/$name.png" 2>/dev/null
 }
 
-# row name tiles... : assemble the tiles into a row of width $row_width (default $width) in $tmp/name.png.
+# row name tiles... : assemble the tiles (centering shorter ones on the background) into a row of width $row_width
+# (default $width) in $tmp/name.png.
 row() {
   local name=$1; shift
-  (cd "$tmp" && Filterimage -assemble $# 1 "${@/%/.png}" -scaletox ${row_width:-$width} -to png >"$name.png" \
-    2>/dev/null)
+  (cd "$tmp" && Filterimage -nostdin -color $rgb 255 -assemble $# 1 "${@/%/.png}" -scaletox ${row_width:-$width} \
+    -to png >"$name.png" 2>/dev/null)
 }
 
 for variant in light dark; do

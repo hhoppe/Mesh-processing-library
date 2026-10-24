@@ -468,7 +468,7 @@ bool wedge_materials = true;  // Material boundaries imply wedge boundaries; int
 string original_indices;      // Write the PM's original vertex indices in order to a file.
 // With strict_sharp 2, the minimum number of boundary vertices of each chart (material id), e.g., 4 to keep the charts
 // from becoming single triangles.
-int min_chart_boundary_vertices = 0;
+int min_chart_bnd_vertices = 0;
 
 // Failed attempt at signed_dihedral_angle():
 //  constexpr float gmindih = -rad_from_deg(109.471);
@@ -3431,7 +3431,7 @@ void tvc_update_cache(Edge e) {
   }
 }
 
-// For min_chart_boundary_vertices, the current number of boundary vertices of each chart (material id).
+// For min_chart_bnd_vertices, the current number of boundary vertices of each chart (material id).
 Map<int, int> chart_num_boundary_vertices;
 
 // Returns the charts (material ids) whose boundary contains vertex v, i.e., all its adjacent charts if it is
@@ -3444,10 +3444,10 @@ Array<int> charts_with_boundary_vertex(Vertex v) {
   return charts;
 }
 
-// Returns false if removing vertex v would leave some chart with fewer than min_chart_boundary_vertices.
+// Returns false if removing vertex v would leave some chart with fewer than min_chart_bnd_vertices.
 bool can_remove_chart_boundary_vertex(Vertex v) {
   for (const int chart : charts_with_boundary_vertex(v))
-    if (chart_num_boundary_vertices.get(chart) <= min_chart_boundary_vertices) return false;
+    if (chart_num_boundary_vertices.get(chart) <= min_chart_bnd_vertices) return false;
   return true;
 }
 
@@ -3919,7 +3919,7 @@ EcolResult try_ecol(Edge e, bool commit) {
       if (ii == 0) std::swap(tv1, tv2);
       // Here, tv1 is kept and tv2 is lost.
       const bool ok = [&] {
-        if (min_chart_boundary_vertices && !can_remove_chart_boundary_vertex(tv2)) return false;  // From lambda.
+        if (min_chart_bnd_vertices && !can_remove_chart_boundary_vertex(tv2)) return false;  // From lambda.
         for (Face f : mesh.faces(e)) {
           Vertex vv = mesh.opp_vertex(e, f);  // Either side_vertex1 or side_vertex2.
           Face fc = mesh.opp_face(f, mesh.edge(tv2, vv));
@@ -4354,7 +4354,7 @@ EcolResult try_ecol(Edge e, bool commit) {
   }
   if (tvcfac) tvc_update_cache(e);
   if (original_indices != "") ar_vt_indices.push(mesh.vertex_id(vt));
-  if (min_chart_boundary_vertices) {
+  if (min_chart_bnd_vertices) {
     for (const int chart : charts_with_boundary_vertex(vt)) {
       assertx(chart_num_boundary_vertices[chart] > 0);
       chart_num_boundary_vertices[chart]--;
@@ -4629,7 +4629,7 @@ void parallel_optimize() {
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       Vertex vs = !bswap ? v1 : v2;
       // The chart boundary-vertex counts may have changed since the evaluation, due to other collapses in the charts.
-      if (min_chart_boundary_vertices && !can_remove_chart_boundary_vertex(!bswap ? v2 : v1)) continue;
+      if (min_chart_bnd_vertices && !can_remove_chart_boundary_vertex(!bswap ? v2 : v1)) continue;
       // COMMIT.
       num_edges_collapsed++;
       for (Vertex v : V(v1, v2)) {
@@ -4660,7 +4660,7 @@ void parallel_optimize() {
 // Simplify the mesh until it has <= nfaces or <= nvertices.
 void optimize() {
   if (minii2 && minqem) assertx(no_fit_geom);
-  if (min_chart_boundary_vertices) {
+  if (min_chart_bnd_vertices) {
     assertx(strict_sharp >= 2);
     initialize_chart_num_boundary_vertices();
   }
@@ -5000,7 +5000,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(invertexorder, "i : remove vertices in rev. order, 2=fix edges");
   HH_ARGSC("", ":");
   HH_ARGSP(strict_sharp, "i : preserve topology of discont. curves");
-  HH_ARGSP(min_chart_boundary_vertices, "n : with strict_sharp 2, keep >= n boundary vertices per chart");
+  HH_ARGSP(min_chart_bnd_vertices, "n : with -strict 2, keep >= n bnd vertices per chart");
   HH_ARGSF(no_fit_geom, ": do not optimize over geometry");
   HH_ARGSP(fit_colors, "bool : modify colors (wad2)");
   HH_ARGSP(fit_normals, "bool : modify normals (wad2)");

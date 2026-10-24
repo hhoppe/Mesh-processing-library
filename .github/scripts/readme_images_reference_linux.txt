@@ -2,16 +2,16 @@
 # llvmpipe renderer (the per-channel "mean sd" of each image, else the file size in bytes, each optionally followed
 # by a tolerance "tol=..."), checked using bin/check_reference_values.  Update them with
 # "create_readme_images --update DIR".
-overview.jpg 210.94 69.92 199.13 77.02 191.82 84.81
-reconstruction.jpg 216.45 67.42 216.45 67.42 216.54 67.31
-progressive_mesh.jpg 226.08 58.42 212.08 82.28 212.09 82.19
+overview.jpg 210.62 70.21 198.89 77.24 191.70 84.89
+reconstruction.jpg 216.30 67.50 216.30 67.50 216.38 67.39
+progressive_mesh.jpg 225.52 59.15 211.38 82.77 211.39 82.68
 terrain.jpg 201.49 64.18 180.38 63.80 145.20 78.12
-spherical.jpg 171.10 73.94 171.84 74.63 170.77 75.07
+spherical.jpg 171.10 73.94 171.84 74.63 170.76 75.07
 simplicial_complex.jpg 195.18 81.90 195.18 81.89 194.86 88.64
-overview_dark.jpg 80.69 91.67 70.76 78.47 67.60 72.15
-reconstruction_dark.jpg 54.59 72.81 56.66 71.72 61.74 69.18
-progressive_mesh_dark.jpg 59.57 84.23 50.13 71.27 55.38 68.80
-terrain_dark.jpg 154.82 96.48 134.68 84.77 102.85 73.32
-spherical_dark.jpg 106.04 80.66 107.71 80.80 108.84 78.34
-simplicial_complex_dark.jpg 49.83 58.75 51.63 57.64 55.69 63.91
+overview_dark.jpg 82.21 72.68 70.45 57.73 63.32 52.34
+reconstruction_dark.jpg 60.77 50.62 60.77 50.62 60.86 50.68
+progressive_mesh_dark.jpg 61.17 54.12 46.96 40.69 46.98 40.65
+terrain_dark.jpg 140.87 85.13 119.73 68.30 84.56 49.81
+spherical_dark.jpg 101.37 65.16 102.10 66.68 101.04 66.31
+simplicial_complex_dark.jpg 63.63 50.79 63.63 50.74 63.47 60.17
 spheretext.svg 104017

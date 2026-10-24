@@ -308,7 +308,8 @@ template <invocable_r<float, const Point&, Univ> Approx2, invocable_r<float, con
 template <invocable_r<float, Univ> Func>
 void ObjectSpatial<Approx2, Exact2>::search_segment(const Point& p1, const Point& p2, Func ftest) const {
   static_assert(std::is_same_v<std::invoke_result_t<Func&, Univ>, float>);
-  Set<Univ> set;
+  // Set of the elements already tested.  Its built-in storage avoids heap allocation in most searches.
+  InlinedSet<Univ, 32> set;
   float fmin = BIGFLOAT;  // The minimum parametric position of an intersection found so far.
   for_int(c, 3) {
     assertx(p1[c] >= 0.f && p1[c] <= 1.f);

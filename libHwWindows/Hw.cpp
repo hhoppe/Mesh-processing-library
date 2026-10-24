@@ -8,6 +8,7 @@
 #include <dwmapi.h>    // DwmFlush(), DwmGetWindowAttribute(), DwmSetWindowAttribute()
 #include <shellapi.h>  // DragAcceptFiles()
 
+HH_REFERENCE_LIB("advapi32.lib");  // RegGetValueA()
 HH_REFERENCE_LIB("comdlg32.lib");  // GetOpenFilenameW(), GetSaveFileNameW()
 HH_REFERENCE_LIB("dwmapi.lib");    // DwmFlush(), DwmGetWindowAttribute(), DwmSetWindowAttribute()
 HH_REFERENCE_LIB("opengl32.lib");
@@ -119,6 +120,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   args.f("-icon[ic", _iconic, ": set initial window state");
   args.p("-back[ground", _backcolor, "color : set backcolor (e.g. white or #5987B3)");
   args.p("-fore[ground", _forecolor, "color : set forecolor (e.g. black)");
+  args.p("-theme", _theme, "name : select default colors (auto, light, or dark)");
   args.p("-hwdebug", _hwdebug, "val : set debug level");
   args.p("-hwkey", _hwkey, "string : simulate keys");
   args.p("-hwdelay", _hwdelay, "secs : delay between keys");
@@ -138,6 +140,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   }
   assertx(aargs.num());
   if (_offscreen != "") _hidden = true;  // It renders a single frame without any visible window.
+  verify_theme();
   _argv0 = aargs[0];
   if (minimize) _iconic = true;
   g_hw = this;
@@ -218,8 +221,7 @@ void Hw::open() {
   _state = EState::open;
   // Create a window.
   {
-    if (_backcolor == "") _backcolor = _default_background;
-    if (_forecolor == "") _forecolor = _default_foreground;
+    assign_default_colors();
     _color_background = parse_color(_backcolor);
     _color_foreground = parse_color(_forecolor);
   }
@@ -530,6 +532,17 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
       if (_hwdebug) SHOW("WM_GETMINMAXINFO");
       return 0;
     }
+    case WM_SETTINGCHANGE:
+      // The system light or dark theme may have changed.
+      if (lParam && std::wstring_view(reinterpret_cast<const wchar_t*>(lParam)) == L"ImmersiveColorSet" &&
+          _theme_colors && _theme == "auto") {
+        _backcolor = _forecolor = "";
+        assign_default_colors();
+        _color_background = parse_color(_backcolor);
+        _color_foreground = parse_color(_forecolor);
+        redraw_later();
+      }
+      break;
       // case WM_DPICHANGED:
       // Do nothing currently.
       // break;
@@ -539,6 +552,14 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
   }  // End switch.
   // If got here, didn't handle the message, so pass on to default handler.
   return DefWindowProcW(_hwnd, iMsg, wParam, lParam);
+}
+
+bool Hw::system_theme_is_dark() {
+  DWORD value = 1, size = sizeof(value);
+  const char* subkey = "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+  if (RegGetValueA(HKEY_CURRENT_USER, subkey, "AppsUseLightTheme", RRF_RT_REG_DWORD, nullptr, &value, &size))
+    return false;  // The value is absent before Windows 10.
+  return value == 0;
 }
 
 bool Hw::got_event() {

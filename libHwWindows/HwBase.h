@@ -42,6 +42,11 @@ class HwBase : noncopyable {
   // Call after init() but before open():
   void set_default_background(string s) { assertx(_state == EState::init), _default_background = std::move(s); }
   void set_default_foreground(string s) { assertx(_state == EState::init), _default_foreground = std::move(s); }
+  // Colors that replace the two defaults under a dark theme (-theme dark, or a dark system theme with -theme auto).
+  void set_default_colors_dark(string background, string foreground) {
+    assertx(_state == EState::init);
+    _default_background_dark = std::move(background), _default_foreground_dark = std::move(foreground);
+  }
   void set_default_geometry(string s) { assertx(_state == EState::init), _default_geometry = std::move(s); }
   virtual void set_double_buffering(bool newstate) = 0;  // (also allowed after open() in libHwX without HH_OGLX)
 
@@ -115,6 +120,10 @@ class HwBase : noncopyable {
   friend class Hw;  // Grant access to Hw but not to any DerivedHw.
   string _default_background{"white"};
   string _default_foreground{"black"};
+  string _default_background_dark;  // If nonempty, the defaults under a dark theme.
+  string _default_foreground_dark;
+  string _theme{"auto"};      // "auto" (follow the system theme), "light", or "dark".
+  bool _theme_colors{false};  // The colors are the program defaults rather than user-specified.
   string _default_geometry{"200x200+100+0"};
   string _argv0;
   string _window_title{"noname"};
@@ -160,6 +169,7 @@ class HwBase : noncopyable {
   int _listbase_font{-1};
 
   virtual bool init_aux(Array<string>& aargs) = 0;
+  virtual bool system_theme_is_dark() { return false; }
   virtual void start_hwkey() = 0;
   virtual void end_hwkey() = 0;
   virtual void flush_seg() = 0;
@@ -167,6 +177,8 @@ class HwBase : noncopyable {
   virtual bool loop() = 0;  // Returns true if it should quit.
   virtual void draw_text_internal(const Vec2<int>& yx, const string& s) = 0;
 
+  void verify_theme();
+  void assign_default_colors();
   void soft_flush();    // Flush output buffers.
   void soft_discard();  // Discard buffered segments and points.
   void query_keypress(string s);
@@ -187,6 +199,23 @@ class HwBase : noncopyable {
 Pixel parse_color(const string& scolor);
 
 //----------------------------------------------------------------------------
+
+// Call in init_aux() after parsing the arguments.
+inline void HwBase::verify_theme() {
+  if (_theme != "auto" && _theme != "light" && _theme != "dark") assertnever("-theme must be auto, light, or dark");
+  if (_theme == "auto" && _hidden) _theme = "light";  // Images and videos must not depend on the system theme.
+}
+
+// Call in open() after assigning any user-specified colors to _backcolor and _forecolor.
+inline void HwBase::assign_default_colors() {
+  _theme_colors = _backcolor == "" && _forecolor == "";
+  if (_theme_colors && _default_background_dark != "" &&
+      (_theme == "dark" || (_theme == "auto" && system_theme_is_dark()))) {
+    _backcolor = _default_background_dark, _forecolor = _default_foreground_dark;
+  }
+  if (_backcolor == "") _backcolor = _default_background;
+  if (_forecolor == "") _forecolor = _default_foreground;
+}
 
 inline void HwBase::redraw_later() {
   if (0) assertx(_state != EState::uninit);  // Could occur in a background thread after quit().

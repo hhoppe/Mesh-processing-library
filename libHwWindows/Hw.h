@@ -85,6 +85,7 @@ class Hw : public HwBase {
   void flush_point() override;
   bool loop() override;
   void draw_text_internal(const Vec2<int>& yx, const string& s) override;
+  bool system_theme_is_dark() override;
 
   bool got_event();  // Get an event; returns whether an event is ready.
   void handle_events();

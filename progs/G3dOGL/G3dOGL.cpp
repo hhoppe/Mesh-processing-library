@@ -2678,6 +2678,7 @@ void HB::open() {
   // hw.set_default_background("#5987B3");  // Equivalently: .35 .53 .70; "hhblue" == 89, 135, 179.
   hw.set_default_background("white");
   hw.set_default_foreground("black");
+  hw.set_default_colors_dark("#242424", "white");  // As in octaviewer.
   hw.set_default_geometry(k_default_geometry);
   hw.set_double_buffering(dbuffer);
   hw.open();

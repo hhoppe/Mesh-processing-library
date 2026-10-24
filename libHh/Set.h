@@ -163,18 +163,22 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   // Default operator=() and copy_constructor are safe.
 };
 
-// Set with built-in storage for inline_capacity elements, which are searched linearly; when a new element exceeds
-// this capacity, all elements move into a hash Set, which is used from then on.  Like InlinedArray, it avoids heap
-// allocation while the set is small.  Elements must be default-constructible, copyable, and cheap to compare, and
-// Hash and Equal must be consistent (as for any Set).  Unlike Set, it offers neither iteration nor references to its
-// elements.
+// Set with built-in storage for inline_capacity elements, which are searched linearly; when a new element exceeds this
+// capacity, all elements move into a hash Set, which is used from then on.  Like InlinedArray, it avoids heap
+// allocation while the set is small; the Set is constructed only at that first move, because an empty
+// std::unordered_set may itself allocate (as in the MSVC library).  Elements must be default-constructible, copyable,
+// and cheap to compare, and Hash and Equal must be consistent (as for any Set).  Unlike Set, it offers neither
+// iteration nor references to its elements.
 template <typename T, int inline_capacity, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
 class InlinedSet {
   static_assert(Hashable<T, Hash, Equal>);
   static_assert(inline_capacity > 0);
 
  public:
-  void clear() { _n = 0, _large.clear(); }
+  void clear() {
+    _n = 0;
+    if (_large) _large->clear();  // (Keeping its allocated storage for reuse.)
+  }
   void enter(const T& e) {  // Element e must be new.
     [[maybe_unused]] const bool is_new = add(e);
     ASSERTX(is_new);
@@ -183,21 +187,22 @@ class InlinedSet {
     if (_n <= inline_capacity) {
       if (contains_inline(e)) return false;
       if (_n < inline_capacity) return _builtin[_n++] = e, true;
-      for (const T& ee : _builtin) _large.enter(ee);
+      if (!_large) _large.emplace();
+      for (const T& ee : _builtin) _large->enter(ee);
       _n = inline_capacity + 1;
     }
-    return _large.add(e);
+    return _large->add(e);
   }
   [[nodiscard]] bool contains(const T& e) const {
-    return _n <= inline_capacity ? contains_inline(e) : _large.contains(e);
+    return _n <= inline_capacity ? contains_inline(e) : _large->contains(e);
   }
-  [[nodiscard]] int num() const { return _n <= inline_capacity ? _n : _large.num(); }
+  [[nodiscard]] int num() const { return _n <= inline_capacity ? _n : _large->num(); }
   [[nodiscard]] bool empty() const { return !num(); }
 
  private:
   int _n{0};  // Number of elements in _builtin, or inline_capacity + 1 once the elements are in _large.
   Vec<T, inline_capacity> _builtin;
-  Set<T, Hash, Equal> _large;
+  std::optional<Set<T, Hash, Equal>> _large;  // Constructed when the elements first exceed _builtin.
   [[nodiscard]] bool contains_inline(const T& e) const {
     for_int(i, _n) {
       if (Equal{}(_builtin[i], e)) return true;

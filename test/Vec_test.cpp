@@ -10,6 +10,8 @@
 #include "libHh/Set.h"
 using namespace hh;
 
+// This file tests flat Vecs; nested Vecs (SGrid) and their grid interface are tested in SGrid_test.cpp.
+
 namespace {
 
 template <typename T, int N, size_t... Is>
@@ -547,28 +549,6 @@ int main() {
     assertx(interp(V(V(0.f, 4.f), V(8.f, 12.f), V(16.f, 20.f)), .5f, .25f) == V(6.f, 10.f));      // A triple.
     assertx(interp(V(0, 10), V(10, 20)) == V(5, 15));     // Integer elements, interpolated in float.
     SHOW(interp(V(0.f, 3.f), V(3.f, 6.f), V(6.f, 9.f)));  // Equal weights of one third.
-  }
-  {
-    // A nested Vec, as an SGrid.
-    using G = SGrid<int, 2, 3>;
-    static_assert(std::is_same_v<G, Vec2<Vec3<int>>>);
-    static_assert(vec_depth_v<int> == 0 && vec_depth_v<Vec3<int>> == 1 && vec_depth_v<G> == 2);
-    static_assert(is_vec_v<G> && is_vec_v<Vec3<int>> && !is_vec_v<int> && !is_vec_v<S>);
-    static_assert(std::is_same_v<sgrid_leaf_t<1, G>, Vec3<int>> && std::is_same_v<sgrid_leaf_t<2, G>, int>);
-    static_assert(G::grid_dims() == V(2, 3) && G::grid_dims<1>() == V(2));
-    static_assert(SGrid<int, 4, 3, 2>::grid_dims<3>() == V(4, 3, 2));
-    static_assert(sizeof(G) == 6 * sizeof(int));
-    G g{{1, 2, 3}, {4, 5, 6}};  // Nested brace initialization.
-    assertx((g[1, 2] == 6 && g[V(1, 2)] == 6 && g[1][2] == 6));
-    g[0, 1] = 20;
-    assertx(g[V(0, 1)] == 20);
-    g[V(0, 1)] = 2;
-    SHOW(g * 10);                  // A scalar operation reaches the leaves.
-    SHOW(g + V(100, 200, 300));    // A less nested Vec applies to each row.
-    SHOW(interp(g, g * 3, .25f));  // The interpolation recurses to the leaves.
-    int count = 0;
-    for (const auto& u : range(G::grid_dims())) assertx(g[u] == ++count);
-    assertx(count == 6);
   }
   {
     // Equal Vecs have equal hashes, so a Vec can be used as a key.

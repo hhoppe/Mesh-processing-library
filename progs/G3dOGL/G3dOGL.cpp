@@ -3173,9 +3173,9 @@ void draw_lod_slider(float lod, int nv0, int nv1) {
     HB::draw_segment(V(y1, xm), V(y2, xm));
   }
   if (nv_ratio > 1.f) {  // Tick marks.
-    for (float nv = 1.f; nv <= nv1; nv *= 10.f) {
+    for (int64_t nv = 1; nv <= nv1; nv *= 10) {
       if (nv < nv0) continue;
-      const float y = y_of_slider(std::log(nv / nv0) / std::log(nv_ratio));
+      const float y = y_of_slider(std::log(float(nv) / nv0) / std::log(nv_ratio));
       HB::draw_segment(V(y, xleft + .03f), V(y, xleft + .037f));
     }
   }

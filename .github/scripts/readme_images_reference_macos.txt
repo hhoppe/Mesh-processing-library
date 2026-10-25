@@ -8,10 +8,10 @@ progressive_mesh.jpg 225.30 61.33 211.29 83.62 211.17 83.87
 terrain.jpg 200.58 66.64 179.96 65.43 143.96 79.01
 spherical.jpg 170.53 74.76 171.50 75.29 170.19 76.01
 simplicial_complex.jpg 195.00 81.94 195.41 81.68 194.75 88.96
-overview_dark.jpg 76.00 87.04 67.15 71.23 61.96 65.02
-reconstruction_dark.jpg 49.89 65.40 53.52 63.50 56.54 62.03
-progressive_mesh_dark.jpg 54.26 77.28 44.05 59.65 46.93 58.20
-terrain_dark.jpg 148.83 93.49 129.46 78.56 94.46 62.98
-spherical_dark.jpg 101.39 76.40 103.96 75.99 103.94 74.30
-simplicial_complex_dark.jpg 48.72 58.17 52.11 56.87 53.94 63.98
+overview_dark.jpg 82.08 72.92 70.31 57.65 62.76 52.12
+reconstruction_dark.jpg 60.79 50.24 60.79 50.24 60.88 50.34
+progressive_mesh_dark.jpg 60.71 55.04 46.57 40.70 46.43 40.76
+terrain_dark.jpg 140.15 86.36 119.42 69.33 83.25 49.20
+spherical_dark.jpg 99.50 64.60 100.48 66.25 99.16 65.75
+simplicial_complex_dark.jpg 63.14 49.81 63.56 50.30 62.88 59.73
 spheretext.svg 104237

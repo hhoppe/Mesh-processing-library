@@ -138,6 +138,63 @@ int main() {
     SHOW(resizer2.apply(grid, &cval));
     assertx(resizer2.apply(grid, &cval)[0] > 3.f);  // The border value (10) shows at the ends: .286 * 10 + .714 * 1.
   }
+  {  // Sampler: point reconstruction with any kernel (after its digital filter) and boundary rule.
+    Random random(31);
+    Matrix<float> mat(5, 4);
+    for (float& e : mat) e = random.unif();
+    const float cval = .25f;
+    for (const auto& [filter_name, boundary_name] :
+         {std::pair{"triangle", "reflect"}, std::pair{"cubic", "clamp"}, std::pair{"cardinal3", "reflect"},
+          std::pair{"cardinal3", "border"}, std::pair{"omoms5", "natural"}, std::pair{"lanczos3", "wrap"},
+          std::pair{"cubic", "linear"}}) {
+      const SamplingOptions<2> options{.filter = filter_name, .boundary = boundary_name};
+      const Sampler<2, float> sampler(mat, options, &cval);
+      for (const Vec2<int> u : range(mat.dims())) {  // Interpolating kernels reproduce the samples.
+        const Vec2<float> p((u[0] + .5f) / 5.f, (u[1] + .5f) / 4.f);
+        assertx(abs(sampler(p) - mat[u]) < 1e-5f);
+        assertx(abs(sampler.at_grid(convert<float>(u)) - mat[u]) < 1e-5f);
+      }
+      const Vec2<int> ndims(9, 11);  // Magnification by scale() matches point sampling.
+      const Grid<2, float> gridn =
+          scale(mat, ndims, ResizeOptions<2>{.filter = filter_name, .boundary = boundary_name}, &cval);
+      for (const Vec2<int> yx : range(ndims)) {
+        const Vec2<float> p((yx[0] + .5f) / ndims[0], (yx[1] + .5f) / ndims[1]);
+        if (!(abs(gridn[yx] - sampler(p)) < 1e-5f))
+          assertnever(SSHOW(filter_name, boundary_name, yx, gridn[yx], sampler(p)));
+      }
+      assertx(sample_domain(mat, V(.3f, .6f), options, &cval) == sampler(V(.3f, .6f)));
+    }
+    {  // A primal grid: the samples lie at i / (n - 1).
+      const Sampler<2, float> sampler(mat, {.gridtype = Gridtype::primal, .filter = "cubic", .boundary = "reflect"});
+      for (const Vec2<int> u : range(mat.dims())) assertx(abs(sampler(V(u[0] / 4.f, u[1] / 3.f)) - mat[u]) < 1e-5f);
+    }
+    {  // A point outside the domain gets cval with "constant", and the reflected value with "reflect".
+      const Sampler<2, float> constant(mat, {.filter = "cubic", .boundary = "constant"}, &cval);
+      assertx(constant(V(-.2f, .5f)) == cval && constant(V(.5f, 1.1f)) == cval);
+      const Sampler<2, float> reflect(mat, {.filter = "cubic", .boundary = "reflect"});
+      assertx(abs(reflect(V(-.2f, .5f)) - reflect(V(.2f, .5f))) < 1e-6f);
+    }
+  }
+  {  // resample(): reconstruction at a grid of unit-domain coordinates.
+    Random random(5);
+    Grid<2, Vector4> grid(V(5, 7));
+    for (Vector4& e : grid) {  // (Sequenced, because the evaluation order of arguments varies across compilers.)
+      const float r = random.unif(), g = random.unif(), b = random.unif();
+      e = Vector4(r, g, b, 1.f);
+    }
+    Grid<2, Vec2<float>> coords(grid.dims());  // The identity: the dual sample positions.
+    for (const Vec2<int> u : range(grid.dims())) coords[u] = (convert<float>(u) + .5f) / convert<float>(grid.dims());
+    const Grid<2, Vector4> same = resample(grid, coords, {.filter = "lanczos3"});
+    for (const Vec2<int> u : range(grid.dims())) assertx(dist(same[u], grid[u]) < 1e-5f);
+    Grid<1, Vec2<float>> line(V(6));  // A line of points crossing the boundary x = 1 of the domain.
+    for_int(i, 6) line[i] = V(.5f, .9f + i * .05f);
+    const Vector4 cval(0.f, 0.f, 0.f, 0.f);
+    const Grid<1, Vector4> along = resample(grid, line, {.filter = "cubic", .boundary = "constant"}, &cval);
+    SHOW(along);
+    // The transition to cval (alpha 1, 1, .5, 0, 0, 0) is antialiased and monotone.
+    for_int(i, 5) assertx(along[i][3] >= along[i + 1][3] - 1e-6f);
+    assertx(abs(along[0][3] - 1.f) < 1e-6f && abs(along[2][3] - .5f) < 1e-6f && along[5][3] == 0.f);
+  }
   {  // Parity with the Python package resampler.
 #include "Resample_parity.inc"
     // Every output sample maps outside the source domain: the result is cval, not NaN.

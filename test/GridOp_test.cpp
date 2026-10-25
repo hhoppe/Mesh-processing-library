@@ -73,21 +73,22 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
       const Filter& ofilter = *pfilter;
       if (ofilter.is_impulse()) continue;         // Cannot be used in sample_domain().
       if (!ofilter.is_interpolating()) continue;  // (skip mitchell)
-      for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::reflect_primal}) {
-        Grid<D, float> grid(ogrid);
-        auto filterbs = ntimes<D>(FilterBnd(ofilter, bndrule));
-        if (0) SHOW(filterbs[0].filter().name(), ofilter.name());
-        if (ofilter.has_inv_convolution()) {
-          if (!(bndrule == Bndrule::reflect || bndrule == Bndrule::wrap)) continue;
-          filterbs = inverse_convolution(grid, filterbs);
-        }
+      // The boundary rules and grid types (reflect on a primal grid is the former reflected101).
+      for (const auto& [boundary, gridtype] :
+           {std::pair{"reflect", Gridtype::dual}, std::pair{"wrap", Gridtype::dual},
+            std::pair{"clamp", Gridtype::dual}, std::pair{"reflect", Gridtype::primal},
+            std::pair{"wrap", Gridtype::primal}}) {
+        if (gridtype == Gridtype::primal && min(ogrid.dims()) < 2) continue;
+        const Sampler<D, float> sampler(ogrid, {.gridtype = gridtype, .filter = ofilter, .boundary = boundary});
         for (const Vec<int, D> u : range(ogrid.dims())) {
+          // On a primal grid, "wrap" replaces the last sample by the first one.
+          if (gridtype == Gridtype::primal && string(boundary) == "wrap" && max(u - ogrid.dims() + 1) == 0) continue;
           Vec<float, D> p;
-          for_int(d, D) p[d] = (u[d] + .5f) / ogrid.dim(d);
+          for_int(d, D) p[d] =
+              gridtype == Gridtype::dual ? (u[d] + .5f) / ogrid.dim(d) : float(u[d]) / (ogrid.dim(d) - 1);
           const float oval = ogrid[u];
-          const float nval = sample_domain(grid, p, filterbs);
-          // SHOW(u, p, oval, nval);
-          assertx(abs(nval - oval) < 1e-6f);
+          const float nval = sampler(p);
+          if (!(abs(nval - oval) < 1e-6f)) assertnever(SSHOW(ofilter.name(), boundary, gridtype, u, p, oval, nval));
         }
       }
     }

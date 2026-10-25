@@ -1320,9 +1320,8 @@ Pixel assign_signal(const string& signal, const GMesh& mesh, const Bbox<float, 3
       const Uv uv = interp_f_uv(mesh, f, bary);
       // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
       const Uv yx = Uv(1.f - uv[1], uv[0]);  // Also, we expect (y, x) sampling order.
-      const string filtername = 1 ? "keys" : "triangle";
-      const auto filterbs = twice(FilterBnd(Filter::get(filtername), Bndrule::reflect));
-      pixel = sample_domain(texture_image_vector4, yx, filterbs).pixel();
+      static const SamplingOptions<2> k_options{.filter = 1 ? "cubic" : "triangle", .boundary = "reflect"};
+      pixel = Sampler<2, Vector4>(texture_image_vector4, k_options)(yx).pixel();
       break;
     }
     case 'v': {

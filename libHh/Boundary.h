@@ -31,6 +31,8 @@ class Boundary : noncopyable {
   // True if some folded rows reference cval, i.e., their interior weights may not sum to 1.
   [[nodiscard]] bool uses_cval() const { return _uses_cval; }
   [[nodiscard]] bool is_auto() const { return _is_auto; }
+  // True if the rule overrides the value outside the unit domain (natural, constant, *_constant).
+  [[nodiscard]] bool overrides_exterior() const { return _overrides_exterior; }
   // Modify a unit-domain coordinate before the kernel is evaluated (identity except for "tile").
   [[nodiscard]] virtual double remap_coordinate(double x) const { return x; }
   // Fold the dense row of taps at indices [index0, index0 + weights.num()) into interior indices of a grid of `size`
@@ -50,6 +52,7 @@ class Boundary : noncopyable {
   virtual ~Boundary() = default;
   bool _uses_cval{false};
   bool _is_auto{false};
+  bool _overrides_exterior{false};
 
  private:
   string _name;

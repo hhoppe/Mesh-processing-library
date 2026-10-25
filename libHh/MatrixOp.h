@@ -219,9 +219,10 @@ template <typename T> [[nodiscard]] Matrix<T> identity_mat(int n) { return ident
 // Compute a new matrix nm by transforming input matrix m according to frame,
 //  where frame maps from destination pixel (y, x, 0) to source pixel (y, x, 0);
 //  both have domain [-0.5, +0.5]^2 (even if rectangular in pixel dimensions).
+// The boundary rules of a minification (the approximate antialiasing path) must be reflect, wrap, clamp, or border.
 template <typename T>
-void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filterbs, MatrixView<T> nm,
-               const T* bordervalue = nullptr) {
+void transform(CMatrixView<T> m, const Frame& frame, const SamplingOptions<2>& options, MatrixView<T> nm,
+               const T* cval = nullptr) {
   static_assert(std::is_trivially_default_constructible_v<T>);
   assertx(frame[2, 2] == 1.f);
   const Frame frame_inv = inverse(frame);
@@ -238,14 +239,16 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
   }
   const float transform_minification_threshold = getenv_float("TRANSFORM_MINIFICATION_THRESHOLD", 1.3f, true);
   const bool minification_case = max_shrinkage > transform_minification_threshold;
-  const bool has_inv_convolution =
-      ranges::any_of(filterbs, [](const FilterBnd& f) { return f.filter().has_inv_convolution(); });
-  if (minification_case && !has_inv_convolution) {
+  const bool has_digital_filter =
+      ranges::any_of(options.filter, [](const FilterRef& f) { return f->requires_digital_filter(); });
+  if (minification_case && !has_digital_filter) {
     // Special slow case to do accurate minification.
-    const Vec2<KernelFunc> kernels = transformed(filterbs, [](const FilterBnd& f) { return f.filter().func(); });
-    const Vec2<Bndrule> bndrules = transformed(filterbs, [](const FilterBnd& f) { return f.bndrule(); });
+    const Vec2<KernelFunc> kernels = transformed(options.filter, [](const FilterRef& f) { return f->func(); });
+    const Vec2<Bndrule> bndrules = transformed(options.boundary, [](const BoundaryRef& b) {
+      return parse_boundaryrule(b->is_auto() ? "reflect" : b->name());
+    });
     const Vec2<float> kernel_radii =
-        transformed(filterbs, [](const FilterBnd& f) { return float(f.filter().radius()); });
+        transformed(options.filter, [](const FilterRef& f) { return float(f->radius()); });
     const bool transform_filter_expensive = getenv_bool("TRANSFORM_FILTER_EXPENSIVE");
     const bool transform_filter_radial = getenv_bool("TRANSFORM_FILTER_RADIAL");
     if (!transform_filter_expensive) {
@@ -280,9 +283,9 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
             } else {  // Single kernel based on radial distance.
               w = float(kernels[0](mag(dst_dyx)));
             }
-            // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, bndrules, bordervalue));
+            // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, bndrules, cval));
             if (!w) continue;
-            val += w * m.inside(yx, bndrules, bordervalue);
+            val += w * m.inside(yx, bndrules, cval);
             sumw += w;
             num++;
           }
@@ -295,11 +298,11 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
     } else {
       // Approach 2: supersample uniformly in kernel window of destination image, evaluating reconstruction
       //  kernels at corresponding points in source image (expensive!).
-      const Vec2<int> super_sampling = twice(8);         // Samples per pixel on each axis.
-      const Filter& recon_kernel = Filter::get("keys");  // Bicubic reconstruction kernel.
+      const Vec2<int> super_sampling = twice(8);  // Samples per pixel on each axis.
       const Vec2<int> num_samples = convert<int>(convert<float>(super_sampling) * kernel_radii + .5f);
-      const Vec2<FilterBnd> fb_reconstruction =
-          V(FilterBnd(recon_kernel, filterbs[0].bndrule()), FilterBnd(recon_kernel, filterbs[1].bndrule()));
+      SamplingOptions<2> reconstruction = options;  // Bicubic reconstruction kernel.
+      reconstruction.filter = "cubic";
+      const Sampler<2, T> sampler(m, reconstruction, cval);
       // for (const Vec2<int>& yx : range(nm.dims())) {
       // { const int y = 500, x = 400;
       parallel_for({.cycles_per_elem = uint64_t(nm.xsize()) * 10'000}, range(nm.ysize()), [&](const int y) {
@@ -320,7 +323,7 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
             }
             const Vec2<float> p = (convert<float>(yx) + .5f + sample_offset) / convert<float>(nm.dims());  // [0, 1]^2
             const Vec2<float> tp = transform_about_center(p, frame);
-            val += w * sample_domain(m, tp, fb_reconstruction, bordervalue);
+            val += w * sampler(tp);
             // SHOW(yx, sample_yx, w, p, tp, sample_offset);
             sumw += w;
             num++;
@@ -335,19 +338,19 @@ void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filt
     return;
   }
   if (minification_case) Warning("Image transform: minification could result in aliasing");
-  Vec2<FilterBnd> tfilterbs = filterbs;
-  CMatrixView<T> mr(m);
-  Matrix<T> tm;
-  if (has_inv_convolution) {
-    tm = m;
-    tfilterbs = inverse_convolution(tm, filterbs);
-    mr.reinit(tm);
-  }
+  const Sampler<2, T> sampler(m, options, cval);
   parallel_for_coords({.cycles_per_elem = 500}, nm.dims(), [&](const Vec2<int>& yx) {
     const Vec2<float> p = (convert<float>(yx) + .5f) / convert<float>(nm.dims());  // In [0, 1]^2.
     const Vec2<float> tp = transform_about_center(p, frame);
-    nm[yx] = sample_domain(mr, tp, tfilterbs, bordervalue);
+    nm[yx] = sampler(tp);
   });
+}
+
+// (Transitional:) transform() with the filters and boundary rules given as FilterBnd.
+template <typename T>
+void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filterbs, MatrixView<T> nm,
+               const T* bordervalue = nullptr) {
+  transform(m, frame, details::sampling_options_from_filterbnds(filterbs), nm, bordervalue);
 }
 
 // Input: mvec[y, x].mag() is large except near seedpoints where it should indicate relative location of seedpoints.

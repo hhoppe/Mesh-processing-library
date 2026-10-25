@@ -132,6 +132,14 @@ resizer2.apply(grid, &cval) = Array<float>(7) {
   3.71429
   5.71429
 }
+along = Array<hh::Vector4>(6) {
+  Vector4(0.197324, 0.879215, 0.319736, 1)
+  Vector4(0.0990121, 0.972782, 0.401168, 1)
+  Vector4(0.0364706, 0.49981, 0.211211, 0.5)
+  Vector4(0, 0, 0, 0)
+  Vector4(0, 0, 0, 0)
+  Vector4(0, 0, 0, 0)
+}
 result = Array<double>(5) {
   1
   1

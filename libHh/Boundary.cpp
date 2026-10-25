@@ -53,7 +53,7 @@ void push_remainder(Array<int>& indices, Array<float>& folded, int first) {
 struct BoundaryIndexMap final : Boundary {
   explicit BoundaryIndexMap(string name, IndexMap map, bool uses_cval, bool tile = false, bool override = false)
       : Boundary(std::move(name)), _map(map), _tile(tile), _override(override) {
-    _uses_cval = uses_cval;
+    _uses_cval = uses_cval, _overrides_exterior = override;
   }
   [[nodiscard]] double remap_coordinate(double x) const override { return _tile ? x - std::floor(x) : x; }
   void fold(int index0, CArrayView<float> weights, int size, Gridtype gridtype, double x, double spacing,
@@ -77,7 +77,7 @@ struct BoundaryIndexMap final : Boundary {
 
 // Exterior taps are dropped and the interior weights renormalized; points outside the domain get cval.
 struct BoundaryNatural final : Boundary {
-  BoundaryNatural() : Boundary("natural") { _uses_cval = true; }
+  BoundaryNatural() : Boundary("natural") { _uses_cval = _overrides_exterior = true; }
   void fold(int index0, CArrayView<float> weights, int size, Gridtype /*gridtype*/, double x, double spacing,
             Array<int>& indices, Array<float>& folded) const override {
     const int first = indices.num();
@@ -100,7 +100,7 @@ struct BoundaryNatural final : Boundary {
 struct BoundaryExtrapolate final : Boundary {
   explicit BoundaryExtrapolate(string name, int degree, bool override)
       : Boundary(std::move(name)), _degree(degree), _override(override) {
-    _uses_cval = override;
+    _uses_cval = _overrides_exterior = override;
   }
   void fold(int index0, CArrayView<float> weights, int size, Gridtype gridtype, double x, double spacing,
             Array<int>& indices, Array<float>& folded) const override {

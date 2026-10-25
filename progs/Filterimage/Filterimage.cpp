@@ -59,6 +59,13 @@ Vec2<Bndrule> g_bndrules = twice(Bndrule::reflect);
 Vec2<FilterBnd> g_filterbs =
     V(FilterBnd(Filter::get("spline"), g_bndrules[0]), FilterBnd(Filter::get("spline"), g_bndrules[1]));
 
+// (Transitional:) the sampling options corresponding to the global filters and boundary rules.
+SamplingOptions<2> g_sampling_options() {
+  return {.filter = V(FilterRef(g_filterbs[0].filter()), FilterRef(g_filterbs[1].filter())),
+          .boundary = V(BoundaryRef(Boundary::get(g_filterbs[0].bndrule())),
+                        BoundaryRef(Boundary::get(g_filterbs[1].bndrule())))};
+}
+
 constexpr Bndrule k_reflected = Bndrule::reflect;
 constexpr Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflect);
 constexpr Pixel k_color_zero_alpha{0, 0, 0, 0};
@@ -2191,12 +2198,8 @@ void output_contour(int gridn, float contour_value) {
   Matrix<float> matrix(image.dims());
   for (const auto& yx : range(image.dims())) matrix[yx] = float(image[yx][0]);  // Red channel.
 
-  Vec2<FilterBnd> filterbs = g_filterbs;
-  if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution())
-    filterbs = inverse_convolution(matrix, filterbs);
-  const auto func_eval = [&](const Vec2<float>& p) -> float {
-    return sample_domain(matrix, p, filterbs) - contour_value;
-  };
+  const Sampler<2, float> sampler(matrix, g_sampling_options());
+  const auto func_eval = [&](const Vec2<float>& p) -> float { return sampler(p) - contour_value; };
   A3dElem el;
   const auto func_contour = [&](CArrayView<Vec2<float>> poly) {
     el.init(A3dElem::EType::polyline);
@@ -2515,9 +2518,7 @@ void do_procedure(Args& args) {
     assertx(same_size(image, image2));
     Matrix<Vector4> image2v(image.dims());
     convert(image2, image2v);
-    Vec2<FilterBnd> filterbs = g_filterbs;
-    if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution())
-      filterbs = inverse_convolution(image2v, filterbs);
+    const Sampler<2, Vector4> sampler(image2v, g_sampling_options());
     GMesh mesh;
     Matrix<Vertex> matv(image.dims());
     string str;
@@ -2537,7 +2538,7 @@ void do_procedure(Args& args) {
       mesh.update_string(v, "Opos", csform_vec(str, p));
       const Vector vrgb = convert<float>(image[yx].head<3>()) / 255.f;
       // Vector nvrgb = convert<float>(image2[yx].head<3>()) / 255.f;
-      Vector4 vec4 = sample_domain(image2v, V(np[1], np[0]), filterbs);
+      Vector4 vec4 = sampler(V(np[1], np[0]));
       vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
       const Vector nvrgb(vec4[0], vec4[1], vec4[2]);
       mesh.update_string(v, "rgb", csform_vec(str, nvrgb));
@@ -2859,9 +2860,10 @@ void do_procedure(Args& args) {
     convert(CGridView<1, Pixel>(k_color_ramp), color_ramp);
     Vector4 vgcolor;
     convert(CGrid1View(gcolor), Grid1View(vgcolor));
-    for_coords(image.dims(), [&](const Vec2<int>& yx) {
-      image[yx] = sample_domain(color_ramp, V((yx[1] + .5f) / image.xsize()), g_filterbs.head<1>(), &vgcolor).pixel();
-    });
+    const Sampler<1, Vector4> sampler(
+        color_ramp, {.filter = g_filterbs[0].filter(), .boundary = Boundary::get(g_filterbs[0].bndrule())}, &vgcolor);
+    for_coords(image.dims(),
+               [&](const Vec2<int>& yx) { image[yx] = sampler(V((yx[1] + .5f) / image.xsize())).pixel(); });
 
   } else if (name == "compress_yuv420") {
     Nv12 nv12(image.dims());
@@ -3446,13 +3448,11 @@ void do_resamplemesh(Args& args) {
   mesh.read(RFile(mfile)());
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
-  Vec2<FilterBnd> filterbs = g_filterbs;
-  if (filterbs[0].filter().has_inv_convolution() || filterbs[1].filter().has_inv_convolution())
-    filterbs = inverse_convolution(imagev, filterbs);
+  const Sampler<2, Vector4> sampler(imagev, g_sampling_options());
   string str;
   for (Vertex v : mesh.vertices()) {
     Point p = mesh.point(v);  // In the range [0, 1].
-    Vector4 vec4 = sample_domain(imagev, V(p[1], p[0]), filterbs);
+    Vector4 vec4 = sampler(V(p[1], p[0]));
     vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
     mesh.update_string(v, "rgb", csform_vec(str, V(vec4[0], vec4[1], vec4[2])));
   }

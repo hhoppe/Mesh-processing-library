@@ -3270,8 +3270,7 @@ void do_projectimage(Args& args) {
   const Image image(image_name);
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
-  Vec2<FilterBnd> filterbs = twice(FilterBnd(Filter::get("spline"), Bndrule::reflect));
-  if (filterbs[0].filter().has_inv_convolution()) filterbs = inverse_convolution(imagev, filterbs);
+  const Sampler<2, Vector4> sampler(imagev, {.filter = "cardinal3", .boundary = "reflect"});
   string str;
   for (Vertex v : mesh.vertices()) {
     Point p = mesh.point(v);
@@ -3286,7 +3285,7 @@ void do_projectimage(Args& args) {
       HH_SSTAT(Sx, p[1]);
       HH_SSTAT(Sy, p[2]);
     }
-    Vector4 vec4 = sample_domain(imagev, V(p[2], p[1]), filterbs);
+    Vector4 vec4 = sampler(V(p[2], p[1]));
     vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
     mesh.update_string(v, "rgb", csform_vec(str, V(vec4[0], vec4[1], vec4[2])));
   }

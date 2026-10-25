@@ -148,4 +148,15 @@ int main() {
   test_transforms();
   test_right_justify();
   test_euclidean_distance_map();
+  {  // transform(): resample a matrix through an affine map of its unit domain, e.g. a rotation about its center.
+    Matrix<float> m(V(7, 7), 0.f);  // The center sample (3, 3) lies at the center of the domain.
+    for (const Vec2<int> u : range(m.dims())) m[u] = float(u[0] * 10 + u[1]);
+    const Frame frame = Frame::rotation(2, D_TAU / 8);  // Rotate by 45 degrees.
+    Matrix<float> nm(m.dims());
+    const float cval = -1.f;
+    transform(m, frame, SamplingOptions<2>{.filter = "cubic", .boundary = "constant"}, nm, &cval);
+    SHOW(nm);
+    assertx(nm[0, 0] == cval && nm[6, 6] == cval);  // The corners map outside the domain.
+    assertx(abs(nm[3, 3] - m[3, 3]) < 1e-3f);       // The center is a fixed point of the rotation.
+  }
 }

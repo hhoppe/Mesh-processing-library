@@ -12,3 +12,112 @@ scale(ramp, V(9), options) = Array<float>(9) {
   12.5
   16
 }
+i=0 row.index0=-2 row.indices=Array<int>(4) {
+  1
+  2
+  0
+  1
+}
+ row.weights=Array<float>(4) {
+  -0.0291545
+  0.271137
+  0.830904
+  -0.0728863
+}
+ row.cval_weight=0
+i=1 row.index0=-1 row.indices=Array<int>(4) {
+  2
+  0
+  1
+  2
+}
+ row.weights=Array<float>(4) {
+  -0.0524781
+  0.953353
+  0.107872
+  -0.00874636
+}
+ row.cval_weight=0
+i=2 row.index0=-1 row.indices=Array<int>(4) {
+  2
+  0
+  1
+  2
+}
+ row.weights=Array<float>(4) {
+  -0.0524781
+  0.463557
+  0.658892
+  -0.0699708
+}
+ row.cval_weight=0
+i=3 row.index0=0 row.indices=Array<int>(4) {
+  0
+  1
+  2
+  0
+}
+ row.weights=Array<float>(4) {
+  0
+  1
+  0
+  0
+}
+ row.cval_weight=0
+i=4 row.index0=0 row.indices=Array<int>(4) {
+  0
+  1
+  2
+  0
+}
+ row.weights=Array<float>(4) {
+  -0.0699708
+  0.658892
+  0.463557
+  -0.0524781
+}
+ row.cval_weight=0
+i=5 row.index0=0 row.indices=Array<int>(4) {
+  0
+  1
+  2
+  0
+}
+ row.weights=Array<float>(4) {
+  -0.00874636
+  0.107872
+  0.953353
+  -0.0524781
+}
+ row.cval_weight=0
+i=6 row.index0=1 row.indices=Array<int>(4) {
+  1
+  2
+  0
+  1
+}
+ row.weights=Array<float>(4) {
+  -0.0728863
+  0.830904
+  0.271137
+  -0.0291545
+}
+ row.cval_weight=0
+result = Array<float>(7) {
+  1.71137
+  0.924198
+  1.29155
+  2
+  3.04956
+  3.96793
+  3.39067
+}
+resizer2.apply(grid, &cval) = Array<float>(7) {
+  3.57143
+  1.14286
+  1.57143
+  2
+  2.85714
+  3.71429
+  5.71429
+}

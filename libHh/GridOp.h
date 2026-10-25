@@ -126,6 +126,60 @@ template <int D, typename T>
 [[nodiscard]] T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options = {},
                               const T* cval = nullptr);
 
+namespace details {
+
+// The precomputed kernel weights of one dimension of a Resizer.
+struct ResizerDim {
+  const Filter* filter{nullptr};      // The resolved kernel (the prefilter when minifying).
+  const Boundary* boundary{nullptr};  // The resolved boundary rule.
+  bool identity{false};               // Same size and interpolating kernel: the dimension is copied.
+  bool is_minification{false};
+  Array<int> index0;           // [nx] First source index of each row's window of nk dense weights.
+  Matrix<float> weights;       // [nx][nk] The dense weights, used directly by the interior rows.
+  int ioutmin{0}, ioutmax{0};  // The rows [ioutmin, ioutmax) are interior: their windows lie inside the grid.
+  // The folded rows: the taps j in [row_begin[x], row_begin[x + 1]) of row x have source index col[j] (or -1 for
+  // the constant value cval) and weight val[j], in the order of the window so that sums match the dense rows.
+  Array<int> row_begin;  // [nx + 1]
+  Array<int> col;
+  Array<float> val;
+};
+
+}  // namespace details
+
+// The precomputed kernel weights for resizing grids of dimensions dims to dimensions ndims according to options.
+// The rows whose kernel window lies inside the grid keep dense weights; the other rows have their taps folded by the
+// boundary rule into interior samples (and the constant value cval).  One Resizer serves any number of grids.
+template <int D> class Resizer {
+ public:
+  Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const ResizeOptions<D>& options);
+  [[nodiscard]] const Vec<int, D>& dims() const { return _dims; }
+  [[nodiscard]] const Vec<int, D>& ndims() const { return _ndims; }
+  [[nodiscard]] const Vec<int, D>& dim_order() const { return _dim_order; }
+  [[nodiscard]] const Filter& filter(int d) const { return *_plan[d].filter; }
+  [[nodiscard]] const Boundary& boundary(int d) const { return *_plan[d].boundary; }
+  // Resize a grid of dimensions dims() into a grid of dimensions ndims(); cval is the constant value referenced by
+  // some boundary rules (e.g. "border").
+  template <typename T>
+  [[nodiscard]] Grid<D, T> apply(CGridView<D, T> grid, const T* cval = nullptr, Grid<D, T>&& gr = Grid<D, T>()) const;
+  // The taps of output sample i along dimension d.  For an interior row, `indices` is empty and the taps are the
+  // contiguous source samples [index0, index0 + weights.num()).  Otherwise `indices` gives the source index of each
+  // tap, possibly repeating an index, where -1 denotes cval (whose total weight is cval_weight).
+  struct Row {
+    int index0;
+    CArrayView<int> indices;
+    CArrayView<float> weights;
+    float cval_weight;
+  };
+  [[nodiscard]] Row row(int d, int i) const;
+
+ private:
+  Vec<int, D> _dims, _ndims, _dim_order;
+  Vec<details::ResizerDim, D> _plan;
+  bool _all_preprocess{false};  // All kernels are "preprocess": only the digital filter is applied.
+  bool _all_bspline3{false};    // All kernels are "bspline3": the value range is expanded afterwards.
+  [[nodiscard]] Vec<FilterBnd, D> filterbnds() const;  // (Transitional bridge to the digital filter.)
+};
+
 // Convolve a Pixel grid along its d'th dimension with the 1D kernel (which must have odd length).
 template <int D, bool parallel = true>
 [[nodiscard]] Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Bndrule bndrule,
@@ -449,6 +503,56 @@ Grid<D, T> evaluate_kernel_d(CGridView<D, T> grid, int d, CArrayView<int> ar_pix
   return ngrid;
 }
 
+// The factor by which the "bspline3" kernel (the cubic B-spline evaluated after the "preprocess" digital filter)
+// expands the value range, and by which the "preprocess" filter shrinks it.
+inline float expand_value_range() {
+  // Note: IMAGE_EXPAND_VALUE_RANGE would be 2. to get a range [-.5, 1.5].
+  // The lower factor of 1.5 was found empirically to yield the best results; see ~/prevproj/2011/vtfilter/Notes.txt.
+  static const float k_expand_value_range = getenv_float("IMAGE_EXPAND_VALUE_RANGE", 1.5f, true);
+  return assertx(k_expand_value_range);
+}
+
+// The "preprocess" kernels: apply the digital filter of the cubic B-spline to the grid, shrink the value range, and
+// optimize the coefficients so that the reconstruction stays within [0, 1].
+template <int D, typename T>
+Grid<D, T> scale_preprocess(CGridView<D, T> grid, const Vec<FilterBnd, D>& filterbs, Grid<D, T>&& gr) {
+  const Vec<int, D>& dims = grid.dims();
+  const float expand_value_range = 1.f / details::expand_value_range();
+  const bool no_constrained_optimization = getenv_bool("IMAGE_NO_CONSTRAINED_OPTIMIZATION");
+  Grid<D, T> ogrid;
+  if (!no_constrained_optimization) ogrid = grid;  // A backup of the original grid.
+  gr = grid;                                       // A no-op if gr.data() == grid.data().
+  inverse_convolution(gr, filterbs);
+  for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // Shrink the range.
+  if (!no_constrained_optimization) {
+    // Slow implementation: no parallelism, no fast interior, no precomputed grid of weights.
+    Vec<Bndrule, D> bndrules;
+    for_int(d, D) bndrules[d] = filterbs[d].bndrule();
+    for (T& e : ogrid) e = T{.5f} + (e - T{.5f}) * expand_value_range;
+    for (T& e : gr) e = general_clamp(e, T{0.f}, T{1.f});
+    for_int(iter, 5) {  // 10 Gauss-Seidel iterations are a tiny bit better; 100 are no different.
+      for (const auto& u : range(dims)) {
+        // if (gr[u] == 0.f || gr[u] == 1.f) continue;  // Constrained forever at limit, if T is scalar.
+        T newv = ogrid[u];
+        float wcenter = 0.f;
+        for (const auto& ud : range(ntimes<D>(-1), ntimes<D>(+2))) {  // [-1, 0, +1]^D
+          Vec<int, D> uu = u + ud;
+          assertx(gr.map_inside(uu, bndrules));
+          float w = 1.f;
+          for_int(d, D) w *= (ud[d] == 0 ? (4.f / 6.f) : (1.f / 6.f));
+          if (uu == u) {
+            wcenter += w;
+          } else {
+            newv -= w * gr[uu];
+          }
+        }
+        gr[u] = general_clamp(newv / wcenter, T{0.f}, T{1.f});
+      }
+    }
+  }
+  return std::move(gr);
+}
+
 // Rescale grid such that dimension d has new size nx.
 template <int D, typename T>
 Grid<D, T> scale_d(CGridView<D, T> grid, int d, int nx, const FilterBnd& filterb, const T* bordervalue, bool primal,
@@ -495,46 +599,11 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
     if (filterbs[d].filter().name() == "bspline3") njustspline++;
   }
   assertx(njustspline == 0 || njustspline == D);
-  // Note: IMAGE_EXPAND_VALUE_RANGE would be 2. to get a range [-.5, 1.5].
-  // The lower factor of 1.5 was found empirically to yield the best results; see ~/prevproj/2011/vtfilter/Notes.txt.
-  static const float k_expand_value_range = getenv_float("IMAGE_EXPAND_VALUE_RANGE", 1.5f, true);
-  const float expand_value_range = npreprocess ? 1.f / assertx(k_expand_value_range) : k_expand_value_range;
   if (npreprocess) {
     assertx(ndims == dims);
-    const bool no_constrained_optimization = getenv_bool("IMAGE_NO_CONSTRAINED_OPTIMIZATION");
-    Grid<D, T> ogrid;
-    if (!no_constrained_optimization) ogrid = grid;  // A backup of the original grid.
-    gr = grid;                                       // A no-op if gr.data() == grid.data().
-    inverse_convolution(gr, filterbs);
-    for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // Shrink the range.
-    if (!no_constrained_optimization) {
-      // Slow implementation: no parallelism, no fast interior, no precomputed grid of weights.
-      Vec<Bndrule, D> bndrules;
-      for_int(d, D) bndrules[d] = filterbs[d].bndrule();
-      for (T& e : ogrid) e = T{.5f} + (e - T{.5f}) * expand_value_range;
-      for (T& e : gr) e = general_clamp(e, T{0.f}, T{1.f});
-      for_int(iter, 5) {  // 10 Gauss-Seidel iterations are a tiny bit better; 100 are no different.
-        for (const auto& u : range(dims)) {
-          // if (gr[u] == 0.f || gr[u] == 1.f) continue;  // Constrained forever at limit, if T is scalar.
-          T newv = ogrid[u];
-          float wcenter = 0.f;
-          for (const auto& ud : range(ntimes<D>(-1), ntimes<D>(+2))) {  // [-1, 0, +1]^D
-            Vec<int, D> uu = u + ud;
-            assertx(gr.map_inside(uu, bndrules));
-            float w = 1.f;
-            for_int(d, D) w *= (ud[d] == 0 ? (4.f / 6.f) : (1.f / 6.f));
-            if (uu == u) {
-              wcenter += w;
-            } else {
-              newv -= w * gr[uu];
-            }
-          }
-          gr[u] = general_clamp(newv / wcenter, T{0.f}, T{1.f});
-        }
-      }
-    }
-    return std::move(gr);
+    return scale_preprocess(grid, filterbs, std::move(gr));
   }
+  const float expand_value_range = details::expand_value_range();
   struct Tup {
     int dim;
     float scaling;
@@ -704,20 +773,257 @@ Vec<FilterBnd, D> filterbnds_from_options(const PerDim<FilterRef, D>& filter, co
 
 }  // namespace details
 
+namespace details {
+
+// The index-mapping rule of one of the four former boundary rules (a transitional bridge to the digital filter).
+inline Bndrule bndrule_of(const Boundary& boundary) {
+  for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border})
+    if (&Boundary::get(bndrule) == &boundary) return bndrule;
+  assertnever("Boundary '" + boundary.name() + "' is not yet supported by the digital filter");
+}
+
+// Compute the rows of kernel weights for resizing cx samples to nx samples along one dimension.
+inline void compute_resizer_dim(ResizerDim& rd, int cx, int nx, Gridtype src_gridtype, Gridtype dst_gridtype,
+                                double scale, double translate) {
+  const Filter& filter = *rd.filter;
+  const Boundary& boundary = *rd.boundary;
+  const bool src_dual = src_gridtype == Gridtype::dual, dst_dual = dst_gridtype == Gridtype::dual;
+  assertx(cx >= (src_dual ? 1 : 2) && nx >= (dst_dual ? 1 : 2));
+  const double scaling = (dst_dual ? nx : nx - 1.) / (src_dual ? cx : cx - 1.) * scale;
+  const bool is_impulse = filter.is_impulse();
+  const KernelFunc kernel_func = is_impulse ? nullptr : filter.func();
+  const double radius = filter.radius();
+  // (The tolerance avoids an extra zero-weight tap when the ratio is an integer up to floating-point error.)
+  const int nk = is_impulse ? 1 : int(std::ceil((rd.is_minification ? radius * 2. / scaling : radius * 2.) - 1e-6));
+  const bool nkodd = (nk % 2) > 0;
+  rd.index0.init(nx);
+  rd.weights.init(nx, nk);
+  rd.row_begin.init(nx + 1);
+  rd.col.clear();
+  rd.val.clear();
+  Array<bool> interior(nx);
+  Array<int> indices;
+  Array<float> folded;
+  for_int(x, nx) {
+    const double dst_position = dst_dual ? (x + .5) / nx : double(x) / (nx - 1);  // In the unit domain.
+    const double src_position = boundary.remap_coordinate((dst_position - translate) / scale);
+    const double src_index =
+        src_dual ? src_position * cx - .5 : src_position * (cx - 1);  // Source sample coordinates.
+    const double wf = std::floor(src_index + (nkodd ? .5 : 0.));
+    const int index0 = int(wf) - ((nk - 1) / 2);
+    rd.index0[x] = index0;
+    double sum = 0.;
+    for_int(k, nk) {
+      const double w0 = double(index0 + k);
+      const double v = is_impulse            ? 1.
+                       : !rd.is_minification ? kernel_func(src_index - w0)
+                                             : kernel_func((src_index - w0) * scaling) * scaling;
+      rd.weights[x, k] = float(v);
+      sum += v;
+    }
+    rd.weights[x] /= float(sum);
+    interior[x] = index0 >= 0 && index0 + nk <= cx && src_position >= 0. && src_position <= 1.;
+    rd.row_begin[x] = rd.col.num();
+    indices.clear();
+    folded.clear();
+    boundary.fold(index0, rd.weights[x], cx, src_gridtype, src_position, indices, folded);
+    rd.col.push_array(indices);
+    rd.val.push_array(folded);
+  }
+  rd.row_begin[nx] = rd.col.num();
+  rd.ioutmin = 0;
+  while (rd.ioutmin < nx && !interior[rd.ioutmin]) rd.ioutmin++;
+  rd.ioutmax = nx;
+  while (rd.ioutmax > rd.ioutmin && !interior[rd.ioutmax - 1]) rd.ioutmax--;
+  for_intL(x, rd.ioutmin, rd.ioutmax) {
+    if (!interior[x]) {  // E.g. "tile" remaps coordinates non-monotonically: all rows use their folded taps.
+      rd.ioutmin = rd.ioutmax = 0;
+      break;
+    }
+  }
+}
+
+// Resample dimension d of the grid using the precomputed rows of weights.
+template <int D, typename T>
+Grid<D, T> evaluate_rows_d(CGridView<D, T> grid, int d, const ResizerDim& rd, const T* cval) {
+  HH_GRIDOP_TIMER("__evaluate");
+  static_assert(std::is_trivially_default_constructible_v<T>);
+  const Vec<int, D>& dims = grid.dims();
+  const int nx = rd.index0.num();
+  const int nk = rd.weights.xsize();
+  const Vec<int, D> ndims = dims.with(d, nx);
+  Grid<D, T> ngrid(ndims);
+  const size_t stride = grid_stride(dims, d);
+  assertx(stride == grid_stride(ndims, d));  // Same stride in the new grid (other dims unchanged).
+  const CArrayView<int> ar_pixelindex0 = rd.index0;
+  const CMatrixView<float> mat_weights = rd.weights;
+  const auto func = [&](const Vec<int, D>& u) {  // A row evaluated through its folded taps.
+    const int x = u[d];
+    T v{};
+    for_intL(j, rd.row_begin[x], rd.row_begin[x + 1]) {
+      const int i = rd.col[j];
+      v += rd.val[j] * (i >= 0 ? grid[u.with(d, i)] : *cval);
+    }
+    ngrid[u] = v;
+  };
+  const auto func_interior = [&](const Vec<int, D>& u) {
+    const int x = u[d];
+    const Vec<int, D> u0 = u.with(d, ar_pixelindex0[x]);
+    const size_t i0 = ravel_index(dims, u0);
+    T v{};
+    const float* mat_weights_x = mat_weights[x].data();
+    const T* grid_i0 = grid.data() + i0;
+    for_int(k, nk) v += mat_weights_x[k] * grid_i0[k * stride];
+    ngrid[u] = v;
+  };
+  // TODO: Use 2D tiling approach so that both grid and mat_weights fit in cache for wide grids.
+  if (ngrid.size() * 20 < k_parallel_thresh) {
+    for_coords(ndims, func);
+  } else {
+    // Timing test using:
+    // Filterimage ~/data/image/lake.png -tile 10 10 -scaleu 2 | vv
+    // Filterimage ~/data/image/lake.png -tile 4 4 -info $(printf -- '-scaleu 2 -scaleu .5 %.0s' {1..10}) | vv
+    for_coordsL(ntimes<D>(0).with(d, 0), ndims.with(d, rd.ioutmin), func);
+    parallel_for_coordsL(ntimes<D>(0).with(d, rd.ioutmin), ndims.with(d, rd.ioutmax), func_interior);
+    for_coordsL(ntimes<D>(0).with(d, rd.ioutmax), ndims.with(d, nx), func);
+  }
+  return ngrid;
+}
+
+// Express the filters and boundary rules of a Vec<FilterBnd, D> as resizing options (a transitional bridge).
+template <int D> ResizeOptions<D> options_from_filterbnds(const Vec<FilterBnd, D>& filterbs) {
+  ResizeOptions<D> options;
+  for_int(d, D) {
+    options.filter[d] = FilterRef(filterbs[d].filter());
+    options.boundary[d] = BoundaryRef(Boundary::get(filterbs[d].bndrule()));
+  }
+  return options;
+}
+
+}  // namespace details
+
+template <int D>
+Resizer<D>::Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const ResizeOptions<D>& options)
+    : _dims(dims), _ndims(ndims) {
+  assertx(options.gamma->is_identity());  // (The transfer function of integer samples is applied by the callers.)
+  const PerDim<Gridtype, D>& dst_gridtype = options.dst_gridtype ? *options.dst_gridtype : options.gridtype;
+  int npreprocess = 0, nbspline3 = 0;
+  for_int(d, D) {
+    details::ResizerDim& rd = _plan[d];
+    const int cx = dims[d], nx = ndims[d];
+    const Gridtype src_gridtype = options.gridtype[d];
+    const double src_in_samples = src_gridtype == Gridtype::dual ? cx : cx - 1.;
+    const double dst_in_samples = dst_gridtype[d] == Gridtype::dual ? nx : nx - 1.;
+    const double scaling = dst_in_samples / src_in_samples * options.scale[d];
+    rd.is_minification = scaling < 1.;
+    rd.filter =
+        rd.is_minification && !options.prefilter[d]->is_auto() ? options.prefilter[d].ptr : options.filter[d].ptr;
+    rd.boundary = options.boundary[d]->is_auto() ? &Boundary::get(rd.is_minification ? "clamp" : "reflect")
+                                                 : options.boundary[d].ptr;
+    if (rd.filter->is_preprocess()) npreprocess++;
+    if (rd.filter->name() == "bspline3") nbspline3++;
+    rd.identity = nx == cx && rd.filter->is_interpolating() && options.scale[d] == 1. && options.translate[d] == 0. &&
+                  src_gridtype == dst_gridtype[d];
+    if (rd.identity || rd.filter->is_preprocess()) continue;
+    details::compute_resizer_dim(rd, cx, nx, src_gridtype, dst_gridtype[d], options.scale[d], options.translate[d]);
+  }
+  assertx(npreprocess == 0 || npreprocess == D);
+  _all_preprocess = npreprocess == D;
+  if (_all_preprocess) assertx(ndims == dims);
+  assertx(nbspline3 == 0 || nbspline3 == D);
+  _all_bspline3 = nbspline3 == D;
+  if (options.dim_order) {
+    _dim_order = *options.dim_order;
+    Vec<int, D> sorted = _dim_order;
+    sort(sorted);
+    for_int(d, D) assertx(sorted[d] == d);  // A permutation of the dimensions.
+  } else {
+    struct Tup {
+      int dim;
+      float scaling;
+    };
+    Array<Tup> ar;
+    for_int(d, D) ar.push(Tup{d, float(ndims[d]) / assertx(dims[d])});
+    // Sort dimensions for quickest domain size reduction (or slowest domain size increase).
+    // However, operating on last dimension is most efficient due to memory layout.
+    // Therefore, if identical downsampling on multiple dimensions, we prefer to do last dimension first.
+    // And,       if identical upsampling   on multiple dimensions, we prefer to do last dimension last.
+    const auto by_quickest_size_reduction = [](const Tup& t1, const Tup& t2) {
+      Vec2<Tup> tups(t1, t2);
+      for (Tup& t : tups) {
+        if (1 && t.dim == D - 1) {
+          const float adjust = 2.f;
+          if (t.scaling < 1.f) t.scaling /= adjust;  // Encourage earlier minification of the last dimension.
+          if (t.scaling > 1.f) t.scaling *= adjust;  // Encourage later magnification of last dimension.
+        }
+      }
+      return tups[0].scaling < tups[1].scaling;
+    };
+    sort(ar, by_quickest_size_reduction);
+    for_int(i, D) _dim_order[i] = ar[i].dim;
+  }
+}
+
+template <int D> Vec<FilterBnd, D> Resizer<D>::filterbnds() const {
+  Vec<FilterBnd, D> filterbs = ntimes<D>(FilterBnd(Filter::get("box"), Bndrule::reflect));
+  for_int(d, D) filterbs[d] = FilterBnd(*_plan[d].filter, details::bndrule_of(*_plan[d].boundary));
+  return filterbs;
+}
+
+template <int D> typename Resizer<D>::Row Resizer<D>::row(int d, int i) const {
+  const details::ResizerDim& rd = _plan[d];
+  assertx(!rd.identity && !rd.filter->is_preprocess());
+  if (i >= rd.ioutmin && i < rd.ioutmax) return Row{rd.index0[i], CArrayView<int>(nullptr, 0), rd.weights[i], 0.f};
+  const int j0 = rd.row_begin[i], j1 = rd.row_begin[i + 1];
+  float cval_weight = 0.f;
+  for_intL(j, j0, j1) {
+    if (rd.col[j] < 0) cval_weight += rd.val[j];
+  }
+  return Row{rd.index0[i], rd.col.slice(j0, j1), rd.val.slice(j0, j1), cval_weight};
+}
+
+template <int D>
+template <typename T>
+Grid<D, T> Resizer<D>::apply(CGridView<D, T> grid, const T* cval, Grid<D, T>&& gr) const {
+  HH_GRIDOP_TIMER("__scale");
+  assertx(grid.dims() == _dims);
+  for_int(d, D) {
+    if (_plan[d].boundary->uses_cval()) assertx(cval);
+  }
+  if (_all_preprocess) return details::scale_preprocess(grid, filterbnds(), std::move(gr));
+  CGridView<D, T> gridref(grid);  // (Becomes gr after the first dimension.)
+  for (const int d : _dim_order) {
+    const details::ResizerDim& rd = _plan[d];
+    if (rd.identity) {
+      gr = gridref;
+    } else if (!rd.is_minification) {  // Resampling or magnification.
+      if (rd.filter->requires_digital_filter()) {
+        if (gridref.data() != gr.data()) gr = gridref;  // Else directly modify the temporary input buffer.
+        details::inverse_convolution_d(gr, FilterBnd(*rd.filter, details::bndrule_of(*rd.boundary)), d);
+        gr = details::evaluate_rows_d(CGridView<D, T>(gr), d, rd, cval);
+      } else {
+        gr = details::evaluate_rows_d(gridref, d, rd, cval);
+      }
+    } else {  // Minification.
+      gr = details::evaluate_rows_d(gridref, d, rd, cval);
+      if (rd.filter->requires_digital_filter())
+        details::inverse_convolution_d(gr, FilterBnd(*rd.filter, details::bndrule_of(*rd.boundary)), d);
+    }
+    gridref.reinit(gr);
+  }
+  assertx(gridref.data() == gr.data());
+  if (_all_bspline3) {
+    const float expand_value_range = details::expand_value_range();
+    for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // Expand the range.
+  }
+  return std::move(gr);
+}
+
 template <int D, typename T>
 Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const ResizeOptions<D>& options, const T* cval,
                  Grid<D, T>&& gr) {
-  assertx(!options.dst_gridtype && !options.dim_order && options.gamma->is_identity());
-  for_int(d, D) {
-    assertx(options.scale[d] == 1. && options.translate[d] == 0.);
-    assertx(options.gridtype[d] == options.gridtype[0]);
-  }
-  const bool primal = options.gridtype[0] == Gridtype::primal;
-  Vec<bool, D> is_minification;
-  for_int(d, D) is_minification[d] = ndims[d] < grid.dim(d);
-  const Vec<FilterBnd, D> filterbs =
-      details::filterbnds_from_options(options.filter, options.prefilter, options.boundary, is_minification);
-  return details::scale_i(grid, ndims, filterbs, cval, std::move(gr), primal);
+  const Resizer<D> resizer(grid.dims(), ndims, options);
+  return resizer.apply(grid, cval, std::move(gr));
 }
 
 template <int D, typename T>

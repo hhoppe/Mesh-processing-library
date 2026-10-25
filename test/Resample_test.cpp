@@ -71,5 +71,37 @@ int main() {
       assertx(ranges::equal(scale(ramp, V(9), options), expected));
       SHOW(scale(ramp, V(9), options));
     }
+    {  // Three dimensions with different kernels and rules per dimension.
+      Grid<3, float> grid(V(4, 5, 3));
+      for (float& e : grid) e = random.unif();
+      const Vec3<FilterBnd> filterbs(FilterBnd(Filter::get("cubic"), Bndrule::reflect),
+                                     FilterBnd(Filter::get("triangle"), Bndrule::wrap),
+                                     FilterBnd(Filter::get("box"), Bndrule::clamp));
+      const ResizeOptions<3> options{.filter = V("cubic", "triangle", "box"),
+                                     .boundary = V("reflect", "wrap", "clamp")};
+      for (const Vec3<int> ndims : {V(7, 2, 6), V(4, 9, 1), V(2, 2, 2)})
+        assertx(ranges::equal(scale(grid, ndims, options), scale(grid, ndims, filterbs)));
+    }
+  }
+  {  // Resizer: rows of precomputed weights, with the boundary taps folded into interior samples.
+    const Resizer<1> resizer(V(3), V(7), {.filter = "cubic", .boundary = "wrap"});
+    for_int(i, 7) {
+      const Resizer<1>::Row row = resizer.row(0, i);
+      SHOW(i, row.index0, row.indices, row.weights, row.cval_weight);
+      assertx(row.indices.num() == 4 && row.weights.num() == 4);  // The window of 4 taps is never interior.
+      assertx(abs(sum(row.weights) - 1.f) < 1e-6f);
+    }
+    Grid<1, float> grid(V(3));
+    grid[0] = 1.f, grid[1] = 2.f, grid[2] = 4.f;
+    const Grid<1, float> result = resizer.apply(grid);
+    assertx(ranges::equal(result, scale(grid, V(7), ResizeOptions<1>{.filter = "cubic", .boundary = "wrap"})));
+    SHOW(result);
+    const Grid<1, float> ones(V(3), 1.f);  // The resizer applies to any grid of the same dimensions.
+    assertx(abs(max(resizer.apply(ones)) - 1.f) < 1e-6f && abs(min(resizer.apply(ones)) - 1.f) < 1e-6f);
+    const Resizer<1> resizer2(V(3), V(7), {.filter = "triangle", .boundary = "border"});
+    assertx(resizer2.row(0, 0).cval_weight > 0.f && resizer2.row(0, 3).cval_weight == 0.f);
+    const float cval = 10.f;
+    SHOW(resizer2.apply(grid, &cval));
+    assertx(resizer2.apply(grid, &cval)[0] > 3.f);  // The border value (10) shows at the ends: .286 * 10 + .714 * 1.
   }
 }

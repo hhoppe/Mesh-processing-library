@@ -87,20 +87,28 @@ name=clamp gridtype=Gridtype{primal} indices=Array<int>(4) {
   0.4
 }
 
-name=border gridtype=Gridtype{dual} indices=Array<int>(2) {
+name=border gridtype=Gridtype{dual} indices=Array<int>(4) {
+  -1
+  -1
   0
   1
 }
- folded=Array<float>(2) {
+ folded=Array<float>(4) {
+  0.1
+  0.2
   0.3
   0.4
 }
 
-name=border gridtype=Gridtype{primal} indices=Array<int>(2) {
+name=border gridtype=Gridtype{primal} indices=Array<int>(4) {
+  -1
+  -1
   0
   1
 }
- folded=Array<float>(2) {
+ folded=Array<float>(4) {
+  0.1
+  0.2
   0.3
   0.4
 }

@@ -18,7 +18,7 @@ struct BoundaryIndexMap final : Boundary {
     ASSERTX(size >= (gridtype == Gridtype::dual ? 1 : 2));
     for_int(k, weights.num()) {
       int i = index0 + k;
-      if (!_map(i, size, gridtype)) continue;
+      if (!_map(i, size, gridtype)) i = -1;  // The tap references cval.
       indices.push(i);
       folded.push(weights[k]);
     }

@@ -11,16 +11,11 @@ namespace hh {
 // for n in {1..20} 40 100 1000; do echo $n; Filterimage -create $n $n -bound c -scaleu 1 -noo; done
 
 // Rescale matrix of pixels to the sizes given by destination nmatrixp; views matrixp and nmatrixp must be distinct.
-inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue,
+inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Resizer<2>& resizer, const Pixel* bordervalue,
                                MatrixView<Pixel> nmatrixp) {
-  static const int g_test_scale_accuracy = getenv_int("IMAGE_TEST_SCALE_ACCURACY");  // Also in Image.cpp.
   assertx(matrixp.data() != nmatrixp.data());
-  if (matrixp.dims() == nmatrixp.dims() && !g_test_scale_accuracy && filterbs[0].filter().is_interpolating() &&
-      filterbs[1].filter().is_interpolating()) {
-    nmatrixp.assign(matrixp);
-    return;
-  }
-  if (filterbs[0].filter().is_trivial_magnify() && filterbs[1].filter().is_trivial_magnify() &&
+  assertx(matrixp.dims() == resizer.dims() && nmatrixp.dims() == resizer.ndims());
+  if (resizer.filter(0).is_trivial_magnify() && resizer.filter(1).is_trivial_magnify() &&
       nmatrixp.dims() == matrixp.dims() * 2) {
     const int cx = matrixp.xsize();
     parallel_for(range(nmatrixp.ysize()), [&](const int y) {
@@ -34,7 +29,7 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
     });
     return;
   }
-  if (filterbs[0].filter().is_trivial_minify() && filterbs[1].filter().is_trivial_minify() && nmatrixp.size()) {
+  if (resizer.filter(0).is_trivial_minify() && resizer.filter(1).is_trivial_minify() && nmatrixp.size()) {
     if (nmatrixp.dims() * 2 == matrixp.dims()) {
       constexpr int DS = 2, DS2 = square(DS);
       const int nx = nmatrixp.xsize();
@@ -94,8 +89,22 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>
   convert(matrixp, matrix);
   Vector4 vborder;
   if (bordervalue) convert(CGrid1View(*bordervalue), Grid1View(vborder));
-  matrix = scale(matrix, nmatrixp.dims(), filterbs, bordervalue ? &vborder : nullptr, std::move(matrix));
+  matrix = resizer.apply(matrix, bordervalue ? &vborder : nullptr, std::move(matrix));
   convert(matrix, nmatrixp);
+}
+
+// Rescale matrix of pixels to the sizes given by destination nmatrixp; views matrixp and nmatrixp must be distinct.
+inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue,
+                               MatrixView<Pixel> nmatrixp) {
+  static const int g_test_scale_accuracy = getenv_int("IMAGE_TEST_SCALE_ACCURACY");  // Also in Image.cpp.
+  assertx(matrixp.data() != nmatrixp.data());
+  if (matrixp.dims() == nmatrixp.dims() && !g_test_scale_accuracy && filterbs[0].filter().is_interpolating() &&
+      filterbs[1].filter().is_interpolating()) {
+    nmatrixp.assign(matrixp);
+    return;
+  }
+  const Resizer<2> resizer(matrixp.dims(), nmatrixp.dims(), details::options_from_filterbnds(filterbs));
+  scale_Matrix_Pixel(matrixp, resizer, bordervalue, nmatrixp);
 }
 
 // Rescale 3D grid of pixels spatially (only dimensions 1 and 2) to sizes given by destination ngridp;
@@ -105,7 +114,14 @@ inline void spatially_scale_Grid3_Pixel(CGridView<3, Pixel> gridp, const Vec2<Fi
                                         const Pixel* bordervalue, GridView<3, Pixel> ngridp) {
   assertx(gridp.dim(0) == ngridp.dim(0));  // Only scale dimensions 1 and 2.
   assertx(gridp.dim(1) > 0 && gridp.dim(2) > 0 && ngridp.dim(1) > 0 && ngridp.dim(2) > 0);
-  for_int(f, gridp.dim(0)) scale_Matrix_Pixel(gridp[f], filterbs, bordervalue, ngridp[f]);
+  if (gridp[0].dims() == ngridp[0].dims() && filterbs[0].filter().is_interpolating() &&
+      filterbs[1].filter().is_interpolating()) {
+    for_int(f, gridp.dim(0)) ngridp[f].assign(gridp[f]);
+    return;
+  }
+  // The kernel weights are computed once for all the frames.
+  const Resizer<2> resizer(gridp[0].dims(), ngridp[0].dims(), details::options_from_filterbnds(filterbs));
+  for_int(f, gridp.dim(0)) scale_Matrix_Pixel(gridp[f], resizer, bordervalue, ngridp[f]);
 }
 
 }  // namespace hh

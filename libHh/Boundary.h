@@ -26,9 +26,10 @@ class Boundary : noncopyable {
   // Modify a unit-domain coordinate before the kernel is evaluated (identity except for "tile").
   [[nodiscard]] virtual double remap_coordinate(double x) const { return x; }
   // Fold the dense row of taps at indices [index0, index0 + weights.num()) into interior indices of a grid of `size`
-  // samples, appending (index, weight) pairs to `indices` and `folded`; the same index may appear several times,
-  // and the caller merges them.  `x` is the unit-domain coordinate of the sample being reconstructed, used only by
-  // the rules that override the value outside some extent.
+  // samples, appending (index, weight) pairs to `indices` and `folded` in the order of the taps (so that their sum
+  // matches a direct evaluation); the same index may appear several times, and an index of -1 denotes the constant
+  // value cval.  `x` is the unit-domain coordinate of the sample being reconstructed, used only by the rules that
+  // override the value outside some extent.
   virtual void fold(int index0, CArrayView<float> weights, int size, Gridtype gridtype, double x, Array<int>& indices,
                     Array<float>& folded) const = 0;
   friend std::ostream& operator<<(std::ostream& os, const Boundary& boundary) {

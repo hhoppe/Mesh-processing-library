@@ -1,0 +1,2 @@
+Gamma::get("srgb").decode(.5f)=0.214041 Gamma::get("srgb").encode(.25f)=0.537099
+Gamma::get("power22").decode(.5f)=0.217638 Gamma::get("power22").encode(.25f)=0.532521

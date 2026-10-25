@@ -1,4 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+#include <optional>
+
 #include "libHh/A3dStream.h"
 #include "libHh/Args.h"
 #include "libHh/BinaryIO.h"
@@ -55,16 +57,9 @@ bool use_lab = true;
 bool nooutput = false;
 Pixel gcolor{255, 255, 255, 255};
 float tolerance = 0.f;
-Vec2<Bndrule> g_bndrules = twice(Bndrule::reflect);
-Vec2<FilterBnd> g_filterbs =
-    V(FilterBnd(Filter::get("spline"), g_bndrules[0]), FilterBnd(Filter::get("spline"), g_bndrules[1]));
-
-// (Transitional:) the sampling options corresponding to the global filters and boundary rules.
-SamplingOptions<2> g_sampling_options() {
-  return {.filter = V(FilterRef(g_filterbs[0].filter()), FilterRef(g_filterbs[1].filter())),
-          .boundary = V(BoundaryRef(Boundary::get(g_filterbs[0].bndrule())),
-                        BoundaryRef(Boundary::get(g_filterbs[1].bndrule())))};
-}
+Vec2<Bndrule> g_bndrules = twice(Bndrule::reflect);  // For cropping (the four index-mapping rules only).
+// For resampling; the boundary rule "auto" is reflect when magnifying and clamp when minifying.
+ResizeOptions<2> g_options{.filter = "cardinal3"};
 
 constexpr Bndrule k_reflected = Bndrule::reflect;
 constexpr Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflect);
@@ -379,23 +374,29 @@ void do_getcolorxy(Args& args) {
   showf("gotcolor %d %d %d %d\n", gcolor[0], gcolor[1], gcolor[2], gcolor[3]);
 }
 
-void do_boundaryrule(Args& args) {
-  const Bndrule bndrule = parse_boundaryrule(args.get_string());
-  g_bndrules = twice(bndrule);
-  for_int(i, 2) g_filterbs[i].set_bndrule(bndrule);
+// Set the boundary rule of dimension d (both if d < 0) for resampling (any rule) and, if it is one of the four
+// index-mapping rules, for cropping.
+void set_boundary(int d, const string& name) {
+  const Boundary& boundary = Boundary::get(name);
+  for_int(i, 2) {
+    if (d >= 0 && d != i) continue;
+    g_options.boundary[i] = BoundaryRef(boundary);
+    for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border})
+      if (&Boundary::get(bndrule) == &boundary) g_bndrules[i] = bndrule;
+  }
 }
 
-void do_hboundaryrule(Args& args) {
-  const Bndrule bndrule = parse_boundaryrule(args.get_string());
-  g_bndrules[1] = bndrule;
-  g_filterbs[1].set_bndrule(bndrule);
-}
+void do_boundary(Args& args) { set_boundary(-1, args.get_string()); }
 
-void do_vboundaryrule(Args& args) {
-  const Bndrule bndrule = parse_boundaryrule(args.get_string());
-  g_bndrules[0] = bndrule;
-  g_filterbs[0].set_bndrule(bndrule);
-}
+void do_hboundary(Args& args) { set_boundary(1, args.get_string()); }
+
+void do_vboundary(Args& args) { set_boundary(0, args.get_string()); }
+
+void do_boundaryrule(Args& args) { do_boundary(args); }  // The former name.
+
+void do_hboundaryrule(Args& args) { do_hboundary(args); }
+
+void do_vboundaryrule(Args& args) { do_vboundary(args); }
 
 void do_cropsides(Args& args) {
   int vl = parse_size(args.get_string(), image.xsize(), false);
@@ -520,31 +521,28 @@ void do_drawrectangle(Args& args) {
 
 // *** scale
 
-void do_filter(Args& args) {
-  const Filter& filter = Filter::get(args.get_string());
-  for_int(i, 2) g_filterbs[i].set_filter(filter);
-}
+void do_filter(Args& args) { g_options.filter = FilterRef(args.get_string()); }
 
-void do_hfilter(Args& args) {
-  const Filter& filter = Filter::get(args.get_string());
-  g_filterbs[1].set_filter(filter);
-}
+void do_hfilter(Args& args) { g_options.filter[1] = FilterRef(args.get_string()); }
 
-void do_vfilter(Args& args) {
-  const Filter& filter = Filter::get(args.get_string());
-  g_filterbs[0].set_filter(filter);
-}
+void do_vfilter(Args& args) { g_options.filter[0] = FilterRef(args.get_string()); }
+
+void do_prefilter(Args& args) { g_options.prefilter = FilterRef(args.get_string()); }
+
+void do_gridtype(Args& args) { g_options.gridtype = parse_gridtype(args.get_string()); }
+
+void do_gamma(Args& args) { g_options.gamma = GammaRef(args.get_string()); }
 
 void do_scaleunif(Args& args) {
   HH_TIMER("_scale");
   const float s = args.get_float();
-  image.scale(twice(s), g_filterbs, &gcolor);
+  image.scale(twice(s), g_options, &gcolor);
 }
 
 void do_scalenonunif(Args& args) {
   HH_TIMER("_scale");
   float sx = args.get_float(), sy = args.get_float();
-  image.scale(V(sy, sx), g_filterbs, &gcolor);
+  image.scale(V(sy, sx), g_options, &gcolor);
 }
 
 void do_scaletox(Args& args) {
@@ -552,7 +550,7 @@ void do_scaletox(Args& args) {
   const int nx = parse_size(args.get_string(), image.xsize(), false);
   assertx(nx > 0);
   const float s = float(nx) / assertx(image.xsize());
-  image.scale(twice(s), g_filterbs, &gcolor);
+  image.scale(twice(s), g_options, &gcolor);
 }
 
 void do_scaletoy(Args& args) {
@@ -560,7 +558,7 @@ void do_scaletoy(Args& args) {
   const int ny = parse_size(args.get_string(), image.ysize(), false);
   assertx(ny > 0);
   const float s = float(ny) / assertx(image.ysize());
-  image.scale(twice(s), g_filterbs, &gcolor);
+  image.scale(twice(s), g_options, &gcolor);
 }
 
 void do_scaletodims(Args& args) {
@@ -568,14 +566,14 @@ void do_scaletodims(Args& args) {
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx > 0 && ny > 0);
   auto syx = convert<float>(V(ny, nx)) / convert<float>(image.dims());
-  image.scale(syx, g_filterbs, &gcolor);
+  image.scale(syx, g_options, &gcolor);
 }
 
 void do_scaleinside(Args& args) {
   HH_TIMER("_scale");
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx > 0 && ny > 0);
-  image.scale(twice(min(convert<float>(V(ny, nx)) / convert<float>(image.dims()))), g_filterbs, &gcolor);
+  image.scale(twice(min(convert<float>(V(ny, nx)) / convert<float>(image.dims()))), g_options, &gcolor);
 }
 
 void do_scalehalf2n1() {
@@ -711,7 +709,7 @@ void apply_frame(const Frame& frame) {
   Matrix<Vector4> matv(image.dims());
   convert(image, matv);
   Matrix<Vector4> nmatv(image.dims());
-  transform(matv, frame, g_filterbs, nmatv, &vgcolor);
+  transform(matv, frame, g_options.sampling(), nmatv, &vgcolor);
   convert(nmatv, image);
 }
 
@@ -846,7 +844,7 @@ void apply_assemble_operations(Grid<2, Pixel>& im, const Vec2<int>& yx, const Ve
       const float vscale = min(convert<float>(as_fit_dims) / convert<float>(im.dims()));
       const Vec2<int> newdims = convert<int>(convert<float>(im.dims()) * vscale + .5f);
       Grid<2, Pixel> newim(newdims);
-      scale_Matrix_Pixel(im, g_filterbs, &gcolor, newim);
+      scale_Matrix_Pixel(im, g_options, &gcolor, newim);
       im = std::move(newim);
     }
     const Vec2<int> side0 = (as_fit_dims - im.dims()) / 2;
@@ -1036,7 +1034,7 @@ void do_replace(Args& args) {
   showf("Replaced %d pixels\n", count);
 }
 
-void do_gamma(Args& args) {
+void do_apply_gamma(Args& args) {
   const float gamma = args.get_float();
   Vec<uint8_t, 256> transf;
   for_int(i, 256) transf[i] = uint8_from_unit(pow(i / 255.f, gamma));
@@ -1245,9 +1243,9 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       // Using filter "triangle" (with weights (1 / 4, 3 / 4, 3 / 4, 1 / 4) / 2) is dual to
       //  the upscaling "triangle" kernel (with alternating weights (3 / 4, 1 / 4) and (1 / 4, 3 / 4)).
       // It introduces a little bit of undesirable ringing.  "box" has no ringing but inferior.
-      const auto downscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));
-      hgrid = scale(grid2, hdims, downscaling_kernel, &vzero);  // Spatially downscale.
-      const float adjust_weight = pow(2.f, float(D));           // Somewhat arbitrary.
+      const ResizeOptions<D> downscaling_options{.filter = "triangle", .boundary = "border"};
+      hgrid = scale(grid2, hdims, downscaling_options, &vzero);  // Spatially downscale.
+      const float adjust_weight = pow(2.f, float(D));            // Somewhat arbitrary.
       for (auto& e : hgrid) e *= adjust_weight;
     } else {
       // - Somehow the coarse-scale content is getting shifted right/bottom unlike in the original Lumigraph
@@ -1256,8 +1254,9 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       const Grid<D, Vector4> grid2 =
           crop(grid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Bndrule::border), &vzero);
       assertx(grid2.dims() % 2 == ntimes<D>(1));
-      const auto downscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));
-      hgrid = scale_primal(grid2, (grid2.dims() - 1) / 2 + 1, downscaling_kernel, &vzero);  // Spatially downscale.
+      const ResizeOptions<D> downscaling_options{
+          .gridtype = Gridtype::primal, .filter = "triangle", .boundary = "border"};
+      hgrid = scale(grid2, (grid2.dims() - 1) / 2 + 1, downscaling_options, &vzero);  // Spatially downscale.
       if (0) SHOW(grid.dims(), grid2.dims(), hgrid.dims(), hdims, hgrid.dims() - hdims);
       if (hgrid.size() >= grid.size() || 0)
         hgrid = crop(hgrid, ntimes<D>(0), hgrid.dims() - hdims);  // Optionally crop extra.
@@ -1276,16 +1275,16 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
     for (const auto& u : range(hdims)) hgrid[u] *= 1.f / max(hgrid[u][3], 1.f);  // Make the weight at most 1.f.
     Grid<D, Vector4> gridu;
     if (!primal) {
-      const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));  // Bilinear.
+      const ResizeOptions<D> upscaling_options{.filter = "triangle", .boundary = "border"};  // Bilinear.
       // This bilinear prolongation has weights (3/4, 1/4) and (1/4, 3/4) on alternating entries.
-      gridu = scale(hgrid, hdims * 2, upscaling_kernel, &vzero);  // Spatially upscale.
-      gridu = crop(gridu, ntimes<D>(0), dims % 2);                // Crop any extra expanded dimensions.
+      gridu = scale(hgrid, hdims * 2, upscaling_options, &vzero);  // Spatially upscale.
+      gridu = crop(gridu, ntimes<D>(0), dims % 2);                 // Crop any extra expanded dimensions.
     } else {
-      const auto upscaling_kernel = ntimes<D>(FilterBnd(Filter::get("triangle"), Bndrule::border));  // Bilinear.
+      const ResizeOptions<D> upscaling_options{.filter = "triangle", .boundary = "border"};  // Bilinear.
       // Expand if the original dimension was even.
       const Grid<D, Vector4> grid2 =
           crop(hgrid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Bndrule::border), &vzero);
-      gridu = scale(grid2, (grid2.dims() - 1) * 2 + 1, upscaling_kernel, &vzero);  // Spatially upscale.
+      gridu = scale(grid2, (grid2.dims() - 1) * 2 + 1, upscaling_options, &vzero);  // Spatially upscale.
       if (0) SHOW(hgrid.dims(), grid2.dims(), gridu.dims(), grid.dims(), gridu.dims() - grid.dims());
       gridu = crop(gridu, ntimes<D>(0), gridu.dims() - grid.dims());  // Crop any extra.
     }
@@ -1911,13 +1910,15 @@ void do_superresolution(Args& args) {
   const float fac = args.get_float();
   assertx(fac > 1.f && fac <= 32.f);
   assertx(image.zsize() == 3);  // A 3-channel RGB image.
-  const auto fb_bilinear2 = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect));
+  const SamplingOptions<2> bilinear{.filter = "triangle", .boundary = "reflect"};
+  std::optional<Sampler<2, float>> lum_sampler;  // Over mlum, defined below.
   // Precompute pixel luminance values (in range [0.f, 255.f]).
   Matrix<float> mlum(image.dims());
   for (const auto& yx : range(image.dims())) mlum[yx] = to_YIQ(to_Vector4_raw(image[yx]))[0];
+  lum_sampler.emplace(mlum, bilinear);
   // Apply ordinary magnification (using any chosen scaling filter).
   Image oimage = std::move(image);
-  image = scale(oimage, twice(fac), g_filterbs, &gcolor);
+  image = scale(oimage, twice(fac), g_options, &gcolor);
   // Now add super-res adaptive sharpening.
   parallel_for_coords({.cycles_per_elem = 1000}, image.dims(), [&](const Vec2<int>& yx) {
     auto fyx = (convert<float>(yx) + .5f) * convert<float>(oimage.dims()) / convert<float>(image.dims()) - .5f;
@@ -1941,19 +1942,19 @@ void do_superresolution(Args& args) {
     func_minmax(mlum.inside(iyx + V(1, 0), k_reflected2));
     func_minmax(mlum.inside(iyx + V(1, 1), k_reflected2));
     // 4 bilinear samples.
-    func_minmax(sample_grid(mlum, fyx + V(-1.f, -1.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(-1.f, +1.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(+1.f, -1.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
+    func_minmax(lum_sampler->at_grid(fyx + V(-1.f, -1.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(-1.f, +1.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(+1.f, -1.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(+1.f, +1.f)));
     // 8 linear samples (naively using the expensive bilinear function).
-    func_minmax(sample_grid(mlum, fyx + V(-1.f, +0.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(-1.f, +1.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(+1.f, +0.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(+0.f, -1.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(+1.f, -1.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(+0.f, +1.f), fb_bilinear2));
-    func_minmax(sample_grid(mlum, fyx + V(+1.f, +1.f), fb_bilinear2));
+    func_minmax(lum_sampler->at_grid(fyx + V(-1.f, +0.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(-1.f, +1.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(+1.f, +0.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(+1.f, +1.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(+0.f, -1.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(+1.f, -1.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(+0.f, +1.f)));
+    func_minmax(lum_sampler->at_grid(fyx + V(+1.f, +1.f)));
     const float delta = lmax - lmin;
     const float threshold = .1f * 255.f;  // 1e-20f is sharpest.
     if (delta >= threshold) {
@@ -2198,7 +2199,7 @@ void output_contour(int gridn, float contour_value) {
   Matrix<float> matrix(image.dims());
   for (const auto& yx : range(image.dims())) matrix[yx] = float(image[yx][0]);  // Red channel.
 
-  const Sampler<2, float> sampler(matrix, g_sampling_options());
+  const Sampler<2, float> sampler(matrix, g_options.sampling());
   const auto func_eval = [&](const Vec2<float>& p) -> float { return sampler(p) - contour_value; };
   A3dElem el;
   const auto func_contour = [&](CArrayView<Vec2<float>> poly) {
@@ -2495,7 +2496,7 @@ void do_procedure(Args& args) {
     const float s = 1.01f;
     for_int(i, 10) {
       // HH_TIMER("__scale");
-      image.scale(twice(s), g_filterbs, &gcolor);
+      image.scale(twice(s), g_options, &gcolor);
     }
 
   } else if (name == "mark_dark") {
@@ -2518,7 +2519,7 @@ void do_procedure(Args& args) {
     assertx(same_size(image, image2));
     Matrix<Vector4> image2v(image.dims());
     convert(image2, image2v);
-    const Sampler<2, Vector4> sampler(image2v, g_sampling_options());
+    const Sampler<2, Vector4> sampler(image2v, g_options.sampling());
     GMesh mesh;
     Matrix<Vertex> matv(image.dims());
     string str;
@@ -2733,7 +2734,7 @@ void do_procedure(Args& args) {
         limage.set_silent_io_progress(true);
         limage.read_file(image_names[i]);
         // Downscale to maximum size.
-        limage.scale(twice(float(size) / assertx(max(limage.dims()))), g_filterbs, &gcolor);
+        limage.scale(twice(float(size) / assertx(max(limage.dims()))), g_options, &gcolor);
         // Fill to square.
         Grid<2, Pixel>& grid = limage;
         const int vt = -(size - limage.ysize()) / 2, vb = -(size - limage.ysize() + vt);
@@ -2861,8 +2862,8 @@ void do_procedure(Args& args) {
     Vector4 vgcolor;
     convert(CGrid1View(gcolor), Grid1View(vgcolor));
     // The ramp runs along x, so it is sampled with the horizontal filter and boundary rule.
-    const Sampler<1, Vector4> sampler(
-        color_ramp, {.filter = g_filterbs[1].filter(), .boundary = Boundary::get(g_filterbs[1].bndrule())}, &vgcolor);
+    const Sampler<1, Vector4> sampler(color_ramp, {.filter = g_options.filter[1], .boundary = g_options.boundary[1]},
+                                      &vgcolor);
     for_coords(image.dims(),
                [&](const Vec2<int>& yx) { image[yx] = sampler(V((yx[1] + .5f) / image.xsize())).pixel(); });
 
@@ -3449,7 +3450,7 @@ void do_resamplemesh(Args& args) {
   mesh.read(RFile(mfile)());
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
-  const Sampler<2, Vector4> sampler(imagev, g_sampling_options());
+  const Sampler<2, Vector4> sampler(imagev, g_options.sampling());
   string str;
   for (Vertex v : mesh.vertices()) {
     Point p = mesh.point(v);  // In the range [0, 1].
@@ -3490,9 +3491,12 @@ int main(int argc, const char** argv) {
   HH_ARGSD(color, "r g b a : set color for various operations (default 255's)");
   HH_ARGSD(not, ": negate test for color selection");
   HH_ARGSD(getcolorxy, "x y : get color from pixel ((x = 0, y = 0) = (left, top))");
-  HH_ARGSD(boundaryrule, "c : reflected/periodic/clamped/border");
-  HH_ARGSD(hboundaryrule, "c : set just horizontal boundary rule");
-  HH_ARGSD(vboundaryrule, "c : set just vertical boundary rule");
+  HH_ARGSD(boundary, "c : rule: reflect/wrap/clamp/border/natural/...");
+  HH_ARGSD(hboundary, "c : set just horizontal boundary rule");
+  HH_ARGSD(vboundary, "c : set just vertical boundary rule");
+  HH_ARGSD(boundaryrule, "c : (former name of -boundary)");
+  HH_ARGSD(hboundaryrule, "c : (former name of -hboundary)");
+  HH_ARGSD(vboundaryrule, "c : (former name of -vboundary)");
   HH_ARGSC("", ":");
   HH_ARGSD(cropsides, "l r t b : crop image (introduce specified color if negative)");
   HH_ARGSD(cropl, "l : crop image");
@@ -3506,10 +3510,13 @@ int main(int argc, const char** argv) {
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmatte, ": crop all sides matching the set color");
   HH_ARGSC("", ":");
-  HH_ARGSD(filter, "c : set kernel: imp/box/tri/quad/mitchell/keys/spline/");
+  HH_ARGSD(filter, "c : kernel: cubic/cardinal3/lanczos3/triangle/...");
   HH_ARGSC("", ":    omoms/gauss/preprocess/justspline (def. spline)");
   HH_ARGSD(hfilter, "c : set just horizontal filter");
   HH_ARGSD(vfilter, "c : set just vertical filter");
+  HH_ARGSD(prefilter, "c : kernel when minifying (auto: same)");
+  HH_ARGSD(gridtype, "c : dual (default) or primal sample placement");
+  HH_ARGSD(gamma, "c : identity (default), power2, power22, srgb");
   HH_ARGSD(scaleunif, "fac : zoom image (upsample and/or downsample)");
   HH_ARGSD(scalenonunif, "facx facy : zoom image");
   HH_ARGSD(scaletox, "x : uniform scale to x width");
@@ -3531,7 +3538,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(drawrectangle, "x0 y0 x1 y1 : replace specified region by current color");
   HH_ARGSP(tolerance, "f : max Euclidean distance in '-replace'");
   HH_ARGSD(replace, "r g b a : replace pixels matching '-color' with this color");
-  HH_ARGSD(gamma, "v : gammawarp image");
+  HH_ARGSD(apply_gamma, "v : gammawarp image");
   HH_ARGSD(tobw, ": convert to grayscale");
   HH_ARGSD(tocolor, ": convert to color");
   HH_ARGSD(hue, ": just keep hue");

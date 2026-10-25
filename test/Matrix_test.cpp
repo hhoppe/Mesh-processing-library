@@ -232,10 +232,9 @@ int main() {
     const int n = 8;
     const Matrix<Vector4> m(V(n, n), Vector4(10.f));
     SHOW(mean(m));
-    // Matrix<Vector4> mn = scale(m, 5, 5, twice(FilterBnd(Filter::get("impulse"), Bndrule::reflect)));
-    Matrix<Vector4> mn = scale(m, V(5, 5), twice(FilterBnd(Filter::get("box"), Bndrule::wrap)));
+    Matrix<Vector4> mn = scale(m, V(5, 5), ResizeOptions<2>{.filter = "box", .boundary = "wrap"});
     SHOW(mean(mn));
-    mn = scale(mn, V(10, 10), twice(FilterBnd(Filter::get("impulse"), Bndrule::wrap)),
+    mn = scale(mn, V(10, 10), ResizeOptions<2>{.filter = "impulse", .boundary = "wrap"},
                implicit_cast<Vector4*>(nullptr), std::move(mn));
     SHOW(mean(mn));
   }

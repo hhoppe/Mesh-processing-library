@@ -97,6 +97,17 @@ CGridView<D, T>             (const elements)
 - `RVideo`, `WVideo`: reading or writing a video one frame at a time; `VideoNv12` stores frames in YUV 4:2:0 (NV12).
 - `Audio`: 2D grid of `float` samples (channels by samples), with a sample rate and bit rate.
 
+## Resampling of grids
+
+- `scale()`, `uniform_resize()`: resize a grid of any dimension and sample type (`float`, `Vector4`, `Pixel`, or
+  16- and 32-bit integers) according to a `ResizeOptions`: per-dimension kernels (`Filter`: `cubic`, `cardinal3`,
+  `lanczos3`, `trapezoid`, ...), boundary rules (`Boundary`: `reflect`, `wrap`, `clamp`, `border`, `natural`, ...),
+  sample placement (`Gridtype`: dual or primal), a transfer function (`Gamma`), and a scaling and translation of the
+  domain, following the Python package [resampler](https://github.com/hhoppe/resampler).
+- `Resizer`: the precomputed kernel weights of a resize, reusable across grids (e.g., the frames of a video).
+- `Sampler`, `sample_domain()`, `resample()`: reconstruct a grid at arbitrary points, applying the digital filter of a
+  generalized kernel once; `transform()` resamples a matrix through an affine map of its domain.
+
 ## Utilities
 
 - `Stat`: accumulates statistics (count, min, max, mean, deviation) of a stream of values.

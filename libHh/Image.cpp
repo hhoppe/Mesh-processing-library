@@ -111,11 +111,11 @@ std::string_view image_suffix_for_magic_byte(uchar c) {
 //----------------------------------------------------------------------------
 // *** Scaling
 
-void Image::scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue) {
-  *this = hh::scale(*this, syx, filterbs, bordervalue, std::move(*this));
+void Image::scale(const Vec2<float>& syx, const ResizeOptions<2>& options, const Pixel* bordervalue) {
+  *this = hh::scale(*this, syx, options, bordervalue, std::move(*this));
 }
 
-Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue,
+Image scale(const Image& image, const Vec2<float>& syx, const ResizeOptions<2>& options, const Pixel* bordervalue,
             Image&& pnewimage) {
   Image newimage = &pnewimage == &image ? Image() : std::move(pnewimage);
   assertx(min(syx) >= 0.f);
@@ -127,7 +127,7 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
   newimage.init(newdims);
   newimage.attrib() = image.attrib();
   if (newdims[0] == 0) return newimage;
-  scale_Matrix_Pixel(image, filterbs, bordervalue, newimage);
+  scale_Matrix_Pixel(image, options, bordervalue, newimage);
   return newimage;
 }
 
@@ -384,31 +384,20 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
   }
 }
 
-void scale(CNv12View nv12, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue, Nv12View new_nv12) {
+void scale(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* bordervalue, Nv12View new_nv12) {
   assertx(nv12.get_Y().data() != new_nv12.get_Y().data());
   assertx(nv12.get_UV().data() != new_nv12.get_UV().data());
   if (nv12.get_Y().dims() == new_nv12.get_Y().dims()) return;
   if (!product(new_nv12.get_Y().dims())) return;
-  float borderY;
-  Vector4 borderUV;
+  uint8_t borderY = 0;
+  Vec2<uint8_t> borderUV{};
   if (bordervalue) {
-    const uint8_t borderYt = Y_from_RGB(*bordervalue);
-    convert(CGrid1View(borderYt), Grid1View(borderY));
-    const Vec2<uint8_t> borderUVt = V(U_from_RGB(*bordervalue), V_from_RGB(*bordervalue));
-    convert(CGrid1View(borderUVt), Grid1View(borderUV));
+    borderY = Y_from_RGB(*bordervalue);
+    borderUV = V(U_from_RGB(*bordervalue), V_from_RGB(*bordervalue));
   }
-  {
-    Matrix<float> mat(nv12.get_Y().dims());
-    convert(nv12.get_Y(), mat);
-    const Matrix<float> mat2 = scale(mat, new_nv12.get_Y().dims(), filterbs, bordervalue ? &borderY : nullptr);
-    convert(mat2, new_nv12.get_Y());
-  }
-  {
-    Matrix<Vector4> mat(nv12.get_UV().dims());
-    convert(nv12.get_UV(), mat);
-    const Matrix<Vector4> mat2 = scale(mat, new_nv12.get_UV().dims(), filterbs, bordervalue ? &borderUV : nullptr);
-    convert(mat2, new_nv12.get_UV());
-  }
+  // The planes are resized as integer samples (decoded, filtered, and encoded with rounding and clamping).
+  new_nv12.get_Y().assign(scale(nv12.get_Y(), new_nv12.get_Y().dims(), options, bordervalue ? &borderY : nullptr));
+  new_nv12.get_UV().assign(scale(nv12.get_UV(), new_nv12.get_UV().dims(), options, bordervalue ? &borderUV : nullptr));
 }
 
 }  // namespace hh

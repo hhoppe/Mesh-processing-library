@@ -20,7 +20,7 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
                   [](const std::string_view s) { return &Filter::get(s); });
   {  // Inverse convolution is partition-of-unity.
     Grid<D, float> grid(dims, 1.f);
-    inverse_convolution(grid, ntimes<D>(FilterBnd(Filter::get("spline"), Bndrule::reflect)));
+    apply_digital_filter(GridView<D, float>(grid), SamplingOptions<D>{.filter = "cardinal3", .boundary = "reflect"});
     // SHOW(grid);
     assertx(abs(min(grid) - 1.f) < 1e-6f);
     assertx(abs(max(grid) - 1.f) < 1e-6f);
@@ -31,19 +31,18 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
     for_int(c, D) p[c] = min(c, dims[c] - 1);  // E.g. V(0, 1, 2) for D == 3
     grid[p] = 1.f;
     // SHOW(grid);
-    inverse_convolution(grid, ntimes<D>(FilterBnd(Filter::get("spline"), Bndrule::reflect)));
+    apply_digital_filter(GridView<D, float>(grid), SamplingOptions<D>{.filter = "cardinal3", .boundary = "reflect"});
     // SHOW(grid);
     assertx(abs(sum(grid) - 1.f) < 1e-6f);
     // SHOW(Stat(grid));
   }
   {  // Rescaling of unity-valued grid reproduces unity-valued grid.
     const Grid<D, float> grid(dims, 1.f);
-    // Not: Bndrule::border.
-    for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp}) {
+    // Not: "border".
+    for (const char* boundary : {"reflect", "wrap", "clamp"}) {
       for (const Filter* pfilter : filters) {
         const Filter& filter = *pfilter;
-        if (filter.has_inv_convolution() && !(bndrule == Bndrule::reflect || bndrule == Bndrule::wrap)) continue;
-        const Grid<D, float> gridn = scale(grid, ndims, ntimes<D>(FilterBnd(filter, bndrule)));
+        const Grid<D, float> gridn = scale(grid, ndims, ResizeOptions<D>{.filter = filter, .boundary = boundary});
         // SHOW(Stat(gridn));
         assertx(abs(min(gridn) - 1.f) < 1e-6f);
         assertx(abs(max(gridn) - 1.f) < 1e-6f);
@@ -51,16 +50,14 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
     }
   }
   {  // Random samples of unity field all reproduce unity.
-    for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap}) {
-      for (const string filter_name : {"spline", "omoms"}) {
-        const Filter& filter = Filter::get(filter_name);
-        Grid<D, float> grid(dims, 1.f);
-        const Vec<FilterBnd, D> nfilterbs = inverse_convolution(grid, ntimes<D>(FilterBnd(filter, bndrule)));
-        // SHOW(Stat(grid));
+    for (const char* boundary : {"reflect", "wrap"}) {
+      for (const char* filter_name : {"cardinal3", "omoms3"}) {
+        const Grid<D, float> grid(dims, 1.f);
+        const Sampler<D, float> sampler(grid, {.filter = filter_name, .boundary = boundary});
         for_int(i, 10) {
           Vec<float, D> p;
           for_int(d, D) p[d] = Random::G.unif();
-          assertx(abs(sample_domain(grid, p, nfilterbs) - 1.f) < 1e-6f);
+          assertx(abs(sampler(p) - 1.f) < 1e-6f);
         }
       }
     }
@@ -102,16 +99,16 @@ int main() {
   if (0) {
     Matrix<float> mat = {{1.f, 1.f, 2.f}, {1.f, 1.f, 1.f}, {1.f, 10.f, 1.f}};
     SHOW(mat);
-    SHOW(scale_primal(mat, V(2, 2), twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect))));
-    SHOW(scale_primal(mat, V(5, 5), twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect))));
-    SHOW(scale_primal(scale_primal(mat, V(5, 5), twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect))), V(3, 3),
-                      twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect))));
+    const ResizeOptions<2> primal{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "reflect"};
+    SHOW(scale(mat, V(2, 2), primal));
+    SHOW(scale(mat, V(5, 5), primal));
+    SHOW(scale(scale(mat, V(5, 5), primal), V(3, 3), primal));
     exit(0);
   }
   {  // Most basic experiment.
     const int D = 2;
     const Grid<D, float> grid(V(2, 2), 1.f);
-    const Grid<D, float> gridn = scale(grid, V(3, 3), ntimes<D>(FilterBnd(Filter::get("impulse"), Bndrule::reflect)));
+    const Grid<D, float> gridn = scale(grid, V(3, 3), ResizeOptions<D>{.filter = "impulse", .boundary = "reflect"});
     SHOW(Stat(gridn));
     assertx(abs(min(gridn) - 1.f) < 1e-5f);
     assertx(abs(max(gridn) - 1.f) < 1e-5f);
@@ -130,16 +127,15 @@ int main() {
     Random random(17);
     Matrix<float> mat(5, 4);
     for (float& e : mat) e = random.unif();
-    for (const auto& [filter_name, bndrule] :
-         {std::pair{"triangle", Bndrule::reflect}, std::pair{"keys", Bndrule::clamp},
-          std::pair{"mitchell", Bndrule::wrap}}) {
-      const auto filterbs = twice(FilterBnd(Filter::get(filter_name), bndrule));
+    for (const auto& [filter_name, boundary] :
+         {std::pair{"triangle", "reflect"}, std::pair{"cubic", "clamp"}, std::pair{"mitchell", "wrap"}}) {
+      const ResizeOptions<2> options{.filter = filter_name, .boundary = boundary};
       for (const Vec2<int> ndims : {V(5, 4), V(9, 11), V(5, 13)}) {
-        const Grid<2, float> gridn = scale(mat, ndims, filterbs);
+        const Grid<2, float> gridn = scale(mat, ndims, options);
         assertx(gridn.dims() == ndims);
         for (const auto& yx : range(ndims)) {
           const Vec2<float> p((yx[0] + .5f) / ndims[0], (yx[1] + .5f) / ndims[1]);
-          const float expected = sample_domain(mat, p, filterbs);
+          const float expected = sample_domain(mat, p, options.sampling());
           if (!(abs(gridn[yx] - expected) < 1e-5f)) assertnever(SSHOW(filter_name, ndims, yx, gridn[yx], expected));
         }
       }
@@ -395,11 +391,12 @@ int main() {
   }
   {  // Primal scaling with the (interpolating) triangle filter reproduces a linear ramp.
     const Grid<1, float> ramp = grid_from_flat(V(5), range(5) | views::transform([](int i) { return i / 4.f; }));
-    const Grid<1, float> ramp2 = scale_primal(ramp, V(9), V(FilterBnd(Filter::get("triangle"), Bndrule::clamp)));
+    const Grid<1, float> ramp2 =
+        scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "clamp"});
     for_int(i, 9) assertx(abs(ramp2[i] - i / 8.f) < 1e-6f);
     const Grid<2, float> grid(V(3, 3), 2.f);
-    const Grid<2, float> grid2 =
-        scale_primal(grid, V(5, 7), twice(FilterBnd(Filter::get("spline"), Bndrule::reflect)));
+    const Grid<2, float> grid2 = scale(
+        grid, V(5, 7), ResizeOptions<2>{.gridtype = Gridtype::primal, .filter = "cardinal3", .boundary = "reflect"});
     for (const float e : grid2) assertx(abs(e - 2.f) < 1e-5f);
   }
   {  // Nearest-filter scaling to the same dimensions copies, and to a zero-size grid yields an empty grid.
@@ -411,17 +408,17 @@ int main() {
   {  // Pointwise evaluation with the triangle filter is linear interpolation, with boundary rules outside.
     const Grid<1, float> grid = {0.f, 10.f, 20.f, 40.f};
     const float bordervalue = 100.f;
-    const auto filterb_clamp = V(FilterBnd(Filter::get("triangle"), Bndrule::clamp));
-    const auto filterb_border = V(FilterBnd(Filter::get("triangle"), Bndrule::border));
-    const auto filterb_wrap = V(FilterBnd(Filter::get("triangle"), Bndrule::wrap));
+    const SamplingOptions<1> filterb_clamp{.filter = "triangle", .boundary = "clamp"};
+    const SamplingOptions<1> filterb_border{.filter = "triangle", .boundary = "border"};
+    const SamplingOptions<1> filterb_wrap{.filter = "triangle", .boundary = "wrap"};
+    const SamplingOptions<2> options2_clamp{.filter = "triangle", .boundary = "clamp"};
     SHOW(sample_grid(grid, V(0.f), filterb_clamp), sample_grid(grid, V(1.5f), filterb_clamp),
          sample_grid(grid, V(2.25f), filterb_clamp), sample_grid(grid, V(-1.f), filterb_clamp),
          sample_grid(grid, V(4.f), filterb_clamp));
     SHOW(sample_grid(grid, V(-.5f), filterb_border, &bordervalue), sample_grid(grid, V(3.5f), filterb_wrap));
     SHOW(sample_domain(grid, V(.5f), filterb_clamp), sample_domain(grid, V(.125f), filterb_clamp));
     const Grid<2, float> grid2 = {{0.f, 1.f}, {2.f, 3.f}};
-    SHOW(sample_grid(grid2, V(.5f, .5f), twice(filterb_clamp[0])),
-         sample_grid(grid2, V(1.f, .25f), twice(filterb_clamp[0])));
+    SHOW(sample_grid(grid2, V(.5f, .5f), options2_clamp), sample_grid(grid2, V(1.f, .25f), options2_clamp));
   }
   {  // Convolution of a pixel grid along each dimension, compared against floating-point evaluation.
     Random random(5);
@@ -454,22 +451,21 @@ int main() {
     assertx(ranges::equal(grid1, grid));
     SHOW(convolve_d(grid, 1, Array<float>{.25f, .5f, .25f}, Bndrule::clamp)[2]);
   }
-  {  // Inverse convolution returns the corresponding non-preprocessing filters.
+  {  // The digital filter preserves a constant grid (its kernel is a partition of unity).
     Grid<2, float> grid(V(4, 5), 1.f);
-    const auto filterbs = inverse_convolution(
-        grid, V(FilterBnd(Filter::get("spline"), Bndrule::reflect), FilterBnd(Filter::get("omoms"), Bndrule::wrap)));
-    SHOW(filterbs);
-    // An inverse convolution along a dimension of size 1 is the identity.
+    apply_digital_filter(GridView<2, float>(grid),
+                         SamplingOptions<2>{.filter = V("cardinal3", "omoms3"), .boundary = V("reflect", "wrap")});
+    for (const float e : grid) assertx(abs(e - 1.f) < 1e-5f);
+    // The digital filter along a dimension of size 1 (with reflect) is the identity.
     Grid<2, float> grid1(V(1, 1), 5.f);
-    inverse_convolution(grid1, twice(FilterBnd(Filter::get("spline"), Bndrule::reflect)));
-    assertx((grid1[0, 0]) == 5.f);
+    apply_digital_filter(GridView<2, float>(grid1), SamplingOptions<2>{.filter = "cardinal3", .boundary = "reflect"});
+    assertx(abs((grid1[0, 0]) - 5.f) < 1e-5f);
     // The inverse convolution along dimension 0 commutes with the extraction of a column.
     Grid<2, float> grid2(V(6, 2));
     for_int(y, 6) grid2[y, 0] = grid2[y, 1] = float(y * y);
     Grid<1, float> column = grid_from_flat(V(6), grid_column<0>(CGridView<2, float>(grid2), V(0, 0)));
-    inverse_convolution(grid2, V(FilterBnd(Filter::get("spline"), Bndrule::reflect),
-                                 FilterBnd(Filter::get("spline"), Bndrule::reflect)));
-    inverse_convolution(column, V(FilterBnd(Filter::get("spline"), Bndrule::reflect)));
+    apply_digital_filter(GridView<2, float>(grid2), SamplingOptions<2>{.filter = "cardinal3", .boundary = "reflect"});
+    apply_digital_filter(GridView<1, float>(column), SamplingOptions<1>{.filter = "cardinal3", .boundary = "reflect"});
     for_int(y, 6) {
       const float tolerance = 1e-5f * (1.f + abs(column[y]));
       assertx(abs(grid2[y, 0] - column[y]) < tolerance && abs(grid2[y, 1] - column[y]) < tolerance);

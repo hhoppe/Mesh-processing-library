@@ -35,8 +35,8 @@ string Video::diagnostic_string(const Vec3<int>& dims, const Attrib& attrib) {
   return s;
 }
 
-void Video::scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue) {
-  *this = hh::scale(*this, syx, filterbs, bordervalue, std::move(*this));
+void Video::scale(const Vec2<float>& syx, const ResizeOptions<2>& options, const Pixel* bordervalue) {
+  *this = hh::scale(*this, syx, options, bordervalue, std::move(*this));
 }
 
 //----------------------------------------------------------------------------
@@ -82,7 +82,7 @@ void convert_Video_to_VideoNv12(CGridView<3, Pixel> video, VideoNv12View vnv12) 
 
 //----------------------------------------------------------------------------
 
-Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue,
+Video scale(const Video& video, const Vec2<float>& syx, const ResizeOptions<2>& options, const Pixel* bordervalue,
             Video&& pnewvideo) {
   // With Grid<3, Pixel> rather than Array<Matrix<Pixel>>, we cannot directly overwrite video in-place.
   Video newvideo = &pnewvideo == &video ? Video() : std::move(pnewvideo);
@@ -96,11 +96,11 @@ Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& f
   newvideo.init(video.nframes(), newdims);
   newvideo.attrib() = video.attrib();
   if (!product(newdims)) return newvideo;
-  spatially_scale_Grid3_Pixel(video, filterbs, bordervalue, newvideo);
+  spatially_scale_Grid3_Pixel(video, options, bordervalue, newvideo);
   return newvideo;
 }
 
-VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
+VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const ResizeOptions<2>& options,
                 const Pixel* bordervalue, VideoNv12&& pnewvideo_nv12) {
   VideoNv12 newvideo_nv12 = &pnewvideo_nv12 == &video_nv12 ? VideoNv12() : std::move(pnewvideo_nv12);
   assertx(min(syx) >= 0.f);
@@ -114,7 +114,7 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<
   newvideo_nv12.init(concat(V(video_nv12.nframes()), newdims));
   if (product(newdims)) {
     parallel_for(range(newvideo_nv12.nframes()), [&](const int f) {  //
-      scale(video_nv12[f], filterbs, bordervalue, newvideo_nv12[f]);
+      scale(video_nv12[f], options, bordervalue, newvideo_nv12[f]);
     });
   }
   return newvideo_nv12;

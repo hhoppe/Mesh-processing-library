@@ -1740,7 +1740,7 @@ bool DerivedHw::key_press(string skey) {
             // Frame maps from/to [-0.5, +0.5] ^ 2 whereas g_view maps from/to pixel/texel coordinates.
             Frame frame = translate_2d(twice(.5f)) * scale_2d(convert<float>(g_win_dims)) * ~g_view *
                           ~scale_2d(convert<float>(g_frame_dims)) * ~translate_2d(twice(.5f));
-            const FilterBnd filterb(get_resampling_filter(), Bndrule::reflect);
+            const SamplingOptions<2> options{.filter = get_resampling_filter(), .boundary = "reflect"};
             immediate_message("Resampling rotated object...");
             Video nvideo;
             VideoNv12 nvideo_nv12;
@@ -1750,7 +1750,7 @@ bool DerivedHw::key_press(string skey) {
                 Matrix<Vector4> matv(osdims);
                 convert(ob._video[f], matv);
                 Matrix<Vector4> nmatv(nsdims);
-                transform(matv, frame, twice(filterb), nmatv);
+                transform(matv, frame, options, nmatv);
                 convert(nmatv, nvideo[f]);
               });
             } else {
@@ -1759,14 +1759,14 @@ bool DerivedHw::key_press(string skey) {
                 Matrix<float> matv(osdims);
                 convert(ob._video_nv12.get_Y()[f], matv);
                 Matrix<float> nmatv(nsdims);
-                transform(matv, frame, twice(filterb), nmatv);
+                transform(matv, frame, options, nmatv);
                 convert(nmatv, nvideo_nv12.get_Y()[f]);
               });
               parallel_for(range(ob.nframes()), [&](const int f) {
                 Matrix<Vector4> matv(osdims / 2);
                 convert(ob._video_nv12.get_UV()[f], matv);
                 Matrix<Vector4> nmatv(nsdims / 2);
-                transform(matv, frame, twice(filterb), nmatv);
+                transform(matv, frame, options, nmatv);
                 convert(nmatv, nvideo_nv12.get_UV()[f]);
               });
             }
@@ -1839,7 +1839,7 @@ bool DerivedHw::key_press(string skey) {
             if (0) ndims = (ndims + 1) / 2 * 2;  // No need to round images to even sizes.
           }
           const Vec2<float> syx = convert<float>(ndims) / convert<float>(g_frame_dims);
-          const auto filterbs = twice(FilterBnd(get_resampling_filter(), Bndrule::reflect));
+          const ResizeOptions<2> filterbs{.filter = get_resampling_filter(), .boundary = "reflect"};
           immediate_message("Spatially rescaling object...");
           Video nvideo;
           VideoNv12 nvideo_nv12;
@@ -2988,7 +2988,7 @@ void upload_image_to_texture() {
   }
   {  // Upload the texture data.
     const Vec2<int> offset = twice(g_background_padding_width);
-    const auto filterbs = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect));
+    const ResizeOptions<2> filterbs{.filter = "triangle", .boundary = "reflect"};
     const auto copy_view_to_frame = [&](MatrixView<Pixel> frame) {
       const int framenum = g_framenum;
       GLenum frame_format = format;
@@ -3874,7 +3874,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
     const int hnf = onf / DT;
     if (0) assertx(onf % DT == 0);  // No, we allow arbitrary number of frames, but truncate to a multiple of DT.
     assertx(hnf > 0);
-    const FilterBnd filterb(Filter::get("box"), Bndrule::reflect);
+    const ResizeOptions<2> options{.filter = "box", .boundary = "reflect"};
     const Vec2<int> hdims = sdims / DS;
     assertx(hdims * DS == sdims);
     if (0) SHOW(sdims, hdims, DS);
@@ -3882,7 +3882,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
     {  // Reduced (maybe "half") resolution.
       HH_TIMER("__scale_spatially");
       if (ovideo.size()) {
-        spatially_scale_Grid3_Pixel(ovideo, twice(filterb), nullptr, hvideo1);
+        spatially_scale_Grid3_Pixel(ovideo, options, nullptr, hvideo1);
       } else if (ovideo_nv12.size()) {
         for_int(f, onf) integrally_downscale_Nv12_to_Image(ovideo_nv12[f], hvideo1[f]);
       } else {

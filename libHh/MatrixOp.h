@@ -346,13 +346,6 @@ void transform(CMatrixView<T> m, const Frame& frame, const SamplingOptions<2>& o
   });
 }
 
-// (Transitional:) transform() with the filters and boundary rules given as FilterBnd.
-template <typename T>
-void transform(CMatrixView<T> m, const Frame& frame, const Vec2<FilterBnd>& filterbs, MatrixView<T> nm,
-               const T* bordervalue = nullptr) {
-  transform(m, frame, details::sampling_options_from_filterbnds(filterbs), nm, bordervalue);
-}
-
 // Input: mvec[y, x].mag() is large except near seedpoints where it should indicate relative location of seedpoints.
 // Output: vectors indicating the relative location of the nearest seedpoint.  E.g. T = int or float.
 template <typename T> void euclidean_distance_map(MatrixView<Vec2<T>> mvec);

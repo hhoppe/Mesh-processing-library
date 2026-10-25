@@ -65,6 +65,18 @@ template <int D> void convert(CGridView<D, Pixel> gridu, GridView<D, Vector4> gr
 // Convert a grid of float pixel values into uint8_t pixel values.
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Pixel> gridu);
 
+// Rescale a grid to have new dimensions ndims, specialized to nearest sampling; works on arbitrary types T,
+//  even those that are non-interpolable.
+template <int D, typename T>
+[[nodiscard]] Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims,
+                                              Grid<D, T>&& gr = Grid<D, T>());
+
+// Apply in place the digital filters of the kernels of the options that require one (e.g. cardinal3), so that the
+// reconstruction with the kernels given by Filter::digital_filter_kernel() (e.g. bspline3) interpolates the grid;
+// the values are assumed linear (the gamma is not applied).  Sampler does this automatically.
+template <int D, typename T>
+void apply_digital_filter(GridView<D, T> grid, const SamplingOptions<D>& options, const T* cval = nullptr);
+
 // Convert a grid of uint8_t values into float values.
 template <int D> void convert(CGridView<D, uint8_t> gridu, GridView<D, float> gridf);
 
@@ -76,40 +88,6 @@ template <int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D, Vec
 
 // Convert a grid of Vector4 values into Vec2<uint8_t> values.
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Vec2<uint8_t>> gridu);
-
-// Rescale a grid to have new dimensions ndims (e.g., V(ny, nx) in 2D); assumes samples of old and new grids
-//  lie at locations [.5 / dim(0)...(dim(0) - .5) / dim(0)]...[.5 / dim(D - 1)...(dim(D - 1) - .5) / dim(D - 1)].
-template <int D, typename T>
-[[nodiscard]] Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<FilterBnd, D>& filterbs,
-                               const T* bordervalue = nullptr, Grid<D, T>&& gr = Grid<D, T>());
-
-// Same as scale() but assumes that samples of old and new grids
-//  lie at locations [0., 1. / (dim(0) - 1), ..., (dim(0) - 1) / (dim(0) - 1) == 1.] on each dimension.
-template <int D, typename T>
-[[nodiscard]] Grid<D, T> scale_primal(CGridView<D, T> grid, const Vec<int, D>& ndims,
-                                      const Vec<FilterBnd, D>& filterbs, const T* bordervalue = nullptr,
-                                      Grid<D, T>&& gr = Grid<D, T>());
-
-// Rescale a grid to have new dimensions ndims, specialized to nearest sampling; works on arbitrary types T,
-//  even those that are non-interpolable.
-template <int D, typename T>
-[[nodiscard]] Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims,
-                                              Grid<D, T>&& gr = Grid<D, T>());
-
-// Apply inverse convolution filter preprocess (spline | omoms) to grid; return new filter (justspline | justomoms).
-template <int D, typename T>
-Vec<FilterBnd, D> inverse_convolution(GridView<D, T> grid, const Vec<FilterBnd, D>& filterbs);
-
-// Evaluate the filter at point p of grid g, where samples lie at integers ([0, dim(0) - 1], ..., [0, dim(D - 1) - 1]).
-template <int D, typename T>
-[[nodiscard]] T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs,
-                            const T* bordervalue = nullptr);
-
-// Evaluate the filter at point p of grid g, where grid domain is [0, 1]^D, and thus grid samples lie at
-// locations [.5 / dim(0) ... (dim(0) - .5) / dim(0)] ... [.5 / dim(D - 1) ... (dim(D - 1) - .5) / dim(D - 1)].
-template <int D, typename T>
-[[nodiscard]] T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs,
-                              const T* bordervalue = nullptr);
 
 // Rescale a grid to have new dimensions ndims according to the resampling options (sample placement, kernels,
 // boundary rules); cval is the constant value referenced by some boundary rules (e.g. "border").
@@ -238,7 +216,7 @@ template <int D> class Resizer {
   bool _all_impulse{false};
   bool _all_preprocess{false};  // All kernels are "preprocess": only the digital filter is applied.
   bool _all_bspline3{false};    // All kernels are "bspline3": the value range is expanded afterwards.
-  [[nodiscard]] Vec<FilterBnd, D> filterbnds() const;  // (Transitional bridge to the digital filter.)
+  [[nodiscard]] SamplingOptions<D> sampling_options() const;  // The resolved kernels and rules per dimension.
 };
 
 // Convolve a Pixel grid along its d'th dimension with the 1D kernel (which must have odd length).
@@ -438,12 +416,6 @@ void inverse_convolution_d(GridView<D, T> grid, const Filter& filter, const Boun
   });
 }
 
-// (Transitional:) the digital filter for a FilterBnd, on a dual grid.
-template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, const FilterBnd& filterb, int d) {
-  inverse_convolution_d(grid, filterb.filter(), Boundary::get(filterb.bndrule()), Gridtype::dual, d,
-                        implicit_cast<const T*>(nullptr));
-}
-
 // True for the sample types whose value range [0, 1] the "preprocess" and "bspline3" kernels shrink and expand.
 template <typename T> constexpr bool has_value_range = std::is_arithmetic_v<T> || std::is_same_v<T, Vector4>;
 
@@ -459,19 +431,20 @@ inline float expand_value_range() {
 // The "preprocess" kernels: apply the digital filter of the cubic B-spline to the grid, shrink the value range, and
 // optimize the coefficients so that the reconstruction stays within [0, 1].
 template <int D, typename T>
-Grid<D, T> scale_preprocess(CGridView<D, T> grid, const Vec<FilterBnd, D>& filterbs, Grid<D, T>&& gr) {
+Grid<D, T> scale_preprocess(CGridView<D, T> grid, const SamplingOptions<D>& options, Grid<D, T>&& gr) {
   const Vec<int, D>& dims = grid.dims();
   const float expand_value_range = 1.f / details::expand_value_range();
   const bool no_constrained_optimization = getenv_bool("IMAGE_NO_CONSTRAINED_OPTIMIZATION");
   Grid<D, T> ogrid;
   if (!no_constrained_optimization) ogrid = grid;  // A backup of the original grid.
   gr = grid;                                       // A no-op if gr.data() == grid.data().
-  inverse_convolution(gr, filterbs);
+  apply_digital_filter(GridView<D, T>(gr), options);
   for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // Shrink the range.
   if (!no_constrained_optimization) {
     // Slow implementation: no parallelism, no fast interior, no precomputed grid of weights.
     Vec<Bndrule, D> bndrules;
-    for_int(d, D) bndrules[d] = filterbs[d].bndrule();
+    for_int(d, D) bndrules[d] =
+        parse_boundaryrule(options.boundary[d]->is_auto() ? "reflect" : options.boundary[d]->name());
     for (T& e : ogrid) e = T{.5f} + (e - T{.5f}) * expand_value_range;
     for (T& e : gr) e = general_clamp(e, T{0.f}, T{1.f});
     for_int(iter, 5) {  // 10 Gauss-Seidel iterations are a tiny bit better; 100 are no different.
@@ -500,16 +473,14 @@ Grid<D, T> scale_preprocess(CGridView<D, T> grid, const Vec<FilterBnd, D>& filte
 }  // namespace details
 
 template <int D, typename T>
-Vec<FilterBnd, D> inverse_convolution(GridView<D, T> grid, const Vec<FilterBnd, D>& filterbs) {
-  Vec<FilterBnd, D> tfilterbs = filterbs;
+void apply_digital_filter(GridView<D, T> grid, const SamplingOptions<D>& options, const T* cval) {
+  static const Boundary& k_reflect = Boundary::get("reflect");
   for_int(d, D) {
-    const Filter& filter = filterbs[d].filter();
-    if (!filter.requires_digital_filter())
-      assertnever("Unrecognized image filter '" + filter.name() + "' for inverse_convolution");
-    tfilterbs[d].set_filter(filter.digital_filter_kernel());
+    const Filter& filter = *options.filter[d];
+    if (!filter.requires_digital_filter()) continue;
+    const Boundary& boundary = options.boundary[d]->is_auto() ? k_reflect : *options.boundary[d];
+    details::inverse_convolution_d(grid, filter, boundary, options.gridtype[d], d, cval);
   }
-  for_int(d, D) details::inverse_convolution_d(grid, filterbs[d], d);
-  return tfilterbs;
 }
 
 template <int D, typename T>
@@ -696,16 +667,6 @@ Grid<D, T> evaluate_rows_d(CGridView<D, T> grid, int d, const ResizerDim& rd, co
   return ngrid;
 }
 
-// Express the filters and boundary rules of a Vec<FilterBnd, D> as resizing options (a transitional bridge).
-template <int D> ResizeOptions<D> options_from_filterbnds(const Vec<FilterBnd, D>& filterbs) {
-  ResizeOptions<D> options;
-  for_int(d, D) {
-    options.filter[d] = FilterRef(filterbs[d].filter());
-    options.boundary[d] = BoundaryRef(Boundary::get(filterbs[d].bndrule()));
-  }
-  return options;
-}
-
 }  // namespace details
 
 template <int D>
@@ -771,10 +732,14 @@ Resizer<D>::Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const Res
   }
 }
 
-template <int D> Vec<FilterBnd, D> Resizer<D>::filterbnds() const {
-  Vec<FilterBnd, D> filterbs = ntimes<D>(FilterBnd(Filter::get("box"), Bndrule::reflect));
-  for_int(d, D) filterbs[d] = FilterBnd(*_plan[d].filter, parse_boundaryrule(_plan[d].boundary->name()));
-  return filterbs;
+template <int D> SamplingOptions<D> Resizer<D>::sampling_options() const {
+  SamplingOptions<D> options;
+  for_int(d, D) {
+    options.gridtype[d] = _plan[d].src_gridtype;
+    options.filter[d] = FilterRef(*_plan[d].filter);
+    options.boundary[d] = BoundaryRef(*_plan[d].boundary);
+  }
+  return options;
 }
 
 template <int D> typename Resizer<D>::Row Resizer<D>::row(int d, int i) const {
@@ -865,7 +830,7 @@ Grid<D, F> Resizer<D>::apply_linear(CGridView<D, F> grid, const F* cval, Grid<D,
   assertx(grid.dims() == _dims && !_all_impulse);
   if (_all_preprocess) {
     if constexpr (details::has_value_range<T>)
-      return details::scale_preprocess(grid, filterbnds(), std::move(gr));
+      return details::scale_preprocess(grid, sampling_options(), std::move(gr));
     else
       assertnever("The preprocess kernel applies to scalar or Vector4 grids");
   }
@@ -909,20 +874,6 @@ Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const ResizeOpt
 }
 
 template <int D, typename T>
-Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<FilterBnd, D>& filterbs,
-                 const T* bordervalue, Grid<D, T>&& gr) {
-  return scale(grid, ndims, details::options_from_filterbnds(filterbs), bordervalue, std::move(gr));
-}
-
-template <int D, typename T>
-Grid<D, T> scale_primal(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<FilterBnd, D>& filterbs,
-                        const T* bordervalue, Grid<D, T>&& gr) {
-  ResizeOptions<D> options = details::options_from_filterbnds(filterbs);
-  options.gridtype = Gridtype::primal;
-  return scale(grid, ndims, options, bordervalue, std::move(gr));
-}
-
-template <int D, typename T>
 Grid<D, T> uniform_resize(CGridView<D, T> grid, const Vec<int, D>& ndims, ObjectFit object_fit,
                           ResizeOptions<D> options, const T* cval) {
   const PerDim<Gridtype, D>& dst_gridtype = options.dst_gridtype ? *options.dst_gridtype : options.gridtype;
@@ -942,20 +893,6 @@ Grid<D, T> uniform_resize(CGridView<D, T> grid, const Vec<int, D>& ndims, Object
   const T default_cval{};
   return scale(grid, ndims, options, cval ? cval : &default_cval);
 }
-
-namespace details {
-
-// Express the filters and boundary rules of a Vec<FilterBnd, D> as sampling options (a transitional bridge).
-template <int D> SamplingOptions<D> sampling_options_from_filterbnds(const Vec<FilterBnd, D>& filterbs) {
-  SamplingOptions<D> options;
-  for_int(d, D) {
-    options.filter[d] = FilterRef(filterbs[d].filter());
-    options.boundary[d] = BoundaryRef(Boundary::get(filterbs[d].bndrule()));
-  }
-  return options;
-}
-
-}  // namespace details
 
 template <int D, typename T>
 Sampler<D, T>::Sampler(CGridView<D, T> grid, const SamplingOptions<D>& options, const T* cval)
@@ -1125,16 +1062,6 @@ T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D
 template <int D, typename T>
 T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options, const T* cval) {
   return Sampler<D, T>(g, options, cval)(p);
-}
-
-template <int D, typename T>
-T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs, const T* bordervalue) {
-  return sample_grid(g, p, details::sampling_options_from_filterbnds(filterbs), bordervalue);
-}
-
-template <int D, typename T>
-T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs, const T* bordervalue) {
-  return sample_domain(g, p, details::sampling_options_from_filterbnds(filterbs), bordervalue);
 }
 
 template <int D, bool parallel>

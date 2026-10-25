@@ -3,9 +3,9 @@
 #define MESH_PROCESSING_LIBHH_VIDEO_H_
 
 #include "libHh/Audio.h"
-#include "libHh/Filter.h"  // FilterBnd
 #include "libHh/Grid.h"
 #include "libHh/Image.h"  // Nv12View
+#include "libHh/ResampleOptions.h"
 
 #if 0
 {
@@ -50,7 +50,7 @@ class Video : public Grid<3, Pixel> {
   void write_file(const string& filename) const;  // The name may be "-" for std::cout; may throw std::runtime_error.
 
   // Misc:
-  void scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue = nullptr);
+  void scale(const Vec2<float>& syx, const ResizeOptions<2>& options = {}, const Pixel* bordervalue = nullptr);
   struct Attrib {
     string suffix;         // E.g. "mp4"; "" if unknown; to identify format of read_file("-") and write_file("-").
     double framerate{0.};  // Frames per second.
@@ -146,10 +146,11 @@ void convert_VideoNv12_to_Video(CVideoNv12View vnv12, GridView<3, Pixel> video);
 void convert_Video_to_VideoNv12(CGridView<3, Pixel> video, VideoNv12View vnv12);
 
 // &video == &newvideo is OK.
-[[nodiscard]] Video scale(const Video& video, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
+[[nodiscard]] Video scale(const Video& video, const Vec2<float>& syx, const ResizeOptions<2>& options = {},
                           const Pixel* bordervalue = nullptr, Video&& newvideo = Video());
-[[nodiscard]] VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs,
-                              const Pixel* bordervalue = nullptr, VideoNv12&& pnewvideo_nv12 = VideoNv12());
+[[nodiscard]] VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx,
+                              const ResizeOptions<2>& options = {}, const Pixel* bordervalue = nullptr,
+                              VideoNv12&& pnewvideo_nv12 = VideoNv12());
 
 // Read a video stream one image frame at a time.  getenv_string("VIDEO_IMPLEMENTATION") may equal "ffmpeg" or "mf".
 class RVideo {

@@ -688,7 +688,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   //  due to get_framei(), but only on even frames when upsampled from coarse-scale correction.
   Nv12 static_frame;
   if (video_filename != "") static_frame.init(sdims);
-  const FilterBnd filterb(Filter::get("box"), Bndrule::reflect);
+  const ResizeOptions<2> options{.filter = "box", .boundary = "reflect"};
   const int hny = ny / DS, hnx = nx / DS;
   const Vec2<int> hdims(hny, hnx);
   assertx(hdims == sdims / DS);
@@ -705,7 +705,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
     HH_TIMER("__scale_down");
     assertx(DT == 1);
     if (video.size()) {
-      spatially_scale_Grid3_Pixel(video, twice(filterb), nullptr, hvideo);
+      spatially_scale_Grid3_Pixel(video, options, nullptr, hvideo);
     } else if (video_nv12.size()) {
       for_int(f, onf) integrally_downscale_Nv12_to_Image(video_nv12[f], hvideo[f]);
     } else {
@@ -1362,14 +1362,14 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         compute_gdloop_aux1<false>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
       } else {  // Reduce resolution on two spatial dimensions by a factor two.
         // "box" is fastest; previously "spline" and "triangle".
-        const FilterBnd filterb(Filter::get("box"), Bndrule::reflect);
+        const ResizeOptions<2> options{.filter = "box", .boundary = "reflect"};
         const bool debug = false;
         Timer timer_gdloop1("_gdloop1");
         Grid<3, Pixel> hvideo(video.dim(0), ((video.dim(1) + 3) / 4) * 2,
                               ((video.dim(2) + 3) / 4) * 2);  // Half-resolution.
         {
           HH_TIMER("__scale_down");
-          spatially_scale_Grid3_Pixel(video, twice(filterb), nullptr, hvideo);
+          spatially_scale_Grid3_Pixel(video, options, nullptr, hvideo);
         }
         if (debug) write_video(hvideo, "hvideo.mp4");
         const Vec2<int> hdims = hvideo.dims().tail<2>();
@@ -1386,7 +1386,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         HH_TIMER("_gdloop3");
         {
           HH_TIMER("__scale_up");
-          spatially_scale_Grid3_Pixel(hvideoloop, twice(filterb), nullptr, videoloop);
+          spatially_scale_Grid3_Pixel(hvideoloop, options, nullptr, videoloop);
         }
         if (debug) write_video(videoloop, "videoloop.mp4");
         if (1) {  // Visually excellent, but actual rms numbers are poor.

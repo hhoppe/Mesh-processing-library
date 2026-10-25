@@ -48,7 +48,7 @@ int verbose = 1;
 bool first_domain_face = false;
 bool nooutput = false;
 
-const auto k_downsampling_filter = twice(FilterBnd(Filter::get("spline"), Bndrule::reflect));
+const ResizeOptions<2> k_downsampling_options{.filter = "cardinal3", .boundary = "reflect"};
 
 struct DomainFace {
   Polygon poly;          // Points on regular polyhedron in 3D.
@@ -1472,7 +1472,7 @@ void do_write_texture(Args& args) {
 
   handle_zero_alpha_pixels_for_filled_faces(image);
   if (anisotropic_filtering) apply_anisotropic_filtering(image, image_surface_points);
-  if (supersample > 1) image.scale(twice(1.f / supersample), k_downsampling_filter);
+  if (supersample > 1) image.scale(twice(1.f / supersample), k_downsampling_options);
   if (feather_texture) feather_sphere_image(image, domain);
   image.write_file(image_name);
   nooutput = true;
@@ -1582,7 +1582,7 @@ void do_write_lonlat_texture(Args& args) {
   });
 
   handle_zero_alpha_pixels_for_filled_faces(image);
-  if (supersample > 1) image.scale(twice(1.f / supersample), k_downsampling_filter);
+  if (supersample > 1) image.scale(twice(1.f / supersample), k_downsampling_options);
   image.write_file(image_name);
   nooutput = true;
 }

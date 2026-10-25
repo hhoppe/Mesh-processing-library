@@ -18,7 +18,6 @@ class Filter : noncopyable {
   [[nodiscard]] double radius() const { return _radius; }
   [[nodiscard]] bool is_interpolating() const { return _is_interpolating; }
   [[nodiscard]] bool is_discontinuous() const { return _is_discontinuous; }
-  [[nodiscard]] bool has_inv_convolution() const { return _has_inv_convolution; }
   // True if the kernel interpolates only after a digital filter (inverse convolution) of the samples.
   [[nodiscard]] bool requires_digital_filter() const { return _has_inv_convolution; }
   // The kernel to evaluate after the digital filter (e.g., bspline3 for cardinal3); the filter itself otherwise.
@@ -84,22 +83,6 @@ class Filter : noncopyable {
   string _name;
   KernelFunc _func;
   double _radius;
-};
-
-class FilterBnd {
- public:
-  explicit FilterBnd(const Filter& filter_, Bndrule bndrule_) : _filter(&filter_) { set_bndrule(bndrule_); }
-  [[nodiscard]] const Filter& filter() const { return *_filter; }
-  [[nodiscard]] Bndrule bndrule() const { return _bndrule; }
-  void set_filter(const Filter& filter_) { _filter = &filter_; }
-  void set_bndrule(Bndrule bndrule_) { _bndrule = bndrule_, assertx(_bndrule != Bndrule::undefined); }
-  friend std::ostream& operator<<(std::ostream& os, const FilterBnd& filterbnd) {
-    return os << "FilterBnd{" << filterbnd._filter->name() << ", " << boundaryrule_name(filterbnd._bndrule) << "}";
-  }
-
- private:
-  const Filter* _filter;
-  Bndrule _bndrule;
 };
 
 }  // namespace hh

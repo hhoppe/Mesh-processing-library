@@ -68,54 +68,18 @@ int main() {
     assertx(ResizeOptions<1>{.filter = my_filter}.filter[0].ptr == &my_filter);
     SHOW(options.filter, options.boundary, options.gamma);
   }
-  {  // The option-based scale() and sample_domain() agree with the FilterBnd-based ones.
+  {  // Primal grids and per-dimension kernels and rules.
+    Grid<1, float> ramp(V(5));
+    for_int(i, 5) ramp[i] = float(i * i);
+    SHOW(scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "clamp"}));
+    // On a primal grid, "reflect" is the 101 reflection (the boundary sample is not repeated), as in resampler.
+    SHOW(scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "cubic", .boundary = "reflect"}));
     Random random(17);
-    Matrix<float> mat(5, 4);
-    for (float& e : mat) e = random.unif();
-    const float cval = .25f;
-    for (const auto& [filter_name, boundary_name] :
-         {std::pair{"triangle", "reflect"}, std::pair{"cubic", "clamp"}, std::pair{"mitchell", "wrap"},
-          std::pair{"cardinal3", "reflect"}, std::pair{"box", "border"}, std::pair{"impulse", "clamp"}}) {
-      const auto filterbs = twice(FilterBnd(Filter::get(filter_name), parse_boundaryrule(boundary_name)));
-      const ResizeOptions<2> options{.filter = filter_name, .boundary = boundary_name};
-      for (const Vec2<int> ndims : {V(5, 4), V(9, 11), V(5, 13), V(3, 2)}) {
-        const Grid<2, float> expected = scale(mat, ndims, filterbs, &cval);
-        const Grid<2, float> result = scale(mat, ndims, options, &cval);
-        assertx(ranges::equal(result, expected));
-      }
-      if (Filter::get(filter_name).requires_digital_filter() || Filter::get(filter_name).is_impulse()) continue;
-      for_int(i, 5) {
-        const Vec2<float> p(random.unif() * 1.4f - .2f, random.unif() * 1.4f - .2f);
-        assertx(sample_domain(mat, p, filterbs, &cval) == sample_domain(mat, p, options.sampling(), &cval));
-        const Vec2<float> pg(p[0] * 5.f, p[1] * 4.f);
-        assertx(sample_grid(mat, pg, filterbs, &cval) == sample_grid(mat, pg, options.sampling(), &cval));
-      }
-    }
-    {  // A primal grid.
-      Grid<1, float> ramp(V(5));
-      for_int(i, 5) ramp[i] = float(i * i);
-      const Grid<1, float> expected = scale_primal(ramp, V(9), V(FilterBnd(Filter::get("triangle"), Bndrule::clamp)));
-      const ResizeOptions<1> options{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "clamp"};
-      assertx(ranges::equal(scale(ramp, V(9), options), expected));
-      SHOW(scale(ramp, V(9), options));
-      // On a primal grid, "reflect" is the 101 reflection (the boundary sample is not repeated), as in resampler;
-      // the FilterBnd entry point follows the same rule.
-      const ResizeOptions<1> options2{.gridtype = Gridtype::primal, .filter = "cubic", .boundary = "reflect"};
-      const Grid<1, float> result2 = scale(ramp, V(9), options2);
-      assertx(ranges::equal(scale_primal(ramp, V(9), V(FilterBnd(Filter::get("cubic"), Bndrule::reflect))), result2));
-      SHOW(result2);
-    }
-    {  // Three dimensions with different kernels and rules per dimension.
-      Grid<3, float> grid(V(4, 5, 3));
-      for (float& e : grid) e = random.unif();
-      const Vec3<FilterBnd> filterbs(FilterBnd(Filter::get("cubic"), Bndrule::reflect),
-                                     FilterBnd(Filter::get("triangle"), Bndrule::wrap),
-                                     FilterBnd(Filter::get("box"), Bndrule::clamp));
-      const ResizeOptions<3> options{.filter = V("cubic", "triangle", "box"),
-                                     .boundary = V("reflect", "wrap", "clamp")};
-      for (const Vec3<int> ndims : {V(7, 2, 6), V(4, 9, 1), V(2, 2, 2)})
-        assertx(ranges::equal(scale(grid, ndims, options), scale(grid, ndims, filterbs)));
-    }
+    Grid<3, float> grid(V(4, 5, 3));
+    for (float& e : grid) e = random.unif();
+    const ResizeOptions<3> options{.filter = V("cubic", "triangle", "box"), .boundary = V("reflect", "wrap", "clamp")};
+    for (const Vec3<int> ndims : {V(7, 2, 6), V(4, 9, 1), V(2, 2, 2)})
+      SHOW(ndims, round_fraction_digits(float(sum(scale(grid, ndims, options))), 100.f));
   }
   {  // Resizer: rows of precomputed weights, with the boundary taps folded into interior samples.
     const Resizer<1> resizer(V(3), V(7), {.filter = "cubic", .boundary = "wrap"});

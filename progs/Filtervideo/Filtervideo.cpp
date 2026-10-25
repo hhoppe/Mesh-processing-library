@@ -31,8 +31,8 @@ constexpr int nz = 3;  // 3 color channels; no alpha channel.
 
 bool g_not = false;
 Pixel gcolor{255, 255, 255, 255};
-Bndrule bndrule = Bndrule::reflect;
-FilterBnd filterb(Filter::get("spline"), bndrule);
+Bndrule bndrule = Bndrule::reflect;  // For cropping (the four index-mapping rules only).
+ResizeOptions<2> g_options{.filter = "cardinal3"};  // For resampling (boundary "auto").
 int startframe = 0;
 int tradius = 0;  // Was 4.
 bool nooutput = false;
@@ -210,7 +210,7 @@ void apply_assemble_operations(Grid<3, Pixel>& vid, const Vec2<int>& yx, const V
       const float vscale = min(convert<float>(as_fit_dims) / convert<float>(vid.dims().tail<2>()));
       const Vec2<int> newdims = convert<int>(convert<float>(vid.dims().tail<2>()) * vscale + .5f);
       Grid<3, Pixel> newvid(concat(V(vid.dim(0)), newdims));
-      spatially_scale_Grid3_Pixel(vid, twice(filterb), &gcolor, newvid);
+      spatially_scale_Grid3_Pixel(vid, g_options, &gcolor, newvid);
       vid = std::move(newvid);
     }
     const Vec2<int> side0 = (as_fit_dims - vid.dims().tail<2>()) / 2;
@@ -844,10 +844,14 @@ void do_getcolorfxy(Args& args) {
   showf("gotcolor %d %d %d\n", gcolor[0], gcolor[1], gcolor[2]);
 }
 
-void do_boundaryrule(Args& args) {
-  bndrule = parse_boundaryrule(args.get_string());
-  filterb.set_bndrule(bndrule);
+void do_boundary(Args& args) {
+  const Boundary& boundary = Boundary::get(args.get_string());
+  g_options.boundary = BoundaryRef(boundary);
+  for (const Bndrule rule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border})
+    if (&Boundary::get(rule) == &boundary) bndrule = rule;
 }
+
+void do_boundaryrule(Args& args) { do_boundary(args); }  // The former name.
 
 void do_cropsides(Args& args) {
   int vl = parse_size(args.get_string(), video.xsize(), false);
@@ -939,10 +943,16 @@ void do_cropmult(Args& args) {
 
 // *** scale
 
-void do_filter(Args& args) { filterb.set_filter(Filter::get(args.get_string())); }
+void do_filter(Args& args) { g_options.filter = FilterRef(args.get_string()); }
+
+void do_prefilter(Args& args) { g_options.prefilter = FilterRef(args.get_string()); }
+
+void do_gridtype(Args& args) { g_options.gridtype = parse_gridtype(args.get_string()); }
+
+void do_gamma(Args& args) { g_options.gamma = GammaRef(args.get_string()); }
 
 void apply_scale(const Vec2<float>& v) {
-  video.scale(v, twice(filterb), &gcolor);
+  video.scale(v, g_options, &gcolor);
   if (max(v) < 1.f) {
     video.attrib().bitrate = int(video.attrib().bitrate * pow(float(product(v)), .8f) + .5f);
     showf("Reducing bitrate after scaling: %s\n", Video::diagnostic_string(video.dims(), video.attrib()).c_str());
@@ -1079,7 +1089,7 @@ void do_replace(Args& args) {
   showf("Replaced %d pixels\n", count);
 }
 
-void do_gamma(Args& args) {
+void do_apply_gamma(Args& args) {
   const float gamma = args.get_float();
   const auto transf = Vec<uint8_t, 256>::create([gamma](int uc) { return uint8_from_unit(pow(uc / 255.f, gamma)); });
   parallel_for({.cycles_per_elem = 10}, range(video.size()), [&](const size_t i) {
@@ -1113,14 +1123,14 @@ void possibly_rescale_loop_parameters() {
     showdf("Scaling vlp from %s to %s\n",  //
            make_string(g_lp.mat_static.dims()).c_str(), make_string(video.spatial_dims()).c_str());
   }
-  const FilterBnd tfilterb(Filter::get("impulse"), Bndrule::reflect);
+  const ResizeOptions<2> nearest{.filter = "impulse", .boundary = "reflect"};
   const auto func_scale_Matrix_int = [&](Matrix<int>& m) {
     m = scale_filter_nearest(m, video.spatial_dims(), std::move(m));
   };
   func_scale_Matrix_int(g_lp.mat_static);
   func_scale_Matrix_int(g_lp.mat_start);
   func_scale_Matrix_int(g_lp.mat_period);
-  g_lp.mat_activation = scale(g_lp.mat_activation, video.spatial_dims(), twice(tfilterb),
+  g_lp.mat_activation = scale(g_lp.mat_activation, video.spatial_dims(), nearest,
                               implicit_cast<float*>(nullptr), std::move(g_lp.mat_activation));
 }
 
@@ -2237,7 +2247,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(color, "r g b : set color for various operations (default 255's)");
   HH_ARGSD(not, ": negate test for color selection");
   HH_ARGSD(getcolorfxy, "f x y : get color from pixel ((0, 0, 0)=(frame0, left, top))");
-  HH_ARGSD(boundaryrule, "c : reflected/periodic/clamped/border");
+  HH_ARGSD(boundary, "c : rule: reflect/wrap/clamp/border/natural/...");
+  HH_ARGSD(boundaryrule, "c : (former name of -boundary)");
   HH_ARGSC("", "   (for scaling or negative trim/crop)");
   HH_ARGSC("", ":");
   HH_ARGSD(cropsides, "l r t b : crop frames (introduce default color if negative)");
@@ -2252,7 +2263,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmult, "fac : increase dimensions to be multiple of fac");
   HH_ARGSC("", ":");
-  HH_ARGSD(filter, "c : set kernel: imp/box/tri/quad/mitchell/keys/spline/");
+  HH_ARGSD(filter, "c : kernel: cubic/cardinal3/lanczos3/triangle/...");
+  HH_ARGSD(prefilter, "c : kernel when minifying (auto: same)");
+  HH_ARGSD(gridtype, "c : dual (default) or primal sample placement");
+  HH_ARGSD(gamma, "c : identity (default), power2, power22, srgb");
   HH_ARGSC("", ":    omoms/gauss/preprocess/justspline (def. spline)");
   HH_ARGSD(scaleunif, "fac : zoom video (upsample and/or downsample)");
   HH_ARGSD(scalenonunif, "facx facy : zoom video");
@@ -2268,7 +2282,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(gridcrop, "nx ny sizex sizey : assemble grid of regions (with as_cropsides)");
   HH_ARGSC("", ":");
   HH_ARGSD(replace, "r g b : replace pixels matching '-color' with this color");
-  HH_ARGSD(gamma, "v : gammawarp video");
+  HH_ARGSD(apply_gamma, "v : gammawarp video");
   HH_ARGSC("", ":");
   HH_ARGSD(loadpj, "file.pj{o,r} : read progressive video project file");
   HH_ARGSD(loadvlp, "file.vlp : read video-loop parameters (PNG)");

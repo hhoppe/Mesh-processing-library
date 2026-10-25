@@ -19,7 +19,7 @@ The programs `Filterimage`, `Filtermesh`, `Filtervideo`,
 Processes an image.  For example, the command
 ```shell
 Filterimage demos/data/gaudipark.png -rotate 20 -cropl 100 -cropr 100 \
-  -filter lanczos6 -scaletox 100 -color 0 0 255 255 -boundary border -cropall -20 \
+  -filter lanczos3 -scaletox 100 -color 0 0 255 255 -boundary border -cropall -20 \
   -setalpha 255 -color 0 0 0 0 -drawrectangle 30% 30% -30% -30% -gdfill \
   -info -to jpg >gaudipark.new.jpg
 ```
@@ -66,7 +66,7 @@ FilterPM demos/data/spheretext.pm -nf 2000 -outmesh |
 
 Processes a video.  For example, the command
 ```shell
-Filtervideo demos/data/palmtrees_small.mp4 -filter keys -scaleu 1.5 >palmtrees_small.scale1.5.mp4
+Filtervideo demos/data/palmtrees_small.mp4 -filter cubic -scaleu 1.5 >palmtrees_small.scale1.5.mp4
 ```
 - reads the video (entirely into memory),
 - uniformly scales the two spatial dimensions by a factor 1.5 using the Keys bicubic filter, and
@@ -74,7 +74,7 @@ Filtervideo demos/data/palmtrees_small.mp4 -filter keys -scaleu 1.5 >palmtrees_s
 
 The command
 ```shell
-Filtervideo demos/data/palmtrees_small.mp4 -info -trimbeg 4 -boundary clamped -trimend -20% \
+Filtervideo demos/data/palmtrees_small.mp4 -info -trimbeg 4 -boundary clamp -trimend -20% \
     -tscale 1.5 -framerate 150% -croprectangle 50% 50% 400 240 -gamma 1.5 -bitrate 10m |
   VideoViewer demos/data/palmtrees_small.mp4 - -key =an
 ```

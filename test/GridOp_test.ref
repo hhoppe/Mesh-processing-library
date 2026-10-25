@@ -625,7 +625,7 @@ assemble(grids1) = Array<int>(5) {
 sample_grid(grid, V(0.f), filterb_clamp)=0 sample_grid(grid, V(1.5f), filterb_clamp)=15 sample_grid(grid, V(2.25f), filterb_clamp)=25 sample_grid(grid, V(-1.f), filterb_clamp)=0 sample_grid(grid, V(4.f), filterb_clamp)=40
 sample_grid(grid, V(-.5f), filterb_border, &bordervalue)=50 sample_grid(grid, V(3.5f), filterb_wrap)=20
 sample_domain(grid, V(.5f), filterb_clamp)=15 sample_domain(grid, V(.125f), filterb_clamp)=0
-sample_grid(grid2, V(.5f, .5f), twice(filterb_clamp[0]))=1.5 sample_grid(grid2, V(1.f, .25f), twice(filterb_clamp[0]))=2.25
+sample_grid(grid2, V(.5f, .5f), options2_clamp)=1.5 sample_grid(grid2, V(1.f, .25f), options2_clamp)=2.25
 convolve_d(grid, 1, Array<float>{.25f, .5f, .25f}, Bndrule::clamp)[2] = Array<hh::Pixel>(7) {
   Pixel(219, 120, 193, 146)
   Pixel(176, 142, 97, 182)
@@ -635,4 +635,3 @@ convolve_d(grid, 1, Array<float>{.25f, .5f, .25f}, Bndrule::clamp)[2] = Array<hh
   Pixel(149, 81, 83, 161)
   Pixel(88, 125, 61, 96)
 }
-filterbs = [FilterBnd{bspline3, reflect}, FilterBnd{justomoms, wrap}]

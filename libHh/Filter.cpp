@@ -378,7 +378,8 @@ const Filter& Filter::get(std::string_view name) {
 }
 
 const Filter& Filter::digital_filter_kernel() const {
-  if (!_has_inv_convolution || _is_preprocess) return *this;
+  if (!_has_inv_convolution) return *this;
+  if (_is_preprocess) return get("bspline3");  // The digital filter of the cubic B-spline.
   if (_name == "cardinal3") return get("bspline3");
   if (_name == "cardinal5") return get("bspline5");
   if (_name == "omoms3") return get("justomoms");

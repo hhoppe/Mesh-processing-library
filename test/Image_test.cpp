@@ -219,7 +219,7 @@ int main() {
     assertx(cnv12v.get_UV().data() == nv12b.get_UV().data());
     // Scaling an Nv12 image.
     Nv12 nv12c(V(8, 6));
-    scale(nv12b, twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect)), nullptr, nv12c);
+    scale(nv12b, ResizeOptions<2>{.filter = "triangle", .boundary = "reflect"}, nullptr, nv12c);
     for (const uint8_t y : nv12c.get_Y()) assertx(abs(y - nv12b.get_Y()[0][0]) <= 1);
     for (const Vec2<uint8_t>& uv : nv12c.get_UV()) assertx(abs(uv[0] - nv12b.get_UV()[0][0][0]) <= 1);
   }
@@ -227,17 +227,17 @@ int main() {
     // Scaling of an image preserves a uniform color and the attributes.
     Image image(V(4, 6), Pixel(200, 100, 50, 255));
     image.set_zsize(4);
-    const Image image2 = scale(image, V(2.f, .5f), twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect)));
+    const Image image2 = scale(image, V(2.f, .5f), ResizeOptions<2>{.filter = "triangle", .boundary = "reflect"});
     SHOW(image2.dims(), image2.zsize());
     for (const Pixel& pixel : image2) assertx(pixel == image[0, 0]);
-    image.scale(V(.5f, 1.5f), twice(FilterBnd(Filter::get("box"), Bndrule::clamp)));
+    image.scale(V(.5f, 1.5f), ResizeOptions<2>{.filter = "box", .boundary = "clamp"});
     SHOW(image.dims());
     for (const Pixel& pixel : image) assertx(pixel == Pixel(200, 100, 50, 255));
     // Scaling with a border value.
     const Image image3(V(2, 2), Pixel::black());
     const Pixel bordervalue = Pixel::white();
     const Image image4 =
-        scale(image3, V(2.f, 2.f), twice(FilterBnd(Filter::get("triangle"), Bndrule::border)), &bordervalue);
+        scale(image3, V(2.f, 2.f), ResizeOptions<2>{.filter = "triangle", .boundary = "border"}, &bordervalue);
     SHOW(image4);
   }
 #if defined(HH_IMAGE_HAVE_WIC) || defined(HH_IMAGE_HAVE_LIBS)  // Without these, the image IO would require ffmpeg.

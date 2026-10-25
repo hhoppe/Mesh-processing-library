@@ -30,9 +30,10 @@ class Filter : noncopyable {
   [[nodiscard]] bool is_preprocess() const { return _is_preprocess; }  // For: preprocess.
   [[nodiscard]] bool is_partition_of_unity() const { return _is_partition_of_unity; }
   [[nodiscard]] bool is_unit_integral() const { return _is_unit_integral; }
-  [[nodiscard]] bool is_auto() const {
-    return _is_auto;
-  }  // The placeholder "auto", resolved by the resampling options.
+  // The placeholder "auto", resolved by the resampling options.
+  [[nodiscard]] bool is_auto() const { return _is_auto; }
+  // The scaling-dependent trapezoid kernel, usable only in scale().
+  [[nodiscard]] bool is_trapezoid() const { return _is_trapezoid; }
 
   // The names follow the Python package `resampler`; the former names and single letters remain aliases.
   [[HH_NO_DANGLING]] [[nodiscard]] static const Filter& get(std::string_view name);
@@ -58,6 +59,7 @@ class Filter : noncopyable {
   // lanczos10:   Lanczos filter with support [-10, 10]; best but slowest.
   // hamming3:    (h, hamming6) Hamming-windowed sinc with support [-3, 3] (a0 = 25 / 46).
   // kaiser3:     Kaiser-windowed sinc with support [-3, 3] (beta = 7.12).
+  // trapezoid:   area-antialiasing kernel whose radius .5 + .5 min(s, 1 / s) depends on the scaling s; in scale().
   // auto:        a placeholder resolved by the resampling options (e.g., prefilter "auto" means the filter).
   friend std::ostream& operator<<(std::ostream& os, const Filter& filter) {
     return os << "Filter{" << filter.name() << "}";
@@ -76,6 +78,7 @@ class Filter : noncopyable {
   bool _is_partition_of_unity{true};
   bool _is_unit_integral{true};
   bool _is_auto{false};
+  bool _is_trapezoid{false};
 
  private:
   string _name;

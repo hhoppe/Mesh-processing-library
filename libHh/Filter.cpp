@@ -400,6 +400,11 @@ struct FilterKaiser3 final : Filter {
   static double sfunc(double x) { return kaiser(x, 3., 7.12); }
 };
 
+struct FilterTrapezoid final : Filter {  // Its kernel depends on the scaling; see compute_resizer_dim().
+  using type = FilterTrapezoid;
+  FilterTrapezoid() : Filter("trapezoid", nullptr, 0.) { _is_trapezoid = true; }
+};
+
 struct FilterAuto final : Filter {
   using type = FilterAuto;
   FilterAuto() : Filter("auto", nullptr, 0.) { _is_auto = true; }
@@ -425,7 +430,7 @@ const Filter& Filter::get(std::string_view name) {
       new FilterCubic,      new FilterSharpCubic, new FilterCardinal3, new FilterCardinal5, new FilterOmoms3,
       new FilterOmoms5,     new FilterPreprocess, new FilterBspline3,  new FilterBspline5,  new FilterJustOmoms,
       new FilterJustOmoms5, new FilterGaussian,   new FilterLanczos3,  new FilterLanczos5,  new FilterLanczos10,
-      new FilterHamming3,   new FilterKaiser3,    new FilterAuto,
+      new FilterHamming3,   new FilterKaiser3,    new FilterTrapezoid, new FilterAuto,
   };
   assertx(filters.num());
   for (const auto& [alias, canonical] : k_filter_aliases)

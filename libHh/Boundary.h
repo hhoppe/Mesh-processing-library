@@ -12,11 +12,19 @@ namespace hh {
 // obtained through Boundary::get(); user-defined rules derive from this class.
 class Boundary : noncopyable {
  public:
-  // reflect:  (r, reflected) samples are reflected across the domain boundaries (101 reflection on a primal grid).
-  // wrap:     (w, periodic) samples repeat periodically (with period size - 1 on a primal grid).
-  // clamp:    (c, clamped) the nearest interior sample is repeated.
-  // border:   (b) samples outside the domain have the constant value cval.
-  // auto:     reflect when magnifying or point sampling, clamp when minifying (resolved before use).
+  // reflect:            (r, reflected) samples reflect across the domain boundaries (101 reflection on a primal grid).
+  // wrap:               (w, periodic) samples repeat periodically (with period size - 1 on a primal grid).
+  // tile:               like reflect within the unit domain, which is then tiled (discontinuously).
+  // clamp:              (c, clamped) the nearest interior sample is repeated.
+  // border:             (b) samples outside the domain have the constant value cval.
+  // natural:            the reconstruction uses only the interior samples (renormalized); cval outside the domain.
+  // linear:             exterior samples are extrapolated linearly from the two nearest samples.
+  // quadratic:          exterior samples are extrapolated quadratically from the three nearest samples.
+  // linear_constant:    like linear, but cval outside the unit domain.
+  // quadratic_constant: like quadratic, but cval outside the unit domain.
+  // reflect_clamp:      samples reflect once across each boundary, then clamp (mirror-clamp-to-edge).
+  // constant:           like reflect, but cval outside the unit domain.
+  // auto:               reflect when magnifying or point sampling, clamp when minifying (resolved before use).
   [[HH_NO_DANGLING]] [[nodiscard]] static const Boundary& get(std::string_view name);
   [[HH_NO_DANGLING]] [[nodiscard]] static const Boundary& get(Bndrule bndrule);
   [[nodiscard]] const string& name() const { return _name; }
@@ -28,10 +36,11 @@ class Boundary : noncopyable {
   // Fold the dense row of taps at indices [index0, index0 + weights.num()) into interior indices of a grid of `size`
   // samples, appending (index, weight) pairs to `indices` and `folded` in the order of the taps (so that their sum
   // matches a direct evaluation); the same index may appear several times, and an index of -1 denotes the constant
-  // value cval.  `x` is the unit-domain coordinate of the sample being reconstructed, used only by the rules that
-  // override the value outside some extent.
-  virtual void fold(int index0, CArrayView<float> weights, int size, Gridtype gridtype, double x, Array<int>& indices,
-                    Array<float>& folded) const = 0;
+  // value cval.  The rules that override the value outside the unit domain use `x`, the unit-domain coordinate of
+  // the point being reconstructed, and `spacing`, the distance between consecutive reconstruction points (0 for an
+  // isolated point), which antialiases the transition to cval.
+  virtual void fold(int index0, CArrayView<float> weights, int size, Gridtype gridtype, double x, double spacing,
+                    Array<int>& indices, Array<float>& folded) const = 0;
   friend std::ostream& operator<<(std::ostream& os, const Boundary& boundary) {
     return os << "Boundary{" << boundary.name() << "}";
   }

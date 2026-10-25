@@ -126,6 +126,15 @@ template <int D, typename T>
 [[nodiscard]] T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options = {},
                               const T* cval = nullptr);
 
+enum class ObjectFit { contain, cover };  // As in CSS: fit the source within the destination, or cover it.
+
+// Resize a grid to dimensions ndims with the same scaling in every dimension (preserving the aspect ratio), like
+// CSS object-fit; options.scale and options.translate must be their defaults, and the boundary rule "auto" means
+// "natural" here (cval, or T{} if null, outside the source domain).
+template <int D, typename T>
+[[nodiscard]] Grid<D, T> uniform_resize(CGridView<D, T> grid, const Vec<int, D>& ndims, ObjectFit object_fit,
+                                        ResizeOptions<D> options = {}, const T* cval = nullptr);
+
 namespace details {
 
 // The precomputed kernel weights of one dimension of a Resizer.
@@ -790,11 +799,17 @@ inline void compute_resizer_dim(ResizerDim& rd, int cx, int nx, Gridtype src_gri
   const bool src_dual = src_gridtype == Gridtype::dual, dst_dual = dst_gridtype == Gridtype::dual;
   assertx(cx >= (src_dual ? 1 : 2) && nx >= (dst_dual ? 1 : 2));
   const double scaling = (dst_dual ? nx : nx - 1.) / (src_dual ? cx : cx - 1.) * scale;
-  const bool is_impulse = filter.is_impulse();
-  const KernelFunc kernel_func = is_impulse ? nullptr : filter.func();
-  const double radius = filter.radius();
+  const bool is_impulse = filter.is_impulse(), is_trapezoid = filter.is_trapezoid();
+  const KernelFunc kernel_func = is_impulse || is_trapezoid ? nullptr : filter.func();
+  // The trapezoid has value 1 for |x| <= 1 - radius and decreases linearly to 0 at |x| = radius (always .5 at .5).
+  const double radius = is_trapezoid ? .5 + .5 * min(scaling, 1. / scaling) : filter.radius();
+  const auto kernel = [&](double v) {
+    return is_trapezoid ? clamp((.5 + .25 / (radius - .5)) - (.5 / (radius - .5)) * abs(v), 0., 1.) : kernel_func(v);
+  };
   // (The tolerance avoids an extra zero-weight tap when the ratio is an integer up to floating-point error.)
   const int nk = is_impulse ? 1 : int(std::ceil((rd.is_minification ? radius * 2. / scaling : radius * 2.) - 1e-6));
+  // The distance in the source domain between consecutive destination samples (for antialiased boundaries).
+  const double spacing = (dst_dual ? 1. / nx : 1. / (nx - 1)) / scale;
   const bool nkodd = (nk % 2) > 0;
   rd.index0.init(nx);
   rd.weights.init(nx, nk);
@@ -804,9 +819,19 @@ inline void compute_resizer_dim(ResizerDim& rd, int cx, int nx, Gridtype src_gri
   Array<bool> interior(nx);
   Array<int> indices;
   Array<float> folded;
-  for_int(x, nx) {
+  const auto src_position_of = [&](int x) {
     const double dst_position = dst_dual ? (x + .5) / nx : double(x) / (nx - 1);  // In the unit domain.
-    const double src_position = boundary.remap_coordinate((dst_position - translate) / scale);
+    return boundary.remap_coordinate((dst_position - translate) / scale);
+  };
+  // As in resampler, the rules that override the value outside the unit domain do so (with an antialiased
+  // transition) only if some destination sample maps outside the domain; otherwise they pass the domain center.
+  bool any_outside = false;
+  for_int(x, nx) {
+    const double src_position = src_position_of(x);
+    if (src_position < 0. || src_position > 1.) any_outside = true;
+  }
+  for_int(x, nx) {
+    const double src_position = src_position_of(x);
     const double src_index =
         src_dual ? src_position * cx - .5 : src_position * (cx - 1);  // Source sample coordinates.
     const double wf = std::floor(src_index + (nkodd ? .5 : 0.));
@@ -816,19 +841,23 @@ inline void compute_resizer_dim(ResizerDim& rd, int cx, int nx, Gridtype src_gri
     for_int(k, nk) {
       const double w0 = double(index0 + k);
       const double v = is_impulse            ? 1.
-                       : !rd.is_minification ? kernel_func(src_index - w0)
-                                             : kernel_func((src_index - w0) * scaling) * scaling;
+                       : !rd.is_minification ? kernel(src_index - w0)
+                                             : kernel((src_index - w0) * scaling) * scaling;
       rd.weights[x, k] = float(v);
       sum += v;
     }
     rd.weights[x] /= float(sum);
-    interior[x] = index0 >= 0 && index0 + nk <= cx && src_position >= 0. && src_position <= 1.;
     rd.row_begin[x] = rd.col.num();
     indices.clear();
     folded.clear();
-    boundary.fold(index0, rd.weights[x], cx, src_gridtype, src_position, indices, folded);
+    boundary.fold(index0, rd.weights[x], cx, src_gridtype, any_outside ? src_position : .5, spacing, indices, folded);
     rd.col.push_array(indices);
     rd.val.push_array(folded);
+    // The row is interior if its window lies inside the grid and the rule left its taps unchanged.
+    interior[x] = index0 >= 0 && index0 + nk <= cx && indices.num() == nk;
+    for_int(k, nk) {
+      if (interior[x] && (indices[k] != index0 + k || folded[k] != rd.weights[x, k])) interior[x] = false;
+    }
   }
   rd.row_begin[nx] = rd.col.num();
   rd.ioutmin = 0;
@@ -1024,6 +1053,27 @@ Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const ResizeOpt
                  Grid<D, T>&& gr) {
   const Resizer<D> resizer(grid.dims(), ndims, options);
   return resizer.apply(grid, cval, std::move(gr));
+}
+
+template <int D, typename T>
+Grid<D, T> uniform_resize(CGridView<D, T> grid, const Vec<int, D>& ndims, ObjectFit object_fit,
+                          ResizeOptions<D> options, const T* cval) {
+  const PerDim<Gridtype, D>& dst_gridtype = options.dst_gridtype ? *options.dst_gridtype : options.gridtype;
+  Vec<double, D> raw_scales;
+  for_int(d, D) {
+    assertx(options.scale[d] == 1. && options.translate[d] == 0.);
+    const double src_in_samples = options.gridtype[d] == Gridtype::dual ? grid.dim(d) : grid.dim(d) - 1.;
+    const double dst_in_samples = dst_gridtype[d] == Gridtype::dual ? ndims[d] : ndims[d] - 1.;
+    raw_scales[d] = dst_in_samples / src_in_samples;
+  }
+  const double scale0 = object_fit == ObjectFit::contain ? min(raw_scales) : max(raw_scales);
+  for_int(d, D) {
+    options.scale[d] = scale0 / raw_scales[d];
+    options.translate[d] = (1. - options.scale[d]) / 2.;
+    if (options.boundary[d]->is_auto()) options.boundary[d] = BoundaryRef(Boundary::get("natural"));
+  }
+  const T default_cval{};
+  return scale(grid, ndims, options, cval ? cval : &default_cval);
 }
 
 template <int D, typename T>

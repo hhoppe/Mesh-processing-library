@@ -186,7 +186,7 @@ int main() {
       for (const Gridtype gridtype : {Gridtype::dual, Gridtype::primal}) {
         Array<int> indices;
         Array<float> folded;
-        Boundary::get(name).fold(-2, Array<float>{.1f, .2f, .3f, .4f}, 3, gridtype, .5, indices, folded);
+        Boundary::get(name).fold(-2, Array<float>{.1f, .2f, .3f, .4f}, 3, gridtype, .5, 0., indices, folded);
         SHOW(name, gridtype, indices, folded);  // Taps at indices -2, -1, 0, 1 of a grid of 3 samples.
       }
     }

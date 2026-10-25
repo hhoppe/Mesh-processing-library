@@ -821,7 +821,7 @@ void do_blur(Args& args) {
   } else {
     ar_gauss /= float(sum(ar_gauss));
     // SHOW(ar_gauss); SHOW(sum(ar_gauss));
-    for_int(d, 2) image = convolve_d(image, d, ar_gauss, Bndrule::reflect);
+    for_int(d, 2) image = convolve_d(image, d, ar_gauss, g_bndrules[d], &gcolor);
   }
 }
 

@@ -774,15 +774,16 @@ string get_szoom() {
   return sform("%s%d%%", (isotropic ? "" : "~"), int(vzoom * 100.f + .5f));
 }
 
-// Select filter for spatial resampling operations.
+// Select the filter for the non-interactive spatial resampling operations (crop, scale, rotate).  The interactive
+// view renders with the cheap cubic (keys) kernel; these operations can afford the cardinal cubic B-spline, which
+// is sharper but requires a digital filter, so the "keys" setting is upgraded to it here.
 const Filter& get_resampling_filter() {
-  return (g_kernel == EKernel::nearest  ? Filter::get("impulse")
-          : g_kernel == EKernel::linear ? Filter::get("triangle")
-          : g_kernel == EKernel::keys   ? Filter::get("spline")
-                                        :  // Higher quality than "keys".
-              g_kernel == EKernel::lanczos6 ? Filter::get("lanczos6")
-          : g_kernel == EKernel::lanczos10  ? Filter::get("lanczos5")  // Support [-5, 5]; "lanczos10" is wider.
-                                            : (assertnever_ret(""), Filter::get("impulse")));
+  return (g_kernel == EKernel::nearest     ? Filter::get("impulse")
+          : g_kernel == EKernel::linear    ? Filter::get("triangle")
+          : g_kernel == EKernel::keys      ? Filter::get("cardinal3")
+          : g_kernel == EKernel::lanczos6  ? Filter::get("lanczos3")  // Support [-3, 3].
+          : g_kernel == EKernel::lanczos10 ? Filter::get("lanczos5")  // Support [-5, 5].
+                                           : (assertnever_ret(""), Filter::get("impulse")));
 }
 
 Frame scale_2d(const Vec2<float>& vec) { return Frame::scaling(concat(vec, V(1.f))); }

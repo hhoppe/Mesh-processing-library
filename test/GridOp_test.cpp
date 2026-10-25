@@ -13,9 +13,10 @@ using namespace hh;
 namespace {
 
 template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
-  // Not: "gaussian", "preprocess", "justspline", "justomoms".
-  const auto filters = transformed(V("impulse", "box", "triangle", "quadratic", "mitchell", "keys", "spline", "omoms"),
-                                   [](const std::string_view s) { return &Filter::get(s); });
+  // Not: "gaussian", "preprocess", "bspline3", "justomoms".
+  const auto filters =
+      transformed(V("impulse", "box", "triangle", "quadratic", "mitchell", "cubic", "cardinal3", "omoms3"),
+                  [](const std::string_view s) { return &Filter::get(s); });
   {  // Inverse convolution is partition-of-unity.
     Grid<D, float> grid(dims, 1.f);
     inverse_convolution(grid, ntimes<D>(FilterBnd(Filter::get("spline"), Bndrule::reflected)));
@@ -159,8 +160,25 @@ int main() {
     assertx(grid.dims() == V(10, 10));
     assertx(grid[9, 9] == Pixel(65, 66, 67, 72));
   }
+  {  // Old names and single-letter shortcuts remain aliases of the resampler names.
+    for (const auto& [alias, name] :
+         {std::pair{"keys", "cubic"}, std::pair{"spline", "cardinal3"}, std::pair{"omoms", "omoms3"},
+          std::pair{"justspline", "bspline3"}, std::pair{"lanczos6", "lanczos3"}, std::pair{"hamming6", "hamming3"},
+          std::pair{"k", "cubic"}, std::pair{"s", "cardinal3"}, std::pair{"o", "omoms3"}, std::pair{"l", "lanczos3"},
+          std::pair{"h", "hamming3"}, std::pair{"i", "impulse"}, std::pair{"b", "box"}, std::pair{"t", "triangle"},
+          std::pair{"q", "quadratic"}, std::pair{"m", "mitchell"}, std::pair{"g", "gaussian"},
+          std::pair{"p", "preprocess"}})
+      assertx(Filter::get(alias).name() == name);
+    assertx(&Filter::get("cardinal3").digital_filter_kernel() == &Filter::get("bspline3"));
+    assertx(&Filter::get("omoms3").digital_filter_kernel() == &Filter::get("justomoms"));
+    assertx(&Filter::get("cubic").digital_filter_kernel() == &Filter::get("cubic"));
+    assertx(Filter::get("cardinal5").requires_digital_filter() && !Filter::get("cubic").requires_digital_filter());
+    for (const string name : {"sharpcubic", "cardinal5", "omoms5", "lanczos10", "kaiser3", "bspline5", "justomoms5"})
+      SHOW(name, Filter::get(name).radius(), Filter::get(name).func()(0.), Filter::get(name).func()(.5));
+    SHOW(Filter::get("hamming3").func()(.5));  // The Hamming window uses a0 = 25 / 46, as in resampler.
+  }
   if (1) {
-    const string name = "hamming6";
+    const string name = "hamming3";
     const Filter& filter = Filter::get(name);
     KernelFunc func = filter.func();
     const double radius = filter.radius();
@@ -171,8 +189,8 @@ int main() {
     }
   }
   if (1) {
-    for (string name : {"box", "triangle", "quadratic", "mitchell", "keys", "spline", "omoms", "gaussian", "lanczos6",
-                        "lanczos10", "hamming6"}) {
+    for (string name : {"box", "triangle", "quadratic", "mitchell", "cubic", "sharpcubic", "cardinal3", "cardinal5",
+                        "omoms3", "omoms5", "gaussian", "lanczos3", "lanczos5", "lanczos10", "hamming3", "kaiser3"}) {
       const Filter& filter = Filter::get(name);
       SHOW(filter.name());
       assertx(filter.name() == name);
@@ -212,12 +230,12 @@ int main() {
     }
   }
   if (1) {
-    SHOW(Filter::get("spline").func()(0.));
-    SHOW(Filter::get("spline").func()(1.));
-    SHOW(Filter::get("spline").func()(2.));
-    SHOW(Filter::get("omoms").func()(0.));
-    SHOW(Filter::get("omoms").func()(1.));
-    SHOW(Filter::get("omoms").func()(2.));
+    SHOW(Filter::get("cardinal3").func()(0.));
+    SHOW(Filter::get("cardinal3").func()(1.));
+    SHOW(Filter::get("cardinal3").func()(2.));
+    SHOW(Filter::get("omoms3").func()(0.));
+    SHOW(Filter::get("omoms3").func()(1.));
+    SHOW(Filter::get("omoms3").func()(2.));
   }
   if (1) {
     // 1D

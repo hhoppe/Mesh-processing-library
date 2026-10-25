@@ -474,7 +474,7 @@ Grid<D, T> scale_i(CGridView<D, T> grid, const Vec<int, D>& ndims, const Vec<Fil
   assertx(npreprocess == 0 || npreprocess == D);
   int njustspline = 0;
   for_int(d, D) {
-    if (filterbs[d].filter().name() == "justspline") njustspline++;
+    if (filterbs[d].filter().name() == "bspline3") njustspline++;
   }
   assertx(njustspline == 0 || njustspline == D);
   // Note: IMAGE_EXPAND_VALUE_RANGE would be 2. to get a range [-.5, 1.5].
@@ -557,17 +557,10 @@ template <int D, typename T>
 Vec<FilterBnd, D> inverse_convolution(GridView<D, T> grid, const Vec<FilterBnd, D>& filterbs) {
   Vec<FilterBnd, D> tfilterbs = filterbs;
   for_int(d, D) {
-    const string& name = filterbs[d].filter().name();
-    if (0)
-      void();
-    else if (name == "spline")
-      tfilterbs[d].set_filter(Filter::get("justspline"));
-    else if (name == "omoms")
-      tfilterbs[d].set_filter(Filter::get("justomoms"));
-    else if (name == "preprocess")
-      void();
-    else
-      assertnever("Unrecognized image filter '" + name + "' for inverse_convolution");
+    const Filter& filter = filterbs[d].filter();
+    if (!filter.requires_digital_filter())
+      assertnever("Unrecognized image filter '" + filter.name() + "' for inverse_convolution");
+    tfilterbs[d].set_filter(filter.digital_filter_kernel());
   }
   for_int(d, D) details::inverse_convolution_d(grid, filterbs[d], d);
   return tfilterbs;

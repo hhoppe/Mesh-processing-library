@@ -1,36 +1,44 @@
 Stat(gridn) = (9      )           1:1            av=1              sd=0
 begin test
 end test
-func(   -1.650000)=   -0.080451
-func(   -1.540000)=   -0.106785
-func(   -1.430000)=   -0.124625
-func(   -1.320000)=   -0.127496
-func(   -1.210000)=   -0.109246
-func(   -1.100000)=   -0.065018
-func(   -0.990000)=    0.007819
-func(   -0.880000)=    0.108937
-func(   -0.770000)=    0.234665
-func(   -0.660000)=    0.378017
-func(   -0.550000)=    0.529199
-func(   -0.440000)=    0.676527
-func(   -0.330000)=    0.807672
-func(   -0.220000)=    0.911056
-func(   -0.110000)=    0.977227
+name=sharpcubic Filter::get(name).radius()=2 Filter::get(name).func()(0.)=1 Filter::get(name).func()(.5)=0.59375
+name=cardinal5 Filter::get(name).radius()=3 Filter::get(name).func()(0.)=0.55 Filter::get(name).func()(.5)=0.438021
+name=omoms5 Filter::get(name).radius()=3 Filter::get(name).func()(0.)=0.520455 Filter::get(name).func()(.5)=0.424258
+name=lanczos10 Filter::get(name).radius()=10 Filter::get(name).func()(0.)=1 Filter::get(name).func()(.5)=0.634005
+name=kaiser3 Filter::get(name).radius()=3 Filter::get(name).func()(0.)=1 Filter::get(name).func()(.5)=0.580521
+name=bspline5 Filter::get(name).radius()=3 Filter::get(name).func()(0.)=0.55 Filter::get(name).func()(.5)=0.438021
+name=justomoms5 Filter::get(name).radius()=3 Filter::get(name).func()(0.)=0.520455 Filter::get(name).func()(.5)=0.424258
+Filter::get("hamming3").func()(.5) = 0.597683
+func(   -1.650000)=   -0.081142
+func(   -1.540000)=   -0.107528
+func(   -1.430000)=   -0.125325
+func(   -1.320000)=   -0.128072
+func(   -1.210000)=   -0.109639
+func(   -1.100000)=   -0.065202
+func(   -0.990000)=    0.007836
+func(   -0.880000)=    0.109121
+func(   -0.770000)=    0.234958
+func(   -0.660000)=    0.378355
+func(   -0.550000)=    0.529520
+func(   -0.440000)=    0.676785
+func(   -0.330000)=    0.807843
+func(   -0.220000)=    0.911141
+func(   -0.110000)=    0.977249
 func(    0.000000)=    1.000000
-func(    0.110000)=    0.977227
-func(    0.220000)=    0.911056
-func(    0.330000)=    0.807672
-func(    0.440000)=    0.676527
-func(    0.550000)=    0.529199
-func(    0.660000)=    0.378017
-func(    0.770000)=    0.234665
-func(    0.880000)=    0.108937
-func(    0.990000)=    0.007819
-func(    1.100000)=   -0.065018
-func(    1.210000)=   -0.109246
-func(    1.320000)=   -0.127496
-func(    1.430000)=   -0.124625
-func(    1.540000)=   -0.106785
+func(    0.110000)=    0.977249
+func(    0.220000)=    0.911141
+func(    0.330000)=    0.807843
+func(    0.440000)=    0.676785
+func(    0.550000)=    0.529520
+func(    0.660000)=    0.378355
+func(    0.770000)=    0.234958
+func(    0.880000)=    0.109121
+func(    0.990000)=    0.007836
+func(    1.100000)=   -0.065202
+func(    1.210000)=   -0.109639
+func(    1.320000)=   -0.128072
+func(    1.430000)=   -0.125325
+func(    1.540000)=   -0.107528
 filter.name() = box
 name = box
 sum = 1
@@ -47,40 +55,60 @@ filter.name() = mitchell
 name = mitchell
 sum = 1
 stat = (100000 )           1:1            av=1              sd=0
-filter.name() = keys
-name = keys
+filter.name() = cubic
+name = cubic
 sum = 1
 stat = (100000 )           1:1            av=1              sd=0
-filter.name() = spline
-name = spline
+filter.name() = sharpcubic
+name = sharpcubic
 sum = 1
 stat = (100000 )           1:1            av=1              sd=0
-filter.name() = omoms
-name = omoms
+filter.name() = cardinal3
+name = cardinal3
+sum = 1
+stat = (100000 )           1:1            av=1              sd=0
+filter.name() = cardinal5
+name = cardinal5
+sum = 1
+stat = (100000 )           1:1            av=1              sd=0
+filter.name() = omoms3
+name = omoms3
+sum = 1
+stat = (100000 )           1:1            av=1              sd=0
+filter.name() = omoms5
+name = omoms5
 sum = 1
 stat = (100000 )           1:1            av=1              sd=0
 filter.name() = gaussian
 name = gaussian
 sum = 1
 stat = (100000 )     0.93503:1.06497      av=1              sd=0.045942375
-filter.name() = lanczos6
-name = lanczos6
+filter.name() = lanczos3
+name = lanczos3
 sum = 0.997055
 stat = (100000 )    0.994299:1            av=0.99705535     sd=0.0020039311
-filter.name() = lanczos10
-name = lanczos10
+filter.name() = lanczos5
+name = lanczos5
 sum = 0.999353
 stat = (100000 )    0.998746:1            av=0.99935263     sd=0.00044080331
-filter.name() = hamming6
-name = hamming6
-sum = 1.00188
-stat = (100000 )           1:1.00242      av=1.0018761      sd=0.00052976126
-Filter::get("spline").func()(0.) = 0.666667
-Filter::get("spline").func()(1.) = 0.166667
-Filter::get("spline").func()(2.) = 0
-Filter::get("omoms").func()(0.) = 0.619048
-Filter::get("omoms").func()(1.) = 0.190476
-Filter::get("omoms").func()(2.) = 0
+filter.name() = lanczos10
+name = lanczos10
+sum = 1.00008
+stat = (100000 )           1:1.00016      av=1.0000818      sd=5.571037e-05
+filter.name() = hamming3
+name = hamming3
+sum = 1.00236
+stat = (100000 )           1:1.00292      av=1.0023624      sd=0.00067597383
+filter.name() = kaiser3
+name = kaiser3
+sum = 0.999648
+stat = (100000 )    0.999225:1.00004      av=0.99964791     sd=0.00029874484
+Filter::get("cardinal3").func()(0.) = 0.666667
+Filter::get("cardinal3").func()(1.) = 0.166667
+Filter::get("cardinal3").func()(2.) = 0
+Filter::get("omoms3").func()(0.) = 0.619048
+Filter::get("omoms3").func()(1.) = 0.190476
+Filter::get("omoms3").func()(2.) = 0
 scale_filter_nearest(grid1.grid_view<1>(), V(1)) = Array<int>(1) {
   3
 }
@@ -503,4 +531,4 @@ convolve_d(grid, 1, Array<float>{.25f, .5f, .25f}, Bndrule::clamped)[2] = Array<
   Pixel(149, 81, 83, 161)
   Pixel(88, 125, 61, 96)
 }
-filterbs = [FilterBnd{justspline, reflected}, FilterBnd{justomoms, periodic}]
+filterbs = [FilterBnd{bspline3, reflected}, FilterBnd{justomoms, periodic}]

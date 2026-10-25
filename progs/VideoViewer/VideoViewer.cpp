@@ -781,7 +781,7 @@ const Filter& get_resampling_filter() {
           : g_kernel == EKernel::keys   ? Filter::get("spline")
                                         :  // Higher quality than "keys".
               g_kernel == EKernel::lanczos6 ? Filter::get("lanczos6")
-          : g_kernel == EKernel::lanczos10  ? Filter::get("lanczos10")
+          : g_kernel == EKernel::lanczos10  ? Filter::get("lanczos5")  // Support [-5, 5]; "lanczos10" is wider.
                                             : (assertnever_ret(""), Filter::get("impulse")));
 }
 

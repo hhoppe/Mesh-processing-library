@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/GridOp.h"
 
+#include "libHh/Boundary.h"
 #include "libHh/Filter.h"
 #include "libHh/MatrixOp.h"
 #include "libHh/Random.h"
@@ -175,6 +176,20 @@ int main() {
     for (const string name : {"sharpcubic", "cardinal5", "omoms5", "lanczos10", "kaiser3", "bspline5", "justomoms5"})
       SHOW(name, Filter::get(name).radius(), Filter::get(name).func()(0.), Filter::get(name).func()(.5));
     SHOW(Filter::get("hamming3").func()(.5));  // The Hamming window uses a0 = 25 / 46, as in resampler.
+  }
+  {  // Boundary rules fold the exterior taps of a weight row into interior samples.
+    assertx(Boundary::get("reflected").name() == "reflect" && Boundary::get("r").name() == "reflect");
+    assertx(Boundary::get(Bndrule::wrap).name() == "wrap" && Boundary::get("periodic").name() == "wrap");
+    assertx(Boundary::get("border").uses_cval() && !Boundary::get("clamp").uses_cval());
+    assertx(Boundary::get("auto").is_auto() && !Boundary::get("reflect").is_auto());
+    for (const string name : {"reflect", "wrap", "clamp", "border"}) {
+      for (const Gridtype gridtype : {Gridtype::dual, Gridtype::primal}) {
+        Array<int> indices;
+        Array<float> folded;
+        Boundary::get(name).fold(-2, Array<float>{.1f, .2f, .3f, .4f}, 3, gridtype, .5, indices, folded);
+        SHOW(name, gridtype, indices, folded);  // Taps at indices -2, -1, 0, 1 of a grid of 3 samples.
+      }
+    }
   }
   if (1) {
     const string name = "hamming3";

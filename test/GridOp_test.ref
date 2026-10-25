@@ -9,6 +9,102 @@ name=kaiser3 Filter::get(name).radius()=3 Filter::get(name).func()(0.)=1 Filter:
 name=bspline5 Filter::get(name).radius()=3 Filter::get(name).func()(0.)=0.55 Filter::get(name).func()(.5)=0.438021
 name=justomoms5 Filter::get(name).radius()=3 Filter::get(name).func()(0.)=0.520455 Filter::get(name).func()(.5)=0.424258
 Filter::get("hamming3").func()(.5) = 0.597683
+name=reflect gridtype=Gridtype{dual} indices=Array<int>(4) {
+  1
+  0
+  0
+  1
+}
+ folded=Array<float>(4) {
+  0.1
+  0.2
+  0.3
+  0.4
+}
+
+name=reflect gridtype=Gridtype{primal} indices=Array<int>(4) {
+  2
+  1
+  0
+  1
+}
+ folded=Array<float>(4) {
+  0.1
+  0.2
+  0.3
+  0.4
+}
+
+name=wrap gridtype=Gridtype{dual} indices=Array<int>(4) {
+  1
+  2
+  0
+  1
+}
+ folded=Array<float>(4) {
+  0.1
+  0.2
+  0.3
+  0.4
+}
+
+name=wrap gridtype=Gridtype{primal} indices=Array<int>(4) {
+  0
+  1
+  0
+  1
+}
+ folded=Array<float>(4) {
+  0.1
+  0.2
+  0.3
+  0.4
+}
+
+name=clamp gridtype=Gridtype{dual} indices=Array<int>(4) {
+  0
+  0
+  0
+  1
+}
+ folded=Array<float>(4) {
+  0.1
+  0.2
+  0.3
+  0.4
+}
+
+name=clamp gridtype=Gridtype{primal} indices=Array<int>(4) {
+  0
+  0
+  0
+  1
+}
+ folded=Array<float>(4) {
+  0.1
+  0.2
+  0.3
+  0.4
+}
+
+name=border gridtype=Gridtype{dual} indices=Array<int>(2) {
+  0
+  1
+}
+ folded=Array<float>(2) {
+  0.3
+  0.4
+}
+
+name=border gridtype=Gridtype{primal} indices=Array<int>(2) {
+  0
+  1
+}
+ folded=Array<float>(2) {
+  0.3
+  0.4
+}
+
 func(   -1.650000)=   -0.081142
 func(   -1.540000)=   -0.107528
 func(   -1.430000)=   -0.125325

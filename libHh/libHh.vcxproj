@@ -48,6 +48,7 @@
     <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="BufferedA3dStream.cpp" />
     <ClCompile Include="FileIO.cpp" />
+    <ClCompile Include="Boundary.cpp" />
     <ClCompile Include="Filter.cpp" />
     <ClCompile Include="FrameIO.cpp" />
     <ClCompile Include="GMesh.cpp" />
@@ -113,6 +114,7 @@
     <ClInclude Include="Encoding.h" />
     <ClInclude Include="Facedistance.h" />
     <ClInclude Include="FileIO.h" />
+    <ClInclude Include="Boundary.h" />
     <ClInclude Include="Filter.h" />
     <ClInclude Include="Flags.h" />
     <ClInclude Include="FrameIO.h" />

@@ -121,6 +121,13 @@ resizer2.apply(grid, &cval) = Array<float>(7) {
   3.71429
   5.71429
 }
+result = Array<double>(5) {
+  1
+  1
+  1
+  1
+  1
+}
 uniform_resize(ones2, V(2, 4), ObjectFit::contain, {.filter = "trapezoid"}) = Matrix<double>(2, 4) {
   0 1 1 0
   0 1 1 0

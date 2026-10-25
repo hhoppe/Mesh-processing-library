@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_GRIDOP_H_
 
 #include "libHh/Array.h"
+#include "libHh/DigitalFilter.h"
 #include "libHh/Filter.h"
 #include "libHh/Grid.h"
 #include "libHh/ParallelCoords.h"
@@ -141,7 +142,8 @@ namespace details {
 struct ResizerDim {
   const Filter* filter{nullptr};      // The resolved kernel (the prefilter when minifying).
   const Boundary* boundary{nullptr};  // The resolved boundary rule.
-  bool identity{false};               // Same size and interpolating kernel: the dimension is copied.
+  Gridtype src_gridtype{Gridtype::dual}, dst_gridtype{Gridtype::dual};
+  bool identity{false};  // Same size and interpolating kernel: the dimension is copied.
   bool is_minification{false};
   Array<int> index0;           // [nx] First source index of each row's window of nk dense weights.
   Matrix<float> weights;       // [nx][nk] The dense weights, used directly by the interior rows.
@@ -403,57 +405,26 @@ template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Vec2<uint
 
 namespace details {
 
-// Perform the inverse convolution preprocess for a single dimension d.
-template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, const FilterBnd& filterb, int d) {
+// Apply the digital filter (inverse convolution) of a generalized kernel along dimension d, in place.
+template <int D, typename T>
+void inverse_convolution_d(GridView<D, T> grid, const Filter& filter, const Boundary& boundary, Gridtype gridtype,
+                           int d, const T* cval) {
   HH_GRIDOP_TIMER("__inv_convol");
-  const LUfactorization& lu = filterb.lu_factorization();
-  const bool lastspecial = lu.Llastrow.num() > 0;
   const Vec<int, D>& dims = grid.dims();
-  // TODO: Always process a coherent swath of the last dimension together for better cache performance.
-  const int cx = grid.dim(d);
-  if (cx == 1) return;  // The inverse convolution is the identity.
+  const int cx = dims[d];
+  const DigitalFilter& digital_filter = DigitalFilter::get(filter, boundary, gridtype, cx);
   const size_t stride = grid_stride(dims, d);
-  const Vec<int, D> rows = grid.dims().with(d, 1);
-  parallel_for_coords(rows, [&](const Vec<int, D>& urow) {  // Nice.
-    // Preprocess (inverse convolution L U x = z).
-    StridedArrayView<T> rowv(&grid[urow], cx, stride);
-    // Forward pass: L y = z.
-    if (0) rowv[0] = rowv[0];  // NOLINT(misc-redundant-expression): just copy first element
-    for_intL(x, 1, min(cx - lastspecial, lu.Llower.num()))  // Special initial elements.
-        rowv[x] = rowv[x] - lu.Llower[x] * rowv[x - 1];
-    const float cfast = lu.Llower.last();
-    if (lu.Llower.num() < cx - lastspecial) {
-      T vprev = rowv[lu.Llower.num() - 1];
-      for_intL(x, lu.Llower.num(), cx - lastspecial) {
-        rowv[x] = vprev = rowv[x] - cfast * vprev;  // OPT:ic1
-      }
-    }
-    if (lastspecial && cx > 1) {  // The last element may be a dense combination.
-      T& lastv = rowv[cx - 1];
-      lastv -= lu.LlastrowPen[min(cx - 1, lu.LlastrowPen.num() - 1)] * rowv[cx - 2];
-      for_int(x, min(cx - 2, lu.Llastrow.num())) lastv -= lu.Llastrow[x] * rowv[x];
-    }
-    // Backward pass: U x = y.
-    {
-      T& lastv = rowv[cx - 1];  // Scale the last element by a special value.
-      lastv *= lu.UidiagLast[min(cx - 1, lu.UidiagLast.num() - 1)];
-      if (lastspecial && cx > 1) {  // The penultimate element may be special.
-        rowv[cx - 2] = lu.Uidiag[min(cx - 2, lu.Uidiag.num() - 1)] *
-                       (rowv[cx - 2] - lu.UlastcolPen[min(cx - 1, lu.UlastcolPen.num() - 1)] * lastv);
-      }
-    }
-    const float cfast1 = lu.Uidiag.last(), cfast2 = lu.Uupper;
-    const int low = lu.Uidiag.num() - 1;
-    if (cx - 2 - lastspecial >= low) {
-      T vprev = rowv[cx - 2 - lastspecial + 1];
-      for (int x = cx - 2 - lastspecial; x >= low; --x)
-        rowv[x] = vprev = cfast1 * (rowv[x] - cfast2 * vprev);  // OPT:ic2
-    }
-    for (int x = min(lu.Uidiag.num() - 2, cx - 2 - lastspecial); x >= 0; --x) {  // Special initial elements.
-      rowv[x] = lu.Uidiag[x] * (rowv[x] - lu.Uupper * rowv[x + 1]);
-      if (lastspecial) rowv[x] -= lu.Uidiag[x] * lu.Ulastcol[x] * rowv[cx - 1];
-    }
+  const Vec<int, D> rows = dims.with(d, 1);
+  // TODO: Always process a coherent swath of the last dimension together for better cache performance.
+  parallel_for_coords(rows, [&](const Vec<int, D>& urow) {
+    digital_filter.solve(StridedArrayView<T>(&grid[urow], cx, stride), cval);
   });
+}
+
+// (Transitional:) the digital filter for a FilterBnd, on a dual grid.
+template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, const FilterBnd& filterb, int d) {
+  inverse_convolution_d(grid, filterb.filter(), Boundary::get(filterb.bndrule()), Gridtype::dual, d,
+                        implicit_cast<const T*>(nullptr));
 }
 
 template <int D, typename T>
@@ -784,13 +755,6 @@ Vec<FilterBnd, D> filterbnds_from_options(const PerDim<FilterRef, D>& filter, co
 
 namespace details {
 
-// The index-mapping rule of one of the four former boundary rules (a transitional bridge to the digital filter).
-inline Bndrule bndrule_of(const Boundary& boundary) {
-  for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border})
-    if (&Boundary::get(bndrule) == &boundary) return bndrule;
-  assertnever("Boundary '" + boundary.name() + "' is not yet supported by the digital filter");
-}
-
 // Compute the rows of kernel weights for resizing cx samples to nx samples along one dimension.
 inline void compute_resizer_dim(ResizerDim& rd, int cx, int nx, Gridtype src_gridtype, Gridtype dst_gridtype,
                                 double scale, double translate) {
@@ -949,6 +913,7 @@ Resizer<D>::Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const Res
         rd.is_minification && !options.prefilter[d]->is_auto() ? options.prefilter[d].ptr : options.filter[d].ptr;
     rd.boundary = options.boundary[d]->is_auto() ? &Boundary::get(rd.is_minification ? "clamp" : "reflect")
                                                  : options.boundary[d].ptr;
+    rd.src_gridtype = src_gridtype, rd.dst_gridtype = dst_gridtype[d];
     if (rd.filter->is_preprocess()) npreprocess++;
     if (rd.filter->name() == "bspline3") nbspline3++;
     rd.identity = nx == cx && rd.filter->is_interpolating() && options.scale[d] == 1. && options.translate[d] == 0. &&
@@ -995,7 +960,7 @@ Resizer<D>::Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const Res
 
 template <int D> Vec<FilterBnd, D> Resizer<D>::filterbnds() const {
   Vec<FilterBnd, D> filterbs = ntimes<D>(FilterBnd(Filter::get("box"), Bndrule::reflect));
-  for_int(d, D) filterbs[d] = FilterBnd(*_plan[d].filter, details::bndrule_of(*_plan[d].boundary));
+  for_int(d, D) filterbs[d] = FilterBnd(*_plan[d].filter, parse_boundaryrule(_plan[d].boundary->name()));
   return filterbs;
 }
 
@@ -1028,7 +993,7 @@ Grid<D, T> Resizer<D>::apply(CGridView<D, T> grid, const T* cval, Grid<D, T>&& g
     } else if (!rd.is_minification) {  // Resampling or magnification.
       if (rd.filter->requires_digital_filter()) {
         if (gridref.data() != gr.data()) gr = gridref;  // Else directly modify the temporary input buffer.
-        details::inverse_convolution_d(gr, FilterBnd(*rd.filter, details::bndrule_of(*rd.boundary)), d);
+        details::inverse_convolution_d(gr, *rd.filter, *rd.boundary, rd.src_gridtype, d, cval);
         gr = details::evaluate_rows_d(CGridView<D, T>(gr), d, rd, cval);
       } else {
         gr = details::evaluate_rows_d(gridref, d, rd, cval);
@@ -1036,7 +1001,7 @@ Grid<D, T> Resizer<D>::apply(CGridView<D, T> grid, const T* cval, Grid<D, T>&& g
     } else {  // Minification.
       gr = details::evaluate_rows_d(gridref, d, rd, cval);
       if (rd.filter->requires_digital_filter())
-        details::inverse_convolution_d(gr, FilterBnd(*rd.filter, details::bndrule_of(*rd.boundary)), d);
+        details::inverse_convolution_d(gr, *rd.filter, *rd.boundary, rd.dst_gridtype, d, cval);
     }
     gridref.reinit(gr);
   }

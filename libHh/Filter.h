@@ -86,8 +86,6 @@ class Filter : noncopyable {
   double _radius;
 };
 
-struct LUfactorization;
-
 class FilterBnd {
  public:
   explicit FilterBnd(const Filter& filter_, Bndrule bndrule_) : _filter(&filter_) { set_bndrule(bndrule_); }
@@ -95,8 +93,6 @@ class FilterBnd {
   [[nodiscard]] Bndrule bndrule() const { return _bndrule; }
   void set_filter(const Filter& filter_) { _filter = &filter_; }
   void set_bndrule(Bndrule bndrule_) { _bndrule = bndrule_, assertx(_bndrule != Bndrule::undefined); }
-  // Returns the LU factorization of the inverse convolution matrix for the filter and boundary rule.
-  [[nodiscard]] const LUfactorization& lu_factorization() const;
   // Given old size cx and new size nx, for each new index i compute the interval of weights on old values
   //  starting at index ar_pixelindex0[i].  mat_weights is allocated of size [nx, nk] where nk is interval size.
   // Samples are assumed at half-integer locations (!primal) or integer locations (primal).
@@ -108,37 +104,6 @@ class FilterBnd {
  private:
   const Filter* _filter;
   Bndrule _bndrule;
-};
-
-// LU factorization of inverse convolution matrix for a generalized sampling filter.
-struct LUfactorization {
-  using AF = Array<float>;
-  explicit LUfactorization(AF a1, AF a2, AF a3, AF a4, AF a5, AF a6, AF a7, float f)
-      : Llower(std::move(a1)),
-        Llastrow(std::move(a2)),
-        LlastrowPen(std::move(a3)),
-        Uidiag(std::move(a4)),
-        UidiagLast(std::move(a5)),
-        Ulastcol(std::move(a6)),
-        UlastcolPen(std::move(a7)),
-        Uupper(f) {
-    validate();
-  }
-  Array<float> Llower;       // Lower off-diagonal of L (except the last row).
-  Array<float> Llastrow;     // Last row of L (except the last two elements).
-  Array<float> LlastrowPen;  // Penultimate element of last row of L, as a function of matrix size ([0]=size1).
-  Array<float> Uidiag;       // Inverse diagonal of U (except the last row).
-  Array<float> UidiagLast;   // Last diagonal element of U, as a function of matrix size.
-  Array<float> Ulastcol;     // Last column of U (except the last two elements).
-  Array<float> UlastcolPen;  // Penultimate element of last column of U, as a function of matrix size ([0]=size1).
-  float Uupper;              // Upper off-diagonal of U, constant along the diagonal.
-  void validate() const {
-    const bool last_special = Llastrow.num() > 0;
-    assertx(last_special == (LlastrowPen.num() > 0));
-    assertx(last_special == (Ulastcol.num() > 0));
-    assertx(last_special == (UlastcolPen.num() > 0));
-    if (last_special) assertx(Ulastcol.num() == Uidiag.num());
-  }
 };
 
 }  // namespace hh

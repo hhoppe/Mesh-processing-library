@@ -49,6 +49,7 @@
     <ClCompile Include="BufferedA3dStream.cpp" />
     <ClCompile Include="FileIO.cpp" />
     <ClCompile Include="Boundary.cpp" />
+    <ClCompile Include="DigitalFilter.cpp" />
     <ClCompile Include="Filter.cpp" />
     <ClCompile Include="Gamma.cpp" />
     <ClCompile Include="FrameIO.cpp" />
@@ -116,6 +117,7 @@
     <ClInclude Include="Facedistance.h" />
     <ClInclude Include="FileIO.h" />
     <ClInclude Include="Boundary.h" />
+    <ClInclude Include="DigitalFilter.h" />
     <ClInclude Include="Filter.h" />
     <ClInclude Include="Gamma.h" />
     <ClInclude Include="Flags.h" />

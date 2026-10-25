@@ -11,7 +11,18 @@ import numpy as np
 import resampler
 
 BOUNDARIES = resampler.BOUNDARIES
-FILTERS = ['box', 'trapezoid', 'triangle', 'cubic', 'lanczos3', 'mitchell']
+FILTERS = [
+    'box',
+    'trapezoid',
+    'triangle',
+    'cubic',
+    'lanczos3',
+    'mitchell',
+    'cardinal3',
+    'cardinal5',
+    'omoms3',
+    'omoms5',
+]
 GRIDTYPES = ['dual']
 SRC_SIZES = [3, 5]
 DST_SIZES = [2, 7]

@@ -1,74 +1,11 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Filter.h"
 
-#include <mutex>  // once_flag, call_once()
-
 #include "libHh/MathOp.h"  // gaussian()
 
 namespace hh {
 
 namespace {
-
-using AF = Array<float>;
-
-const LUfactorization g_reflected_spline_lu_factorization =
-    LUfactorization(AF{100.f, 0.2f, 0.26315789f, 0.26760563f, 0.26792453f, 0.26794742f, 0.26794907f, 0.26794918f,
-                       0.26794919f, 0.26794919f},
-                    AF{}, AF{},
-                    AF{1.2f, 1.5789474f, 1.6056338f, 1.6075472f, 1.6076845f, 1.6076944f, 1.6076951f, 1.6076952f,
-                       1.6076952f, 1.6076952f},
-                    AF{1.f, 1.25f, 1.2666667f, 1.2678571f, 1.2679426f, 1.2679487f, 1.2679492f, 1.2679492f, 1.2679492f,
-                       1.2679492f, 1.2679492f},
-                    AF{}, AF{}, 0.16666667f);
-
-const LUfactorization g_periodic_spline_lu_factorization = LUfactorization(
-    AF{100.f, 0.25f, 0.26666667f, 0.26785714f, 0.26794258f, 0.26794872f, 0.26794916f, 0.26794919f, 0.26794919f,
-       0.26794919f},
-    AF{0.25f, -0.066666667f, 0.017857143f, -0.004784689f, 0.0012820513f, -0.00034352456f, 0.000092047128f,
-       -0.000024663954f, 6.6086865e-6f, -1.7707922e-6f, 4.7448234e-7f, -1.2713716e-7f, 3.4066299e-8f},
-    AF{100.f, 0.5f, 0.2f, 0.28571429f, 0.26315789f, 0.26923077f, 0.26760563f, 0.26804124f, 0.26792453f, 0.2679558f,
-       0.26794742f, 0.26794967f, 0.26794907f, 0.26794923f, 0.26794918f, 0.26794919f, 0.26794919f},
-    AF{1.5f, 1.6f, 1.6071429f, 1.6076555f, 1.6076923f, 1.607695f, 1.6076951f, 1.6076952f, 1.6076952f, 1.6076952f,
-       1.6076952f, 1.6076952f, 1.6076952f},
-    AF{1.f, 2.f, 1.6666667f, 1.75f, 1.7272727f, 1.7333333f, 1.7317073f, 1.7321429f, 1.7320261f, 1.7320574f, 1.732049f,
-       1.7320513f, 1.7320507f, 1.7320508f, 1.7320508f},
-    AF{0.16666667f, -0.041666667f, 0.011111111f, -0.0029761905f, 0.00079744817f, -0.00021367521f, 0.000057254094f,
-       -0.000015341188f, 4.1106589e-6f, -1.1014477e-6f, 2.9513203e-7f, -7.908039e-8f, 2.1189527e-8f},
-    AF{100.f, 0.33333333f, 0.125f, 0.17777778f, 0.16369048f, 0.16746411f, 0.16645299f, 0.16672392f, 0.16665133f,
-       0.16667078f, 0.16666557f, 0.16666696f, 0.16666659f, 0.16666669f, 0.16666666f, 0.16666667f, 0.16666667f},
-    0.16666667f);
-
-const LUfactorization g_reflected_omoms_lu_factorization =
-    LUfactorization(AF{100.f, 0.23529412f, 0.33170732f, 0.34266611f, 0.34395774f, 0.34411062f, 0.34412872f,
-                       0.34413087f, 0.34413112f, 0.34413115f},
-                    AF{}, AF{},
-                    AF{1.2352941f, 1.7414634f, 1.7989971f, 1.8057781f, 1.8065807f, 1.8066758f, 1.806687f, 1.8066884f,
-                       1.8066885f, 1.8066886f},
-                    AF{1.f, 1.3076923f, 1.3398693f, 1.3436272f, 1.3440715f, 1.3441241f, 1.3441303f, 1.3441311f,
-                       1.3441311f, 1.3441312f, 1.3441312f},
-                    AF{}, AF{}, 0.19047619f);
-
-const LUfactorization g_periodic_omoms_lu_factorization =
-    LUfactorization(AF{100.f, 0.30769231f, 0.33986928f, 0.34362718f, 0.34407148f, 0.34412409f, 0.34413032f,
-                       0.34413106f, 0.34413114f, 0.34413115f},
-                    AF{0.30769231f, -0.10457516f, 0.035934868f, -0.012364163f, 0.0042548064f, -0.0014642079f,
-                       0.0005038794f, -0.00017340059f, 0.000059672546f, -0.000020535182f, 7.066796e-6f, -2.4319047e-6f,
-                       8.3689415e-7f, -2.8800135e-7f, 9.9110237e-8f, -3.410692e-8f},
-                    AF{100.f,       0.61538462f, 0.23529412f, 0.37956204f, 0.33170732f, 0.34837889f, 0.34266611f,
-                       0.34463493f, 0.34395774f, 0.34419083f, 0.34411062f, 0.34413822f, 0.34412872f, 0.34413199f,
-                       0.34413087f, 0.34413125f, 0.34413112f, 0.34413117f, 0.34413115f, 0.34413116f},
-                    AF{1.6153846f, 1.7843137f, 1.8040427f, 1.8063753f, 1.8066515f, 1.8066842f, 1.806688f, 1.8066885f,
-                       1.8066886f, 1.8066886f, 1.8066886f, 1.8066886f, 1.8066886f, 1.8066886f, 1.8066886f, 1.8066886f},
-                    AF{1.f,        2.6f,       1.8888889f, 2.1076923f, 2.029703f,  2.0562092f, 2.0470488f,
-                       2.0501965f, 2.0491127f, 2.0494856f, 2.0493573f, 2.0494015f, 2.0493863f, 2.0493915f,
-                       2.0493897f, 2.0493903f, 2.0493901f, 2.0493902f, 2.0493901f, 2.0493902f},
-                    AF{0.19047619f, -0.058608059f, 0.019919079f, -0.0068447368f, 0.0023550787f, -0.00081043931f,
-                       0.00027889674f, -0.000095977029f, 0.000033028685f, -0.000011366199f, 3.9114633e-6f,
-                       -1.3460564e-6f, 4.6321993e-7f, -1.5940841e-7f, 5.48574e-8f, -1.887814e-8f},
-                    AF{100.f,       0.38095238f, 0.13186813f, 0.21039527f, 0.18363145f, 0.19283127f, 0.18966575f,
-                       0.19075509f, 0.19038021f, 0.19050922f, 0.19046482f, 0.1904801f,  0.19047484f, 0.19047665f,
-                       0.19047603f, 0.19047625f, 0.19047617f, 0.1904762f,  0.19047619f, 0.19047619f},
-                    0.19047619f);
 
 //----------------------------------------------------------------------------
 
@@ -447,31 +384,6 @@ const Filter& Filter::digital_filter_kernel() const {
   if (_name == "omoms3") return get("justomoms");
   if (_name == "omoms5") return get("justomoms5");
   assertnever("Filter '" + _name + "' has no digital-filter kernel");
-}
-
-const LUfactorization& FilterBnd::lu_factorization() const {
-  // There is an inherent problem with using "generalized filtering" with clamped boundary rule:
-  //  there is no solution to the discrete inverse convolution which can both (1) satisfy the clamped
-  //  boundary condition and (2) interpolate the original data.
-  // These constraints can only be approximated in a least-squares sense, so it is hopeless.
-  assertx(filter().has_inv_convolution());
-  // The tables below are for the cubic kernels; the quintic ones await the general banded solver.
-  if (filter().radius() > 2.)
-    assertnever("Filter '" + filter().name() + "' is not yet supported by inverse_convolution");
-  const bool is_bspline = !filter().is_omoms() || filter().is_preprocess();
-  switch (bndrule()) {
-    case Bndrule::reflect:
-      return is_bspline ? g_reflected_spline_lu_factorization : g_reflected_omoms_lu_factorization;
-    case Bndrule::wrap: return is_bspline ? g_periodic_spline_lu_factorization : g_periodic_omoms_lu_factorization;
-    case Bndrule::clamp:
-      Warning("Clamped boundary only approximated by Reflected boundary; could pad data first");
-      return is_bspline ? g_reflected_spline_lu_factorization : g_reflected_omoms_lu_factorization;
-    case Bndrule::border:
-      assertnever("Bndrule::border not supported in generalized-filter scale operation; could pad data first");
-    case Bndrule::reflect_primal:
-      assertnever("Bndrule::reflect_primal not supported in generalized-filter scale operation");
-    default: assertnever("");
-  }
 }
 
 void FilterBnd::setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar_pixelindex0,

@@ -132,6 +132,13 @@ int main() {
     // Every output sample maps outside the source domain: the result is cval, not NaN.
     check_parity("natural", "cubic", Gridtype::dual, 0.5, 2.0, 3, 4, {-1., -1., -1., -1.});
   }
+  {  // The digital filter of a cardinal spline on a primal grid of 2 samples with "wrap" (period 1) is well-posed.
+    const Grid<1, double> two(V(2), 1.);
+    const ResizeOptions<1> options{.gridtype = Gridtype::primal, .filter = "cardinal3", .boundary = "wrap"};
+    const Grid<1, double> result = scale(two, V(5), options);
+    SHOW(result);
+    for (const double v : result) assertx(abs(v - 1.) < 1e-6);
+  }
   {  // uniform_resize() preserves the aspect ratio (the doctests of resampler.uniform_resize).
     const Grid<2, double> ones2(V(2, 2), 1.);
     SHOW(uniform_resize(ones2, V(2, 4), ObjectFit::contain, {.filter = "trapezoid"}));

@@ -75,7 +75,7 @@ Filtervideo demos/data/palmtrees_small.mp4 -filter cubic -scaleu 1.5 >palmtrees_
 The command
 ```shell
 Filtervideo demos/data/palmtrees_small.mp4 -info -trimbeg 4 -boundary clamp -trimend -20% \
-    -tscale 1.5 -framerate 150% -croprectangle 50% 50% 400 240 -gamma 1.5 -bitrate 10m |
+    -tscale 1.5 -framerate 150% -croprectangle 50% 50% 400 240 -apply_gamma 1.5 -bitrate 10m |
   VideoViewer demos/data/palmtrees_small.mp4 - -key =an
 ```
 - reads the video (entirely into memory),

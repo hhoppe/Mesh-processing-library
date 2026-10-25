@@ -145,6 +145,7 @@ template <int D, typename T> class Sampler : noncopyable {
   Vec<KernelFunc, D> _funcs;  // The kernels evaluated after the digital filter.
   Vec<float, D> _radii;
   F _cval{};
+  [[nodiscard]] F evaluate_linear(const Vec<float, D>& p0, const Vec<float, D>& spacing, bool override_exterior) const;
   [[nodiscard]] F evaluate_grid(const Vec<float, D>& x, const Vec<float, D>& p, const Vec<float, D>& spacing,
                                 bool override_exterior) const;
 };
@@ -742,7 +743,7 @@ template <int D> SamplingOptions<D> Resizer<D>::sampling_options() const {
   return options;
 }
 
-template <int D> typename Resizer<D>::Row Resizer<D>::row(int d, int i) const {
+template <int D> Resizer<D>::Row Resizer<D>::row(int d, int i) const {
   const details::ResizerDim& rd = _plan[d];
   assertx(!rd.identity && !rd.filter->is_preprocess());
   if (i >= rd.ioutmin && i < rd.ioutmax) return Row{rd.index0[i], CArrayView<int>(nullptr, 0), rd.weights[i], 0.f};
@@ -940,16 +941,11 @@ Sampler<D, T>::Sampler(Sampler&& rhs) noexcept
       _radii(rhs._radii),
       _cval(rhs._cval) {}
 
-template <int D, typename T> typename Sampler<D, T>::F Sampler<D, T>::linear(const Vec<float, D>& p) const {
-  Vec<float, D> x;
-  for_int(d, D) {
-    const int dim = _coefficients.dim(d);
-    x[d] = _gridtypes[d] == Gridtype::dual ? p[d] * dim - .5f : p[d] * (dim - 1);
-  }
-  return evaluate_grid(x, p, ntimes<D>(0.f), true);
+template <int D, typename T> Sampler<D, T>::F Sampler<D, T>::linear(const Vec<float, D>& p) const {
+  return evaluate_linear(p, ntimes<D>(0.f), true);
 }
 
-template <int D, typename T> typename Sampler<D, T>::F Sampler<D, T>::linear_at_grid(const Vec<float, D>& x) const {
+template <int D, typename T> Sampler<D, T>::F Sampler<D, T>::linear_at_grid(const Vec<float, D>& x) const {
   Vec<float, D> p;
   for_int(d, D) {
     const int dim = _coefficients.dim(d);
@@ -960,17 +956,24 @@ template <int D, typename T> typename Sampler<D, T>::F Sampler<D, T>::linear_at_
 
 template <int D, typename T>
 T Sampler<D, T>::evaluate(const Vec<float, D>& p, const Vec<float, D>& spacing, bool override_exterior) const {
-  Vec<float, D> x;
-  for_int(d, D) {
-    const int dim = _coefficients.dim(d);
-    x[d] = _gridtypes[d] == Gridtype::dual ? p[d] * dim - .5f : p[d] * (dim - 1);
-  }
-  return encode_value<T>(*_gamma, evaluate_grid(x, p, spacing, override_exterior));
+  return encode_value<T>(*_gamma, evaluate_linear(p, spacing, override_exterior));
 }
 
 template <int D, typename T>
-typename Sampler<D, T>::F Sampler<D, T>::evaluate_grid(const Vec<float, D>& x, const Vec<float, D>& p,
-                                                       const Vec<float, D>& spacing, bool override_exterior) const {
+Sampler<D, T>::F Sampler<D, T>::evaluate_linear(const Vec<float, D>& p0, const Vec<float, D>& spacing,
+                                                bool override_exterior) const {
+  Vec<float, D> p, x;
+  for_int(d, D) {
+    p[d] = float(_boundaries[d]->remap_coordinate(p0[d]));  // (The "tile" rule maps the point into the unit domain.)
+    const int dim = _coefficients.dim(d);
+    x[d] = _gridtypes[d] == Gridtype::dual ? p[d] * dim - .5f : p[d] * (dim - 1);
+  }
+  return evaluate_grid(x, p, spacing, override_exterior);
+}
+
+template <int D, typename T>
+Sampler<D, T>::F Sampler<D, T>::evaluate_grid(const Vec<float, D>& x, const Vec<float, D>& p,
+                                              const Vec<float, D>& spacing, bool override_exterior) const {
   // The taps of each dimension: either the dense kernel window, when it lies inside the grid and the boundary rule
   // leaves it unchanged (the common case), or the taps folded by the rule.  The scratch arrays avoid allocations.
   struct Taps {
@@ -1054,13 +1057,25 @@ Grid<Dout, T> resample(CGridView<D, T> grid, CGridView<Dout, Vec<float, D>> coor
   return result;
 }
 
+namespace details {
+
+// The convenience functions build a transient Sampler, so they assert that the kernels need no digital filter
+// (which would be applied to the whole grid at every call); construct a Sampler explicitly for those kernels.
+template <int D> void assert_no_digital_filter(const SamplingOptions<D>& options) {
+  for_int(d, D) assertx(!options.filter[d]->requires_digital_filter());
+}
+
+}  // namespace details
+
 template <int D, typename T>
 T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options, const T* cval) {
+  details::assert_no_digital_filter(options);
   return Sampler<D, T>(g, options, cval).at_grid(p);
 }
 
 template <int D, typename T>
 T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options, const T* cval) {
+  details::assert_no_digital_filter(options);
   return Sampler<D, T>(g, options, cval)(p);
 }
 

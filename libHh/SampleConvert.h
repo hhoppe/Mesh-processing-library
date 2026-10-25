@@ -40,7 +40,7 @@ template <> struct SampleFloat<Pixel> {
 
 // The floating-point type in which samples of type T are filtered: T itself for floating-point types, float for
 // 8- and 16-bit unsigned integers, double for 32-bit ones (elementwise for Vec), and Vector4 for Pixel.
-template <typename T> using sample_float_t = typename details::SampleFloat<T>::type;
+template <typename T> using sample_float_t = details::SampleFloat<T>::type;
 
 // True if T is an integer sample type (so that its values must be decoded and encoded).
 template <typename T> constexpr bool is_integer_sample_v = !std::is_same_v<sample_float_t<T>, T>;

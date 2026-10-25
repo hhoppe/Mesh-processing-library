@@ -3492,6 +3492,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(not, ": negate test for color selection");
   HH_ARGSD(getcolorxy, "x y : get color from pixel ((x = 0, y = 0) = (left, top))");
   HH_ARGSD(boundary, "c : rule: reflect/wrap/clamp/border/natural/...");
+  HH_ARGSC("", ":    (crops and -blur use only the first four)");
   HH_ARGSD(hboundary, "c : set just horizontal boundary rule");
   HH_ARGSD(vboundary, "c : set just vertical boundary rule");
   HH_ARGSD(boundaryrule, "c : (former name of -boundary)");
@@ -3511,7 +3512,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(cropmatte, ": crop all sides matching the set color");
   HH_ARGSC("", ":");
   HH_ARGSD(filter, "c : kernel: cubic/cardinal3/lanczos3/triangle/...");
-  HH_ARGSC("", ":    omoms/gauss/preprocess/justspline (def. spline)");
+  HH_ARGSC("", ":    omoms3/gaussian/box/impulse/... (def. cardinal3)");
   HH_ARGSD(hfilter, "c : set just horizontal filter");
   HH_ARGSD(vfilter, "c : set just vertical filter");
   HH_ARGSD(prefilter, "c : kernel when minifying (auto: same)");

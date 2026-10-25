@@ -101,6 +101,9 @@ int main() {
     const float cval = 10.f;
     SHOW(resizer2.apply(grid, &cval));
     assertx(resizer2.apply(grid, &cval)[0] > 3.f);  // The border value (10) shows at the ends: .286 * 10 + .714 * 1.
+    // The rules that alter only the boundary rows ("natural" here) keep the dense weights of the interior rows.
+    const Resizer<1> resizer3(V(100), V(201), {.filter = "cubic", .boundary = "natural"});
+    assertx(resizer3.row(0, 100).indices.num() == 0 && resizer3.row(0, 0).indices.num() > 0);
   }
   {  // Sampler: point reconstruction with any kernel (after its digital filter) and boundary rule.
     Random random(31);
@@ -126,11 +129,17 @@ int main() {
         if (!(abs(gridn[yx] - sampler(p)) < 1e-5f))
           assertnever(SSHOW(filter_name, boundary_name, yx, gridn[yx], sampler(p)));
       }
-      assertx(sample_domain(mat, V(.3f, .6f), options, &cval) == sampler(V(.3f, .6f)));
+      if (!options.filter[0]
+               ->requires_digital_filter())  // (sample_domain() asserts that no digital filter is needed.)
+        assertx(sample_domain(mat, V(.3f, .6f), options, &cval) == sampler(V(.3f, .6f)));
     }
     {  // A primal grid: the samples lie at i / (n - 1).
       const Sampler<2, float> sampler(mat, {.gridtype = Gridtype::primal, .filter = "cubic", .boundary = "reflect"});
       for (const Vec2<int> u : range(mat.dims())) assertx(abs(sampler(V(u[0] / 4.f, u[1] / 3.f)) - mat[u]) < 1e-5f);
+    }
+    {  // The "tile" rule maps the point into the unit domain before reconstruction.
+      const Sampler<2, float> sampler(mat, {.filter = "cubic", .boundary = "tile"});
+      assertx(abs(sampler(V(1.1f, -.4f)) - sampler(V(.1f, .6f))) < 1e-5f);
     }
     {  // A point outside the domain gets cval with "constant", and the reflected value with "reflect".
       const Sampler<2, float> constant(mat, {.filter = "cubic", .boundary = "constant"}, &cval);

@@ -2248,6 +2248,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(not, ": negate test for color selection");
   HH_ARGSD(getcolorfxy, "f x y : get color from pixel ((0, 0, 0)=(frame0, left, top))");
   HH_ARGSD(boundary, "c : rule: reflect/wrap/clamp/border/natural/...");
+  HH_ARGSC("", ":    (crops use only the first four)");
   HH_ARGSD(boundaryrule, "c : (former name of -boundary)");
   HH_ARGSC("", "   (for scaling or negative trim/crop)");
   HH_ARGSC("", ":");
@@ -2264,10 +2265,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(cropmult, "fac : increase dimensions to be multiple of fac");
   HH_ARGSC("", ":");
   HH_ARGSD(filter, "c : kernel: cubic/cardinal3/lanczos3/triangle/...");
+  HH_ARGSC("", ":    omoms3/gaussian/box/impulse/... (def. cardinal3)");
   HH_ARGSD(prefilter, "c : kernel when minifying (auto: same)");
   HH_ARGSD(gridtype, "c : dual (default) or primal sample placement");
   HH_ARGSD(gamma, "c : identity (default), power2, power22, srgb");
-  HH_ARGSC("", ":    omoms/gauss/preprocess/justspline (def. spline)");
   HH_ARGSD(scaleunif, "fac : zoom video (upsample and/or downsample)");
   HH_ARGSD(scalenonunif, "facx facy : zoom video");
   HH_ARGSD(scaletox, "x : uniform scale to x width");

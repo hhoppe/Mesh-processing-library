@@ -84,14 +84,19 @@ struct BoundaryNatural final : Boundary {
             Array<int>& indices, Array<float>& folded) const override {
     const int first = indices.num();
     double sum = 0.;
+    bool dropped = false;
     for_int(k, weights.num()) {
       const int i = index0 + k;
-      if (i < 0 || i >= size) continue;
+      if (i < 0 || i >= size) {
+        dropped = true;
+        continue;
+      }
       indices.push(i);
       folded.push(weights[k]);
       sum += weights[k];
     }
-    if (sum != 0.) for_intL(j, first, folded.num()) folded[j] = float(folded[j] / sum);
+    // (The weights are renormalized only if some tap was dropped, so that interior rows stay bitwise unchanged.)
+    if (dropped && sum != 0.) for_intL(j, first, folded.num()) folded[j] = float(folded[j] / sum);
     override_exterior(x, spacing, folded, first);
     push_remainder(indices, folded, first);
   }

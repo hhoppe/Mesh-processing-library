@@ -400,6 +400,11 @@ struct FilterKaiser3 final : Filter {
   static double sfunc(double x) { return kaiser(x, 3., 7.12); }
 };
 
+struct FilterAuto final : Filter {
+  using type = FilterAuto;
+  FilterAuto() : Filter("auto", nullptr, 0.) { _is_auto = true; }
+};
+
 // Former names (and single letters) that remain accepted by Filter::get().
 constexpr std::pair<std::string_view, std::string_view> k_filter_aliases[] = {
     {"keys", "cubic"},        {"spline", "cardinal3"},  {"omoms", "omoms3"}, {"justspline", "bspline3"},
@@ -420,7 +425,7 @@ const Filter& Filter::get(std::string_view name) {
       new FilterCubic,      new FilterSharpCubic, new FilterCardinal3, new FilterCardinal5, new FilterOmoms3,
       new FilterOmoms5,     new FilterPreprocess, new FilterBspline3,  new FilterBspline5,  new FilterJustOmoms,
       new FilterJustOmoms5, new FilterGaussian,   new FilterLanczos3,  new FilterLanczos5,  new FilterLanczos10,
-      new FilterHamming3,   new FilterKaiser3,
+      new FilterHamming3,   new FilterKaiser3,    new FilterAuto,
   };
   assertx(filters.num());
   for (const auto& [alias, canonical] : k_filter_aliases)

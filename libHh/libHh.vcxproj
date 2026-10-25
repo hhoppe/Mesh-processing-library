@@ -169,6 +169,7 @@
     <ClInclude Include="Queue.h" />
     <ClInclude Include="Random.h" />
     <ClInclude Include="RangeOp.h" />
+    <ClInclude Include="ResampleOptions.h" />
     <ClInclude Include="SphereImage.h" />
     <ClInclude Include="SrMesh.h" />
     <ClInclude Include="STree.h" />

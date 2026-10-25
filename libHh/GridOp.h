@@ -7,6 +7,7 @@
 #include "libHh/Grid.h"
 #include "libHh/ParallelCoords.h"
 #include "libHh/Pixel.h"
+#include "libHh/ResampleOptions.h"
 #include "libHh/StridedArrayView.h"
 #include "libHh/Vector4.h"
 #include "libHh/Vector4i.h"
@@ -107,6 +108,23 @@ template <int D, typename T>
 template <int D, typename T>
 [[nodiscard]] T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, D>& filterbs,
                               const T* bordervalue = nullptr);
+
+// Rescale a grid to have new dimensions ndims according to the resampling options (sample placement, kernels,
+// boundary rules); cval is the constant value referenced by some boundary rules (e.g. "border").
+template <int D, typename T>
+[[nodiscard]] Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const ResizeOptions<D>& options = {},
+                               const T* cval = nullptr, Grid<D, T>&& gr = Grid<D, T>());
+
+// Evaluate the reconstruction at point p of grid g, where samples lie at integers ([0, dim(0) - 1], ...).
+template <int D, typename T>
+[[nodiscard]] T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options = {},
+                            const T* cval = nullptr);
+
+// Evaluate the reconstruction at point p of grid g, whose domain is [0, 1]^D with the samples placed according to
+// options.gridtype (dual: (i + .5) / dim(d); primal: i / (dim(d) - 1)).
+template <int D, typename T>
+[[nodiscard]] T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options = {},
+                              const T* cval = nullptr);
 
 // Convolve a Pixel grid along its d'th dimension with the 1D kernel (which must have odd length).
 template <int D, bool parallel = true>
@@ -664,6 +682,57 @@ T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const Vec<FilterBnd, 
   Vec<float, D> pp;
   for_int(d, D) pp[d] = p[d] * g.dim(d) - .5f;
   return sample_grid(g, pp, filterbs, bordervalue);
+}
+
+namespace details {
+
+// Express the per-dimension options as FilterBnd (a transitional bridge to the former machinery), resolving the
+// "auto" kernel and boundary rule using whether each dimension is minified.
+template <int D>
+Vec<FilterBnd, D> filterbnds_from_options(const PerDim<FilterRef, D>& filter, const PerDim<FilterRef, D>& prefilter,
+                                          const PerDim<BoundaryRef, D>& boundary,
+                                          const Vec<bool, D>& is_minification) {
+  Vec<FilterBnd, D> filterbs = ntimes<D>(FilterBnd(Filter::get("box"), Bndrule::reflect));
+  for_int(d, D) {
+    const Filter& f = is_minification[d] && !prefilter[d]->is_auto() ? *prefilter[d] : *filter[d];
+    const Boundary& b =
+        boundary[d]->is_auto() ? Boundary::get(is_minification[d] ? "clamp" : "reflect") : *boundary[d];
+    filterbs[d] = FilterBnd(f, parse_boundaryrule(b.name()));
+  }
+  return filterbs;
+}
+
+}  // namespace details
+
+template <int D, typename T>
+Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const ResizeOptions<D>& options, const T* cval,
+                 Grid<D, T>&& gr) {
+  assertx(!options.dst_gridtype && !options.dim_order && options.gamma->is_identity());
+  for_int(d, D) {
+    assertx(options.scale[d] == 1. && options.translate[d] == 0.);
+    assertx(options.gridtype[d] == options.gridtype[0]);
+  }
+  const bool primal = options.gridtype[0] == Gridtype::primal;
+  Vec<bool, D> is_minification;
+  for_int(d, D) is_minification[d] = ndims[d] < grid.dim(d);
+  const Vec<FilterBnd, D> filterbs =
+      details::filterbnds_from_options(options.filter, options.prefilter, options.boundary, is_minification);
+  return details::scale_i(grid, ndims, filterbs, cval, std::move(gr), primal);
+}
+
+template <int D, typename T>
+T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options, const T* cval) {
+  assertx(options.gamma->is_identity());
+  const Vec<FilterBnd, D> filterbs =
+      details::filterbnds_from_options(options.filter, options.filter, options.boundary, ntimes<D>(false));
+  return sample_grid(g, p, filterbs, cval);
+}
+
+template <int D, typename T>
+T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options, const T* cval) {
+  Vec<float, D> pp;
+  for_int(d, D) pp[d] = options.gridtype[d] == Gridtype::dual ? p[d] * g.dim(d) - .5f : p[d] * (g.dim(d) - 1);
+  return sample_grid(g, pp, options, cval);
 }
 
 template <int D, bool parallel>

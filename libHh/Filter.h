@@ -93,10 +93,6 @@ class FilterBnd {
   [[nodiscard]] Bndrule bndrule() const { return _bndrule; }
   void set_filter(const Filter& filter_) { _filter = &filter_; }
   void set_bndrule(Bndrule bndrule_) { _bndrule = bndrule_, assertx(_bndrule != Bndrule::undefined); }
-  // Given old size cx and new size nx, for each new index i compute the interval of weights on old values
-  //  starting at index ar_pixelindex0[i].  mat_weights is allocated of size [nx, nk] where nk is interval size.
-  // Samples are assumed at half-integer locations (!primal) or integer locations (primal).
-  void setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar_pixelindex0, Matrix<float>& mat_weights) const;
   friend std::ostream& operator<<(std::ostream& os, const FilterBnd& filterbnd) {
     return os << "FilterBnd{" << filterbnd._filter->name() << ", " << boundaryrule_name(filterbnd._bndrule) << "}";
   }

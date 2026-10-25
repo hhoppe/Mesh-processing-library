@@ -12,6 +12,17 @@ scale(ramp, V(9), options) = Array<float>(9) {
   12.5
   16
 }
+result2 = Array<float>(9) {
+  0
+  0.25
+  1
+  2.25
+  4
+  6.25
+  9
+  13.25
+  16
+}
 i=0 row.index0=-2 row.indices=Array<int>(4) {
   1
   2

@@ -3,7 +3,6 @@
 
 #include "libHh/GridPixelOp.h"  // scale_Matrix_Pixel()
 #include "libHh/Parallel.h"
-#include "libHh/Random.h"  // for testing
 #include "libHh/RangeOp.h"
 #include "libHh/Stat.h"  // for testing; HH_SSTAT()
 #include "libHh/StringOp.h"
@@ -112,8 +111,6 @@ std::string_view image_suffix_for_magic_byte(uchar c) {
 //----------------------------------------------------------------------------
 // *** Scaling
 
-static const int g_test_scale_accuracy = getenv_int("IMAGE_TEST_SCALE_ACCURACY");  // Also in MatrixOp.h.
-
 void Image::scale(const Vec2<float>& syx, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue) {
   *this = hh::scale(*this, syx, filterbs, bordervalue, std::move(*this));
 }
@@ -123,7 +120,6 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
   Image newimage = &pnewimage == &image ? Image() : std::move(pnewimage);
   assertx(min(syx) >= 0.f);
   Vec2<int> newdims = convert<int>(convert<float>(image.dims()) * syx + .5f);
-  const int nz = image.zsize();
   if (!product(newdims)) {
     Warning("scaling to zero image");
     if (0) fill(newdims, 0);
@@ -131,23 +127,6 @@ Image scale(const Image& image, const Vec2<float>& syx, const Vec2<FilterBnd>& f
   newimage.init(newdims);
   newimage.attrib() = image.attrib();
   if (newdims[0] == 0) return newimage;
-  if (g_test_scale_accuracy) {
-    Matrix<Vector4> matrix(image.dims());
-    for_int(y, image.ysize()) for_int(x, image.xsize()) for_int(z, nz) {
-      matrix[y, x][z] = Random::G.unif();  // A matrix of noise.
-    }
-    Matrix<Vector4> omatrix(matrix);
-    assertx(!bordervalue);
-    for_int(i, g_test_scale_accuracy) {
-      matrix = scale(matrix, matrix.dims(), filterbs, implicit_cast<Vector4*>(nullptr), std::move(matrix));
-    }
-    assertx(same_size(omatrix, matrix));
-    for_int(y, image.ysize()) for_int(x, image.xsize()) for_int(z, nz) {
-      const float diff = matrix[y, x][z] - omatrix[y, x][z];
-      HH_SSTAT(Serr, diff);
-    }
-    exit(0);
-  }
   scale_Matrix_Pixel(image, filterbs, bordervalue, newimage);
   return newimage;
 }

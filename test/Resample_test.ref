@@ -140,6 +140,46 @@ along = Array<hh::Vector4>(6) {
   Vector4(0, 0, 0, 0)
   Vector4(0, 0, 0, 0)
 }
+convert<int>(r8) = Array<int>(7) {
+  0
+  36
+  93
+  150
+  204
+  235
+  255
+}
+r16 = Array<unsigned short>(9) {
+  0
+  3200
+  16545
+  31889
+  49643
+  64433
+  65535
+  65535
+  65535
+}
+r32 = Array<unsigned int>(9) {
+  0
+  0
+  0
+  1259836988
+  3128237848
+  4229159375
+  4294967295
+  4294967295
+  4294967259
+}
+scale(gv, V(5), ResizeOptions<1>{.filter = "triangle", .gamma = "srgb"}) = Array<hh::Vec<unsigned short,3>>(5) {
+  [0, 100, 65535]
+  [400, 140, 52280]
+  [1000, 200, 0]
+  [1600, 260, 52280]
+  [2000, 300, 65535]
+}
+sampler2(V(.5f, .5f)) = Pixel(180, 180, 180, 255)
+round_fraction_digits(max_error, 100.f)=0 round_fraction_digits(rms_error, 100.f)=0
 result = Array<double>(5) {
   1
   1

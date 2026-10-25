@@ -9,6 +9,7 @@
 #include "libHh/ParallelCoords.h"
 #include "libHh/Pixel.h"
 #include "libHh/ResampleOptions.h"
+#include "libHh/SampleConvert.h"
 #include "libHh/StridedArrayView.h"
 #include "libHh/Vector4.h"
 #include "libHh/Vector4i.h"
@@ -141,28 +142,32 @@ template <int D, typename T>
 // and the reconstruction is evaluated many times.  The grid must outlive the Sampler unless it is copied.
 template <int D, typename T> class Sampler : noncopyable {
  public:
+  using F = sample_float_t<T>;  // The type of the coefficients and of the reconstruction (T for floating types).
   explicit Sampler(CGridView<D, T> grid, const SamplingOptions<D>& options = {}, const T* cval = nullptr);
   Sampler(Sampler&& rhs) noexcept;
-  // Reconstruct the value at point p of the unit domain [0, 1]^D.
-  [[nodiscard]] T operator()(const Vec<float, D>& p) const;
+  // Reconstruct the value at point p of the unit domain [0, 1]^D (integer samples are encoded with the gamma).
+  [[nodiscard]] T operator()(const Vec<float, D>& p) const { return encode_value<T>(*_gamma, linear(p)); }
   // Reconstruct the value at point p in grid coordinates (the samples lie at the integers).
-  [[nodiscard]] T at_grid(const Vec<float, D>& p) const;
+  [[nodiscard]] T at_grid(const Vec<float, D>& p) const { return encode_value<T>(*_gamma, linear_at_grid(p)); }
+  // Reconstruct the linear (decoded) value at point p of the unit domain, or at grid coordinates.
+  [[nodiscard]] F linear(const Vec<float, D>& p) const;
+  [[nodiscard]] F linear_at_grid(const Vec<float, D>& p) const;
   // Reconstruct the value at point p of the unit domain, where `spacing` is the distance between neighboring
   // reconstruction points in each dimension (antialiasing the transition to cval of the rules that override the
   // value outside the domain) and `override_exterior` false disables those rules (see resample()).
   [[nodiscard]] T evaluate(const Vec<float, D>& p, const Vec<float, D>& spacing, bool override_exterior) const;
-  [[nodiscard]] CGridView<D, T> coefficients() const { return _coefficients; }
+  [[nodiscard]] CGridView<D, F> coefficients() const { return _coefficients; }
 
  private:
-  Grid<D, T> _owned;  // The coefficients when they differ from the grid.
-  CGridView<D, T> _coefficients;
+  Grid<D, F> _owned;  // The coefficients when they differ from the grid.
+  CGridView<D, F> _coefficients;
+  const Gamma* _gamma;
   Vec<Gridtype, D> _gridtypes;
   Vec<const Boundary*, D> _boundaries;
   Vec<KernelFunc, D> _funcs;  // The kernels evaluated after the digital filter.
   Vec<float, D> _radii;
-  bool _has_cval{false};
-  T _cval{};
-  [[nodiscard]] T evaluate_grid(const Vec<float, D>& x, const Vec<float, D>& p, const Vec<float, D>& spacing,
+  F _cval{};
+  [[nodiscard]] F evaluate_grid(const Vec<float, D>& x, const Vec<float, D>& p, const Vec<float, D>& spacing,
                                 bool override_exterior) const;
 };
 
@@ -203,10 +208,18 @@ template <int D> class Resizer {
   [[nodiscard]] const Vec<int, D>& dim_order() const { return _dim_order; }
   [[nodiscard]] const Filter& filter(int d) const { return *_plan[d].filter; }
   [[nodiscard]] const Boundary& boundary(int d) const { return *_plan[d].boundary; }
+  [[nodiscard]] const Gamma& gamma() const { return *_gamma; }
   // Resize a grid of dimensions dims() into a grid of dimensions ndims(); cval is the constant value referenced by
-  // some boundary rules (e.g. "border").
+  // some boundary rules (e.g. "border").  Integer samples (e.g. Pixel) are decoded with the gamma, filtered in
+  // sample_float_t<T>, and encoded back with rounding and clamping; an all-impulse resize gathers them unchanged.
   template <typename T>
   [[nodiscard]] Grid<D, T> apply(CGridView<D, T> grid, const T* cval = nullptr, Grid<D, T>&& gr = Grid<D, T>()) const;
+  // Resize into an existing grid of dimensions ndims().
+  template <typename T> void apply_to(CGridView<D, T> grid, const T* cval, GridView<D, T> out) const;
+  // Resize a grid of linear (decoded) floating-point values; cval is likewise decoded.
+  template <typename F>
+  [[nodiscard]] Grid<D, F> apply_linear(CGridView<D, F> grid, const F* cval = nullptr,
+                                        Grid<D, F>&& gr = Grid<D, F>()) const;
   // The taps of output sample i along dimension d.  For an interior row, `indices` is empty and the taps are the
   // contiguous source samples [index0, index0 + weights.num()).  Otherwise `indices` gives the source index of each
   // tap, possibly repeating an index, where -1 denotes cval (whose total weight is cval_weight).
@@ -220,7 +233,9 @@ template <int D> class Resizer {
 
  private:
   Vec<int, D> _dims, _ndims, _dim_order;
+  const Gamma* _gamma;
   Vec<details::ResizerDim, D> _plan;
+  bool _all_impulse{false};
   bool _all_preprocess{false};  // All kernels are "preprocess": only the digital filter is applied.
   bool _all_bspline3{false};    // All kernels are "bspline3": the value range is expanded afterwards.
   [[nodiscard]] Vec<FilterBnd, D> filterbnds() const;  // (Transitional bridge to the digital filter.)
@@ -361,79 +376,46 @@ template <int D, typename T> CGridView<D + 1, T> raise_grid_rank(CGridView<D, T>
   return CGridView<D + 1, T>(grid.data(), concat(V(1), grid.dims()));
 }
 
-inline bool env_image_linear_filter() {
-  static const bool value = getenv_bool("IMAGE_LINEAR_FILTER");  // Expand gamma.  Assumes gamma = 2.0 (not 2.2).
-  return value;
-}
-
 template <int D> void convert(CGridView<D, Pixel> gridu, GridView<D, Vector4> gridf) {
   HH_GRIDOP_TIMER("__convert1");
   assertx(same_size(gridu, gridf));
-  if (env_image_linear_filter())
-    parallel_for({.cycles_per_elem = 4}, range(gridu.size()),
-                 [&](const size_t i) { gridf.flat(i) = square(Vector4(gridu.flat(i))); });
-  else
-    parallel_for({.cycles_per_elem = 4}, range(gridu.size()),
-                 [&](const size_t i) { gridf.flat(i) = Vector4(gridu.flat(i)); });
+  parallel_for({.cycles_per_elem = 4}, range(gridu.size()),
+               [&](const size_t i) { gridf.flat(i) = Vector4(gridu.flat(i)); });
 }
 
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Pixel> gridu) {
   HH_GRIDOP_TIMER("__convert2");
   assertx(same_size(gridf, gridu));
-  if (env_image_linear_filter())
-    parallel_for({.cycles_per_elem = 4}, range(gridf.size()),
-                 [&](const size_t i) { gridu.flat(i) = sqrt(gridf.flat(i)).pixel(); });
-  else
-    parallel_for({.cycles_per_elem = 4}, range(gridf.size()),
-                 [&](const size_t i) { gridu.flat(i) = gridf.flat(i).pixel(); });
+  parallel_for({.cycles_per_elem = 4}, range(gridf.size()),
+               [&](const size_t i) { gridu.flat(i) = gridf.flat(i).pixel(); });
 }
 
 template <int D> void convert(CGridView<D, uint8_t> gridu, GridView<D, float> gridf) {
   assertx(same_size(gridu, gridf));
-  if (env_image_linear_filter())
-    parallel_for({.cycles_per_elem = 1}, range(gridu.size()),
-                 [&](const size_t i) { gridf.flat(i) = square(float(gridu.flat(i))); });
-  else
-    parallel_for({.cycles_per_elem = 1}, range(gridu.size()),
-                 [&](const size_t i) { gridf.flat(i) = float(gridu.flat(i)); });
+  parallel_for({.cycles_per_elem = 1}, range(gridu.size()),
+               [&](const size_t i) { gridf.flat(i) = float(gridu.flat(i)); });
 }
 
 template <int D> void convert(CGridView<D, float> gridf, GridView<D, uint8_t> gridu) {
   assertx(same_size(gridf, gridu));
-  if (env_image_linear_filter())
-    parallel_for({.cycles_per_elem = 1}, range(gridf.size()),
-                 [&](const size_t i) { gridu.flat(i) = clamp_to_uint8(int(sqrt(gridf.flat(i)))); });
-  else
-    parallel_for({.cycles_per_elem = 1}, range(gridf.size()),
-                 [&](const size_t i) { gridu.flat(i) = clamp_to_uint8(int(gridf.flat(i))); });
+  parallel_for({.cycles_per_elem = 1}, range(gridf.size()),
+               [&](const size_t i) { gridu.flat(i) = clamp_to_uint8(int(gridf.flat(i))); });
 }
 
 template <int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D, Vector4> gridf) {
   assertx(same_size(gridu, gridf));
-  if (env_image_linear_filter())
-    parallel_for({.cycles_per_elem = 4}, range(gridu.size()), [&](const size_t i) {
-      const auto& uv = gridu.flat(i);
-      gridf.flat(i) = square(Vector4(Pixel(uv[0], uv[1], 0, 0)));
-    });
-  else
-    parallel_for({.cycles_per_elem = 4}, range(gridu.size()), [&](const size_t i) {
-      const auto& uv = gridu.flat(i);
-      gridf.flat(i) = Vector4(Pixel(uv[0], uv[1], 0, 0));
-    });
+  parallel_for({.cycles_per_elem = 4}, range(gridu.size()), [&](const size_t i) {
+    const auto& uv = gridu.flat(i);
+    gridf.flat(i) = Vector4(Pixel(uv[0], uv[1], 0, 0));
+  });
 }
 
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Vec2<uint8_t>> gridu) {
   assertx(same_size(gridf, gridu));
-  if (env_image_linear_filter())
-    parallel_for({.cycles_per_elem = 4}, range(gridf.size()), [&](const size_t i) {
-      const Pixel p = sqrt(gridf.flat(i)).pixel();
-      gridu.flat(i) = V(p[0], p[1]);
-    });
-  else
-    parallel_for({.cycles_per_elem = 4}, range(gridf.size()), [&](const size_t i) {
-      const Pixel p = gridf.flat(i).pixel();
-      gridu.flat(i) = V(p[0], p[1]);
-    });
+  parallel_for({.cycles_per_elem = 4}, range(gridf.size()), [&](const size_t i) {
+    const Pixel p = gridf.flat(i).pixel();
+    gridu.flat(i) = V(p[0], p[1]);
+  });
 }
 
 //----------------------------------------------------------------------------
@@ -461,6 +443,9 @@ template <int D, typename T> void inverse_convolution_d(GridView<D, T> grid, con
   inverse_convolution_d(grid, filterb.filter(), Boundary::get(filterb.bndrule()), Gridtype::dual, d,
                         implicit_cast<const T*>(nullptr));
 }
+
+// True for the sample types whose value range [0, 1] the "preprocess" and "bspline3" kernels shrink and expand.
+template <typename T> constexpr bool has_value_range = std::is_arithmetic_v<T> || std::is_same_v<T, Vector4>;
 
 // The factor by which the "bspline3" kernel (the cubic B-spline evaluated after the "preprocess" digital filter)
 // expands the value range, and by which the "preprocess" filter shrinks it.
@@ -725,8 +710,7 @@ template <int D> ResizeOptions<D> options_from_filterbnds(const Vec<FilterBnd, D
 
 template <int D>
 Resizer<D>::Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const ResizeOptions<D>& options)
-    : _dims(dims), _ndims(ndims) {
-  assertx(options.gamma->is_identity());  // (The transfer function of integer samples is applied by the callers.)
+    : _dims(dims), _ndims(ndims), _gamma(options.gamma.ptr) {
   const PerDim<Gridtype, D>& dst_gridtype = options.dst_gridtype ? *options.dst_gridtype : options.gridtype;
   int npreprocess = 0, nbspline3 = 0;
   for_int(d, D) {
@@ -751,6 +735,7 @@ Resizer<D>::Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const Res
   }
   assertx(npreprocess == 0 || npreprocess == D);
   _all_preprocess = npreprocess == D;
+  _all_impulse = ranges::all_of(_plan, [](const details::ResizerDim& rd) { return rd.filter->is_impulse(); });
   if (_all_preprocess) assertx(ndims == dims);
   assertx(nbspline3 == 0 || nbspline3 == D);
   _all_bspline3 = nbspline3 == D;
@@ -804,6 +789,24 @@ template <int D> typename Resizer<D>::Row Resizer<D>::row(int d, int i) const {
   return Row{rd.index0[i], rd.col.slice(j0, j1), rd.val.slice(j0, j1), cval_weight};
 }
 
+namespace details {
+
+// Gather the nearest samples along dimension d (the rows of an impulse kernel have a single tap each).
+template <int D, typename T>
+Grid<D, T> gather_rows_d(CGridView<D, T> grid, int d, const ResizerDim& rd, const T* cval) {
+  const Vec<int, D> ndims = grid.dims().with(d, rd.index0.num());
+  Grid<D, T> ngrid(ndims);
+  parallel_for_coords({.cycles_per_elem = 10}, ndims, [&](const Vec<int, D>& u) {
+    const int x = u[d];
+    assertx(rd.row_begin[x + 1] - rd.row_begin[x] == 1);
+    const int i = rd.col[rd.row_begin[x]];
+    ngrid[u] = i >= 0 ? grid[u.with(d, i)] : *cval;
+  });
+  return ngrid;
+}
+
+}  // namespace details
+
 template <int D>
 template <typename T>
 Grid<D, T> Resizer<D>::apply(CGridView<D, T> grid, const T* cval, Grid<D, T>&& gr) const {
@@ -812,7 +815,60 @@ Grid<D, T> Resizer<D>::apply(CGridView<D, T> grid, const T* cval, Grid<D, T>&& g
   for_int(d, D) {
     if (_plan[d].boundary->uses_cval()) assertx(cval);
   }
-  if (_all_preprocess) return details::scale_preprocess(grid, filterbnds(), std::move(gr));
+  if (_all_impulse) {  // Gather the nearest samples without any conversion (exact for any sample type).
+    CGridView<D, T> gridref(grid);
+    for (const int d : _dim_order) {
+      if (_plan[d].identity) {
+        gr = gridref;
+      } else {
+        gr = details::gather_rows_d(gridref, d, _plan[d], cval);
+      }
+      gridref.reinit(gr);
+    }
+    return std::move(gr);
+  }
+  if constexpr (is_integer_sample_v<T>) {
+    Grid<D, T> result(_ndims);
+    apply_to(grid, cval, result);
+    return result;
+  } else {
+    if (_gamma->is_identity()) return apply_linear(grid, cval, std::move(gr));
+    const T fcval = cval ? decode_value(*_gamma, *cval) : T{};
+    Grid<D, T> fgrid = decode(*_gamma, grid);
+    fgrid = apply_linear(CGridView<D, T>(fgrid), cval ? &fcval : nullptr, std::move(fgrid));
+    encode<D, T>(*_gamma, fgrid, fgrid);
+    return fgrid;
+  }
+}
+
+template <int D>
+template <typename T>
+void Resizer<D>::apply_to(CGridView<D, T> grid, const T* cval, GridView<D, T> out) const {
+  assertx(out.dims() == _ndims);
+  if constexpr (is_integer_sample_v<T>) {
+    if (!_all_impulse) {
+      using F = sample_float_t<T>;
+      const F fcval = cval ? decode_value(*_gamma, *cval) : F{};
+      Grid<D, F> fgrid = decode(*_gamma, grid);
+      fgrid = apply_linear(CGridView<D, F>(fgrid), cval ? &fcval : nullptr, std::move(fgrid));
+      encode<D, T>(*_gamma, fgrid, out);
+      return;
+    }
+  }
+  out.assign(apply(grid, cval));
+}
+
+template <int D>
+template <typename F>
+Grid<D, F> Resizer<D>::apply_linear(CGridView<D, F> grid, const F* cval, Grid<D, F>&& gr) const {
+  using T = F;
+  assertx(grid.dims() == _dims && !_all_impulse);
+  if (_all_preprocess) {
+    if constexpr (details::has_value_range<T>)
+      return details::scale_preprocess(grid, filterbnds(), std::move(gr));
+    else
+      assertnever("The preprocess kernel applies to scalar or Vector4 grids");
+  }
   CGridView<D, T> gridref(grid);  // (Becomes gr after the first dimension.)
   for (const int d : _dim_order) {
     const details::ResizerDim& rd = _plan[d];
@@ -835,8 +891,12 @@ Grid<D, T> Resizer<D>::apply(CGridView<D, T> grid, const T* cval, Grid<D, T>&& g
   }
   assertx(gridref.data() == gr.data());
   if (_all_bspline3) {
-    const float expand_value_range = details::expand_value_range();
-    for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // Expand the range.
+    if constexpr (details::has_value_range<T>) {
+      const float expand_value_range = details::expand_value_range();
+      for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // Expand the range.
+    } else {
+      assertnever("The bspline3 kernel applies to scalar or Vector4 grids");
+    }
   }
   return std::move(gr);
 }
@@ -898,12 +958,18 @@ template <int D> SamplingOptions<D> sampling_options_from_filterbnds(const Vec<F
 }  // namespace details
 
 template <int D, typename T>
-Sampler<D, T>::Sampler(CGridView<D, T> grid, const SamplingOptions<D>& options, const T* cval) : _coefficients(grid) {
+Sampler<D, T>::Sampler(CGridView<D, T> grid, const SamplingOptions<D>& options, const T* cval)
+    : _coefficients(nullptr, ntimes<D>(0)), _gamma(options.gamma.ptr) {
   static_assert(std::is_trivially_default_constructible_v<T>);
-  assertx(options.gamma->is_identity());  // (The transfer function of integer samples is applied by the callers.)
   static const Boundary& k_reflect = Boundary::get("reflect");
-  if (cval) _has_cval = true, _cval = *cval;
+  if (cval) _cval = decode_value(*_gamma, *cval);
   bool digital = false;
+  if constexpr (is_integer_sample_v<T>) {
+    digital = true;  // (The decoded coefficients are always owned.)
+  } else {
+    if (!_gamma->is_identity()) digital = true;
+    _coefficients.reinit(grid);
+  }
   for_int(d, D) {
     const Filter& filter = *options.filter[d];
     assertx(!filter.is_impulse() && !filter.is_trapezoid());  // These kernels serve only scale().
@@ -916,11 +982,11 @@ Sampler<D, T>::Sampler(CGridView<D, T> grid, const SamplingOptions<D>& options, 
     if (filter.requires_digital_filter()) digital = true;
   }
   if (digital) {
-    _owned = grid;
+    _owned = decode(*_gamma, grid);
     for_int(d, D) {
       if (options.filter[d]->requires_digital_filter())
-        details::inverse_convolution_d(GridView<D, T>(_owned), *options.filter[d], *_boundaries[d], _gridtypes[d], d,
-                                       cval);
+        details::inverse_convolution_d(GridView<D, F>(_owned), *options.filter[d], *_boundaries[d], _gridtypes[d], d,
+                                       cval ? &_cval : nullptr);
     }
     _coefficients.reinit(_owned);
   }
@@ -929,15 +995,15 @@ Sampler<D, T>::Sampler(CGridView<D, T> grid, const SamplingOptions<D>& options, 
 template <int D, typename T>
 Sampler<D, T>::Sampler(Sampler&& rhs) noexcept
     : _owned(std::move(rhs._owned)),
-      _coefficients(_owned.size() ? CGridView<D, T>(_owned) : rhs._coefficients),
+      _coefficients(_owned.size() ? CGridView<D, F>(_owned) : rhs._coefficients),
+      _gamma(rhs._gamma),
       _gridtypes(rhs._gridtypes),
       _boundaries(rhs._boundaries),
       _funcs(rhs._funcs),
       _radii(rhs._radii),
-      _has_cval(rhs._has_cval),
       _cval(rhs._cval) {}
 
-template <int D, typename T> T Sampler<D, T>::operator()(const Vec<float, D>& p) const {
+template <int D, typename T> typename Sampler<D, T>::F Sampler<D, T>::linear(const Vec<float, D>& p) const {
   Vec<float, D> x;
   for_int(d, D) {
     const int dim = _coefficients.dim(d);
@@ -946,7 +1012,7 @@ template <int D, typename T> T Sampler<D, T>::operator()(const Vec<float, D>& p)
   return evaluate_grid(x, p, ntimes<D>(0.f), true);
 }
 
-template <int D, typename T> T Sampler<D, T>::at_grid(const Vec<float, D>& x) const {
+template <int D, typename T> typename Sampler<D, T>::F Sampler<D, T>::linear_at_grid(const Vec<float, D>& x) const {
   Vec<float, D> p;
   for_int(d, D) {
     const int dim = _coefficients.dim(d);
@@ -962,12 +1028,12 @@ T Sampler<D, T>::evaluate(const Vec<float, D>& p, const Vec<float, D>& spacing, 
     const int dim = _coefficients.dim(d);
     x[d] = _gridtypes[d] == Gridtype::dual ? p[d] * dim - .5f : p[d] * (dim - 1);
   }
-  return evaluate_grid(x, p, spacing, override_exterior);
+  return encode_value<T>(*_gamma, evaluate_grid(x, p, spacing, override_exterior));
 }
 
 template <int D, typename T>
-T Sampler<D, T>::evaluate_grid(const Vec<float, D>& x, const Vec<float, D>& p, const Vec<float, D>& spacing,
-                               bool override_exterior) const {
+typename Sampler<D, T>::F Sampler<D, T>::evaluate_grid(const Vec<float, D>& x, const Vec<float, D>& p,
+                                                       const Vec<float, D>& spacing, bool override_exterior) const {
   // The taps of each dimension: either the dense kernel window, when it lies inside the grid and the boundary rule
   // leaves it unchanged (the common case), or the taps folded by the rule.  The scratch arrays avoid allocations.
   struct Taps {
@@ -1001,7 +1067,7 @@ T Sampler<D, T>::evaluate_grid(const Vec<float, D>& x, const Vec<float, D>& p, c
     }
     counts[d] = taps[d].count;
   }
-  T val{};
+  F val{};
   for (const Vec<int, D>& k : range(counts)) {
     float w = 1.f;
     bool exterior = false;

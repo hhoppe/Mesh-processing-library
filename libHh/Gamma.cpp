@@ -63,6 +63,14 @@ const Gamma& Gamma::get(std::string_view name) {
   assertnever("Gamma '" + string(name) + "' not recognized");
 }
 
+CArrayView<float> Gamma::decode_table_uint16() const {
+  std::call_once(_table_uint16_once, [&] {
+    _table_uint16.init(65536);
+    for_int(i, 65536) _table_uint16[i] = float(decode(i / 65535.));
+  });
+  return _table_uint16;
+}
+
 CArrayView<float> Gamma::decode_table_uint8() const {
   std::call_once(_table_uint8_once, [&] {
     _table_uint8.init(256);

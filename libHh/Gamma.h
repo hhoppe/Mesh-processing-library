@@ -27,8 +27,9 @@ class Gamma : noncopyable {
   // Convert a linear value to an encoded value (a negative value is treated as zero).
   [[nodiscard]] virtual float encode(float linear) const = 0;
   [[nodiscard]] virtual double encode(double linear) const = 0;
-  // The decoded values of the 256 uint8_t sample values (lazily computed).
+  // The decoded values of the 256 uint8_t sample values, and of the 65536 uint16_t ones (lazily computed).
   [[nodiscard]] CArrayView<float> decode_table_uint8() const;
+  [[nodiscard]] CArrayView<float> decode_table_uint16() const;
   friend std::ostream& operator<<(std::ostream& os, const Gamma& gamma) {
     return os << "Gamma{" << gamma.name() << "}";
   }
@@ -40,8 +41,8 @@ class Gamma : noncopyable {
 
  private:
   string _name;
-  mutable std::once_flag _table_uint8_once;
-  mutable Array<float> _table_uint8;
+  mutable std::once_flag _table_uint8_once, _table_uint16_once;
+  mutable Array<float> _table_uint8, _table_uint16;
 };
 
 }  // namespace hh

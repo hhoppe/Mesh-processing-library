@@ -195,6 +195,73 @@ int main() {
     for_int(i, 5) assertx(along[i][3] >= along[i + 1][3] - 1e-6f);
     assertx(abs(along[0][3] - 1.f) < 1e-6f && abs(along[2][3] - .5f) < 1e-6f && along[5][3] == 0.f);
   }
+  {  // Integer sample types are decoded with the gamma, resampled, and encoded with rounding and clamping.
+    Grid<1, uint8_t> g8(V(4));
+    g8[0] = 0, g8[1] = 100, g8[2] = 200, g8[3] = 255;
+    const Grid<1, uint8_t> r8 = scale(g8, V(7), ResizeOptions<1>{.filter = "triangle"});
+    SHOW(convert<int>(r8));
+    Grid<1, float> f(V(4));
+    for_int(i, 4) f[i] = g8[i] / 255.f;
+    const Grid<1, float> rf = scale(f, V(7), ResizeOptions<1>{.filter = "triangle"});
+    for_int(i, 7) assertx(r8[i] == uint8_t(clamp(rf[i], 0.f, 1.f) * 255.f + .5f));
+    Grid<1, uint8_t> two(V(2));
+    two[0] = 0, two[1] = 255;  // The midpoint is 128 in the encoded space but sqrt(.5) * 255 = 180 with power2.
+    assertx(scale(two, V(3), ResizeOptions<1>{.filter = "triangle"})[1] == 128);
+    assertx(scale(two, V(3), ResizeOptions<1>{.filter = "triangle", .gamma = "power2"})[1] == 180);
+    Grid<1, uint16_t> g16(V(4));  // The overshoot of the cubic kernel saturates at the maximum value.
+    g16[0] = 0, g16[1] = 30000, g16[2] = 65535, g16[3] = 65535;
+    const Grid<1, uint16_t> r16 = scale(g16, V(9), ResizeOptions<1>{.filter = "cubic"});
+    SHOW(r16);
+    assertx(max(r16) == 65535 && r16[0] == 0);
+    Grid<1, uint32_t> g32(V(4));
+    g32[0] = 0, g32[1] = 1'000'000'000u, g32[2] = 4294967295u, g32[3] = 4294967295u;
+    const Grid<1, uint32_t> r32 = scale(g32, V(9), ResizeOptions<1>{.filter = "cubic", .gamma = "power2"});
+    SHOW(r32);
+    // (The float32 kernel weights limit the precision of 32-bit samples to about 2^-24 relative.)
+    assertx(max(r32) == 4294967295u && r32[0] == 0 && r32[8] > 4294967295u - 512u);
+    Grid<1, Vec3<uint16_t>> gv(V(3));
+    gv[0] = convert<uint16_t>(V(0, 100, 65535)), gv[1] = convert<uint16_t>(V(1000, 200, 0));
+    gv[2] = convert<uint16_t>(V(2000, 300, 65535));
+    SHOW(scale(gv, V(5), ResizeOptions<1>{.filter = "triangle", .gamma = "srgb"}));
+    Matrix<Pixel> pix(V(4, 4), Pixel(255, 255, 255, 255));  // The left half is white and the right half black.
+    for (const Vec2<int> u : range(pix.dims()))
+      if (u[1] >= 2) pix[u] = Pixel(0, 0, 0, 255);
+    const Sampler<2, Pixel> sampler(pix, {.filter = "cubic"});
+    assertx(sampler(V(.5f, .3125f)) == Pixel(255, 255, 255, 255));  // Overshoot above 255 is clamped.
+    assertx(sampler(V(.5f, .6875f)) == Pixel(0, 0, 0, 255));        // Undershoot below 0 is clamped.
+    const Sampler<2, Pixel> sampler2(pix, {.filter = "triangle", .gamma = "power2"});
+    SHOW(sampler2(V(.5f, .5f)));  // The blend of white and black in linear space, encoded back: 180.
+    assertx(sampler2(V(.5f, .5f))[0] == 180);
+    const Grid<2, Pixel> near = scale(pix, V(7, 5), ResizeOptions<2>{.filter = "impulse"});  // An exact gather.
+    for (const Vec2<int> u : range(near.dims())) {
+      Vec2<int> src;
+      for_int(d, 2) src[d] = int(std::floor((u[d] + .5) / near.dim(d) * pix.dim(d)));
+      assertx(near[u] == pix[src]);
+    }
+  }
+  {  // The accuracy of repeated resizing (64 -> 65 -> 64) of a smooth field with the cardinal cubic B-spline.
+    Matrix<Vector4> matrix(V(64, 64));
+    for (const Vec2<int> u : range(matrix.dims()))
+      matrix[u] = Vector4(std::sin(u[0] * .3f) * std::cos(u[1] * .2f) * .5f + .5f);
+    Matrix<Vector4> omatrix(matrix.dims());
+    omatrix.assign(matrix);
+    const ResizeOptions<2> options{.filter = "cardinal3", .boundary = "reflect"};
+    for_int(i, 10) {
+      matrix = scale(matrix, V(65, 65), options, implicit_cast<const Vector4*>(nullptr), std::move(matrix));
+      matrix = scale(matrix, V(64, 64), options, implicit_cast<const Vector4*>(nullptr), std::move(matrix));
+    }
+    float max_error = 0.f;
+    double sum2 = 0.;
+    for (const Vec2<int> u : range(matrix.dims())) {
+      for_int(c, 4) {
+        const float e = abs(matrix[u][c] - omatrix[u][c]);
+        max_error = max(max_error, e), sum2 += double(e) * e;
+      }
+    }
+    const float rms_error = float(std::sqrt(sum2 / (matrix.size() * 4)));
+    SHOW(round_fraction_digits(max_error, 100.f), round_fraction_digits(rms_error, 100.f));
+    assertx(max_error < .02f && rms_error < .005f);
+  }
   {  // Parity with the Python package resampler.
 #include "Resample_parity.inc"
     // Every output sample maps outside the source domain: the result is cval, not NaN.

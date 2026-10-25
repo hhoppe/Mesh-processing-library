@@ -7,15 +7,14 @@
 
 namespace hh {
 
-// Testing:
-// for n in {1..20} 40 100 1000; do echo $n; Filterimage -create $n $n -bound c -scaleu 1 -noo; done
-
 // Rescale matrix of pixels to the sizes given by destination nmatrixp; views matrixp and nmatrixp must be distinct.
 inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Resizer<2>& resizer, const Pixel* bordervalue,
                                MatrixView<Pixel> nmatrixp) {
   assertx(matrixp.data() != nmatrixp.data());
   assertx(matrixp.dims() == resizer.dims() && nmatrixp.dims() == resizer.ndims());
-  if (resizer.filter(0).is_trivial_magnify() && resizer.filter(1).is_trivial_magnify() &&
+  // The integer fast paths apply only when no transfer function alters the values.
+  const bool identity_gamma = resizer.gamma().is_identity();
+  if (identity_gamma && resizer.filter(0).is_trivial_magnify() && resizer.filter(1).is_trivial_magnify() &&
       nmatrixp.dims() == matrixp.dims() * 2) {
     const int cx = matrixp.xsize();
     parallel_for(range(nmatrixp.ysize()), [&](const int y) {
@@ -29,7 +28,8 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Resizer<2>& res
     });
     return;
   }
-  if (resizer.filter(0).is_trivial_minify() && resizer.filter(1).is_trivial_minify() && nmatrixp.size()) {
+  if (identity_gamma && resizer.filter(0).is_trivial_minify() && resizer.filter(1).is_trivial_minify() &&
+      nmatrixp.size()) {
     if (nmatrixp.dims() * 2 == matrixp.dims()) {
       constexpr int DS = 2, DS2 = square(DS);
       const int nx = nmatrixp.xsize();
@@ -85,20 +85,14 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Resizer<2>& res
       return;
     }
   }
-  Matrix<Vector4> matrix(matrixp.dims());
-  convert(matrixp, matrix);
-  Vector4 vborder;
-  if (bordervalue) convert(CGrid1View(*bordervalue), Grid1View(vborder));
-  matrix = resizer.apply(matrix, bordervalue ? &vborder : nullptr, std::move(matrix));
-  convert(matrix, nmatrixp);
+  resizer.apply_to(matrixp, bordervalue, nmatrixp);
 }
 
 // Rescale matrix of pixels to the sizes given by destination nmatrixp; views matrixp and nmatrixp must be distinct.
 inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Vec2<FilterBnd>& filterbs, const Pixel* bordervalue,
                                MatrixView<Pixel> nmatrixp) {
-  static const int g_test_scale_accuracy = getenv_int("IMAGE_TEST_SCALE_ACCURACY");  // Also in Image.cpp.
   assertx(matrixp.data() != nmatrixp.data());
-  if (matrixp.dims() == nmatrixp.dims() && !g_test_scale_accuracy && filterbs[0].filter().is_interpolating() &&
+  if (matrixp.dims() == nmatrixp.dims() && filterbs[0].filter().is_interpolating() &&
       filterbs[1].filter().is_interpolating()) {
     nmatrixp.assign(matrixp);
     return;

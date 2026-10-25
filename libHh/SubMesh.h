@@ -56,9 +56,9 @@ class SubMesh {
   void update_vertex_positions();
 
   // Misc:
-  void mask_parameters(bool ps222, float pweighta) {
-    _s222 = ps222;
-    _weighta = pweighta;
+  void mask_parameters(bool s222, float weighta) {
+    _s222 = s222;
+    _weighta = weighta;
   }
 
   // The omesh to and from mesh:

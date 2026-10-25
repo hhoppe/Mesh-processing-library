@@ -87,7 +87,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
   // The cube vertices are indexed by nodes with indices [0, _gn].  See get_point().
   // So there are no "+ .5f" roundings anywhere in the code.
   struct Node : VertexData {
-    explicit Node(unsigned pen) : _en(pen) {}
+    explicit Node(unsigned en) : _en(en) {}
     enum class ECubestate { nothing, queued, visited };
     unsigned _en;                                // The encoded vertex index.
     ECubestate _cubestate{ECubestate::nothing};  // Cube info.

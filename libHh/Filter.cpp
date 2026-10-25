@@ -303,7 +303,7 @@ struct FilterHamming6 final : Filter {
 
 }  // namespace
 
-const Filter& Filter::get(const string& name) {
+const Filter& Filter::get(std::string_view name) {
   assertx(name != "");
   // Careful: Filter::get() may be called by some static constructor, so we use a function-local
   // static (thread-safe and lazily initialized) and intentionally never destroy the filters.
@@ -317,7 +317,7 @@ const Filter& Filter::get(const string& name) {
     const string& filter_name = filter->name();
     if (filter_name == name || (name.size() == 1 && name[0] != 'j' && filter_name[0] == name[0])) return *filter;
   }
-  assertnever("Filter '" + name + "' not recognized");
+  assertnever("Filter '" + string(name) + "' not recognized");
 }
 
 const LUfactorization& FilterBnd::lu_factorization() const {

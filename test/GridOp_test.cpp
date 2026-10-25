@@ -13,9 +13,9 @@ using namespace hh;
 namespace {
 
 template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
-  Array<const Filter*> filters;  // not: "gaussian", "preprocess", "justspline", "justomoms"
-  for (const string s : {"impulse", "box", "triangle", "quadratic", "mitchell", "keys", "spline", "omoms"})
-    filters.push(&Filter::get(s));
+  // Not: "gaussian", "preprocess", "justspline", "justomoms".
+  const auto filters = transformed(V("impulse", "box", "triangle", "quadratic", "mitchell", "keys", "spline", "omoms"),
+                                   [](const std::string_view s) { return &Filter::get(s); });
   {  // Inverse convolution is partition-of-unity.
     Grid<D, float> grid(dims, 1.f);
     inverse_convolution(grid, ntimes<D>(FilterBnd(Filter::get("spline"), Bndrule::reflected)));

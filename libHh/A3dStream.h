@@ -138,7 +138,7 @@ class RA3dStream : noncopyable {
 
 class RSA3dStream : public RA3dStream {  // Read from a stream.
  public:
-  explicit RSA3dStream(std::istream& pis) : _is(pis) {}
+  explicit RSA3dStream(std::istream& is_) : _is(is_) {}
   [[nodiscard]] std::istream& is() { return _is; }
 
  private:
@@ -173,7 +173,7 @@ class WA3dStream : noncopyable {
 
 class WSA3dStream : public WA3dStream {  // Write to a stream.
  public:
-  explicit WSA3dStream(std::ostream& pos) : _os(pos) {}
+  explicit WSA3dStream(std::ostream& os_) : _os(os_) {}
   ~WSA3dStream() override { WSA3dStream::flush(); }
   void flush() override { _os.flush(); }
   [[nodiscard]] std::ostream& os() { return _os; }

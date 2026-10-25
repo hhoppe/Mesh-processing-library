@@ -27,7 +27,7 @@ class Filter : noncopyable {
   [[nodiscard]] bool is_partition_of_unity() const { return _is_partition_of_unity; }
   [[nodiscard]] bool is_unit_integral() const { return _is_unit_integral; }
 
-  [[HH_NO_DANGLING]] [[nodiscard]] static const Filter& get(const string& name);
+  [[HH_NO_DANGLING]] [[nodiscard]] static const Filter& get(std::string_view name);
   // impulse:     (for nearest-sample minification) (does not support func()).
   // box:         (nearest magnification), a.k.a. rectangle/rect func, top-hat, pi func, unit pulse, boxcar).
   // triangle:    a.k.a. linear, tent, hat, triangular func.
@@ -70,11 +70,11 @@ struct LUfactorization;
 
 class FilterBnd {
  public:
-  explicit FilterBnd(const Filter& pfilter, Bndrule pbndrule) : _filter(&pfilter) { set_bndrule(pbndrule); }
+  explicit FilterBnd(const Filter& filter_, Bndrule bndrule_) : _filter(&filter_) { set_bndrule(bndrule_); }
   [[nodiscard]] const Filter& filter() const { return *_filter; }
   [[nodiscard]] Bndrule bndrule() const { return _bndrule; }
-  void set_filter(const Filter& pfilter) { _filter = &pfilter; }
-  void set_bndrule(Bndrule pbndrule) { _bndrule = pbndrule, assertx(_bndrule != Bndrule::undefined); }
+  void set_filter(const Filter& filter_) { _filter = &filter_; }
+  void set_bndrule(Bndrule bndrule_) { _bndrule = bndrule_, assertx(_bndrule != Bndrule::undefined); }
   // Returns the LU factorization of the inverse convolution matrix for the filter and boundary rule.
   [[nodiscard]] const LUfactorization& lu_factorization() const;
   // Given old size cx and new size nx, for each new index i compute the interval of weights on old values

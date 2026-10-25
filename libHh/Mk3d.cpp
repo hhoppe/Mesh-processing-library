@@ -3,7 +3,7 @@
 
 namespace hh {
 
-Mk3d::Mk3d(WA3dStream& pos) : _os(pos) { _os.write_comment(" Init Mk3d"); }
+Mk3d::Mk3d(WA3dStream& os) : _os(os) { _os.write_comment(" Init Mk3d"); }
 
 Mk3d::~Mk3d() {
   _os.write_comment(sform(" End Mk3d: %dgons %dlines %dpoints, %dverts(max %d)",  //

@@ -32,7 +32,7 @@ constexpr int nz = 3;  // 3 color channels; no alpha channel.
 bool g_not = false;
 Pixel gcolor{255, 255, 255, 255};
 Bndrule bndrule = Bndrule::reflected;
-FilterBnd filterb{Filter::get("spline"), bndrule};
+FilterBnd filterb(Filter::get("spline"), bndrule);
 int startframe = 0;
 int tradius = 0;  // Was 4.
 bool nooutput = false;

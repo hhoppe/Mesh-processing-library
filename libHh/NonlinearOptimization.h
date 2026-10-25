@@ -56,8 +56,8 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   Array<double> _alphak;     // Used in the formula that computes H * g.
   Matrix<double> _as;        // Last _m search step          (s_k = x_k - x_{k-1}).
   Matrix<double> _ay;        // Last _m gradient differences (y_k = g_k - g_{k-1}).
-  NonlinearOptimization(void*, ArrayView<double> px, Eval eval)
-      : _x(std::move(px)),
+  NonlinearOptimization(void*, ArrayView<double> x, Eval eval)
+      : _x(std::move(x)),
         _n(_x.num()),
         _eval(eval),
         _g(_n),

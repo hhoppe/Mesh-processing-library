@@ -10,7 +10,7 @@ namespace hh {
 // Create a stream of polygons and polylines on a WA3dStream, with nested geometric transforms and color transforms.
 class Mk3d : noncopyable {
  public:
-  explicit Mk3d(WA3dStream& pos);
+  explicit Mk3d(WA3dStream& os);
   ~Mk3d();
   WA3dStream& oa3d() { return _os; }
   void push() { _stack_frame.push(_ctm), _stack_framei.push(_ctmi); }

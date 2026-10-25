@@ -11,7 +11,7 @@ const DigitalFilter& DigitalFilter::get(const Filter& filter, const Boundary& bo
   // The factorizations are intentionally never destroyed.
   static auto& cache = *new std::map<Key, const DigitalFilter*>;
   static auto& mutex = *new std::mutex;
-  const std::lock_guard<std::mutex> lock(mutex);
+  const std::scoped_lock lock(mutex);
   const DigitalFilter*& entry = cache[Key{&filter, &boundary, gridtype, size}];
   if (!entry) entry = new DigitalFilter(filter, boundary, gridtype, size);
   return *entry;

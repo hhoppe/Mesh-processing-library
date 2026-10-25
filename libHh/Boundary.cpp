@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
 #include "libHh/Boundary.h"
 
+#include "libHh/Vec.h"
+
 namespace hh {
 
 namespace {

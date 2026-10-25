@@ -129,7 +129,7 @@ template <int D, typename T> class Sampler : noncopyable {
   [[nodiscard]] T at_grid(const Vec<float, D>& p) const { return encode_value<T>(*_gamma, linear_at_grid(p)); }
   // Reconstruct the linear (decoded) value at point p of the unit domain, or at grid coordinates.
   [[nodiscard]] F linear(const Vec<float, D>& p) const;
-  [[nodiscard]] F linear_at_grid(const Vec<float, D>& p) const;
+  [[nodiscard]] F linear_at_grid(const Vec<float, D>& x) const;
   // Reconstruct the value at point p of the unit domain, where `spacing` is the distance between neighboring
   // reconstruction points in each dimension (antialiasing the transition to cval of the rules that override the
   // value outside the domain) and `override_exterior` false disables those rules (see resample()).
@@ -765,7 +765,7 @@ Grid<D, T> gather_rows_d(CGridView<D, T> grid, int d, const ResizerDim& rd, cons
     const int x = u[d];
     assertx(rd.row_begin[x + 1] - rd.row_begin[x] == 1);
     const int i = rd.col[rd.row_begin[x]];
-    ngrid[u] = i >= 0 ? grid[u.with(d, i)] : *cval;
+    ngrid[u] = i >= 0 ? grid[u.with(d, i)] : *assertx(cval);
   });
   return ngrid;
 }

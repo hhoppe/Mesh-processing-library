@@ -2860,8 +2860,9 @@ void do_procedure(Args& args) {
     convert(CGridView<1, Pixel>(k_color_ramp), color_ramp);
     Vector4 vgcolor;
     convert(CGrid1View(gcolor), Grid1View(vgcolor));
+    // The ramp runs along x, so it is sampled with the horizontal filter and boundary rule.
     const Sampler<1, Vector4> sampler(
-        color_ramp, {.filter = g_filterbs[0].filter(), .boundary = Boundary::get(g_filterbs[0].bndrule())}, &vgcolor);
+        color_ramp, {.filter = g_filterbs[1].filter(), .boundary = Boundary::get(g_filterbs[1].bndrule())}, &vgcolor);
     for_coords(image.dims(),
                [&](const Vec2<int>& yx) { image[yx] = sampler(V((yx[1] + .5f) / image.xsize())).pixel(); });
 

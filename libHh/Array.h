@@ -31,13 +31,14 @@
 
 namespace hh {
 
-// Define behavior beyond boundary of 1D range.
-//  (reflected = Matlab:symmetric / Mathematica:reversed / DirectX:Mirror)
-//  (reflected101 == OpenCV BORDER_REFLECT_101)
-enum class Bndrule { reflected, periodic, clamped, border, reflected101, undefined };
+// Define behavior beyond boundary of 1D range.  The names are those of the Python package resampler.
+//  (reflect = Matlab:symmetric / Mathematica:reversed / DirectX:Mirror; formerly "reflected")
+//  (wrap = periodic; clamp = clamped)
+//  (reflect_primal == OpenCV BORDER_REFLECT_101: the reflection of a primal grid; formerly "reflected101")
+enum class Bndrule { reflect, wrap, clamp, border, reflect_primal, undefined };
 
-// Convert a string ("reflected", "periodic", "clamped", "border", "101reflected") to a boundary rule by examining
-// its first letter.
+// Convert a string ("reflect", "wrap", "clamp", "border", "reflect_primal", their former names "reflected",
+// "periodic", "clamped", "reflected101", or the letters "r", "w" or "p", "c", "b", "1") to a boundary rule.
 [[nodiscard]] constexpr Bndrule parse_boundaryrule(std::string_view s);
 
 // Convert a boundary rule to a string.
@@ -45,6 +46,20 @@ enum class Bndrule { reflected, periodic, clamped, border, reflected101, undefin
 
 inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
   return os << "Bndrule{" << boundaryrule_name(bndrule) << "}";
+}
+
+// Placement of the n samples of a 1D grid over the unit domain: at the cell centers (i + .5) / n (dual, the usual
+// image convention) or at the cell vertices i / (n - 1) (primal), as in the Python package resampler.
+enum class Gridtype { dual, primal };
+
+// Convert a string ("dual", "primal", or the letters "d", "p") to a grid type.
+[[nodiscard]] constexpr Gridtype parse_gridtype(std::string_view s);
+
+// Convert a grid type to a string.
+[[nodiscard]] constexpr std::string_view gridtype_name(Gridtype gridtype);
+
+inline std::ostream& operator<<(std::ostream& os, Gridtype gridtype) {
+  return os << "Gridtype{" << gridtype_name(gridtype) << "}";
 }
 
 // Modify index i to be in domain [0, n - 1] using boundary rule; return false if bndrule == Border and i is outside.
@@ -471,29 +486,51 @@ template <typename T, int inline_capacity, typename Func> requires(inline_capaci
 //----------------------------------------------------------------------------
 
 [[nodiscard]] constexpr Bndrule parse_boundaryrule(const std::string_view s) {
-  Bndrule bndrule;
-  assertx(s.size() >= 1);
-  const char ch = s[0];
-  switch (ch) {
-    case 'r': bndrule = Bndrule::reflected; break;
-    case 'p': bndrule = Bndrule::periodic; break;
-    case 'c': bndrule = Bndrule::clamped; break;
-    case 'b': bndrule = Bndrule::border; break;
-    case '1': bndrule = Bndrule::reflected101; break;
-    default: assertnever("Boundary rule '" + string(s) + "' not recognized");
-  }
-  if (s.size() > 1 && s != boundaryrule_name(bndrule)) assertnever("Boundary rule '" + string(s) + "' not recognized");
-  return bndrule;
+  constexpr std::pair<std::string_view, Bndrule> k_names[] = {
+      {"reflect", Bndrule::reflect},
+      {"reflected", Bndrule::reflect},
+      {"r", Bndrule::reflect},
+      {"wrap", Bndrule::wrap},
+      {"periodic", Bndrule::wrap},
+      {"w", Bndrule::wrap},
+      {"p", Bndrule::wrap},
+      {"clamp", Bndrule::clamp},
+      {"clamped", Bndrule::clamp},
+      {"c", Bndrule::clamp},
+      {"border", Bndrule::border},
+      {"b", Bndrule::border},
+      {"reflect_primal", Bndrule::reflect_primal},
+      {"reflected101", Bndrule::reflect_primal},
+      {"101reflected", Bndrule::reflect_primal},
+      {"1", Bndrule::reflect_primal},
+  };
+  for (const auto& [name, bndrule] : k_names)
+    if (s == name) return bndrule;
+  assertnever("Boundary rule '" + string(s) + "' not recognized");
 }
 
 [[nodiscard]] constexpr std::string_view boundaryrule_name(Bndrule bndrule) {
   switch (bndrule) {
-    case Bndrule::reflected: return "reflected";
-    case Bndrule::periodic: return "periodic";
-    case Bndrule::clamped: return "clamped";
+    case Bndrule::reflect: return "reflect";
+    case Bndrule::wrap: return "wrap";
+    case Bndrule::clamp: return "clamp";
     case Bndrule::border: return "border";
-    case Bndrule::reflected101: return "101reflected";
+    case Bndrule::reflect_primal: return "reflect_primal";
     case Bndrule::undefined: return "undefined";
+    default: assertnever("");
+  }
+}
+
+[[nodiscard]] constexpr Gridtype parse_gridtype(const std::string_view s) {
+  if (s == "dual" || s == "d") return Gridtype::dual;
+  if (s == "primal" || s == "p") return Gridtype::primal;
+  assertnever("Grid type '" + string(s) + "' not recognized");
+}
+
+[[nodiscard]] constexpr std::string_view gridtype_name(Gridtype gridtype) {
+  switch (gridtype) {
+    case Gridtype::dual: return "dual";
+    case Gridtype::primal: return "primal";
     default: assertnever("");
   }
 }
@@ -501,7 +538,7 @@ template <typename T, int inline_capacity, typename Func> requires(inline_capaci
 constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule) {
   ASSERTX(n >= 1);
   switch (bndrule) {
-    case Bndrule::reflected:
+    case Bndrule::reflect:
       for (;;) {
         if (i < 0)
           i = -i - 1;
@@ -511,7 +548,7 @@ constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule) {
           break;
       }
       break;
-    case Bndrule::periodic:
+    case Bndrule::wrap:
       for (;;) {
         if (i < 0)
           i += n;
@@ -521,7 +558,7 @@ constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule) {
           break;
       }
       break;
-    case Bndrule::clamped:
+    case Bndrule::clamp:
       if (i < 0)
         i = 0;
       else if (i >= n)
@@ -530,7 +567,7 @@ constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule) {
     case Bndrule::border:
       if (i < 0 || i >= n) return false;
       break;
-    case Bndrule::reflected101:
+    case Bndrule::reflect_primal:
       if (n == 1) {
         i = 0;
         break;

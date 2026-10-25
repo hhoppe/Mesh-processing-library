@@ -254,7 +254,7 @@ class Multigrid : noncopyable {
       for_int(d, D) {  // These boundary rules were chosen because they behave well empirically.
         bndrules[d] = (_periodic(d)                             ? Bndrule::border
                        : largest_odd_size >= largest_other_size ? Bndrule::border
-                                                                : Bndrule::reflected);
+                                                                : Bndrule::reflect);
       }
       for_int(c, D) {
         const Vec<int, D> uL = ntimes<D>(0).with(c, dims[c] / 2);

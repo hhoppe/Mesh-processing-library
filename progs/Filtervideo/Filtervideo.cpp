@@ -31,7 +31,7 @@ constexpr int nz = 3;  // 3 color channels; no alpha channel.
 
 bool g_not = false;
 Pixel gcolor{255, 255, 255, 255};
-Bndrule bndrule = Bndrule::reflected;
+Bndrule bndrule = Bndrule::reflect;
 FilterBnd filterb(Filter::get("spline"), bndrule);
 int startframe = 0;
 int tradius = 0;  // Was 4.
@@ -253,7 +253,7 @@ void assemble_videos(MatrixView<Video> videos) {
       showf("Padding video[%d][%d] from %d frames to %d frames\n", yx[0], yx[1], vid.nframes(), maxframes);
       Warning("assemble: padding shorter video with extra frames");
       const int npad = maxframes - vid.nframes();
-      vid = crop(vid, V(0, 0, 0), V(-npad, 0, 0), thrice(Bndrule::clamped));
+      vid = crop(vid, V(0, 0, 0), V(-npad, 0, 0), thrice(Bndrule::clamp));
     }
     assertw(videos[yx].nframes() == videos[0, 0].nframes());
   }
@@ -1113,7 +1113,7 @@ void possibly_rescale_loop_parameters() {
     showdf("Scaling vlp from %s to %s\n",  //
            make_string(g_lp.mat_static.dims()).c_str(), make_string(video.spatial_dims()).c_str());
   }
-  const FilterBnd tfilterb(Filter::get("impulse"), Bndrule::reflected);
+  const FilterBnd tfilterb(Filter::get("impulse"), Bndrule::reflect);
   const auto func_scale_Matrix_int = [&](Matrix<int>& m) {
     m = scale_filter_nearest(m, video.spatial_dims(), std::move(m));
   };

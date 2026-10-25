@@ -688,7 +688,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   //  due to get_framei(), but only on even frames when upsampled from coarse-scale correction.
   Nv12 static_frame;
   if (video_filename != "") static_frame.init(sdims);
-  const FilterBnd filterb(Filter::get("box"), Bndrule::reflected);
+  const FilterBnd filterb(Filter::get("box"), Bndrule::reflect);
   const int hny = ny / DS, hnx = nx / DS;
   const Vec2<int> hdims(hny, hnx);
   assertx(hdims == sdims / DS);
@@ -1362,7 +1362,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         compute_gdloop_aux1<false>(video, mat_start_highres, mat_period_highres, videoloop, b_exact);
       } else {  // Reduce resolution on two spatial dimensions by a factor two.
         // "box" is fastest; previously "spline" and "triangle".
-        const FilterBnd filterb(Filter::get("box"), Bndrule::reflected);
+        const FilterBnd filterb(Filter::get("box"), Bndrule::reflect);
         const bool debug = false;
         Timer timer_gdloop1("_gdloop1");
         Grid<3, Pixel> hvideo(video.dim(0), ((video.dim(1) + 3) / 4) * 2,

@@ -55,12 +55,12 @@ bool use_lab = true;
 bool nooutput = false;
 Pixel gcolor{255, 255, 255, 255};
 float tolerance = 0.f;
-Vec2<Bndrule> g_bndrules = twice(Bndrule::reflected);
+Vec2<Bndrule> g_bndrules = twice(Bndrule::reflect);
 Vec2<FilterBnd> g_filterbs =
     V(FilterBnd(Filter::get("spline"), g_bndrules[0]), FilterBnd(Filter::get("spline"), g_bndrules[1]));
 
-constexpr Bndrule k_reflected = Bndrule::reflected;
-constexpr Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflected);
+constexpr Bndrule k_reflected = Bndrule::reflect;
+constexpr Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflect);
 constexpr Pixel k_color_zero_alpha{0, 0, 0, 0};
 
 int parse_size(string s, int size, bool measure_neg_from_end) {
@@ -814,7 +814,7 @@ void do_blur(Args& args) {
   } else {
     ar_gauss /= float(sum(ar_gauss));
     // SHOW(ar_gauss); SHOW(sum(ar_gauss));
-    for_int(d, 2) image = convolve_d(image, d, ar_gauss, Bndrule::reflected);
+    for_int(d, 2) image = convolve_d(image, d, ar_gauss, Bndrule::reflect);
   }
 }
 
@@ -1904,7 +1904,7 @@ void do_superresolution(Args& args) {
   const float fac = args.get_float();
   assertx(fac > 1.f && fac <= 32.f);
   assertx(image.zsize() == 3);  // A 3-channel RGB image.
-  const auto fb_bilinear2 = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected));
+  const auto fb_bilinear2 = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect));
   // Precompute pixel luminance values (in range [0.f, 255.f]).
   Matrix<float> mlum(image.dims());
   for (const auto& yx : range(image.dims())) mlum[yx] = to_YIQ(to_Vector4_raw(image[yx]))[0];
@@ -2036,7 +2036,7 @@ void do_gdtoroidal() {
     multigrid.set_desired_mean(mean(grid_orig));
     // To create a toroidal image, we compute the image Laplacian using reflected boundary conditions
     //  and find the image whose periodic-boundary Laplacian matches it.
-    const Vec2<Bndrule> bndrules = twice(Bndrule::reflected);
+    const Vec2<Bndrule> bndrules = twice(Bndrule::reflect);
     parallel_for_coords({.cycles_per_elem = 50}, image.dims(), [&](const Vec2<int>& yx) {
       Vector4 vrhs{};
       vrhs += grid_orig.inside(yx + V(-1, 0), bndrules) - grid_orig[yx];
@@ -2055,7 +2055,7 @@ void do_gdtoroidal() {
     fill(multigrid.initial_estimate(), Vector4(0.f));
     multigrid.set_desired_mean(Vector4(0.f));
     // To create a toroidal image, we compute the sparse change in Laplacian across the periodic boundaries.
-    const Vec2<Bndrule> bndrules = twice(Bndrule::periodic);
+    const Vec2<Bndrule> bndrules = twice(Bndrule::wrap);
     fill(multigrid.rhs(), Vector4(0.f));
     parallel_for_coords({.cycles_per_elem = 50}, image.dims(), [&](const Vec2<int>& yx) {
       // (Highly inefficient implementation.)

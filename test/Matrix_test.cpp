@@ -52,12 +52,10 @@ void test_inside() {
   Matrix<int> m(2, 3);
   for_int(y, 2) for_int(x, 3) m[y, x] = 10 * y + x;
   const CMatrixView<int> mv = m;
-  const auto bndrules = {std::pair{Bndrule::reflected, "reflected"}, std::pair{Bndrule::periodic, "periodic"},
-                         std::pair{Bndrule::clamped, "clamped"}};
-  for (const auto& [bndrule, name] : bndrules) {
+  for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp}) {
     string s;
     for_intL(x, -4, 7) s += sform(" %d", mv.inside(-1, x, bndrule));
-    showf("Row y=-1 for x=-4..6 with Bndrule::%s:%s\n", name, s.c_str());
+    showf("Row y=-1 for x=-4..6 with Bndrule::%s:%s\n", string(boundaryrule_name(bndrule)).c_str(), s.c_str());
     for_int(y, 2) for_int(x, 3) assertx(mv.inside(y, x, bndrule) == m[y, x]);
   }
   const int bordervalue = -1;
@@ -67,8 +65,8 @@ void test_inside() {
   int y = 2, x = -1;
   assertx(!mv.map_inside(y, x, Bndrule::border));
   y = 2, x = -1;
-  assertx(mv.map_inside(y, x, Bndrule::periodic) && y == 0 && x == 2);
-  m.inside(5, -7, Bndrule::periodic) = 99;  // Modifiable element [1, 2].
+  assertx(mv.map_inside(y, x, Bndrule::wrap) && y == 0 && x == 2);
+  m.inside(5, -7, Bndrule::wrap) = 99;  // Modifiable element [1, 2].
   assertx(m[1, 2] == 99);
 }
 
@@ -234,10 +232,10 @@ int main() {
     const int n = 8;
     const Matrix<Vector4> m(V(n, n), Vector4(10.f));
     SHOW(mean(m));
-    // Matrix<Vector4> mn = scale(m, 5, 5, twice(FilterBnd(Filter::get("impulse"), Bndrule::reflected)));
-    Matrix<Vector4> mn = scale(m, V(5, 5), twice(FilterBnd(Filter::get("box"), Bndrule::periodic)));
+    // Matrix<Vector4> mn = scale(m, 5, 5, twice(FilterBnd(Filter::get("impulse"), Bndrule::reflect)));
+    Matrix<Vector4> mn = scale(m, V(5, 5), twice(FilterBnd(Filter::get("box"), Bndrule::wrap)));
     SHOW(mean(mn));
-    mn = scale(mn, V(10, 10), twice(FilterBnd(Filter::get("impulse"), Bndrule::periodic)),
+    mn = scale(mn, V(10, 10), twice(FilterBnd(Filter::get("impulse"), Bndrule::wrap)),
                implicit_cast<Vector4*>(nullptr), std::move(mn));
     SHOW(mean(mn));
   }

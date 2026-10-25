@@ -20,7 +20,7 @@ void show_matrix(const string& name, CMatrixView<Pixel> matrix) {
 }
 
 Vec2<FilterBnd> filterbs(const string& filter_name) {
-  return twice(FilterBnd(Filter::get(filter_name), Bndrule::reflected));
+  return twice(FilterBnd(Filter::get(filter_name), Bndrule::reflect));
 }
 
 Matrix<Pixel> scaled(CMatrixView<Pixel> matrix, const Vec2<int>& dims, const string& filter_name) {

@@ -450,16 +450,16 @@ const LUfactorization& FilterBnd::lu_factorization() const {
     assertnever("Filter '" + filter().name() + "' is not yet supported by inverse_convolution");
   const bool is_bspline = !filter().is_omoms() || filter().is_preprocess();
   switch (bndrule()) {
-    case Bndrule::reflected:
+    case Bndrule::reflect:
       return is_bspline ? g_reflected_spline_lu_factorization : g_reflected_omoms_lu_factorization;
-    case Bndrule::periodic: return is_bspline ? g_periodic_spline_lu_factorization : g_periodic_omoms_lu_factorization;
-    case Bndrule::clamped:
+    case Bndrule::wrap: return is_bspline ? g_periodic_spline_lu_factorization : g_periodic_omoms_lu_factorization;
+    case Bndrule::clamp:
       Warning("Clamped boundary only approximated by Reflected boundary; could pad data first");
       return is_bspline ? g_reflected_spline_lu_factorization : g_reflected_omoms_lu_factorization;
     case Bndrule::border:
       assertnever("Bndrule::border not supported in generalized-filter scale operation; could pad data first");
-    case Bndrule::reflected101:
-      assertnever("Bndrule::reflected101 not supported in generalized-filter scale operation");
+    case Bndrule::reflect_primal:
+      assertnever("Bndrule::reflect_primal not supported in generalized-filter scale operation");
     default: assertnever("");
   }
 }
@@ -486,7 +486,7 @@ void FilterBnd::setup_kernel_weights(int cx, int nx, bool primal, Array<int>& ar
     const int pixelindex0 = int(wf) - ((nk - 1) / 2);
     ar_pixelindex0[x] = pixelindex0;
     double sum = 0.;
-    // Here we cannot fold the boundary rule because Bndrule::periodic requires non-contiguous access.
+    // Here we cannot fold the boundary rule because Bndrule::wrap requires non-contiguous access.
     // Instead we use map_boundaryrule_1d() within evaluate_kernel_d().
     for_int(k, nk) {
       const int i = pixelindex0 + k;

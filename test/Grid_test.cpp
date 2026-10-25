@@ -13,15 +13,15 @@ bool equal_grids(const auto& g1, const auto& g2) { return g1.dims() == g2.dims()
 bool ref_map_boundaryrule(int& i, int n, Bndrule bndrule) {
   const auto mod = [](int a, int b) { return ((a % b) + b) % b; };
   switch (bndrule) {
-    case Bndrule::reflected: {
+    case Bndrule::reflect: {
       const int m = mod(i, 2 * n);
       i = m < n ? m : 2 * n - 1 - m;
       return true;
     }
-    case Bndrule::periodic: i = mod(i, n); return true;
-    case Bndrule::clamped: i = clamp(i, 0, n - 1); return true;
+    case Bndrule::wrap: i = mod(i, n); return true;
+    case Bndrule::clamp: i = clamp(i, 0, n - 1); return true;
     case Bndrule::border: return i >= 0 && i < n;
-    case Bndrule::reflected101: {
+    case Bndrule::reflect_primal: {
       if (n == 1) {
         i = 0;
         return true;
@@ -35,7 +35,7 @@ bool ref_map_boundaryrule(int& i, int n, Bndrule bndrule) {
 }
 
 constexpr auto k_bndrules =
-    V(Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::border, Bndrule::reflected101);
+    V(Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal);
 
 // Verify all the inside() and map_inside() variants of a 2D grid against the brute-force reference.
 void test_inside_2d(const Vec2<int>& dims) {
@@ -309,10 +309,10 @@ int main() {
     // Distinct boundary rules on each dimension of a 3D grid.
     Grid<3, int> grid(V(2, 3, 4));
     for (const auto& u : range(grid.dims())) grid[u] = u[0] * 100 + u[1] * 10 + u[2];
-    const auto bndrules = V(Bndrule::periodic, Bndrule::clamped, Bndrule::reflected);
+    const auto bndrules = V(Bndrule::wrap, Bndrule::clamp, Bndrule::reflect);
     const int bordervalue = -1;
     SHOW(grid.inside(V(-1, -1, -1), bndrules), grid.inside(V(2, 3, 4), bndrules), grid.inside(V(5, 7, 9), bndrules));
-    const auto bndrules2 = V(Bndrule::border, Bndrule::reflected101, Bndrule::periodic);
+    const auto bndrules2 = V(Bndrule::border, Bndrule::reflect_primal, Bndrule::wrap);
     SHOW(grid.inside(V(1, -2, 6), bndrules2, &bordervalue), grid.inside(V(2, 0, 0), bndrules2, &bordervalue));
   }
   {

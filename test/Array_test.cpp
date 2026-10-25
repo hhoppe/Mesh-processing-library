@@ -358,25 +358,37 @@ void test_views() {
 
 void test_boundary_rules() {
   for (const Bndrule bndrule :
-       {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::border, Bndrule::reflected101}) {
+       {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
     const std::string_view name = boundaryrule_name(bndrule);
     assertx(parse_boundaryrule(name) == bndrule);
-    assertx(parse_boundaryrule(name.substr(0, 1)) == bndrule);  // The first letter suffices.
     SHOW(bndrule);
   }
   SHOW(Bndrule::undefined);
+  // The canonical names are those of the Python package resampler; the former names and letters remain accepted.
+  for (const auto& [s, bndrule] :
+       {std::pair{"reflect", Bndrule::reflect}, std::pair{"reflected", Bndrule::reflect},
+        std::pair{"r", Bndrule::reflect}, std::pair{"wrap", Bndrule::wrap}, std::pair{"periodic", Bndrule::wrap},
+        std::pair{"w", Bndrule::wrap}, std::pair{"p", Bndrule::wrap}, std::pair{"clamp", Bndrule::clamp},
+        std::pair{"clamped", Bndrule::clamp}, std::pair{"c", Bndrule::clamp}, std::pair{"border", Bndrule::border},
+        std::pair{"b", Bndrule::border}, std::pair{"reflect_primal", Bndrule::reflect_primal},
+        std::pair{"reflected101", Bndrule::reflect_primal}, std::pair{"1", Bndrule::reflect_primal}})
+    assertx(parse_boundaryrule(s) == bndrule);
+  assertx(boundaryrule_name(Bndrule::clamp) == "clamp" &&
+          boundaryrule_name(Bndrule::reflect_primal) == "reflect_primal");
+  assertx(parse_gridtype("primal") == Gridtype::primal && parse_gridtype("dual") == Gridtype::dual);
+  assertx(parse_gridtype("p") == Gridtype::primal && parse_gridtype("d") == Gridtype::dual);
   // A reference model of the boundary rules, for n >= 1; it returns -1 for a border index outside the domain.
   const auto model = [](int i, int n, Bndrule bndrule) {
     const auto mod = [](int a, int b) { return ((a % b) + b) % b; };
     switch (bndrule) {
-      case Bndrule::reflected: {
+      case Bndrule::reflect: {
         const int j = mod(i, 2 * n);
         return j < n ? j : 2 * n - 1 - j;
       }
-      case Bndrule::periodic: return mod(i, n);
-      case Bndrule::clamped: return clamp(i, 0, n - 1);
+      case Bndrule::wrap: return mod(i, n);
+      case Bndrule::clamp: return clamp(i, 0, n - 1);
       case Bndrule::border: return i >= 0 && i < n ? i : -1;
-      case Bndrule::reflected101: {
+      case Bndrule::reflect_primal: {
         if (n == 1) return 0;
         const int j = mod(i, 2 * n - 2);
         return j < n ? j : 2 * n - 2 - j;
@@ -385,7 +397,7 @@ void test_boundary_rules() {
     }
   };
   for (const Bndrule bndrule :
-       {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::border, Bndrule::reflected101}) {
+       {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
     for (const int n : {1, 2, 3, 5}) {
       for_intL(i0, -3 * n - 2, 4 * n + 2) {
         int i = i0;
@@ -403,25 +415,25 @@ void test_boundary_rules() {
     SHOW(bndrule, s);  // The mapped indices for i in [-5, 8] with n == 4.
   }
   // The functions are constexpr.
-  static_assert(parse_boundaryrule("periodic") == Bndrule::periodic);
+  static_assert(parse_boundaryrule("periodic") == Bndrule::wrap);
   static_assert([] {
     int i = -1;
-    return map_boundaryrule_1d(i, 4, Bndrule::reflected101) && i == 1;
+    return map_boundaryrule_1d(i, 4, Bndrule::reflect_primal) && i == 1;
   }());
   // CArrayView::inside() accesses the array according to a boundary rule.
   const Array<int> ar{10, 11, 12};
   int i = 4;
-  assertx(ar.map_inside(i, Bndrule::periodic) && i == 1);
+  assertx(ar.map_inside(i, Bndrule::wrap) && i == 1);
   i = 5;
   assertx(!ar.map_inside(i, Bndrule::border));
-  assertx(ar.inside(-1, Bndrule::reflected) == 10 && ar.inside(3, Bndrule::reflected) == 12);
-  assertx(ar.inside(-1, Bndrule::reflected101) == 11 && ar.inside(3, Bndrule::reflected101) == 11);
-  assertx(ar.inside(-1, Bndrule::periodic) == 12 && ar.inside(7, Bndrule::clamped) == 12);
+  assertx(ar.inside(-1, Bndrule::reflect) == 10 && ar.inside(3, Bndrule::reflect) == 12);
+  assertx(ar.inside(-1, Bndrule::reflect_primal) == 11 && ar.inside(3, Bndrule::reflect_primal) == 11);
+  assertx(ar.inside(-1, Bndrule::wrap) == 12 && ar.inside(7, Bndrule::clamp) == 12);
   const int bordervalue = 99;
   assertx(ar.inside(-1, Bndrule::border, &bordervalue) == 99 && ar.inside(2, Bndrule::border, &bordervalue) == 12);
   assertx(&ar.inside(1, Bndrule::border, &bordervalue) == &ar[1]);
   Array<int> ar2{1, 2};
-  ar2.inside(-1, Bndrule::clamped) = 5;  // A mutable array gives a mutable element.
+  ar2.inside(-1, Bndrule::clamp) = 5;  // A mutable array gives a mutable element.
   assertx(ar2[0] == 5);
 }
 

@@ -512,17 +512,17 @@ ar4=Array<int>(2) {
 }
  ar4.capacity()=10
 ar4.num()=0 ar4.capacity()=3
-bndrule = Bndrule{reflected}
-bndrule = Bndrule{periodic}
-bndrule = Bndrule{clamped}
+bndrule = Bndrule{reflect}
+bndrule = Bndrule{wrap}
+bndrule = Bndrule{clamp}
 bndrule = Bndrule{border}
-bndrule = Bndrule{101reflected}
+bndrule = Bndrule{reflect_primal}
 Bndrule::undefined = Bndrule{undefined}
-bndrule=Bndrule{reflected} s=33210012332100
-bndrule=Bndrule{periodic} s=30123012301230
-bndrule=Bndrule{clamped} s=00000012333333
+bndrule=Bndrule{reflect} s=33210012332100
+bndrule=Bndrule{wrap} s=30123012301230
+bndrule=Bndrule{clamp} s=00000012333333
 bndrule=Bndrule{border} s=-----0123-----
-bndrule=Bndrule{101reflected} s=12321012321012
+bndrule=Bndrule{reflect_primal} s=12321012321012
 interp(f1, f2, f3) = Array<float>(2) {
   8
   12

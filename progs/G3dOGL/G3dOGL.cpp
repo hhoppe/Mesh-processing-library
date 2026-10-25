@@ -949,7 +949,7 @@ void load_texturemaps() {
       if (max(itexture.dims()) > max_texture_size) {
         showf("texture too large (maxsize=%d), so downsampling\n", max_texture_size);
         itexture.scale(twice(min(twice(float(max_texture_size)) / convert<float>(itexture.dims()))),
-                       twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected)));
+                       twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect)));
       }
     }
     // Use modern approach with glGenerateMipmap().

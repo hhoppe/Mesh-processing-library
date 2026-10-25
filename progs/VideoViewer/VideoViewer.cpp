@@ -1442,18 +1442,18 @@ bool DerivedHw::key_press(string skey) {
           break;
         }
         case '{': {  // Slow down video among preselected speeds.
-          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) - 1, Bndrule::clamped));
+          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) - 1, Bndrule::clamp));
           const auto speeds = Array(concatenate(k_speeds, V(std::numeric_limits<double>::max())));
           const int index =
               discrete_binary_search(speeds, 0, speeds.num(), clamp(g_speed * .999999f, speeds[0], speeds.last()));
-          set_speed(k_speeds.view().inside(index + 0, Bndrule::clamped));
+          set_speed(k_speeds.view().inside(index + 0, Bndrule::clamp));
           break;
         }
         case '}': {  // Speed up video among preselected speeds.
-          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) + 1, Bndrule::clamped));
+          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) + 1, Bndrule::clamp));
           const auto speeds = Array(concatenate(k_speeds, V(std::numeric_limits<double>::max())));
           const int index = discrete_binary_search(speeds, 0, speeds.num(), clamp(g_speed, speeds[0], speeds.last()));
-          set_speed(k_speeds.view().inside(index + 1, Bndrule::clamped));
+          set_speed(k_speeds.view().inside(index + 1, Bndrule::clamp));
           break;
         }
         case '1':
@@ -1739,7 +1739,7 @@ bool DerivedHw::key_press(string skey) {
             // Frame maps from/to [-0.5, +0.5] ^ 2 whereas g_view maps from/to pixel/texel coordinates.
             Frame frame = translate_2d(twice(.5f)) * scale_2d(convert<float>(g_win_dims)) * ~g_view *
                           ~scale_2d(convert<float>(g_frame_dims)) * ~translate_2d(twice(.5f));
-            const FilterBnd filterb(get_resampling_filter(), Bndrule::reflected);
+            const FilterBnd filterb(get_resampling_filter(), Bndrule::reflect);
             immediate_message("Resampling rotated object...");
             Video nvideo;
             VideoNv12 nvideo_nv12;
@@ -1838,7 +1838,7 @@ bool DerivedHw::key_press(string skey) {
             if (0) ndims = (ndims + 1) / 2 * 2;  // No need to round images to even sizes.
           }
           const Vec2<float> syx = convert<float>(ndims) / convert<float>(g_frame_dims);
-          const auto filterbs = twice(FilterBnd(get_resampling_filter(), Bndrule::reflected));
+          const auto filterbs = twice(FilterBnd(get_resampling_filter(), Bndrule::reflect));
           immediate_message("Spatially rescaling object...");
           Video nvideo;
           VideoNv12 nvideo_nv12;
@@ -2987,7 +2987,7 @@ void upload_image_to_texture() {
   }
   {  // Upload the texture data.
     const Vec2<int> offset = twice(g_background_padding_width);
-    const auto filterbs = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected));
+    const auto filterbs = twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect));
     const auto copy_view_to_frame = [&](MatrixView<Pixel> frame) {
       const int framenum = g_framenum;
       GLenum frame_format = format;
@@ -3873,7 +3873,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
     const int hnf = onf / DT;
     if (0) assertx(onf % DT == 0);  // No, we allow arbitrary number of frames, but truncate to a multiple of DT.
     assertx(hnf > 0);
-    const FilterBnd filterb(Filter::get("box"), Bndrule::reflected);
+    const FilterBnd filterb(Filter::get("box"), Bndrule::reflect);
     const Vec2<int> hdims = sdims / DS;
     assertx(hdims * DS == sdims);
     if (0) SHOW(sdims, hdims, DS);
@@ -4278,8 +4278,8 @@ void do_batch_create_loop(Args& args) {
   crop_spatial_dimensions_to_multiple(ovideo_nv12, 8);
   if (ovideo_nv12.get_Y().dim(0) < 20) {
     // For short input video, repeat the first and last frames to enable looping to include these end frames.
-    ovideo_nv12 = VideoNv12(crop(ovideo_nv12.get_Y(), V(-1, 0, 0), V(-1, 0, 0), thrice(Bndrule::clamped)),
-                            crop(ovideo_nv12.get_UV(), V(-1, 0, 0), V(-1, 0, 0), thrice(Bndrule::clamped)));
+    ovideo_nv12 = VideoNv12(crop(ovideo_nv12.get_Y(), V(-1, 0, 0), V(-1, 0, 0), thrice(Bndrule::clamp)),
+                            crop(ovideo_nv12.get_UV(), V(-1, 0, 0), V(-1, 0, 0), thrice(Bndrule::clamp)));
   }
   {
     Timer timer_loop("loop");

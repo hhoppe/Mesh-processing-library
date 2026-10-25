@@ -69,7 +69,7 @@ void test_convolve() {
   const Array<float> kernel{.25f, .5f, .25f};
   const float bordervalue = 0.f;
   for (const Bndrule bndrule :
-       {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped, Bndrule::border, Bndrule::reflected101}) {
+       {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
     const float* pbordervalue = bndrule == Bndrule::border ? &bordervalue : nullptr;
     const Array<float> result = convolve<float, float>(ar, kernel, bndrule, pbordervalue);
     SHOW(boundaryrule_name(bndrule), result);
@@ -85,7 +85,7 @@ void test_convolve() {
     // Convolution with a kernel that sums to 1 preserves a constant image under every boundary rule.
     const Matrix<float> constant(V(4, 6), 3.f);
     const Matrix<float> box(V(3, 3), 1.f / 9.f);
-    for (const Bndrule bndrule : {Bndrule::reflected, Bndrule::periodic, Bndrule::clamped}) {
+    for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp}) {
       assertx(max_abs_diff<float>(convolve<float, float>(constant, box, bndrule), constant) < 1e-5f);
     }
   }

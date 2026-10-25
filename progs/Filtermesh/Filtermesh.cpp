@@ -3270,7 +3270,7 @@ void do_projectimage(Args& args) {
   const Image image(image_name);
   Matrix<Vector4> imagev(image.dims());
   convert(image, imagev);
-  Vec2<FilterBnd> filterbs = twice(FilterBnd(Filter::get("spline"), Bndrule::reflected));
+  Vec2<FilterBnd> filterbs = twice(FilterBnd(Filter::get("spline"), Bndrule::reflect));
   if (filterbs[0].filter().has_inv_convolution()) filterbs = inverse_convolution(imagev, filterbs);
   string str;
   for (Vertex v : mesh.vertices()) {

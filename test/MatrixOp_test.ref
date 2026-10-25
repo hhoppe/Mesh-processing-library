@@ -35,7 +35,7 @@ rot=-90 rotate_ccw<int>(m, rot)=Matrix<int>(2, 3) {
   60 40 20
 }
 
-boundaryrule_name(bndrule)=reflected result=Array<float>(5) {
+boundaryrule_name(bndrule)=reflect result=Array<float>(5) {
   1.25
   2.25
   4.5
@@ -43,7 +43,7 @@ boundaryrule_name(bndrule)=reflected result=Array<float>(5) {
   14
 }
 
-boundaryrule_name(bndrule)=periodic result=Array<float>(5) {
+boundaryrule_name(bndrule)=wrap result=Array<float>(5) {
   5
   2.25
   4.5
@@ -51,7 +51,7 @@ boundaryrule_name(bndrule)=periodic result=Array<float>(5) {
   10.25
 }
 
-boundaryrule_name(bndrule)=clamped result=Array<float>(5) {
+boundaryrule_name(bndrule)=clamp result=Array<float>(5) {
   1.25
   2.25
   4.5
@@ -67,7 +67,7 @@ boundaryrule_name(bndrule)=border result=Array<float>(5) {
   10
 }
 
-boundaryrule_name(bndrule)=101reflected result=Array<float>(5) {
+boundaryrule_name(bndrule)=reflect_primal result=Array<float>(5) {
   1.5
   2.25
   4.5

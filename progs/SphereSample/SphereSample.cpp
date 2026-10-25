@@ -48,7 +48,7 @@ int verbose = 1;
 bool first_domain_face = false;
 bool nooutput = false;
 
-const auto k_downsampling_filter = twice(FilterBnd(Filter::get("spline"), Bndrule::reflected));
+const auto k_downsampling_filter = twice(FilterBnd(Filter::get("spline"), Bndrule::reflect));
 
 struct DomainFace {
   Polygon poly;          // Points on regular polyhedron in 3D.
@@ -1321,7 +1321,7 @@ Pixel assign_signal(const string& signal, const GMesh& mesh, const Bbox<float, 3
       // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
       const Uv yx = Uv(1.f - uv[1], uv[0]);  // Also, we expect (y, x) sampling order.
       const string filtername = 1 ? "keys" : "triangle";
-      const auto filterbs = twice(FilterBnd(Filter::get(filtername), Bndrule::reflected));
+      const auto filterbs = twice(FilterBnd(Filter::get(filtername), Bndrule::reflect));
       pixel = sample_domain(texture_image_vector4, yx, filterbs).pixel();
       break;
     }

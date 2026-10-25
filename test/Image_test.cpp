@@ -59,7 +59,7 @@ int main() {
   }
   if (1) {
     Image image(V(20, 20), Pixel(65, 66, 67, 72));
-    const Bndrule bndrule = Bndrule::reflected;
+    const Bndrule bndrule = Bndrule::reflect;
     const Pixel gcolor(255, 255, 255, 255);
     {
       const Grid<2, Pixel>& grid = image;
@@ -219,7 +219,7 @@ int main() {
     assertx(cnv12v.get_UV().data() == nv12b.get_UV().data());
     // Scaling an Nv12 image.
     Nv12 nv12c(V(8, 6));
-    scale(nv12b, twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected)), nullptr, nv12c);
+    scale(nv12b, twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect)), nullptr, nv12c);
     for (const uint8_t y : nv12c.get_Y()) assertx(abs(y - nv12b.get_Y()[0][0]) <= 1);
     for (const Vec2<uint8_t>& uv : nv12c.get_UV()) assertx(abs(uv[0] - nv12b.get_UV()[0][0][0]) <= 1);
   }
@@ -227,10 +227,10 @@ int main() {
     // Scaling of an image preserves a uniform color and the attributes.
     Image image(V(4, 6), Pixel(200, 100, 50, 255));
     image.set_zsize(4);
-    const Image image2 = scale(image, V(2.f, .5f), twice(FilterBnd(Filter::get("triangle"), Bndrule::reflected)));
+    const Image image2 = scale(image, V(2.f, .5f), twice(FilterBnd(Filter::get("triangle"), Bndrule::reflect)));
     SHOW(image2.dims(), image2.zsize());
     for (const Pixel& pixel : image2) assertx(pixel == image[0, 0]);
-    image.scale(V(.5f, 1.5f), twice(FilterBnd(Filter::get("box"), Bndrule::clamped)));
+    image.scale(V(.5f, 1.5f), twice(FilterBnd(Filter::get("box"), Bndrule::clamp)));
     SHOW(image.dims());
     for (const Pixel& pixel : image) assertx(pixel == Pixel(200, 100, 50, 255));
     // Scaling with a border value.

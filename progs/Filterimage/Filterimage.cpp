@@ -714,21 +714,21 @@ void apply_frame(const Frame& frame) {
 }
 
 // Compare 2x scaling using transform and built-in scaling
-// Filterimage ~/data/image/lake.png -filter o -boundaryrule r -cropall -50% -gtransf "F 0  0.5 0 0  0 0.5 0  0 0 1  0 0 0  0" >v1.png
-// Filterimage ~/data/image/lake.png -filter o -scaleu 2.0 >v2.png
+// Filterimage ~/data/image/lake.png -filter omoms3 -boundary reflect -cropall -50% -gtransf "F 0  0.5 0 0  0 0.5 0  0 0 1  0 0 0  0" >v1.png
+// Filterimage ~/data/image/lake.png -filter omoms3 -scaleu 2.0 >v2.png
 // Filterimage v1.png -compare v2.png
 //
-// E.g. 10 degree rotation (on anisometric rectangle!):  Filterimage ~/data/image/lake.png -filter o -gtransf "F 0  0.9848 -0.1736 0  0.1736 0.9848 0  0 0 1  0 0 0  0" | vv
-// E.g. add 3x scale:  Filterimage ~/data/image/lake.png -boundaryrule r -cropall -100% -filter o -gtransf "F 0  0.32827 -0.05788 0  0.05788 0.32827 0  0 0 1  0 0 0  0" | vv
+// E.g. 10 degree rotation (on anisometric rectangle!):  Filterimage ~/data/image/lake.png -filter omoms3 -gtransf "F 0  0.9848 -0.1736 0  0.1736 0.9848 0  0 0 1  0 0 0  0" | vv
+// E.g. add 3x scale:  Filterimage ~/data/image/lake.png -boundary reflect -cropall -100% -filter omoms3 -gtransf "F 0  0.32827 -0.05788 0  0.05788 0.32827 0  0 0 1  0 0 0  0" | vv
 //  ca cos(10/45*atan2(1, 1)), sin(10/45*atan2(1, 1))
 void do_gtransf(Args& args) {
   const Frame frame = FrameIO::parse_frame(args.get_string());
   apply_frame(frame);
 }
 
-// E.g. 10 degree   :  Filterimage ~/data/image/lake.png -filter o -boundaryrule r -rotate 10 | vv
-// 36-times repeated:  Filterimage ~/data/image/lake.png -filter o -boundaryrule r $(printf -- '-rotate 10 %.0s' {1..36}) | vv
-// Large image      :  time Filterimage ~/data/image/rampart1.jpg -filter o -boundaryrule r $(printf -- '-rotate 10 %.0s' {1..1}) >v.jpg && vv v.jpg
+// E.g. 10 degree   :  Filterimage ~/data/image/lake.png -filter omoms3 -boundary reflect -rotate 10 | vv
+// 36-times repeated:  Filterimage ~/data/image/lake.png -filter omoms3 -boundary reflect $(printf -- '-rotate 10 %.0s' {1..36}) | vv
+// Large image      :  time Filterimage ~/data/image/rampart1.jpg -filter omoms3 -boundary reflect $(printf -- '-rotate 10 %.0s' {1..1}) >v.jpg && vv v.jpg
 // Filterimage ~/data/image/lake.png -filt k $(printf -- '-rotate 18 %.0s' {1..20}) | vv
 void do_rotate(Args& args) {
   const float ang = args.get_float();
@@ -1321,7 +1321,7 @@ void do_softpullpush() {
 // *** voronoidilate
 
 void do_voronoidilate() {
-  // Filterimage ~/git/mesh_processing/demos/data/texture.input.png -filter i -scaleu 10 -color 255 0 0 255 -voronoidilate -noo
+  // Filterimage ~/git/mesh_processing/demos/data/texture.input.png -filter impulse -scaleu 10 -color 255 0 0 255 -voronoidilate -noo
   // Using Vec2<float>:  win: 0.74  gcc: 0.23
   // Using Vec2<int>  :  win: 0.27  gcc: 0.19
   HH_TIMER("_voronoi");
@@ -3440,7 +3440,7 @@ void do_structuretransfer(Args& args) {
   image = convert_mat_image(mat_xfer);
 }
 
-// (d=~/prevproj/2014/morph/data/quadmesh; Filterimage $d/image2.png -filter k -boundaryrule r -resamplemesh $d/128_mesh2.m | G3d - -lighta 1 -lights 0 -st imagenew)
+// (d=~/prevproj/2014/morph/data/quadmesh; Filterimage $d/image2.png -filter cubic -boundary reflect -resamplemesh $d/128_mesh2.m | G3d - -lighta 1 -lights 0 -st imagenew)
 void do_resamplemesh(Args& args) {
   const string mfile = args.get_filename();
   assertx(min(image.dims()) >= 2);

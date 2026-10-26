@@ -1654,7 +1654,7 @@ void do_render_harmonize(Args& args) {
 // E.g.: d=~/proj/videoloops/data/test; Filtervideo $d/HDbrink8.mp4 -loadvlp $d/HDbrink8_loop.vlp -gdloop 5sec | vv
 // E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_PRECISE=1 Filtervideo -trunc_frames 215 HDgiant.mp4 -end 7sec -start -5sec -trimend -1 -loadvlp out/HDgiant_loop.vlp -gdloop 5sec -to mp4 >v1.gdloop5sec.mp4
 // E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_PRECISE=1 Filtervideo -trunc_frames 215 HDpoolpalms.mp4 -end 7sec -start -5sec -trimend -1 -loadvlp out/HDpoolpalms_loop.vlp -gdloop 5sec -to mp4 >v.gdloop5sec.mp4
-// E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_NO_BLEND=1 Filtervideo -trunc_frames 215 HDsquareflags3.mp4 -end 7sec -start -5sec -boundaryrule c -trimend -2 -loadvlp out/HDsquareflags3_loop.vlp -gdloop 5sec -to mp4 >v.gdloop5sec.mp4
+// E.g.: cd ~/proj/videoloops/data/ReallyFreakinAll/; VIDEOLOOP_NO_BLEND=1 Filtervideo -trunc_frames 215 HDsquareflags3.mp4 -end 7sec -start -5sec -boundary clamp -trimend -2 -loadvlp out/HDsquareflags3_loop.vlp -gdloop 5sec -to mp4 >v.gdloop5sec.mp4
 //  (For 4K video, 4.9 GB for input, then max of 9.8 GB; gdloop 5.3sec; write 63 sec; total 84 sec.)
 void do_gdloop(Args& args) {
   const int nnf = parse_nframes(args.get_string(), false);

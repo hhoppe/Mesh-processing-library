@@ -556,7 +556,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
 
 bool Hw::system_theme_is_dark() {
   DWORD value = 1, size = sizeof(value);
-  const char* subkey = "Software\\Microsoft\\Windows\\CurrentVersion\\Themes\\Personalize";
+  const char* subkey = R"(Software\Microsoft\Windows\CurrentVersion\Themes\Personalize)";
   if (RegGetValueA(HKEY_CURRENT_USER, subkey, "AppsUseLightTheme", RRF_RT_REG_DWORD, nullptr, &value, &size))
     return false;  // The value is absent before Windows 10.
   return value == 0;

@@ -226,11 +226,11 @@ enum class EFit { isotropic, anisotropic };
 const EFit k_default_fit = EFit::isotropic;  // Do not distort aspect ratio to fit image/video to window.
 EFit g_fit = k_default_fit;
 bool g_fit_view_to_window = true;  // Always adjust g_view to fit window (using g_fit), else g_view is unconstrained.
-enum class EKernel { linear, keys, lanczos6, lanczos10, nearest, last };
-Array<string> k_kernel_string{"linear", "keys", "lanczos6", "lanczos10", "nearest"};
-const EKernel k_default_kernel = EKernel::keys;  // 2015-05-21: was EKernel::linear; could be EKernel::lanczos6.
-EKernel g_kernel = k_default_kernel;             // Desired image reconstruction (sampling) filter.
-EKernel g_render_kernel;                         // Filter in use.
+enum class EKernel { nearest, linear, cubic, lanczos3, lanczos5, last };
+Array<string> k_kernel_string{"nearest", "linear", "cubic", "lanczos3", "lanczos5"};
+const EKernel k_default_kernel = EKernel::cubic;  // 2015-05-21: was EKernel::linear; could be EKernel::lanczos3.
+EKernel g_kernel = k_default_kernel;              // Desired image reconstruction (sampling) filter.
+EKernel g_render_kernel;                          // Filter in use.
 const bool k_default_info = true;
 bool g_show_info = k_default_info;  // Show information in window (including timeline).
 bool g_show_grid = false;           // Show horizontal and vertical lines.
@@ -775,15 +775,15 @@ string get_szoom() {
 }
 
 // Select the filter for the non-interactive spatial resampling operations (crop, scale, rotate).  The interactive
-// view renders with the cheap cubic (keys) kernel; these operations can afford the cardinal cubic B-spline, which
-// is sharper but requires a digital filter, so the "keys" setting is upgraded to it here.
+// view renders with the cheap "cubic" kernel; these operations can afford the cardinal cubic B-spline, which
+// is sharper but requires a digital filter, so the "cubic" setting is upgraded to it here.
 const Filter& get_resampling_filter() {
-  return (g_kernel == EKernel::nearest     ? Filter::get("impulse")
-          : g_kernel == EKernel::linear    ? Filter::get("triangle")
-          : g_kernel == EKernel::keys      ? Filter::get("cardinal3")
-          : g_kernel == EKernel::lanczos6  ? Filter::get("lanczos3")  // Support [-3, 3].
-          : g_kernel == EKernel::lanczos10 ? Filter::get("lanczos5")  // Support [-5, 5].
-                                           : (assertnever_ret(""), Filter::get("impulse")));
+  return (g_kernel == EKernel::nearest    ? Filter::get("impulse")
+          : g_kernel == EKernel::linear   ? Filter::get("triangle")
+          : g_kernel == EKernel::cubic    ? Filter::get("cardinal3")
+          : g_kernel == EKernel::lanczos3 ? Filter::get("lanczos3")  // Support [-3, 3].
+          : g_kernel == EKernel::lanczos5 ? Filter::get("lanczos5")  // Support [-5, 5].
+                                          : (assertnever_ret(""), Filter::get("impulse")));
 }
 
 Frame scale_2d(const Vec2<float>& vec) { return Frame::scaling(concat(vec, V(1.f))); }

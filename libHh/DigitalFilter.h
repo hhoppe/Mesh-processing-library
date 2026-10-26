@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Hugues Hoppe; see LICENSE.
 #ifndef MESH_PROCESSING_LIBHH_DIGITALFILTER_H_
 #define MESH_PROCESSING_LIBHH_DIGITALFILTER_H_
 
@@ -12,21 +12,29 @@ namespace hh {
 // The digital filter (inverse convolution) that makes a generalized kernel such as cardinal3 or omoms5 interpolate.
 // For a 1D grid of `size` samples x_i, it computes the coefficients c_j such that the reconstruction with the kernel
 // evaluated after the digital filter (e.g. bspline3 for cardinal3), sum_j k(i - j) c_j, where the sum honors the
-// boundary rule, equals x_i at every sample.  The matrix is banded, plus corner entries for "wrap"; its LU
-// factorization is computed once per (filter, boundary, grid type, size) and cached forever.
+// boundary rule, equals x_i at every sample, i.e., it solves the linear system A c = x (minus the contribution of
+// the constant value cval in the rows that reference it).  The matrix A is banded except for the entries that a
+// "wrap" rule puts in its corners, so it is partitioned as A = [B C; R D], where B is the banded block of the first
+// nb = size - corner rows and columns, and C, R, and D hold the last `corner` columns and rows.  The LU
+// factorization of B and the inverse of the Schur complement S = D - R B^-1 C are computed once per
+// (filter, boundary, grid type, size) and cached forever.
 class DigitalFilter : noncopyable {
  public:
   [[HH_NO_DANGLING]] [[nodiscard]] static const DigitalFilter& get(const Filter& filter, const Boundary& boundary,
                                                                    Gridtype gridtype, int size);
   [[nodiscard]] int size() const { return _size; }
-  // Replace the samples in `row` by the coefficients; cval is the constant value referenced by some boundary rules.
+
+  // Replace the samples x in `row` by the coefficients c of A c = x; cval is the constant value referenced by some
+  // boundary rules.
   template <typename T> void solve(StridedArrayView<T> row, const T* cval) const;
 
  private:
   DigitalFilter(const Filter& filter, const Boundary& boundary, Gridtype gridtype, int size);
+  // With n = _size, m = _corner, and nb = n - m, the matrix A is partitioned as [B C; R D], where B is nb x nb and
+  // banded with bandwidth _bw (lower and upper), C is nb x m, R is m x nb, and D is m x m (m is 0 unless "wrap").
   int _size;
-  int _bw{0};      // Bandwidth of the banded block B (lower and upper).
-  int _corner{0};  // Number of trailing rows and columns treated densely (for "wrap"); B has size - corner rows.
+  int _bw{0};
+  int _corner{0};
   bool _uses_cval{false};
   Matrix<float> _lower;       // [size - corner][bw]: the multipliers L(i, i - 1 - k) of the unit lower factor.
   Matrix<float> _upper;       // [size - corner][bw]: the entries U(i, i + 1 + k) of the upper factor.
@@ -64,7 +72,7 @@ template <typename T> void DigitalFilter::solve(StridedArrayView<T> row, const T
     }
   }
   if (m) {  // The corner: z = S^-1 (x2 - R y1); then x1 -= B^-1 C z and x2 = z.
-    Array<T> z(m);
+    InlinedArray<T, 8> z(m);
     for_int(c, m) {
       T v = row[nb + c];
       for_int(j, nb) {
@@ -72,7 +80,7 @@ template <typename T> void DigitalFilter::solve(StridedArrayView<T> row, const T
       }
       z[c] = v;
     }
-    Array<T> z2(m);
+    InlinedArray<T, 8> z2(m);
     for_int(c, m) {
       T v{};
       for_int(e, m) v += _s_inv[c, e] * z[e];

@@ -127,8 +127,8 @@ def assemble(
   for path in paths:
     tile = path.with_suffix('.tile.png')
     run(
-        ['Filterimage', str(path), '-filter', 'lanczos6', '-scaleunif', str(1 / SUPERSAMPLE)]
-        + ['-color', '255', '255', '255', '255', '-boundaryrule', 'border']
+        ['Filterimage', str(path), '-filter', 'lanczos3', '-scaleunif', str(1 / SUPERSAMPLE)]
+        + ['-color', '255', '255', '255', '255', '-boundary', 'border']
         + ['-croptodims', str(w), str(h), '-to', 'png'],
         tile,
     )
@@ -140,7 +140,7 @@ def assemble(
     pad = -(COLUMNS - len(chunk)) * w  # A negative crop extends the row to the full width.
     run(
         ['Filterimage', '-assemble', str(len(chunk)), '1', *map(str, chunk)]
-        + ['-color', '255', '255', '255', '255', '-boundaryrule', 'border']
+        + ['-color', '255', '255', '255', '255', '-boundary', 'border']
         + ['-cropsides', '0', str(pad), '0', '0', '-to', 'png'],
         row,
     )

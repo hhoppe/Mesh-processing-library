@@ -17,9 +17,7 @@
 #if 0
 #include "libHh/Timer.h"
 #define HH_GRIDOP_TIMER(name) HH_TIMER(name)
-#endif
-
-#if !defined(HH_GRIDOP_TIMER)
+#elif !defined(HH_GRIDOP_TIMER)
 #define HH_GRIDOP_TIMER(name)
 #endif
 
@@ -66,7 +64,7 @@ template <int D> void convert(CGridView<D, Pixel> gridu, GridView<D, Vector4> gr
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Pixel> gridu);
 
 // Rescale a grid to have new dimensions ndims, specialized to nearest sampling; works on arbitrary types T,
-//  even those that are non-interpolable.
+// even those that are non-interpolable.
 template <int D, typename T>
 [[nodiscard]] Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims,
                                               Grid<D, T>&& gr = Grid<D, T>());
@@ -155,27 +153,6 @@ template <int Dout, int D, typename T>
 [[nodiscard]] Grid<Dout, T> resample(CGridView<D, T> grid, CGridView<Dout, Vec<float, D>> coords,
                                      const SamplingOptions<D>& options = {}, const T* cval = nullptr);
 
-namespace details {
-
-// The precomputed kernel weights of one dimension of a Resizer.
-struct ResizerDim {
-  const Filter* filter{nullptr};      // The resolved kernel (the prefilter when minifying).
-  const Boundary* boundary{nullptr};  // The resolved boundary rule.
-  Gridtype src_gridtype{Gridtype::dual}, dst_gridtype{Gridtype::dual};
-  bool identity{false};  // Same size and interpolating kernel: the dimension is copied.
-  bool is_minification{false};
-  Array<int> index0;           // [nx] First source index of each row's window of nk dense weights.
-  Matrix<float> weights;       // [nx][nk] The dense weights, used directly by the interior rows.
-  int ioutmin{0}, ioutmax{0};  // The rows [ioutmin, ioutmax) are interior: their windows lie inside the grid.
-  // The folded rows: the taps j in [row_begin[x], row_begin[x + 1]) of row x have source index col[j] (or -1 for
-  // the constant value cval) and weight val[j], in the order of the window so that sums match the dense rows.
-  Array<int> row_begin;  // [nx + 1]
-  Array<int> col;
-  Array<float> val;
-};
-
-}  // namespace details
-
 // The precomputed kernel weights for resizing grids of dimensions dims to dimensions ndims according to options.
 // The rows whose kernel window lies inside the grid keep dense weights; the other rows have their taps folded by the
 // boundary rule into interior samples (and the constant value cval).  One Resizer serves any number of grids.
@@ -211,13 +188,38 @@ template <int D> class Resizer {
   [[nodiscard]] Row row(int d, int i) const;
 
  private:
+  // The precomputed kernel weights of one dimension.
+  struct Dim {
+    const Filter* filter{nullptr};      // The resolved kernel (the prefilter when minifying).
+    const Boundary* boundary{nullptr};  // The resolved boundary rule.
+    Gridtype src_gridtype{Gridtype::dual}, dst_gridtype{Gridtype::dual};
+    bool identity{false};  // Same size and interpolating kernel: the dimension is copied.
+    bool is_minification{false};
+    Array<int> index0;           // [nx] First source index of each row's window of nk dense weights.
+    Matrix<float> weights;       // [nx][nk] The dense weights, used directly by the interior rows.
+    int ioutmin{0}, ioutmax{0};  // The rows [ioutmin, ioutmax) are interior: their windows lie inside the grid.
+    // The folded rows: the taps j in [row_begin[x], row_begin[x + 1]) of row x have source index col[j] (or -1 for
+    // the constant value cval) and weight val[j], in the order of the window so that sums match the dense rows.
+    Array<int> row_begin;  // [nx + 1]
+    Array<int> col;
+    Array<float> val;
+  };
   Vec<int, D> _dims, _ndims, _dim_order;
   const Gamma* _gamma;
-  Vec<details::ResizerDim, D> _plan;
+  Vec<Dim, D> _plan;
   bool _all_impulse{false};
   bool _all_preprocess{false};  // All kernels are "preprocess": only the digital filter is applied.
   bool _all_bspline3{false};    // All kernels are "bspline3": the value range is expanded afterwards.
   [[nodiscard]] SamplingOptions<D> sampling_options() const;  // The resolved kernels and rules per dimension.
+  // Compute the rows of kernel weights for resizing cx samples to nx samples along one dimension.
+  static void compute_dim(Dim& rd, int cx, int nx, Gridtype src_gridtype, Gridtype dst_gridtype, double scale,
+                          double translate);
+  // Resample dimension d of the grid using the precomputed rows of weights.
+  template <typename T>
+  [[nodiscard]] static Grid<D, T> evaluate_rows(CGridView<D, T> grid, int d, const Dim& rd, const T* cval);
+  // Gather the nearest samples along dimension d (the rows of an impulse kernel have a single tap each).
+  template <typename T>
+  [[nodiscard]] static Grid<D, T> gather_rows(CGridView<D, T> grid, int d, const Dim& rd, const T* cval);
 };
 
 // Convolve a Pixel grid along its d'th dimension with the 1D kernel (which must have odd length).
@@ -471,6 +473,13 @@ Grid<D, T> scale_preprocess(CGridView<D, T> grid, const SamplingOptions<D>& opti
   return std::move(gr);
 }
 
+// The convenience functions sample_grid() and sample_domain() build a transient Sampler, so they assert that the
+// kernels need no digital filter (which would be applied to the whole grid at every call); construct a Sampler
+// explicitly for those kernels.
+template <int D> void assert_no_digital_filter(const SamplingOptions<D>& options) {
+  for_int(d, D) assertx(!options.filter[d]->requires_digital_filter());
+}
+
 }  // namespace details
 
 template <int D, typename T>
@@ -538,11 +547,9 @@ Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, 
   return ngrid;
 }
 
-namespace details {
-
-// Compute the rows of kernel weights for resizing cx samples to nx samples along one dimension.
-inline void compute_resizer_dim(ResizerDim& rd, int cx, int nx, Gridtype src_gridtype, Gridtype dst_gridtype,
-                                double scale, double translate) {
+template <int D>
+void Resizer<D>::compute_dim(Dim& rd, int cx, int nx, Gridtype src_gridtype, Gridtype dst_gridtype, double scale,
+                             double translate) {
   const Filter& filter = *rd.filter;
   const Boundary& boundary = *rd.boundary;
   const bool src_dual = src_gridtype == Gridtype::dual, dst_dual = dst_gridtype == Gridtype::dual;
@@ -621,9 +628,9 @@ inline void compute_resizer_dim(ResizerDim& rd, int cx, int nx, Gridtype src_gri
   }
 }
 
-// Resample dimension d of the grid using the precomputed rows of weights.
-template <int D, typename T>
-Grid<D, T> evaluate_rows_d(CGridView<D, T> grid, int d, const ResizerDim& rd, const T* cval) {
+template <int D>
+template <typename T>
+Grid<D, T> Resizer<D>::evaluate_rows(CGridView<D, T> grid, int d, const Dim& rd, const T* cval) {
   HH_GRIDOP_TIMER("__evaluate");
   static_assert(std::is_trivially_default_constructible_v<T>);
   const Vec<int, D>& dims = grid.dims();
@@ -668,15 +675,13 @@ Grid<D, T> evaluate_rows_d(CGridView<D, T> grid, int d, const ResizerDim& rd, co
   return ngrid;
 }
 
-}  // namespace details
-
 template <int D>
 Resizer<D>::Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const ResizeOptions<D>& options)
     : _dims(dims), _ndims(ndims), _gamma(options.gamma.ptr) {
   const PerDim<Gridtype, D>& dst_gridtype = options.dst_gridtype ? *options.dst_gridtype : options.gridtype;
   int npreprocess = 0, nbspline3 = 0;
   for_int(d, D) {
-    details::ResizerDim& rd = _plan[d];
+    Dim& rd = _plan[d];
     const int cx = dims[d], nx = ndims[d];
     const Gridtype src_gridtype = options.gridtype[d];
     const double src_in_samples = src_gridtype == Gridtype::dual ? cx : cx - 1.;
@@ -693,11 +698,11 @@ Resizer<D>::Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const Res
     rd.identity = nx == cx && rd.filter->is_interpolating() && options.scale[d] == 1. && options.translate[d] == 0. &&
                   src_gridtype == dst_gridtype[d];
     if (rd.identity || rd.filter->is_preprocess()) continue;
-    details::compute_resizer_dim(rd, cx, nx, src_gridtype, dst_gridtype[d], options.scale[d], options.translate[d]);
+    compute_dim(rd, cx, nx, src_gridtype, dst_gridtype[d], options.scale[d], options.translate[d]);
   }
   assertx(npreprocess == 0 || npreprocess == D);
   _all_preprocess = npreprocess == D;
-  _all_impulse = ranges::all_of(_plan, [](const details::ResizerDim& rd) { return rd.filter->is_impulse(); });
+  _all_impulse = ranges::all_of(_plan, [](const Dim& rd) { return rd.filter->is_impulse(); });
   if (_all_preprocess) assertx(ndims == dims);
   assertx(nbspline3 == 0 || nbspline3 == D);
   _all_bspline3 = nbspline3 == D;
@@ -744,7 +749,7 @@ template <int D> SamplingOptions<D> Resizer<D>::sampling_options() const {
 }
 
 template <int D> Resizer<D>::Row Resizer<D>::row(int d, int i) const {
-  const details::ResizerDim& rd = _plan[d];
+  const Dim& rd = _plan[d];
   assertx(!rd.identity && !rd.filter->is_preprocess());
   if (i >= rd.ioutmin && i < rd.ioutmax) return Row{rd.index0[i], CArrayView<int>(nullptr, 0), rd.weights[i], 0.f};
   const int j0 = rd.row_begin[i], j1 = rd.row_begin[i + 1];
@@ -755,11 +760,9 @@ template <int D> Resizer<D>::Row Resizer<D>::row(int d, int i) const {
   return Row{rd.index0[i], rd.col.slice(j0, j1), rd.val.slice(j0, j1), cval_weight};
 }
 
-namespace details {
-
-// Gather the nearest samples along dimension d (the rows of an impulse kernel have a single tap each).
-template <int D, typename T>
-Grid<D, T> gather_rows_d(CGridView<D, T> grid, int d, const ResizerDim& rd, const T* cval) {
+template <int D>
+template <typename T>
+Grid<D, T> Resizer<D>::gather_rows(CGridView<D, T> grid, int d, const Dim& rd, const T* cval) {
   const Vec<int, D> ndims = grid.dims().with(d, rd.index0.num());
   Grid<D, T> ngrid(ndims);
   parallel_for_coords({.cycles_per_elem = 10}, ndims, [&](const Vec<int, D>& u) {
@@ -770,8 +773,6 @@ Grid<D, T> gather_rows_d(CGridView<D, T> grid, int d, const ResizerDim& rd, cons
   });
   return ngrid;
 }
-
-}  // namespace details
 
 template <int D>
 template <typename T>
@@ -787,7 +788,7 @@ Grid<D, T> Resizer<D>::apply(CGridView<D, T> grid, const T* cval, Grid<D, T>&& g
       if (_plan[d].identity) {
         gr = gridref;
       } else {
-        gr = details::gather_rows_d(gridref, d, _plan[d], cval);
+        gr = gather_rows(gridref, d, _plan[d], cval);
       }
       gridref.reinit(gr);
     }
@@ -837,19 +838,19 @@ Grid<D, F> Resizer<D>::apply_linear(CGridView<D, F> grid, const F* cval, Grid<D,
   }
   CGridView<D, T> gridref(grid);  // (Becomes gr after the first dimension.)
   for (const int d : _dim_order) {
-    const details::ResizerDim& rd = _plan[d];
+    const Dim& rd = _plan[d];
     if (rd.identity) {
       gr = gridref;
     } else if (!rd.is_minification) {  // Resampling or magnification.
       if (rd.filter->requires_digital_filter()) {
         if (gridref.data() != gr.data()) gr = gridref;  // Else directly modify the temporary input buffer.
         details::inverse_convolution_d(gr, *rd.filter, *rd.boundary, rd.src_gridtype, d, cval);
-        gr = details::evaluate_rows_d(CGridView<D, T>(gr), d, rd, cval);
+        gr = evaluate_rows(CGridView<D, T>(gr), d, rd, cval);
       } else {
-        gr = details::evaluate_rows_d(gridref, d, rd, cval);
+        gr = evaluate_rows(gridref, d, rd, cval);
       }
     } else {  // Minification.
-      gr = details::evaluate_rows_d(gridref, d, rd, cval);
+      gr = evaluate_rows(gridref, d, rd, cval);
       if (rd.filter->requires_digital_filter())
         details::inverse_convolution_d(gr, *rd.filter, *rd.boundary, rd.dst_gridtype, d, cval);
     }
@@ -1056,16 +1057,6 @@ Grid<Dout, T> resample(CGridView<D, T> grid, CGridView<Dout, Vec<float, D>> coor
   });
   return result;
 }
-
-namespace details {
-
-// The convenience functions build a transient Sampler, so they assert that the kernels need no digital filter
-// (which would be applied to the whole grid at every call); construct a Sampler explicitly for those kernels.
-template <int D> void assert_no_digital_filter(const SamplingOptions<D>& options) {
-  for_int(d, D) assertx(!options.filter[d]->requires_digital_filter());
-}
-
-}  // namespace details
 
 template <int D, typename T>
 T sample_grid(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions<D>& options, const T* cval) {

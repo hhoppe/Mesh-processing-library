@@ -48,20 +48,6 @@ inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
   return os << "Bndrule{" << boundaryrule_name(bndrule) << "}";
 }
 
-// Placement of the n samples of a 1D grid over the unit domain: at the cell centers (i + .5) / n (dual, the usual
-// image convention) or at the cell vertices i / (n - 1) (primal), as in the Python package resampler.
-enum class Gridtype { dual, primal };
-
-// Convert a string ("dual", "primal", or the letters "d", "p") to a grid type.
-[[nodiscard]] constexpr Gridtype parse_gridtype(std::string_view s);
-
-// Convert a grid type to a string.
-[[nodiscard]] constexpr std::string_view gridtype_name(Gridtype gridtype);
-
-inline std::ostream& operator<<(std::ostream& os, Gridtype gridtype) {
-  return os << "Gridtype{" << gridtype_name(gridtype) << "}";
-}
-
 // Modify index i to be in domain [0, n - 1] using boundary rule; return false if bndrule == Border and i is outside.
 [[nodiscard]] constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule);
 
@@ -115,6 +101,7 @@ template <typename T> class CArrayView {
     return array_view_t<decltype(self.data())>(self.data() + i, s);
   }
   [[nodiscard]] constexpr auto slice(this auto&& self, int ib, int ie) noexcept { return self.segment(ib, ie - ib); }
+  [[nodiscard]] constexpr auto slice(this auto&& self, int ib) noexcept { return self.segment(ib, self.num() - ib); }
   using value_type = T;
   using iterator = const T*;
   using const_iterator = const T*;
@@ -315,6 +302,11 @@ template <typename T, int inline_capacity> class GeneralArray : public details::
     } else {
       delete[] _a;
     }
+  }
+  // E.g.: const auto array = Array<float>::create(n, [](int i) { return i * .5f; }).
+  template <typename Func> requires std::is_invocable_r_v<T, Func, int>
+  [[nodiscard]] static type create(int n, Func func) {
+    return type(range(n) | views::transform(func));
   }
   type& operator=(CArrayView<T> ar) requires Copyable<T> {
     init(ar.num());
@@ -517,20 +509,6 @@ template <typename T, int inline_capacity, typename Func> requires(inline_capaci
     case Bndrule::border: return "border";
     case Bndrule::reflect_primal: return "reflect_primal";
     case Bndrule::undefined: return "undefined";
-    default: assertnever("");
-  }
-}
-
-[[nodiscard]] constexpr Gridtype parse_gridtype(const std::string_view s) {
-  if (s == "dual" || s == "d") return Gridtype::dual;
-  if (s == "primal" || s == "p") return Gridtype::primal;
-  assertnever("Grid type '" + string(s) + "' not recognized");
-}
-
-[[nodiscard]] constexpr std::string_view gridtype_name(Gridtype gridtype) {
-  switch (gridtype) {
-    case Gridtype::dual: return "dual";
-    case Gridtype::primal: return "primal";
     default: assertnever("");
   }
 }

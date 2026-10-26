@@ -2517,9 +2517,7 @@ void do_procedure(Args& args) {
     const string filename2 = args.get_filename();
     const Image image2(filename2);
     assertx(same_size(image, image2));
-    Matrix<Vector4> image2v(image.dims());
-    convert(image2, image2v);
-    const Sampler<2, Vector4> sampler(image2v, g_options.sampling());
+    const Sampler<2, Pixel> sampler(image2, g_options.sampling());
     GMesh mesh;
     Matrix<Vertex> matv(image.dims());
     string str;
@@ -2539,7 +2537,7 @@ void do_procedure(Args& args) {
       mesh.update_string(v, "Opos", csform_vec(str, p));
       const Vector vrgb = convert<float>(image[yx].head<3>()) / 255.f;
       // Vector nvrgb = convert<float>(image2[yx].head<3>()) / 255.f;
-      Vector4 vec4 = sampler(V(np[1], np[0]));
+      Vector4 vec4 = sampler.linear(V(np[1], np[0]));
       vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
       const Vector nvrgb(vec4[0], vec4[1], vec4[2]);
       mesh.update_string(v, "rgb", csform_vec(str, nvrgb));
@@ -3448,13 +3446,11 @@ void do_resamplemesh(Args& args) {
   assertx(min(image.dims()) >= 2);
   GMesh mesh;
   mesh.read(RFile(mfile)());
-  Matrix<Vector4> imagev(image.dims());
-  convert(image, imagev);
-  const Sampler<2, Vector4> sampler(imagev, g_options.sampling());
+  const Sampler<2, Pixel> sampler(image, g_options.sampling());
   string str;
   for (Vertex v : mesh.vertices()) {
     Point p = mesh.point(v);  // In the range [0, 1].
-    Vector4 vec4 = sampler(V(p[1], p[0]));
+    Vector4 vec4 = sampler.linear(V(p[1], p[0]));
     vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
     mesh.update_string(v, "rgb", csform_vec(str, V(vec4[0], vec4[1], vec4[2])));
   }
@@ -3491,7 +3487,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(color, "r g b a : set color for various operations (default 255's)");
   HH_ARGSD(not, ": negate test for color selection");
   HH_ARGSD(getcolorxy, "x y : get color from pixel ((x = 0, y = 0) = (left, top))");
-  HH_ARGSD(boundary, "c : rule: reflect/wrap/clamp/border/natural/...");
+  HH_ARGSD(boundary, "c : rule: reflect|wrap|clamp|border|natural|...");
   HH_ARGSC("", ":    (crops and -blur use only the first four)");
   HH_ARGSD(hboundary, "c : set just horizontal boundary rule");
   HH_ARGSD(vboundary, "c : set just vertical boundary rule");
@@ -3511,8 +3507,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmatte, ": crop all sides matching the set color");
   HH_ARGSC("", ":");
-  HH_ARGSD(filter, "c : kernel: cubic/cardinal3/lanczos3/triangle/...");
-  HH_ARGSC("", ":    omoms3/gaussian/box/impulse/... (def. cardinal3)");
+  HH_ARGSD(filter, "c : kernel: cubic|cardinal3|lanczos3|triangle|...");
+  HH_ARGSC("", ":    omoms3|gaussian|box|impulse|... (default: cardinal3)");
   HH_ARGSD(hfilter, "c : set just horizontal filter");
   HH_ARGSD(vfilter, "c : set just vertical filter");
   HH_ARGSD(prefilter, "c : kernel when minifying (auto: same)");

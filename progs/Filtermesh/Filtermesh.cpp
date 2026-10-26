@@ -3268,9 +3268,7 @@ void do_projectimage(Args& args) {
   const ObjectFrame object_frame = FrameIO::read(iss).value();
   const Frame frameinv = ~object_frame.frame;
   const Image image(image_name);
-  Matrix<Vector4> imagev(image.dims());
-  convert(image, imagev);
-  const Sampler<2, Vector4> sampler(imagev, {.filter = "cardinal3", .boundary = "reflect"});
+  const Sampler<2, Pixel> sampler(image, {.filter = "cardinal3", .boundary = "reflect"});
   string str;
   for (Vertex v : mesh.vertices()) {
     Point p = mesh.point(v);
@@ -3285,7 +3283,7 @@ void do_projectimage(Args& args) {
       HH_SSTAT(Sx, p[1]);
       HH_SSTAT(Sy, p[2]);
     }
-    Vector4 vec4 = sampler(V(p[2], p[1]));
+    Vector4 vec4 = sampler.linear(V(p[2], p[1]));
     vec4 = general_clamp(vec4, Vector4(0.f), Vector4(1.f));
     mesh.update_string(v, "rgb", csform_vec(str, V(vec4[0], vec4[1], vec4[2])));
   }

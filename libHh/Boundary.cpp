@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Hugues Hoppe; see LICENSE.
 #include "libHh/Boundary.h"
 
 #include "libHh/Vec.h"
@@ -16,7 +16,8 @@ bool map_reflect(int& i, int size, Gridtype gridtype) {
 
 bool map_wrap(int& i, int size, Gridtype gridtype) {
   const int period = gridtype == Gridtype::dual ? size : size - 1;  // The last primal sample repeats the first.
-  i = ((i % period) + period) % period;
+  i %= period;
+  if (i < 0) i += period;
   return true;
 }
 
@@ -37,14 +38,12 @@ void override_exterior(double x, double spacing, ArrayView<float> folded, int fi
   const double signed_distance = abs(x - .5) - .5;  // Boundaries at 0 and 1.
   const double opacity = spacing > 0. ? clamp(.5 - signed_distance / spacing, 0., 1.) : signed_distance > 0. ? 0. : 1.;
   if (opacity == 1.) return;
-  for_intL(j, first, folded.num()) folded[j] = float(folded[j] * opacity);
+  folded.slice(first) *= float(opacity);
 }
 
 // Give the remainder 1 - sum of the folded taps [first, num) to cval.
 void push_remainder(Array<int>& indices, Array<float>& folded, int first) {
-  double sum = 0.;
-  for_intL(j, first, folded.num()) sum += folded[j];
-  const double remainder = 1. - sum;
+  const double remainder = 1. - sum<double>(folded.slice(first));
   if (abs(remainder) < 1e-6) return;
   indices.push(-1);
   folded.push(float(remainder));
@@ -53,9 +52,10 @@ void push_remainder(Array<int>& indices, Array<float>& folded, int first) {
 // A rule for which each exterior tap maps to a single interior sample (or to cval), optionally tiling the
 // coordinates and overriding the value outside the unit domain by cval.
 struct BoundaryIndexMap final : Boundary {
-  explicit BoundaryIndexMap(string name, IndexMap map, bool uses_cval, bool tile = false, bool override = false)
-      : Boundary(std::move(name)), _map(map), _tile(tile), _override(override) {
-    _uses_cval = uses_cval, _overrides_exterior = override;
+  explicit BoundaryIndexMap(string name, IndexMap map, bool uses_cval, bool tile = false,
+                            bool overrides_exterior = false)
+      : Boundary(std::move(name)), _map(map), _tile(tile) {
+    _uses_cval = uses_cval, _overrides_exterior = overrides_exterior;
   }
   [[nodiscard]] double remap_coordinate(double x) const override { return _tile ? x - std::floor(x) : x; }
   void fold(int index0, CArrayView<float> weights, int size, Gridtype gridtype, double x, double spacing,
@@ -68,13 +68,13 @@ struct BoundaryIndexMap final : Boundary {
       indices.push(i);
       folded.push(weights[k]);
     }
-    if (_override) {
+    if (_overrides_exterior) {
       override_exterior(x, spacing, folded, first);
       push_remainder(indices, folded, first);
     }
   }
   IndexMap _map;
-  bool _tile, _override;
+  bool _tile;
 };
 
 // Exterior taps are dropped and the interior weights renormalized; points outside the domain get cval.
@@ -96,7 +96,7 @@ struct BoundaryNatural final : Boundary {
       sum += weights[k];
     }
     // (The weights are renormalized only if some tap was dropped, so that interior rows stay bitwise unchanged.)
-    if (dropped && sum != 0.) for_intL(j, first, folded.num()) folded[j] = float(folded[j] / sum);
+    if (dropped && sum != 0.) folded.slice(first) /= float(sum);
     override_exterior(x, spacing, folded, first);
     push_remainder(indices, folded, first);
   }
@@ -105,9 +105,9 @@ struct BoundaryNatural final : Boundary {
 // Exterior samples are extrapolated linearly from the two nearest samples (quadratically from the three nearest),
 // optionally overriding the value outside the unit domain by cval.
 struct BoundaryExtrapolate final : Boundary {
-  explicit BoundaryExtrapolate(string name, int degree, bool override)
-      : Boundary(std::move(name)), _degree(degree), _override(override) {
-    _uses_cval = _overrides_exterior = override;
+  explicit BoundaryExtrapolate(string name, int degree, bool overrides_exterior)
+      : Boundary(std::move(name)), _degree(degree) {
+    _uses_cval = _overrides_exterior = overrides_exterior;
   }
   void fold(int index0, CArrayView<float> weights, int size, Gridtype gridtype, double x, double spacing,
             Array<int>& indices, Array<float>& folded) const override {
@@ -143,13 +143,12 @@ struct BoundaryExtrapolate final : Boundary {
         if (high[c] != 0.) indices.push(size - 1 - c), folded.push(float(high[c]));
       }
     }
-    if (_override) {
+    if (_overrides_exterior) {
       override_exterior(x, spacing, folded, first);
       push_remainder(indices, folded, first);
     }
   }
   int _degree;
-  bool _override;
 };
 
 struct BoundaryAuto final : Boundary {

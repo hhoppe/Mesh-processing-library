@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Hugues Hoppe; see LICENSE.
 #include "libHh/DigitalFilter.h"
 
 #include <map>
@@ -23,8 +23,7 @@ DigitalFilter::DigitalFilter(const Filter& filter, const Boundary& boundary, Gri
   assertx(size >= (gridtype == Gridtype::dual ? 1 : 2));
   const Filter& kernel = filter.digital_filter_kernel();
   const int l = int(std::ceil(kernel.radius())) - 1;  // The kernel is sampled at the integer offsets -l .. l.
-  Array<float> taps(2 * l + 1);
-  for_int(k, 2 * l + 1) taps[k] = float(kernel.func()(double(k - l)));
+  const auto taps = Array<float>::create(2 * l + 1, [&](int k) { return float(kernel.func()(double(k - l))); });
   // The rows of the matrix: the folded taps merged by column (a column of -1 denotes cval).
   Array<std::map<int, double>> rows(size);
   _cval_weight.init(size, 0.f);

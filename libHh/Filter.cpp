@@ -322,8 +322,8 @@ struct FilterLanczos10 final : Filter {
 struct FilterHamming3 final : Filter {
   using type = FilterHamming3;
   FilterHamming3() : Filter("hamming3", sfunc, 3.) {
-    _is_partition_of_unity = false;  // 1:1.00242  av=1.00188  sd=0.00052909
-    _is_unit_integral = false;       // 1.00188
+    _is_partition_of_unity = false;  // 1:1.00292  av=1.00236  sd=0.00067597
+    _is_unit_integral = false;       // 1.00236
   }
   static double sfunc(double x) { return hamming(x, 3., 25. / 46.); }
 };
@@ -337,7 +337,7 @@ struct FilterKaiser3 final : Filter {
   static double sfunc(double x) { return kaiser(x, 3., 7.12); }
 };
 
-struct FilterTrapezoid final : Filter {  // Its kernel depends on the scaling; see compute_resizer_dim().
+struct FilterTrapezoid final : Filter {  // Its kernel depends on the scaling; see Resizer::compute_dim().
   using type = FilterTrapezoid;
   FilterTrapezoid() : Filter("trapezoid", nullptr, 0.) { _is_trapezoid = true; }
 };

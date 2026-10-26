@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Hugues Hoppe; see LICENSE.
 #include "libHh/Gamma.h"
 #include "libHh/GridOp.h"
 #include "libHh/Random.h"

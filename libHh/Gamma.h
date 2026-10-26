@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Hugues Hoppe; see LICENSE.
 #ifndef MESH_PROCESSING_LIBHH_GAMMA_H_
 #define MESH_PROCESSING_LIBHH_GAMMA_H_
 
@@ -21,15 +21,19 @@ class Gamma : noncopyable {
   [[HH_NO_DANGLING]] [[nodiscard]] static const Gamma& get(std::string_view name);
   [[nodiscard]] const string& name() const { return _name; }
   [[nodiscard]] bool is_identity() const { return _is_identity; }
+
   // Convert an encoded value to a linear value.
   [[nodiscard]] virtual float decode(float encoded) const = 0;
   [[nodiscard]] virtual double decode(double encoded) const = 0;
+
   // Convert a linear value to an encoded value (a negative value is treated as zero).
   [[nodiscard]] virtual float encode(float linear) const = 0;
   [[nodiscard]] virtual double encode(double linear) const = 0;
+
   // The decoded values of the 256 uint8_t sample values, and of the 65536 uint16_t ones (lazily computed).
   [[nodiscard]] CArrayView<float> decode_table_uint8() const;
   [[nodiscard]] CArrayView<float> decode_table_uint16() const;
+
   friend std::ostream& operator<<(std::ostream& os, const Gamma& gamma) {
     return os << "Gamma{" << gamma.name() << "}";
   }

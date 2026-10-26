@@ -40,7 +40,7 @@ data=demos/data; results=demos/results
 render() {
   local name=$1 geometry=$2; shift 2
   G3dOGL "$@" -noinfo 1 $viewer_args -geom "$geometry" -offscreen "$tmp/$name.raw.png" >&/dev/null </dev/null
-  Filterimage "$tmp/$name.raw.png" -color $rgb 255 -cropmatte -scaletoy $height -boundaryrule border \
+  Filterimage "$tmp/$name.raw.png" -color $rgb 255 -cropmatte -scaletoy $height -boundary border \
     -cropsides -${hgap:-$gap} -${hgap:-$gap} -$gap -$gap -to png >"$tmp/$name.png" 2>/dev/null
 }
 
@@ -93,7 +93,7 @@ for variant in light dark; do
   render bunny_normalmap 1100x1100 $results/bunny.spheresample.remesh.m -st $data/bunny.s3d \
     -texturemap $normalmap -texturenormal 1 -key Dt
   side=$((height * 9 / 10)); pad=$(((height - side) / 2))  # The normal map, as a square slightly smaller.
-  Filterimage $normalmap -filter lanczos6 -scaletoy $side -color $rgb 255 -boundaryrule border \
+  Filterimage $normalmap -filter lanczos3 -scaletoy $side -color $rgb 255 -boundary border \
     -cropsides -$gap -$gap -$pad -$pad -to png >"$tmp/normalmap.png" 2>/dev/null
   # Progressive simplicial complex at a coarse and at its full resolution.
   for lod in 0.05 1.0; do

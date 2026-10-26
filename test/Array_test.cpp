@@ -320,7 +320,7 @@ void test_views() {
   static_assert(std::is_same_v<decltype(Array(std::vector<float>{})), Array<float>>);
 
   assertx(ar.head(2) == V(0, 1).view() && ar.tail(2) == V(4, 5).view());
-  assertx(ar.segment(1, 3) == V(1, 2, 3).view() && ar.slice(2, 4) == V(2, 3).view());
+  assertx(ar.segment(1, 3) == V(1, 2, 3).view() && ar.slice(2, 4) == V(2, 3).view() && ar.slice(4) == V(4, 5).view());
   assertx(ar.head(0).num() == 0 && ar.tail(0).num() == 0 && ar.segment(6, 0).num() == 0);
   assertx(ar.tail(0).data() == ar.data() + 6);
   assertx(ar.head(4).tail(2) == V(2, 3).view());  // Subviews compose.
@@ -375,8 +375,6 @@ void test_boundary_rules() {
     assertx(parse_boundaryrule(s) == bndrule);
   assertx(boundaryrule_name(Bndrule::clamp) == "clamp" &&
           boundaryrule_name(Bndrule::reflect_primal) == "reflect_primal");
-  assertx(parse_gridtype("primal") == Gridtype::primal && parse_gridtype("dual") == Gridtype::dual);
-  assertx(parse_gridtype("p") == Gridtype::primal && parse_gridtype("d") == Gridtype::dual);
   // A reference model of the boundary rules, for n >= 1; it returns -1 for a border index outside the domain.
   const auto model = [](int i, int n, Bndrule bndrule) {
     const auto mod = [](int a, int b) { return ((a % b) + b) % b; };

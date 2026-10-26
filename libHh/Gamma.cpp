@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Hugues Hoppe; see LICENSE.
 #include "libHh/Gamma.h"
 
 namespace hh {
@@ -65,16 +65,16 @@ const Gamma& Gamma::get(std::string_view name) {
 
 CArrayView<float> Gamma::decode_table_uint16() const {
   std::call_once(_table_uint16_once, [&] {
-    _table_uint16.init(65536);
-    for_int(i, 65536) _table_uint16[i] = float(decode(i / 65535.));
+    _table_uint16 = Array<float>::create(65536, [&](int i) { return float(decode(i / 65535.)); });
   });
   return _table_uint16;
 }
 
 CArrayView<float> Gamma::decode_table_uint8() const {
   std::call_once(_table_uint8_once, [&] {
-    _table_uint8.init(256);
-    for_int(i, 256) _table_uint8[i] = decode(i / 255.f);
+    // (Computed in float so that it equals the float decode path bitwise; the uint16 table is computed in double
+    // because its float rounding would otherwise be the dominant error.)
+    _table_uint8 = Array<float>::create(256, [&](int i) { return decode(i / 255.f); });
   });
   return _table_uint8;
 }

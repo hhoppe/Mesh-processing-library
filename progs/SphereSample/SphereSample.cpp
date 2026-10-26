@@ -1,4 +1,5 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corp; see LICENSE.
+#include <optional>
 #include <regex>
 
 #include "libHh/Args.h"
@@ -43,7 +44,8 @@ string signal_;                  // Surface signal {position, normal, rgb, textu
 int voxel_grid_resolution = 50;  // 3D checkerboard grid resolution for "voxel" signal.
 int supersample = 1;             // 1 signifies no supersampling.
 bool feather_texture = true;     // Blend texture discontinuities in do_write_texture().
-Matrix<Vector4> texture_image_vector4;
+Image texture_image;
+std::optional<Sampler<2, Pixel>> texture_sampler;  // The reconstruction of texture_image (which must outlive it).
 int verbose = 1;
 bool first_domain_face = false;
 bool nooutput = false;
@@ -1282,9 +1284,8 @@ void do_signal(Args& args) {
 
 void do_texture_file(Args& args) {
   const string filename = args.get_string();
-  const Image texture_image{filename};
-  texture_image_vector4.init(texture_image.dims());
-  convert(texture_image, texture_image_vector4);
+  texture_image = Image{filename};
+  texture_sampler.emplace(texture_image, SamplingOptions<2>{.filter = "cubic", .boundary = "reflect"});
 }
 
 void project_to_cube(Vector& normal) { normal /= max_abs_element(normal); }
@@ -1316,12 +1317,11 @@ Pixel assign_signal(const string& signal, const GMesh& mesh, const Bbox<float, 3
       break;
     }
     case 't': {
-      assertx(texture_image_vector4.ysize());
+      assertx(texture_sampler);
       const Uv uv = interp_f_uv(mesh, f, bary);
       // We flip the image vertically because the OpenGL Uv coordinate origin is at the image lower-left.
       const Uv yx = Uv(1.f - uv[1], uv[0]);  // Also, we expect (y, x) sampling order.
-      static const SamplingOptions<2> k_options{.filter = 1 ? "cubic" : "triangle", .boundary = "reflect"};
-      pixel = Sampler<2, Vector4>(texture_image_vector4, k_options)(yx).pixel();
+      pixel = (*texture_sampler)(yx);
       break;
     }
     case 'v': {

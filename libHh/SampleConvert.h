@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Hugues Hoppe; see LICENSE.
 #ifndef MESH_PROCESSING_LIBHH_SAMPLECONVERT_H_
 #define MESH_PROCESSING_LIBHH_SAMPLECONVERT_H_
 

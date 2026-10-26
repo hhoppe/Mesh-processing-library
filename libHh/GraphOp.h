@@ -133,7 +133,7 @@ template <invocable_r<float, int, int> Func> [[nodiscard]] Graph<int> graph_mst(
   }
   for_intL(i, 1, num) {
     const int offset = 1;
-    const int minj = arg_min(lowcost.slice(offset, num)) + offset;
+    const int minj = arg_min(lowcost.slice(offset)) + offset;
     const float minf = lowcost[minj];
     assertx(minf < k_inf);
     gnew.enter_undirected(minj, closest[minj]);

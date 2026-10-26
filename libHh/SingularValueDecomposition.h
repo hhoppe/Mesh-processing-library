@@ -102,6 +102,7 @@ template <typename T> void sort_singular_values(MatrixView<T> U, ArrayView<T> S,
   assertx(VT.dims() == V(n, n));
   // Selection sort: singular values in descending order.
   for_int(i0, n - 1) {
+    // (S.slice(i0) triggers a false -Waggressive-loop-optimizations from gcc 15 in the arg_max() loop.)
     const int i1 = arg_max(S.slice(i0, n)) + i0;
     if (i0 == i1) continue;
     std::swap(S[i0], S[i1]);

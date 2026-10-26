@@ -2091,18 +2091,18 @@ bool DerivedHw::key_press(string skey) {
           const Vec3<int> ndims = ob._dims - V(ncut, 0, 0);
           if (ob._video.size()) {
             nvideo.init(ndims);
-            nvideo.slice(0, ob._framein).assign(ob._video.slice(0, ob._framein));
-            nvideo.slice(ob._framein, ndims[0]).assign(ob._video.slice(ob._frameou1, ob._dims[0]));
+            nvideo.head(ob._framein).assign(ob._video.head(ob._framein));
+            nvideo.slice(ob._framein).assign(ob._video.slice(ob._frameou1));
           } else if (ob._video_nv12.size()) {
             nvideo_nv12.init(ndims);
             auto oYY = ob._video_nv12.get_Y();
             auto nYY = nvideo_nv12.get_Y();
             auto oUV = ob._video_nv12.get_UV();
             auto nUV = nvideo_nv12.get_UV();
-            nYY.slice(0, ob._framein).assign(oYY.slice(0, ob._framein));
-            nUV.slice(0, ob._framein).assign(oUV.slice(0, ob._framein));
-            nYY.slice(ob._framein, ndims[0]).assign(oYY.slice(ob._frameou1, ob._dims[0]));
-            nUV.slice(ob._framein, ndims[0]).assign(oUV.slice(ob._frameou1, ob._dims[0]));
+            nYY.head(ob._framein).assign(oYY.head(ob._framein));
+            nUV.head(ob._framein).assign(oUV.head(ob._framein));
+            nYY.slice(ob._framein).assign(oYY.slice(ob._frameou1));
+            nUV.slice(ob._framein).assign(oUV.slice(ob._frameou1));
           } else {
             assertnever("");
           }
@@ -2163,14 +2163,14 @@ bool DerivedHw::key_press(string skey) {
           const Vec3<int> ndims = concat(V(ob1.nframes() + ob2.nframes()), ob1.spatial_dims());
           if (ob1._video.size()) {
             nvideo.init(ndims);
-            nvideo.slice(0, ob1.nframes()).assign(ob1._video);
-            nvideo.slice(ob1.nframes(), ndims[0]).assign(ob2._video);
+            nvideo.head(ob1.nframes()).assign(ob1._video);
+            nvideo.slice(ob1.nframes()).assign(ob2._video);
           } else if (ob1._video_nv12.size()) {
             nvideo_nv12.init(ndims);
-            nvideo_nv12.get_Y().slice(0, ob1.nframes()).assign(ob1._video_nv12.get_Y());
-            nvideo_nv12.get_Y().slice(ob1.nframes(), ndims[0]).assign(ob2._video_nv12.get_Y());
-            nvideo_nv12.get_UV().slice(0, ob1.nframes()).assign(ob1._video_nv12.get_UV());
-            nvideo_nv12.get_UV().slice(ob1.nframes(), ndims[0]).assign(ob2._video_nv12.get_UV());
+            nvideo_nv12.get_Y().head(ob1.nframes()).assign(ob1._video_nv12.get_Y());
+            nvideo_nv12.get_Y().slice(ob1.nframes()).assign(ob2._video_nv12.get_Y());
+            nvideo_nv12.get_UV().head(ob1.nframes()).assign(ob1._video_nv12.get_UV());
+            nvideo_nv12.get_UV().slice(ob1.nframes()).assign(ob2._video_nv12.get_UV());
           } else {
             assertnever("");
           }

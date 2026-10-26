@@ -125,6 +125,8 @@ template <int D, typename T> class CGridView {
     assertx(ib >= 0 && ib <= ie && ie <= dims[0]);
     return grid_view_t<D, decltype(self.data())>(self.data() + ib * grid_stride(dims, 0), dims.with(0, ie - ib));
   }
+  [[nodiscard]] auto slice(this auto&& self, int ib) { return self.slice(ib, self.dims()[0]); }
+  [[nodiscard]] auto head(this auto&& self, int n) { return self.slice(0, n); }
   [[nodiscard]] auto slices(this auto&& self) requires(D >= 2) {
     // We capture the pointer and dims rather than a view because a captured view would be const in the lambda,
     // and subscripting a const GridView yields a CGridView.

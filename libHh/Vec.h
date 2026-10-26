@@ -182,6 +182,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   [[nodiscard]] constexpr auto slice(this auto&& self, int ib, int ie) noexcept {
     return as_vec(self).segment(ib, ie - ib);
   }
+  [[nodiscard]] constexpr auto slice(this auto&& self, int ib) noexcept { return as_vec(self).segment(ib, n - ib); }
 
   template <typename U> [[nodiscard]] constexpr Vec<U, n> cast() const {
     return transformed(*this, [](const auto& e) { return static_cast<U>(e); });

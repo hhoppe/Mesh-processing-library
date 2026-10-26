@@ -26,7 +26,7 @@ template <ranges::input_range R> [[nodiscard]] auto median_two(const R& range) -
   ranges::nth_element(ar, ar.begin() + median_index);  // Place median element at median location.
   const auto val0 = ar[median_index];
   // List is partially sorted about the median value, so find the min of the second half.
-  const auto val1 = ar.num() % 2 == 1 ? val0 : min(ar.slice(median_index + 1, ar.num()));
+  const auto val1 = ar.num() % 2 == 1 ? val0 : min(ar.slice(median_index + 1));
   return V(val0, val1);
 }
 

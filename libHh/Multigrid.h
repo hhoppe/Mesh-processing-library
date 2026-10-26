@@ -180,7 +180,7 @@ class Multigrid : noncopyable {
   [[nodiscard]] bool have_orig() const { return _grid_orig.size() > 0; }
 
   static Vec<int, D> generate_interior_offsets(const Vec<int, D>& dims) {
-    // Each offset is the product of the subsequent dims.  (Using product(dims.slice(c + 1, D)) instead caused a
+    // Each offset is the product of the subsequent dims.  (Using product(dims.slice(c + 1)) instead caused a
     // false -Wmaybe-uninitialized from gcc 15 when it vectorized that product for AVX-512.)
     Vec<int, D> ar_interior_offsets;
     ar_interior_offsets[D - 1] = 1;

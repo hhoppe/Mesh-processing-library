@@ -341,6 +341,8 @@ int main() {
     static_assert(std::is_same_v<decltype(cgrid[0, 1, 2]), const int&>);
     static_assert(std::is_same_v<decltype(grid.slice(0, 1)), GridView<3, int>>);
     static_assert(std::is_same_v<decltype(cgrid.slice(0, 1)), CGridView<3, int>>);
+    static_assert(std::is_same_v<decltype(grid.slice(1)), GridView<3, int>>);
+    static_assert(std::is_same_v<decltype(cgrid.head(1)), CGridView<3, int>>);
     static_assert(std::is_same_v<decltype(grid.array_view()), ArrayView<int>>);
     static_assert(std::is_same_v<decltype(cgrid.array_view()), CArrayView<int>>);
     static_assert(std::is_same_v<decltype(grid.flat(0)), int&>);
@@ -353,6 +355,8 @@ int main() {
     const auto slice = grid.slice(1, 3);
     SHOW(slice.dims(), (slice[0, 0, 0]), (slice[1, 1, 2]));
     assertx(grid.slice(4, 4).size() == 0 && grid.slice(0, 4).data() == grid.data());
+    assertx(grid.slice(1).dims() == V(3, 2, 3) && grid.slice(1).data() == grid[1].data() && grid.slice(4).size() == 0);
+    assertx(grid.head(1).dims() == V(1, 2, 3) && grid.head(2).data() == grid.data() && grid.head(0).size() == 0);
     grid.slice(2, 3)[0, 1, 1] = -1;  // Write through a mutable slice.
     assertx(grid[2, 1, 1] == -1);
     int count = 0;

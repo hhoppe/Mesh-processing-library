@@ -427,9 +427,9 @@ void test_boundary_rules() {
   assertx(ar.inside(-1, Bndrule::reflect) == 10 && ar.inside(3, Bndrule::reflect) == 12);
   assertx(ar.inside(-1, Bndrule::reflect_primal) == 11 && ar.inside(3, Bndrule::reflect_primal) == 11);
   assertx(ar.inside(-1, Bndrule::wrap) == 12 && ar.inside(7, Bndrule::clamp) == 12);
-  const int bordervalue = 99;
-  assertx(ar.inside(-1, Bndrule::border, &bordervalue) == 99 && ar.inside(2, Bndrule::border, &bordervalue) == 12);
-  assertx(&ar.inside(1, Bndrule::border, &bordervalue) == &ar[1]);
+  const int cval = 99;
+  assertx(ar.inside(-1, Bndrule::border, &cval) == 99 && ar.inside(2, Bndrule::border, &cval) == 12);
+  assertx(&ar.inside(1, Bndrule::border, &cval) == &ar[1]);
   Array<int> ar2{1, 2};
   ar2.inside(-1, Bndrule::clamp) = 5;  // A mutable array gives a mutable element.
   assertx(ar2[0] == 5);

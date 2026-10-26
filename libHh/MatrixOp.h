@@ -360,8 +360,7 @@ template <typename T> [[nodiscard]] Matrix<T> outer_product(CArrayView<T> ar1, C
 
 // Convolve array ar with convolution kernel ark; result has the same size and type as ar.
 template <typename T, typename TK>
-[[nodiscard]] Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule,
-                                const T* bordervalue = nullptr) {
+[[nodiscard]] Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule, const T* cval = nullptr) {
   static_assert(std::is_floating_point_v<TK>, "Kernel array must contain float/double");
   using Precise = sum_type_t<T>;
   assertx(ark.num() % 2 == 1);
@@ -369,7 +368,7 @@ template <typename T, typename TK>
   Array<T> nar(ar.num());
   parallel_for({.cycles_per_elem = ark.size() * 2}, range(ar.num()), [&](const int x) {
     Precise v{0};
-    for_int(xx, ark.num()) { v += ark[xx] * Precise{ar.inside(x - xxm + xx, bndrule, bordervalue)}; }
+    for_int(xx, ark.num()) { v += ark[xx] * Precise{ar.inside(x - xxm + xx, bndrule, cval)}; }
     nar[x] = static_cast<T>(v);
   });
   return nar;
@@ -377,8 +376,7 @@ template <typename T, typename TK>
 
 // Convolve matrix mat with convolution kernel matk; result has the same size and type as mat.
 template <typename T, typename TK>
-[[nodiscard]] Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule,
-                                 const T* bordervalue = nullptr) {
+[[nodiscard]] Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule, const T* cval = nullptr) {
   static_assert(std::is_floating_point_v<TK>, "Kernel matrix must contain float/double");
   using Precise = sum_type_t<T>;
   assertx(matk.ysize() % 2 == 1 && matk.xsize() % 2 == 1);
@@ -388,7 +386,7 @@ template <typename T, typename TK>
     for_int(x, mat.xsize()) {
       Precise v{0};
       for_int(yy, matk.ysize()) for_int(xx, matk.xsize()) {
-        v += matk[yy, xx] * Precise{mat.inside(y - pm[0] + yy, x - pm[1] + xx, bndrule, bordervalue)};
+        v += matk[yy, xx] * Precise{mat.inside(y - pm[0] + yy, x - pm[1] + xx, bndrule, cval)};
       }
       nmat[y, x] = static_cast<T>(v);
     }

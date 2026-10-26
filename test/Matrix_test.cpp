@@ -58,10 +58,10 @@ void test_inside() {
     showf("Row y=-1 for x=-4..6 with Bndrule::%s:%s\n", string(boundaryrule_name(bndrule)).c_str(), s.c_str());
     for_int(y, 2) for_int(x, 3) assertx(mv.inside(y, x, bndrule) == m[y, x]);
   }
-  const int bordervalue = -1;
-  assertx(mv.inside(0, 3, Bndrule::border, &bordervalue) == -1);
-  assertx(mv.inside(-1, 0, Bndrule::border, &bordervalue) == -1);
-  assertx(mv.inside(1, 2, Bndrule::border, &bordervalue) == 12);
+  const int cval = -1;
+  assertx(mv.inside(0, 3, Bndrule::border, &cval) == -1);
+  assertx(mv.inside(-1, 0, Bndrule::border, &cval) == -1);
+  assertx(mv.inside(1, 2, Bndrule::border, &cval) == 12);
   int y = 2, x = -1;
   assertx(!mv.map_inside(y, x, Bndrule::border));
   y = 2, x = -1;

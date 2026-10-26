@@ -111,11 +111,11 @@ std::string_view image_suffix_for_magic_byte(uchar c) {
 //----------------------------------------------------------------------------
 // *** Scaling
 
-void Image::scale(const Vec2<float>& syx, const ResizeOptions<2>& options, const Pixel* bordervalue) {
-  *this = hh::scale(*this, syx, options, bordervalue, std::move(*this));
+void Image::scale(const Vec2<float>& syx, const ResizeOptions<2>& options, const Pixel* cval) {
+  *this = hh::scale(*this, syx, options, cval, std::move(*this));
 }
 
-Image scale(const Image& image, const Vec2<float>& syx, const ResizeOptions<2>& options, const Pixel* bordervalue,
+Image scale(const Image& image, const Vec2<float>& syx, const ResizeOptions<2>& options, const Pixel* cval,
             Image&& pnewimage) {
   Image newimage = &pnewimage == &image ? Image() : std::move(pnewimage);
   assertx(min(syx) >= 0.f);
@@ -127,7 +127,7 @@ Image scale(const Image& image, const Vec2<float>& syx, const ResizeOptions<2>& 
   newimage.init(newdims);
   newimage.attrib() = image.attrib();
   if (newdims[0] == 0) return newimage;
-  scale_Matrix_Pixel(image, options, bordervalue, newimage);
+  scale_Matrix_Pixel(image, options, cval, newimage);
   return newimage;
 }
 
@@ -384,23 +384,22 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
   }
 }
 
-void scale(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* bordervalue, Nv12View new_nv12) {
+void scale(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* cval, Nv12View new_nv12) {
   assertx(nv12.get_Y().data() != new_nv12.get_Y().data());
   assertx(nv12.get_UV().data() != new_nv12.get_UV().data());
   if (nv12.get_Y().dims() == new_nv12.get_Y().dims()) return;
   if (!product(new_nv12.get_Y().dims())) return;
   uint8_t borderY = 0;
   Vec2<uint8_t> borderUV{};
-  if (bordervalue) {
-    borderY = Y_from_RGB(*bordervalue);
-    borderUV = V(U_from_RGB(*bordervalue), V_from_RGB(*bordervalue));
+  if (cval) {
+    borderY = Y_from_RGB(*cval);
+    borderUV = V(U_from_RGB(*cval), V_from_RGB(*cval));
   }
   // The planes are resized as integer samples (decoded, filtered, and encoded with rounding and clamping).
-  new_nv12.get_Y().assign(scale(nv12.get_Y(), new_nv12.get_Y().dims(), options, bordervalue ? &borderY : nullptr));
+  new_nv12.get_Y().assign(scale(nv12.get_Y(), new_nv12.get_Y().dims(), options, cval ? &borderY : nullptr));
   ResizeOptions<2> options_uv = options;
   options_uv.gamma = "identity";  // The chroma planes are not gamma-encoded intensities.
-  new_nv12.get_UV().assign(
-      scale(nv12.get_UV(), new_nv12.get_UV().dims(), options_uv, bordervalue ? &borderUV : nullptr));
+  new_nv12.get_UV().assign(scale(nv12.get_UV(), new_nv12.get_UV().dims(), options_uv, cval ? &borderUV : nullptr));
 }
 
 }  // namespace hh

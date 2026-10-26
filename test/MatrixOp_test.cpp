@@ -67,11 +67,11 @@ void test_outer_product_and_rotate() {
 void test_convolve() {
   const Array<float> ar{1.f, 2.f, 4.f, 8.f, 16.f};
   const Array<float> kernel{.25f, .5f, .25f};
-  const float bordervalue = 0.f;
+  const float cval = 0.f;
   for (const Bndrule bndrule :
        {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
-    const float* pbordervalue = bndrule == Bndrule::border ? &bordervalue : nullptr;
-    const Array<float> result = convolve<float, float>(ar, kernel, bndrule, pbordervalue);
+    const float* pcval = bndrule == Bndrule::border ? &cval : nullptr;
+    const Array<float> result = convolve<float, float>(ar, kernel, bndrule, pcval);
     SHOW(boundaryrule_name(bndrule), result);
   }
   {
@@ -80,7 +80,7 @@ void test_convolve() {
     mat[2, 2] = 1.f;
     Matrix<float> matk(3, 3);
     for_int(y, 3) for_int(x, 3) matk[y, x] = float(1 + y * 3 + x);
-    const Matrix<float> result = convolve<float, float>(mat, matk, Bndrule::border, &bordervalue);
+    const Matrix<float> result = convolve<float, float>(mat, matk, Bndrule::border, &cval);
     SHOW(result);
     // Convolution with a kernel that sums to 1 preserves a constant image under every boundary rule.
     const Matrix<float> constant(V(4, 6), 3.f);

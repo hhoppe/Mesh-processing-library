@@ -8,7 +8,7 @@
 namespace hh {
 
 // Rescale matrix of pixels to the sizes given by destination nmatrixp; views matrixp and nmatrixp must be distinct.
-inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Resizer<2>& resizer, const Pixel* bordervalue,
+inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Resizer<2>& resizer, const Pixel* cval,
                                MatrixView<Pixel> nmatrixp) {
   assertx(matrixp.data() != nmatrixp.data());
   assertx(matrixp.dims() == resizer.dims() && nmatrixp.dims() == resizer.ndims());
@@ -85,27 +85,27 @@ inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const Resizer<2>& res
       return;
     }
   }
-  resizer.apply_to(matrixp, bordervalue, nmatrixp);
+  resizer.apply_to(matrixp, cval, nmatrixp);
 }
 
 // Rescale matrix of pixels to the sizes given by destination nmatrixp; views matrixp and nmatrixp must be distinct.
-inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const ResizeOptions<2>& options, const Pixel* bordervalue,
+inline void scale_Matrix_Pixel(CMatrixView<Pixel> matrixp, const ResizeOptions<2>& options, const Pixel* cval,
                                MatrixView<Pixel> nmatrixp) {
   assertx(matrixp.data() != nmatrixp.data());
   const Resizer<2> resizer(matrixp.dims(), nmatrixp.dims(), options);
-  scale_Matrix_Pixel(matrixp, resizer, bordervalue, nmatrixp);
+  scale_Matrix_Pixel(matrixp, resizer, cval, nmatrixp);
 }
 
 // Rescale 3D grid of pixels spatially (only dimensions 1 and 2) to sizes given by destination ngridp;
 //  views gridp and ngridp must be distinct.
 // Was previously in GridOp.cpp
-inline void spatially_scale_Grid3_Pixel(CGridView<3, Pixel> gridp, const ResizeOptions<2>& options,
-                                        const Pixel* bordervalue, GridView<3, Pixel> ngridp) {
+inline void spatially_scale_Grid3_Pixel(CGridView<3, Pixel> gridp, const ResizeOptions<2>& options, const Pixel* cval,
+                                        GridView<3, Pixel> ngridp) {
   assertx(gridp.dim(0) == ngridp.dim(0));  // Only scale dimensions 1 and 2.
   assertx(gridp.dim(1) > 0 && gridp.dim(2) > 0 && ngridp.dim(1) > 0 && ngridp.dim(2) > 0);
   // The kernel weights are computed once for all the frames.
   const Resizer<2> resizer(gridp[0].dims(), ngridp[0].dims(), options);
-  for_int(f, gridp.dim(0)) scale_Matrix_Pixel(gridp[f], resizer, bordervalue, ngridp[f]);
+  for_int(f, gridp.dim(0)) scale_Matrix_Pixel(gridp[f], resizer, cval, ngridp[f]);
 }
 
 }  // namespace hh

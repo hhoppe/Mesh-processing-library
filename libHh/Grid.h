@@ -115,9 +115,9 @@ template <int D, typename T> class CGridView {
     assertx(self.map_inside(ut, bndrules));
     return self[ut];
   }
-  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* bordervalue) const {
+  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* cval) const {
     Vec<int, D> ut(u);
-    if (!map_inside(ut, bndrules)) return ASSERTX(bordervalue), *bordervalue;
+    if (!map_inside(ut, bndrules)) return ASSERTX(cval), *cval;
     return (*this)[ut];
   }
   [[nodiscard]] auto slice(this auto&& self, int ib, int ie) {  // View of grid truncated in 0th dimension.
@@ -153,7 +153,7 @@ template <int D, typename T> class CGridView {
     ASSERTX(b);
     return self[y, x];
   }
-  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2);
+  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule, const T* cval) const requires(D == 2);
 
  protected:
   // See class CArrayView for a discussion of constness and protection of operator=().
@@ -416,10 +416,10 @@ template <int D, typename T> bool CGridView<D, T>::map_inside(int& y, int& x, Bn
 }
 
 template <int D, typename T>
-const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* bordervalue) const requires(D == 2) {
+const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* cval) const requires(D == 2) {
   if (!map_inside(y, x, bndrule)) {
-    ASSERTX(bordervalue);
-    return *bordervalue;
+    ASSERTX(cval);
+    return *cval;
   }
   return (*this)[y, x];
 }

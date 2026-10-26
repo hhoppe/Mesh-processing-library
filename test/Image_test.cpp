@@ -235,9 +235,9 @@ int main() {
     for (const Pixel& pixel : image) assertx(pixel == Pixel(200, 100, 50, 255));
     // Scaling with a border value.
     const Image image3(V(2, 2), Pixel::black());
-    const Pixel bordervalue = Pixel::white();
+    const Pixel cval = Pixel::white();
     const Image image4 =
-        scale(image3, V(2.f, 2.f), ResizeOptions<2>{.filter = "triangle", .boundary = "border"}, &bordervalue);
+        scale(image3, V(2.f, 2.f), ResizeOptions<2>{.filter = "triangle", .boundary = "border"}, &cval);
     SHOW(image4);
   }
 #if defined(HH_IMAGE_HAVE_WIC) || defined(HH_IMAGE_HAVE_LIBS)  // Without these, the image IO would require ffmpeg.

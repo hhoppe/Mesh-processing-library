@@ -92,7 +92,7 @@ template <typename T> class CArrayView {
   [[nodiscard]] auto& inside(this auto&& self, int i, Bndrule bndrule) {
     return assertx(self.map_inside(i, bndrule)), self[i];
   }
-  [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* bordervalue) const;
+  [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* cval) const;
   [[nodiscard]] constexpr bool operator==(type rhs) const;
   [[nodiscard]] constexpr auto head(this auto&& self, int n) noexcept { return self.segment(0, n); }
   [[nodiscard]] constexpr auto tail(this auto&& self, int n) noexcept { return self.segment(self.num() - n, n); }
@@ -570,11 +570,10 @@ template <typename T> [[nodiscard]] bool CArrayView<T>::map_inside(int& i, Bndru
   return map_boundaryrule_1d(i, _n, bndrule);
 }
 
-template <typename T>
-[[nodiscard]] const T& CArrayView<T>::inside(int i, Bndrule bndrule, const T* bordervalue) const {
+template <typename T> [[nodiscard]] const T& CArrayView<T>::inside(int i, Bndrule bndrule, const T* cval) const {
   if (!map_inside(i, bndrule)) {
-    ASSERTX(bordervalue);
-    return *bordervalue;
+    ASSERTX(cval);
+    return *cval;
   }
   return (*this)[i];
 }

@@ -43,8 +43,7 @@ template <int D, typename T>
 //  and requires the definition of boundary rules (and border value if Bndrule::border).
 template <int D, typename T>
 [[nodiscard]] Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& dU,
-                              Vec<Bndrule, D> bndrules = ntimes<D>(Bndrule::undefined),
-                              const T* bordervalue = nullptr);
+                              Vec<Bndrule, D> bndrules = ntimes<D>(Bndrule::undefined), const T* cval = nullptr);
 
 enum class Alignment { left, center, right };
 
@@ -226,7 +225,7 @@ template <int D> class Resizer {
 // Convolve a Pixel grid along its d'th dimension with the 1D kernel (which must have odd length).
 template <int D, bool parallel = true>
 [[nodiscard]] Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Bndrule bndrule,
-                                        const Pixel* bordervalue = nullptr);
+                                        const Pixel* cval = nullptr);
 
 //----------------------------------------------------------------------------
 
@@ -260,9 +259,9 @@ template <int D, typename T> StridedArrayView<T> grid_column(GridView<D, T> grid
 
 template <int D, typename T>
 Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& dU, Vec<Bndrule, D> bndrules,
-                const T* bordervalue) {
+                const T* cval) {
   for_int(i, D) {
-    if (bndrules[i] == Bndrule::border) assertx(bordervalue);
+    if (bndrules[i] == Bndrule::border) assertx(cval);
     if (grid.size() == 0)
       assertx(bndrules[i] != Bndrule::reflect && bndrules[i] != Bndrule::wrap && bndrules[i] != Bndrule::clamp &&
               bndrules[i] != Bndrule::reflect_primal);
@@ -299,7 +298,7 @@ Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& 
   } else {
     // Slower path.
     parallel_for_coords({.cycles_per_elem = 20}, newdims, [&](const Vec<int, D>& u) {  //
-      newgrid[u] = grid.inside(u + dL, bndrules, bordervalue);
+      newgrid[u] = grid.inside(u + dL, bndrules, cval);
     });
   }
   return newgrid;
@@ -1079,9 +1078,9 @@ T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions
 
 template <int D, bool parallel>
 Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Bndrule bndrule,
-                          const Pixel* bordervalue) {
+                          const Pixel* cval) {
   // HH_TIMER("__convolve_d");
-  if (bndrule == Bndrule::border) assertx(bordervalue);
+  if (bndrule == Bndrule::border) assertx(cval);
   const Vec<int, D>& dims = grid.dims();
   const int nx = dims[d];
   const int nk = kernel.num(), r = (nk - 1) / 2;
@@ -1106,7 +1105,7 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
     Vector4i v{0};
     for_int(k, nk) {
       int ii = x - r + k;
-      const Pixel* pvalue = map_boundaryrule_1d(ii, nx, bndrule) ? &grid[u.with(d, ii)] : bordervalue;
+      const Pixel* pvalue = map_boundaryrule_1d(ii, nx, bndrule) ? &grid[u.with(d, ii)] : cval;
       v += kerneli[k] * Vector4i(*pvalue);
     }
     ngrid[u] = ((v + fach) >> ishift).pixel();

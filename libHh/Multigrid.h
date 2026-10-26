@@ -242,7 +242,7 @@ class Multigrid : noncopyable {
         if (d % 2 == 1 && d > largest_odd_size) std::swap(d, largest_odd_size);
         largest_other_size = max(largest_other_size, d);
       }
-      T bordervalue{};
+      T cval{};
       // Easy inside part [0, dims / 2 - 1]:
       parallel_for_coords({.cycles_per_elem = uint64_t(product(vrange)) * 2}, dims / 2, [&](const Vec<int, D>& u) {
         T v{};
@@ -261,7 +261,7 @@ class Multigrid : noncopyable {
         const Vec<int, D> uU = ndims;
         for (const auto& u : range(uL, uU)) {
           T v{};
-          for (const auto& ut : range(u * 2, u * 2 + vrange)) v += grid.inside(ut, bndrules, &bordervalue);
+          for (const auto& ut : range(u * 2, u * 2 + vrange)) v += grid.inside(ut, bndrules, &cval);
           ngrid[u] = v * fac;
         }
       }

@@ -316,16 +316,16 @@ int main() {
   }
   {  // Cropping, including negative crops that grow the grid using each boundary rule.
     const Grid<2, int> grid = grid_from_flat(V(3, 4), range(12));
-    const int bordervalue = -1;
+    const int cval = -1;
     for (const Bndrule bndrule :
          {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
       for (const auto& dLU : range(ntimes<4>(-3), ntimes<4>(2))) {
         const Vec2<int> dL = V(dLU[0], dLU[1]), dU = V(dLU[2], dLU[3]);
-        const Grid<2, int> newgrid = crop(grid, dL, dU, twice(bndrule), &bordervalue);
+        const Grid<2, int> newgrid = crop(grid, dL, dU, twice(bndrule), &cval);
         assertx(newgrid.dims() == grid.dims() - dL - dU);
         for (const auto& yx : range(newgrid.dims())) {
           Vec2<int> yx2 = yx + dL;
-          const int expected = grid.map_inside(yx2, twice(bndrule)) ? grid[yx2] : bordervalue;
+          const int expected = grid.map_inside(yx2, twice(bndrule)) ? grid[yx2] : cval;
           assertx(newgrid[yx] == expected);
         }
       }
@@ -333,9 +333,9 @@ int main() {
     SHOW(crop(grid, V(1, 1), V(0, 2)));  // The fast path, cropping more than dim0.
     SHOW(crop(grid, V(1, 0), V(1, 0)));  // The fastest path, cropping just dim0.
     SHOW(crop(grid, V(-1, -2), V(-1, -2), twice(Bndrule::reflect)));
-    SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::clamp, Bndrule::border), &bordervalue));
+    SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::clamp, Bndrule::border), &cval));
     // A Bndrule::undefined dimension (not cropped negatively) combined with a negative crop in another dimension.
-    SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::undefined, Bndrule::border), &bordervalue));
+    SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::undefined, Bndrule::border), &cval));
     SHOW(crop(grid, V(1, -1), V(0, 0), V(Bndrule::undefined, Bndrule::wrap)));
     for (const auto& dLU : range(V(0, -3, 0, -3), V(2, 2, 2, 2))) {
       const Vec2<int> dL = V(dLU[0], dLU[1]), dU = V(dLU[2], dLU[3]);
@@ -407,7 +407,7 @@ int main() {
   }
   {  // Pointwise evaluation with the triangle filter is linear interpolation, with boundary rules outside.
     const Grid<1, float> grid = {0.f, 10.f, 20.f, 40.f};
-    const float bordervalue = 100.f;
+    const float cval = 100.f;
     const SamplingOptions<1> filterb_clamp{.filter = "triangle", .boundary = "clamp"};
     const SamplingOptions<1> filterb_border{.filter = "triangle", .boundary = "border"};
     const SamplingOptions<1> filterb_wrap{.filter = "triangle", .boundary = "wrap"};
@@ -415,7 +415,7 @@ int main() {
     SHOW(sample_grid(grid, V(0.f), filterb_clamp), sample_grid(grid, V(1.5f), filterb_clamp),
          sample_grid(grid, V(2.25f), filterb_clamp), sample_grid(grid, V(-1.f), filterb_clamp),
          sample_grid(grid, V(4.f), filterb_clamp));
-    SHOW(sample_grid(grid, V(-.5f), filterb_border, &bordervalue), sample_grid(grid, V(3.5f), filterb_wrap));
+    SHOW(sample_grid(grid, V(-.5f), filterb_border, &cval), sample_grid(grid, V(3.5f), filterb_wrap));
     SHOW(sample_domain(grid, V(.5f), filterb_clamp), sample_domain(grid, V(.125f), filterb_clamp));
     const Grid<2, float> grid2 = {{0.f, 1.f}, {2.f, 3.f}};
     SHOW(sample_grid(grid2, V(.5f, .5f), options2_clamp), sample_grid(grid2, V(1.f, .25f), options2_clamp));
@@ -424,7 +424,7 @@ int main() {
     Random random(5);
     Grid<2, Pixel> grid(V(5, 7));
     for (Pixel& pixel : grid) for_int(z, 4) pixel[z] = uint8_t(random.get_uint64() % 256);
-    const Pixel bordervalue(255, 0, 0, 255);
+    const Pixel cval(255, 0, 0, 255);
     for (const Bndrule bndrule :
          {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
       for (const Array<float>& kernel :
@@ -432,14 +432,14 @@ int main() {
             Array<float>{.0625f, .0625f, .0625f, .625f, .0625f, .0625f, .0625f}}) {
         const int r = kernel.num() / 2;
         for_int(d, 2) {
-          const Grid<2, Pixel> newgrid = convolve_d(grid, d, kernel, bndrule, &bordervalue);
-          const Grid<2, Pixel> newgrid2 = convolve_d<2, false>(grid, d, kernel, bndrule, &bordervalue);
+          const Grid<2, Pixel> newgrid = convolve_d(grid, d, kernel, bndrule, &cval);
+          const Grid<2, Pixel> newgrid2 = convolve_d<2, false>(grid, d, kernel, bndrule, &cval);
           assertx(ranges::equal(newgrid, newgrid2));
           for (const auto& yx : range(grid.dims())) {
             Vec4<float> v{};
             for_int(k, kernel.num()) {
               Vec2<int> yx2 = yx.with(d, yx[d] - r + k);
-              const Pixel& pixel = grid.map_inside(yx2, twice(bndrule)) ? grid[yx2] : bordervalue;
+              const Pixel& pixel = grid.map_inside(yx2, twice(bndrule)) ? grid[yx2] : cval;
               for_int(z, 4) v[z] += kernel[k] * pixel[z];
             }
             for_int(z, 4) assertx(abs(newgrid[yx][z] - v[z]) <= .51f);

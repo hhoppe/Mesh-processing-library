@@ -573,12 +573,12 @@ crop(grid, V(-1, -2), V(-1, -2), twice(Bndrule::reflect)) = Matrix<int>(5, 8) {
   9 8 8 9 10 11 11 10
   9 8 8 9 10 11 11 10
 }
-crop(grid, V(0, -1), V(0, -1), V(Bndrule::clamp, Bndrule::border), &bordervalue) = Matrix<int>(3, 6) {
+crop(grid, V(0, -1), V(0, -1), V(Bndrule::clamp, Bndrule::border), &cval) = Matrix<int>(3, 6) {
   -1 0 1 2 3 -1
   -1 4 5 6 7 -1
   -1 8 9 10 11 -1
 }
-crop(grid, V(0, -1), V(0, -1), V(Bndrule::undefined, Bndrule::border), &bordervalue) = Matrix<int>(3, 6) {
+crop(grid, V(0, -1), V(0, -1), V(Bndrule::undefined, Bndrule::border), &cval) = Matrix<int>(3, 6) {
   -1 0 1 2 3 -1
   -1 4 5 6 7 -1
   -1 8 9 10 11 -1
@@ -623,7 +623,7 @@ assemble(grids1) = Array<int>(5) {
   5
 }
 sample_grid(grid, V(0.f), filterb_clamp)=0 sample_grid(grid, V(1.5f), filterb_clamp)=15 sample_grid(grid, V(2.25f), filterb_clamp)=25 sample_grid(grid, V(-1.f), filterb_clamp)=0 sample_grid(grid, V(4.f), filterb_clamp)=40
-sample_grid(grid, V(-.5f), filterb_border, &bordervalue)=50 sample_grid(grid, V(3.5f), filterb_wrap)=20
+sample_grid(grid, V(-.5f), filterb_border, &cval)=50 sample_grid(grid, V(3.5f), filterb_wrap)=20
 sample_domain(grid, V(.5f), filterb_clamp)=15 sample_domain(grid, V(.125f), filterb_clamp)=0
 sample_grid(grid2, V(.5f, .5f), options2_clamp)=1.5 sample_grid(grid2, V(1.f, .25f), options2_clamp)=2.25
 convolve_d(grid, 1, Array<float>{.25f, .5f, .25f}, Bndrule::clamp)[2] = Array<hh::Pixel>(7) {

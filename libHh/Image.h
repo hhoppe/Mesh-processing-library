@@ -69,7 +69,7 @@ class Image : public Matrix<Pixel> {
   // Misc:
   void to_bw();
   void to_color();
-  void scale(const Vec2<float>& syx, const ResizeOptions<2>& options = {}, const Pixel* bordervalue = nullptr);
+  void scale(const Vec2<float>& syx, const ResizeOptions<2>& options = {}, const Pixel* cval = nullptr);
   struct Attrib {
     int zsize{3};            // Number of components per pixel; must be either 1, 3, or 4.
     string suffix;           // E.g. "rgb"; "" if unknown; to identify format of read_file("-") and write_file("-").
@@ -104,7 +104,7 @@ class Image : public Matrix<Pixel> {
 
 // &image == &newimage is OK.
 [[nodiscard]] Image scale(const Image& image, const Vec2<float>& syx, const ResizeOptions<2>& options = {},
-                          const Pixel* bordervalue = nullptr, Image&& newimage = Image());
+                          const Pixel* cval = nullptr, Image&& newimage = Image());
 
 [[nodiscard]] inline bool rgb_equal(const Pixel& pix1, const Pixel& pix2) {
   return pix1[0] == pix2[0] && pix1[1] == pix2[1] && pix1[2] == pix2[2];
@@ -269,7 +269,7 @@ void convert_Nv12_to_Image_BGRA(CNv12View nv12v, MatrixView<Pixel> frame);
 // Convert RGBA image to 8-bit luminance plus half-spatial resolution UV chroma.
 void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v);
 
-void scale(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* bordervalue, Nv12View new_nv12);
+void scale(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* cval, Nv12View new_nv12);
 
 // *** Image IO
 

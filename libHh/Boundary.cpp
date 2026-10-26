@@ -1,6 +1,7 @@
 // -*- C++ -*-  Copyright (c) Hugues Hoppe; see LICENSE.
 #include "libHh/Boundary.h"
 
+#include "libHh/RangeOp.h"
 #include "libHh/Vec.h"
 
 namespace hh {

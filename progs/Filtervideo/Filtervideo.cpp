@@ -31,7 +31,7 @@ constexpr int nz = 3;  // 3 color channels; no alpha channel.
 
 bool g_not = false;
 Pixel gcolor{255, 255, 255, 255};
-Bndrule bndrule = Bndrule::reflect;  // For cropping (the four index-mapping rules only).
+Bndrule bndrule = Bndrule::reflect;                 // For cropping (the four index-mapping rules only).
 ResizeOptions<2> g_options{.filter = "cardinal3"};  // For resampling (boundary "auto").
 int startframe = 0;
 int tradius = 0;  // Was 4.
@@ -1130,8 +1130,8 @@ void possibly_rescale_loop_parameters() {
   func_scale_Matrix_int(g_lp.mat_static);
   func_scale_Matrix_int(g_lp.mat_start);
   func_scale_Matrix_int(g_lp.mat_period);
-  g_lp.mat_activation = scale(g_lp.mat_activation, video.spatial_dims(), nearest,
-                              implicit_cast<float*>(nullptr), std::move(g_lp.mat_activation));
+  g_lp.mat_activation = scale(g_lp.mat_activation, video.spatial_dims(), nearest, implicit_cast<float*>(nullptr),
+                              std::move(g_lp.mat_activation));
 }
 
 void verify_loop_parameters() {

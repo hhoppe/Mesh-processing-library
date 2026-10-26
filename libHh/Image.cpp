@@ -397,7 +397,10 @@ void scale(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* borderv
   }
   // The planes are resized as integer samples (decoded, filtered, and encoded with rounding and clamping).
   new_nv12.get_Y().assign(scale(nv12.get_Y(), new_nv12.get_Y().dims(), options, bordervalue ? &borderY : nullptr));
-  new_nv12.get_UV().assign(scale(nv12.get_UV(), new_nv12.get_UV().dims(), options, bordervalue ? &borderUV : nullptr));
+  ResizeOptions<2> options_uv = options;
+  options_uv.gamma = "identity";  // The chroma planes are not gamma-encoded intensities.
+  new_nv12.get_UV().assign(
+      scale(nv12.get_UV(), new_nv12.get_UV().dims(), options_uv, bordervalue ? &borderUV : nullptr));
 }
 
 }  // namespace hh

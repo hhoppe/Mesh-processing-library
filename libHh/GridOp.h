@@ -208,6 +208,7 @@ template <int D> class Resizer {
   const Gamma* _gamma;
   Vec<Dim, D> _plan;
   bool _all_impulse{false};
+  bool _all_identity{false};    // Every dimension is copied, so the samples are copied without any conversion.
   bool _all_preprocess{false};  // All kernels are "preprocess": only the digital filter is applied.
   bool _all_bspline3{false};    // All kernels are "bspline3": the value range is expanded afterwards.
   [[nodiscard]] SamplingOptions<D> sampling_options() const;  // The resolved kernels and rules per dimension.
@@ -564,8 +565,9 @@ void Resizer<D>::compute_dim(Dim& rd, int cx, int nx, Gridtype src_gridtype, Gri
   };
   // (The tolerance avoids an extra zero-weight tap when the ratio is an integer up to floating-point error.)
   const int nk = is_impulse ? 1 : int(std::ceil((rd.is_minification ? radius * 2. / scaling : radius * 2.) - 1e-6));
-  // The distance in the source domain between consecutive destination samples (for antialiased boundaries).
-  const double spacing = (dst_dual ? 1. / nx : 1. / (nx - 1)) / scale;
+  // The distance in the source domain between consecutive destination samples (for antialiased boundaries);
+  // a single destination sample gets a hard cutoff instead, as in resampler.
+  const double spacing = nx >= 2 ? (dst_dual ? 1. / nx : 1. / (nx - 1)) / scale : 0.;
   const bool nkodd = (nk % 2) > 0;
   rd.index0.init(nx);
   rd.weights.init(nx, nk);
@@ -703,6 +705,7 @@ Resizer<D>::Resizer(const Vec<int, D>& dims, const Vec<int, D>& ndims, const Res
   assertx(npreprocess == 0 || npreprocess == D);
   _all_preprocess = npreprocess == D;
   _all_impulse = ranges::all_of(_plan, [](const Dim& rd) { return rd.filter->is_impulse(); });
+  _all_identity = ranges::all_of(_plan, [](const Dim& rd) { return rd.identity; });
   if (_all_preprocess) assertx(ndims == dims);
   assertx(nbspline3 == 0 || nbspline3 == D);
   _all_bspline3 = nbspline3 == D;
@@ -782,6 +785,10 @@ Grid<D, T> Resizer<D>::apply(CGridView<D, T> grid, const T* cval, Grid<D, T>&& g
   for_int(d, D) {
     if (_plan[d].boundary->uses_cval()) assertx(cval);
   }
+  if (_all_identity) {
+    gr = grid;  // (A no-op if gr.data() == grid.data().)
+    return std::move(gr);
+  }
   if (_all_impulse) {  // Gather the nearest samples without any conversion (exact for any sample type).
     CGridView<D, T> gridref(grid);
     for (const int d : _dim_order) {
@@ -813,7 +820,7 @@ template <typename T>
 void Resizer<D>::apply_to(CGridView<D, T> grid, const T* cval, GridView<D, T> out) const {
   assertx(out.dims() == _ndims);
   if constexpr (is_integer_sample_v<T>) {
-    if (!_all_impulse) {
+    if (!_all_impulse && !_all_identity) {
       using F = sample_float_t<T>;
       const F fcval = cval ? decode_value(*_gamma, *cval) : F{};
       Grid<D, F> fgrid = decode(*_gamma, grid);

@@ -15,9 +15,10 @@ namespace hh {
 // pointer; an unrecognized name fails loudly at construction.
 template <typename T> struct NamedRef {
   const T* ptr;
-  NamedRef(std::string_view name) : ptr(&T::get(name)) {}           // NOLINT(google-explicit-constructor)
-  NamedRef(const char* name) : NamedRef(std::string_view(name)) {}  // NOLINT(google-explicit-constructor)
-  NamedRef(const T& t) : ptr(&t) {}                                 // NOLINT(google-explicit-constructor)
+  NamedRef(std::string_view name) : ptr(&T::get(name)) {}             // NOLINT(google-explicit-constructor)
+  NamedRef(const char* name) : NamedRef(std::string_view(name)) {}    // NOLINT(google-explicit-constructor)
+  NamedRef(const string& name) : NamedRef(std::string_view(name)) {}  // NOLINT(google-explicit-constructor)
+  NamedRef(const T& t) : ptr(&t) {}                                   // NOLINT(google-explicit-constructor)
   [[nodiscard]] const T& operator*() const { return *ptr; }
   [[nodiscard]] const T* operator->() const { return ptr; }
   [[nodiscard]] friend bool operator==(NamedRef l, NamedRef r) { return l.ptr == r.ptr; }

@@ -57,6 +57,8 @@ int main() {
   {  // Options structs: per-dimension fields broadcast from one value or take a Vec, and parse names at construction.
     const PerDim<FilterRef, 2> filters = "cubic";
     assertx(filters[0]->name() == "cubic" && filters[1]->name() == "cubic");
+    const string filter_name = "lanczos3";  // A name held in a string also converts.
+    assertx(ResizeOptions<1>{.filter = filter_name}.filter[0]->name() == "lanczos3");
     const ResizeOptions<2> options{.filter = V("cubic", "triangle"), .boundary = "clamp", .scale = .5};
     assertx(options.filter[1]->name() == "triangle" && options.boundary[0]->name() == "clamp");
     assertx(options.prefilter[0]->is_auto() && options.gridtype[1] == Gridtype::dual && options.scale[1] == .5);
@@ -80,6 +82,13 @@ int main() {
     const ResizeOptions<3> options{.filter = V("cubic", "triangle", "box"), .boundary = V("reflect", "wrap", "clamp")};
     for (const Vec3<int> ndims : {V(7, 2, 6), V(4, 9, 1), V(2, 2, 2)})
       SHOW(ndims, round_fraction_digits(float(sum(scale(grid, ndims, options))), 100.f));
+  }
+  {  // A single output sample gets a hard cutoff to cval (no antialiased transition), as in resampler.
+    Grid<1, float> ramp(V(5));
+    for_int(i, 5) ramp[i] = float(i);
+    const float cval = -7.f;
+    const ResizeOptions<1> options{.filter = "triangle", .boundary = "constant", .translate = .8};
+    assertx(scale(ramp, V(1), options, &cval)[0] == cval);  // The sample at .5 maps to -.3, outside the domain.
   }
   {  // Resizer: rows of precomputed weights, with the boundary taps folded into interior samples.
     const Resizer<1> resizer(V(3), V(7), {.filter = "cubic", .boundary = "wrap"});
@@ -205,6 +214,8 @@ int main() {
     const Sampler<2, Pixel> sampler2(pix, {.filter = "triangle", .gamma = "power2"});
     SHOW(sampler2(V(.5f, .5f)));  // The blend of white and black in linear space, encoded back: 180.
     assertx(sampler2(V(.5f, .5f))[0] == 180);
+    // An identity resize copies the samples exactly, whatever the gamma.
+    assertx(ranges::equal(scale(pix, pix.dims(), ResizeOptions<2>{.filter = "cubic", .gamma = "srgb"}), pix));
     const Grid<2, Pixel> near = scale(pix, V(7, 5), ResizeOptions<2>{.filter = "impulse"});  // An exact gather.
     for (const Vec2<int> u : range(near.dims())) {
       Vec2<int> src;

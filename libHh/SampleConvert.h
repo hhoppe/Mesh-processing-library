@@ -45,30 +45,58 @@ template <typename T> using sample_float_t = details::SampleFloat<T>::type;
 // True if T is an integer sample type (so that its values must be decoded and encoded).
 template <typename T> constexpr bool is_integer_sample_v = !std::is_same_v<sample_float_t<T>, T>;
 
+namespace details {
+
+// The scalar type at the leaves of a sample type (uint8_t for Pixel).
+template <typename T> struct SampleScalar {
+  using type = T;
+};
+template <typename T, int N> struct SampleScalar<Vec<T, N>> {
+  using type = SampleScalar<T>::type;
+};
+template <> struct SampleScalar<Pixel> {
+  using type = uint8_t;
+};
+
+}  // namespace details
+
+// Decodes sample values of type T to their linear floating-point values; it holds the lookup table of the 8- and
+// 16-bit integer types so that a grid is decoded without fetching the table for each element.
+template <typename T> class Decoder {
+ public:
+  explicit Decoder(const Gamma& gamma) : _gamma(gamma) {
+    if constexpr (std::is_same_v<Scalar, uint8_t>) _table = gamma.decode_table_uint8();
+    if constexpr (std::is_same_v<Scalar, uint16_t>) _table = gamma.decode_table_uint16();
+  }
+  [[nodiscard]] sample_float_t<T> operator()(const T& v) const { return decode(v); }
+
+ private:
+  using Scalar = details::SampleScalar<T>::type;
+  const Gamma& _gamma;
+  CArrayView<float> _table{nullptr, 0};  // The decoded 8- or 16-bit integer sample values, if T holds those.
+  [[nodiscard]] float decode(uint8_t v) const { return _table[v]; }
+  [[nodiscard]] float decode(uint16_t v) const { return _table[v]; }
+  [[nodiscard]] double decode(uint32_t v) const { return _gamma.decode(v / 4294967295.); }
+  [[nodiscard]] float decode(float v) const { return _gamma.is_identity() ? v : _gamma.decode(v); }
+  [[nodiscard]] double decode(double v) const { return _gamma.is_identity() ? v : _gamma.decode(v); }
+  template <typename U, int N> [[nodiscard]] Vec<sample_float_t<U>, N> decode(const Vec<U, N>& v) const {
+    Vec<sample_float_t<U>, N> r;
+    for_int(c, N) r[c] = decode(v[c]);
+    return r;
+  }
+  [[nodiscard]] Vector4 decode(const Vector4& v) const {
+    if (_gamma.is_identity()) return v;
+    return Vector4(_gamma.decode(v[0]), _gamma.decode(v[1]), _gamma.decode(v[2]), _gamma.decode(v[3]));
+  }
+  [[nodiscard]] Vector4 decode(const Pixel& v) const {
+    if (_gamma.is_identity()) return Vector4(v);  // (The same conversion as convert().)
+    return Vector4(_table[v[0]], _table[v[1]], _table[v[2]], _table[v[3]]);
+  }
+};
+
 // Decode a sample value to its linear floating-point value.
-[[nodiscard]] inline float decode_value(const Gamma& gamma, uint8_t v) { return gamma.decode_table_uint8()[v]; }
-[[nodiscard]] inline float decode_value(const Gamma& gamma, uint16_t v) { return gamma.decode_table_uint16()[v]; }
-[[nodiscard]] inline double decode_value(const Gamma& gamma, uint32_t v) { return gamma.decode(v / 4294967295.); }
-[[nodiscard]] inline float decode_value(const Gamma& gamma, float v) {
-  return gamma.is_identity() ? v : gamma.decode(v);
-}
-[[nodiscard]] inline double decode_value(const Gamma& gamma, double v) {
-  return gamma.is_identity() ? v : gamma.decode(v);
-}
-template <typename T, int N>
-[[nodiscard]] Vec<sample_float_t<T>, N> decode_value(const Gamma& gamma, const Vec<T, N>& v) {
-  Vec<sample_float_t<T>, N> r;
-  for_int(c, N) r[c] = decode_value(gamma, v[c]);
-  return r;
-}
-[[nodiscard]] inline Vector4 decode_value(const Gamma& gamma, const Pixel& v) {
-  if (gamma.is_identity()) return Vector4(v);  // (The same conversion as convert().)
-  const CArrayView<float> table = gamma.decode_table_uint8();
-  return Vector4(table[v[0]], table[v[1]], table[v[2]], table[v[3]]);
-}
-[[nodiscard]] inline Vector4 decode_value(const Gamma& gamma, const Vector4& v) {
-  return gamma.is_identity() ? v
-                             : Vector4(gamma.decode(v[0]), gamma.decode(v[1]), gamma.decode(v[2]), gamma.decode(v[3]));
+template <typename T> [[nodiscard]] sample_float_t<T> decode_value(const Gamma& gamma, const T& v) {
+  return Decoder<T>(gamma)(v);
 }
 
 namespace details {
@@ -104,8 +132,9 @@ template <typename T> [[nodiscard]] T encode_value(const Gamma& gamma, const sam
 template <int D, typename T>
 [[nodiscard]] Grid<D, sample_float_t<T>> decode(const Gamma& gamma, CGridView<D, T> grid) {
   Grid<D, sample_float_t<T>> result(grid.dims());
+  const Decoder<T> decoder(gamma);
   parallel_for({.cycles_per_elem = 8}, range(grid.size()),
-               [&](const size_t i) { result.flat(i) = decode_value(gamma, grid.flat(i)); });
+               [&](const size_t i) { result.flat(i) = decoder(grid.flat(i)); });
   return result;
 }
 

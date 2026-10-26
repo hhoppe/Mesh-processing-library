@@ -19,7 +19,7 @@ void show_matrix(const string& name, CMatrixView<Pixel> matrix) {
   }
 }
 
-ResizeOptions<2> options(const string& filter_name) { return {.filter = filter_name.c_str(), .boundary = "reflect"}; }
+ResizeOptions<2> options(const string& filter_name) { return {.filter = filter_name, .boundary = "reflect"}; }
 
 Matrix<Pixel> scaled(CMatrixView<Pixel> matrix, const Vec2<int>& dims, const string& filter_name) {
   Matrix<Pixel> nmatrix(dims);

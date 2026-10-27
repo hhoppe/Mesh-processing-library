@@ -1,10 +1,10 @@
 MeshRoot = ..
-orig_CONFIG := $(CONFIG)#  It may be null, in which case we use the executables in $(MeshRoot)/bin/msbuild.
+orig_CONFIG := $(CONFIG)#  If null on Windows, we use the executables in $(MeshRoot)/bin/msbuild.
 include $(MeshRoot)/make/Makefile_defs
 
 ifneq ($(CONFIG),all)  # For the rest of this file.
 
-ifeq ($(orig_CONFIG),)
+ifeq ($(orig_CONFIG)$(is_mswin),1)  # Elsewhere, CONFIG defaults to unix.
   # undefine CONFIG#  Recent feature of make.
   CONFIG :=
   unexport CONFIG

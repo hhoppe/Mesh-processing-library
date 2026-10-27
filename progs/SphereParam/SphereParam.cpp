@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corp; see LICENSE.
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "SphereMapper.h"
 #include "libHh/Args.h"
 #include "libHh/FileIO.h"

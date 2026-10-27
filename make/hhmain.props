@@ -146,6 +146,10 @@
     <Delete Files="@(HhFileToDelete)" />
   </Target>
 
+  <!-- Optional settings private to the solution being built, analogous to Makefile_local_defs for the make build. -->
+  <Import Project="$(SolutionDir)hhmain_local.props"
+          Condition="'$(SolutionDir)' != '' AND Exists('$(SolutionDir)hhmain_local.props')" />
+
   <!-- Precompiled headers: -->
   <!-- I give up on using a shared precompiled header across multiple projects using msbuild.
        It would be feasible by using /Z7 for debug info in *.obj files, but Claude's opinion is that

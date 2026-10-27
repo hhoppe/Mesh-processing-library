@@ -11,6 +11,8 @@
 #include "progs/VideoViewer/GradientDomainLoop.h"  // integrally_downscale_Nv12_to_Image()
 
 #if defined(HH_HAVE_VIDEO_LOOP)
+#define WIN32_LEAN_AND_MEAN
+#include <Windows.h>  // HRESULT, used by SLooperBase.h.
 // From ~/git/CompPhoto/Applications/VideoLooping/LoopAPILib/LoopAPILib/src/.
 #include "OptSetting.h"
 #include "PipeAPI.h"

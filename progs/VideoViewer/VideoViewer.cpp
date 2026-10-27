@@ -1944,7 +1944,7 @@ bool DerivedHw::key_press(string skey) {
           break;
         }
         case 'V': {  // Convert sequence of images (starting from current) to a video.
-          // Vv ~/prevproj/2016/motiongraph/Other/20150720/Morphs/Dancer-MSECIELAB10000/Atlas-F*.png -key 'V'.
+          // VideoViewer ~/prevproj/2016/motiongraph/Other/20150720/Morphs/Dancer-MSECIELAB10000/Atlas-F*.png -key Vm
           std::scoped_lock lock(g_mutex_obs);
           const Object& ob = check_loaded_image();
           const int ibeg = g_cob;
@@ -1977,8 +1977,7 @@ bool DerivedHw::key_press(string skey) {
           break;
         }
         case '#': {  // Convert image sequence (incrementing current image name) to a video.
-          // VideoViewer ~/proj/motiongraph/Other/20150720/Morphs/Dancer-MSECIELAB10000/Atlas-F00001.png -key '#'
-          // vv d:/Other/2015_06_12_HuguesH_Take2/Output_V1/Frames/view.F00001.png -key '#'
+          // VideoViewer ~/prevproj/2016/motiongraph/Other/20150716_color_morph/zombie/Atlas-F00001.png -key '#m'
           std::scoped_lock lock(g_mutex_obs);
           const Object& ob = check_loaded_image();
           if (file_requires_pipe(ob._filename)) throw "image is loaded from a pipe";
@@ -4098,7 +4097,7 @@ void crop_spatial_dimensions_to_multiple(VideoNv12& onv12, int k) {
 }
 
 // Time the creation of a video loop (without the overhead of opening and updating the window).
-//  E.g.:  VideoViewer -batch_create_loop ~/proj/fastloops/data/maf_rsig00/SDstreetlight/SDstreetlight_orig.mp4 ""
+//  E.g.:  VideoViewer -batch_create_loop ~/data/video/HDgardensea.mp4 v.mp4
 void do_batch_create_loop(Args& args) {
   const string input_filename = args.get_filename();
   string output_filename = args.get_string();
@@ -4369,25 +4368,14 @@ int main(int argc, const char** argv) {
     // Launch asynchronous background thread.
     std::thread th{background_work, true};
     th.detach();  // The detached thread never terminates.
-#if defined(_WIN32)
-    // Raise priority of the current (foreground) thread (which renders video into window).
-    if (0) assertx(SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_HIGHEST));  // Omitting seems fine.
-    if (0) assertx(SetPriorityClass(GetCurrentProcess(), ABOVE_NORMAL_PRIORITY_CLASS));
-    if (0) assertx(SetPriorityClass(GetCurrentProcess(), REALTIME_PRIORITY_CLASS));
-#endif
   }
   hw.set_window_title("VideoViewer");
   Vec2<int> win_dims = (getobnum() ? determine_default_window_dims(getob(0).spatial_dims())
                                    : k_default_window_dims);  // Window geometry when no video is yet loaded.
   hw.set_default_geometry(sform("%dx%d+130+0", win_dims[1], win_dims[0]));
   hw.set_default_background("black");  // Not used since OpenGL rendering completely covers it.
-  if (1) {
-    hw.set_default_foreground("yellow");
-    g_text_shadow_color = Pixel::black();
-  } else {  // Does not look as nice.
-    hw.set_default_foreground("black");
-    g_text_shadow_color = Pixel::white();
-  }
+  hw.set_default_foreground("yellow");
+  g_text_shadow_color = Pixel::black();
   hw.open();
   return 0;
 }

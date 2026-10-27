@@ -3076,7 +3076,9 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   // const float transf_border = 1.f;
   const float transf_size = 1.f;
   {
-    const Bbox bbox{mesh.vertices(e) | views::transform([&](Vertex v) { return mesh.point(v); })};
+    // The faces adjacent to the edge span the neighbors of both its vertices.
+    const Bbox bbox{concatenate(mesh.vertices(mesh.vertex1(e)), mesh.vertices(mesh.vertex2(e))) |
+                    views::transform([&](Vertex v) { return mesh.point(v); })};
     if (!bbox.max_side()) {
       Warning("Empty bbox");
       return false;
@@ -3153,10 +3155,10 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   int* izrov = ivector(1, n);
   int icase;
   // Maximize the linear functional: -x*link_normal[0]-y*link_normal[1]...
-  a[1, 1] = 0.f;  // Always.
-  a[1, 2] = -link_normal[0];
-  a[1, 3] = -link_normal[1];
-  a[1, 4] = -link_normal[2];
+  a[1][1] = 0.f;  // Always.
+  a[1][2] = -link_normal[0];
+  a[1][3] = -link_normal[1];
+  a[1][4] = -link_normal[2];
   // Subject to the constraint: lf.eval(Point(x, y, z)) >= 0;
   //  equivalently, lf[0] * x + lf[1] * y + lf[2] * z >= -lf[3].
   //  or possibly, -lf[0] * x - lf[1] * y - lf[2] * z <= lf[3].
@@ -3165,20 +3167,20 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
       if (!(lf.offset > 0.f)) continue;
-      a[2 + nr, 1] = lf.offset;
-      a[2 + nr, 2] = lf.v[0];
-      a[2 + nr, 3] = lf.v[1];
-      a[2 + nr, 4] = lf.v[2];
+      a[2 + nr][1] = lf.offset;
+      a[2 + nr][2] = lf.v[0];
+      a[2 + nr][3] = lf.v[1];
+      a[2 + nr][4] = lf.v[2];
       nr++;
     }
     assertx(nr == m1);
     for_int(i, ar_lf.num()) {
       const LinearFunc& lf = ar_lf[i];
       if (lf.offset > 0.f) continue;
-      a[2 + nr, 1] = -lf.offset;
-      a[2 + nr, 2] = -lf.v[0];
-      a[2 + nr, 3] = -lf.v[1];
-      a[2 + nr, 4] = -lf.v[2];
+      a[2 + nr][1] = -lf.offset;
+      a[2 + nr][2] = -lf.v[0];
+      a[2 + nr][3] = -lf.v[1];
+      a[2 + nr][4] = -lf.v[2];
       nr++;
     }
     assertx(nr == m);
@@ -3202,7 +3204,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     Point pnew(0.f, 0.f, 0.f);  // Must be initialized to zero's.
     for_intL(i, 1, m + 1) {
       assertx(iposv[i] >= 1);
-      if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i, 1]);
+      if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i][1]);
     }
     if (1) {
       for_int(i, ar_lf.num()) {

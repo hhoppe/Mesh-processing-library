@@ -392,12 +392,6 @@ void do_hboundary(Args& args) { set_boundary(1, args.get_string()); }
 
 void do_vboundary(Args& args) { set_boundary(0, args.get_string()); }
 
-void do_boundaryrule(Args& args) { do_boundary(args); }  // The former name.
-
-void do_hboundaryrule(Args& args) { do_hboundary(args); }
-
-void do_vboundaryrule(Args& args) { do_vboundary(args); }
-
 void do_cropsides(Args& args) {
   int vl = parse_size(args.get_string(), image.xsize(), false);
   int vr = parse_size(args.get_string(), image.xsize(), false);
@@ -3532,15 +3526,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(color, "r g b a : set color for various operations (default 255's)");
   HH_ARGSD(not, ": negate test for color selection");
   HH_ARGSD(getcolorxy, "x y : get color from pixel ((x = 0, y = 0) = (left, top))");
-  HH_ARGSD(boundary, "c : rule: reflect|wrap|clamp|border|constant|...");
-  HH_ARGSC("", ":    natural|linear|quadratic|tile|reflect_clamp|...");
-  HH_ARGSC("", ":    (crops and -blur use only the first four)");
-  HH_ARGSC("", ":    (-boundary constant with -color: colored exterior)");
-  HH_ARGSD(hboundary, "c : set just horizontal boundary rule");
-  HH_ARGSD(vboundary, "c : set just vertical boundary rule");
-  HH_ARGSD(boundaryrule, "c : (former name of -boundary)");
-  HH_ARGSD(hboundaryrule, "c : (former name of -hboundary)");
-  HH_ARGSD(vboundaryrule, "c : (former name of -vboundary)");
+  HH_ARGSD(boundary, "s : rule: reflect|wrap|clamp|border|constant|natural|linear|quadratic|tile|...");
+  HH_ARGSC("", ":    (crops and -blur use the first four; 'constant' colors the exterior with -color)");
+  HH_ARGSD(hboundary, "s : set just horizontal boundary rule");
+  HH_ARGSD(vboundary, "s : set just vertical boundary rule");
   HH_ARGSC("", ":");
   HH_ARGSD(cropsides, "l r t b : crop image (introduce specified color if negative)");
   HH_ARGSD(cropl, "l : crop image");
@@ -3554,14 +3543,13 @@ int main(int argc, const char** argv) {
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmatte, ": crop all sides matching the set color");
   HH_ARGSC("", ":");
-  HH_ARGSD(filter, "c : kernel: cubic|cardinal3|lanczos3|triangle|...");
-  HH_ARGSC("", ":    omoms3|gaussian|box|impulse|... (default: cardinal3)");
-  HH_ARGSD(hfilter, "c : set just horizontal filter");
-  HH_ARGSD(vfilter, "c : set just vertical filter");
-  HH_ARGSD(prefilter, "c : kernel when minifying (auto: same)");
-  HH_ARGSD(gridtype, "c : dual (default) or primal sample placement");
-  HH_ARGSD(dst_gridtype, "c : sample placement of the output (def. gridtype)");
-  HH_ARGSD(gamma, "c : identity (default), power2, power22, srgb");
+  HH_ARGSD(filter, "s : kernel: cardinal3 (default)|cubic|lanczos3|triangle|omoms3|gaussian|box|impulse|...");
+  HH_ARGSD(hfilter, "s : set just horizontal filter");
+  HH_ARGSD(vfilter, "s : set just vertical filter");
+  HH_ARGSD(prefilter, "s : kernel when minifying (auto: same)");
+  HH_ARGSD(gridtype, "s : dual (default) or primal sample placement");
+  HH_ARGSD(dst_gridtype, "s : sample placement of the output (def. gridtype)");
+  HH_ARGSD(gamma, "s : identity (default), power2, power22, srgb");
   HH_ARGSD(scaleunif, "fac : zoom image (upsample and/or downsample)");
   HH_ARGSD(scalenonunif, "facx facy : zoom image");
   HH_ARGSD(scaletox, "x : uniform scale to x width");

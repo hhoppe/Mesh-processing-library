@@ -851,8 +851,6 @@ void do_boundary(Args& args) {
     if (&Boundary::get(rule) == &boundary) bndrule = rule;
 }
 
-void do_boundaryrule(Args& args) { do_boundary(args); }  // The former name.
-
 void do_cropsides(Args& args) {
   int vl = parse_size(args.get_string(), video.xsize(), false);
   int vr = parse_size(args.get_string(), video.xsize(), false);
@@ -2263,8 +2261,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(start, "frame_or_time : trim video prior (eg. 30 or -1 or 2s or 10%)");
   HH_ARGSD(end, "frame_or_time : trim video beyond (eg. 30 or -1 or 2s or 10%)");
   HH_ARGSD(interval, "f1 f2 : trim video to interval [f1, f2)");
-  HH_ARGSD(trimbeg, "nframes : temporally crop beg using boundaryrule (< 0 to extend)");
-  HH_ARGSD(trimend, "nframes : temporally crop end using boundaryrule (< 0 to extend)");
+  HH_ARGSD(trimbeg, "nframes : temporally crop beg using the boundary rule (< 0 to extend)");
+  HH_ARGSD(trimend, "nframes : temporally crop end using the boundary rule (< 0 to extend)");
   HH_ARGSD(loop, "n : repeat n times (1=no_op)");
   HH_ARGSD(mirror, "n : repeat n times (2 for simple mirror)");
   HH_ARGSD(reverse, ": reverse order of frames");
@@ -2276,11 +2274,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(color, "r g b : set color for various operations (default 255's)");
   HH_ARGSD(not, ": negate test for color selection");
   HH_ARGSD(getcolorfxy, "f x y : get color from pixel ((0, 0, 0)=(frame0, left, top))");
-  HH_ARGSD(boundary, "c : rule: reflect|wrap|clamp|border|constant|...");
-  HH_ARGSC("", ":    natural|linear|quadratic|tile|reflect_clamp|...");
-  HH_ARGSC("", ":    (crops use only the first four)");
-  HH_ARGSC("", ":    (-boundary constant with -color: colored exterior)");
-  HH_ARGSD(boundaryrule, "c : (former name of -boundary)");
+  HH_ARGSD(boundary, "s : rule: reflect|wrap|clamp|border|constant|natural|linear|quadratic|tile|...");
+  HH_ARGSC("", ":    (crops use the first four; 'constant' colors the exterior with -color)");
   HH_ARGSC("", "   (for scaling or negative trim/crop)");
   HH_ARGSC("", ":");
   HH_ARGSD(cropsides, "l r t b : crop frames (introduce default color if negative)");
@@ -2295,12 +2290,11 @@ int main(int argc, const char** argv) {
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmult, "fac : increase dimensions to be multiple of fac");
   HH_ARGSC("", ":");
-  HH_ARGSD(filter, "c : kernel: cubic|cardinal3|lanczos3|triangle|...");
-  HH_ARGSC("", ":    omoms3|gaussian|box|impulse|... (default: cardinal3)");
-  HH_ARGSD(prefilter, "c : kernel when minifying (auto: same)");
-  HH_ARGSD(gridtype, "c : dual (default) or primal sample placement");
-  HH_ARGSD(dst_gridtype, "c : sample placement of the output (def. gridtype)");
-  HH_ARGSD(gamma, "c : identity (default), power2, power22, srgb");
+  HH_ARGSD(filter, "s : kernel: cardinal3 (default)|cubic|lanczos3|triangle|omoms3|gaussian|box|impulse|...");
+  HH_ARGSD(prefilter, "s : kernel when minifying (auto: same)");
+  HH_ARGSD(gridtype, "s : dual (default) or primal sample placement");
+  HH_ARGSD(dst_gridtype, "s : sample placement of the output (def. gridtype)");
+  HH_ARGSD(gamma, "s : identity (default), power2, power22, srgb");
   HH_ARGSD(scaleunif, "fac : zoom video (upsample and/or downsample)");
   HH_ARGSD(scalenonunif, "facx facy : zoom video");
   HH_ARGSD(scaletox, "x : uniform scale to x width");

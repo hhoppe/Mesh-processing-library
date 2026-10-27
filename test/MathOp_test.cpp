@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/MathOp.h"
 
 #include <bit>  // bit_cast(), bit_width(), popcount().

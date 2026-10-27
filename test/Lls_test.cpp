@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/Lls.h"
 
 #include "libHh/MatrixOp.h"  // identity_mat(), diag_mat(), mat_mul(), column()

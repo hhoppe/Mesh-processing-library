@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #ifndef MESH_PROCESSING_SPHEREPARAM_SPHEREMAPPER_H_
 #define MESH_PROCESSING_SPHEREPARAM_SPHEREMAPPER_H_
 

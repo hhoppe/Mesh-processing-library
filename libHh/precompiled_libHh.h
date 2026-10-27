@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 
 // The contents are used for several purposes:
 // (1) With the _MSC_VER compiler,  to build precompiled_libHh.pch when compiling precompiled_libHh.cpp.

@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #ifndef MESH_PROCESSING_LIBHH_ARGS_H_
 #define MESH_PROCESSING_LIBHH_ARGS_H_
 

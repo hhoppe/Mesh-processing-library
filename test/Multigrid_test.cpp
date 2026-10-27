@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #define HH_MULTIGRID_TIMER(name)  // Override before "Multigrid.h".
 #include "libHh/Multigrid.h"
 

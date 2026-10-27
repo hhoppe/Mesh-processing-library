@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/Video.h"
 
 // We get better read/write performance by directly calling Media Foundation, at least in Windows 7.

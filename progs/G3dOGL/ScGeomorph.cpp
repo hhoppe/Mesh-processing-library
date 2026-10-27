@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "progs/G3dOGL/ScGeomorph.h"
 
 #include "libHh/GMesh.h"

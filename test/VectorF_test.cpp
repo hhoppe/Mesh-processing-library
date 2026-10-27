@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/VectorF.h"
 
 #include "libHh/RangeOp.h"  // sum(), mag2(), dist2(), dot() on Vec.

@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 // From a set of points, build an implicit function that represents the signed
 // distance to the manifold.  Then extract its zero set.
 // 1993-03-16 ported from C version

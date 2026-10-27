@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include <cstring>  // strcmp(), strlen(), etc.
 
 #include "mikktspace.h"  // Canonical computation of tangent vectors at mesh corners.

@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #ifndef MESH_PROCESSING_LIBHH_HH_INIT_H_
 #define MESH_PROCESSING_LIBHH_HH_INIT_H_
 #include "libHh/Hh.h"  // NOLINT(misc-header-include-cycle): Hh.h includes this file.

@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "Hw.h"
 
 #if defined(_MSC_VER) && (NTDDI_VERSION >= NTDDI_WINBLUE)

@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "Hw.h"
 #include "libHh/GMesh.h"  // GMesh::string_key()
 #include "libHh/PMesh.h"

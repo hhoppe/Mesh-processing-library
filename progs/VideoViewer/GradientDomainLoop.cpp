@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "progs/VideoViewer/GradientDomainLoop.h"
 
 #include "libHh/ArrayOp.h"  // sort_unique()

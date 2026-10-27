@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/A3dStream.h"  // A3dColor
 #include "libHh/Args.h"
 #include "libHh/Bbox.h"

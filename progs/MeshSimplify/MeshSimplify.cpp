@@ -1,4 +1,4 @@
-// -*- C++ -*-  Copyright (c) Microsoft Corporation; see license.txt
+// -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include <charconv>  // to_chars(), chars_format
 
 #if defined(HH_HAVE_SIMPLEX)

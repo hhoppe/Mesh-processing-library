@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (c) Microsoft Corporation; see license.txt -->
+<!-- Copyright (c) Microsoft Corporation; see LICENSE. -->
 <!-- Why a face of the lon-lat parameterization can come out inverted, and how SphereParam repairs it.
      See the lonlat_repair namespace in SphereParam.cpp. -->
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 880 1230" width="880" height="1230"

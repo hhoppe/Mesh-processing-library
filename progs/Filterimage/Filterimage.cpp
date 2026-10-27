@@ -57,12 +57,12 @@ bool use_lab = true;
 bool nooutput = false;
 Pixel gcolor{255, 255, 255, 255};
 float tolerance = 0.f;
-Vec2<Bndrule> g_bndrules = twice(Bndrule::reflect);  // For cropping (the four index-mapping rules only).
+Vec2<Extension> g_extensions = twice(Extension::reflect);  // For cropping (the four index-mapping rules only).
 // For resampling; the boundary rule "auto" is reflect when magnifying and clamp when minifying.
 ResizeOptions<2> g_options{.filter = "cardinal3"};
 
-constexpr Bndrule k_reflected = Bndrule::reflect;
-constexpr Vec2<Bndrule> k_reflected2 = twice(Bndrule::reflect);
+constexpr Extension k_reflected = Extension::reflect;
+constexpr Vec2<Extension> k_reflected2 = twice(Extension::reflect);
 constexpr Pixel k_color_zero_alpha{0, 0, 0, 0};
 
 int parse_size(string s, int size, bool measure_neg_from_end) {
@@ -381,8 +381,8 @@ void set_boundary(int d, const string& name) {
   for_int(i, 2) {
     if (d >= 0 && d != i) continue;
     g_options.boundary[i] = BoundaryRef(boundary);
-    for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border})
-      if (&Boundary::get(bndrule) == &boundary) g_bndrules[i] = bndrule;
+    for (const Extension extension : {Extension::reflect, Extension::wrap, Extension::clamp, Extension::border})
+      if (&Boundary::get(extension) == &boundary) g_extensions[i] = extension;
   }
 }
 
@@ -398,38 +398,38 @@ void do_cropsides(Args& args) {
   const int vt = parse_size(args.get_string(), image.ysize(), false);
   const int vb = parse_size(args.get_string(), image.ysize(), false);
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, V(vt, vl), V(vb, vr), g_bndrules, &gcolor);
+  grid = crop(grid, V(vt, vl), V(vb, vr), g_extensions, &gcolor);
 }
 
 void do_cropl(Args& args) {
   int v = parse_size(args.get_string(), image.xsize(), false);
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, V(0, v), V(0, 0), g_bndrules, &gcolor);
+  grid = crop(grid, V(0, v), V(0, 0), g_extensions, &gcolor);
 }
 
 void do_cropr(Args& args) {
   int v = parse_size(args.get_string(), image.xsize(), false);
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, V(0, 0), V(0, v), g_bndrules, &gcolor);
+  grid = crop(grid, V(0, 0), V(0, v), g_extensions, &gcolor);
 }
 
 void do_cropt(Args& args) {
   const int v = parse_size(args.get_string(), image.ysize(), false);
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, V(v, 0), V(0, 0), g_bndrules, &gcolor);
+  grid = crop(grid, V(v, 0), V(0, 0), g_extensions, &gcolor);
 }
 
 void do_cropb(Args& args) {
   const int v = parse_size(args.get_string(), image.ysize(), false);
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, V(0, 0), V(v, 0), g_bndrules, &gcolor);
+  grid = crop(grid, V(0, 0), V(v, 0), g_extensions, &gcolor);
 }
 
 void do_cropall(Args& args) {
   const string s = args.get_string();
   const Vec2<int> sides = V(parse_size(s, image.ysize(), false), parse_size(s, image.xsize(), false));
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, sides, sides, g_bndrules, &gcolor);
+  grid = crop(grid, sides, sides, g_extensions, &gcolor);
 }
 
 void do_cropsquare(Args& args) {
@@ -438,7 +438,7 @@ void do_cropsquare(Args& args) {
   const int s = image.ysize() == image.xsize() ? parse_size(args.get_string(), image.ysize(), false) : args.get_int();
   const Vec2<int> p(y, x), p0 = p - (s / 2);
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, p0, image.dims() - p0 - s, g_bndrules, &gcolor);
+  grid = crop(grid, p0, image.dims() - p0 - s, g_extensions, &gcolor);
 }
 
 void do_croprectangle(Args& args) {
@@ -448,7 +448,7 @@ void do_croprectangle(Args& args) {
   const int sy = parse_size(args.get_string(), image.ysize(), false);
   const Vec2<int> p(y, x), s(sy, sx), p0 = p - s / 2;
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, p0, image.dims() - p0 - s, g_bndrules, &gcolor);
+  grid = crop(grid, p0, image.dims() - p0 - s, g_extensions, &gcolor);
 }
 
 void do_cropcoord(Args& args) {
@@ -458,7 +458,7 @@ void do_cropcoord(Args& args) {
   const int y1 = parse_size(args.get_string(), image.ysize(), true);
   const Vec2<int> p0(y0, x0), p1(y1, x1);
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, p0, image.dims() - p1, g_bndrules, &gcolor);
+  grid = crop(grid, p0, image.dims() - p1, g_extensions, &gcolor);
 }
 
 void do_croptodims(Args& args) {
@@ -468,7 +468,7 @@ void do_croptodims(Args& args) {
   auto yx0 = (image.dims() - ndims) / 2;
   auto yx1 = image.dims() - ndims - yx0;
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, yx0, yx1, g_bndrules, &gcolor);
+  grid = crop(grid, yx0, yx1, g_extensions, &gcolor);
 }
 
 void do_cropmatte() {
@@ -491,7 +491,7 @@ void do_cropmatte() {
     if (!ranges::all_of(range(image.xsize()), [&](int x) { return equal(image[y, x], gcolor, nz); })) break;
   }
   Grid<2, Pixel>& grid = image;
-  grid = crop(grid, V(t, l), V(b, r), g_bndrules, &gcolor);
+  grid = crop(grid, V(t, l), V(b, r), g_extensions, &gcolor);
 }
 
 void do_overlayimage(Args& args) {
@@ -606,7 +606,7 @@ void do_zoom(Args& args) {
   const double x = args.get_double(), y = args.get_double();
   assertx(fac > 0.);
   const Vec2<double> center = V(y, x) / convert<double>(image.dims());  // In the unit domain.
-  apply_domain_transform(twice(fac), center * (1. - fac));  // The source point center maps to itself.
+  apply_domain_transform(twice(fac), center * (1. - fac));              // The source point center maps to itself.
 }
 
 // Shift the image content by (dx, dy) pixels (positive moves it right and down), keeping the image dimensions.
@@ -851,14 +851,14 @@ void do_blur(Args& args) {
     parallel_for_coords({.cycles_per_elem = 1000}, image.dims(), [&](const Vec2<int>& yx) {
       Vector4 vec{};
       for_coordsL(twice(-r), twice(r + 1), [&](const Vec2<int>& dyx) {
-        vec += ar_gauss[dyx[0] + r] * ar_gauss[dyx[1] + r] * grid.inside(yx + dyx, g_bndrules);
+        vec += ar_gauss[dyx[0] + r] * ar_gauss[dyx[1] + r] * grid.inside(yx + dyx, g_extensions);
       });
       image[yx] = vec.pixel();
     });
   } else {
     ar_gauss /= float(sum(ar_gauss));
     // SHOW(ar_gauss); SHOW(sum(ar_gauss));
-    for_int(d, 2) image = convolve_d(image, d, ar_gauss, g_bndrules[d], &gcolor);
+    for_int(d, 2) image = convolve_d(image, d, ar_gauss, g_extensions[d], &gcolor);
   }
 }
 
@@ -888,7 +888,7 @@ void apply_assemble_operations(Grid<2, Pixel>& im, const Vec2<int>& yx, const Ve
     }
     const Vec2<int> side0 = (as_fit_dims - im.dims()) / 2;
     const Vec2<int> side1 = as_fit_dims - im.dims() - side0;
-    im = crop(im, -side0, -side1, twice(Bndrule::border), &gcolor);
+    im = crop(im, -side0, -side1, twice(Extension::border), &gcolor);
   }
   if (as_crop_vl || as_crop_vr || as_crop_vt || as_crop_vb) {
     int vl = as_crop_vl, vr = as_crop_vr, vt = as_crop_vt, vb = as_crop_vb;
@@ -899,7 +899,7 @@ void apply_assemble_operations(Grid<2, Pixel>& im, const Vec2<int>& yx, const Ve
       if (yx[0] == 0) vt = max(vt, 0);
       if (yx[0] == gdims[0] - 1) vb = max(vb, 0);
     }
-    im = crop(im, V(vt, vl), V(vb, vr), twice(Bndrule::border), &gcolor);
+    im = crop(im, V(vt, vl), V(vb, vr), twice(Extension::border), &gcolor);
   }
 }
 
@@ -1015,7 +1015,7 @@ void do_gridcrop(Args& args) {
     const int vb = image.ysize() - vt - sy;
     if (0) showf("vl=%d vt=%d  vr=%d vb=%d\n", vl, vt, vr, vb);
     Grid<2, Pixel>& im = images[yx];
-    im = crop(image, V(vt, vl), V(vb, vr), g_bndrules, &gcolor);
+    im = crop(image, V(vt, vl), V(vb, vr), g_extensions, &gcolor);
     apply_assemble_operations(im, yx, images.dims());
   });
   assemble_images(images);
@@ -1275,10 +1275,10 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
     if (!primal) {
       // - This dual structure is better than original lumigraph pull-push when used over power-of-two grids
       //    because it doesn't shift the content off the right/bottom boundaries at coarse levels.
-      // - It is important to use Bndrule::border to avoid introducing excessive confidence at coarse levels.
+      // - It is important to use Extension::border to avoid introducing excessive confidence at coarse levels.
       // - Filter "triangle" is nicer overall than original lumigraph although it introduces a bit of ringing.
       // Expand to even dimensions.
-      const Grid<D, Vector4> grid2 = crop(grid, ntimes<D>(0), -dims % 2, ntimes<D>(Bndrule::border), &vzero);
+      const Grid<D, Vector4> grid2 = crop(grid, ntimes<D>(0), -dims % 2, ntimes<D>(Extension::border), &vzero);
       // Using filter "triangle" (with weights (1 / 4, 3 / 4, 3 / 4, 1 / 4) / 2) is dual to
       //  the upscaling "triangle" kernel (with alternating weights (3 / 4, 1 / 4) and (1 / 4, 3 / 4)).
       // It introduces a little bit of undesirable ringing.  "box" has no ringing but inferior.
@@ -1291,7 +1291,7 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       //   implementation; the cause is unknown.
       // Expand to odd dimensions.
       const Grid<D, Vector4> grid2 =
-          crop(grid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Bndrule::border), &vzero);
+          crop(grid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Extension::border), &vzero);
       assertx(grid2.dims() % 2 == ntimes<D>(1));
       const ResizeOptions<D> downscaling_options{
           .gridtype = Gridtype::primal, .filter = "triangle", .boundary = "border"};
@@ -1322,7 +1322,7 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       const ResizeOptions<D> upscaling_options{.filter = "triangle", .boundary = "border"};  // Bilinear.
       // Expand if the original dimension was even.
       const Grid<D, Vector4> grid2 =
-          crop(hgrid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Bndrule::border), &vzero);
+          crop(hgrid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Extension::border), &vzero);
       gridu = scale(grid2, (grid2.dims() - 1) * 2 + 1, upscaling_options, &vzero);  // Spatially upscale.
       if (0) SHOW(hgrid.dims(), grid2.dims(), gridu.dims(), grid.dims(), gridu.dims() - grid.dims());
       gridu = crop(gridu, ntimes<D>(0), gridu.dims() - grid.dims());  // Crop any extra.
@@ -2083,13 +2083,13 @@ void do_gdtoroidal() {
     multigrid.set_desired_mean(mean(grid_orig));
     // To create a toroidal image, we compute the image Laplacian using reflected boundary conditions
     //  and find the image whose periodic-boundary Laplacian matches it.
-    const Vec2<Bndrule> bndrules = twice(Bndrule::reflect);
+    const Vec2<Extension> extensions = twice(Extension::reflect);
     parallel_for_coords({.cycles_per_elem = 50}, image.dims(), [&](const Vec2<int>& yx) {
       Vector4 vrhs{};
-      vrhs += grid_orig.inside(yx + V(-1, 0), bndrules) - grid_orig[yx];
-      vrhs += grid_orig.inside(yx + V(+1, 0), bndrules) - grid_orig[yx];
-      vrhs += grid_orig.inside(yx + V(0, -1), bndrules) - grid_orig[yx];
-      vrhs += grid_orig.inside(yx + V(0, +1), bndrules) - grid_orig[yx];
+      vrhs += grid_orig.inside(yx + V(-1, 0), extensions) - grid_orig[yx];
+      vrhs += grid_orig.inside(yx + V(+1, 0), extensions) - grid_orig[yx];
+      vrhs += grid_orig.inside(yx + V(0, -1), extensions) - grid_orig[yx];
+      vrhs += grid_orig.inside(yx + V(0, +1), extensions) - grid_orig[yx];
       multigrid.rhs()[yx] = vrhs;
     });
     if (0) multigrid.set_verbose(true);
@@ -2102,7 +2102,7 @@ void do_gdtoroidal() {
     fill(multigrid.initial_estimate(), Vector4(0.f));
     multigrid.set_desired_mean(Vector4(0.f));
     // To create a toroidal image, we compute the sparse change in Laplacian across the periodic boundaries.
-    const Vec2<Bndrule> bndrules = twice(Bndrule::wrap);
+    const Vec2<Extension> extensions = twice(Extension::wrap);
     fill(multigrid.rhs(), Vector4(0.f));
     parallel_for_coords({.cycles_per_elem = 50}, image.dims(), [&](const Vec2<int>& yx) {
       // (Highly inefficient implementation.)
@@ -2110,7 +2110,7 @@ void do_gdtoroidal() {
       for (auto yxd : {V(-1, 0), V(+1, 0), V(0, -1), V(0, +1)}) {
         auto yxn = yx + yxd;
         if (grid_orig.ok(yxn)) continue;  // Only consider neighbors across the periodic boundaries.
-        assertx(grid_orig.map_inside(yxn, bndrules));
+        assertx(grid_orig.map_inside(yxn, extensions));
         vrhs += grid_orig[yx] - grid_orig[yxn];
       }
       multigrid.rhs()[yx] = vrhs;
@@ -2776,7 +2776,7 @@ void do_procedure(Args& args) {
         Grid<2, Pixel>& grid = limage;
         const int vt = -(size - limage.ysize()) / 2, vb = -(size - limage.ysize() + vt);
         int vl = -(size - limage.xsize()) / 2, vr = -(size - limage.xsize() + vl);
-        grid = crop(grid, V(vt, vl), V(vb, vr), twice(Bndrule::border), &gcolor);
+        grid = crop(grid, V(vt, vl), V(vb, vr), twice(Extension::border), &gcolor);
       });
     }
     Matrix<Image> grid_thumbnails;
@@ -3257,7 +3257,7 @@ TransferResult structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixVie
       for_int(iy, window_diam) {
         const float w = fwindow[iy];
         int yy = y - window_radius + iy;
-        assertx(map_boundaryrule_1d(yy, mat_s.ysize(), k_reflected));
+        assertx(map_extension(yy, mat_s.ysize(), k_reflected));
         for_int(x, mat_s.xsize()) {
           const Vector4 sv = mat_s[yy, x];
           fscolsum[x] += w * sv;
@@ -3292,7 +3292,7 @@ TransferResult structure_transfer_zscore(CMatrixView<Vector4> mat_s0, CMatrixVie
         for_int(ix, window_diam) {
           const float w = fwindow[ix];
           int xx = x - window_radius + ix;
-          const bool b = map_boundaryrule_1d(xx, mat_s.xsize(), k_reflected);
+          const bool b = map_extension(xx, mat_s.xsize(), k_reflected);
           ASSERTX(b);
           ssum += w * fscolsum[xx];
           ssum2 += w * fscolsum2[xx];
@@ -3538,7 +3538,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(cropb, "b : crop image");
   HH_ARGSD(cropall, "i : crop all sides");
   HH_ARGSD(cropsquare, "x y size : crop square centered at (x, y)");
-  HH_ARGSD(croprectangle, "x y xsize ysize : crop rectangle centered at (x, y)");
+  HH_ARGSD(croprectangle, "x y w h : crop rectangle centered at (x, y)");
   HH_ARGSD(cropcoord, "x0 y0 x1 y1 : crop box within bounds x0 <= x < x1");
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmatte, ": crop all sides matching the set color");

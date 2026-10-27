@@ -52,21 +52,21 @@ void test_inside() {
   Matrix<int> m(2, 3);
   for_int(y, 2) for_int(x, 3) m[y, x] = 10 * y + x;
   const CMatrixView<int> mv = m;
-  for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp}) {
+  for (const Extension extension : {Extension::reflect, Extension::wrap, Extension::clamp}) {
     string s;
-    for_intL(x, -4, 7) s += sform(" %d", mv.inside(-1, x, bndrule));
-    showf("Row y=-1 for x=-4..6 with Bndrule::%s:%s\n", string(boundaryrule_name(bndrule)).c_str(), s.c_str());
-    for_int(y, 2) for_int(x, 3) assertx(mv.inside(y, x, bndrule) == m[y, x]);
+    for_intL(x, -4, 7) s += sform(" %d", mv.inside(-1, x, extension));
+    showf("Row y=-1 for x=-4..6 with Extension::%s:%s\n", string(extension_name(extension)).c_str(), s.c_str());
+    for_int(y, 2) for_int(x, 3) assertx(mv.inside(y, x, extension) == m[y, x]);
   }
   const int cval = -1;
-  assertx(mv.inside(0, 3, Bndrule::border, &cval) == -1);
-  assertx(mv.inside(-1, 0, Bndrule::border, &cval) == -1);
-  assertx(mv.inside(1, 2, Bndrule::border, &cval) == 12);
+  assertx(mv.inside(0, 3, Extension::border, &cval) == -1);
+  assertx(mv.inside(-1, 0, Extension::border, &cval) == -1);
+  assertx(mv.inside(1, 2, Extension::border, &cval) == 12);
   int y = 2, x = -1;
-  assertx(!mv.map_inside(y, x, Bndrule::border));
+  assertx(!mv.map_inside(y, x, Extension::border));
   y = 2, x = -1;
-  assertx(mv.map_inside(y, x, Bndrule::wrap) && y == 0 && x == 2);
-  m.inside(5, -7, Bndrule::wrap) = 99;  // Modifiable element [1, 2].
+  assertx(mv.map_inside(y, x, Extension::wrap) && y == 0 && x == 2);
+  m.inside(5, -7, Extension::wrap) = 99;  // Modifiable element [1, 2].
   assertx(m[1, 2] == 99);
 }
 

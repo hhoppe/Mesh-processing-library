@@ -12,7 +12,7 @@ namespace {
 using IndexMap = bool (*)(int& i, int size, Gridtype gridtype);
 
 bool map_reflect(int& i, int size, Gridtype gridtype) {
-  return map_boundaryrule_1d(i, size, gridtype == Gridtype::dual ? Bndrule::reflect : Bndrule::reflect_primal);
+  return map_extension(i, size, gridtype == Gridtype::dual ? Extension::reflect : Extension::reflect_primal);
 }
 
 bool map_wrap(int& i, int size, Gridtype gridtype) {
@@ -22,9 +22,9 @@ bool map_wrap(int& i, int size, Gridtype gridtype) {
   return true;
 }
 
-bool map_clamp(int& i, int size, Gridtype /*gridtype*/) { return map_boundaryrule_1d(i, size, Bndrule::clamp); }
+bool map_clamp(int& i, int size, Gridtype /*gridtype*/) { return map_extension(i, size, Extension::clamp); }
 
-bool map_border(int& i, int size, Gridtype /*gridtype*/) { return map_boundaryrule_1d(i, size, Bndrule::border); }
+bool map_border(int& i, int size, Gridtype /*gridtype*/) { return map_extension(i, size, Extension::border); }
 
 // Reflect once across each boundary, then clamp (OpenGL's mirror-clamp-to-edge).
 bool map_reflect_clamp(int& i, int size, Gridtype gridtype) {
@@ -192,13 +192,13 @@ const Boundary& Boundary::get(std::string_view name) {
   assertnever("Boundary '" + string(name) + "' not recognized");
 }
 
-const Boundary& Boundary::get(Bndrule bndrule) {
-  switch (bndrule) {
-    case Bndrule::reflect: return get("reflect");
-    case Bndrule::wrap: return get("wrap");
-    case Bndrule::clamp: return get("clamp");
-    case Bndrule::border: return get("border");
-    case Bndrule::reflect_primal: assertnever("Bndrule::reflect_primal is 'reflect' on a primal grid");
+const Boundary& Boundary::get(Extension extension) {
+  switch (extension) {
+    case Extension::reflect: return get("reflect");
+    case Extension::wrap: return get("wrap");
+    case Extension::clamp: return get("clamp");
+    case Extension::border: return get("border");
+    case Extension::reflect_primal: assertnever("Extension::reflect_primal is 'reflect' on a primal grid");
     default: assertnever("");
   }
 }

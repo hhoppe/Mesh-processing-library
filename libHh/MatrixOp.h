@@ -219,7 +219,8 @@ template <typename T> [[nodiscard]] Matrix<T> identity_mat(int n) { return ident
 // Compute a new matrix nm by transforming input matrix m according to frame,
 //  where frame maps from destination pixel (y, x, 0) to source pixel (y, x, 0);
 //  both have domain [-0.5, +0.5]^2 (even if rectangular in pixel dimensions).
-// The boundary rules of a minification (the approximate antialiasing path) must be reflect, wrap, clamp, or border.
+// The boundary rules of a minification (the approximate antialiasing path) must be the extensions reflect, wrap,
+// clamp, or border.
 template <typename T>
 void transform(CMatrixView<T> m, const Frame& frame, const SamplingOptions<2>& options, MatrixView<T> nm,
                const T* cval = nullptr) {
@@ -244,9 +245,8 @@ void transform(CMatrixView<T> m, const Frame& frame, const SamplingOptions<2>& o
   if (minification_case && !has_digital_filter) {
     // Special slow case to do accurate minification.
     const Vec2<KernelFunc> kernels = transformed(options.filter, [](const FilterRef& f) { return f->func(); });
-    const Vec2<Bndrule> bndrules = transformed(options.boundary, [](const BoundaryRef& b) {
-      return parse_boundaryrule(b->is_auto() ? "reflect" : b->name());
-    });
+    const Vec2<Extension> extensions = transformed(
+        options.boundary, [](const BoundaryRef& b) { return parse_extension(b->is_auto() ? "reflect" : b->name()); });
     const Vec2<float> kernel_radii =
         transformed(options.filter, [](const FilterRef& f) { return float(f->radius()); });
     const bool transform_filter_expensive = getenv_bool("TRANSFORM_FILTER_EXPENSIVE");
@@ -283,9 +283,9 @@ void transform(CMatrixView<T> m, const Frame& frame, const SamplingOptions<2>& o
             } else {  // Single kernel based on radial distance.
               w = float(kernels[0](mag(dst_dyx)));
             }
-            // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, bndrules, cval));
+            // SHOW(yx, dyx, dst_dyx, w, m.inside(yx, extensions, cval));
             if (!w) continue;
-            val += w * m.inside(yx, bndrules, cval);
+            val += w * m.inside(yx, extensions, cval);
             sumw += w;
             num++;
           }
@@ -360,7 +360,7 @@ template <typename T> [[nodiscard]] Matrix<T> outer_product(CArrayView<T> ar1, C
 
 // Convolve array ar with convolution kernel ark; result has the same size and type as ar.
 template <typename T, typename TK>
-[[nodiscard]] Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Bndrule bndrule, const T* cval = nullptr) {
+[[nodiscard]] Array<T> convolve(CArrayView<T> ar, CArrayView<TK> ark, Extension extension, const T* cval = nullptr) {
   static_assert(std::is_floating_point_v<TK>, "Kernel array must contain float/double");
   using Precise = sum_type_t<T>;
   assertx(ark.num() % 2 == 1);
@@ -368,7 +368,7 @@ template <typename T, typename TK>
   Array<T> nar(ar.num());
   parallel_for({.cycles_per_elem = ark.size() * 2}, range(ar.num()), [&](const int x) {
     Precise v{0};
-    for_int(xx, ark.num()) { v += ark[xx] * Precise{ar.inside(x - xxm + xx, bndrule, cval)}; }
+    for_int(xx, ark.num()) { v += ark[xx] * Precise{ar.inside(x - xxm + xx, extension, cval)}; }
     nar[x] = static_cast<T>(v);
   });
   return nar;
@@ -376,7 +376,8 @@ template <typename T, typename TK>
 
 // Convolve matrix mat with convolution kernel matk; result has the same size and type as mat.
 template <typename T, typename TK>
-[[nodiscard]] Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Bndrule bndrule, const T* cval = nullptr) {
+[[nodiscard]] Matrix<T> convolve(CMatrixView<T> mat, CMatrixView<TK> matk, Extension extension,
+                                 const T* cval = nullptr) {
   static_assert(std::is_floating_point_v<TK>, "Kernel matrix must contain float/double");
   using Precise = sum_type_t<T>;
   assertx(matk.ysize() % 2 == 1 && matk.xsize() % 2 == 1);
@@ -386,7 +387,7 @@ template <typename T, typename TK>
     for_int(x, mat.xsize()) {
       Precise v{0};
       for_int(yy, matk.ysize()) for_int(xx, matk.xsize()) {
-        v += matk[yy, xx] * Precise{mat.inside(y - pm[0] + yy, x - pm[1] + xx, bndrule, cval)};
+        v += matk[yy, xx] * Precise{mat.inside(y - pm[0] + yy, x - pm[1] + xx, extension, cval)};
       }
       nmat[y, x] = static_cast<T>(v);
     }

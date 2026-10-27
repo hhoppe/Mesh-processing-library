@@ -1443,18 +1443,18 @@ bool DerivedHw::key_press(string skey) {
           break;
         }
         case '{': {  // Slow down video among preselected speeds.
-          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) - 1, Bndrule::clamp));
+          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) - 1, Extension::clamp));
           const auto speeds = Array(concatenate(k_speeds, V(std::numeric_limits<double>::max())));
           const int index =
               discrete_binary_search(speeds, 0, speeds.num(), clamp(g_speed * .999999f, speeds[0], speeds.last()));
-          set_speed(k_speeds.view().inside(index + 0, Bndrule::clamp));
+          set_speed(k_speeds.view().inside(index + 0, Extension::clamp));
           break;
         }
         case '}': {  // Speed up video among preselected speeds.
-          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) + 1, Bndrule::clamp));
+          if (0) set_speed(k_speeds.view().inside(index(k_speeds, g_speed) + 1, Extension::clamp));
           const auto speeds = Array(concatenate(k_speeds, V(std::numeric_limits<double>::max())));
           const int index = discrete_binary_search(speeds, 0, speeds.num(), clamp(g_speed, speeds[0], speeds.last()));
-          set_speed(k_speeds.view().inside(index + 1, Bndrule::clamp));
+          set_speed(k_speeds.view().inside(index + 1, Extension::clamp));
           break;
         }
         case '1':
@@ -4279,8 +4279,8 @@ void do_batch_create_loop(Args& args) {
   crop_spatial_dimensions_to_multiple(ovideo_nv12, 8);
   if (ovideo_nv12.get_Y().dim(0) < 20) {
     // For short input video, repeat the first and last frames to enable looping to include these end frames.
-    ovideo_nv12 = VideoNv12(crop(ovideo_nv12.get_Y(), V(-1, 0, 0), V(-1, 0, 0), thrice(Bndrule::clamp)),
-                            crop(ovideo_nv12.get_UV(), V(-1, 0, 0), V(-1, 0, 0), thrice(Bndrule::clamp)));
+    ovideo_nv12 = VideoNv12(crop(ovideo_nv12.get_Y(), V(-1, 0, 0), V(-1, 0, 0), thrice(Extension::clamp)),
+                            crop(ovideo_nv12.get_UV(), V(-1, 0, 0), V(-1, 0, 0), thrice(Extension::clamp)));
   }
   {
     Timer timer_loop("loop");

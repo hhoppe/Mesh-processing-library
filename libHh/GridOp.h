@@ -40,10 +40,10 @@ template <int D, typename T>
 [[nodiscard]] StridedArrayView<T> grid_column(GridView<D, T> grid, int col_d, const Vec<int, D>& u0);
 
 // Crop the sides of a D-dimensional grid (dL/dU for lower/upper extents); any negative crop grows the grid
-//  and requires the definition of boundary rules (and border value if Bndrule::border).
+//  and requires the definition of the extensions (and the border value if Extension::border).
 template <int D, typename T>
 [[nodiscard]] Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& dU,
-                              Vec<Bndrule, D> bndrules = ntimes<D>(Bndrule::undefined), const T* cval = nullptr);
+                              Vec<Extension, D> extensions = ntimes<D>(Extension::undefined), const T* cval = nullptr);
 
 enum class Alignment { left, center, right };
 
@@ -224,7 +224,7 @@ template <int D> class Resizer {
 
 // Convolve a Pixel grid along its d'th dimension with the 1D kernel (which must have odd length).
 template <int D, bool parallel = true>
-[[nodiscard]] Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Bndrule bndrule,
+[[nodiscard]] Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Extension extension,
                                         const Pixel* cval = nullptr);
 
 //----------------------------------------------------------------------------
@@ -258,18 +258,18 @@ template <int D, typename T> StridedArrayView<T> grid_column(GridView<D, T> grid
 }
 
 template <int D, typename T>
-Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& dU, Vec<Bndrule, D> bndrules,
+Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& dU, Vec<Extension, D> extensions,
                 const T* cval) {
   for_int(i, D) {
-    if (bndrules[i] == Bndrule::border) assertx(cval);
+    if (extensions[i] == Extension::border) assertx(cval);
     if (grid.size() == 0)
-      assertx(bndrules[i] != Bndrule::reflect && bndrules[i] != Bndrule::wrap && bndrules[i] != Bndrule::clamp &&
-              bndrules[i] != Bndrule::reflect_primal);
-    if (bndrules[i] == Bndrule::undefined) {
+      assertx(extensions[i] != Extension::reflect && extensions[i] != Extension::wrap &&
+              extensions[i] != Extension::clamp && extensions[i] != Extension::reflect_primal);
+    if (extensions[i] == Extension::undefined) {
       assertx(dL[i] >= 0 && dU[i] >= 0);  // No negative crop.
       // So the dimension is never accessed outside its domain, and any defined rule maps it identically.  (The slower
-      // path below maps every dimension through map_boundaryrule_1d(), which rejects Bndrule::undefined.)
-      bndrules[i] = Bndrule::clamp;
+      // path below maps every dimension through map_extension(), which rejects Extension::undefined.)
+      extensions[i] = Extension::clamp;
     }
   }
   Vec<int, D> newdims = max(grid.dims() - dL - dU, ntimes<D>(0));
@@ -298,7 +298,7 @@ Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& 
   } else {
     // Slower path.
     parallel_for_coords({.cycles_per_elem = 20}, newdims, [&](const Vec<int, D>& u) {  //
-      newgrid[u] = grid.inside(u + dL, bndrules, cval);
+      newgrid[u] = grid.inside(u + dL, extensions, cval);
     });
   }
   return newgrid;
@@ -445,9 +445,9 @@ Grid<D, T> scale_preprocess(CGridView<D, T> grid, const SamplingOptions<D>& opti
   for (T& e : gr) e = T{.5f} + (e - T{.5f}) * expand_value_range;  // Shrink the range.
   if (!no_constrained_optimization) {
     // Slow implementation: no parallelism, no fast interior, no precomputed grid of weights.
-    Vec<Bndrule, D> bndrules;
-    for_int(d, D) bndrules[d] =
-        parse_boundaryrule(options.boundary[d]->is_auto() ? "reflect" : options.boundary[d]->name());
+    Vec<Extension, D> extensions;
+    for_int(d, D) extensions[d] =
+        parse_extension(options.boundary[d]->is_auto() ? "reflect" : options.boundary[d]->name());
     for (T& e : ogrid) e = T{.5f} + (e - T{.5f}) * expand_value_range;
     for (T& e : gr) e = general_clamp(e, T{0.f}, T{1.f});
     for_int(iter, 5) {  // 10 Gauss-Seidel iterations are a tiny bit better; 100 are no different.
@@ -457,7 +457,7 @@ Grid<D, T> scale_preprocess(CGridView<D, T> grid, const SamplingOptions<D>& opti
         float wcenter = 0.f;
         for (const auto& ud : range(ntimes<D>(-1), ntimes<D>(+2))) {  // [-1, 0, +1]^D
           Vec<int, D> uu = u + ud;
-          assertx(gr.map_inside(uu, bndrules));
+          assertx(gr.map_inside(uu, extensions));
           float w = 1.f;
           for_int(d, D) w *= (ud[d] == 0 ? (4.f / 6.f) : (1.f / 6.f));
           if (uu == u) {
@@ -1077,10 +1077,10 @@ T sample_domain(CGridView<D, T> g, const Vec<float, D>& p, const SamplingOptions
 }
 
 template <int D, bool parallel>
-Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Bndrule bndrule,
+Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> kernel, Extension extension,
                           const Pixel* cval) {
   // HH_TIMER("__convolve_d");
-  if (bndrule == Bndrule::border) assertx(cval);
+  if (extension == Extension::border) assertx(cval);
   const Vec<int, D>& dims = grid.dims();
   const int nx = dims[d];
   const int nk = kernel.num(), r = (nk - 1) / 2;
@@ -1105,7 +1105,7 @@ Grid<D, Pixel> convolve_d(CGridView<D, Pixel> grid, int d, CArrayView<float> ker
     Vector4i v{0};
     for_int(k, nk) {
       int ii = x - r + k;
-      const Pixel* pvalue = map_boundaryrule_1d(ii, nx, bndrule) ? &grid[u.with(d, ii)] : cval;
+      const Pixel* pvalue = map_extension(ii, nx, extension) ? &grid[u.with(d, ii)] : cval;
       v += kerneli[k] * Vector4i(*pvalue);
     }
     ngrid[u] = ((v + fach) >> ishift).pixel();

@@ -250,18 +250,18 @@ class Multigrid : noncopyable {
         ngrid[u] = v * fac;
       });
       // The optional D leftover hyperplanes [dims / 2, ndims - 1] for odd sizes.
-      Vec<Bndrule, D> bndrules;
-      for_int(d, D) {  // These boundary rules were chosen because they behave well empirically.
-        bndrules[d] = (_periodic(d)                             ? Bndrule::border
-                       : largest_odd_size >= largest_other_size ? Bndrule::border
-                                                                : Bndrule::reflect);
+      Vec<Extension, D> extensions;
+      for_int(d, D) {  // These extensions were chosen because they behave well empirically.
+        extensions[d] = (_periodic(d)                             ? Extension::border
+                         : largest_odd_size >= largest_other_size ? Extension::border
+                                                                  : Extension::reflect);
       }
       for_int(c, D) {
         const Vec<int, D> uL = ntimes<D>(0).with(c, dims[c] / 2);
         const Vec<int, D> uU = ndims;
         for (const auto& u : range(uL, uU)) {
           T v{};
-          for (const auto& ut : range(u * 2, u * 2 + vrange)) v += grid.inside(ut, bndrules, &cval);
+          for (const auto& ut : range(u * 2, u * 2 + vrange)) v += grid.inside(ut, extensions, &cval);
           ngrid[u] = v * fac;
         }
       }

@@ -226,9 +226,9 @@ mt = Matrix<int>(3, 2) {
   1 11
   2 12
 }
-Row y=-1 for x=-4..6 with Bndrule::reflect: 2 2 1 0 0 1 2 2 1 0 0
-Row y=-1 for x=-4..6 with Bndrule::wrap: 12 10 11 12 10 11 12 10 11 12 10
-Row y=-1 for x=-4..6 with Bndrule::clamp: 0 0 0 0 0 1 2 2 2 2 2
+Row y=-1 for x=-4..6 with Extension::reflect: 2 2 1 0 0 1 2 2 1 0 0
+Row y=-1 for x=-4..6 with Extension::wrap: 12 10 11 12 10 11 12 10 11 12 10
+Row y=-1 for x=-4..6 with Extension::clamp: 0 0 0 0 0 1 2 2 2 2 2
 m3 = Matrix<int>(2, 3) {
   1 11 21
   0 10 20

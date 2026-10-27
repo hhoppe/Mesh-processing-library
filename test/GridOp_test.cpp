@@ -151,9 +151,9 @@ int main() {
   {
     Grid<2, Pixel> grid(V(20, 20), Pixel(65, 66, 67, 72));
     assertx(grid[19, 19] == Pixel(65, 66, 67, 72));
-    const Bndrule bndrule = Bndrule::reflect;
+    const Extension extension = Extension::reflect;
     const Pixel gcolor(255, 255, 255, 255);
-    grid = crop(grid, V(0, 0), V(10, 10), twice(bndrule), &gcolor);
+    grid = crop(grid, V(0, 0), V(10, 10), twice(extension), &gcolor);
     assertx(grid.dims() == V(10, 10));
     assertx(grid[9, 9] == Pixel(65, 66, 67, 72));
   }
@@ -176,7 +176,7 @@ int main() {
   }
   {  // Boundary rules fold the exterior taps of a weight row into interior samples.
     assertx(Boundary::get("reflected").name() == "reflect" && Boundary::get("r").name() == "reflect");
-    assertx(Boundary::get(Bndrule::wrap).name() == "wrap" && Boundary::get("periodic").name() == "wrap");
+    assertx(Boundary::get(Extension::wrap).name() == "wrap" && Boundary::get("periodic").name() == "wrap");
     assertx(Boundary::get("border").uses_cval() && !Boundary::get("clamp").uses_cval());
     assertx(Boundary::get("auto").is_auto() && !Boundary::get("reflect").is_auto());
     for (const string name : {"reflect", "wrap", "clamp", "border"}) {
@@ -317,33 +317,33 @@ int main() {
   {  // Cropping, including negative crops that grow the grid using each boundary rule.
     const Grid<2, int> grid = grid_from_flat(V(3, 4), range(12));
     const int cval = -1;
-    for (const Bndrule bndrule :
-         {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
+    for (const Extension extension :
+         {Extension::reflect, Extension::wrap, Extension::clamp, Extension::border, Extension::reflect_primal}) {
       for (const auto& dLU : range(ntimes<4>(-3), ntimes<4>(2))) {
         const Vec2<int> dL = V(dLU[0], dLU[1]), dU = V(dLU[2], dLU[3]);
-        const Grid<2, int> newgrid = crop(grid, dL, dU, twice(bndrule), &cval);
+        const Grid<2, int> newgrid = crop(grid, dL, dU, twice(extension), &cval);
         assertx(newgrid.dims() == grid.dims() - dL - dU);
         for (const auto& yx : range(newgrid.dims())) {
           Vec2<int> yx2 = yx + dL;
-          const int expected = grid.map_inside(yx2, twice(bndrule)) ? grid[yx2] : cval;
+          const int expected = grid.map_inside(yx2, twice(extension)) ? grid[yx2] : cval;
           assertx(newgrid[yx] == expected);
         }
       }
     }
     SHOW(crop(grid, V(1, 1), V(0, 2)));  // The fast path, cropping more than dim0.
     SHOW(crop(grid, V(1, 0), V(1, 0)));  // The fastest path, cropping just dim0.
-    SHOW(crop(grid, V(-1, -2), V(-1, -2), twice(Bndrule::reflect)));
-    SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::clamp, Bndrule::border), &cval));
-    // A Bndrule::undefined dimension (not cropped negatively) combined with a negative crop in another dimension.
-    SHOW(crop(grid, V(0, -1), V(0, -1), V(Bndrule::undefined, Bndrule::border), &cval));
-    SHOW(crop(grid, V(1, -1), V(0, 0), V(Bndrule::undefined, Bndrule::wrap)));
+    SHOW(crop(grid, V(-1, -2), V(-1, -2), twice(Extension::reflect)));
+    SHOW(crop(grid, V(0, -1), V(0, -1), V(Extension::clamp, Extension::border), &cval));
+    // A Extension::undefined dimension (not cropped negatively) combined with a negative crop in another dimension.
+    SHOW(crop(grid, V(0, -1), V(0, -1), V(Extension::undefined, Extension::border), &cval));
+    SHOW(crop(grid, V(1, -1), V(0, 0), V(Extension::undefined, Extension::wrap)));
     for (const auto& dLU : range(V(0, -3, 0, -3), V(2, 2, 2, 2))) {
       const Vec2<int> dL = V(dLU[0], dLU[1]), dU = V(dLU[2], dLU[3]);
-      const Grid<2, int> newgrid = crop(grid, dL, dU, V(Bndrule::undefined, Bndrule::reflect_primal));
+      const Grid<2, int> newgrid = crop(grid, dL, dU, V(Extension::undefined, Extension::reflect_primal));
       assertx(newgrid.dims() == grid.dims() - dL - dU);
       for (const auto& yx : range(newgrid.dims())) {
         int x = yx[1] + dL[1];
-        assertx(map_boundaryrule_1d(x, grid.dim(1), Bndrule::reflect_primal));
+        assertx(map_extension(x, grid.dim(1), Extension::reflect_primal));
         assertx(newgrid[yx] == grid[yx[0] + dL[0], x]);
       }
     }
@@ -425,21 +425,21 @@ int main() {
     Grid<2, Pixel> grid(V(5, 7));
     for (Pixel& pixel : grid) for_int(z, 4) pixel[z] = uint8_t(random.get_uint64() % 256);
     const Pixel cval(255, 0, 0, 255);
-    for (const Bndrule bndrule :
-         {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
+    for (const Extension extension :
+         {Extension::reflect, Extension::wrap, Extension::clamp, Extension::border, Extension::reflect_primal}) {
       for (const Array<float>& kernel :
            {Array<float>{1.f}, Array<float>{.25f, .5f, .25f}, Array<float>{.1f, .2f, .4f, .2f, .1f},
             Array<float>{.0625f, .0625f, .0625f, .625f, .0625f, .0625f, .0625f}}) {
         const int r = kernel.num() / 2;
         for_int(d, 2) {
-          const Grid<2, Pixel> newgrid = convolve_d(grid, d, kernel, bndrule, &cval);
-          const Grid<2, Pixel> newgrid2 = convolve_d<2, false>(grid, d, kernel, bndrule, &cval);
+          const Grid<2, Pixel> newgrid = convolve_d(grid, d, kernel, extension, &cval);
+          const Grid<2, Pixel> newgrid2 = convolve_d<2, false>(grid, d, kernel, extension, &cval);
           assertx(ranges::equal(newgrid, newgrid2));
           for (const auto& yx : range(grid.dims())) {
             Vec4<float> v{};
             for_int(k, kernel.num()) {
               Vec2<int> yx2 = yx.with(d, yx[d] - r + k);
-              const Pixel& pixel = grid.map_inside(yx2, twice(bndrule)) ? grid[yx2] : cval;
+              const Pixel& pixel = grid.map_inside(yx2, twice(extension)) ? grid[yx2] : cval;
               for_int(z, 4) v[z] += kernel[k] * pixel[z];
             }
             for_int(z, 4) assertx(abs(newgrid[yx][z] - v[z]) <= .51f);
@@ -447,9 +447,9 @@ int main() {
         }
       }
     }
-    const Grid<2, Pixel> grid1 = convolve_d(grid, 1, Array<float>{1.f}, Bndrule::reflect);
+    const Grid<2, Pixel> grid1 = convolve_d(grid, 1, Array<float>{1.f}, Extension::reflect);
     assertx(ranges::equal(grid1, grid));
-    SHOW(convolve_d(grid, 1, Array<float>{.25f, .5f, .25f}, Bndrule::clamp)[2]);
+    SHOW(convolve_d(grid, 1, Array<float>{.25f, .5f, .25f}, Extension::clamp)[2]);
   }
   {  // The digital filter preserves a constant grid (its kernel is a partition of unity).
     Grid<2, float> grid(V(4, 5), 1.f);

@@ -356,37 +356,38 @@ void test_views() {
   assertx(ar.head(2) != ar.head(3) && ar.head(2) != ar.tail(2));
 }
 
-void test_boundary_rules() {
-  for (const Bndrule bndrule :
-       {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
-    const std::string_view name = boundaryrule_name(bndrule);
-    assertx(parse_boundaryrule(name) == bndrule);
-    SHOW(bndrule);
+void test_extensions() {
+  for (const Extension extension :
+       {Extension::reflect, Extension::wrap, Extension::clamp, Extension::border, Extension::reflect_primal}) {
+    const std::string_view name = extension_name(extension);
+    assertx(parse_extension(name) == extension);
+    SHOW(extension);
   }
-  SHOW(Bndrule::undefined);
+  SHOW(Extension::undefined);
   // The canonical names are those of the Python package resampler; the former names and letters remain accepted.
-  for (const auto& [s, bndrule] :
-       {std::pair{"reflect", Bndrule::reflect}, std::pair{"reflected", Bndrule::reflect},
-        std::pair{"r", Bndrule::reflect}, std::pair{"wrap", Bndrule::wrap}, std::pair{"periodic", Bndrule::wrap},
-        std::pair{"w", Bndrule::wrap}, std::pair{"p", Bndrule::wrap}, std::pair{"clamp", Bndrule::clamp},
-        std::pair{"clamped", Bndrule::clamp}, std::pair{"c", Bndrule::clamp}, std::pair{"border", Bndrule::border},
-        std::pair{"b", Bndrule::border}, std::pair{"reflect_primal", Bndrule::reflect_primal},
-        std::pair{"reflected101", Bndrule::reflect_primal}, std::pair{"1", Bndrule::reflect_primal}})
-    assertx(parse_boundaryrule(s) == bndrule);
-  assertx(boundaryrule_name(Bndrule::clamp) == "clamp" &&
-          boundaryrule_name(Bndrule::reflect_primal) == "reflect_primal");
+  for (const auto& [s, extension] :
+       {std::pair{"reflect", Extension::reflect}, std::pair{"reflected", Extension::reflect},
+        std::pair{"r", Extension::reflect}, std::pair{"wrap", Extension::wrap}, std::pair{"periodic", Extension::wrap},
+        std::pair{"w", Extension::wrap}, std::pair{"p", Extension::wrap}, std::pair{"clamp", Extension::clamp},
+        std::pair{"clamped", Extension::clamp}, std::pair{"c", Extension::clamp},
+        std::pair{"border", Extension::border}, std::pair{"b", Extension::border},
+        std::pair{"reflect_primal", Extension::reflect_primal}, std::pair{"reflected101", Extension::reflect_primal},
+        std::pair{"1", Extension::reflect_primal}})
+    assertx(parse_extension(s) == extension);
+  assertx(extension_name(Extension::clamp) == "clamp" &&
+          extension_name(Extension::reflect_primal) == "reflect_primal");
   // A reference model of the boundary rules, for n >= 1; it returns -1 for a border index outside the domain.
-  const auto model = [](int i, int n, Bndrule bndrule) {
+  const auto model = [](int i, int n, Extension extension) {
     const auto mod = [](int a, int b) { return ((a % b) + b) % b; };
-    switch (bndrule) {
-      case Bndrule::reflect: {
+    switch (extension) {
+      case Extension::reflect: {
         const int j = mod(i, 2 * n);
         return j < n ? j : 2 * n - 1 - j;
       }
-      case Bndrule::wrap: return mod(i, n);
-      case Bndrule::clamp: return clamp(i, 0, n - 1);
-      case Bndrule::border: return i >= 0 && i < n ? i : -1;
-      case Bndrule::reflect_primal: {
+      case Extension::wrap: return mod(i, n);
+      case Extension::clamp: return clamp(i, 0, n - 1);
+      case Extension::border: return i >= 0 && i < n ? i : -1;
+      case Extension::reflect_primal: {
         if (n == 1) return 0;
         const int j = mod(i, 2 * n - 2);
         return j < n ? j : 2 * n - 2 - j;
@@ -394,13 +395,13 @@ void test_boundary_rules() {
       default: assertnever("");
     }
   };
-  for (const Bndrule bndrule :
-       {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
+  for (const Extension extension :
+       {Extension::reflect, Extension::wrap, Extension::clamp, Extension::border, Extension::reflect_primal}) {
     for (const int n : {1, 2, 3, 5}) {
       for_intL(i0, -3 * n - 2, 4 * n + 2) {
         int i = i0;
-        const bool inside = map_boundaryrule_1d(i, n, bndrule);
-        const int expected = model(i0, n, bndrule);
+        const bool inside = map_extension(i, n, extension);
+        const int expected = model(i0, n, extension);
         assertx(inside == (expected >= 0));
         if (inside) assertx(i == expected);
       }
@@ -408,30 +409,30 @@ void test_boundary_rules() {
     string s;
     for_intL(i, -5, 9) {
       int i2 = i;
-      s += map_boundaryrule_1d(i2, 4, bndrule) ? string(1, char('0' + i2)) : "-";
+      s += map_extension(i2, 4, extension) ? string(1, char('0' + i2)) : "-";
     }
-    SHOW(bndrule, s);  // The mapped indices for i in [-5, 8] with n == 4.
+    SHOW(extension, s);  // The mapped indices for i in [-5, 8] with n == 4.
   }
   // The functions are constexpr.
-  static_assert(parse_boundaryrule("periodic") == Bndrule::wrap);
+  static_assert(parse_extension("periodic") == Extension::wrap);
   static_assert([] {
     int i = -1;
-    return map_boundaryrule_1d(i, 4, Bndrule::reflect_primal) && i == 1;
+    return map_extension(i, 4, Extension::reflect_primal) && i == 1;
   }());
   // CArrayView::inside() accesses the array according to a boundary rule.
   const Array<int> ar{10, 11, 12};
   int i = 4;
-  assertx(ar.map_inside(i, Bndrule::wrap) && i == 1);
+  assertx(ar.map_inside(i, Extension::wrap) && i == 1);
   i = 5;
-  assertx(!ar.map_inside(i, Bndrule::border));
-  assertx(ar.inside(-1, Bndrule::reflect) == 10 && ar.inside(3, Bndrule::reflect) == 12);
-  assertx(ar.inside(-1, Bndrule::reflect_primal) == 11 && ar.inside(3, Bndrule::reflect_primal) == 11);
-  assertx(ar.inside(-1, Bndrule::wrap) == 12 && ar.inside(7, Bndrule::clamp) == 12);
+  assertx(!ar.map_inside(i, Extension::border));
+  assertx(ar.inside(-1, Extension::reflect) == 10 && ar.inside(3, Extension::reflect) == 12);
+  assertx(ar.inside(-1, Extension::reflect_primal) == 11 && ar.inside(3, Extension::reflect_primal) == 11);
+  assertx(ar.inside(-1, Extension::wrap) == 12 && ar.inside(7, Extension::clamp) == 12);
   const int cval = 99;
-  assertx(ar.inside(-1, Bndrule::border, &cval) == 99 && ar.inside(2, Bndrule::border, &cval) == 12);
-  assertx(&ar.inside(1, Bndrule::border, &cval) == &ar[1]);
+  assertx(ar.inside(-1, Extension::border, &cval) == 99 && ar.inside(2, Extension::border, &cval) == 12);
+  assertx(&ar.inside(1, Extension::border, &cval) == &ar[1]);
   Array<int> ar2{1, 2};
-  ar2.inside(-1, Bndrule::clamp) = 5;  // A mutable array gives a mutable element.
+  ar2.inside(-1, Extension::clamp) = 5;  // A mutable array gives a mutable element.
   assertx(ar2[0] == 5);
 }
 
@@ -774,7 +775,7 @@ int main() {
   verify_against_vector<0>();
   verify_against_vector<3>();
   test_views();
-  test_boundary_rules();
+  test_extensions();
   test_operations();
   test_construction();
 #if HH_HAS_ASAN

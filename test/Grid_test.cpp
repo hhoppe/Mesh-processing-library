@@ -9,19 +9,19 @@ namespace {
 // Return true if the two grids have the same dimensions and the same elements.
 bool equal_grids(const auto& g1, const auto& g2) { return g1.dims() == g2.dims() && ranges::equal(g1, g2); }
 
-// Brute-force reference for map_boundaryrule_1d(): returns false if i lies outside a Bndrule::border domain.
-bool ref_map_boundaryrule(int& i, int n, Bndrule bndrule) {
+// Brute-force reference for map_extension(): returns false if i lies outside a Extension::border domain.
+bool ref_map_extension(int& i, int n, Extension extension) {
   const auto mod = [](int a, int b) { return ((a % b) + b) % b; };
-  switch (bndrule) {
-    case Bndrule::reflect: {
+  switch (extension) {
+    case Extension::reflect: {
       const int m = mod(i, 2 * n);
       i = m < n ? m : 2 * n - 1 - m;
       return true;
     }
-    case Bndrule::wrap: i = mod(i, n); return true;
-    case Bndrule::clamp: i = clamp(i, 0, n - 1); return true;
-    case Bndrule::border: return i >= 0 && i < n;
-    case Bndrule::reflect_primal: {
+    case Extension::wrap: i = mod(i, n); return true;
+    case Extension::clamp: i = clamp(i, 0, n - 1); return true;
+    case Extension::border: return i >= 0 && i < n;
+    case Extension::reflect_primal: {
       if (n == 1) {
         i = 0;
         return true;
@@ -34,35 +34,35 @@ bool ref_map_boundaryrule(int& i, int n, Bndrule bndrule) {
   }
 }
 
-constexpr auto k_bndrules =
-    V(Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal);
+constexpr auto k_extensions =
+    V(Extension::reflect, Extension::wrap, Extension::clamp, Extension::border, Extension::reflect_primal);
 
 // Verify all the inside() and map_inside() variants of a 2D grid against the brute-force reference.
 void test_inside_2d(const Vec2<int>& dims) {
   Grid<2, int> grid(dims);
   for (const auto& yx : range(dims)) grid[yx] = yx[0] * 100 + yx[1];
   const int cval = -1;
-  for (const Bndrule bndrule : k_bndrules) {
+  for (const Extension extension : k_extensions) {
     for_intL(y, -2 * dims[0] - 3, 3 * dims[0] + 3) for_intL(x, -2 * dims[1] - 3, 3 * dims[1] + 3) {
       int yy = y, xx = x;
       const bool expect_inside =
-          ref_map_boundaryrule(yy, dims[0], bndrule) && ref_map_boundaryrule(xx, dims[1], bndrule);
+          ref_map_extension(yy, dims[0], extension) && ref_map_extension(xx, dims[1], extension);
       const int expected = expect_inside ? grid[yy, xx] : cval;
       {
         int y2 = y, x2 = x;
-        assertx(grid.map_inside(y2, x2, bndrule) == expect_inside);
+        assertx(grid.map_inside(y2, x2, extension) == expect_inside);
         if (expect_inside) assertx(y2 == yy && x2 == xx);
       }
       {
         Vec2<int> yx = V(y, x);
-        assertx(grid.map_inside(yx, twice(bndrule)) == expect_inside);
+        assertx(grid.map_inside(yx, twice(extension)) == expect_inside);
         if (expect_inside) assertx(yx == V(yy, xx));
       }
-      assertx(grid.inside(y, x, bndrule, &cval) == expected);
-      assertx(grid.inside(V(y, x), twice(bndrule), &cval) == expected);
-      if (bndrule != Bndrule::border) {
-        assertx(grid.inside(y, x, bndrule) == expected);
-        assertx(grid.inside(V(y, x), twice(bndrule)) == expected);
+      assertx(grid.inside(y, x, extension, &cval) == expected);
+      assertx(grid.inside(V(y, x), twice(extension), &cval) == expected);
+      if (extension != Extension::border) {
+        assertx(grid.inside(y, x, extension) == expected);
+        assertx(grid.inside(V(y, x), twice(extension)) == expected);
       }
       assertx(grid.ok(V(y, x)) == (y >= 0 && y < dims[0] && x >= 0 && x < dims[1]));
     }
@@ -298,22 +298,23 @@ int main() {
     test_inside_2d(V(2, 1));
     test_inside_2d(V(1, 1));
     // A readable summary of the 1D mappings on a domain of size 4.
-    for (const Bndrule bndrule : k_bndrules) {
+    for (const Extension extension : k_extensions) {
       string s;
       for_intL(i, -6, 10) {
         int ii = i;
-        s += map_boundaryrule_1d(ii, 4, bndrule) ? sform(" %d", ii) : string(" .");
+        s += map_extension(ii, 4, extension) ? sform(" %d", ii) : string(" .");
       }
-      showf("%-12s:%s\n", string(boundaryrule_name(bndrule)).c_str(), s.c_str());
+      showf("%-12s:%s\n", string(extension_name(extension)).c_str(), s.c_str());
     }
     // Distinct boundary rules on each dimension of a 3D grid.
     Grid<3, int> grid(V(2, 3, 4));
     for (const auto& u : range(grid.dims())) grid[u] = u[0] * 100 + u[1] * 10 + u[2];
-    const auto bndrules = V(Bndrule::wrap, Bndrule::clamp, Bndrule::reflect);
+    const auto extensions = V(Extension::wrap, Extension::clamp, Extension::reflect);
     const int cval = -1;
-    SHOW(grid.inside(V(-1, -1, -1), bndrules), grid.inside(V(2, 3, 4), bndrules), grid.inside(V(5, 7, 9), bndrules));
-    const auto bndrules2 = V(Bndrule::border, Bndrule::reflect_primal, Bndrule::wrap);
-    SHOW(grid.inside(V(1, -2, 6), bndrules2, &cval), grid.inside(V(2, 0, 0), bndrules2, &cval));
+    SHOW(grid.inside(V(-1, -1, -1), extensions), grid.inside(V(2, 3, 4), extensions),
+         grid.inside(V(5, 7, 9), extensions));
+    const auto extensions2 = V(Extension::border, Extension::reflect_primal, Extension::wrap);
+    SHOW(grid.inside(V(1, -2, 6), extensions2, &cval), grid.inside(V(2, 0, 0), extensions2, &cval));
   }
   {
     // Raveling of all coordinates matches the raster order of range(dims), including 1-wide dimensions.

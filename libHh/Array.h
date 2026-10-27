@@ -31,25 +31,26 @@
 
 namespace hh {
 
-// Define behavior beyond boundary of 1D range.  The names are those of the Python package resampler.
+// The extension of a 1D range beyond its domain, i.e., how an index outside [0, n - 1] maps to a sample (or to a
+// constant border value).  The names are those of the Python package resampler.
 //  (reflect = Matlab:symmetric / Mathematica:reversed / DirectX:Mirror; formerly "reflected")
 //  (wrap = periodic; clamp = clamped)
 //  (reflect_primal == OpenCV BORDER_REFLECT_101: the reflection of a primal grid; formerly "reflected101")
-enum class Bndrule { reflect, wrap, clamp, border, reflect_primal, undefined };
+enum class Extension { reflect, wrap, clamp, border, reflect_primal, undefined };
 
 // Convert a string ("reflect", "wrap", "clamp", "border", "reflect_primal", their former names "reflected",
-// "periodic", "clamped", "reflected101", or the letters "r", "w" or "p", "c", "b", "1") to a boundary rule.
-[[nodiscard]] constexpr Bndrule parse_boundaryrule(std::string_view s);
+// "periodic", "clamped", "reflected101", or the letters "r", "w" or "p", "c", "b", "1") to an extension.
+[[nodiscard]] constexpr Extension parse_extension(std::string_view s);
 
-// Convert a boundary rule to a string.
-[[nodiscard]] constexpr std::string_view boundaryrule_name(Bndrule bndrule);
+// Convert an extension to a string.
+[[nodiscard]] constexpr std::string_view extension_name(Extension extension);
 
-inline std::ostream& operator<<(std::ostream& os, Bndrule bndrule) {
-  return os << "Bndrule{" << boundaryrule_name(bndrule) << "}";
+inline std::ostream& operator<<(std::ostream& os, Extension extension) {
+  return os << "Extension{" << extension_name(extension) << "}";
 }
 
-// Modify index i to be in domain [0, n - 1] using boundary rule; return false if bndrule == Border and i is outside.
-[[nodiscard]] constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule);
+// Map index i into the domain [0, n - 1] through the extension; return false if it is "border" and i is outside.
+[[nodiscard]] constexpr bool map_extension(int& i, int n, Extension extension);
 
 template <typename T> class CArrayView;
 template <typename T> class ArrayView;
@@ -87,12 +88,12 @@ template <typename T> class CArrayView {
   [[nodiscard]] constexpr auto& last(this auto&& self) noexcept { return self[self.num() - 1]; }
   [[nodiscard]] constexpr bool ok(int i) const noexcept { return i >= 0 && i < _n; }
   [[nodiscard]] constexpr bool ok(const T* e) const noexcept { return ok(narrow_cast<int>(e - _a)); }
-  // Returns false if bndrule == Border and i is outside.
-  [[nodiscard]] bool map_inside(int& i, Bndrule bndrule) const;
-  [[nodiscard]] auto& inside(this auto&& self, int i, Bndrule bndrule) {
-    return assertx(self.map_inside(i, bndrule)), self[i];
+  // Returns false if extension == Border and i is outside.
+  [[nodiscard]] bool map_inside(int& i, Extension extension) const;
+  [[nodiscard]] auto& inside(this auto&& self, int i, Extension extension) {
+    return assertx(self.map_inside(i, extension)), self[i];
   }
-  [[nodiscard]] const T& inside(int i, Bndrule bndrule, const T* cval) const;
+  [[nodiscard]] const T& inside(int i, Extension extension, const T* cval) const;
   [[nodiscard]] constexpr bool operator==(type rhs) const;
   [[nodiscard]] constexpr auto head(this auto&& self, int n) noexcept { return self.segment(0, n); }
   [[nodiscard]] constexpr auto tail(this auto&& self, int n) noexcept { return self.segment(self.num() - n, n); }
@@ -477,46 +478,46 @@ template <typename T, int inline_capacity, typename Func> requires(inline_capaci
 
 //----------------------------------------------------------------------------
 
-[[nodiscard]] constexpr Bndrule parse_boundaryrule(const std::string_view s) {
-  constexpr std::pair<std::string_view, Bndrule> k_names[] = {
-      {"reflect", Bndrule::reflect},
-      {"reflected", Bndrule::reflect},
-      {"r", Bndrule::reflect},
-      {"wrap", Bndrule::wrap},
-      {"periodic", Bndrule::wrap},
-      {"w", Bndrule::wrap},
-      {"p", Bndrule::wrap},
-      {"clamp", Bndrule::clamp},
-      {"clamped", Bndrule::clamp},
-      {"c", Bndrule::clamp},
-      {"border", Bndrule::border},
-      {"b", Bndrule::border},
-      {"reflect_primal", Bndrule::reflect_primal},
-      {"reflected101", Bndrule::reflect_primal},
-      {"101reflected", Bndrule::reflect_primal},
-      {"1", Bndrule::reflect_primal},
+[[nodiscard]] constexpr Extension parse_extension(const std::string_view s) {
+  constexpr std::pair<std::string_view, Extension> k_names[] = {
+      {"reflect", Extension::reflect},
+      {"reflected", Extension::reflect},
+      {"r", Extension::reflect},
+      {"wrap", Extension::wrap},
+      {"periodic", Extension::wrap},
+      {"w", Extension::wrap},
+      {"p", Extension::wrap},
+      {"clamp", Extension::clamp},
+      {"clamped", Extension::clamp},
+      {"c", Extension::clamp},
+      {"border", Extension::border},
+      {"b", Extension::border},
+      {"reflect_primal", Extension::reflect_primal},
+      {"reflected101", Extension::reflect_primal},
+      {"101reflected", Extension::reflect_primal},
+      {"1", Extension::reflect_primal},
   };
-  for (const auto& [name, bndrule] : k_names)
-    if (s == name) return bndrule;
-  assertnever("Boundary rule '" + string(s) + "' not recognized");
+  for (const auto& [name, extension] : k_names)
+    if (s == name) return extension;
+  assertnever("Extension '" + string(s) + "' not recognized");
 }
 
-[[nodiscard]] constexpr std::string_view boundaryrule_name(Bndrule bndrule) {
-  switch (bndrule) {
-    case Bndrule::reflect: return "reflect";
-    case Bndrule::wrap: return "wrap";
-    case Bndrule::clamp: return "clamp";
-    case Bndrule::border: return "border";
-    case Bndrule::reflect_primal: return "reflect_primal";
-    case Bndrule::undefined: return "undefined";
+[[nodiscard]] constexpr std::string_view extension_name(Extension extension) {
+  switch (extension) {
+    case Extension::reflect: return "reflect";
+    case Extension::wrap: return "wrap";
+    case Extension::clamp: return "clamp";
+    case Extension::border: return "border";
+    case Extension::reflect_primal: return "reflect_primal";
+    case Extension::undefined: return "undefined";
     default: assertnever("");
   }
 }
 
-constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule) {
+constexpr bool map_extension(int& i, int n, Extension extension) {
   ASSERTX(n >= 1);
-  switch (bndrule) {
-    case Bndrule::reflect:
+  switch (extension) {
+    case Extension::reflect:
       for (;;) {
         if (i < 0)
           i = -i - 1;
@@ -526,7 +527,7 @@ constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule) {
           break;
       }
       break;
-    case Bndrule::wrap:
+    case Extension::wrap:
       for (;;) {
         if (i < 0)
           i += n;
@@ -536,16 +537,16 @@ constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule) {
           break;
       }
       break;
-    case Bndrule::clamp:
+    case Extension::clamp:
       if (i < 0)
         i = 0;
       else if (i >= n)
         i = n - 1;
       break;
-    case Bndrule::border:
+    case Extension::border:
       if (i < 0 || i >= n) return false;
       break;
-    case Bndrule::reflect_primal:
+    case Extension::reflect_primal:
       if (n == 1) {
         i = 0;
         break;
@@ -566,12 +567,12 @@ constexpr bool map_boundaryrule_1d(int& i, int n, Bndrule bndrule) {
 
 //----------------------------------------------------------------------------
 
-template <typename T> [[nodiscard]] bool CArrayView<T>::map_inside(int& i, Bndrule bndrule) const {
-  return map_boundaryrule_1d(i, _n, bndrule);
+template <typename T> [[nodiscard]] bool CArrayView<T>::map_inside(int& i, Extension extension) const {
+  return map_extension(i, _n, extension);
 }
 
-template <typename T> [[nodiscard]] const T& CArrayView<T>::inside(int i, Bndrule bndrule, const T* cval) const {
-  if (!map_inside(i, bndrule)) {
+template <typename T> [[nodiscard]] const T& CArrayView<T>::inside(int i, Extension extension, const T* cval) const {
+  if (!map_inside(i, extension)) {
     ASSERTX(cval);
     return *cval;
   }

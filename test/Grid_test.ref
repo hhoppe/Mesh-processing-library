@@ -325,8 +325,8 @@ wrap        : 2 3 0 1 2 3 0 1 2 3 0 1 2 3 0 1
 clamp       : 0 0 0 0 0 0 0 1 2 3 3 3 3 3 3 3
 border      : . . . . . . 0 1 2 3 . . . . . .
 reflect_primal: 0 1 2 3 2 1 0 1 2 3 2 1 0 1 2 3
-grid.inside(V(-1, -1, -1), bndrules)=100 grid.inside(V(2, 3, 4), bndrules)=23 grid.inside(V(5, 7, 9), bndrules)=121
-grid.inside(V(1, -2, 6), bndrules2, &cval)=122 grid.inside(V(2, 0, 0), bndrules2, &cval)=-1
+grid.inside(V(-1, -1, -1), extensions)=100 grid.inside(V(2, 3, 4), extensions)=23 grid.inside(V(5, 7, 9), extensions)=121
+grid.inside(V(1, -2, 6), extensions2, &cval)=122 grid.inside(V(2, 0, 0), extensions2, &cval)=-1
 grid_stride(dims, 0)=8 grid_stride(dims, 1)=8 grid_stride(dims, 2)=2 grid_stride(dims, 3)=1
 slice.dims()=[2, 2, 3] (slice[0, 0, 0])=6 (slice[1, 1, 2])=17
 grid = Matrix<int>(2, 3) {

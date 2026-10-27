@@ -31,7 +31,7 @@ constexpr int nz = 3;  // 3 color channels; no alpha channel.
 
 bool g_not = false;
 Pixel gcolor{255, 255, 255, 255};
-Bndrule bndrule = Bndrule::reflect;                 // For cropping (the four index-mapping rules only).
+Extension extension = Extension::reflect;           // For cropping (the four index-mapping rules only).
 ResizeOptions<2> g_options{.filter = "cardinal3"};  // For resampling (boundary "auto").
 int startframe = 0;
 int tradius = 0;  // Was 4.
@@ -215,7 +215,7 @@ void apply_assemble_operations(Grid<3, Pixel>& vid, const Vec2<int>& yx, const V
     }
     const Vec2<int> side0 = (as_fit_dims - vid.dims().tail<2>()) / 2;
     const Vec2<int> side1 = as_fit_dims - vid.dims().tail<2>() - side0;
-    vid = hh::crop(vid, concat(V(0), -side0), concat(V(0), -side1), thrice(Bndrule::border), &gcolor);
+    vid = hh::crop(vid, concat(V(0), -side0), concat(V(0), -side1), thrice(Extension::border), &gcolor);
   }
   if (as_crop_vl || as_crop_vr || as_crop_vt || as_crop_vb) {
     int vl = as_crop_vl, vr = as_crop_vr, vt = as_crop_vt, vb = as_crop_vb;
@@ -226,7 +226,7 @@ void apply_assemble_operations(Grid<3, Pixel>& vid, const Vec2<int>& yx, const V
       if (yx[0] == 0) vt = max(vt, 0);
       if (yx[0] == gdims[0] - 1) vb = max(vb, 0);
     }
-    vid = crop(vid, V(0, vt, vl), V(0, vb, vr), thrice(Bndrule::border), &gcolor);
+    vid = crop(vid, V(0, vt, vl), V(0, vb, vr), thrice(Extension::border), &gcolor);
   }
   if (as_tnframes) {
     const int nnf = as_tnframes;
@@ -253,7 +253,7 @@ void assemble_videos(MatrixView<Video> videos) {
       showf("Padding video[%d][%d] from %d frames to %d frames\n", yx[0], yx[1], vid.nframes(), maxframes);
       Warning("assemble: padding shorter video with extra frames");
       const int npad = maxframes - vid.nframes();
-      vid = crop(vid, V(0, 0, 0), V(-npad, 0, 0), thrice(Bndrule::clamp));
+      vid = crop(vid, V(0, 0, 0), V(-npad, 0, 0), thrice(Extension::clamp));
     }
     assertw(videos[yx].nframes() == videos[0, 0].nframes());
   }
@@ -604,7 +604,7 @@ void do_interval(Args& args) {
 void do_trimbeg(Args& args) {
   const int nframes = parse_nframes(args.get_string(), false);
   if (video.nframes()) {
-    video = crop(video, V(nframes, 0, 0), V(0, 0, 0), thrice(bndrule));
+    video = crop(video, V(nframes, 0, 0), V(0, 0, 0), thrice(extension));
     if (video.attrib().audio.size()) {
       Warning("Clearing audio");
       video.attrib().audio.clear();
@@ -615,7 +615,7 @@ void do_trimbeg(Args& args) {
 void do_trimend(Args& args) {
   const int nframes = parse_nframes(args.get_string(), false);
   if (video.nframes()) {
-    video = crop(video, V(0, 0, 0), V(nframes, 0, 0), thrice(bndrule));
+    video = crop(video, V(0, 0, 0), V(nframes, 0, 0), thrice(extension));
     if (video.attrib().audio.size()) {
       Warning("Clearing audio");
       video.attrib().audio.clear();
@@ -847,8 +847,8 @@ void do_getcolorfxy(Args& args) {
 void do_boundary(Args& args) {
   const Boundary& boundary = Boundary::get(args.get_string());
   g_options.boundary = BoundaryRef(boundary);
-  for (const Bndrule rule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border})
-    if (&Boundary::get(rule) == &boundary) bndrule = rule;
+  for (const Extension rule : {Extension::reflect, Extension::wrap, Extension::clamp, Extension::border})
+    if (&Boundary::get(rule) == &boundary) extension = rule;
 }
 
 void do_cropsides(Args& args) {
@@ -857,37 +857,37 @@ void do_cropsides(Args& args) {
   int vt = parse_size(args.get_string(), video.ysize(), false);
   int vb = parse_size(args.get_string(), video.ysize(), false);
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, V(0, vt, vl), V(0, vb, vr), thrice(bndrule), &gcolor);
+  grid = hh::crop(grid, V(0, vt, vl), V(0, vb, vr), thrice(extension), &gcolor);
 }
 
 void do_cropl(Args& args) {
   int v = parse_size(args.get_string(), video.xsize(), false);
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, V(0, 0, v), V(0, 0, 0), thrice(bndrule), &gcolor);
+  grid = hh::crop(grid, V(0, 0, v), V(0, 0, 0), thrice(extension), &gcolor);
 }
 
 void do_cropr(Args& args) {
   int v = parse_size(args.get_string(), video.xsize(), false);
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, V(0, 0, 0), V(0, 0, v), thrice(bndrule), &gcolor);
+  grid = hh::crop(grid, V(0, 0, 0), V(0, 0, v), thrice(extension), &gcolor);
 }
 
 void do_cropt(Args& args) {
   int v = parse_size(args.get_string(), video.ysize(), false);
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, V(0, v, 0), V(0, 0, 0), thrice(bndrule), &gcolor);
+  grid = hh::crop(grid, V(0, v, 0), V(0, 0, 0), thrice(extension), &gcolor);
 }
 
 void do_cropb(Args& args) {
   int v = parse_size(args.get_string(), video.ysize(), false);
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, V(0, 0, 0), V(0, v, 0), thrice(bndrule), &gcolor);
+  grid = hh::crop(grid, V(0, 0, 0), V(0, v, 0), thrice(extension), &gcolor);
 }
 
 void do_cropall(Args& args) {
   int v = video.ysize() == video.xsize() ? parse_size(args.get_string(), video.ysize(), false) : args.get_int();
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, V(0, v, v), V(0, v, v), thrice(bndrule), &gcolor);
+  grid = hh::crop(grid, V(0, v, v), V(0, v, v), thrice(extension), &gcolor);
 }
 
 void do_cropsquare(Args& args) {
@@ -896,7 +896,8 @@ void do_cropsquare(Args& args) {
   const int s = video.ysize() == video.xsize() ? parse_size(args.get_string(), video.ysize(), false) : args.get_int();
   const int y0 = y - s / 2, x0 = x - s / 2;
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, V(0, y0, x0), V(0, video.ysize() - y0 - s, video.xsize() - x0 - s), thrice(bndrule), &gcolor);
+  grid =
+      hh::crop(grid, V(0, y0, x0), V(0, video.ysize() - y0 - s, video.xsize() - x0 - s), thrice(extension), &gcolor);
 }
 
 void do_croprectangle(Args& args) {
@@ -907,7 +908,7 @@ void do_croprectangle(Args& args) {
   int y0 = y - sy / 2, x0 = x - sx / 2;
   Grid<3, Pixel>& grid = video;
   grid =
-      hh::crop(grid, V(0, y0, x0), V(0, video.ysize() - y0 - sy, video.xsize() - x0 - sx), thrice(bndrule), &gcolor);
+      hh::crop(grid, V(0, y0, x0), V(0, video.ysize() - y0 - sy, video.xsize() - x0 - sx), thrice(extension), &gcolor);
 }
 
 void do_cropcoord(Args& args) {
@@ -916,7 +917,7 @@ void do_cropcoord(Args& args) {
   const int x1 = parse_size(args.get_string(), video.xsize(), true);
   const int y1 = parse_size(args.get_string(), video.ysize(), true);
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, V(0, y0, x0), V(0, video.ysize() - y1, video.xsize() - x1), thrice(bndrule), &gcolor);
+  grid = hh::crop(grid, V(0, y0, x0), V(0, video.ysize() - y1, video.xsize() - x1), thrice(extension), &gcolor);
 }
 
 void do_croptodims(Args& args) {
@@ -926,7 +927,7 @@ void do_croptodims(Args& args) {
   auto yx0 = (video.spatial_dims() - ndims) / 2;
   auto yx1 = video.spatial_dims() - ndims - yx0;
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, concat(V(0), yx0), concat(V(0), yx1), thrice(bndrule), &gcolor);
+  grid = hh::crop(grid, concat(V(0), yx0), concat(V(0), yx1), thrice(extension), &gcolor);
 }
 
 void do_cropmult(Args& args) {
@@ -936,7 +937,7 @@ void do_cropmult(Args& args) {
   auto yx0 = (video.spatial_dims() - ndims) / 2;
   auto yx1 = video.spatial_dims() - ndims - yx0;
   Grid<3, Pixel>& grid = video;
-  grid = hh::crop(grid, concat(V(0), yx0), concat(V(0), yx1), thrice(bndrule), &gcolor);
+  grid = hh::crop(grid, concat(V(0), yx0), concat(V(0), yx1), thrice(extension), &gcolor);
 }
 
 // *** scale
@@ -1092,7 +1093,7 @@ void do_gridcrop(Args& args) {
     int vb = video.ysize() - vt - sy;
     if (0) SHOW(vl, vt, vr, vb);
     Grid<3, Pixel>& vid = videos[yx];
-    vid = crop(video, V(0, vt, vl), V(0, vb, vr), thrice(bndrule), &gcolor);
+    vid = crop(video, V(0, vt, vl), V(0, vb, vr), thrice(extension), &gcolor);
     apply_assemble_operations(vid, yx, videos.dims());
   });
   assemble_videos(videos);
@@ -2285,7 +2286,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(cropb, "b : crop frames");
   HH_ARGSD(cropall, "i : crop all frame sides");
   HH_ARGSD(cropsquare, "x y size : crop frame square centered at (x, y)");
-  HH_ARGSD(croprectangle, "x y xsize ysize : crop frame rectangle centered at (x, y)");
+  HH_ARGSD(croprectangle, "x y w h : crop frame rectangle centered at (x, y)");
   HH_ARGSD(cropcoord, "x0 y0 x1 y1 : crop frame box within bounds x0 <= x < x1");
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmult, "fac : increase dimensions to be multiple of fac");

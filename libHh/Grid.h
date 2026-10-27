@@ -104,20 +104,20 @@ template <int D, typename T> class CGridView {
     }
     return true;
   }
-  bool map_inside(Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) const {  // Returns false if outside a Border.
+  bool map_inside(Vec<int, D>& u, const Vec<Extension, D>& extensions) const {  // Returns false if outside a Border.
     for_int(c, D) {
-      if (!map_boundaryrule_1d(u[c], _dims[c], bndrules[c])) return false;
+      if (!map_extension(u[c], _dims[c], extensions[c])) return false;
     }
     return true;
   }
-  [[nodiscard]] auto& inside(this auto&& self, const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules) {
+  [[nodiscard]] auto& inside(this auto&& self, const Vec<int, D>& u, const Vec<Extension, D>& extensions) {
     Vec<int, D> ut(u);
-    assertx(self.map_inside(ut, bndrules));
+    assertx(self.map_inside(ut, extensions));
     return self[ut];
   }
-  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Bndrule, D>& bndrules, const T* cval) const {
+  [[nodiscard]] const T& inside(const Vec<int, D>& u, const Vec<Extension, D>& extensions, const T* cval) const {
     Vec<int, D> ut(u);
-    if (!map_inside(ut, bndrules)) return ASSERTX(cval), *cval;
+    if (!map_inside(ut, extensions)) return ASSERTX(cval), *cval;
     return (*this)[ut];
   }
   [[nodiscard]] auto slice(this auto&& self, int ib, int ie) {  // View of grid truncated in 0th dimension.
@@ -146,14 +146,14 @@ template <int D, typename T> class CGridView {
   // For implementation of Matrix (D == 2):
   [[nodiscard]] int ysize() const requires(D == 2) { return dim(0); }
   [[nodiscard]] int xsize() const requires(D == 2) { return dim(1); }
-  // Returns false if bndrule == Border and (y, x) is outside.
-  bool map_inside(int& y, int& x, Bndrule bndrule) const requires(D == 2);
-  [[nodiscard]] auto& inside(this auto&& self, int y, int x, Bndrule bndrule) requires(D == 2) {
-    const bool b = self.map_inside(y, x, bndrule);
+  // Returns false if extension == Border and (y, x) is outside.
+  bool map_inside(int& y, int& x, Extension extension) const requires(D == 2);
+  [[nodiscard]] auto& inside(this auto&& self, int y, int x, Extension extension) requires(D == 2) {
+    const bool b = self.map_inside(y, x, extension);
     ASSERTX(b);
     return self[y, x];
   }
-  [[nodiscard]] const T& inside(int y, int x, Bndrule bndrule, const T* cval) const requires(D == 2);
+  [[nodiscard]] const T& inside(int y, int x, Extension extension, const T* cval) const requires(D == 2);
 
  protected:
   // See class CArrayView for a discussion of constness and protection of operator=().
@@ -411,13 +411,14 @@ constexpr decltype(auto) CGridView<D, T>::operator[](this auto&& self, const Vec
   return details::grid_view_at<D, n>(p, dims);
 }
 
-template <int D, typename T> bool CGridView<D, T>::map_inside(int& y, int& x, Bndrule bndrule) const requires(D == 2) {
-  return map_boundaryrule_1d(y, ysize(), bndrule) && map_boundaryrule_1d(x, xsize(), bndrule);
+template <int D, typename T>
+bool CGridView<D, T>::map_inside(int& y, int& x, Extension extension) const requires(D == 2) {
+  return map_extension(y, ysize(), extension) && map_extension(x, xsize(), extension);
 }
 
 template <int D, typename T>
-const T& CGridView<D, T>::inside(int y, int x, Bndrule bndrule, const T* cval) const requires(D == 2) {
-  if (!map_inside(y, x, bndrule)) {
+const T& CGridView<D, T>::inside(int y, int x, Extension extension, const T* cval) const requires(D == 2) {
+  if (!map_inside(y, x, extension)) {
     ASSERTX(cval);
     return *cval;
   }

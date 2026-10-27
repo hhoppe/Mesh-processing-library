@@ -51,7 +51,7 @@ class Boundary : noncopyable {
   // auto:               reflect when magnifying or point sampling, clamp when minifying (resolved before use).
   [[HH_NO_DANGLING]] [[nodiscard]] static const Boundary& get(std::string_view name);
 
-  [[HH_NO_DANGLING]] [[nodiscard]] static const Boundary& get(Bndrule bndrule);
+  [[HH_NO_DANGLING]] [[nodiscard]] static const Boundary& get(Extension extension);
 
   [[nodiscard]] const string& name() const { return _name; }
 

@@ -68,11 +68,11 @@ void test_convolve() {
   const Array<float> ar{1.f, 2.f, 4.f, 8.f, 16.f};
   const Array<float> kernel{.25f, .5f, .25f};
   const float cval = 0.f;
-  for (const Bndrule bndrule :
-       {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp, Bndrule::border, Bndrule::reflect_primal}) {
-    const float* pcval = bndrule == Bndrule::border ? &cval : nullptr;
-    const Array<float> result = convolve<float, float>(ar, kernel, bndrule, pcval);
-    SHOW(boundaryrule_name(bndrule), result);
+  for (const Extension extension :
+       {Extension::reflect, Extension::wrap, Extension::clamp, Extension::border, Extension::reflect_primal}) {
+    const float* pcval = extension == Extension::border ? &cval : nullptr;
+    const Array<float> result = convolve<float, float>(ar, kernel, extension, pcval);
+    SHOW(extension_name(extension), result);
   }
   {
     // Convolving a centered delta function reproduces the kernel, flipped in both dimensions.
@@ -80,13 +80,13 @@ void test_convolve() {
     mat[2, 2] = 1.f;
     Matrix<float> matk(3, 3);
     for_int(y, 3) for_int(x, 3) matk[y, x] = float(1 + y * 3 + x);
-    const Matrix<float> result = convolve<float, float>(mat, matk, Bndrule::border, &cval);
+    const Matrix<float> result = convolve<float, float>(mat, matk, Extension::border, &cval);
     SHOW(result);
     // Convolution with a kernel that sums to 1 preserves a constant image under every boundary rule.
     const Matrix<float> constant(V(4, 6), 3.f);
     const Matrix<float> box(V(3, 3), 1.f / 9.f);
-    for (const Bndrule bndrule : {Bndrule::reflect, Bndrule::wrap, Bndrule::clamp}) {
-      assertx(max_abs_diff<float>(convolve<float, float>(constant, box, bndrule), constant) < 1e-5f);
+    for (const Extension extension : {Extension::reflect, Extension::wrap, Extension::clamp}) {
+      assertx(max_abs_diff<float>(convolve<float, float>(constant, box, extension), constant) < 1e-5f);
     }
   }
 }

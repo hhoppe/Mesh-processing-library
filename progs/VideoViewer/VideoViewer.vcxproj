@@ -29,10 +29,12 @@
   <Import Project="$(LocalRoot)\make\hhmain.props" />
   <ItemGroup>
     <ClCompile Include="GradientDomainLoop.cpp" />
+    <ClCompile Include="LoopParameters.cpp" />
     <ClCompile Include="VideoViewer.cpp">
       <AssemblerOutput>$(HhAssemblerOutputValue)</AssemblerOutput>
     </ClCompile>
     <ClInclude Include="GradientDomainLoop.h" />
+    <ClInclude Include="LoopParameters.h" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="$(MeshRoot)\libHh\libHh.vcxproj">

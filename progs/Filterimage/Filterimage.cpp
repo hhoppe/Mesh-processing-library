@@ -615,119 +615,6 @@ void do_pan(Args& args) {
   apply_domain_transform(twice(1.), V(dy, dx) / convert<double>(image.dims()));
 }
 
-void do_scalehalf2n1() {
-  HH_TIMER("_scale");
-  if (image.xsize() == 1 && image.ysize() == 1) Warning("Image already 1x1; no effect");
-  const Vec2<int> newdims = (image.dims() - 1) / 2 + 1;
-  assertx((newdims - 1) * 2 + 1 == image.dims());
-  Image timage(image);
-  image.init(newdims);
-  for (const auto& yx : range(image.dims())) image[yx] = timage[yx * 2];
-}
-
-// *** tops (to postscript)
-
-int column_ps;
-
-inline void output_hex_nibble(uint8_t c) { std::cout.put("0123456789abcdef"[c]); }
-
-inline void output_hex_byte(uint8_t c) {
-  // std::cout << sform("%02x", c);
-  output_hex_nibble(c >> 4);
-  output_hex_nibble(c & 0xF);
-  column_ps += 2;
-  if (column_ps >= 72) {
-    std::cout << "\n";
-    column_ps = 0;
-  }
-}
-
-// Filterimage ~/data/image/lake.png -tops | gv
-// Filterimage ~/data/image/lake.png -to jpg -tops | gv
-void do_tops() {
-  assertx(image.zsize() == 1 || image.zsize() == 3);
-  const int cy = image.ysize(), cx = image.xsize(), cz = image.zsize();
-  const bool is_jpg = image.suffix() == "jpg";
-  // A 6-inch square centered on the page at 4.25, 5.5 inches.
-  int x1, x2, y1, y2;
-  {
-    const float aspectx = cx > cy ? 1.f : float(cx) / cy;
-    const float aspecty = cy > cx ? 1.f : float(cy) / cx;
-    const float radius = 3.f;  // 3 inches.
-    x1 = int(4.25f * 72.f - aspectx * radius * 72.f + .5f);
-    x2 = int(4.25f * 72.f + aspectx * radius * 72.f + .5f);
-    y1 = int(5.50f * 72.f - aspecty * radius * 72.f + .5f);
-    y2 = int(5.50f * 72.f + aspecty * radius * 72.f + .5f);
-  }
-  std::cout << "%!PS-Adobe-2.0 EPSF-1.2\n";
-  std::cout << "%%BoundingBox: " << sform("%d %d %d %d\n", x1, y1, x2, y2);
-  std::cout << "%%Pages: 1\n";
-  std::cout << "%%Orientation: Portrait\n";
-  std::cout << "%%Creator: Filterimage -tops\n";
-  std::cout << "%%CreationDate: " << get_current_datetime() << "\n";
-  std::cout << "%%LanguageLevel: 1\n";
-  std::cout << "%%EndComments\n";
-  if (1) {
-    std::cout << "%%BeginPreview: 16 16 1 16\n";
-    std::cout << "% FFFF\n% 8001\n% 8001\n% 8001\n";
-    std::cout << "% 8001\n% 8001\n% 8001\n% 8001\n";
-    std::cout << "% 8001\n% 8001\n% 8001\n% 8001\n";
-    std::cout << "% 8001\n% 8001\n% 8001\n% FFFF\n";
-    std::cout << "%%EndPreview\n";
-  }
-  std::cout << "%%EndProlog\n";
-  std::cout << "%%Page: 1 1\n";
-  std::cout << "gsave\n";
-  std::cout << sform("%d %d translate\n", x1, y1);
-  std::cout << sform("%d %d scale\n", x2 - x1, y2 - y1);
-  if (1 && is_jpg) {
-    std::cout << sform("/DeviceRGB setcolorspace\n");
-    std::cout << sform("<<\n");
-    std::cout << sform(" /ImageType 1\n");
-    std::cout << sform(" /Width %d\n", cx);
-    std::cout << sform(" /Height %d\n", cy);
-    std::cout << sform(" /BitsPerComponent 8\n");
-    std::cout << sform(" /Decode [0 1 0 1 0 1]\n");
-    // std::cout << sform(" /ImageMatrix [%d 0 0 %d 0 0]\n", cx, cy);
-    std::cout << sform(" /ImageMatrix [%d 0 0 %d 0 %d]\n", cx, -cy, cy);
-    // Could use /ASCII85Decode instead.
-    std::cout << sform(" /DataSource currentfile /ASCIIHexDecode filter\n");
-    std::cout << sform("   <</Relax 1>> /DCTDecode filter\n");
-    std::cout << sform(">>\n");
-    std::cout << sform("image\n");
-    std::cout.flush();
-    {
-      // Write the image to a temporary JPG file and read its raw bytes.
-      const TmpFile tmpfile("jpg");
-      const string filename = tmpfile.filename();
-      image.write_file(filename);
-      RFile fi(filename);
-      for (;;) {
-        uint8_t byte;
-        if (!read_binary_raw(fi(), ArView(byte))) break;
-        output_hex_byte(byte);
-      }
-    }
-    if (column_ps) std::cout << "\n";
-  } else {
-    std::cout << sform("/hhpicstr %d string def\n", cx * cz);
-    std::cout << sform("%d %d 8\n", cx, cy);
-    // std::cout << sform("  [%d 0 0 %d 0 0]\n", cx, cy);
-    std::cout << sform("  [%d 0 0 %d 0 %d]\n", cx, -cy, cy);
-    std::cout << sform("  { currentfile hhpicstr readhexstring pop }\n");
-    std::cout << sform("  false %d\n", cz);
-    std::cout << sform("  colorimage\n");
-    column_ps = 0;
-    for (const auto& yx : range(image.dims())) for_int(z, cz) output_hex_byte(image[yx][z]);  // ? test bw image
-    if (column_ps) std::cout << "\n";
-  }
-  std::cout << "% % end of image data\n";
-  std::cout << "grestore\n";
-  std::cout << "showpage\n";
-  std::cout << "%%EOF\n";
-  nooutput = true;
-}
-
 // *** misc
 
 void do_flipvertical() { image.reverse_y(); }
@@ -3517,11 +3404,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(to, "suffix : set output format (jpg, png, bmp, ppm, rgb, tif, wmp)");
   HH_ARGSD(outfile, "filename : output an intermediate image");
   HH_ARGSF(nooutput, ": do not output final image on stdout");
+  HH_ARGSD(sizes, ": print 'width height'");
   HH_ARGSD(quick_info, ": print image dimensions and format");
   HH_ARGSD(info, ": print image statistics");
   HH_ARGSD(stat, ": equivalent to '-info -nooutput'");
-  HH_ARGSD(sizes, ": print 'width height'");
-  HH_ARGSD(tops, ": convert to encapsulated postscript");
   HH_ARGSC("", ":");
   HH_ARGSD(color, "r g b a : set color for various operations (default 255's)");
   HH_ARGSD(not, ": negate test for color selection");
@@ -3560,7 +3446,6 @@ int main(int argc, const char** argv) {
   HH_ARGSD(scalefill, "x y : uniform scale to fill x y (crops the excess)");
   HH_ARGSD(zoom, "fac x y : zoom by fac about point (x, y), same dims");
   HH_ARGSD(pan, "dx dy : shift content by (dx, dy) pixels, same dims");
-  HH_ARGSD(scalehalf2n1, ": subsample 2**(n + 1) + 1 -> 2**n + 1 on each axis");
   HH_ARGSC("", ":");
   HH_ARGSD(flipvertical, ": reverse rows");
   HH_ARGSD(fliphorizontal, ": reverse columns");

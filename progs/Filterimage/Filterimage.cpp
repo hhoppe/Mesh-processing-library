@@ -531,6 +531,8 @@ void do_prefilter(Args& args) { g_options.prefilter = FilterRef(args.get_string(
 
 void do_gridtype(Args& args) { g_options.gridtype = parse_gridtype(args.get_string()); }
 
+void do_dst_gridtype(Args& args) { g_options.dst_gridtype = PerDim<Gridtype, 2>(parse_gridtype(args.get_string())); }
+
 void do_gamma(Args& args) { g_options.gamma = GammaRef(args.get_string()); }
 
 void do_scaleunif(Args& args) {
@@ -574,6 +576,49 @@ void do_scaleinside(Args& args) {
   int nx = args.get_int(), ny = args.get_int();
   assertx(nx > 0 && ny > 0);
   image.scale(twice(min(convert<float>(V(ny, nx)) / convert<float>(image.dims()))), g_options, &gcolor);
+}
+
+// Scale uniformly to the dimensions ndims: either fit the image within them (object-fit "contain"; the set color
+// fills the rest unless a boundary rule is specified) or fill them (object-fit "cover"; the excess is cropped).
+void apply_uniform_resize(const Vec2<int>& ndims, ObjectFit object_fit) {
+  HH_TIMER("_scale");
+  assertx(min(ndims) > 0);
+  image = uniform_resize(image, ndims, object_fit, g_options, &gcolor);
+}
+
+void do_scalefit(Args& args) {
+  const int nx = args.get_int(), ny = args.get_int();
+  apply_uniform_resize(V(ny, nx), ObjectFit::contain);
+}
+
+void do_scalefill(Args& args) {
+  const int nx = args.get_int(), ny = args.get_int();
+  apply_uniform_resize(V(ny, nx), ObjectFit::cover);
+}
+
+// Resample the image onto itself with the source domain scaled and translated (in the unit domain); the exterior
+// is defined by the boundary rule (e.g., "-boundary constant" with "-color" gives a colored exterior).
+void apply_domain_transform(const Vec2<double>& domain_scale, const Vec2<double>& domain_translate) {
+  HH_TIMER("_scale");
+  ResizeOptions<2> options = g_options;
+  options.scale = domain_scale, options.translate = domain_translate;
+  image = scale(image, image.dims(), options, &gcolor);
+}
+
+// Zoom by the factor about the point (x, y) in pixel coordinates (the image center is (xsize / 2, ysize / 2)),
+// keeping the image dimensions.
+void do_zoom(Args& args) {
+  const double fac = args.get_double();
+  const double x = args.get_double(), y = args.get_double();
+  assertx(fac > 0.);
+  const Vec2<double> center = V(y, x) / convert<double>(image.dims());  // In the unit domain.
+  apply_domain_transform(twice(fac), center * (1. - fac));  // The source point center maps to itself.
+}
+
+// Shift the image content by (dx, dy) pixels (positive moves it right and down), keeping the image dimensions.
+void do_pan(Args& args) {
+  const double dx = args.get_double(), dy = args.get_double();
+  apply_domain_transform(twice(1.), V(dy, dx) / convert<double>(image.dims()));
 }
 
 void do_scalehalf2n1() {
@@ -3487,8 +3532,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(color, "r g b a : set color for various operations (default 255's)");
   HH_ARGSD(not, ": negate test for color selection");
   HH_ARGSD(getcolorxy, "x y : get color from pixel ((x = 0, y = 0) = (left, top))");
-  HH_ARGSD(boundary, "c : rule: reflect|wrap|clamp|border|natural|...");
+  HH_ARGSD(boundary, "c : rule: reflect|wrap|clamp|border|constant|...");
+  HH_ARGSC("", ":    natural|linear|quadratic|tile|reflect_clamp|...");
   HH_ARGSC("", ":    (crops and -blur use only the first four)");
+  HH_ARGSC("", ":    (-boundary constant with -color: colored exterior)");
   HH_ARGSD(hboundary, "c : set just horizontal boundary rule");
   HH_ARGSD(vboundary, "c : set just vertical boundary rule");
   HH_ARGSD(boundaryrule, "c : (former name of -boundary)");
@@ -3513,6 +3560,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(vfilter, "c : set just vertical filter");
   HH_ARGSD(prefilter, "c : kernel when minifying (auto: same)");
   HH_ARGSD(gridtype, "c : dual (default) or primal sample placement");
+  HH_ARGSD(dst_gridtype, "c : sample placement of the output (def. gridtype)");
   HH_ARGSD(gamma, "c : identity (default), power2, power22, srgb");
   HH_ARGSD(scaleunif, "fac : zoom image (upsample and/or downsample)");
   HH_ARGSD(scalenonunif, "facx facy : zoom image");
@@ -3520,6 +3568,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(scaletoy, "y : uniform scale to y height");
   HH_ARGSD(scaletodims, "x y : non-uniform scale");
   HH_ARGSD(scaleinside, "x y : uniform scale to become no larger than rectangle");
+  HH_ARGSD(scalefit, "x y : uniform scale to fit within x y (color outside)");
+  HH_ARGSD(scalefill, "x y : uniform scale to fill x y (crops the excess)");
+  HH_ARGSD(zoom, "fac x y : zoom by fac about point (x, y), same dims");
+  HH_ARGSD(pan, "dx dy : shift content by (dx, dy) pixels, same dims");
   HH_ARGSD(scalehalf2n1, ": subsample 2**(n + 1) + 1 -> 2**n + 1 on each axis");
   HH_ARGSC("", ":");
   HH_ARGSD(flipvertical, ": reverse rows");

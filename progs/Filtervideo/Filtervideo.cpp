@@ -949,6 +949,8 @@ void do_prefilter(Args& args) { g_options.prefilter = FilterRef(args.get_string(
 
 void do_gridtype(Args& args) { g_options.gridtype = parse_gridtype(args.get_string()); }
 
+void do_dst_gridtype(Args& args) { g_options.dst_gridtype = PerDim<Gridtype, 2>(parse_gridtype(args.get_string())); }
+
 void do_gamma(Args& args) { g_options.gamma = GammaRef(args.get_string()); }
 
 void apply_scale(const Vec2<float>& v) {
@@ -1002,6 +1004,33 @@ void do_scaletodims(Args& args) {
   assertx(nx > 0 && ny > 0);
   auto syx = convert<float>(V(ny, nx)) / convert<float>(video.spatial_dims());
   apply_scale(syx);
+}
+
+// Scale each frame uniformly to the dimensions ndims: either fit the frame within them (object-fit "contain"; the
+// set color fills the rest unless a boundary rule is specified) or fill them (object-fit "cover"; the excess is
+// cropped).
+void apply_uniform_resize(const Vec2<int>& ndims, ObjectFit object_fit) {
+  HH_TIMER("_scale");
+  assertx(min(ndims) > 0);
+  Video nvideo(video.nframes(), ndims);
+  nvideo.attrib() = video.attrib();
+  for_int(f, video.nframes()) nvideo[f].assign(uniform_resize(video[f], ndims, object_fit, g_options, &gcolor));
+  const double area_ratio = double(product(ndims)) / product(video.spatial_dims());
+  video = std::move(nvideo);
+  if (area_ratio < 1.) {
+    video.attrib().bitrate = int(video.attrib().bitrate * std::pow(area_ratio, .8) + .5);
+    showf("Reducing bitrate after scaling: %s\n", Video::diagnostic_string(video.dims(), video.attrib()).c_str());
+  }
+}
+
+void do_scalefit(Args& args) {
+  const int nx = args.get_int(), ny = args.get_int();
+  apply_uniform_resize(V(ny, nx), ObjectFit::contain);
+}
+
+void do_scalefill(Args& args) {
+  const int nx = args.get_int(), ny = args.get_int();
+  apply_uniform_resize(V(ny, nx), ObjectFit::cover);
 }
 
 void do_scaleinside(Args& args) {
@@ -2247,8 +2276,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(color, "r g b : set color for various operations (default 255's)");
   HH_ARGSD(not, ": negate test for color selection");
   HH_ARGSD(getcolorfxy, "f x y : get color from pixel ((0, 0, 0)=(frame0, left, top))");
-  HH_ARGSD(boundary, "c : rule: reflect/wrap/clamp/border/natural/...");
+  HH_ARGSD(boundary, "c : rule: reflect|wrap|clamp|border|constant|...");
+  HH_ARGSC("", ":    natural|linear|quadratic|tile|reflect_clamp|...");
   HH_ARGSC("", ":    (crops use only the first four)");
+  HH_ARGSC("", ":    (-boundary constant with -color: colored exterior)");
   HH_ARGSD(boundaryrule, "c : (former name of -boundary)");
   HH_ARGSC("", "   (for scaling or negative trim/crop)");
   HH_ARGSC("", ":");
@@ -2264,10 +2295,11 @@ int main(int argc, const char** argv) {
   HH_ARGSD(croptodims, "x y : centered crop to obtain new dimensions");
   HH_ARGSD(cropmult, "fac : increase dimensions to be multiple of fac");
   HH_ARGSC("", ":");
-  HH_ARGSD(filter, "c : kernel: cubic/cardinal3/lanczos3/triangle/...");
-  HH_ARGSC("", ":    omoms3/gaussian/box/impulse/... (def. cardinal3)");
+  HH_ARGSD(filter, "c : kernel: cubic|cardinal3|lanczos3|triangle|...");
+  HH_ARGSC("", ":    omoms3|gaussian|box|impulse|... (default: cardinal3)");
   HH_ARGSD(prefilter, "c : kernel when minifying (auto: same)");
   HH_ARGSD(gridtype, "c : dual (default) or primal sample placement");
+  HH_ARGSD(dst_gridtype, "c : sample placement of the output (def. gridtype)");
   HH_ARGSD(gamma, "c : identity (default), power2, power22, srgb");
   HH_ARGSD(scaleunif, "fac : zoom video (upsample and/or downsample)");
   HH_ARGSD(scalenonunif, "facx facy : zoom video");
@@ -2276,6 +2308,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(scaleifgtmax, "n : uniform scale such that max(width, height) <= n");
   HH_ARGSD(scaletodims, "x y : non-uniform scale");
   HH_ARGSD(scaleinside, "x y : uniform scale to become no larger than rectangle");
+  HH_ARGSD(scalefit, "x y : uniform scale to fit within x y (color outside)");
+  HH_ARGSD(scalefill, "x y : uniform scale to fill x y (crops the excess)");
   HH_ARGSC("", ":");
   HH_ARGSD(flipvertical, ": reverse rows");
   HH_ARGSD(fliphorizontal, ": reverse columns");

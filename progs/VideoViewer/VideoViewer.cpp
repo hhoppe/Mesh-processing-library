@@ -2597,11 +2597,14 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
   Vec2<int> yx = pyx;
   if (g_verbose >= 1) SHOW(butnum, pressed, yx);
   if (getobnum() == 0) return;
+  // Control-left acts as the middle button (e.g., on a laptop trackpad), without the control-middle rate mode.
+  const bool simulated_middle = butnum == 1 && get_key_modifier(Hw::EModifier::control);
+  if (simulated_middle) butnum = 2;
   if (pressed) {
     if (butnum <= 3) {
       g_selected.button_active = butnum;
       g_selected.shift_was_pressed = get_key_modifier(Hw::EModifier::shift);
-      g_selected.control_was_pressed = get_key_modifier(Hw::EModifier::control);
+      g_selected.control_was_pressed = get_key_modifier(Hw::EModifier::control) && !simulated_middle;
       g_selected.yx_pressed = yx;
       g_selected.yx_last = yx;
       g_selected.axis_constraint = -1;
@@ -3456,9 +3459,9 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         if (!g_selected.shift_was_pressed) {  // Zoom.
           float fac_zoom;
           if (!g_selected.control_was_pressed) {  // Pointer position determines value.
-            fac_zoom = std::exp((yx[0] - g_selected.yx_last[0]) * .005f);
+            fac_zoom = std::exp((yx[0] - g_selected.yx_last[0]) * -.005f);
           } else {  // Pointer position determines rate of change.
-            fac_zoom = std::exp((yx[0] - g_selected.yx_pressed[0]) * .005f * .02f);
+            fac_zoom = std::exp((yx[0] - g_selected.yx_pressed[0]) * -.005f * .02f);
           }
           if (alt_pressed) fac_zoom = pow(fac_zoom, .2f);
           perform_zoom_at_cursor(fac_zoom, g_selected.yx_pressed);
@@ -3689,7 +3692,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
   if (g_show_help) {  // Show overlaid help text.
     Array<string> ar = {
         "<h>,<?>,<f1>: Toggle this help   (S=shift, C=control)",
-        "Mouse:  <Left>select   <Mid>zoom   <S-Mid>rotate   <Right>pan",
+        "Mouse:  <Left>select   <Mid>zoom   <S-Mid>rotate   <Right>pan   (<C-Left> simulates <Mid>)",
         "Keys:  <r>eset_all",
         " <=>enlarge   <->shrink   <0>100%   <f>ullscreen   <w>indow_fit   <A>spectratio   <:>anisotropic",
         " <k>ernel_filter   <b>rightness_controls",

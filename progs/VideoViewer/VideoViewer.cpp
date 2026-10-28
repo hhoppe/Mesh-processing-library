@@ -146,7 +146,7 @@ struct Object {
   // NOLINTNEXTLINE(modernize-use-string-view): the result is concatenated with `string` and `const char*`.
   [[nodiscard]] string stype() const { return is_image() ? "image" : "video"; }
   [[nodiscard]] bool loaded() const { return _nframes_loaded == nframes(); }
-  Vec3<int> _dims;  // _dims[0] is the number of frames, which is always 1 for an image
+  Vec3<int> _dims;  // _dims[0] is the number of frames, which is always 1 for an image.
   bool _is_image;
   Video _video;  // If is_image(), contains a single frame which is the image.
   VideoNv12 _video_nv12;
@@ -176,7 +176,7 @@ std::mutex& g_mutex_obs = *new std::mutex;
 std::condition_variable& g_cond_obs = *new std::condition_variable;
 std::atomic<int> g_cob{-1};  // Currently selected object (0 .. g_obs.num() - 1), or -1 if g_obs.num() == 0.
 Object& getob(int cob) {
-  assertx(g_obs.ok(cob));  // (bounds-check even in Release)
+  assertx(g_obs.ok(cob));  // (Bounds-check even in Release.)
   return *g_obs[cob];
 }
 Object& getob() { return getob(g_cob); }
@@ -203,7 +203,7 @@ std::mutex g_mutex_messages;
 
 string g_argv0;         // Pathname used to invoke this program.
 string g_keystring;     // Accumulates command-line simulated keystrokes.
-int g_verbose = 0;      // 0 == normal, 1 == some_output, 2 == lots_of_output
+int g_verbose = 0;      // 0 == normal, 1 == some_output, 2 == lots_of_output.
 bool g_playing = true;  // Video is playing (else paused).
 enum class ELooping { off, one, all, mirror };
 const ELooping k_default_looping = ELooping::one;  // Default is to loop the current video object infinitely.
@@ -261,7 +261,7 @@ const Vec<Slider, 4> g_sliders = {
 };
 
 struct S_Selected {      // During drag operation.
-  int button_active{0};  // 1..3 if mouse button currently pressed, else 0
+  int button_active{0};  // 1..3 if mouse button currently pressed, else 0.
   bool shift_was_pressed;
   bool control_was_pressed;
   Vec2<int> yx_pressed;  // Location where button was initially pressed.
@@ -298,11 +298,11 @@ struct S_Timeline {
 
 struct PrefetchImage {
   string filename;
-  uint64_t file_modification_time{0};  // 0 == load_never_attempted
+  uint64_t file_modification_time{0};  // 0 == load_never_attempted.
   unique_ptr<Image> pimage;            // Nullptr could indicate a load error; bgra format iff k_use_bgra.
 };
 // These are never destroyed; used by the detached background thread past static destruction.
-Vec2<PrefetchImage>& g_prefetch_image = *new Vec2<PrefetchImage>;  // {0 == next, 1 == prev}
+Vec2<PrefetchImage>& g_prefetch_image = *new Vec2<PrefetchImage>;  // {0 == next, 1 == prev}.
 std::mutex& g_mutex_prefetch = *new std::mutex;
 
 bool filename_is_media(const string& s) { return filename_is_image(s) || filename_is_video(s); }
@@ -692,7 +692,7 @@ void set_video_frame(int cob, double frametime, bool force_refresh = false) {
       string filename = next_image_in_directory(o._filename, increment);
       if (filename == "") continue;
       if (const int64_t size = get_file_size(filename); size < 0 || size > k_max_prefetch_size) continue;
-      const int i = (1 - increment) / 2;  // 0 == next, 1 == prev
+      const int i = (1 - increment) / 2;  // 0 == next, 1 == prev.
       std::scoped_lock lock(g_mutex_prefetch);
       if (ranges::none_of(g_prefetch_image, [&](const PrefetchImage& p) { return p.filename == filename; })) {
         if (g_verbose >= 1) SHOW("requesting_prefetch", i, filename);
@@ -1181,7 +1181,7 @@ bool DerivedHw::key_press(string skey) {
     if (skey == "<left>") skey = "<prior>";
     if (skey == "<right>") skey = "<next>";
   }
-  if ((skey == "/" || skey == "\x1F") && is_control) skey = "?";  // control-/ is also help
+  if ((skey == "/" || skey == "\x1F") && is_control) skey = "?";  // C-/ is also help.
   const int keycode = uint8_t(skey[0]);
   try {
     if (0) {
@@ -1196,7 +1196,7 @@ bool DerivedHw::key_press(string skey) {
       if (!query(V(20, 10), "Rename " + old_type + " to (or <esc>): ", new_filename)) throw "";
       if (new_filename == old_filename) throw "source and destination are identical";
       if (file_exists(new_filename)) throw "file " + optionally_quote(new_filename) + " already exists";
-      const bool success = !rename(old_filename.c_str(), new_filename.c_str());  // Like command mv(1).
+      const bool success = !rename(old_filename.c_str(), new_filename.c_str());  // Like command "mv".
       if (!success)
         throw "could not rename " + optionally_quote(old_filename) + " to " + optionally_quote(new_filename);
       message("Renamed " + old_type + " to " + optionally_quote(new_filename));
@@ -1244,7 +1244,7 @@ bool DerivedHw::key_press(string skey) {
       const string new_filename = g_dest_dir + "/" + get_path_tail(old_filename);
       if (file_exists(new_filename)) throw "file " + optionally_quote(new_filename) + " already exists";
       const bool next_loaded = replace_with_other_object_in_directory(+1);
-      const bool success = !rename(old_filename.c_str(), new_filename.c_str());  // Like command mv(1).
+      const bool success = !rename(old_filename.c_str(), new_filename.c_str());  // Like command "mv".
       // SHOW(old_type, old_filename, new_filename, next_loaded, success);
       if (!success) {
         if (next_loaded) replace_with_other_object_in_directory(-1);
@@ -1283,9 +1283,9 @@ bool DerivedHw::key_press(string skey) {
             ex.what();
       }
       message("Copied " + old_type + " to " + optionally_quote(new_filename));
-    } else if (keycode == 'L' - 64 && !is_shift) {  // C-l is unbound
+    } else if (keycode == 'L' - 64 && !is_shift) {  // C-l is unbound.
       beep();
-    } else if (keycode == 'R' - 64 && !is_shift) {  // C-r is unbound
+    } else if (keycode == 'R' - 64 && !is_shift) {  // C-r is unbound.
       beep();
     } else if (skey == "<f11>" || skey == "<enter>") {  // Fullscreen <enter>/<ret>.
       return key_press("\r");
@@ -1363,7 +1363,7 @@ bool DerivedHw::key_press(string skey) {
       g_dir_media_filenames.invalidate();
     } else if (skey == "<esc>") {  // Exit, from -key "<esc>" or -hwdelay 2 -hwkey '<enter><esc>'; see also '\033'.
       quit();
-    } else if (skey.size() == 1 && keycode >= '1' && keycode <= '9' && is_control) {  // C-1 ... C-9: select object
+    } else if (skey.size() == 1 && keycode >= '1' && keycode <= '9' && is_control) {  // C-1 ... C-9: select object.
       const int ob = keycode - '1';
       if (ob < getobnum()) {
         func_switch_ob(ob);
@@ -1374,7 +1374,7 @@ bool DerivedHw::key_press(string skey) {
       recognized = false;
     } else {
       switch (keycode) {
-          // ** Object/play controls
+          // ** Object/play controls.
         case 'r': {  // Reset sliders or reset all parameters.
           if (g_use_sliders) {
             reset_sliders();
@@ -1459,11 +1459,11 @@ bool DerivedHw::key_press(string skey) {
           set_speed(2.);
           break;
         }
-        case '5': {  // .5x speed
+        case '5': {  // .5x speed.
           set_speed(.5);
           break;
         }
-        case '\t': {       // <tab> == C-i (== uchar{9} == 'I' - 64), previous/next object
+        case '\t': {       // <tab> == C-i (== uchar{9} == 'I' - 64), previous/next object.
           if (is_shift) {  // Previous object.
             return key_press("p");
           } else {  // Next object.
@@ -1573,7 +1573,7 @@ bool DerivedHw::key_press(string skey) {
             const Vec2<int> owin_dims = g_win_dims;
             const Vec2<int> win_dims = determine_default_window_dims(dims);
             // SHOW(dims, win_dims, owin_dims, get_max_window_dims());
-            reset_window(win_dims);  // (does not immediately update g_win_dims)
+            reset_window(win_dims);  // (Does not immediately update g_win_dims.)
             if (win_dims == dims) {
               message("Zoom set to 100%");
             } else if (win_dims != owin_dims) {
@@ -1595,7 +1595,7 @@ bool DerivedHw::key_press(string skey) {
           perform_window_zoom(1.f / k_key_zoom_fac);
           break;
         }
-        case 'f':  // Or <enter> / <ret> / C-M key (== uchar{13} == 'M' - 64), toggle fullscreen.
+        case 'f':  // Or <enter> / <ret> / C-m key (== uchar{13} == 'M' - 64), toggle fullscreen.
         case '\r':
         case '\n':  // G3d -key $'\n'.
         {
@@ -1615,7 +1615,7 @@ bool DerivedHw::key_press(string skey) {
         }
 
           // ** Other:
-        case 'O' - 64: {  // C-o: open an existing video/image file
+        case 'O' - 64: {  // C-o: open an existing video/image file.
           const string cur_filename =
               (g_cob >= 0 && (is_url(getob()._filename) || !file_requires_pipe(getob()._filename))
                    ? getob()._filename
@@ -1645,7 +1645,7 @@ bool DerivedHw::key_press(string skey) {
           if (s_message != "") throw string(s_message);
           break;
         }
-        case 'S' - 64: {  // C-s: save video/image to file;  C-S-s: overwrite original file
+        case 'S' - 64: {  // C-s: save video/image to file;  C-S-s: overwrite original file.
           std::scoped_lock lock(g_mutex_obs);
           Object& ob = check_loaded_object();
           if (g_use_sliders) throw "close sliders first before saving file";
@@ -1695,14 +1695,14 @@ bool DerivedHw::key_press(string skey) {
           view_externally();
           break;
         }
-        case 'D' - 64: {  // C-d: unload current image/video from viewer
+        case 'D' - 64: {  // C-d: unload current image/video from viewer.
           std::scoped_lock lock(g_mutex_obs);
           const Object& ob = check_object();
           message("Unloaded " + ob.stype() + " " + optionally_quote(get_path_tail(ob._filename)), 4.);
           unload_current_object();
           break;
         }
-        case 'K' - 64: {  // C-k: unload all objects except current one
+        case 'K' - 64: {  // C-k: unload all objects except current one.
           std::scoped_lock lock(g_mutex_obs);
           check_object();
           check_all_objects();
@@ -1713,7 +1713,7 @@ bool DerivedHw::key_press(string skey) {
           message("Unloaded all but current object", 4.);
           break;
         }
-        case 'N' - 64: {  // C-n: open new VideoViewer window on same file
+        case 'N' - 64: {  // C-n: open new VideoViewer window on same file.
           if (g_cob < 0) throw "no loaded object";
           string filename = getob()._filename;
           if (filename == "") throw getob().stype() + " has no filename";
@@ -2041,7 +2041,7 @@ bool DerivedHw::key_press(string skey) {
           message("Unmarked beginning and end trim frames");
           break;
         }
-        case 'T': {  // Temporal exterior video trim (shift-t).
+        case 'T': {  // S-t: temporal exterior video trim.
           std::scoped_lock lock(g_mutex_obs);
           const Object& ob = check_loaded_video();
           if (ob._framein == 0 && ob._frameou1 == ob.nframes())
@@ -2068,7 +2068,7 @@ bool DerivedHw::key_press(string skey) {
           message("Trimmed video");
           break;
         }
-        case 'T' - 64: {  // Temporal interior video cut (control-shift-t).
+        case 'T' - 64: {  // C-S-t: temporal interior video cut.
           std::scoped_lock lock(g_mutex_obs);
           if (!is_shift) {
             beep();
@@ -2369,29 +2369,12 @@ bool DerivedHw::key_press(string skey) {
           initiate_loop_request();
           break;
         }
-        case 'G' + 257: {  // Generate optimized seamless loop; disabled.
+        case 'G' - 64: {  // C-g: generate optimized (high-quality if C-S-g) seamless loop.
           std::scoped_lock lock(g_mutex_obs);
           const Object& ob = check_object();
           if (ob.nframes() < 4) throw "too few video frames";
+          if (is_shift) g_high_quality_loop = true;
           g_request_loop_synchronously = false;
-          initiate_loop_request();
-          break;
-        }
-        case 'G' - 64: {  // Generate high-quality optimized seamless loop.
-          std::scoped_lock lock(g_mutex_obs);
-          const Object& ob = check_object();
-          if (ob.nframes() < 4) throw "too few video frames";
-          g_request_loop_synchronously = false;
-          g_high_quality_loop = true;
-          initiate_loop_request();
-          break;
-        }
-        case 'G' + 258: {  // Generate optimized seamless loop synchronously; disabled.
-          std::scoped_lock lock(g_mutex_obs);
-          const Object& ob = check_object();
-          if (ob.nframes() < 4) throw "too few video frames";
-          message("Waiting for seamless loop creation");
-          g_request_loop_synchronously = true;
           initiate_loop_request();
           break;
         }
@@ -2461,7 +2444,7 @@ bool DerivedHw::key_press(string skey) {
           redraw_later();
           break;
         }
-        case 'C' - 64: {  // C-c: copy image or frame to clipboard
+        case 'C' - 64: {  // C-c: copy image or frame to clipboard.
           std::scoped_lock lock(g_mutex_obs);
           Object& ob = check_object();
           if (g_framenum < 0) throw "no current video frame";
@@ -2481,7 +2464,7 @@ bool DerivedHw::key_press(string skey) {
           if (!copy_image_to_clipboard(image)) throw "could not copy image/frame to clipboard";
           break;
         }
-        case 'V' - 64: {  // C-v: paste clipboard image as new object
+        case 'V' - 64: {  // C-v: paste clipboard image as new object.
           std::scoped_lock lock(g_mutex_obs);
           auto image = copy_clipboard_to_image();
           if (!image) throw "could not copy an image from clipboard";
@@ -2853,7 +2836,7 @@ void upload_sub_texture(int level, const Vec2<int>& offset, const Vec2<int>& dim
       // Else texture is incomplete and get error below on glTexSubImage2D().
     }
     glBindBuffer(GL_PIXEL_UNPACK_BUFFER, io_buf[0]);
-    // GL_STATIC_DRAW (uploaded once); GL_DYNAMIC_DRAW (used several times); GL_STREAM_DRAW (used once)
+    // GL_STATIC_DRAW (uploaded once); GL_DYNAMIC_DRAW (used several times); GL_STREAM_DRAW (used once).
     glBufferData(GL_PIXEL_UNPACK_BUFFER, narrow_cast<size_t>(product(dims) * sizeof(Pixel)), nullptr, GL_STREAM_DRAW);
     void* ioMem = assertx(glMapBuffer(GL_PIXEL_UNPACK_BUFFER, GL_WRITE_ONLY));
     assertx(reinterpret_cast<uintptr_t>(ioMem) % alignof(Pixel) == 0);
@@ -3028,7 +3011,7 @@ void upload_image_to_texture() {
   assertx(!gl_report_errors());
 }
 
-// Cygwin: OpenGL GLSL 3.00 is not supported. Supported versions are: 1.10, 1.20, 1.30, 1.00 ES, and 3.00 ES
+// Cygwin: OpenGL GLSL 3.00 is not supported. Supported versions are: 1.10, 1.20, 1.30, 1.00 ES, and 3.00 ES.
 // https://github.com/mattdesl/lwjgl-basics/wiki/GLSL-Versions
 // https://en.wikipedia.org/wiki/OpenGL_Shading_Language
 // https://www.opengl.org/registry/doc/GLSLangSpec.4.50.pdf
@@ -3041,7 +3024,7 @@ void upload_image_to_texture() {
 const string glsl_shader_version = "#version 300 es\n";  // Works everywhere.
 // static const string glsl_shader_version = "#version 130\n";  // Last non-es version supported by cygwin; also works.
 #elif defined(__APPLE__)
-// "GLX/X11 is limited to OpenGL 2.1 on OSX" (legacy context)
+// "GLX/X11 is limited to OpenGL 2.1 on OSX" (legacy context).
 // "Apparently X11 doesn't support OpenGL higher than 2.1 on OS X.  As such I suggest you switch to GLFW."
 // https://www.geeks3d.com/20121109/overview-of-opengl-support-on-os-x/
 const string glsl_shader_version =
@@ -3275,7 +3258,7 @@ void render_image() {
         const int h_somematrix = glGetUniformLocation(program_id, "somematrix");
         glUniformMatrix4fv(h_somematrix, 1, GL_FALSE, SGrid<float, 4, 4>{}.const_grid_view().data());
       }
-      Array<Vec4<float>> ar_vertex;  // (xy, uv)
+      Array<Vec4<float>> ar_vertex;  // (xy, uv).
       for_int(i, 4) {
         Point pyx = Point(concat(convert<float>(yxi[i] * g_frame_dims), V(0.f))) * g_view;
         pyx = pyx / concat(convert<float>(g_win_dims), V(1.f)) * 2.f - 1.f;  // Without glOrtho(), range is [-1, +1].
@@ -3652,7 +3635,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
           }
         }
       }
-      string s_frame;  // + speed + framerate for video
+      string s_frame;  // + speed + framerate for video.
       if (!ob.is_image()) {
         const double video_framerate = ob._video.attrib().framerate ? ob._video.attrib().framerate : 30.;
         const double dtime = g_framenum / video_framerate;
@@ -3722,7 +3705,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         " <[>slower   <]>faster   <1>normal   <2>twice   <5>half   <F>ramerate   <B>itrate",
         " <,>mark_beg   <.>mark_end   <u>nmark   <T>rim   <C-S-t>cut   <|>split    <&>merge   <M>irror",
         " <D>ifference",
-        " <R>esample_temporally   <C-g>high-quality_loop   <L>oop",
+        " <R>esample_temporally   <C-g>generate_loop   <C-S-g>high_quality_loop   <L>naive_loop",
         " <I>mage_from_frame   <V>ideo_from_images   <#>from_image_files%03d",
     };
     for_int(i, ar.num()) app_draw_text(V((4 + i) * (font_height + 4), 6), ar[i], k_no_text_wrap);

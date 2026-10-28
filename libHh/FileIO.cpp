@@ -421,6 +421,12 @@ WFile::~WFile() {
 
 // *** ReversedLinesReader
 
+// This reader uses chunked fread() rather than MappedFile.  In Oct 2026 benchmarks reading a 4 GiB file backward
+// (Ryzen 9 5900X; clang++ under WSL, MSVC under Windows), MappedFile's forward-sequential hint made a cold read 27x
+// slower under Linux, and any mapping without explicit prefetching was 8x slower cold under Windows.  Prefetching
+// 4 MiB windows ahead of the scan won cold under Linux (3.7 s vs. 5.3 s) but lost under Windows (3.1 s vs. 1.8 s),
+// and with a warm cache, mapping was 10-30% slower on both, so it would not justify the platform-specific code.
+
 ReversedLinesReader::ReversedLinesReader(const string& filename) : _rfile(filename) {
   // Reject the cases in which RFile would read through a pipe (including its fallback to filename + ".gz").
   assertx(!file_requires_pipe(filename) && file_exists(filename));

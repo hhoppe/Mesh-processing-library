@@ -46,6 +46,12 @@ void Buffer::expand() {
 
 #if defined(BUFFER_USE_WIN32_THREAD)
 
+// A background thread reads fd0 because Win32 offers no way to wait for data on an anonymous pipe: select() accepts
+//  only sockets, a pipe handle's signaled state is unrelated to data availability, and ReOpenFile() cannot make the
+//  handle overlapped (ERROR_PIPE_BUSY).  PIPE_NOWAIT gives non-blocking reads but nothing to wait on, so the
+//  alternative would be polling.  The thread instead signals g_buf_event_data_available, which the window message
+//  loop waits on together with messages in MsgWaitForMultipleObjectsEx().  (Verified on Windows 10 22H2, 2026.)
+
 extern HANDLE g_buf_event_data_available;
 HANDLE g_buf_event_data_available;  // Manual-reset; used in libHwWindows/Hw.cpp.
 

@@ -16,6 +16,8 @@ view_pm_gaudipark.sh
 view_pm_cessna.sh
 view_pm_club.sh
 view_geomorphs.sh
+view_proghull_bunny.sh
+view_proghull_standingblob.sh
 
 view_sr_office.sh
 view_sr_terrain.sh

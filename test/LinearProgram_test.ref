@@ -1,0 +1,20 @@
+textbook: optimal value=36 x=(2 6)
+infeasible: infeasible
+unbounded: unbounded
+negative: optimal value=5 x=(-3 -2)
+equality: optimal value=3 x=(2 1)
+redundant: optimal value=5 x=(5 -3)
+inconsistent: infeasible
+zero_row_ok: optimal value=3 x=(3)
+zero_row_bad: infeasible
+result.value = 0
+scaled: optimal value=3.6e+09 x=(2 6)
+beale: optimal value=1.25 x=(1 0 1 0)
+apex: optimal
+apex_bottom: optimal
+apex_unbounded: unbounded
+random_3d: 300 of 300 agree with brute force
+near_coplanar: 300 of 300 agree with brute force
+captured: value=-4.12706
+captured: value=-7.81939
+captured: value=-4.7557

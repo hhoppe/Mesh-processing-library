@@ -27,6 +27,8 @@ create_scripts = \
   create_pm_club.sh \
   determine_approximation_error.sh \
   create_geomorphs.sh \
+  create_proghull_bunny.sh \
+  create_proghull_standingblob.sh \
   create_sr_office.sh \
   create_sr_terrain.sh \
   create_terrain_hierarchy.sh \
@@ -46,6 +48,8 @@ view_scripts = \
   view_pm_cessna.sh \
   view_pm_club.sh \
   view_geomorphs.sh \
+  view_proghull_bunny.sh \
+  view_proghull_standingblob.sh \
   view_sr_office.sh \
   view_sr_terrain.sh \
   view_terrain_hierarchy.sh \

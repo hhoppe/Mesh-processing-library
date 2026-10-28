@@ -181,6 +181,20 @@ The [programs page](progs/README.md) shows these and other results together with
   </td>
  </tr>
 
+ <tr id="pub_silclip">
+  <td width="216">
+   <img src=".github/images/silclip.red.jpg" alt=""/>
+  </td>
+  <td>
+   <div><b><a href="https://hhoppe.com/proj/silclip/">Silhouette clipping</a></b>.</div>
+   <div>Pedro Sander, Xianfeng Gu, Steven Gortler, Hugues Hoppe, John Snyder.</div>
+   <div><cite>ACM SIGGRAPH 2000 Proceedings</cite>.</div>
+   <div><em>Efficient computation of mesh silhouette, used to clip coarse geometry.</em></div>
+   <div>Programs: <a href="progs/README.md#prog_MeshSimplify"><code>MeshSimplify</code></a></div>
+   <div>Demos: <code>create_proghull_*</code>, <code>view_proghull_*</code></div>
+  </td>
+ </tr>
+
  <tr id="pub_sphereparam">
   <td width="216">
    <img src=".github/images/sphereparam.red.jpg" alt=""/>

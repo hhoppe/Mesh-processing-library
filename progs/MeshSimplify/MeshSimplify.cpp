@@ -1,10 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include <charconv>  // to_chars(), chars_format
 
-#if defined(HH_HAVE_SIMPLEX)
-#include "recipes.h"
-#endif
-
 #include "libHh/A3dStream.h"  // A3dColor
 #include "libHh/Args.h"
 #include "libHh/Array.h"
@@ -18,6 +14,7 @@
 #include "libHh/GMesh.h"
 #include "libHh/GeomOp.h"  // dihedral_angle_cos()
 #include "libHh/LinearFunc.h"
+#include "libHh/LinearProgram.h"  // maximize_over_halfspaces()
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"
 #include "libHh/Matrix.h"
@@ -3065,10 +3062,8 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     Warning("hull: ignoring boundary 'corner' vertex");
     return false;
   }
-  // Set up a linear programming problem.  Recall that all variables are expected to be >= 0, annoying!
-  // Workaround: translate all variables into (x, y, z) > 0 octant.
-  // simplx(): epsilon is not scale-invariant -> scale data as well.
-  // p' = p * scale + translate .   p' in range [border, border + size].
+  // Set up a linear program in normalized coordinates, so that its tolerance tests below are scale-invariant:
+  // p' = p * scale + translate, with the neighborhood centered at the origin within [-size / 2, size / 2].
   float scale;
   Vector translate;
   const float transf_border = 10.f;  // Allow vertex to go anywhere.
@@ -3084,7 +3079,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
       return false;
     }
     scale = transf_size / bbox.max_side();
-    translate = Vector(transf_border, transf_border, transf_border) + (Point(0.f, 0.f, 0.f) - bbox[0]) * scale;
+    translate = (Point(0.f, 0.f, 0.f) - interp(bbox[0], bbox[1])) * scale;
   }
   // Gather constraints.
   Array<LinearFunc> ar_lf;
@@ -3097,7 +3092,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
         if (v == v2 && (f == f1 || f == f2)) continue;
         mesh.polygon(f, poly);
         Vector normal = poly.get_normal_dir();
-        // Normalize normal for numerical precision in simplx.
+        // Normalize the normal, so that the constraint tolerances are distances.
         if (!normal.normalize()) {
           Warning("Ignoring degenerate face");
           continue;
@@ -3107,7 +3102,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
         Point pnew = pold * scale + translate;
         if (1) {
           for_int(c, 3) {
-            if (pnew[c] <= transf_border - 1e-4f || pnew[c] >= transf_border + transf_size + 1e-4f) assertnever("");
+            if (abs(pnew[c]) >= transf_size * .5f + 1e-4f) assertnever("");
           }
         }
         ar_lf.push(LinearFunc(normal, pnew));
@@ -3133,113 +3128,41 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     if (!closed) Warning("compute_hull not designed for boundaries");
     for_int(i, nn.va.num() - closed) poly.push(mesh.point(nn.va[i]));
     link_normal = poly.get_normal_dir();
-    // Normalize for numerical precision in simplx.
+    // Normalize the objective direction.
     if (!link_normal.normalize()) {
       Warning("Zero volume gradient; skipping");
       return false;
     }
     if (innerhull) link_normal = -link_normal;
   }
-#if defined(HH_HAVE_SIMPLEX)
-  // Count number of constraints which are of form lfunc(x, y, z) >= d >= 0.
-  int n_m1 = 0;
-  for_int(i, ar_lf.num()) {
-    if (ar_lf[i].offset > 0.f) n_m1++;
+  // Maximize the displacement against the link normal, subject to lf.eval(p) >= 0 for every constraint.
+  const auto [status, pnew] = maximize_over_halfspaces(-link_normal, ar_lf);
+  if (status == ELpStatus::infeasible) {
+    Warning("hull: no point satisfies the constraints");
+    return false;
   }
-  // Use Numerical Recipes code (converted to double precision).
-  int n = 3;                                       // Number of variables (x, y, z).
-  int m1 = n_m1, m2 = ar_lf.num() - n_m1, m3 = 0;  // Number of '<=', '>=', '==' constraints.
-  int m = m1 + m2 + m3;                            // Total number of constraints.
-  double** a = dmatrix(1, m + 2, 1, n + 1);
-  int* iposv = ivector(1, m);
-  int* izrov = ivector(1, n);
-  int icase;
-  // Maximize the linear functional: -x*link_normal[0]-y*link_normal[1]...
-  a[1][1] = 0.f;  // Always.
-  a[1][2] = -link_normal[0];
-  a[1][3] = -link_normal[1];
-  a[1][4] = -link_normal[2];
-  // Subject to the constraint: lf.eval(Point(x, y, z)) >= 0;
-  //  equivalently, lf[0] * x + lf[1] * y + lf[2] * z >= -lf[3].
-  //  or possibly, -lf[0] * x - lf[1] * y - lf[2] * z <= lf[3].
-  {
-    int nr = 0;
-    for_int(i, ar_lf.num()) {
-      const LinearFunc& lf = ar_lf[i];
-      if (!(lf.offset > 0.f)) continue;
-      a[2 + nr][1] = lf.offset;
-      a[2 + nr][2] = lf.v[0];
-      a[2 + nr][3] = lf.v[1];
-      a[2 + nr][4] = lf.v[2];
-      nr++;
-    }
-    assertx(nr == m1);
-    for_int(i, ar_lf.num()) {
-      const LinearFunc& lf = ar_lf[i];
-      if (lf.offset > 0.f) continue;
-      a[2 + nr][1] = -lf.offset;
-      a[2 + nr][2] = -lf.v[0];
-      a[2 + nr][3] = -lf.v[1];
-      a[2 + nr][4] = -lf.v[2];
-      nr++;
-    }
-    assertx(nr == m);
+  if (status == ELpStatus::unbounded) {
+    Warning("hull: objective function is unbounded");
+    return false;
   }
-  {
-    // We could instead use the Raymond Seidel (or Raimund Seidel) fast linear programming scheme, copied from
-    // Seth Teller into rseidel_lp.tar.gz, then into linprog.tar.gz .
-    simplx(a, m, n, m1, m2, m3, &icase, izrov, iposv);
-  }
-  bool ret = false;
-  if (icase == -2) {
-    Warning("simplx: hhiter exceeded");
-  } else if (icase == -1) {
-    Warning("simplx: no solution satisfies constraints");
-  } else if (icase < 0) {
-    assertnever("");
-  } else if (icase > 0) {
-    Warning("simplx: objective function is unbounded");
-  } else {
-    // A finite solution is found.
-    Point pnew(0.f, 0.f, 0.f);  // Must be initialized to zero's.
-    for_intL(i, 1, m + 1) {
-      assertx(iposv[i] >= 1);
-      if (iposv[i] <= n) pnew[iposv[i] - 1] = float(a[1 + i][1]);
-    }
-    if (1) {
-      for_int(i, ar_lf.num()) {
-        if (ar_lf[i].eval(pnew) < -1e-4f) {
-          Warning("Simplx linear inequality not satisfied");
-          SSTATV2(Ssimplxbad, ar_lf[i].eval(pnew));
-        }
-      }
-    }
-    bool good = true;
-    for_int(c, 3) {
-      assertw(pnew[c] >= -1e-4f);
-      if (pnew[c] < .01f) {
-        Warning("hull point outside border_min");
-        good = false;
-        break;
-      }
-      if (pnew[c] > transf_border * 2 + transf_size) {
-        Warning("hull point outside border_max");
-        good = false;
-        break;
-      }
-    }
-    if (good) {
-      newpoint = (pnew - translate) / scale;
-      ret = true;
+  for (const LinearFunc& lf : ar_lf) {
+    if (lf.eval(pnew) < -1e-4f) {
+      Warning("hull: linear inequality not satisfied");
+      SSTATV2(Shullbad, lf.eval(pnew));
     }
   }
-  free_dmatrix(a, 1, m + 2, 1, n + 1);
-  free_ivector(iposv, 1, m);
-  free_ivector(izrov, 1, n);
-  return ret;
-#else   // defined(HH_HAVE_SIMPLEX)
-  assertnever("Linear programming (simplex) is unavailable");
-#endif  // defined(HH_HAVE_SIMPLEX)
+  for_int(c, 3) {
+    if (pnew[c] < -(transf_border + transf_size * .5f)) {
+      Warning("hull point outside border_min");
+      return false;
+    }
+    if (pnew[c] > transf_border + transf_size * .5f) {
+      Warning("hull point outside border_max");
+      return false;
+    }
+  }
+  newpoint = (pnew - translate) / scale;
+  return true;
 }
 
 float compute_volume_before(Edge e) {

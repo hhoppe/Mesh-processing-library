@@ -74,7 +74,7 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(LocalRoot)\lib\$(Platform)\Release;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <!-- <AdditionalDependencies>libjpeg.lib;libpng.lib;libz.lib;librecipes.lib;%(AdditionalDependencies)</AdditionalDependencies> -->
+      <!-- <AdditionalDependencies>libjpeg.lib;libpng.lib;libz.lib;%(AdditionalDependencies)</AdditionalDependencies> -->
       <!-- <AdditionalDependencies>liblapack.lib;libF77.lib;libI77.lib;libBLAS.lib;%(AdditionalDependencies)</AdditionalDependencies> -->
     </Link>
   </ItemDefinitionGroup>

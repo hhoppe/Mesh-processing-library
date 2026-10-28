@@ -66,6 +66,7 @@
     <ClCompile Include="Image_IO.cpp" />
     <ClCompile Include="Image_libs.cpp" />
     <ClCompile Include="Image_wic.cpp" />
+    <ClCompile Include="LinearProgram.cpp" />
     <ClCompile Include="Lls.cpp" />
     <ClCompile Include="MappedFile.cpp" />
     <ClCompile Include="Mesh.cpp" />
@@ -142,6 +143,7 @@
     <ClInclude Include="Kdtree.h" />
     <ClInclude Include="Lls.h" />
     <ClInclude Include="LinearFunc.h" />
+    <ClInclude Include="LinearProgram.h" />
     <ClInclude Include="LinearRegression.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="MappedFile.h" />

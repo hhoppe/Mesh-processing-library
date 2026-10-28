@@ -15,8 +15,6 @@ Everything is in namespace `hh`.
 - `Array<T>`: heap-allocated resizable array, like `std::vector<T>`.
 - `InlinedArray<T, n>`: resizable array whose first `n` elements use built-in storage, which avoids heap allocation
   for small arrays.
-- `GeneralArray<T, n>`: the class of which `Array<T>` (with `n == 0`) and `InlinedArray<T, n>` are aliases; code
-  names it directly only when it is generic over `n`, e.g. in a function that resizes any such array.
 - `CStridedArrayView<T>`, `StridedArrayView<T>`: views whose elements are separated by a stride, e.g. a column of a
   `Matrix`.
 
@@ -73,10 +71,11 @@ CGridView<D, T>             (const elements)
 - `Bary`, `Uv`: barycentric coordinates within a triangle, and 2D texture coordinates.
 - `Polygon`: array of `Point`s, with normal, area, clipping, and intersection operations.
 - `Quaternion`: unit quaternion representing a 3D rotation, with `slerp()` and `squad()` interpolation.
-- `PointSpatial<T>`, `ObjectSpatial`, `SpatialSearch<T>`: uniform grid over the unit cube, for finding the elements
-  nearest to a query point.
+- `PointSpatial<T>`, `ObjectSpatial`, `SpatialSearch<T>`: uniform grid over the unit cube, for finding elements
+  nearest to a point.
 - `Vector4`, `VectorF<n>`: vectors of `float` accelerated using SSE or NEON instructions.
 - `Lls`, `SparseLls`: linear least-squares solvers (dense QR or SVD, and sparse conjugate gradient).
+- `maximize_linear_program()`, `maximize_over_halfspaces()`: linear programming (simplex method).
 
 ## Meshes, images, and video
 
@@ -91,8 +90,7 @@ CGridView<D, T>             (const elements)
 - `RA3dStream`, `WA3dStream`: reading and writing streams of polygons, polylines, and points (`*.a3d`).
 - `Pixel`: RGBA color with 8-bit channels (a `Vec4<uint8_t>`).
 - `Image`: 2D grid of `Pixel`s (a `Matrix<Pixel>`) with file input and output.
-- `feather_sphere_image()`: blends the pixels across the discontinuities of the image of a spherical domain (tetra,
-  octa, octaflat, or cube), as created by `SphereSample`.
+- `feather_sphere_image()`: blends the pixels across the discontinuities of the image of a spherical domain.
 - `Video`: 3D grid of `Pixel`s with attributes such as frame rate, bit rate, and compression type.
 - `RVideo`, `WVideo`: reading or writing a video one frame at a time; `VideoNv12` stores frames in YUV 4:2:0 (NV12).
 - `Audio`: 2D grid of `float` samples (channels by samples), with a sample rate and bit rate.
@@ -106,7 +104,8 @@ CGridView<D, T>             (const elements)
   domain, following the Python package [resampler](https://github.com/hhoppe/resampler).
 - `Resizer`: the precomputed kernel weights of a resize, reusable across grids (e.g., the frames of a video).
 - `Sampler`, `sample_domain()`, `resample()`: reconstruct a grid at arbitrary points, applying the digital filter of a
-  generalized kernel once; `transform()` resamples a matrix through an affine map of its domain.
+  generalized kernel once.
+- `transform()`: resamples a matrix through an affine map of its domain.
 
 ## Utilities
 

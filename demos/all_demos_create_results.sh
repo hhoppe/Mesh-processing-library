@@ -18,6 +18,8 @@ create_pm_club.sh
 determine_approximation_error.sh
 
 create_geomorphs.sh
+create_proghull_bunny.sh
+create_proghull_standingblob.sh
 
 create_sr_office.sh
 create_sr_terrain.sh

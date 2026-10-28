@@ -283,6 +283,11 @@ bin/mesh_to_pm demos/data/club.orig.m >club.pm
 ```
 (or `bin/mesh_to_pm.bat` under the Windows `cmd` shell).
 
+A progressive <em>outer hull</em>, whose every level of detail encloses the original mesh, is created similarly:
+```shell
+bin/mesh_to_pm demos/data/bunny.orig.m -hull -minvolume >bunny.ohull.pm
+```
+
 Given a progressive mesh, we can interactively traverse its continuous levels of detail:
 ```shell
 PM_LOD_LEVEL=0.05 G3dOGL -pm_mode club.pm -st demos/data/club.s3d -lightambient .4 -key De

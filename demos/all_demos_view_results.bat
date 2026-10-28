@@ -14,6 +14,8 @@ if .==. (
   call view_pm_cessna.bat
   call view_pm_club.bat
   call view_geomorphs.bat
+  call view_proghull_bunny.bat
+  call view_proghull_standingblob.bat
 
   call view_sr_office.bat
   call view_sr_terrain.bat

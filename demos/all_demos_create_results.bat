@@ -16,6 +16,8 @@ if .==. (
   call determine_approximation_error.bat
 
   call create_geomorphs.bat
+  call create_proghull_bunny.bat
+  call create_proghull_standingblob.bat
 
   call create_sr_office.bat
   call create_sr_terrain.bat

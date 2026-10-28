@@ -264,6 +264,7 @@ struct S_Selected {      // During drag operation.
   int button_active{0};  // 1..3 if mouse button currently pressed, else 0.
   bool shift_was_pressed;
   bool control_was_pressed;
+  bool simulated_right;
   Vec2<int> yx_pressed;  // Location where button was initially pressed.
   Vec2<int> yx_last;     // Previous location during a drag operation.
   int axis_constraint;   // 0 or 1, or -1 if none.
@@ -2598,13 +2599,17 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& pyx) {
   if (g_verbose >= 1) SHOW(butnum, pressed, yx);
   if (getobnum() == 0) return;
   // Control-left acts as the middle button (e.g., on a laptop trackpad), without the control-middle rate mode.
+  // Shift-left acts as the right button, without the shift-right axis constraint.
   const bool simulated_middle = butnum == 1 && get_key_modifier(Hw::EModifier::control);
+  const bool simulated_right = butnum == 1 && !simulated_middle && get_key_modifier(Hw::EModifier::shift);
   if (simulated_middle) butnum = 2;
+  if (simulated_right) butnum = 3;
   if (pressed) {
     if (butnum <= 3) {
       g_selected.button_active = butnum;
       g_selected.shift_was_pressed = get_key_modifier(Hw::EModifier::shift);
       g_selected.control_was_pressed = get_key_modifier(Hw::EModifier::control) && !simulated_middle;
+      g_selected.simulated_right = simulated_right;
       g_selected.yx_pressed = yx;
       g_selected.yx_last = yx;
       g_selected.axis_constraint = -1;
@@ -3482,7 +3487,8 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
           yxd = convert<float>(yx - g_selected.yx_pressed) * .02f;
         }
         if (alt_pressed) yxd *= .1f;
-        if (shift_pressed) {
+        const bool constrain_axis = shift_pressed && !g_selected.simulated_right;
+        if (constrain_axis) {
           if (g_selected.axis_constraint < 0 && g_selected.yx_last == g_selected.yx_pressed && mag2(yxd)) {
             g_selected.axis_constraint = arg_max(abs(yxd));
             if (g_verbose >= 3) SHOW(abs(yxd), g_selected.axis_constraint);
@@ -3491,7 +3497,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
             yxd[1 - g_selected.axis_constraint] = 0.f;  // Zero-out the contribution of least-moved dimension.
         }
         Vec2<bool> b_constrain_inside = twice(false);
-        if (!shift_pressed && !view_has_rotation()) {
+        if (!constrain_axis && !view_has_rotation()) {
           // For each axis, restrict motion to image boundaries if we see the entire image on that axis.
           for_int(c, 2) {
             Vec2<int> winc;
@@ -3692,7 +3698,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
   if (g_show_help) {  // Show overlaid help text.
     Array<string> ar = {
         "<h>,<?>,<f1>: Toggle this help   (S=shift, C=control)",
-        "Mouse:  <Left>select   <Mid>zoom   <S-Mid>rotate   <Right>pan   (<C-Left> simulates <Mid>)",
+        "Mouse:  <Left>select   <Mid>zoom   <S-Mid>rotate   <Right>,<S-Left>pan   (<C-Left> acts as <Mid>)",
         "Keys:  <r>eset_all",
         " <=>enlarge   <->shrink   <0>100%   <f>ullscreen   <w>indow_fit   <A>spectratio   <:>anisotropic",
         " <k>ernel_filter   <b>rightness_controls",

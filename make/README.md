@@ -131,6 +131,11 @@ and compares that output with the expected output in `test/X_test.ref`.
 On a mismatch, the differences are shown and saved in `test/X_test.diff`, and `make` reports a failure
 (as it does on every later run until the test passes).
 
+The test `Resample_test` also compares resizing and resampling results with those of the Python package
+[resampler](https://github.com/hhoppe/resampler), stored in `test/Resample_parity.inc`.
+`make -C test resampler_parity` regenerates that file using the installed package (`pip install resampler`)
+and reruns the test; the values are rounded so that the file changes only if some result changes.
+
 
 ## Demos
 

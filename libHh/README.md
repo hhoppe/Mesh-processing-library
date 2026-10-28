@@ -97,7 +97,7 @@ CGridView<D, T>             (const elements)
 
 ## Resampling of grids
 
-- `scale()`, `uniform_resize()`: resize a grid of any dimension and sample type (`float`, `Vector4`, `Pixel`, or
+- `resize()`, `uniform_resize()`: resize a grid of any dimension and sample type (`float`, `Vector4`, `Pixel`, or
   16- and 32-bit integers) according to a `ResizeOptions`: per-dimension kernels (`Filter`: `cubic`, `cardinal3`,
   `lanczos3`, `trapezoid`, ...), boundary rules (`Boundary`: `reflect`, `wrap`, `clamp`, `border`, `natural`, ...),
   sample placement (`Gridtype`: dual or primal), a transfer function (`Gamma`), and a scaling and translation of the

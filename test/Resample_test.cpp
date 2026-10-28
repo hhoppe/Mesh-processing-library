@@ -21,7 +21,7 @@ void check_parity(const char* boundary, const char* filter, Gridtype gridtype, G
                                  .dst_gridtype = dst_gridtype,
                                  .scale = scale_,
                                  .translate = translate};
-  const Grid<1, double> result = scale(src, V(dst_size), options, &cval);
+  const Grid<1, double> result = resize(src, V(dst_size), options, &cval);
   assertx(result.dims() == V(dst_size) && int(expected.size()) == dst_size);
   int i = 0;
   for (const double e : expected) {
@@ -73,22 +73,23 @@ int main() {
   {  // Primal grids and per-dimension kernels and rules.
     Grid<1, float> ramp(V(5));
     for_int(i, 5) ramp[i] = float(i * i);
-    SHOW(scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "clamp"}));
+    SHOW(
+        resize(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "clamp"}));
     // On a primal grid, "reflect" is the 101 reflection (the boundary sample is not repeated), as in resampler.
-    SHOW(scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "cubic", .boundary = "reflect"}));
+    SHOW(resize(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "cubic", .boundary = "reflect"}));
     Random random(17);
     Grid<3, float> grid(V(4, 5, 3));
     for (float& e : grid) e = random.unif();
     const ResizeOptions<3> options{.filter = V("cubic", "triangle", "box"), .boundary = V("reflect", "wrap", "clamp")};
     for (const Vec3<int> ndims : {V(7, 2, 6), V(4, 9, 1), V(2, 2, 2)})
-      SHOW(ndims, round_fraction_digits(float(sum(scale(grid, ndims, options))), 100.f));
+      SHOW(ndims, round_fraction_digits(float(sum(resize(grid, ndims, options))), 100.f));
   }
   {  // A single output sample gets a hard cutoff to cval (no antialiased transition), as in resampler.
     Grid<1, float> ramp(V(5));
     for_int(i, 5) ramp[i] = float(i);
     const float cval = -7.f;
     const ResizeOptions<1> options{.filter = "triangle", .boundary = "constant", .translate = .8};
-    assertx(scale(ramp, V(1), options, &cval)[0] == cval);  // The sample at .5 maps to -.3, outside the domain.
+    assertx(resize(ramp, V(1), options, &cval)[0] == cval);  // The sample at .5 maps to -.3, outside the domain.
   }
   {  // Resizer: rows of precomputed weights, with the boundary taps folded into interior samples.
     const Resizer<1> resizer(V(3), V(7), {.filter = "cubic", .boundary = "wrap"});
@@ -101,7 +102,7 @@ int main() {
     Grid<1, float> grid(V(3));
     grid[0] = 1.f, grid[1] = 2.f, grid[2] = 4.f;
     const Grid<1, float> result = resizer.apply(grid);
-    assertx(ranges::equal(result, scale(grid, V(7), ResizeOptions<1>{.filter = "cubic", .boundary = "wrap"})));
+    assertx(ranges::equal(result, resize(grid, V(7), ResizeOptions<1>{.filter = "cubic", .boundary = "wrap"})));
     SHOW(result);
     const Grid<1, float> ones(V(3), 1.f);  // The resizer applies to any grid of the same dimensions.
     assertx(abs(max(resizer.apply(ones)) - 1.f) < 1e-6f && abs(min(resizer.apply(ones)) - 1.f) < 1e-6f);
@@ -130,9 +131,9 @@ int main() {
         assertx(abs(sampler(p) - mat[u]) < 1e-5f);
         assertx(abs(sampler.at_grid(convert<float>(u)) - mat[u]) < 1e-5f);
       }
-      const Vec2<int> ndims(9, 11);  // Magnification by scale() matches point sampling.
+      const Vec2<int> ndims(9, 11);  // Magnification by resize() matches point sampling.
       const Grid<2, float> gridn =
-          scale(mat, ndims, ResizeOptions<2>{.filter = filter_name, .boundary = boundary_name}, &cval);
+          resize(mat, ndims, ResizeOptions<2>{.filter = filter_name, .boundary = boundary_name}, &cval);
       for (const Vec2<int> yx : range(ndims)) {
         const Vec2<float> p((yx[0] + .5f) / ndims[0], (yx[1] + .5f) / ndims[1]);
         if (!(abs(gridn[yx] - sampler(p)) < 1e-5f))
@@ -180,31 +181,31 @@ int main() {
   {  // Integer sample types are decoded with the gamma, resampled, and encoded with rounding and clamping.
     Grid<1, uint8_t> g8(V(4));
     g8[0] = 0, g8[1] = 100, g8[2] = 200, g8[3] = 255;
-    const Grid<1, uint8_t> r8 = scale(g8, V(7), ResizeOptions<1>{.filter = "triangle"});
+    const Grid<1, uint8_t> r8 = resize(g8, V(7), ResizeOptions<1>{.filter = "triangle"});
     SHOW(convert<int>(r8));
     Grid<1, float> f(V(4));
     for_int(i, 4) f[i] = g8[i] / 255.f;
-    const Grid<1, float> rf = scale(f, V(7), ResizeOptions<1>{.filter = "triangle"});
+    const Grid<1, float> rf = resize(f, V(7), ResizeOptions<1>{.filter = "triangle"});
     for_int(i, 7) assertx(r8[i] == uint8_t(clamp(rf[i], 0.f, 1.f) * 255.f + .5f));
     Grid<1, uint8_t> two(V(2));
     two[0] = 0, two[1] = 255;  // The midpoint is 128 in the encoded space but sqrt(.5) * 255 = 180 with power2.
-    assertx(scale(two, V(3), ResizeOptions<1>{.filter = "triangle"})[1] == 128);
-    assertx(scale(two, V(3), ResizeOptions<1>{.filter = "triangle", .gamma = "power2"})[1] == 180);
+    assertx(resize(two, V(3), ResizeOptions<1>{.filter = "triangle"})[1] == 128);
+    assertx(resize(two, V(3), ResizeOptions<1>{.filter = "triangle", .gamma = "power2"})[1] == 180);
     Grid<1, uint16_t> g16(V(4));  // The overshoot of the cubic kernel saturates at the maximum value.
     g16[0] = 0, g16[1] = 30000, g16[2] = 65535, g16[3] = 65535;
-    const Grid<1, uint16_t> r16 = scale(g16, V(9), ResizeOptions<1>{.filter = "cubic"});
+    const Grid<1, uint16_t> r16 = resize(g16, V(9), ResizeOptions<1>{.filter = "cubic"});
     SHOW(r16);
     assertx(max(r16) == 65535 && r16[0] == 0);
     Grid<1, uint32_t> g32(V(4));
     g32[0] = 0, g32[1] = 1'000'000'000u, g32[2] = 4294967295u, g32[3] = 4294967295u;
-    const Grid<1, uint32_t> r32 = scale(g32, V(9), ResizeOptions<1>{.filter = "cubic", .gamma = "power2"});
+    const Grid<1, uint32_t> r32 = resize(g32, V(9), ResizeOptions<1>{.filter = "cubic", .gamma = "power2"});
     SHOW(r32);
     // (The float32 kernel weights limit the precision of 32-bit samples to about 2^-24 relative.)
     assertx(max(r32) == 4294967295u && r32[0] == 0 && r32[8] > 4294967295u - 512u);
     Grid<1, Vec3<uint16_t>> gv(V(3));
     gv[0] = convert<uint16_t>(V(0, 100, 65535)), gv[1] = convert<uint16_t>(V(1000, 200, 0));
     gv[2] = convert<uint16_t>(V(2000, 300, 65535));
-    SHOW(scale(gv, V(5), ResizeOptions<1>{.filter = "triangle", .gamma = "srgb"}));
+    SHOW(resize(gv, V(5), ResizeOptions<1>{.filter = "triangle", .gamma = "srgb"}));
     Matrix<Pixel> pix(V(4, 4), Pixel(255, 255, 255, 255));  // The left half is white and the right half black.
     for (const Vec2<int> u : range(pix.dims()))
       if (u[1] >= 2) pix[u] = Pixel(0, 0, 0, 255);
@@ -215,8 +216,8 @@ int main() {
     SHOW(sampler2(V(.5f, .5f)));  // The blend of white and black in linear space, encoded back: 180.
     assertx(sampler2(V(.5f, .5f))[0] == 180);
     // An identity resize copies the samples exactly, whatever the gamma.
-    assertx(ranges::equal(scale(pix, pix.dims(), ResizeOptions<2>{.filter = "cubic", .gamma = "srgb"}), pix));
-    const Grid<2, Pixel> near = scale(pix, V(7, 5), ResizeOptions<2>{.filter = "impulse"});  // An exact gather.
+    assertx(ranges::equal(resize(pix, pix.dims(), ResizeOptions<2>{.filter = "cubic", .gamma = "srgb"}), pix));
+    const Grid<2, Pixel> near = resize(pix, V(7, 5), ResizeOptions<2>{.filter = "impulse"});  // An exact gather.
     for (const Vec2<int> u : range(near.dims())) {
       Vec2<int> src;
       for_int(d, 2) src[d] = int(std::floor((u[d] + .5) / near.dim(d) * pix.dim(d)));
@@ -231,8 +232,8 @@ int main() {
     omatrix.assign(matrix);
     const ResizeOptions<2> options{.filter = "cardinal3", .boundary = "reflect"};
     for_int(i, 10) {
-      matrix = scale(matrix, V(65, 65), options, implicit_cast<const Vector4*>(nullptr), std::move(matrix));
-      matrix = scale(matrix, V(64, 64), options, implicit_cast<const Vector4*>(nullptr), std::move(matrix));
+      matrix = resize(matrix, V(65, 65), options, implicit_cast<const Vector4*>(nullptr), std::move(matrix));
+      matrix = resize(matrix, V(64, 64), options, implicit_cast<const Vector4*>(nullptr), std::move(matrix));
     }
     float max_error = 0.f;
     double sum2 = 0.;
@@ -254,7 +255,7 @@ int main() {
   {  // The digital filter of a cardinal spline on a primal grid of 2 samples with "wrap" (period 1) is well-posed.
     const Grid<1, double> two(V(2), 1.);
     const ResizeOptions<1> options{.gridtype = Gridtype::primal, .filter = "cardinal3", .boundary = "wrap"};
-    const Grid<1, double> result = scale(two, V(5), options);
+    const Grid<1, double> result = resize(two, V(5), options);
     SHOW(result);
     for (const double v : result) assertx(abs(v - 1.) < 1e-6);
   }

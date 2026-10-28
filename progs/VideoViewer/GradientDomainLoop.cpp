@@ -4,8 +4,8 @@
 #include "libHh/ArrayOp.h"  // sort_unique()
 #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"       // file_exists()
-#include "libHh/GridOp.h"       // scale_filter_nearest(), scale()
-#include "libHh/GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
+#include "libHh/GridOp.h"       // resize_nearest(), resize()
+#include "libHh/GridPixelOp.h"  // spatially_resize_Grid3_Pixel()
 #include "libHh/Image.h"
 #include "libHh/Multigrid.h"
 #include "libHh/Parallel.h"
@@ -444,7 +444,7 @@ void compute_gdloop_aux2(CGridView<3, Pixel> video, CMatrixView<int> mat_start, 
 Matrix<int> possibly_rescale(CMatrixView<int> mat, const Vec2<int>& sdims) {
   assertx(min(mat.dims()) > 0);
   assertx(is_zero(mat.dims() % sdims) || is_zero(sdims % mat.dims()));
-  Matrix<int> nmat = mat.dims() == sdims ? Matrix<int>(mat) : scale_filter_nearest(mat, sdims);
+  Matrix<int> nmat = mat.dims() == sdims ? Matrix<int>(mat) : resize_nearest(mat, sdims);
   return nmat;
 }
 
@@ -695,8 +695,8 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
   Matrix<int> hmat_start = possibly_rescale(mat_start, hdims);
   Matrix<int> hmat_period = possibly_rescale(mat_period, hdims);
   if (1) {  // Quick optional debug.
-    assertx(max_abs_element(scale_filter_nearest(hmat_start, mat_start.dims()) - mat_start) == 0);
-    assertx(max_abs_element(scale_filter_nearest(hmat_period, mat_period.dims()) - mat_period) == 0);
+    assertx(max_abs_element(resize_nearest(hmat_start, mat_start.dims()) - mat_start) == 0);
+    assertx(max_abs_element(resize_nearest(hmat_period, mat_period.dims()) - mat_period) == 0);
   }
   assertx(is_zero(hdims % hmat_start.dims()));
   assertx(is_zero(hdims % hmat_period.dims()));
@@ -705,7 +705,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
     HH_TIMER("__scale_down");
     assertx(DT == 1);
     if (video.size()) {
-      spatially_scale_Grid3_Pixel(video, options, nullptr, hvideo);
+      spatially_resize_Grid3_Pixel(video, options, nullptr, hvideo);
     } else if (video_nv12.size()) {
       for_int(f, onf) integrally_downscale_Nv12_to_Image(video_nv12[f], hvideo[f]);
     } else {
@@ -1369,12 +1369,12 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
                               ((video.dim(2) + 3) / 4) * 2);  // Half-resolution.
         {
           HH_TIMER("__scale_down");
-          spatially_scale_Grid3_Pixel(video, options, nullptr, hvideo);
+          spatially_resize_Grid3_Pixel(video, options, nullptr, hvideo);
         }
         if (debug) write_video(hvideo, "hvideo.mp4");
         const Vec2<int> hdims = hvideo.dims().tail<2>();
-        const Matrix<int> hmat_start = scale_filter_nearest(mat_start, hdims);    // Half-resolution.
-        const Matrix<int> hmat_period = scale_filter_nearest(mat_period, hdims);  // Half-resolution.
+        const Matrix<int> hmat_start = resize_nearest(mat_start, hdims);    // Half-resolution.
+        const Matrix<int> hmat_period = resize_nearest(mat_period, hdims);  // Half-resolution.
         // HH_RSTAT(Shstart, hmat_start); HH_RSTAT(Shperiod, hmat_period);
         timer_gdloop1.terminate();
         Grid<3, Pixel> hvideoloop(concat(V(videoloop.dim(0)), hdims));  // Half-resolution loop.
@@ -1386,7 +1386,7 @@ void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CG
         HH_TIMER("_gdloop3");
         {
           HH_TIMER("__scale_up");
-          spatially_scale_Grid3_Pixel(hvideoloop, options, nullptr, videoloop);
+          spatially_resize_Grid3_Pixel(hvideoloop, options, nullptr, videoloop);
         }
         if (debug) write_video(videoloop, "videoloop.mp4");
         if (1) {  // Visually excellent, but actual rms numbers are poor.

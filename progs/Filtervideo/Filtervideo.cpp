@@ -5,7 +5,7 @@
 #include "libHh/FileIO.h"
 #include "libHh/FrameIO.h"
 #include "libHh/Geometry.h"
-#include "libHh/GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
+#include "libHh/GridPixelOp.h"  // spatially_resize_Grid3_Pixel()
 #include "libHh/Homogeneous.h"
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"    // smooth_step(), frac(Vec<>), floor(Vec<>)
@@ -210,7 +210,7 @@ void apply_assemble_operations(Grid<3, Pixel>& vid, const Vec2<int>& yx, const V
       const float vscale = min(convert<float>(as_fit_dims) / convert<float>(vid.dims().tail<2>()));
       const Vec2<int> newdims = convert<int>(convert<float>(vid.dims().tail<2>()) * vscale + .5f);
       Grid<3, Pixel> newvid(concat(V(vid.dim(0)), newdims));
-      spatially_scale_Grid3_Pixel(vid, g_options, &gcolor, newvid);
+      spatially_resize_Grid3_Pixel(vid, g_options, &gcolor, newvid);
       vid = std::move(newvid);
     }
     const Vec2<int> side0 = (as_fit_dims - vid.dims().tail<2>()) / 2;
@@ -1152,14 +1152,14 @@ void possibly_rescale_loop_parameters() {
            make_string(g_lp.mat_static.dims()).c_str(), make_string(video.spatial_dims()).c_str());
   }
   const ResizeOptions<2> nearest{.filter = "impulse", .boundary = "reflect"};
-  const auto func_scale_Matrix_int = [&](Matrix<int>& m) {
-    m = scale_filter_nearest(m, video.spatial_dims(), std::move(m));
+  const auto func_resize_Matrix_int = [&](Matrix<int>& m) {
+    m = resize_nearest(m, video.spatial_dims(), std::move(m));
   };
-  func_scale_Matrix_int(g_lp.mat_static);
-  func_scale_Matrix_int(g_lp.mat_start);
-  func_scale_Matrix_int(g_lp.mat_period);
-  g_lp.mat_activation = scale(g_lp.mat_activation, video.spatial_dims(), nearest, implicit_cast<float*>(nullptr),
-                              std::move(g_lp.mat_activation));
+  func_resize_Matrix_int(g_lp.mat_static);
+  func_resize_Matrix_int(g_lp.mat_start);
+  func_resize_Matrix_int(g_lp.mat_period);
+  g_lp.mat_activation = resize(g_lp.mat_activation, video.spatial_dims(), nearest, implicit_cast<float*>(nullptr),
+                               std::move(g_lp.mat_activation));
 }
 
 void verify_loop_parameters() {

@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "progs/VideoViewer/LoopParameters.h"
 
-#include "libHh/GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
+#include "libHh/GridPixelOp.h"  // spatially_resize_Grid3_Pixel()
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"  // int_floor_log2()
 #include "libHh/Parallel.h"
@@ -64,7 +64,7 @@ void compute_looping_parameters(const Vec3<int>& odims, CGridView<3, Pixel> ovid
     {  // Reduced (maybe "half") resolution.
       HH_TIMER("__scale_spatially");
       if (ovideo.size()) {
-        spatially_scale_Grid3_Pixel(ovideo, options, nullptr, hvideo1);
+        spatially_resize_Grid3_Pixel(ovideo, options, nullptr, hvideo1);
       } else if (ovideo_nv12.size()) {
         for_int(f, onf) integrally_downscale_Nv12_to_Image(ovideo_nv12[f], hvideo1[f]);
       } else {

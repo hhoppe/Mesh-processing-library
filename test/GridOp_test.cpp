@@ -42,7 +42,7 @@ template <int D> void test(const Vec<int, D>& dims, const Vec<int, D>& ndims) {
     for (const char* boundary : {"reflect", "wrap", "clamp"}) {
       for (const Filter* pfilter : filters) {
         const Filter& filter = *pfilter;
-        const Grid<D, float> gridn = scale(grid, ndims, ResizeOptions<D>{.filter = filter, .boundary = boundary});
+        const Grid<D, float> gridn = resize(grid, ndims, ResizeOptions<D>{.filter = filter, .boundary = boundary});
         // SHOW(Stat(gridn));
         assertx(abs(min(gridn) - 1.f) < 1e-6f);
         assertx(abs(max(gridn) - 1.f) < 1e-6f);
@@ -100,15 +100,15 @@ int main() {
     Matrix<float> mat = {{1.f, 1.f, 2.f}, {1.f, 1.f, 1.f}, {1.f, 10.f, 1.f}};
     SHOW(mat);
     const ResizeOptions<2> primal{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "reflect"};
-    SHOW(scale(mat, V(2, 2), primal));
-    SHOW(scale(mat, V(5, 5), primal));
-    SHOW(scale(scale(mat, V(5, 5), primal), V(3, 3), primal));
+    SHOW(resize(mat, V(2, 2), primal));
+    SHOW(resize(mat, V(5, 5), primal));
+    SHOW(resize(resize(mat, V(5, 5), primal), V(3, 3), primal));
     exit(0);
   }
   {  // Most basic experiment.
     const int D = 2;
     const Grid<D, float> grid(V(2, 2), 1.f);
-    const Grid<D, float> gridn = scale(grid, V(3, 3), ResizeOptions<D>{.filter = "impulse", .boundary = "reflect"});
+    const Grid<D, float> gridn = resize(grid, V(3, 3), ResizeOptions<D>{.filter = "impulse", .boundary = "reflect"});
     SHOW(Stat(gridn));
     assertx(abs(min(gridn) - 1.f) < 1e-5f);
     assertx(abs(max(gridn) - 1.f) < 1e-5f);
@@ -131,7 +131,7 @@ int main() {
          {std::pair{"triangle", "reflect"}, std::pair{"cubic", "clamp"}, std::pair{"mitchell", "wrap"}}) {
       const ResizeOptions<2> options{.filter = filter_name, .boundary = boundary};
       for (const Vec2<int> ndims : {V(5, 4), V(9, 11), V(5, 13)}) {
-        const Grid<2, float> gridn = scale(mat, ndims, options);
+        const Grid<2, float> gridn = resize(mat, ndims, options);
         assertx(gridn.dims() == ndims);
         for (const auto& yx : range(ndims)) {
           const Vec2<float> p((yx[0] + .5f) / ndims[0], (yx[1] + .5f) / ndims[1]);
@@ -251,36 +251,36 @@ int main() {
   if (1) {
     // 1D
     constexpr SGrid<int, 5> grid1 = V(1, 2, 3, 4, 5);
-    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(1)));
-    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(2)));
-    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(3)));
-    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(4)));
-    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(5)));
-    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(6)));
-    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(10)));
-    SHOW(scale_filter_nearest(grid1.grid_view<1>(), V(11)));
+    SHOW(resize_nearest(grid1.grid_view<1>(), V(1)));
+    SHOW(resize_nearest(grid1.grid_view<1>(), V(2)));
+    SHOW(resize_nearest(grid1.grid_view<1>(), V(3)));
+    SHOW(resize_nearest(grid1.grid_view<1>(), V(4)));
+    SHOW(resize_nearest(grid1.grid_view<1>(), V(5)));
+    SHOW(resize_nearest(grid1.grid_view<1>(), V(6)));
+    SHOW(resize_nearest(grid1.grid_view<1>(), V(10)));
+    SHOW(resize_nearest(grid1.grid_view<1>(), V(11)));
     // 2D
     constexpr SGrid<int, 4, 5> grid2 =
         V(V(1, 2, 3, 4, 5), V(6, 7, 8, 9, 10), V(11, 12, 13, 14, 15), V(16, 17, 18, 19, 20));
-    SHOW(scale_filter_nearest(grid2.grid_view<2>(), V(2, 3)));
-    SHOW(scale_filter_nearest(grid2.grid_view<2>(), V(1, 8)));
-    SHOW(scale_filter_nearest(grid2.grid_view<2>(), V(4, 10)));
+    SHOW(resize_nearest(grid2.grid_view<2>(), V(2, 3)));
+    SHOW(resize_nearest(grid2.grid_view<2>(), V(1, 8)));
+    SHOW(resize_nearest(grid2.grid_view<2>(), V(4, 10)));
     // 3D
     constexpr SGrid<int, 2, 2, 5> grid3 = {{{1, 2, 3, 4, 5}, {11, 12, 13, 14, 15}},
                                            {{101, 102, 103, 104, 105}, {111, 112, 113, 114, 115}}};
-    SHOW(scale_filter_nearest(grid3.grid_view<3>(), V(2, 1, 5)));
-    SHOW(scale_filter_nearest(grid3.grid_view<3>(), V(1, 2, 7)));
-    SHOW(scale_filter_nearest(grid3.grid_view<3>(), V(1, 1, 3)));
-    SHOW(scale_filter_nearest(grid3.grid_view<3>(), V(2, 2, 3)));
+    SHOW(resize_nearest(grid3.grid_view<3>(), V(2, 1, 5)));
+    SHOW(resize_nearest(grid3.grid_view<3>(), V(1, 2, 7)));
+    SHOW(resize_nearest(grid3.grid_view<3>(), V(1, 1, 3)));
+    SHOW(resize_nearest(grid3.grid_view<3>(), V(2, 2, 3)));
     // 4D
     constexpr SGrid<int, 2, 2, 2, 2> grid4 =
         V(V(V(V(1, 2), V(3, 4)), V(V(5, 6), V(7, 8))), V(V(V(11, 12), V(13, 14)), V(V(15, 16), V(17, 18))));
-    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(2, 2, 2, 2)));
-    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(2, 1, 2, 2)));
-    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(2, 4, 2, 2)));
-    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(1, 2, 5, 2)));
-    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(6, 2, 2, 2)));
-    SHOW(scale_filter_nearest(grid4.grid_view<4>(), V(3, 2, 2, 5)));
+    SHOW(resize_nearest(grid4.grid_view<4>(), V(2, 2, 2, 2)));
+    SHOW(resize_nearest(grid4.grid_view<4>(), V(2, 1, 2, 2)));
+    SHOW(resize_nearest(grid4.grid_view<4>(), V(2, 4, 2, 2)));
+    SHOW(resize_nearest(grid4.grid_view<4>(), V(1, 2, 5, 2)));
+    SHOW(resize_nearest(grid4.grid_view<4>(), V(6, 2, 2, 2)));
+    SHOW(resize_nearest(grid4.grid_view<4>(), V(3, 2, 2, 5)));
     SHOW(grid_column<0>(grid4.grid_view<4>(), V(0, 0, 0, 0)));
     SHOW(grid_column<0>(grid4.grid_view<4>(), V(0, 0, 0, 1)));
     SHOW(grid_column<0>(grid4.grid_view<4>(), V(0, 1, 1, 1)));
@@ -392,17 +392,17 @@ int main() {
   {  // Primal scaling with the (interpolating) triangle filter reproduces a linear ramp.
     const Grid<1, float> ramp = grid_from_flat(V(5), range(5) | views::transform([](int i) { return i / 4.f; }));
     const Grid<1, float> ramp2 =
-        scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "clamp"});
+        resize(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "clamp"});
     for_int(i, 9) assertx(abs(ramp2[i] - i / 8.f) < 1e-6f);
     const Grid<2, float> grid(V(3, 3), 2.f);
-    const Grid<2, float> grid2 = scale(
+    const Grid<2, float> grid2 = resize(
         grid, V(5, 7), ResizeOptions<2>{.gridtype = Gridtype::primal, .filter = "cardinal3", .boundary = "reflect"});
     for (const float e : grid2) assertx(abs(e - 2.f) < 1e-5f);
   }
   {  // Nearest-filter scaling to the same dimensions copies, and to a zero-size grid yields an empty grid.
     const Grid<2, int> grid = grid_from_flat(V(2, 3), range(6));
-    assertx(ranges::equal(scale_filter_nearest(grid, V(2, 3)), grid));
-    const Grid<2, int> grid0 = scale_filter_nearest(grid, V(0, 3));
+    assertx(ranges::equal(resize_nearest(grid, V(2, 3)), grid));
+    const Grid<2, int> grid0 = resize_nearest(grid, V(0, 3));
     assertx(grid0.dims() == V(0, 3) && grid0.size() == 0);
   }
   {  // Pointwise evaluation with the triangle filter is linear interpolation, with boundary rules outside.

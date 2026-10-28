@@ -31,7 +31,7 @@ class Filter : noncopyable {
   [[nodiscard]] bool is_unit_integral() const { return _is_unit_integral; }
   // The placeholder "auto", resolved by the resampling options.
   [[nodiscard]] bool is_auto() const { return _is_auto; }
-  // The scaling-dependent trapezoid kernel, usable only in scale().
+  // The scaling-dependent trapezoid kernel, usable only in resize().
   [[nodiscard]] bool is_trapezoid() const { return _is_trapezoid; }
 
   // The names follow the Python package `resampler`; the former names and single letters remain aliases.
@@ -58,7 +58,7 @@ class Filter : noncopyable {
   // lanczos10:   Lanczos filter with support [-10, 10]; best but slowest.
   // hamming3:    (h, hamming6) Hamming-windowed sinc with support [-3, 3] (a0 = 25 / 46).
   // kaiser3:     Kaiser-windowed sinc with support [-3, 3] (beta = 7.12).
-  // trapezoid:   area-antialiasing kernel whose radius .5 + .5 min(s, 1 / s) depends on the scaling s; in scale().
+  // trapezoid:   area-antialiasing kernel whose radius .5 + .5 min(s, 1 / s) depends on the scaling s; in resize().
   // auto:        a placeholder resolved by the resampling options (e.g., prefilter "auto" means the filter).
   friend std::ostream& operator<<(std::ostream& os, const Filter& filter) {
     return os << "Filter{" << filter.name() << "}";

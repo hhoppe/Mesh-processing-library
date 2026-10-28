@@ -219,7 +219,7 @@ int main() {
     assertx(cnv12v.get_UV().data() == nv12b.get_UV().data());
     // Scaling an Nv12 image.
     Nv12 nv12c(V(8, 6));
-    scale(nv12b, ResizeOptions<2>{.filter = "triangle", .boundary = "reflect"}, nullptr, nv12c);
+    resize(nv12b, ResizeOptions<2>{.filter = "triangle", .boundary = "reflect"}, nullptr, nv12c);
     for (const uint8_t y : nv12c.get_Y()) assertx(abs(y - nv12b.get_Y()[0][0]) <= 1);
     for (const Vec2<uint8_t>& uv : nv12c.get_UV()) assertx(abs(uv[0] - nv12b.get_UV()[0][0][0]) <= 1);
   }

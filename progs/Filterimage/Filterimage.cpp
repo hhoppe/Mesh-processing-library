@@ -12,7 +12,7 @@
 #include "libHh/FrameIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/GridOp.h"
-#include "libHh/GridPixelOp.h"  // scale_Matrix_Pixel()
+#include "libHh/GridPixelOp.h"  // resize_Matrix_Pixel()
 #include "libHh/Image.h"
 #include "libHh/Lls.h"
 #include "libHh/MathOp.h"  // smooth_step(), floor(Vec<>)
@@ -596,7 +596,7 @@ void apply_domain_transform(const Vec2<double>& domain_scale, const Vec2<double>
   HH_TIMER("_scale");
   ResizeOptions<2> options = g_options;
   options.scale = domain_scale, options.translate = domain_translate;
-  image = scale(image, image.dims(), options, &gcolor);
+  image = resize(image, image.dims(), options, &gcolor);
 }
 
 // Zoom by the factor about the point (x, y) in pixel coordinates (the image center is (xsize / 2, ysize / 2)),
@@ -770,7 +770,7 @@ void apply_assemble_operations(Grid<2, Pixel>& im, const Vec2<int>& yx, const Ve
       const float vscale = min(convert<float>(as_fit_dims) / convert<float>(im.dims()));
       const Vec2<int> newdims = convert<int>(convert<float>(im.dims()) * vscale + .5f);
       Grid<2, Pixel> newim(newdims);
-      scale_Matrix_Pixel(im, g_options, &gcolor, newim);
+      resize_Matrix_Pixel(im, g_options, &gcolor, newim);
       im = std::move(newim);
     }
     const Vec2<int> side0 = (as_fit_dims - im.dims()) / 2;
@@ -1170,8 +1170,8 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       //  the upscaling "triangle" kernel (with alternating weights (3 / 4, 1 / 4) and (1 / 4, 3 / 4)).
       // It introduces a little bit of undesirable ringing.  "box" has no ringing but inferior.
       const ResizeOptions<D> downscaling_options{.filter = "triangle", .boundary = "border"};
-      hgrid = scale(grid2, hdims, downscaling_options, &vzero);  // Spatially downscale.
-      const float adjust_weight = pow(2.f, float(D));            // Somewhat arbitrary.
+      hgrid = resize(grid2, hdims, downscaling_options, &vzero);  // Spatially downscale.
+      const float adjust_weight = pow(2.f, float(D));             // Somewhat arbitrary.
       for (auto& e : hgrid) e *= adjust_weight;
     } else {
       // - Somehow the coarse-scale content is getting shifted right/bottom unlike in the original Lumigraph
@@ -1182,7 +1182,7 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
       assertx(grid2.dims() % 2 == ntimes<D>(1));
       const ResizeOptions<D> downscaling_options{
           .gridtype = Gridtype::primal, .filter = "triangle", .boundary = "border"};
-      hgrid = scale(grid2, (grid2.dims() - 1) / 2 + 1, downscaling_options, &vzero);  // Spatially downscale.
+      hgrid = resize(grid2, (grid2.dims() - 1) / 2 + 1, downscaling_options, &vzero);  // Spatially downscale.
       if (0) SHOW(grid.dims(), grid2.dims(), hgrid.dims(), hdims, hgrid.dims() - hdims);
       if (hgrid.size() >= grid.size() || 0)
         hgrid = crop(hgrid, ntimes<D>(0), hgrid.dims() - hdims);  // Optionally crop extra.
@@ -1203,14 +1203,14 @@ template <int D> void new_pullpush(GridView<D, Vector4> grid) {
     if (!primal) {
       const ResizeOptions<D> upscaling_options{.filter = "triangle", .boundary = "border"};  // Bilinear.
       // This bilinear prolongation has weights (3/4, 1/4) and (1/4, 3/4) on alternating entries.
-      gridu = scale(hgrid, hdims * 2, upscaling_options, &vzero);  // Spatially upscale.
-      gridu = crop(gridu, ntimes<D>(0), dims % 2);                 // Crop any extra expanded dimensions.
+      gridu = resize(hgrid, hdims * 2, upscaling_options, &vzero);  // Spatially upscale.
+      gridu = crop(gridu, ntimes<D>(0), dims % 2);                  // Crop any extra expanded dimensions.
     } else {
       const ResizeOptions<D> upscaling_options{.filter = "triangle", .boundary = "border"};  // Bilinear.
       // Expand if the original dimension was even.
       const Grid<D, Vector4> grid2 =
           crop(hgrid, ntimes<D>(0), -(ntimes<D>(1) - dims % 2), ntimes<D>(Extension::border), &vzero);
-      gridu = scale(grid2, (grid2.dims() - 1) * 2 + 1, upscaling_options, &vzero);  // Spatially upscale.
+      gridu = resize(grid2, (grid2.dims() - 1) * 2 + 1, upscaling_options, &vzero);  // Spatially upscale.
       if (0) SHOW(hgrid.dims(), grid2.dims(), gridu.dims(), grid.dims(), gridu.dims() - grid.dims());
       gridu = crop(gridu, ntimes<D>(0), gridu.dims() - grid.dims());  // Crop any extra.
     }

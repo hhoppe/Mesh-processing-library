@@ -21,7 +21,7 @@
 #include "libHh/FileIO.h"        // my_sh(), get_file_size()
 #include "libHh/Geometry.h"
 #include "libHh/GridOp.h"       // crop()
-#include "libHh/GridPixelOp.h"  // scale_Matrix_Pixel()
+#include "libHh/GridPixelOp.h"  // resize_Matrix_Pixel()
 #include "libHh/Image.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"  // is_pow2()
@@ -2971,7 +2971,7 @@ void upload_image_to_texture() {
         Nv12 nv12_tmp;
         if (g_frame_dims != g_tex_active_dims) {
           nv12_tmp.init(g_tex_active_dims);
-          scale(view, filterbs, nullptr, nv12_tmp);
+          resize(view, filterbs, nullptr, nv12_tmp);
           view.reinit(nv12_tmp);
         }
         if (supports_BGRA)
@@ -2984,7 +2984,7 @@ void upload_image_to_texture() {
         Matrix<Pixel> image_tmp;
         if (g_frame_dims != g_tex_active_dims) {
           image_tmp.init(g_tex_active_dims);
-          scale_Matrix_Pixel(view, filterbs, nullptr, image_tmp);
+          resize_Matrix_Pixel(view, filterbs, nullptr, image_tmp);
           view.reinit(image_tmp);
         }
         ranges::copy(view, frame.data());

@@ -62,11 +62,11 @@ template <int D> void convert(CGridView<D, Pixel> gridu, GridView<D, Vector4> gr
 // Convert a grid of float pixel values into uint8_t pixel values.
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Pixel> gridu);
 
-// Rescale a grid to have new dimensions ndims, specialized to nearest sampling; works on arbitrary types T,
+// Resize a grid to have new dimensions ndims, specialized to nearest sampling; works on arbitrary types T,
 // even those that are non-interpolable.
 template <int D, typename T>
-[[nodiscard]] Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims,
-                                              Grid<D, T>&& gr = Grid<D, T>());
+[[nodiscard]] Grid<D, T> resize_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims,
+                                        Grid<D, T>&& gr = Grid<D, T>());
 
 // Apply in place the digital filters of the kernels of the options that require one (e.g. cardinal3), so that the
 // reconstruction with the kernels given by Filter::digital_filter_kernel() (e.g. bspline3) interpolates the grid;
@@ -86,11 +86,11 @@ template <int D> void convert(CGridView<D, Vec2<uint8_t>> gridu, GridView<D, Vec
 // Convert a grid of Vector4 values into Vec2<uint8_t> values.
 template <int D> void convert(CGridView<D, Vector4> gridf, GridView<D, Vec2<uint8_t>> gridu);
 
-// Rescale a grid to have new dimensions ndims according to the resampling options (sample placement, kernels,
+// Resize a grid to have new dimensions ndims according to the resampling options (sample placement, kernels,
 // boundary rules); cval is the constant value referenced by some boundary rules (e.g. "border").
 template <int D, typename T>
-[[nodiscard]] Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const ResizeOptions<D>& options = {},
-                               const T* cval = nullptr, Grid<D, T>&& gr = Grid<D, T>());
+[[nodiscard]] Grid<D, T> resize(CGridView<D, T> grid, const Vec<int, D>& ndims, const ResizeOptions<D>& options = {},
+                                const T* cval = nullptr, Grid<D, T>&& gr = Grid<D, T>());
 
 // Evaluate the reconstruction at point p of grid g, where samples lie at integers ([0, dim(0) - 1], ...).
 template <int D, typename T>
@@ -494,8 +494,8 @@ void apply_digital_filter(GridView<D, T> grid, const SamplingOptions<D>& options
 }
 
 template <int D, typename T>
-Grid<D, T> scale_filter_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, Grid<D, T>&& gr) {
-  HH_GRIDOP_TIMER("__scale_filter_nearest");
+Grid<D, T> resize_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, Grid<D, T>&& gr) {
+  HH_GRIDOP_TIMER("__resize_nearest");
   if (!product(ndims)) {
     gr.init(ndims);
     return std::move(gr);
@@ -875,8 +875,8 @@ Grid<D, F> Resizer<D>::apply_linear(CGridView<D, F> grid, const F* cval, Grid<D,
 }
 
 template <int D, typename T>
-Grid<D, T> scale(CGridView<D, T> grid, const Vec<int, D>& ndims, const ResizeOptions<D>& options, const T* cval,
-                 Grid<D, T>&& gr) {
+Grid<D, T> resize(CGridView<D, T> grid, const Vec<int, D>& ndims, const ResizeOptions<D>& options, const T* cval,
+                  Grid<D, T>&& gr) {
   const Resizer<D> resizer(grid.dims(), ndims, options);
   return resizer.apply(grid, cval, std::move(gr));
 }
@@ -899,7 +899,7 @@ Grid<D, T> uniform_resize(CGridView<D, T> grid, const Vec<int, D>& ndims, Object
     if (options.boundary[d]->is_auto()) options.boundary[d] = BoundaryRef(Boundary::get("natural"));
   }
   const T default_cval{};
-  return scale(grid, ndims, options, cval ? cval : &default_cval);
+  return resize(grid, ndims, options, cval ? cval : &default_cval);
 }
 
 template <int D, typename T>
@@ -917,7 +917,7 @@ Sampler<D, T>::Sampler(CGridView<D, T> grid, const SamplingOptions<D>& options, 
   }
   for_int(d, D) {
     const Filter& filter = *options.filter[d];
-    assertx(!filter.is_impulse() && !filter.is_trapezoid());  // These kernels serve only scale().
+    assertx(!filter.is_impulse() && !filter.is_trapezoid());  // These kernels serve only resize().
     _gridtypes[d] = options.gridtype[d];
     assertx(grid.dim(d) >= (_gridtypes[d] == Gridtype::dual ? 1 : 2));
     _boundaries[d] = options.boundary[d]->is_auto() ? &k_reflect : options.boundary[d].ptr;

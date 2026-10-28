@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/Video.h"
 
-#include "libHh/GridPixelOp.h"  // spatially_scale_Grid3_Pixel()
+#include "libHh/GridPixelOp.h"  // spatially_resize_Grid3_Pixel()
 #include "libHh/StringOp.h"     // get_path_extension(), to_lower()
 
 namespace hh {
@@ -96,7 +96,7 @@ Video scale(const Video& video, const Vec2<float>& syx, const ResizeOptions<2>& 
   newvideo.init(video.nframes(), newdims);
   newvideo.attrib() = video.attrib();
   if (!product(newdims)) return newvideo;
-  spatially_scale_Grid3_Pixel(video, options, cval, newvideo);
+  spatially_resize_Grid3_Pixel(video, options, cval, newvideo);
   return newvideo;
 }
 
@@ -114,7 +114,7 @@ VideoNv12 scale(const VideoNv12& video_nv12, const Vec2<float>& syx, const Resiz
   newvideo_nv12.init(concat(V(video_nv12.nframes()), newdims));
   if (product(newdims)) {
     parallel_for(range(newvideo_nv12.nframes()), [&](const int f) {  //
-      scale(video_nv12[f], options, cval, newvideo_nv12[f]);
+      resize(video_nv12[f], options, cval, newvideo_nv12[f]);
     });
   }
   return newvideo_nv12;

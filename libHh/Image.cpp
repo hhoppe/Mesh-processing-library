@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/Image.h"
 
-#include "libHh/GridPixelOp.h"  // scale_Matrix_Pixel()
+#include "libHh/GridPixelOp.h"  // resize_Matrix_Pixel()
 #include "libHh/Parallel.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Stat.h"  // for testing; HH_SSTAT()
@@ -127,7 +127,7 @@ Image scale(const Image& image, const Vec2<float>& syx, const ResizeOptions<2>& 
   newimage.init(newdims);
   newimage.attrib() = image.attrib();
   if (newdims[0] == 0) return newimage;
-  scale_Matrix_Pixel(image, options, cval, newimage);
+  resize_Matrix_Pixel(image, options, cval, newimage);
   return newimage;
 }
 
@@ -384,7 +384,7 @@ void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v) {
   }
 }
 
-void scale(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* cval, Nv12View new_nv12) {
+void resize(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* cval, Nv12View new_nv12) {
   assertx(nv12.get_Y().data() != new_nv12.get_Y().data());
   assertx(nv12.get_UV().data() != new_nv12.get_UV().data());
   if (nv12.get_Y().dims() == new_nv12.get_Y().dims()) return;
@@ -396,10 +396,10 @@ void scale(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* cval, N
     borderUV = V(U_from_RGB(*cval), V_from_RGB(*cval));
   }
   // The planes are resized as integer samples (decoded, filtered, and encoded with rounding and clamping).
-  new_nv12.get_Y().assign(scale(nv12.get_Y(), new_nv12.get_Y().dims(), options, cval ? &borderY : nullptr));
+  new_nv12.get_Y().assign(resize(nv12.get_Y(), new_nv12.get_Y().dims(), options, cval ? &borderY : nullptr));
   ResizeOptions<2> options_uv = options;
   options_uv.gamma = "identity";  // The chroma planes are not gamma-encoded intensities.
-  new_nv12.get_UV().assign(scale(nv12.get_UV(), new_nv12.get_UV().dims(), options_uv, cval ? &borderUV : nullptr));
+  new_nv12.get_UV().assign(resize(nv12.get_UV(), new_nv12.get_UV().dims(), options_uv, cval ? &borderUV : nullptr));
 }
 
 }  // namespace hh

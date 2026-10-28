@@ -23,7 +23,7 @@ ResizeOptions<2> options(const string& filter_name) { return {.filter = filter_n
 
 Matrix<Pixel> scaled(CMatrixView<Pixel> matrix, const Vec2<int>& dims, const string& filter_name) {
   Matrix<Pixel> nmatrix(dims);
-  scale_Matrix_Pixel(matrix, options(filter_name), nullptr, nmatrix);
+  resize_Matrix_Pixel(matrix, options(filter_name), nullptr, nmatrix);
   return nmatrix;
 }
 
@@ -88,7 +88,7 @@ int main() {
     grid[0].assign(matrix);
     for_int(y, 4) for_int(x, 4) grid[1][y, x] = Pixel::gray(narrow_cast<uint8_t>(x * 60));
     Grid<3, Pixel> ngrid(V(2, 2, 8));
-    spatially_scale_Grid3_Pixel(grid, options("triangle"), nullptr, ngrid);
+    spatially_resize_Grid3_Pixel(grid, options("triangle"), nullptr, ngrid);
     for_int(f, 2) assertx(equal_grids(ngrid[f], scaled(grid[f], V(2, 8), "triangle")));
     show_matrix("frame 1", ngrid[1]);
   }

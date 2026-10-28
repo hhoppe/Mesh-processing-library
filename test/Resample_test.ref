@@ -1,7 +1,7 @@
 Gamma::get("srgb").decode(.5f)=0.214041 Gamma::get("srgb").encode(.25f)=0.537099
 Gamma::get("power22").decode(.5f)=0.217638 Gamma::get("power22").encode(.25f)=0.532521
 options.filter=[Filter{cubic}, Filter{triangle}] options.boundary=[Boundary{clamp}, Boundary{clamp}] options.gamma=Gamma{identity}
-scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "clamp"}) = Array<float>(9) {
+resize(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "triangle", .boundary = "clamp"}) = Array<float>(9) {
   0
   0.5
   1
@@ -12,7 +12,7 @@ scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "tria
   12.5
   16
 }
-scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "cubic", .boundary = "reflect"}) = Array<float>(9) {
+resize(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "cubic", .boundary = "reflect"}) = Array<float>(9) {
   0
   0.25
   1
@@ -23,9 +23,9 @@ scale(ramp, V(9), ResizeOptions<1>{.gridtype = Gridtype::primal, .filter = "cubi
   13.25
   16
 }
-ndims=[7, 2, 6] round_fraction_digits(float(sum(scale(grid, ndims, options))), 100.f)=41.81
-ndims=[4, 9, 1] round_fraction_digits(float(sum(scale(grid, ndims, options))), 100.f)=17.97
-ndims=[2, 2, 2] round_fraction_digits(float(sum(scale(grid, ndims, options))), 100.f)=4.03
+ndims=[7, 2, 6] round_fraction_digits(float(sum(resize(grid, ndims, options))), 100.f)=41.81
+ndims=[4, 9, 1] round_fraction_digits(float(sum(resize(grid, ndims, options))), 100.f)=17.97
+ndims=[2, 2, 2] round_fraction_digits(float(sum(resize(grid, ndims, options))), 100.f)=4.03
 i=0 row.index0=-2 row.indices=Array<int>(4) {
   1
   2
@@ -174,7 +174,7 @@ r32 = Array<unsigned int>(9) {
   4294967295
   4294967259
 }
-scale(gv, V(5), ResizeOptions<1>{.filter = "triangle", .gamma = "srgb"}) = Array<hh::Vec<unsigned short,3>>(5) {
+resize(gv, V(5), ResizeOptions<1>{.filter = "triangle", .gamma = "srgb"}) = Array<hh::Vec<unsigned short,3>>(5) {
   [0, 100, 65535]
   [400, 140, 52280]
   [1000, 200, 0]

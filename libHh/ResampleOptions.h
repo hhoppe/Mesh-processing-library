@@ -50,7 +50,7 @@ template <int D> struct SamplingOptions {
   GammaRef gamma = "identity";                    // Transfer function applied to the sample values.
 };
 
-// How to resize a D-dimensional grid (scale()); a flat superset of SamplingOptions<D>.
+// How to resize a D-dimensional grid (resize()); a flat superset of SamplingOptions<D>.
 template <int D> struct ResizeOptions {
   PerDim<Gridtype, D> gridtype = Gridtype::dual;  // Placement of the source samples over the unit domain.
   PerDim<FilterRef, D> filter = "cubic";          // Kernel used when magnifying.

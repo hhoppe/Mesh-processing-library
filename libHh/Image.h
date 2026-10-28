@@ -269,7 +269,8 @@ void convert_Nv12_to_Image_BGRA(CNv12View nv12v, MatrixView<Pixel> frame);
 // Convert RGBA image to 8-bit luminance plus half-spatial resolution UV chroma.
 void convert_Image_to_Nv12(CMatrixView<Pixel> frame, Nv12View nv12v);
 
-void scale(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* cval, Nv12View new_nv12);
+// Resize the Nv12 image to the dimensions of new_nv12.
+void resize(CNv12View nv12, const ResizeOptions<2>& options, const Pixel* cval, Nv12View new_nv12);
 
 // *** Image IO
 

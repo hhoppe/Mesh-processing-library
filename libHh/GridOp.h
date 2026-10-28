@@ -1000,7 +1000,7 @@ Sampler<D, T>::F Sampler<D, T>::evaluate_grid(const Vec<float, D>& x, const Vec<
     Array<float>& dense_d = dense[d];
     dense_d.init(i1 - i0);
     double sum = 0.;
-    for_intL(i, i0, i1) sum += dense_d[i - i0] = float(_funcs[d](float(i) - x[d]));
+    for_intL(i, i0, i1) sum += dense_d[i - i0] = float(_funcs[d](x[d] - float(i)));
     dense_d /= float(sum);
     const Boundary& boundary = *_boundaries[d];
     const bool overridden =

@@ -11,5 +11,5 @@ echo (This will take a few minutes.)
 call mesh_to_pm.bat data/club.orig.m -minqem >results/club.pm
 
 echo .
-echo Use view_pm_club.bat to view the resulting progressive mesh.
+echo Use view_progressive_mesh_club.bat to view the resulting progressive mesh.
 echo .

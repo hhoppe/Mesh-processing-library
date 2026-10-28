@@ -18,45 +18,45 @@ $(call assert_prepend_PATH,$(MeshRoot)/bin)  # The scripts (e.g., mesh_to_pm) ta
 $(call assert_prepend_PATH,$(MeshRoot)/demos)  # Allow running bash scripts in local directory.
 
 create_scripts = \
-  create_recon_cactus.sh \
-  create_recon_distcap.sh \
-  create_recon_polygon.sh \
+  create_reconstruction_cactus.sh \
+  create_reconstruction_distcap.sh \
+  create_reconstruction_polygon.sh \
   create_simplified_using_meshopt.sh \
-  create_pm_gaudipark.sh \
-  create_pm_cessna.sh \
-  create_pm_club.sh \
+  create_progressive_mesh_gaudipark.sh \
+  create_progressive_mesh_cessna.sh \
+  create_progressive_mesh_club.sh \
   determine_approximation_error.sh \
   create_geomorphs.sh \
-  create_proghull_bunny.sh \
-  create_proghull_standingblob.sh \
-  create_sr_office.sh \
-  create_sr_terrain.sh \
+  create_progressive_hull_bunny.sh \
+  create_progressive_hull_standingblob.sh \
+  create_selectively_refined_office.sh \
+  create_selectively_refined_terrain.sh \
   create_terrain_hierarchy.sh \
   create_topologically_simplified.sh \
-  create_vertexcache_bunny.sh \
+  create_vertex_cached_bunny.sh \
   create_spherical_param_bunny.sh \
   create_rendered_mechpart_image.sh \
   create_rendered_mechpart_video.sh \
   create_voronoi_fillin.sh \
 
 view_scripts = \
-  view_recon_cactus.sh \
-  view_recon_distcap.sh \
-  view_recon_polygon.sh \
+  view_reconstruction_cactus.sh \
+  view_reconstruction_distcap.sh \
+  view_reconstruction_polygon.sh \
   view_simplified_using_meshopt.sh \
-  view_pm_gaudipark.sh \
-  view_pm_cessna.sh \
-  view_pm_club.sh \
+  view_progressive_mesh_gaudipark.sh \
+  view_progressive_mesh_cessna.sh \
+  view_progressive_mesh_club.sh \
   view_geomorphs.sh \
-  view_proghull_bunny.sh \
-  view_proghull_standingblob.sh \
-  view_sr_office.sh \
-  view_sr_terrain.sh \
+  view_progressive_hull_bunny.sh \
+  view_progressive_hull_standingblob.sh \
+  view_selectively_refined_office.sh \
+  view_selectively_refined_terrain.sh \
   view_terrain_hierarchy.sh \
   view_gcanyon_frames.sh \
   view_psc_drumset.sh \
   view_topologically_simplified.sh \
-  view_vertexcache_bunny.sh \
+  view_vertex_cached_bunny.sh \
   view_spherical_param_bunny.sh \
   view_rendered_mechpart_image.sh \
   view_rendered_mechpart_video.sh \
@@ -90,7 +90,7 @@ $(view_scripts):
 depend $(make_dep):
 
 # Any build-order dependencies.
-determine_approximation_error.sh: create_pm_club.sh
+determine_approximation_error.sh: create_progressive_mesh_club.sh
 
 # Similar to all_demos_view_results.sh (still sequential).
 # Run every demo even if some fail, and report the last failing status.

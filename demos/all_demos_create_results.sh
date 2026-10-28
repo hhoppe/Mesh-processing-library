@@ -6,29 +6,29 @@ PATH=.:$PATH # allow running bash scripts in local directory
 
 set -v
 
-create_recon_cactus.sh
-create_recon_distcap.sh
-create_recon_polygon.sh
+create_reconstruction_cactus.sh
+create_reconstruction_distcap.sh
+create_reconstruction_polygon.sh
 
 create_simplified_using_meshopt.sh
 
-create_pm_gaudipark.sh
-create_pm_cessna.sh
-create_pm_club.sh
+create_progressive_mesh_gaudipark.sh
+create_progressive_mesh_cessna.sh
+create_progressive_mesh_club.sh
 determine_approximation_error.sh
 
 create_geomorphs.sh
-create_proghull_bunny.sh
-create_proghull_standingblob.sh
+create_progressive_hull_bunny.sh
+create_progressive_hull_standingblob.sh
 
-create_sr_office.sh
-create_sr_terrain.sh
+create_selectively_refined_office.sh
+create_selectively_refined_terrain.sh
 
 create_terrain_hierarchy.sh
 
 create_topologically_simplified.sh
 
-create_vertexcache_bunny.sh
+create_vertex_cached_bunny.sh
 
 create_spherical_param_bunny.sh
 

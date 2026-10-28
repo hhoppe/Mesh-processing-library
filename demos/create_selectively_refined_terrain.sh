@@ -13,4 +13,4 @@ echo '.'
 
 mesh_to_pm results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
 
-echo 'Use view_sr_terrain.sh to see geomorphs on the view-dependent terrain.'
+echo 'Use view_selectively_refined_terrain.sh to see geomorphs on the view-dependent terrain.'

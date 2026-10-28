@@ -10,5 +10,5 @@ echo '(This will take a few minutes.)'
 mesh_to_pm data/club.orig.m -minqem >results/club.pm
 
 echo '.'
-echo 'Use view_pm_club.sh to view the resulting progressive mesh.'
+echo 'Use view_progressive_mesh_club.sh to view the resulting progressive mesh.'
 echo '.'

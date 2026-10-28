@@ -14,4 +14,4 @@ echo .
 
 call mesh_to_pm.bat results/gcanyon_sq200.orig.m -vsgeom -terrain >results/gcanyon_sq200.pm
 
-echo Use view_sr_terrain.bat to see geomorphs on the view-dependent terrain.
+echo Use view_selectively_refined_terrain.bat to see geomorphs on the view-dependent terrain.

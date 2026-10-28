@@ -9,8 +9,8 @@
 #    these values (using bin/check_reference_values).
 #  --update DIR: likewise create the images in DIR, and update these reference values.
 #
-# The programs must be built (any CONFIG), and the demos create_recon_cactus, create_spherical_param_bunny, and
-# create_pm_cessna must have been run (e.g., using "make -C demos create").
+# The programs must be built (any CONFIG), and the demos create_reconstruction_cactus, create_spherical_param_bunny,
+# and create_progressive_mesh_cessna must have been run (e.g., using "make -C demos create").
 
 set -e -o pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."

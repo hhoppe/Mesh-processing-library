@@ -14,5 +14,5 @@ echo '(This will take a few minutes.)'
 mesh_to_pm results/gaudipark.orig.m -minqem -norfac 0. -colfac 1. -neptfac 1e5 >results/gaudipark.pm
 
 echo '.'
-echo 'Use view_pm_gaudipark.sh to view the resulting progressive mesh.'
+echo 'Use view_progressive_mesh_gaudipark.sh to view the resulting progressive mesh.'
 echo '.'

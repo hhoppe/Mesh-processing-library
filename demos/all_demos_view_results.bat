@@ -4,21 +4,21 @@ setlocal
 cd "%~p0"
 
 if .==. (
-  call view_recon_cactus.bat
-  call view_recon_distcap.bat
-  call view_recon_polygon.bat
+  call view_reconstruction_cactus.bat
+  call view_reconstruction_distcap.bat
+  call view_reconstruction_polygon.bat
 
   call view_simplified_using_meshopt.bat
 
-  call view_pm_gaudipark.bat
-  call view_pm_cessna.bat
-  call view_pm_club.bat
+  call view_progressive_mesh_gaudipark.bat
+  call view_progressive_mesh_cessna.bat
+  call view_progressive_mesh_club.bat
   call view_geomorphs.bat
-  call view_proghull_bunny.bat
-  call view_proghull_standingblob.bat
+  call view_progressive_hull_bunny.bat
+  call view_progressive_hull_standingblob.bat
 
-  call view_sr_office.bat
-  call view_sr_terrain.bat
+  call view_selectively_refined_office.bat
+  call view_selectively_refined_terrain.bat
 
   call view_terrain_hierarchy.bat
   call view_gcanyon_frames.bat
@@ -27,7 +27,7 @@ if .==. (
 
   call view_topologically_simplified.bat
 
-  call view_vertexcache_bunny.bat
+  call view_vertex_cached_bunny.bat
 
   call view_spherical_param_bunny.bat
 

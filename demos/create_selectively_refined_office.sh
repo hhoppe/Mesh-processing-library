@@ -11,5 +11,5 @@ FilterPM data/office.pm -nfaces 80000 -outmesh >results/office.nf80000.orig.m
 mesh_to_pm results/office.nf80000.orig.m -vsgeom >results/office.nf80000.sr.pm
 
 echo '.'
-echo 'Use view_sr_office.sh to view the resulting selectively refinable mesh.'
+echo 'Use view_selectively_refined_office.sh to view the resulting selectively refinable mesh.'
 echo '.'

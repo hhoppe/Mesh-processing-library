@@ -10,5 +10,5 @@ echo (This will take a few minutes.)
 call mesh_to_pm.bat data/cessna.orig.m >results/cessna.pm
 
 echo .
-echo Use view_pm_cessna.bat to view the resulting progressive mesh.
+echo Use view_progressive_mesh_cessna.bat to view the resulting progressive mesh.
 echo .

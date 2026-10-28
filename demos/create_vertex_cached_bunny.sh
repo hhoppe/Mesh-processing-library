@@ -9,5 +9,5 @@ echo 'From original mesh data/bunny.orig.m, creating results/bunny.vertexcache.m
 MeshReorder data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -color_corners 1 -analyze >results/bunny.vertexcache.m
 
 echo '.'
-echo 'Use view_vertexcache_bunny.sh to see the optimized mesh traversal order.'
+echo 'Use view_vertex_cached_bunny.sh to see the optimized mesh traversal order.'
 echo '.'

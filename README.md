@@ -51,7 +51,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 1992 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div><em>Signed-distance field estimated from a set of unoriented noisy points.</em></div>
    <div>Programs: <a href="progs/README.md#prog_recon"><code>Recon</code></a></div>
-   <div>Demos: <code>create_recon_*</code>, <code>view_recon_*</code></div>
+   <div>Demos: <code>{create,view}_reconstruction_*</code></div>
   </td>
  </tr>
 
@@ -65,7 +65,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 1993 Proceedings</cite>.</div>
    <div><em>Exploration of the space of triangle meshes to balance model fidelity and conciseness.</em></div>
    <div>Programs: <a href="progs/README.md#prog_Meshfit"><code>Meshfit</code></a></div>
-   <div>Demos: <code>create_recon_*</code>, <code>view_recon_*</code>, <code>create_simplified_using_meshopt</code>, <code>view_simplified_using_meshopt</code></div>
+   <div>Demos: <code>{create,view}_reconstruction_*</code>,&ensp;<code>{create,view}_simplified_using_meshopt</code></div>
   </td>
  </tr>
 
@@ -79,7 +79,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 1994 Proceedings</cite>.</div>
    <div><em>Subdivision surfaces with sharp features, and their automatic creation by data fitting.</em></div>
    <div>Programs: <a href="progs/README.md#prog_Subdivfit"><code>Subdivfit</code></a></div>
-   <div>Demos: <code>create_recon_cactus</code>, <code>view_recon_cactus</code></div>
+   <div>Demos: <code>{create,view}_reconstruction_cactus</code></div>
   </td>
  </tr>
 
@@ -93,7 +93,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 1996 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div><em>Efficient, lossless, continuous-resolution representation of surface triangulations.</em></div>
    <div>Programs: <a href="progs/README.md#prog_MeshSimplify"><code>MeshSimplify</code></a>, <a href="progs/README.md#prog_Filterprog"><code>Filterprog</code></a></div>
-   <div>Demos: <code>create_geomorphs</code>, <code>view_geomorphs</code></div>
+   <div>Demos: <code>{create,view}_geomorphs</code></div>
   </td>
  </tr>
 
@@ -107,7 +107,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>Computers &amp; Graphics</cite>, 22(1), 1998.</div>
    <div><em>Progressive mesh data structures compatible with GPU vertex buffers.</em></div>
    <div>Programs: <a href="progs/README.md#prog_FilterPM"><code>FilterPM</code></a>, <a href="progs/README.md#prog_G3dOGL"><code>G3dOGL</code></a></div>
-   <div>Demos: <code>create_pm_club</code>, <code>view_pm_club</code>, <code>determine_approximation_error</code></div>
+   <div>Demos: <code>{create,view}_progressive_mesh_club</code>,&ensp;<code>determine_approximation_error</code></div>
   </td>
  </tr>
 
@@ -121,7 +121,7 @@ The [programs page](progs/README.md) shows these and other results together with
       <div><cite>IEEE Visualization 1999 Conference</cite>.</div>
       <div><em>Efficient simplification metric designed around correspondence in 3D space.</em></div>
       <div>Programs: <a href="progs/README.md#prog_MeshSimplify"><code>MeshSimplify</code></a></div>
-      <div>Demos: <code>create_pm_gaudipark</code>, <code>view_pm_gaudipark</code></div>
+      <div>Demos: <code>{create,view}_progressive_mesh_gaudipark</code></div>
      </td>
  </tr>-->
 
@@ -135,7 +135,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 1997 Proceedings</cite>.</div>
    <div><em>Lossless multiresolution structure for incremental selective refinement/coarsening.</em></div>
    <div>Programs: <a href="progs/README.md#prog_FilterPM"><code>FilterPM</code></a>, <a href="progs/README.md#prog_G3dOGL"><code>G3dOGL</code></a></div>
-   <div>Demos: <code>create_sr_office</code>, <code>view_sr_office</code></div>
+   <div>Demos: <code>{create,view}_selectively_refined_office</code></div>
   </td>
  </tr>
 
@@ -149,7 +149,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>IEEE Visualization 1998 Conference</cite>. (<a href="https://ieeevis.org/year/2023/info/awards/test-of-time-awards#scivis"><em>2023 Test of Time Award</em></a>.)</div>
    <div><em>Visually smooth adaptation of mesh refinement using cascaded temporal geomorphs.</em></div>
    <div>Programs: <a href="progs/README.md#prog_StitchPM"><code>StitchPM</code></a>, <a href="progs/README.md#prog_G3dOGL"><code>G3dOGL</code></a></div>
-   <div>Demos: <code>create_terrain_hierarchy</code>, <code>view_terrain_hierarchy</code>, <code>create_sr_terrain</code>, <code>view_sr_terrain</code>, <code>view_gcanyon_*</code></div>
+   <div>Demos: <code>{create,view}_terrain_hierarchy</code>,&ensp;<code>{create,view}_selectively_refined_terrain</code>,&ensp;<code>view_gcanyon_*</code></div>
   </td>
  </tr>
 
@@ -177,7 +177,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 1999 Proceedings</cite>.</div>
    <div><em>Face reordering for efficient GPU vertex cache, advocating a FIFO policy.</em></div>
    <div>Programs: <a href="progs/README.md#prog_MeshReorder"><code>MeshReorder</code></a></div>
-   <div>Demos: <code>create_vertexcache_bunny</code>, <code>view_vertexcache_bunny</code></div>
+   <div>Demos: <code>{create,view}_vertex_cached_bunny</code></div>
   </td>
  </tr>
 
@@ -191,7 +191,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 2000 Proceedings</cite>.</div>
    <div><em>Efficient computation of mesh silhouette, used to clip coarse geometry.</em></div>
    <div>Programs: <a href="progs/README.md#prog_MeshSimplify"><code>MeshSimplify</code></a></div>
-   <div>Demos: <code>create_proghull_*</code>, <code>view_proghull_*</code></div>
+   <div>Demos: <code>{create,view}_progressive_hull_*</code></div>
   </td>
  </tr>
 
@@ -205,7 +205,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 2003 Proceedings</cite>.</div>
    <div><em>Robust mapping of a surface onto a sphere, allowing 2D-grid resampling.</em></div>
    <div>Programs: <a href="progs/README.md#prog_SphereParam"><code>SphereParam</code></a>, <a href="progs/README.md#prog_SphereSample"><code>SphereSample</code></a></div>
-   <div>Demos: <code>create_spherical_param_bunny</code>, <code>view_spherical_param_bunny</code></div>
+   <div>Demos: <code>{create,view}_spherical_param_bunny</code></div>
   </td>
  </tr>
 

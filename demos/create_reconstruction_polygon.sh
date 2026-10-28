@@ -15,5 +15,5 @@ Polyfit -pfile results/curve1.joined.a3d -file data/curve1.pts -crep 3e-4 -sprin
 echo 'Done.'
 
 echo '.'
-echo 'Use view_recon_polygon.sh to see the results.'
+echo 'Use view_reconstruction_polygon.sh to see the results.'
 echo '.'

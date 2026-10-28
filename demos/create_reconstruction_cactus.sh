@@ -16,4 +16,4 @@ Filtermesh results/cactus.opt.m -angle 55 -mark | Subdivfit -mfile - -file data/
 echo 'Computing final subdivided surface.'
 Subdivfit -mfile results/cactus.sub0.m -nsub 2 -outn >results/cactus.sub2limit.m
 
-echo 'Use view_recon_cactus.sh to view the results.'
+echo 'Use view_reconstruction_cactus.sh to view the results.'

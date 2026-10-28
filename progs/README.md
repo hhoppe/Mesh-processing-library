@@ -285,7 +285,7 @@ bin/mesh_to_pm demos/data/club.orig.m >club.pm
 
 A progressive <em>outer hull</em>, whose every level of detail encloses the original mesh, is created similarly:
 ```shell
-bin/mesh_to_pm demos/data/bunny.orig.m -hull -minvolume >bunny.ohull.pm
+bin/mesh_to_pm demos/data/bunny.orig.m -hull -minvolume >bunny.outer_hull.pm
 ```
 
 Given a progressive mesh, we can interactively traverse its continuous levels of detail:
@@ -332,7 +332,7 @@ Filterimage demos/data/gaudipark.png -scaletox 200 -tomesh |
 
 ## Selective view-dependent mesh refinement
 
-Within `demos/create_sr_office`, the script call
+Within `demos/create_selectively_refined_office`, the script call
 ```shell
 mesh_to_pm demos/results/office.nf80000.orig.m -vsgeom >office.sr.pm
 ```
@@ -357,7 +357,7 @@ or in the top view (key <kbd>Dr</kbd>).  Drag the mouse buttons to rotate, pan, 
 
 <em>View-dependent refinement of a Grand Canyon terrain, textured and as a mesh.</em>
 
-Within `demos/create_sr_terrain.{sh,bat}`,
+Within `demos/create_selectively_refined_terrain.{sh,bat}`,
 ```shell
 Filterimage demos/data/gcanyon_elev_crop.bw.png -tobw -elevation -step 6 -scalez 0.000194522 \
     -removekinks -tomesh |
@@ -367,7 +367,7 @@ mesh_to_pm gcanyon_sq200.orig.m -vsgeom -terrain >gcanyon_sq200.pm
 - converts an elevation image to a smoothed terrain grid mesh, and
 - simplifies it to create a selectively refinable mesh.
 
-Then, within `demos/view_sr_terrain.sh`,
+Then, within `demos/view_selectively_refined_terrain.sh`,
 ```shell
 (common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcanyon_fly_v98.s3d \
    -texturemap demos/data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 \
@@ -424,7 +424,7 @@ FilterPM demos/data/office.pm -nf 200000 -outmesh |
 The program **`MeshReorder`** reorders the triangle faces (and optionally vertices) within a mesh
 to exploit GPU vertex caching and thereby minimize memory bandwidth and shading cost.
 
-For example, within `demos/create_vertexcache_bunny`,
+For example, within `demos/create_vertex_cached_bunny`,
 ```shell
 MeshReorder demos/data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -color_corners 1 -analyze \
     >bunny.vertexcache.m
@@ -434,7 +434,7 @@ MeshReorder demos/data/bunny.orig.m -fifo -cache_size 16 -analyze -meshify5 -col
 - reports the updated cache miss rate, and
 - writes the mesh with corner colors that identify cache misses.
 
-Then, within `demos/view_vertexcache_bunny`,
+Then, within `demos/view_vertex_cached_bunny`,
 ```shell
 G3dOGL bunny.vertexcache.m -st demos/data/bunny.s3d -key DmDTDC
 ```

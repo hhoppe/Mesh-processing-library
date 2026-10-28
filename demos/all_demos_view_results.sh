@@ -6,21 +6,21 @@ PATH=.:$PATH # allow running bash scripts in local directory
 
 set -v
 
-view_recon_cactus.sh
-view_recon_distcap.sh
-view_recon_polygon.sh
+view_reconstruction_cactus.sh
+view_reconstruction_distcap.sh
+view_reconstruction_polygon.sh
 
 view_simplified_using_meshopt.sh
 
-view_pm_gaudipark.sh
-view_pm_cessna.sh
-view_pm_club.sh
+view_progressive_mesh_gaudipark.sh
+view_progressive_mesh_cessna.sh
+view_progressive_mesh_club.sh
 view_geomorphs.sh
-view_proghull_bunny.sh
-view_proghull_standingblob.sh
+view_progressive_hull_bunny.sh
+view_progressive_hull_standingblob.sh
 
-view_sr_office.sh
-view_sr_terrain.sh
+view_selectively_refined_office.sh
+view_selectively_refined_terrain.sh
 
 view_terrain_hierarchy.sh
 view_gcanyon_frames.sh
@@ -29,7 +29,7 @@ view_psc_drumset.sh
 
 view_topologically_simplified.sh
 
-view_vertexcache_bunny.sh
+view_vertex_cached_bunny.sh
 
 view_spherical_param_bunny.sh
 

@@ -3115,7 +3115,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     Point pcandnew = pcand * scale + translate;
     const bool ok = ranges::all_of(ar_lf, [&](const LinearFunc& lf) { return lf.eval(pcandnew) >= -1e-5f; });
     if (ok) {
-      Warning("Using midpoint as hull point");
+      if (verb >= 2) Warning("Using midpoint as hull point");
       newpoint = pcand;
       return true;
     }
@@ -3138,7 +3138,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   // Maximize the displacement against the link normal, subject to lf.eval(p) >= 0 for every constraint.
   const auto [status, pnew] = maximize_over_halfspaces(-link_normal, ar_lf);
   if (status == ELpStatus::infeasible) {
-    Warning("hull: no point satisfies the constraints");
+    if (verb >= 2) Warning("hull: no point satisfies the constraints");
     return false;
   }
   if (status == ELpStatus::unbounded) {
@@ -3147,17 +3147,17 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
   }
   for (const LinearFunc& lf : ar_lf) {
     if (lf.eval(pnew) < -1e-4f) {
-      Warning("hull: linear inequality not satisfied");
+      if (verb >= 2) Warning("hull: linear inequality not satisfied");
       SSTATV2(Shullbad, lf.eval(pnew));
     }
   }
   for_int(c, 3) {
     if (pnew[c] < -(transf_border + transf_size * .5f)) {
-      Warning("hull point outside border_min");
+      if (verb >= 2) Warning("hull point outside border_min");
       return false;
     }
     if (pnew[c] > transf_border + transf_size * .5f) {
-      Warning("hull point outside border_max");
+      if (verb >= 2) Warning("hull point outside border_max");
       return false;
     }
   }

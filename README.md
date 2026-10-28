@@ -216,7 +216,7 @@ The [programs page](progs/README.md) shows these and other results together with
 
 The code compiles with recent C++23 compilers (`gcc`, `clang`, or Microsoft Visual C++)
 on most platforms (Windows, Linux, WSL, macOS), or within a Docker container.
-The steps are summarized here; see [`make/README.md`](make/README.md) for the requirements,
+The steps are summarized below; see [`make/README.md`](make/README.md) for the requirements,
 the build configurations and options, the [unit tests](make/README.md#unit-tests),
 and more on the [demos](make/README.md#demos).
 
@@ -276,7 +276,7 @@ reports the genus of the new mesh, and shows it in an interactive viewer.
 | [`MeshDistance`] | Measure the differences (in geometry, color, and normals) between two meshes. |
 | [`MeshSimplify`] | Simplify a mesh using a sequence of edge collapses, and record them. |
 | [`Filterprog`] | Encode a base mesh and its recorded edge collapses as a progressive mesh. |
-| [`FilterPM`] | Process a progressive mesh (`*.pm`), e.g., to extract meshes and geomorphs of given complexities. |
+| [`FilterPM`] | Process a progressive mesh (`*.pm`), e.g., to create level-of-detail meshes and geomorphs. |
 | [`StitchPM`] | Stitch the progressive meshes of adjacent terrain tiles into one. |
 | [`MinCycles`] | Remove topological noise from a mesh by pinching off its smallest nonseparating cycles. |
 | [`MeshReorder`] | Reorder the faces (and vertices) of a mesh for efficient GPU vertex caching. |
@@ -331,7 +331,7 @@ contains the main reusable classes.
 All files include `Hh.h` which sets up a common cross-platform environment.
 
 The libraries [`libHwWindows`](libHwWindows) and [`libHwX`](libHwX)
-define implementations of a simple windowing interface (class `Hw`),
+implement a simple windowing interface (class `Hw`),
 under `Win32` and the X Window System, respectively.
 Both implementations support `OpenGL` rendering.
 

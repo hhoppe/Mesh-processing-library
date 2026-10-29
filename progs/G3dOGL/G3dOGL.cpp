@@ -3263,8 +3263,7 @@ void pm_set_lod(float lod) {
   } else {
     pm_lod_level = lod;
   }
-  if (!assertw(pm_lod_level >= 0.f)) pm_lod_level = 0.f;
-  if (!assertw(pm_lod_level <= 1.f)) pm_lod_level = 1.f;
+  pm_lod_level = clamp(pm_lod_level, 0.f, 1.f);
   pm_update_lod();
   hw.redraw_later();
 }

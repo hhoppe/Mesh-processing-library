@@ -11,4 +11,4 @@ echo '.'
 
 export PM_LOD_LEVEL="0.01"
 
-G3dOGL -pm_mode results/standingblob.outer_hull.pm -st data/standingblob.s3d -key ,De $G3DARGS
+G3dOGL -pm_mode results/standingblob.outer_hull.pm -st data/standingblob.s3d -key ,De $G3D_GEOM $G3D_ARGS

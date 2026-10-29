@@ -9,4 +9,4 @@ echo '.'
 echo 'Press "DP" to save current line-drawing to an SVG file (results/spheretext.hlr.svg).'
 echo '.'
 
-FilterPM data/spheretext.pm -nfaces 5000 -outmesh | G3dVec - -key DhDb---J -st data/spheretext.s3d $G3DARGS -plotfile results/spheretext.hlr.svg
+FilterPM data/spheretext.pm -nfaces 5000 -outmesh | G3dVec - -key DhDb---J -st data/spheretext.s3d $G3D_GEOM $G3D_ARGS -plotfile results/spheretext.hlr.svg

@@ -11,4 +11,4 @@ export PSC_LOD_LEVEL="0.1"
 
 export ASSERTW_IGNORE='Isolated vertex has undefined normal|Display lists should be off'
 
-G3dOGL -psc_mode data/drumset_trunc.psc data/drumset.box.a3d -st data/drumset.s3d -key , -lightambient .4 $G3DARGS
+G3dOGL -psc_mode data/drumset_trunc.psc data/drumset.box.a3d -st data/drumset.s3d -key , -lightambient .4 $G3D_GEOM $G3D_ARGS

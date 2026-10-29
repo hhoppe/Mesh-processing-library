@@ -11,6 +11,8 @@ built by Visual Studio.
 - `obj_to_mesh`, `ply_to_mesh`, `mesh_to_obj`, and `mesh_to_ply` (Perl scripts) convert between the mesh format
   (`*.m`) and Wavefront `*.obj` or Stanford `*.ply` files; `Materials_lib.pm` and `Materials_rgb.db` provide
   the material colors used by `obj_to_mesh`.
+- `g3d_cmp` (and `g3d_cmp.bat` for the Windows command prompt) compares geometric objects side-by-side in a grid
+  of `G3dOGL` windows whose viewpoints stay synchronized.
 - `hcheck` runs the [unit tests](../make/README.md#unit-tests) and compares their outputs (`*.ou`)
   with the expected reference files (`*.ref`).
 - `check_reference_values` checks generated files against reference values (statistics of images and videos,

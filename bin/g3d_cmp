@@ -1,0 +1,142 @@
+#!/bin/bash
+
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: g3d_cmp [-g3d G3dOGL_command] [-ncol #cols] [per_win_opts...] filename(s)... [global_opts...]
+
+Compare geometric objects side-by-side in a 2D grid of G3dOGL windows, linked by a sequence of directional pipes
+in raster order to synchronize viewpoint changes. A window is created for each object using
+`G3dOGL_command filename win_opts... global_opts...`, where:
+  -g3d G3dOGL_command  viewer command (default "G3dOGL").
+  -ncol #cols          number of grid columns (default: the one maximizing the window size).
+  -winf "opts"         extra options for the first window; similarly -winm (middle windows), -winl (last window),
+                       -wino (all but the first window), and -win<i> (window i, indexed from 1).
+  global_opts          options given to all windows, from the first unrecognized argument that begins with '-'.
+The windows run in the background, unless the environment variable G3D_CMP_FOREGROUND is set (as in the demos),
+in which case the command waits for all windows to close and fails if any of them fails.
+The script g3d_cmp.bat provides the same command for the Windows command prompt.
+
+Examples:
+g3d_cmp mesh.m mesh.modified.m -key DmDe
+g3d_cmp -win1 "-key Dm" -win2 "-key De" mesh1.m mesh2.m
+g3d_cmp -g3d "G3dOGL -pm_mode" demos/data/bunny.split_meridian.pm demos/data/bunny.outer_hull.pm
+g3d_cmp -g3d "G3dOGL -ply_mode" pr.ply ssd.ply
+END_USAGE_EXAMPLES
+
+if [[ $# == 0 || $1 == --help ]]; then echo "$usage"; exit 0; fi
+
+gap=0  # Number of pixels between adjacent windows; windows overlap on a shared border line when gap=0.
+
+g3d=(G3dOGL)
+winx=()                                                     # Extra options for each window, indexed from 1.
+winf=(-key '&Oii')                                          # Options for first window.
+winm=(-nosetforeground -key '&Oii' -async -killeof -input)  # Options for middle windows.
+winl=(-nosetforeground -async -killeof -key ii -input)      # Options for last window.
+
+ob=()
+
+while true; do
+  if [[ $# -eq 0 ]]; then
+    break
+  elif [[ $# -gt 1 && $1 == -g3d ]]; then
+    g3d=($2)
+    shift 2
+  elif [[ $# -gt 1 && $1 == -ncol ]]; then
+    ncol=$2
+    shift 2
+  elif [[ $# -gt 1 && $1 == -winf ]]; then
+    winf+=($2)
+    shift 2
+  elif [[ $# -gt 1 && $1 == -winm ]]; then
+    winm+=($2)
+    shift 2
+  elif [[ $# -gt 1 && $1 == -winl ]]; then
+    winl+=($2)
+    shift 2
+  elif [[ $# -gt 1 && $1 == -wino ]]; then
+    winm+=($2); winl+=($2)
+    shift 2
+  elif [[ $# -gt 1 && $1 =~ ^-win([0-9]+)$ ]]; then
+    winx[BASH_REMATCH[1]]+=" $2"
+    shift 2
+  elif [[ $1 == -* ]]; then
+    break
+  else
+    ob+=("$1")
+    shift
+  fi
+done
+
+n=${#ob[@]}
+if [[ $n -lt 1 ]]; then
+  echo "g3d_cmp: requires at least one object" >&2
+  echo "$usage" >&2
+  exit 1
+fi
+
+# Get the screen size, the work area (excluding the taskbar), the visible window frame (left, top, right, bottom)
+#  around the client area, and the offset from a -geom position to the visible frame.
+read -r _ sw sh _ wx wy ww wh _ fl ft fr fb _ ox oy < <("${g3d[0]}" -hwquery </dev/null)
+if [[ -z $oy ]]; then
+  echo "g3d_cmp: '${g3d[0]} -hwquery' failed" >&2
+  exit 1
+fi
+if [[ -n $WSL_DISTRO_NAME ]]; then
+  # WSLg draws a 6-pixel frame with a 27-pixel title bar at the -geom position, but it reports neither the frame nor
+  #  the Windows taskbar, so take the taskbar edge (0=left, 1=top, 2=right, 3=bottom) and rectangle from the registry.
+  fl=6 ft=27 fr=6 fb=6 ox=0 oy=0
+  hex=$(reg.exe query 'HKCU\Software\Microsoft\Windows\CurrentVersion\Explorer\StuckRects3' /v Settings </dev/null |
+          awk '/Settings/ {print $3}')
+  dword() { local h=${hex:$(($1 * 8)):8}; echo $((16#${h:6:2}${h:4:2}${h:2:2}${h:0:2})); }
+  if [[ -n $hex ]] && (($(dword 2) % 2 == 0)); then  # Unless the taskbar auto-hides.
+    left=$(dword 6) top=$(dword 7) right=$(dword 8) bottom=$(dword 9)
+    case $(dword 3) in
+      0) wx=$right; ww=$((sw - right)) ;;
+      1) wy=$bottom; wh=$((sh - bottom)) ;;
+      2) ww=$left ;;
+      3) wh=$top ;;
+    esac
+  fi
+fi
+
+# Choose the number of columns that maximizes the (square) window size ws, unless given by -ncol.
+dx=$((fl + fr)) dy=$((ft + fb))  # Frame sizes added to each window.
+sep=$((gap - fb))  # Overlap adjacent windows by the border width (fb, as on the other sides), so they share a border.
+ws=0
+for ((c = ${ncol:-1}; c <= ${ncol:-$n}; c++)); do
+  r=$(((n + c - 1) / c))
+  s=$(((ww - (c - 1) * sep) / c - dx)) t=$(((wh - (r - 1) * sep) / r - dy))
+  if ((t < s)); then s=$t; fi
+  if ((n == 1)); then t=$(((wh - dy) * 85 / 100)); if ((t < s)); then s=$t; fi; fi
+  if ((s > ws)); then ws=$s nc=$c nr=$r; fi
+done
+
+# Center the grid of windows within the work area.
+x0=$((wx + (ww - nc * (ws + dx) - (nc - 1) * sep) / 2 - ox))
+y0=$((wy + (wh - nr * (ws + dy) - (nr - 1) * sep) / 2 - oy))
+
+# Launch the window for object $1, and pipe its output into the windows for the subsequent objects.
+launch() {
+  local k=$1; shift
+  local opts=("${winm[@]}")
+  if ((k == 0)); then opts=("${winf[@]}"); elif ((k == n - 1)); then opts=("${winl[@]}"); fi
+  if ((n == 1)); then set -- "$@" -key O; fi
+  local x=$((x0 + k % nc * (ws + dx + sep))) y=$((y0 + k / nc * (ws + dy + sep)))
+  local cmd=("${g3d[@]}" "${ob[k]}" -geom ${ws}x${ws}+${x}+${y} "${opts[@]}" ${winx[k + 1]} "$@")
+  if ((k == n - 1)); then
+    "${cmd[@]}"
+  else
+    "${cmd[@]}" | launch $((k + 1)) "$@"
+  fi
+}
+
+if [[ -n $G3D_CMP_FOREGROUND ]]; then
+  # Report the failure of any window, except the SIGPIPE (exit status 141) of a window whose downstream windows
+  #  were closed first.
+  set -o pipefail
+  launch 0 "$@" < /dev/null || { status=$?; ((status == 141)) || exit $status; }
+else
+  # Ignore the SIGHUP sent when the terminal closes (e.g., the pty of "wsl -e bash -lc ..." after this script exits),
+  #  since a background process of a non-interactive shell stays in its process group.
+  ( trap "" HUP; launch 0 "$@" < /dev/null & )
+  sleep 2
+fi

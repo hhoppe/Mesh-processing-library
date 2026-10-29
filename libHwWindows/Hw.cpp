@@ -339,6 +339,12 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
   static PAINTSTRUCT ps;  // Always zero.
   switch (iMsg) {
     case WM_ERASEBKGND:
+      // Until the first frame, fill with the background color rather than leave the window surface white.
+      if (!_frame_presented && _background_brush) {
+        RECT rect;
+        assertx(GetClientRect(_hwnd, &rect));
+        FillRect(HDC(wParam), &rect, _background_brush);
+      }
       // https://www.opengl.org/pipeline/article/vol003_7/
       // Handle the application window's WM_ERASEBKGND by returning non-zero in the message handler
       // (this will avoid GDI clearing the OpenGL windows background).
@@ -540,6 +546,7 @@ LRESULT Hw::wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam) {
         assign_default_colors();
         _color_background = parse_color(_backcolor);
         _color_foreground = parse_color(_forecolor);
+        update_background_brush();
         redraw_later();
       }
       break;
@@ -713,6 +720,7 @@ void Hw::draw_it() {
     } else {
       glFlush();
     }
+    _frame_presented = true;
   } else {
     soft_discard();
   }
@@ -1033,6 +1041,18 @@ void Hw::set_pixel_format(bool fake_first) {
   assertx(SetPixelFormat(_hRenderDC, iPixelFormat, &pfd));
 }
 
+// Create a brush in the background color for the window class, which shows before the first frame is drawn (and in
+//  areas exposed by resizing).  Once the window exists, a later call replaces the class brush of the window.
+void Hw::update_background_brush() {
+  const Pixel& c = _color_background;
+  const HBRUSH brush = assertx(CreateSolidBrush(RGB(c[0], c[1], c[2])));
+  if (_background_brush) {
+    SetClassLongPtrW(_hwnd, GCLP_HBRBACKGROUND, LONG_PTR(brush));
+    assertx(DeleteObject(_background_brush));
+  }
+  _background_brush = brush;
+}
+
 void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   WNDCLASSEXW wnd_class;
   // Setup parameters of window class.
@@ -1044,8 +1064,10 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
   wnd_class.hInstance = _hInstance;
   wnd_class.hIcon = LoadIcon(nullptr, IDI_APPLICATION);
   wnd_class.hCursor = LoadCursor(nullptr, IDC_ARROW);
-  // Here, hbrBackground was (HBRUSH) GetStockObject(BLACK_BRUSH),  then was nullptr.
-  wnd_class.hbrBackground = HBRUSH(COLOR_WINDOW + 1);
+  // Here, hbrBackground was (HBRUSH) GetStockObject(BLACK_BRUSH), then nullptr, then HBRUSH(COLOR_WINDOW + 1),
+  //  which stays white under a dark theme and so flashed white before the first frame.
+  update_background_brush();
+  wnd_class.hbrBackground = _background_brush;
   wnd_class.lpszMenuName = nullptr;
   const std::wstring wargv0 = utf16_from_utf8(_argv0);  // Must live until the RegisterClassExW() call.
   wnd_class.lpszClassName = wargv0.c_str();

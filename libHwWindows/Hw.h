@@ -76,7 +76,9 @@ class Hw : public HwBase {
   HDC _hDC;
   HDC _hRenderDC;
   HGLRC _hRC;
-  MSG _msg;  // The current window-message.
+  MSG _msg;                           // The current window-message.
+  HBRUSH _background_brush{nullptr};  // Window-class brush, in the background color.
+  bool _frame_presented{false};       // Whether a first frame has been drawn.
 
   bool init_aux(Array<string>& aargs) override;
   void start_hwkey() override;
@@ -94,6 +96,7 @@ class Hw : public HwBase {
   void draw_it();
 
   void ogl_create_window(const Vec2<int>& yx);
+  void update_background_brush();
   void set_pixel_format(bool fake_first);
   LRESULT wndProc(UINT iMsg, WPARAM wParam, LPARAM lParam);
   void set_keyintr() { _is_keyintr = true; }

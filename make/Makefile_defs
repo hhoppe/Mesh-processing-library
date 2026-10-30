@@ -24,9 +24,11 @@ concat = $(subst $(space),,$(strip $1))
 
 # Identify the build system.
 is_mswin ?= $(if $(WINDIR)$(windir),1)#  Check environment variable WINDIR (e.g. C:\\Windows) for Microsoft Windows.
-# MAKE_HOST (GNU make 4.0+) names the platform of the make binary, independent of any mounted directories.
-is_cygwin := $(if $(findstring -cygwin,$(MAKE_HOST)),1)#  Running under Cygwin make (x86_64-pc-cygwin)?
-is_msys := $(if $(findstring -msys,$(MAKE_HOST)),1)#  Running under Msys make (x86_64-pc-msys)?
+# MAKE_HOST (GNU make 4.0+) names the platform of the make binary, independent of any mounted directories.  MSYS2
+#  make reports x86_64-pc-cygwin (formerly x86_64-pc-msys), so the MSYSTEM variable of MSYS2 shells tells it apart.
+is_posix_host := $(if $(findstring -cygwin,$(MAKE_HOST))$(findstring -msys,$(MAKE_HOST)),1)
+is_msys := $(if $(is_posix_host),$(if $(MSYSTEM),1))#  Running under Msys make?
+is_cygwin := $(if $(is_posix_host),$(if $(is_msys),,1))#  Running under Cygwin make?
 is_mac := $(call file_exists,/System/Library/CoreServices/SystemVersion.plist)#  Running on macOS?
 
 ifeq ($(MeshRoot),)

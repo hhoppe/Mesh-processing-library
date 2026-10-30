@@ -411,8 +411,8 @@ void solve_problems() {
         lf.offset = float(b_le[i]);
         halfspaces.push(lf);
       }
-      const LpPointResult point_result = maximize_over_halfspaces(Vector(float(c[0]), float(c[1]), float(c[2])),
-                                                                  halfspaces);
+      const LpPointResult point_result =
+          maximize_over_halfspaces(Vector(float(c[0]), float(c[1]), float(c[2])), halfspaces);
       result.status = point_result.status;
       if (result.status == ELpStatus::optimal) {
         result.x.init(3);

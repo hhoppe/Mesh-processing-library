@@ -3145,12 +3145,6 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     Warning("hull: objective function is unbounded");
     return false;
   }
-  for (const LinearFunc& lf : ar_lf) {
-    if (lf.eval(pnew) < -1e-4f) {
-      if (verb >= 2) Warning("hull: linear inequality not satisfied");
-      SSTATV2(Shullbad, lf.eval(pnew));
-    }
-  }
   for_int(c, 3) {
     if (pnew[c] < -(transf_border + transf_size * .5f)) {
       if (verb >= 2) Warning("hull point outside border_min");
@@ -3161,6 +3155,8 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
       return false;
     }
   }
+  // Test the constraints only within the border, where float roundoff in their evaluation is small.
+  for (const LinearFunc& lf : ar_lf) assertx(lf.eval(pnew) >= -1e-4f);
   newpoint = (pnew - translate) / scale;
   return true;
 }

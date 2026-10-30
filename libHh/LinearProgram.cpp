@@ -98,7 +98,9 @@ LpResult maximize_linear_program(CArrayView<double> c, CMatrixView<double> a_le,
     basis[p] = q;
   };
   // Recompute the tableau as inverse(B) * t0 from the original coefficients, where B = t0[:, basis], using
-  // Gauss-Jordan elimination with partial pivoting.  This removes the roundoff accumulated over the pivots.
+  // Gauss-Jordan elimination with partial pivoting.  This removes the roundoff accumulated over the pivots.  A
+  // slightly negative rhs is kept rather than clamped to zero, since clamping would hide a basis that has drifted
+  // infeasible (e.g., across nearly coincident constraints) and would perturb the solution read from it.
   // Return false if B is numerically singular.
   const auto refactor = [&] {
     Matrix<double> bmat(V(nrows, nrows));
@@ -124,7 +126,6 @@ LpResult maximize_linear_program(CArrayView<double> c, CMatrixView<double> a_le,
     }
     // Row k of the result now corresponds to the basic variable basis[k].
     for_int(i, nrows) for_int(j, ncols + 1) t[i, j] = nt[i, j];
-    for_int(i, nrows) t[i, ncols] = max(t[i, ncols], 0.);
     return true;
   };
   int num_pivots = 0;
@@ -220,23 +221,37 @@ LpResult maximize_linear_program(CArrayView<double> c, CMatrixView<double> a_le,
   }
 
   // Read the basic solution from a refactored tableau, rather than from the tableau updated by the pivots.
-  if (!refactor()) Warning("Linear program: singular basis; using the pivoted tableau");
+  (void)refactor();  // On failure (a numerically singular basis), the pivoted tableau remains.
   Array<double> y(ncols, 0.);
   for_int(i, nrows) y[basis[i]] = t[i, ncols];
   result.status = ELpStatus::optimal;
   result.x.init(n);
   for_int(k, n) result.x[k] = y[k] - y[n + k];
   result.value = dot(c, result.x);
+  // Verify the solution against the original constraints, in the units of the normalized rows.  The residuals in
+  // the progressive-hull demos are at most about 1e-7, so a much larger residual indicates a failure of the solver.
+  const double feasibility_tolerance = 1e-5 * max(1., max_rhs);
+  const auto residual = [&](CArrayView<double> coefs, double rhs) {
+    const double scale = coefs.num() ? max_abs_element(coefs) : 0.;
+    return scale ? (dot(coefs, result.x) - rhs) / scale : 0.;
+  };
+  for_int(i, m_le) assertx(residual(a_le[i], b_le[i]) <= feasibility_tolerance);
+  for_int(i, m_eq) assertx(abs(residual(a_eq[i], b_eq[i])) <= feasibility_tolerance);
   return result;
 }
 
 LpPointResult maximize_over_halfspaces(const Vector& direction, CArrayView<LinearFunc> halfspaces) {
-  // Each constraint dot(lf.v, p) + lf.offset >= 0 becomes -dot(lf.v, p) <= lf.offset.
+  // Each constraint dot(lf.v, p) + lf.offset >= 0 becomes -dot(lf.v, p) <= lf.offset.  A float coefficient that is
+  // tiny relative to the largest one in its row (e.g., roundoff in the normal of an axis-aligned face) is set to
+  // zero; otherwise, the simplex method may pivot on it, and amplify the roundoff into a grossly wrong solution.
+  const float coef_threshold = 1e-6f;
   const int m = halfspaces.num();
   Matrix<double> a_le(m, 3);
   Array<double> b_le(m);
   for_int(i, m) {
-    for_int(c, 3) a_le[i, c] = -double(halfspaces[i].v[c]);
+    const Vector& v = halfspaces[i].v;
+    const float threshold = coef_threshold * max_abs_element(v);
+    for_int(c, 3) a_le[i, c] = abs(v[c]) < threshold ? 0. : -double(v[c]);
     b_le[i] = halfspaces[i].offset;
   }
   const Vec3<double> c{double(direction[0]), double(direction[1]), double(direction[2])};

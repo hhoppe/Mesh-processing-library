@@ -286,13 +286,161 @@ void test_captured_hull_problems() {
   }
 }
 
+// Problems captured from the progressive hull of the demo mesh standingblob, in normalized coordinates, for
+// maximize_over_halfspaces().  Earlier versions of the solver returned for them points violating constraints by up
+// to 0.5 (owing to roundoff-level coefficients in the normals of faces nearly aligned with the axes, and to the
+// clamping of slightly negative basic variables), or reported the infeasible ones as optimal.  Each string holds n
+// (== 3), m, the direction c[3], and m rows of a[3] and b, for the halfspaces dot(-a, p) + b >= 0.
+void test_captured_halfspace_problems() {
+  const Vec<std::string_view, 7> problems = {
+      "3 10 0.6556870341300964 -0.7337393164634705 0.17804840207099915 -0.5211580395698547 -0.8527839779853821 "
+      "-0.03396671637892723 -0.44958168268203735 -0.5211524367332458 -0.8527868390083313 -0.03398197144269943 "
+      "-0.4495859444141388 -0.5211266279220581 -0.8528026938438416 -0.03398110717535019 -0.44959136843681335 "
+      "0.48026999831199646 -0.54994136095047 0.6833046674728394 -0.075831338763237 0.412159264087677 "
+      "-0.9089211225509644 -0.06314423680305481 0.2639235854148865 0.8606716990470886 -0.43870171904563904 "
+      "0.2584281265735626 -0.08767127245664597 0.946813702583313 -0.30764418840408325 -0.0943344309926033 "
+      "-0.14167074859142303 0.42990022897720337 -0.9012196063995361 -0.05467189848423004 0.2548849880695343 "
+      "0.8607044219970703 -0.43868738412857056 0.25834327936172485 -0.08768056333065033 0.4947686791419983 "
+      "-0.8663545846939087 -0.06807011365890503 0.22230497002601624",
+      "3 7 0.03658690303564072 0.08017570525407791 -0.9961090087890625 -0.16341879963874817 0.10051412880420685 "
+      "-0.9814230799674988 -0.007497857324779034 -0.5212159752845764 -0.8527633547782898 -0.03359325975179672 "
+      "-0.4231642782688141 0.028716394677758217 0.08753950893878937 -0.9957471489906311 -0.0014500594697892666 "
+      "0.02858223207294941 0.08755404502153397 -0.9957495927810669 -0.0014523336431011558 0.21576540172100067 "
+      "0.06250610202550888 -0.9744425415992737 -0.007352809887379408 0.028643259778618813 0.087543785572052 "
+      "-0.99574875831604 -0.0014529682230204344 -0.5210879445075989 -0.8527706861495972 -0.0353475846350193 "
+      "-0.4232352674007416",
+      "3 7 0.9209326505661011 -0.10775966197252274 0.3745277225971222 0.07624344527721405 0.9955825805664062 "
+      "-0.05479370430111885 -0.39011114835739136 0.9490311741828918 0.0062453001737594604 -0.31512048840522766 "
+      "-0.19899657368659973 0.8522254824638367 -0.47880032658576965 -0.21086034178733826 -0.12428677082061768 "
+      "-3.5169449574823375e-09 5.367285993429505e-08 1.0 -0.5 0.9288944005966187 -0.3147164285182953 "
+      "-0.19521428644657135 -0.12600883841514587 -3.352267015088728e-07 -0.9153112769126892 0.4027472138404846 "
+      "-0.3196412920951843 2.6598975799707603e-10 5.722432661059429e-08 1.0 -0.5",
+      "3 16 0.28448355197906494 0.284464567899704 -0.9155047535896301 0.606360912322998 0.6149827241897583 "
+      "0.5041056871414185 -0.17014943063259125 0.5524730682373047 0.6466109156608582 0.525992214679718 "
+      "-0.16439874470233917 0.6519224643707275 0.55826735496521 0.5131613612174988 -0.1676516979932785 -0.0 -0.0 "
+      "-1.0 -0.08091393858194351 -2.998035313339642e-07 4.206079893265269e-07 -1.0 -0.08091399073600769 -0.0 -0.0 "
+      "-1.0 -0.08091393858194351 -0.0 1.0 -1.993631428831577e-07 -0.5 -0.0 -0.0 -1.0 -0.08091393858194351 1.0 "
+      "4.011950949234233e-08 -1.9936315709401242e-07 -0.49999919533729553 -0.0 -0.0 -1.0 -0.08091393858194351 -0.0 "
+      "-0.0 -1.0 -0.08091393858194351 3.4742319598990434e-07 -3.440857199166203e-07 -1.0 -0.08091393858194351 "
+      "-4.05659284297144e-06 2.0460738596739247e-06 -1.0 -0.08091293275356293 -0.0 -0.0 -1.0 -0.08091393858194351 "
+      "-0.0 -0.0 -0.9999999403953552 -0.08091393113136292 -0.0 -0.0 -1.0 -0.08091393858194351",
+      "3 18 0.2899244427680969 0.28471460938453674 -0.9137184619903564 0.816653311252594 0.26362767815589905 "
+      "0.5133983492851257 -0.173011913895607 0.817740797996521 0.2993888854980469 0.4915957450866699 "
+      "-0.17823976278305054 0.7793386578559875 0.38876858353614807 0.4914165139198303 -0.1782323569059372 "
+      "0.8000526428222656 0.3516436815261841 0.4860682487487793 -0.1796886920928955 0.7553468942642212 "
+      "0.40998461842536926 0.5112374424934387 -0.17348577082157135 -0.0 -0.0 -1.0 -0.07038391381502151 "
+      "-2.998035313339642e-07 4.206079893265269e-07 -1.0 -0.0703839659690857 -0.0 -0.0 -1.0 -0.07038391381502151 "
+      "-0.0 1.0 -1.993631428831577e-07 -0.4999999701976776 -0.0 -0.0 -1.0 -0.07038391381502151 1.0 "
+      "4.011950949234233e-08 -1.9936315709401242e-07 -0.49999916553497314 -0.0 -0.0 -1.0 -0.07038391381502151 -0.0 "
+      "-0.0 -1.0 -0.07038391381502151 3.4742319598990434e-07 -3.440857199166203e-07 -1.0 -0.07038391381502151 "
+      "-4.05659284297144e-06 2.0460738596739247e-06 -1.0 -0.07038290798664093 -0.0 -0.0 -1.0 -0.07038391381502151 "
+      "-0.0 -0.0 -0.9999999403953552 -0.07038390636444092 -0.0 -0.0 -1.0 -0.07038391381502151",
+      "3 6 -0.19728171825408936 -8.892975245089474e-09 0.9803469181060791 -3.999141123101459e-15 -1.0 "
+      "-1.9936311446144828e-07 -0.5 -0.9999999403953552 -0.0 -0.0 -0.49999913573265076 -1.5094416170064883e-15 1.0 "
+      "-1.993631428831577e-07 -0.4999999701976776 -1.0 -0.0 -0.0 -0.49999916553497314 7.571316906762604e-09 "
+      "6.224533333210047e-09 1.0 -0.1006181463599205 3.868913633908733e-09 2.522135611471299e-09 1.0 "
+      "-0.1006181463599205",
+      "3 6 -0.19728173315525055 -2.27473040403936e-09 0.9803469181060791 -3.999141123101459e-15 -1.0 "
+      "-1.9936311446144828e-07 -0.5 -0.9999999403953552 -0.0 -0.0 -0.49999913573265076 -1.5094414052482514e-15 "
+      "0.9999999403953552 -1.9936311446144828e-07 -0.4999999403953552 -0.9999999403953552 -0.0 -0.0 "
+      "-0.49999913573265076 7.571316906762604e-09 6.224533333210047e-09 1.0 -0.1006181463599205 "
+      "3.868913633908733e-09 2.522135611471299e-09 1.0 -0.1006181463599205",
+  };
+  for (const std::string_view problem : problems) {
+    std::istringstream iss{string(problem)};
+    int n, m;
+    iss >> n >> m;
+    assertx(n == 3);
+    Vec3<float> c;
+    for_int(k, 3) iss >> c[k];
+    Array<LinearFunc> halfspaces(m);
+    for (LinearFunc& lf : halfspaces) {
+      for_int(k, 3) {
+        iss >> lf.v[k];
+        lf.v[k] = -lf.v[k];
+      }
+      iss >> lf.offset;
+    }
+    assertx(iss);
+    const LpPointResult result = maximize_over_halfspaces(Vector(c[0], c[1], c[2]), halfspaces);
+    string s = string(status_name(result.status));
+    if (result.status == ELpStatus::optimal) {
+      for (const LinearFunc& lf : halfspaces) assertx(lf.eval(result.point) >= -1e-5f);
+      s += sform(" value=%g", round6(dot(Vector(c[0], c[1], c[2]), result.point)));
+    }
+    showf("captured_halfspaces: %s\n", s.c_str());
+  }
+}
+
+// Solve the problems read from std::cin (with the argument --solve), for a fuzzer that compares the results with
+// those of the HiGHS solver of SciPy; that script is kept outside this repository, in
+// ~/other/claude/mesh_processing/tools/fuzz_linear_program.py.  Each input line holds a kind
+// ("lp" for maximize_linear_program(), or "hs" for maximize_over_halfspaces() with n == 3), n, m_le, m_eq, c[n],
+// the m_le rows of a_le[n] and b_le, and the m_eq rows of a_eq[n] and b_eq.  For a problem of kind "hs", each row
+// of a_le and b_le is the halfspace LinearFunc(-a_le[i], b_le[i]), and m_eq is zero.  Each output line holds the
+// status and, if optimal, the value and x[n]; it is flushed, so that the output identifies a problem that aborts.
+void solve_problems() {
+  std::cout.precision(17);
+  string line;
+  while (std::getline(std::cin, line)) {
+    std::istringstream iss{line};
+    string kind;
+    int n, m_le, m_eq;
+    iss >> kind >> n >> m_le >> m_eq;
+    Array<double> c(n), b_le(m_le), b_eq(m_eq);
+    Matrix<double> a_le(m_le, n), a_eq(m_eq, n);
+    for_int(k, n) iss >> c[k];
+    for_int(i, m_le) {
+      for_int(k, n) iss >> a_le[i, k];
+      iss >> b_le[i];
+    }
+    for_int(i, m_eq) {
+      for_int(k, n) iss >> a_eq[i, k];
+      iss >> b_eq[i];
+    }
+    assertx(iss);
+    LpResult result;
+    if (kind == "lp") {
+      result = maximize_linear_program(c, a_le, b_le, a_eq, b_eq);
+    } else {
+      assertx(kind == "hs" && n == 3 && m_eq == 0);
+      Array<LinearFunc> halfspaces;
+      for_int(i, m_le) {
+        LinearFunc lf;
+        lf.v = Vector(-float(a_le[i, 0]), -float(a_le[i, 1]), -float(a_le[i, 2]));
+        lf.offset = float(b_le[i]);
+        halfspaces.push(lf);
+      }
+      const LpPointResult point_result = maximize_over_halfspaces(Vector(float(c[0]), float(c[1]), float(c[2])),
+                                                                  halfspaces);
+      result.status = point_result.status;
+      if (result.status == ELpStatus::optimal) {
+        result.x.init(3);
+        for_int(k, 3) result.x[k] = point_result.point[k];
+        result.value = dot(c, result.x);
+      }
+    }
+    std::cout << status_name(result.status);
+    if (result.status == ELpStatus::optimal) {
+      std::cout << ' ' << result.value;
+      for (const double x : result.x) std::cout << ' ' << x;
+    }
+    std::cout << '\n' << std::flush;
+  }
+}
+
 }  // namespace
 
-int main() {
+int main(int argc, const char** argv) {
+  if (argc == 2 && string(argv[1]) == "--solve") {
+    solve_problems();
+    return 0;
+  }
   test_small();
   test_beale_cycling();
   test_degenerate_apex();
   test_random_3d();
   test_near_coplanar();
   test_captured_hull_problems();
+  test_captured_halfspace_problems();
 }

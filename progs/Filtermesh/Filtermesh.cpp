@@ -3649,16 +3649,11 @@ Point compute_hull_point(Vertex v, float offset) {
   const auto [status, pnew] = maximize_over_halfspaces(-link_normal, ar_lf);
   if (status == ELpStatus::infeasible) assertnever("hull: no point satisfies the constraints");
   if (status == ELpStatus::unbounded) assertnever("hull: objective function is unbounded");
-  for (const LinearFunc& lf : ar_lf) {
-    if (lf.eval(pnew) < -1e-4f) {
-      Warning("hull: linear inequality not satisfied");
-      HH_SSTAT(Shullbad, lf.eval(pnew));
-    }
-  }
   for_int(c, 3) {
     if (pnew[c] < -(transf_border + transf_size * .5f)) assertnever("hull point outside border_min");
     if (pnew[c] > transf_border + transf_size * .5f) assertnever("hull point outside border_max");
   }
+  for (const LinearFunc& lf : ar_lf) assertx(lf.eval(pnew) >= -1e-4f);
   return (pnew - translate) / scale;
 }
 

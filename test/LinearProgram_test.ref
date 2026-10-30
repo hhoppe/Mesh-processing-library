@@ -18,3 +18,10 @@ near_coplanar: 300 of 300 agree with brute force
 captured: value=-4.12706
 captured: value=-7.81939
 captured: value=-4.7557
+captured_halfspaces: optimal value=-0.29197
+captured_halfspaces: optimal value=-0.008433
+captured_halfspaces: optimal value=-1.36997
+captured_halfspaces: optimal value=-0.358551
+captured_halfspaces: optimal value=-0.35163
+captured_halfspaces: infeasible
+captured_halfspaces: infeasible

@@ -22,8 +22,8 @@ struct LpResult {
 // Each matrix has n columns (unless it has no rows), and the variables are unrestricted in sign.  If the optimum is
 // not unique (e.g., c is orthogonal to a face of the feasible polytope), some optimal vertex is returned.
 // The solver is a dense two-phase simplex method using Bland's rule, so it terminates even on degenerate problems,
-// and it refactors its tableau from the original coefficients to bound the accumulation of roundoff.
-// To minimize instead, negate c.
+// and it refactors its tableau from the original coefficients to bound the accumulation of roundoff.  It asserts that
+// an optimal solution satisfies the constraints.  To minimize instead, negate c.
 [[nodiscard]] LpResult maximize_linear_program(CArrayView<double> c, CMatrixView<double> a_le, CArrayView<double> b_le,
                                                CMatrixView<double> a_eq, CArrayView<double> b_eq);
 
@@ -39,6 +39,7 @@ struct LpPointResult {
 };
 
 // Find a point p maximizing dot(direction, p) while also satisfying lf.eval(p) >= 0 for every lf in halfspaces.
+// Any coefficient of lf.v smaller than 1e-6 times its largest one is treated as float roundoff and set to zero.
 [[nodiscard]] LpPointResult maximize_over_halfspaces(const Vector& direction, CArrayView<LinearFunc> halfspaces);
 
 }  // namespace hh

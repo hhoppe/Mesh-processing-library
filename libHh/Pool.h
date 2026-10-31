@@ -2,6 +2,12 @@
 #ifndef MESH_PROCESSING_LIBHH_POOL_H_
 #define MESH_PROCESSING_LIBHH_POOL_H_
 
+#include <array>
+#include <atomic>
+#include <mutex>
+#include <thread>  // this_thread::yield()
+#include <vector>
+
 #include "libHh/Hh.h"
 
 #if HH_HAS_ASAN
@@ -19,6 +25,15 @@
 
   // *.cpp
   HH_ALLOCATE_POOL(Polygon);
+
+  // Creating and destroying pooled objects (e.g., mesh elements) in several threads.
+  {
+    const Pool::ThreadSafe pool_thread_safe;  // In the main thread, before the parallel work.
+    parallel_for(range(n), [&](const int i) {
+      GMesh mesh;  // Its vertices, faces, and edges are allocated from (and returned to) the pools.
+      ...;
+    });
+  }  // The pools leave their thread-safe mode.
 }
 #endif
 
@@ -85,7 +100,18 @@ namespace hh {
 
 //----------------------------------------------------------------------------
 
-// Custom memory allocation pool for a class of objects.
+// Custom memory allocation pool for the objects of a class.  Such a class (e.g., Polygon above, or the mesh elements
+// Mesh::MVertex, Mesh::MFace, ...) declares a static Pool using HH_POOL_ALLOCATION(), whose operator new and
+// operator delete hand out elements of large chunks and keep a free list of the released elements.
+//
+// By default, a Pool is not thread-safe.  To create and destroy pooled objects concurrently in several threads, a
+// client constructs a Pool::ThreadSafe object (e.g., on the stack) in the main thread before the parallel section,
+// such as a parallel_for(), and destroys it after the section (or keeps it across several sections).  While any
+// ThreadSafe object exists, every Pool (i.e., the pool of every pooled class) is in a thread-safe mode, in which
+// each thread allocates from and frees into its own cache of elements, one per Pool.  A cache exchanges batches of
+// elements with its Pool under a lock, which is rarely needed (in Subdivfit, about once per 10'000 allocations).
+// When the last ThreadSafe object is destroyed, at which time no other thread may be using a Pool, all the caches
+// return their elements to their Pools.
 class Pool : noncopyable {
  public:
   Pool() = default;   // This constructor must be a no-op as it may be called after construct() has been called!
@@ -97,6 +123,9 @@ class Pool : noncopyable {
               !_reuse);
     }
     _name = assertx(name);
+    _slot = s_num_pools.fetch_add(1);
+    assertx(_slot < k_max_pools);
+    s_pools[_slot] = this;
     _esize = esize;
     _ealign = ealign;
     _h = nullptr;
@@ -134,8 +163,145 @@ class Pool : noncopyable {
     _reuse = nullptr;
     _offset = 0;
   }
+  // Constructed by a client around code that creates and destroys pooled objects in several threads (see the
+  // overview above).  Outside the thread-safe mode, the only overhead in alloc() and free() is the test of a global
+  // atomic counter.
+  class ThreadSafe : noncopyable {
+   public:
+    ThreadSafe() { s_num_thread_safe.fetch_add(1); }
+    ~ThreadSafe() {
+      if (s_num_thread_safe.fetch_sub(1) == 1) flush_thread_caches();
+    }
+  };
   // Allocate based on the static size of the class.
   [[nodiscard]] void* alloc() {
+    if (!thread_safe()) return alloc_aux();
+    Cache& cache = thread_caches().caches[_slot];
+    if (!cache.head) {
+      const Lock lock(_lock);
+      for_int(i, k_cache_batch) cache_push(cache, static_cast<Link*>(alloc_aux()));
+    }
+    return cache_pop(cache);
+  }
+  void free(void* pp) {
+    if (!thread_safe()) return free_aux(pp);
+    if (pp) cache_free(static_cast<Link*>(pp));
+  }
+  // Allocate based on the size of the first alloc_size() call.
+  [[nodiscard]] void* alloc_size(int align, size_t s64) {
+    if (!thread_safe()) return alloc_size_aux(align, s64);
+    Cache& cache = thread_caches().caches[_slot];
+    if (!cache.head) {
+      const Lock lock(_lock);
+      cache_push(cache, static_cast<Link*>(alloc_size_aux(align, s64)));
+      for_int(i, k_cache_batch - 1) cache_push(cache, static_cast<Link*>(alloc_aux()));
+    }
+    return cache_pop(cache);
+  }
+  void free_size(void* pp, size_t s) {
+    if (!thread_safe()) return free_size_aux(pp, s);
+    if (pp) cache_free(static_cast<Link*>(pp));
+  }
+
+ private:
+  struct Link {
+    Link* next;
+  };
+  static constexpr int k_max_pools = 64;  // Maximum number of pools (one per pooled class).
+  // A cache exchanges batches of elements with its pool, and it holds up to about k_cache_max elements, so that a
+  // thread that repeatedly creates and destroys a temporary mesh usually reuses its own elements.
+  static constexpr int k_cache_batch = 256;
+  static constexpr int k_cache_max = 1 << 16;
+  struct Cache {
+    Link* head;
+    int num;
+  };
+  // The caches of a thread (one per pool).  As they are thread_local, they are also registered, so that the main
+  // thread can empty the caches of all threads when the last ThreadSafe object is destroyed (after the parallel work).
+  struct ThreadCaches {
+    ThreadCaches() {
+      const std::scoped_lock lock(registry().mutex);
+      registry().all.push_back(this);
+    }
+    ~ThreadCaches() {
+      const std::scoped_lock lock(registry().mutex);
+      std::erase(registry().all, this);
+    }
+    std::array<Cache, k_max_pools> caches{};
+  };
+  struct Registry {
+    std::mutex mutex;
+    std::vector<ThreadCaches*> all;  // The caches of all threads, in no particular order (used as a set).
+  };
+  static Registry& registry() {
+    static Registry& value = *new Registry;  // Never destroyed, as threads may exit during static destruction.
+    return value;
+  }
+  static ThreadCaches& thread_caches() {
+    thread_local ThreadCaches value;
+    return value;
+  }
+  static void flush_thread_caches() {
+    const std::scoped_lock lock(registry().mutex);
+    for (ThreadCaches* thread_caches : registry().all)
+      for_int(slot, k_max_pools) {
+        Cache& cache = thread_caches->caches[slot];
+        while (Link* p = cache.head) {
+          cache.head = p->next;
+          Pool& pool = *s_pools[slot];
+          unpoison(p, pool._esize);  // Because free_aux() poisons the element again.
+          pool.free_aux(p);
+        }
+        cache.num = 0;
+      }
+  }
+  // Add an element to a cache, as an unused element (like those of the free list).
+  void cache_push(Cache& cache, Link* p) const {
+    p->next = cache.head;
+    cache.head = p;
+    cache.num++;
+    poison(p, _esize);
+  }
+  void* cache_pop(Cache& cache) const {
+    Link* p = cache.head;
+    cache.head = p->next;
+    cache.num--;
+    unpoison(p, _esize);
+    return p;
+  }
+  void cache_free(Link* p) {
+    Cache& cache = thread_caches().caches[_slot];
+    cache_push(cache, p);
+    if (cache.num < k_cache_max + k_cache_batch) return;
+    const Lock lock(_lock);
+    for_int(i, k_cache_batch) {
+      Link* p2 = cache.head;
+      cache.head = p2->next;
+      cache.num--;
+      unpoison(p2, _esize);  // Because free_aux() poisons the element again.
+      free_aux(p2);
+    }
+  }
+  static inline std::atomic<int> s_num_thread_safe{0};
+  static inline std::atomic<int> s_num_pools{0};
+  static inline std::array<Pool*, k_max_pools> s_pools{};
+  static bool thread_safe() { return s_num_thread_safe.load(std::memory_order_relaxed) != 0; }
+  // A spin lock, as the critical sections are short; it yields the processor if the lock stays busy.
+  class Lock : noncopyable {
+   public:
+    explicit Lock(std::atomic_flag& flag) : _flag(flag) {
+      for (int count = 0; _flag.test_and_set(std::memory_order_acquire);)
+        while (_flag.test(std::memory_order_relaxed))
+          if (++count > 100) std::this_thread::yield();
+    }
+    ~Lock() { _flag.clear(std::memory_order_release); }
+
+   private:
+    std::atomic_flag& _flag;
+  };
+  std::atomic_flag _lock;  // Clear upon (constant) initialization.
+  int _slot;               // Index of the pool in s_pools and in the caches of each thread.
+  [[nodiscard]] void* alloc_aux() {
     Link* p = _h;
     if (p) {
       _h = p->next;
@@ -148,7 +314,7 @@ class Pool : noncopyable {
     unpoison(p, _esize);
     return p;
   }
-  void free(void* pp) {
+  void free_aux(void* pp) {
     if (!pp) return;
     Link* p = static_cast<Link*>(pp);
     // The analyzer conflates the pointer and size parameters of the class-level sized operator delete(),
@@ -159,13 +325,12 @@ class Pool : noncopyable {
     poison(p, _esize);
     if (!--_nused) reset();
   }
-  // Allocate based on the size of the first alloc_size() call.
-  [[nodiscard]] void* alloc_size(int align, size_t s64) {
+  [[nodiscard]] void* alloc_size_aux(int align, size_t s64) {
     const int s = narrow_cast<int>(s64);
     if (!_h && _unused == _unused_end) grow_size(s, align);
-    return alloc();
+    return alloc_aux();
   }
-  void free_size(void* pp, size_t s) {
+  void free_size_aux(void* pp, size_t s) {
     // Pool::free(pp);
     if (!pp) return;
     Link* p = static_cast<Link*>(pp);
@@ -174,8 +339,6 @@ class Pool : noncopyable {
     poison(p, s);
     if (!--_nused) reset();
   }
-
- private:
   // In debug builds, overwrite a freed element (beyond its free-list link) with a pattern, so that a later access
   // to the destroyed element fails loudly rather than silently reading its stale contents.  For instance, the
   // std::hash of a mesh element reads its id (see Mesh.h), so a hash container that still holds a destroyed
@@ -207,9 +370,6 @@ class Pool : noncopyable {
   static constexpr int k_malloc_overhead = 64;
   static constexpr int k_chunksize = k_heap_block_size - k_malloc_overhead;
   const int sdebug = getenv_int("POOL_DEBUG");  // 0, 1, 2, or 3; may be uninitialized in constructor() and init().
-  struct Link {
-    Link* next;
-  };
   struct Chunk {
     Chunk* next;
   };

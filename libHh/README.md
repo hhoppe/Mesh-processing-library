@@ -59,7 +59,7 @@ CGridView<D, T>             (const elements)
 - `Graph<T>`: set of directed edges between elements, with fast iteration over the outgoing edges of an element.
 - `UnionFind<T>`: equivalence classes of elements, as pairs of elements are unified.
 - `IntrusiveList`: doubly linked list of `IntrusiveListNode` members embedded within other objects.
-- `Pool`: custom memory allocation pool for the objects of a class.
+- `Pool`: custom memory allocation pool for the objects of a class (thread-safe within a `Pool::ThreadSafe` scope).
 - `STree<T>`: ordered set, a wrapper around `std::set`.
 
 ## Geometry

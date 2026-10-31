@@ -125,7 +125,7 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
     }
     return dp;
   }
-  template <bool avoid_degen, invocable_r<float, const DPoint&> Eval>
+  template <invocable_r<float, const DPoint&> Eval>
   [[nodiscard]] DPoint compute_point(const DPoint& pp, const DPoint& pn, float vp, float vn, Eval& eval) {
     DPoint pm;
     float fm;
@@ -160,16 +160,16 @@ template <int D, typename VertexData = Vec0<int>> class ContourBase {
       }
       HH_SSTAT(SContneval, neval);
     }
-    if (avoid_degen) {
-      // const float fs = _gn > 500 ? .05f : _gn > 100 ? .01f : .001f;
-      const float fs = 2e-5f * _gn;  // Sufficient precision for HashFloat with default nignorebits == 8.
-      if (fm < fs) {
-        _nedegen++;
-        pm = interp(pn, pp, fs);
-      } else if (fm > 1.f - fs) {
-        _nedegen++;
-        pm = interp(pp, pn, fs);
-      }
+    // Keep the point off the grid nodes: a node value that is zero or tiny relative to its neighbors would
+    // otherwise place the points of several edges exactly on that node, creating zero-area triangles.
+    // const float fs = _gn > 500 ? .05f : _gn > 100 ? .01f : .001f;
+    const float fs = 2e-5f * _gn;  // Sufficient precision for HashFloat with default nignorebits == 8.
+    if (fm < fs) {
+      _nedegen++;
+      pm = interp(pn, pp, fs);
+    } else if (fm > 1.f - fs) {
+      _nedegen++;
+      pm = interp(pp, pn, fs);
     }
     return pm;
   }
@@ -470,7 +470,7 @@ class Contour3dMesh : public BaseContour3d<VertexData3dMesh, Contour3dMesh<Eval,
     Vertex& v = *pv;
     if (is_new) {
       v = _pmesh->create_vertex();
-      _pmesh->set_point(v, this->template compute_point<false>(n1->_p, n2->_p, n1->_val, n2->_val, _eval));
+      _pmesh->set_point(v, this->compute_point(n1->_p, n2->_p, n1->_val, n2->_val, _eval));
     }
     return v;
   }
@@ -541,7 +541,7 @@ class Contour3d : public BaseContour3d<Vec0<int>, Contour3d<Eval, Contour, Borde
     for_int(i, 3) {
       const Node* np = n3[i, 0];
       const Node* nn = n3[i, 1];
-      poly[i] = this->template compute_point<true>(np->_p, nn->_p, np->_val, nn->_val, _eval);
+      poly[i] = this->compute_point(np->_p, nn->_p, np->_val, nn->_val, _eval);
     }
     const Vector normal = cross(poly[0], poly[1], poly[2]);
     // Swap might be unnecessary if we carefully swapped above?
@@ -731,7 +731,7 @@ class Contour2d : public ContourBase<2> {
     for_int(i, 2) {
       const Node* np = n2[i, 0];
       const Node* nn = n2[i, 1];
-      poly[i] = compute_point<true>(np->_p, nn->_p, np->_val, nn->_val, _eval);
+      poly[i] = compute_point(np->_p, nn->_p, np->_val, nn->_val, _eval);
     }
     Vec2<float> v = poly[1] - poly[0];
     const Vec2<float> normal(-v[1], v[0]);  // 90-degree rotation.

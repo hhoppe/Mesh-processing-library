@@ -2,7 +2,7 @@ nc1=56 nc2=208
 # March:
 # visited 264 cubes (11 were undefined, 0 contained nothing)
 # evaluated 548 vertices (0 were zero, 5 were undefined)
-# encountered 0 tough edges
+# encountered 46 tough edges
 # March:
 # visited 27 cubes (3 were undefined, 6 contained nothing)
 # evaluated 51 vertices (6 were zero, 5 were undefined)

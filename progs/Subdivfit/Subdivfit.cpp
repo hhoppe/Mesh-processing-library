@@ -10,6 +10,7 @@
 #include "libHh/Homogeneous.h"
 #include "libHh/Lls.h"
 #include "libHh/Map.h"
+#include "libHh/Matrix.h"
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"
 #include "libHh/MeshSearch.h"
@@ -740,15 +741,21 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
       project_point_neighborhood(mesh, co[pi], gscmf[pi], gbary[pi], dummy_clp, true);
     }
   }
-  const int m = setpts.num(), n = mvcvih.iv.num();
+  const int n = mvcvih.iv.num();
   assertx(n == setmv.num());  // Optional.
-  // auto up_lls = make_unique<SparseLls>(m, n, 3); SparseLls& lls = *up_lls;
-  auto up_lls = Lls::make(m, n, 3, 1.f);
-  Lls& lls = *up_lls;
-  int rowi = 0;
+  // The new positions x of setmv (n rows, 3 columns) minimize |A x - b|^2, where each point contributes a row of A
+  // (its affine combination of setmv) and a row of b (the point minus the constant term of that combination).
+  // The minimum satisfies the normal equations A^T A x = A^T b, and its residual is |A x - b|^2 = b^T b - x^T A^T b
+  // (per column).  We accumulate in double precision ata = A^T A (only its lower triangle), atb = A^T b, and the
+  // diagonal btb of b^T b, where each point adds its row of A as `row` and its row of b as `rhs`.
+  Matrix<double> ata(n, n), atb(n, 3);
+  fill(ata, 0.);
+  fill(atb, 0.);
+  Vec3<double> btb{};
   {
     HH_STIMER("____lcombinations");
     Array<Vertex> va;
+    Array<double> row(n);
     for (const int pi : setpts) {
       mesh.get_vertices(gscmf[pi], va);
       assertx(va.num() == 3);
@@ -759,33 +766,60 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, const Se
       for_int(c, 3) cvihcf[c] = cviha[c]->c.data();
       Vec3<const float*> cvihhf;
       for_int(c, 3) cvihhf[c] = cviha[c]->h.data();
-      Vec3<double> h;
-      for_int(k, 3) h[k] = baryd[0] * cvihhf[0][k] + baryd[1] * cvihhf[1][k] + baryd[2] * cvihhf[2][k];
-      for_int(j, n)
-          lls.enter_a_rc(rowi, j, float(baryd[0] * cvihcf[0][j] + baryd[1] * cvihcf[1][j] + baryd[2] * cvihcf[2][j]));
-      // Homogeneous hrh = Homogeneous(co[pi]) - h;
-      Vector vrh;
-      for_int(c, 3) vrh[c] = float(co[pi][c] - h[c]);
-      lls.enter_b_r(rowi, vrh);
-      rowi++;
+      Vec3<double> rhs;
+      for_int(k, 3) {
+        const double h = baryd[0] * cvihhf[0][k] + baryd[1] * cvihhf[1][k] + baryd[2] * cvihhf[2][k];
+        rhs[k] = co[pi][k] - h;
+        btb[k] += square(rhs[k]);
+      }
+      for_int(j, n) row[j] = baryd[0] * cvihcf[0][j] + baryd[1] * cvihcf[1][j] + baryd[2] * cvihcf[2][j];
+      for_int(j, n) {
+        if (!row[j]) continue;
+        for_int(k, j + 1) ata[j, k] += row[j] * row[k];
+        for_int(c, 3) atb[j, c] += row[j] * rhs[c];
+      }
     }
-    assertx(rowi == lls.num_rows());
-  }
-  GMesh& omesh = smesh.orig_mesh();
-  for_int(i, n) {
-    const Point& p = omesh.point(mvcvih.iv[i]);
-    lls.enter_xest_r(i, p);
   }
   {
     HH_STIMER("____lsolve");
-    if (!lls.solve(nullptr, &rss1)) return false;  // Rare; the caller then rejects the move.
+    // As in QrdLls, reject a condition number of A above 1e5, i.e., of A^T A above 1e10.
+    double max_diag = 0.;
+    for_int(j, n) max_diag = max(max_diag, ata[j, j]);
+    const double tolerance = max_diag * 1e-10;
+    // Factor A^T A = L L^T (Cholesky), replacing the lower triangle of ata by L.
+    for_int(j, n) {
+      double d = ata[j, j];
+      for_int(k, j) d -= square(ata[j, k]);
+      if (!(d > tolerance)) return false;  // Rare; the caller then rejects the move.
+      d = std::sqrt(d);
+      ata[j, j] = d;
+      for_intL(i, j + 1, n) {
+        double sum = ata[i, j];
+        for_int(k, j) sum -= ata[i, k] * ata[j, k];
+        ata[i, j] = sum / d;
+      }
+    }
+    // Solve L y = A^T b and then L^T x = y, in place in atb.  As x^T A^T b = y^T L^-1 L y = |y|^2, the residual
+    // is btb - |y|^2.
+    rss1 = 0.;
+    for_int(c, 3) {
+      double rss = btb[c];
+      for_int(j, n) {
+        double sum = atb[j, c];
+        for_int(k, j) sum -= ata[j, k] * atb[k, c];
+        atb[j, c] = sum / ata[j, j];
+        rss -= square(atb[j, c]);
+      }
+      rss1 += max(rss, 0.);
+      for (int j = n - 1; j >= 0; --j) {
+        double sum = atb[j, c];
+        for_intL(k, j + 1, n) sum -= ata[k, j] * atb[k, c];
+        atb[j, c] = sum / ata[j, j];
+      }
+    }
   }
-  if (0) SHOW("local optimization", m, n, rss1);
-  for_int(i, n) {
-    Point p;
-    lls.get_x_r(i, p);
-    omesh.set_point(mvcvih.iv[i], p);
-  }
+  GMesh& omesh = smesh.orig_mesh();
+  for_int(i, n) omesh.set_point(mvcvih.iv[i], Point(float(atb[i, 0]), float(atb[i, 1]), float(atb[i, 2])));
   return true;
 }
 

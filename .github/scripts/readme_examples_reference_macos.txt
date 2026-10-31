@@ -9,7 +9,7 @@ a5d28dee_1.png 229.17 66.17 229.17 66.17 229.17 66.17
 # FilterPM demos/data/spheretext.pm -nf 2000 -outmesh | (screenshot 1)
 0c5a400e_1.png 165.09 95.70 164.97 95.25 170.07 91.34
 # Recon <demos/data/distcap.pts -samplingd 0.02 | (screenshot 1)
-6dce843d_1.png 191.68 86.67 191.68 86.67 191.95 86.48
+d7a87466_1.png 191.68 86.67 191.68 86.67 191.95 86.48
 # Recon <demos/data/distcap.pts -samplingd 0.02 -what c | (screenshot 1)
 121f2762_1.png 225.09 62.79 162.31 106.24 148.26 121.21
 # Recon <demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d | (screenshot 1)

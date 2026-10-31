@@ -25,13 +25,14 @@ The source code has been updated to modern C++ style and for cross-platform use.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/images/overview_dark.jpg">
-  <img src=".github/images/overview.jpg" alt="Renderings of results: reconstruction of a cactus from points, a remeshed bunny, a drum set, an airplane at two levels of detail, and a terrain.">
+  <img src=".github/images/overview.jpg" alt="Renderings of results: reconstruction of a mannequin head from points, a remeshed bunny, a drum set approximated using simplices of mixed dimension, an airplane at two levels of detail, and a terrain.">
 </picture>
 
 <em>Results rendered by the viewer `G3dOGL`.
 Top: a set of points, the mesh reconstructed from it, and the fitted subdivision surface;
-a spherical remesh; a progressive simplicial complex.
-Bottom: a progressive mesh at a coarse (800 faces) and at its full resolution;
+a spherical remesh;
+a progressive simplicial complex (~2,500 mixed-dim. simplices) approximating a 35,000-triangle mesh.
+Bottom: a progressive mesh at coarse (800 faces) and full resolution;
 view-dependent refinement of a terrain.</em>
 
 The [programs page](progs/README.md) shows these and other results together with the commands that create them.
@@ -79,7 +80,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 1994 Proceedings</cite>.</div>
    <div><em>Subdivision surfaces with sharp features, and their automatic creation by data fitting.</em></div>
    <div>Programs: <a href="progs/README.md#prog_Subdivfit"><code>Subdivfit</code></a></div>
-   <div>Demos: <code>{create,view}_reconstruction_cactus</code></div>
+   <div>Demos: <code>{create,view}_reconstruction_mannequin</code></div>
   </td>
  </tr>
 

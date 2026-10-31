@@ -4,7 +4,7 @@ setlocal
 cd "%~p0"
 
 if .==. (
-  call create_reconstruction_cactus.bat
+  call create_reconstruction_mannequin.bat
   call create_reconstruction_distcap.bat
   call create_reconstruction_polygon.bat
 

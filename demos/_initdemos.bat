@@ -26,8 +26,8 @@ if not defined CONFIG set path=%bin_dir%/msbuild;%bin_dir%/msbuild_debug;%bin_di
 :: The scripts in ../bin (e.g., mesh_to_pm.bat) take precedence over the executables.
 set path=%bin_dir%;%path%
 
-:: The default window geometry of the viewers, doubled on a screen of at least 2560x1600 pixels (if the viewer can
-:: report it).  It is not given to g3d_cmp, which arranges its own windows.
+:: Define the default window geometry of the viewers, doubled on a screen of at least 2560x1600 pixels (if the viewer
+:: can report it).  It is not given to g3d_cmp, which arranges its own windows.
 set G3D_GEOM=-geom 1000x750+150+0
 for /f "tokens=2,3" %%a in ('G3dOGL -hwquery 2^>nul ^<nul') do (
   if %%a geq 2560 if %%b geq 1600 set G3D_GEOM=-geom 2000x1500+150+0

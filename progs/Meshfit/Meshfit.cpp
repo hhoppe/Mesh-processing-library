@@ -619,7 +619,7 @@ void do_gfit(Args& args) {
 // *** fgfit
 
 // Test using:
-// Meshfit -mf ~/data/recon/new/cactus.m -fi ~/data/recon/new/cactus.3337.pts -spr 1e-2 -verb 3 -fgfit 60 >~/tmp/cactus.fgfit.m && G3dcmp ~/data/recon/new/cactus.m ~/tmp/cactus.fgfit.m -key DmDe
+// Meshfit -mf demos/results/mannequin.opt.m -fi demos/data/mannequin.pts -spr 1e-2 -verb 3 -fgfit 60 >~/tmp/mannequin.fgfit.m && g3d_cmp demos/results/mannequin.opt.m ~/tmp/mannequin.fgfit.m -key DmDe
 void do_fgfit(Args& args) {
   // Improve fit for constant simplicial complex.
   perhaps_initialize();

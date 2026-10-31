@@ -2,14 +2,16 @@
 # (using ../bin/check_reference_values): per-channel "mean sd" for an image or video, the errors "dL2 nL2 dLi nLi"
 # of MeshDistance output, else the file size in bytes, each optionally followed by a tolerance "tol=...".
 # Update them with "check_created_outputs.sh --update".
-cactus.recon.m 33831
-cactus.opt.m 15827
-cactus.sub0.m 15512
-# The size of this file is proportional to the face count of the mesh fitted by Subdivfit, whose stochastic
-# optimization reaches different face counts across configurations (e.g., 196 to 229 faces, up to +22% in size).
-cactus.sub2limit.m 136328 tol=0.35
-distcap.recon.m 520356
-distcap.opt.m 66472
+# The sizes of the *.sub0.m and *.sub2limit.m files are proportional to the face count of the mesh fitted by
+# Subdivfit, whose stochastic optimization reaches different face counts across configurations (up to 22% apart).
+mannequin.recon.m 707265
+mannequin.opt.m 70804
+mannequin.sub0.m 47337 tol=0.35
+mannequin.sub2limit.m 660005 tol=0.35
+distcap.recon.m 520136
+distcap.opt.m 69542
+distcap.sub0.m 59972 tol=0.35
+distcap.sub2limit.m 788584 tol=0.35
 curve1.opt.a3d 3560
 curve1.joined.a3d 5421
 curve1.recon.a3d 10880

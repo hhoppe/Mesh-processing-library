@@ -9,7 +9,7 @@
 #    these values (using bin/check_reference_values).
 #  --update DIR: likewise create the images in DIR, and update these reference values.
 #
-# The programs must be built (any CONFIG), and the demos create_reconstruction_cactus, create_spherical_param_bunny,
+# The programs must be built (any CONFIG), and the demos create_reconstruction_mannequin, create_spherical_param_bunny,
 # and create_progressive_mesh_cessna must have been run (e.g., using "make -C demos create").
 
 set -e -o pipefail
@@ -59,15 +59,17 @@ for variant in light dark; do
     suffix=''; rgb='255 255 255'; foreground='0 0 0'; viewer_args=''
   fi
 
-  # Surface reconstruction: points, initial mesh, optimized mesh, and fitted subdivision surface.
-  Filtera3d $data/cactus.pts -diff $foreground 2>/dev/null >"$tmp/cactus.a3d"
-  render cactus_points 640x960 "$tmp/cactus.a3d" -st $data/cactus.s3d
-  render cactus_recon 640x960 $results/cactus.recon.m -st $data/cactus.s3d -key DmDe
-  render cactus_subdiv 640x960 $results/cactus.sub2limit.m -st $data/cactus.s3d
-  hgap=40 render cactus_points_wide 640x960 "$tmp/cactus.a3d" -st $data/cactus.s3d
-  hgap=40 render cactus_recon_wide 640x960 $results/cactus.recon.m -st $data/cactus.s3d -key DmDe
-  hgap=40 render cactus_opt_wide 640x960 $results/cactus.opt.m -st $data/cactus.s3d -key DmDe
-  hgap=40 render cactus_subdiv_wide 640x960 $results/cactus.sub2limit.m -st $data/cactus.s3d
+  # Surface reconstruction: points, initial mesh, optimized mesh, fitted subdivision control mesh, and its limit
+  # surface.
+  Filtera3d $data/mannequin.pts -diff $foreground 2>/dev/null >"$tmp/mannequin.a3d"
+  render mannequin_points 640x960 "$tmp/mannequin.a3d" -st $data/mannequin.s3d
+  render mannequin_recon 640x960 $results/mannequin.recon.m -st $data/mannequin.s3d -key DmDe
+  render mannequin_subdiv 640x960 $results/mannequin.sub2limit.m -st $data/mannequin.s3d
+  hgap=40 render mannequin_points_wide 640x960 "$tmp/mannequin.a3d" -st $data/mannequin.s3d
+  hgap=40 render mannequin_recon_wide 640x960 $results/mannequin.recon.m -st $data/mannequin.s3d -key DmDe
+  hgap=40 render mannequin_opt_wide 640x960 $results/mannequin.opt.m -st $data/mannequin.s3d -key DmDe
+  hgap=40 render mannequin_sub0_wide 640x960 $results/mannequin.sub0.m -st $data/mannequin.s3d -key DmDe
+  hgap=40 render mannequin_subdiv_wide 640x960 $results/mannequin.sub2limit.m -st $data/mannequin.s3d
   # Progressive mesh at three levels of detail: 800 faces, 3000 faces, and its full resolution.
   for nf in 800 3000; do
     FilterPM $results/cessna.pm -nf $nf -outmesh >"$tmp/cessna_$nf.m" 2>/dev/null
@@ -95,16 +97,18 @@ for variant in light dark; do
   side=$((height * 9 / 10)); pad=$(((height - side) / 2))  # The normal map, as a square slightly smaller.
   Filterimage $normalmap -filter lanczos3 -scaletoy $side -color $rgb 255 -boundary border \
     -cropsides -$gap -$gap -$pad -$pad -to png >"$tmp/normalmap.png" 2>/dev/null
-  # Progressive simplicial complex at a coarse and at its full resolution.
-  for lod in 0.05 1.0; do
+  # Progressive simplicial complex at a coarse level, at level 1500 of 17921 (for the overview), and at its full
+  # resolution.
+  for lod in 0.05 0.08373 1.0; do
     PSC_LOD_LEVEL=$lod render drumset_$lod 1280x960 -psc_mode $data/drumset_trunc.psc $data/drumset.box.a3d \
       -st $data/drumset.s3d -key , -lightambient .4
   done
 
-  row overview1 cactus_points cactus_recon cactus_subdiv bunny_remesh drumset_1.0
+  row overview1 mannequin_points mannequin_recon mannequin_subdiv bunny_remesh drumset_0.08373
   row overview2 cessna_edges_800 cessna_full canyon_tex
   Filterimage -assemble 1 2 "$tmp/overview1.png" "$tmp/overview2.png" -to jpg >$images/overview$suffix.jpg 2>/dev/null
-  row_width=1440 row reconstruction cactus_points_wide cactus_recon_wide cactus_opt_wide cactus_subdiv_wide
+  row reconstruction mannequin_points_wide mannequin_recon_wide mannequin_opt_wide mannequin_sub0_wide \
+    mannequin_subdiv_wide
   row progressive_mesh cessna_edges_800 cessna_edges_3000 cessna_edges_full
   row terrain canyon_tex canyon_mesh
   row spherical bunny_orig bunny_sphere bunny_remesh bunny_normalmap normalmap

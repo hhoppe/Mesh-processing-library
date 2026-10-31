@@ -18,7 +18,7 @@ $(call assert_prepend_PATH,$(MeshRoot)/bin)  # The scripts (e.g., mesh_to_pm) ta
 $(call assert_prepend_PATH,$(MeshRoot)/demos)  # Allow running bash scripts in local directory.
 
 create_scripts = \
-  create_reconstruction_cactus.sh \
+  create_reconstruction_mannequin.sh \
   create_reconstruction_distcap.sh \
   create_reconstruction_polygon.sh \
   create_simplified_using_meshopt.sh \
@@ -40,7 +40,7 @@ create_scripts = \
   create_voronoi_fillin.sh \
 
 view_scripts = \
-  view_reconstruction_cactus.sh \
+  view_reconstruction_mannequin.sh \
   view_reconstruction_distcap.sh \
   view_reconstruction_polygon.sh \
   view_simplified_using_meshopt.sh \

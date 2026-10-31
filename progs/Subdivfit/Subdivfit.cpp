@@ -371,7 +371,7 @@ void do_gfit(Args& args) {
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Vector, v_grad);
 
 // Test using:
-// Filtermesh ~/data/recon/new/cactus.crep1e-5.m -angle 55 -mark | Subdivfit -mf - -fi ~/data/recon/new/cactus.3337.pts -verb 3 -fgfit 60 >~/tmp/cactus.fgfit.m && G3dcmp ~/data/recon/new/cactus.nsub2.crep1e-5p.0.m ~/tmp/cactus.fgfit.m -key DmDe
+// Filtermesh demos/results/mannequin.opt.m -angle 40 -mark | Subdivfit -mf - -fi demos/data/mannequin.pts -verb 3 -fgfit 60 >~/tmp/mannequin.fgfit.m && g3d_cmp demos/results/mannequin.sub0.m ~/tmp/mannequin.fgfit.m -key DmDe
 // Verdict: not stable enough; often jumps out of initial minimum to worse state; use do_gfit instead.
 void do_fgfit(Args& args) {
   HH_TIMER("_fgfit");

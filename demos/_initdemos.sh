@@ -52,8 +52,8 @@ PATH=.:$PATH
 # The Cygwin builds of the viewers draw through X11, so start an X server if none is running.
 if [[ $(type -P G3dOGL) == */bin/cygwin/* ]]; then ensure_x11_server; fi
 
-# The default window geometry of the viewers, doubled on a screen of at least 2560x1600 pixels (if the viewer can
-# report it).  It is not given to g3d_cmp, which arranges its own windows.
+# Define the default window geometry of the viewers, doubled on a screen of at least 2560x1600 pixels (if the viewer
+# can report it).  It is not given to g3d_cmp, which arranges its own windows.
 read -r _ screen_width screen_height _ < <(G3dOGL -hwquery </dev/null 2>/dev/null) || true
 win_size=1000x750
 if ((${screen_width:-0} >= 2560 && ${screen_height:-0} >= 1600)); then win_size=2000x1500; fi

@@ -6,7 +6,7 @@ PATH=.:$PATH # allow running bash scripts in local directory
 
 set -v
 
-create_reconstruction_cactus.sh
+create_reconstruction_mannequin.sh
 create_reconstruction_distcap.sh
 create_reconstruction_polygon.sh
 

@@ -102,15 +102,13 @@ Processes a stream of coordinate frames (`*.frame`), e.g., to transform, invert,
 
 ## Surface reconstruction
 
-<div align="center">
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../.github/images/reconstruction_dark.jpg">
-  <img src="../.github/images/reconstruction.jpg" alt="Points sampled near a cactus, the mesh reconstructed from them (Recon), the optimized mesh (Meshfit), and the fitted subdivision surface (Subdivfit)." width="660">
+  <img src="../.github/images/reconstruction.jpg" alt="Points sampled on a mannequin head, the mesh reconstructed from them (Recon), the optimized mesh (Meshfit), and the fitted subdivision control mesh and limit surface (Subdivfit).">
 </picture>
-</div>
 
-<em>Points sampled near a cactus, the mesh reconstructed from them (`Recon`), the optimized mesh (`Meshfit`),
-and the fitted subdivision surface (`Subdivfit`).</em>
+<em>Points sampled on a mannequin head, the mesh reconstructed from them (`Recon`), the optimized mesh (`Meshfit`),
+and the fitted subdivision control mesh and limit surface (`Subdivfit`).</em>
 
 ### <a id="prog_recon"></a>Recon
 
@@ -119,7 +117,7 @@ and reconstructs an approximating triangle mesh.
 For example,
 ```shell
 Recon <demos/data/distcap.pts -samplingd 0.02 |
-  Filtermesh -genus -rmcomp 100 -fillholes 30 -triangulate -genus | tee distcap.recon.m |
+  Filtermesh -genus -fillholes 30 -triangulate -genus | tee distcap.recon.m |
   G3dOGL -st demos/data/distcap.s3d -key DmDe
 ```
 - reads the text file of points,

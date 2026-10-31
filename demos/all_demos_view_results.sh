@@ -16,8 +16,8 @@ view_progressive_mesh_gaudipark.sh
 view_progressive_mesh_cessna.sh
 view_progressive_mesh_club.sh
 view_geomorphs.sh
-view_progressive_hull_bunny.sh
-view_progressive_hull_standingblob.sh
+view_progressive_hulls_bunny.sh
+view_progressive_hulls_standingblob.sh
 
 view_selectively_refined_office.sh
 view_selectively_refined_terrain.sh

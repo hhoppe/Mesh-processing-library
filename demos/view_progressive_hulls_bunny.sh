@@ -11,4 +11,4 @@ echo '.'
 
 export PM_LOD_LEVEL="0.001"
 
-G3dOGL -pm_mode results/bunny.outer_hull.pm -st data/bunny.s3d -key ,De $G3D_GEOM $G3D_ARGS
+g3d_cmp -g3d "G3dOGL -pm_mode" results/bunny.{outer,inner}_hull.pm -st data/bunny.s3d -key ,De $G3D_ARGS

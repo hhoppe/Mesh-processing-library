@@ -14,8 +14,8 @@ if .==. (
   call view_progressive_mesh_cessna.bat
   call view_progressive_mesh_club.bat
   call view_geomorphs.bat
-  call view_progressive_hull_bunny.bat
-  call view_progressive_hull_standingblob.bat
+  call view_progressive_hulls_bunny.bat
+  call view_progressive_hulls_standingblob.bat
 
   call view_selectively_refined_office.bat
   call view_selectively_refined_terrain.bat

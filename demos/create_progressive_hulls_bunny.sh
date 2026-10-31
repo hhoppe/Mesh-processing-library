@@ -9,6 +9,11 @@ echo 'each edge collapse.'
 
 mesh_to_pm data/bunny.orig.m -hull -innerhull 0 -af 3 -minvolume -relerror -attrib_project >results/bunny.outer_hull.pm
 
+echo 'Also creating the progressive inner hull results/bunny.inner_hull.pm, whose every level of detail lies'
+echo 'inside the original mesh.'
+
+mesh_to_pm data/bunny.orig.m -hull -innerhull 1 -af 3 -minvolume -relerror -attrib_project >results/bunny.inner_hull.pm
+
 echo '.'
-echo 'Use view_progressive_hull_bunny.sh to view the resulting progressive hull.'
+echo 'Use view_progressive_hulls_bunny.sh to view the resulting progressive hulls.'
 echo '.'

@@ -104,11 +104,11 @@ Processes a stream of coordinate frames (`*.frame`), e.g., to transform, invert,
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="../.github/images/reconstruction_dark.jpg">
-  <img src="../.github/images/reconstruction.jpg" alt="Points sampled on a mannequin head, the mesh reconstructed from them (Recon), the optimized mesh (Meshfit), and the fitted subdivision control mesh and limit surface (Subdivfit).">
+  <img src="../.github/images/reconstruction.jpg" alt="Points sampled on a mannequin head, the initial mesh reconstruction (Recon), the optimized mesh (Meshfit), and the optimized subdivision control mesh and its limit surface (Subdivfit).">
 </picture>
 
-<em>Points sampled on a mannequin head, the mesh reconstructed from them (`Recon`), the optimized mesh (`Meshfit`),
-and the fitted subdivision control mesh and limit surface (`Subdivfit`).</em>
+<em>Points sampled on a mannequin head, the initial mesh reconstruction (`Recon`), the optimized mesh (`Meshfit`),
+and the optimized subdivision control mesh and its limit surface (`Subdivfit`).</em>
 
 ### <a id="prog_recon"></a>Recon
 

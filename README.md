@@ -29,9 +29,9 @@ The source code has been updated to modern C++ style and for cross-platform use.
 </picture>
 
 <em>Results rendered by the viewer `G3dOGL`.
-Top: a set of points, the mesh reconstructed from it, and the fitted subdivision surface;
+Top: a set of points, an initial mesh reconstruction, and an optimized subdivision surface;
 a spherical remesh;
-a progressive simplicial complex (~2,500 mixed-dim. simplices) approximating a 35,000-triangle mesh.
+a progressive simplicial complex (showing ~2,500 mixed-dim. simplices).
 Bottom: a progressive mesh at coarse (800 faces) and full resolution;
 view-dependent refinement of a terrain.</em>
 
@@ -192,7 +192,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>ACM SIGGRAPH 2000 Proceedings</cite>.</div>
    <div><em>Efficient computation of mesh silhouette, used to clip coarse geometry.</em></div>
    <div>Programs: <a href="progs/README.md#prog_MeshSimplify"><code>MeshSimplify</code></a></div>
-   <div>Demos: <code>{create,view}_progressive_hull_*</code></div>
+   <div>Demos: <code>{create,view}_progressive_hulls_*</code></div>
   </td>
  </tr>
 

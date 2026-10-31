@@ -18,8 +18,8 @@ create_progressive_mesh_club.sh
 determine_approximation_error.sh
 
 create_geomorphs.sh
-create_progressive_hull_bunny.sh
-create_progressive_hull_standingblob.sh
+create_progressive_hulls_bunny.sh
+create_progressive_hulls_standingblob.sh
 
 create_selectively_refined_office.sh
 create_selectively_refined_terrain.sh

@@ -23,8 +23,10 @@ club.pm 508276
 club.approximation_error.txt 0.0232 0.06162 0.1623 1.919
 standingblob.geomorphs 4717324
 bunny.outer_hull.pm 2231632
+bunny.inner_hull.pm 2231082
 standingblob.nf20000.m 1108142
 standingblob.outer_hull.pm 647827
+standingblob.inner_hull.pm 647167
 office.nf80000.orig.m 7140990
 office.nf80000.sr.pm 2311530
 gcanyon_sq200.orig.m 5562092

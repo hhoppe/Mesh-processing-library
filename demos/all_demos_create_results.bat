@@ -16,8 +16,8 @@ if .==. (
   call determine_approximation_error.bat
 
   call create_geomorphs.bat
-  call create_progressive_hull_bunny.bat
-  call create_progressive_hull_standingblob.bat
+  call create_progressive_hulls_bunny.bat
+  call create_progressive_hulls_standingblob.bat
 
   call create_selectively_refined_office.bat
   call create_selectively_refined_terrain.bat

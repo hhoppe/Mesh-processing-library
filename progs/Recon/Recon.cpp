@@ -109,7 +109,12 @@ void close_mk(unique_ptr<Mk3d>& pmk) {
 
 void process_read() {
   HH_TIMER("_read");
-  RSA3dStream ia3d(std::cin);
+  std::istream& is = std::cin;
+  for (string line; is.peek() == '#';) {
+    assertx(my_getline(is, line));
+    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+  }
+  RSA3dStream ia3d(is);
   A3dElem el;
   int nnor = 0;
   for (;;) {
@@ -748,7 +753,7 @@ int main(int argc, const char** argv) {
   args.parse();
   assertx(samplingd);
   g_header = args.header();
-  showdf("%s", g_header.c_str());
+  showff("%s", g_header.c_str());
   process();
   hh_clean_up();
   // We close iom here so that the mesh comes after everything else in the file.

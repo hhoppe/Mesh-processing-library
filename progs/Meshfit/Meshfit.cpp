@@ -472,7 +472,12 @@ void initial_projection() {
 void do_mfilename(Args& args) {
   HH_TIMER("_mfilename");
   assertx(mesh.empty());
-  mesh.read(RFile(args.get_filename())());
+  RFile fi(args.get_filename());
+  for (string line; fi().peek() == '#';) {
+    assertx(my_getline(fi(), line));
+    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+  }
+  mesh.read(fi());
   for (Face f : mesh.faces()) {
     const int nv = mesh.num_vertices(f);
     assertx(nv <= 4);
@@ -1486,7 +1491,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(feswaasym, "f : set drss threshold (fraction of crep)");
   {
     HH_TIMER("Meshfit");
-    showdf("%s", args.header().c_str());
+    showff("%s", args.header().c_str());
     args.parse();
     perhaps_initialize();
     analyze_mesh("FINAL");

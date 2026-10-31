@@ -96,7 +96,12 @@ void mark_mesh(GMesh& m) {
 
 void do_mfilename(Args& args) {
   assertx(gmesh.empty());
-  gmesh.read(RFile(args.get_filename())());
+  RFile fi(args.get_filename());
+  for (string line; fi().peek() == '#';) {
+    assertx(my_getline(fi(), line));
+    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+  }
+  gmesh.read(fi());
   showdf("Initial mesh: %s\n", mesh_genus_string(gmesh).c_str());
   for (Vertex v : gmesh.vertices()) gbbox.union_with(gmesh.point(v));
   if (getenv_bool("FORCE_GLOBAL_PROJECT")) {
@@ -1405,7 +1410,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("Examples: Subdivfit -mf - -outn");
   HH_ARGSC("          Subdivfit -mf v.m -fi v.pts  -gfit 10  -ecol -stoc >v");
   Timer timer("Subdivfit");
-  showdf("%s", args.header().c_str());
+  showff("%s", args.header().c_str());
   args.parse();
   if (outn) {
     assertx(!gmesh.empty());

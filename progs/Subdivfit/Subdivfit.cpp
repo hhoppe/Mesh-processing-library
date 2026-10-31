@@ -874,20 +874,14 @@ void build_lmesh2(GMesh& lmesh, const Set<Vertex>& setmv, Set<Face>& setmf) {
 // Subdivide the submesh; trim its outlying faces and vertices.
 void subdiv_trim(SubMesh& smesh, const Set<Face>& setmf) {
   subdivide(smesh, true);
-  {  // Trim faces from smesh outside setmf.
-    Set<Face> setfrem;
-    for (Face f : smesh.mesh().faces())
-      if (!setmf.contains(smesh.orig_face(f))) setfrem.enter(f);
-    HH_SSTAT(Ssetfrem, setfrem.num());
-    for (Face f : setfrem) smesh.mesh().destroy_face(f);
-  }
-  {  // Trim isolated vertices.
-    Set<Vertex> setvrem;
-    for (Vertex v : smesh.mesh().vertices())
-      if (!smesh.mesh().degree(v)) setvrem.enter(v);
-    HH_SSTAT(Ssetvrem, setvrem.num());
-    for (Vertex v : setvrem) smesh.mesh().destroy_vertex(v);
-  }
+  GMesh& mesh = smesh.mesh();
+  Array<Face> arf;
+  for (Face f : mesh.faces())
+    if (!setmf.contains(smesh.orig_face(f))) arf.push(f);
+  HH_SSTAT(Ssetfrem, arf.num());
+  const int nv = mesh.num_vertices();
+  smesh.destroy_faces(arf);
+  HH_SSTAT(Ssetvrem, nv - mesh.num_vertices());
 }
 
 void local_update_gmesh(const SubMesh& smesh, const Set<Vertex>& setmv, const Set<int>& setpts, Face f1l = nullptr,

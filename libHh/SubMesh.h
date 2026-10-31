@@ -36,6 +36,9 @@ class SubMesh {
  public:
   explicit SubMesh(GMesh& mesh);
   void clear();
+  // Destroy some faces of mesh() and any vertices thereby isolated, also removing them from the maps of the SubMesh.
+  // (Their keys must not remain in these maps, whose hash function reads the id of a mesh element.)
+  void destroy_faces(CArrayView<Face> faces);
   static const FlagMask vflag_variable;  // An MVertex flag bit.
   // mesh() may be modified if no more SubMesh operations will be done.
   [[nodiscard]] auto& mesh(this auto&& self) { return self._m; }

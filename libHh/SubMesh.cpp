@@ -175,6 +175,22 @@ void SubMesh::clear() {
   _mofif.clear();
 }
 
+void SubMesh::destroy_faces(CArrayView<Face> faces) {
+  Set<Vertex> setv;
+  for (Face f : faces) {
+    for (Vertex v : _m.vertices(f)) setv.add(v);
+    // Remove the face from the maps before destroying it, as their hash reads the face id.
+    assertx(_mforigf.remove(f));
+    _mfindex.remove(f);  // Can be index 0.
+    _m.destroy_face(f);
+  }
+  for (Vertex v : setv) {
+    if (_m.degree(v)) continue;
+    _cmvcvh.remove(v);
+    _m.destroy_vertex(v);
+  }
+}
+
 // *** subdivide
 
 void SubMesh::subdivide(float cosang) {

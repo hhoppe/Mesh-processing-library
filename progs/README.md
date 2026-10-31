@@ -214,7 +214,7 @@ Filtermesh distcap.opt.m -angle 52 -mark |
 - optimizes the mesh connectivity, geometry, and assignment of sharp edges to fit a
   <em>subdivision surface</em> to the points,
 - with a representation cost of `1e-5` per vertex and `.2e-5` per sharp edge, and
-- saves the resulting optimized base mesh to a file.  (The overall process takes a few minutes.)
+- saves the resulting optimized base mesh to a file.
 
 To view the result,
 ```shell

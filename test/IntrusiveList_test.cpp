@@ -130,8 +130,7 @@ int main() {
     };
     IntrusiveList list_all, list_odd;
     Array<B> bs(5);
-    for_int(i, bs.num()) {
-      B& b = bs[i];
+    for (auto [i, b] : enumerate(bs)) {
       b._i = i;
       b._node_all.link_before(list_all.delim());
       if (i % 2) b._node_odd.link_after(list_odd.delim());

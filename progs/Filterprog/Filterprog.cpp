@@ -1474,8 +1474,8 @@ void do_pm_encode() {
       // materials are a subset (with empty strings for the unused ones) of those still referenced by the old vsplits.
       // Assert that each defined material is identical, and adopt the complete table of the old pm.
       assertx(pm_material_strings.num() <= old_bmesh._materials.num());
-      for_int(i, pm_material_strings.num()) {
-        if (pm_material_strings[i] != "") assertx(pm_material_strings[i] == old_bmesh._materials.get(i));
+      for (const auto [i, material] : enumerate(pm_material_strings)) {
+        if (material != "") assertx(material == old_bmesh._materials.get(i));
       }
       bmesh._materials = old_bmesh._materials;
       assertx(pmrs._info._has_rgb == has_rgb);

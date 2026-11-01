@@ -10,8 +10,8 @@
 #include "libHh/Homogeneous.h"
 #include "libHh/Lls.h"
 #include "libHh/Map.h"
-#include "libHh/Matrix.h"
 #include "libHh/MathOp.h"
+#include "libHh/Matrix.h"
 #include "libHh/MeshOp.h"
 #include "libHh/MeshSearch.h"
 #include "libHh/NonlinearOptimization.h"
@@ -853,7 +853,7 @@ struct Footprint {
 
 // Record in fp the gmesh state that the commit of a successful operation on eg modifies.  A new vertex vnew of lmesh
 // has no counterpart in gmesh.
-void record_writes(Footprint& fp, const GMesh& lmesh, const Set<Vertex>& setmv, Edge eg, Vertex vnew = nullptr) {
+void register_writes(Footprint& fp, const GMesh& lmesh, const Set<Vertex>& setmv, Edge eg, Vertex vnew = nullptr) {
   for (Vertex v : setmv)
     if (v != vnew) fp.write_vertices.push(lmesh.vertex_id(v));
   for (Vertex v : gmesh.vertices(eg)) fp.write_vertices.push(gmesh.vertex_id(v));
@@ -1072,7 +1072,7 @@ EResult try_ecol(Edge eg, double& edrss, Commit& commit, Footprint& fp) {
   const float mina = min_dihedral_about_vertices(lmesh, v1);
   if (mina < k_min_cos && mina < minb) return R_dih;
   // ALL SYSTEMS GO.
-  record_writes(fp, lmesh, setmv, eg);
+  register_writes(fp, lmesh, setmv, eg);
   commit = [local, setmv, lp, eg] {
     Face f1g = gmesh.face1(eg), f2g = gmesh.face2(eg);
     for (Vertex v : gmesh.vertices(eg))
@@ -1142,7 +1142,7 @@ EResult try_esha(Edge eg, double& edrss, Commit& commit, Footprint& fp) {
   }
   // ALL SYSTEMS GO.
   is_sharp = !is_sharp;
-  record_writes(fp, lmesh, setmv, eg);
+  register_writes(fp, lmesh, setmv, eg);
   commit = [local, setmv, lp, eg, is_sharp] {
     gmesh.flags(eg).flag(GMesh::eflag_sharp) = is_sharp;
     if (wf_record) {
@@ -1214,7 +1214,7 @@ EResult try_eswa(Edge eg, double& edrss, Commit& commit, Footprint& fp) {
   const double threshrss = rssf - wcrep * feswaasym + (is_sharp ? 1. : 0.) * wcsharp;
   if (!try_opt(smesh, setmv, lp, mvcvih, threshrss, edrss)) return R_energy;
   // ALL SYSTEMS GO.
-  record_writes(fp, lmesh, setmv, eg);
+  register_writes(fp, lmesh, setmv, eg);
   commit = [local, setmv, lp, eg, v1g, v2g, vo1g, vo2g, of1g, of2g, nf1l, nf2l] {
     ecand.remove(eg);
     Edge neg = gmesh.swap_edge(eg);  // The new edge is not sharp!
@@ -1284,7 +1284,7 @@ EResult try_espl(Edge eg, double& edrss, Commit& commit, Footprint& fp) {
   const double threshrss = rssf - wcrep - (is_sharp ? 1. : 0.) * wcsharp;
   if (!try_opt(smesh, setmv, lp, mvcvih, threshrss, edrss)) return R_energy;
   // ALL SYSTEMS GO.
-  record_writes(fp, lmesh, setmv, eg, vn);
+  register_writes(fp, lmesh, setmv, eg, vn);
   commit = [local, setmv, lp, eg, v2g, nf1l, nf2l, vn] {
     for (Face f : gmesh.faces(eg))
       for (Edge ee : gmesh.edges(f)) ecand.remove(ee);
@@ -1471,12 +1471,12 @@ void do_stoc() {
     for_int(i_edge, attempts.num()) order[i_edge] = i_edge;
     {
       Array<int> successes;
-      for_int(i_edge, attempts.num())
+      for_int(i_edge, attempts.num()) {
         if (attempts[i_edge].result == R_success) successes.push(i_edge);
+      }
       Array<int> sorted_successes(successes);
-      sort(sorted_successes, [&](int i1, int i2) {
-        return std::pair{attempts[i1].edrss, i1} < std::pair{attempts[i2].edrss, i2};
-      });
+      sort(sorted_successes,
+           [&](int i1, int i2) { return std::pair{attempts[i1].edrss, i1} < std::pair{attempts[i2].edrss, i2}; });
       for_int(j, successes.num()) order[successes[j]] = sorted_successes[j];
     }
     Set<int> written_vertices, written_faces;

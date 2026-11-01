@@ -257,8 +257,7 @@ class SphereMapper::Implementation {
   // Returns std::nullopt if the polygon is not star-shaped, i.e. if its kernel is empty.
   static std::optional<Point> kernel_centroid_of_spherical_polygon(CArrayView<Vector> enormals) {
     Vector center{};
-    for_int(i, enormals.num()) {
-      const Vector& enormal = enormals[i];
+    for (const auto [i, enormal] : enumerate(enormals)) {
       // Get a point x0 on the edge.
       Vector x0;
       if (0) {  // Seemed like an improvement, but may be worse?

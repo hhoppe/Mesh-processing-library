@@ -243,7 +243,7 @@ class Pool : noncopyable {
   }
   static void flush_thread_caches() {
     const std::scoped_lock lock(registry().mutex);
-    for (ThreadCaches* thread_caches : registry().all)
+    for (ThreadCaches* thread_caches : registry().all) {
       for_int(slot, k_max_pools) {
         Cache& cache = thread_caches->caches[slot];
         while (Link* p = cache.head) {
@@ -254,6 +254,7 @@ class Pool : noncopyable {
         }
         cache.num = 0;
       }
+    }
   }
   // Add an element to a cache, as an unused element (like those of the free list).
   void cache_push(Cache& cache, Link* p) const {

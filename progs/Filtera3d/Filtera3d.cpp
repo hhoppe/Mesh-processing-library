@@ -683,9 +683,9 @@ void compute_outlier() {
   const Bbox bbox{g_outlier.pa};
   const Frame xform = bbox.get_frame_to_cube(), xform_inverse = ~xform;
   PointSpatial<int> SPp(30);
-  for_int(i, g_outlier.pa.num()) {
-    g_outlier.pa[i] *= xform;
-    SPp.enter(i, &g_outlier.pa[i]);
+  for (auto [i, p] : enumerate(g_outlier.pa)) {
+    p *= xform;
+    SPp.enter(i, &p);
   }
   int num_outliers = 0;
   assertx(g_outlier.pa.num() > outliern);  // Else the search below advances past the end.

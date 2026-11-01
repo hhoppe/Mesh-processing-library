@@ -1303,8 +1303,8 @@ void analyze_strips(int& pnverts, int& pnstrips) {
   dummy_init(expected_j);
   int nstrips = 0;
   int nverts = 0;
-  for_int(fi, pmi->_faces.num()) {
-    const int matid = pmi->_faces[fi].attrib.matid;
+  for (const auto [fi, face] : enumerate(pmi->_faces)) {
+    const int matid = face.attrib.matid;
     if (matid != last_matid) {
       last_matid = matid;
       // Force new strip at mat boundary.
@@ -1312,7 +1312,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
     }
     int j = 3;
     for_int(k, 3) {
-      if (ovid[mod3(k + 0)] == pmi->_faces[fi].wedges[1] && ovid[mod3(k + 1)] == pmi->_faces[fi].wedges[0]) {
+      if (ovid[mod3(k + 0)] == face.wedges[1] && ovid[mod3(k + 1)] == face.wedges[0]) {
         j = k;
         break;
       }
@@ -1339,7 +1339,7 @@ void analyze_strips(int& pnverts, int& pnstrips) {
       nverts += 3;
       expected_j = first_expected_j;
     }
-    ovid = pmi->_faces[fi].wedges;
+    ovid = face.wedges;
   }
   if (debug) std::cerr << "\n";
   if (0)

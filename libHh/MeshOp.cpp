@@ -791,7 +791,6 @@ float project_point_neighborhood(const GMesh& mesh, const Point& p, Face& pf, Ba
   for (Edge e : mesh.edges(pf))
     if (mesh.flags(e).flag(GMesh::eflag_sharp)) pfsmooth = false;
   const float bnearedge = .08f;
-  Set<Face> setfvis;
   const Vec3<Point> triangle1 = mesh.triangle_points(pf);
   auto [mind2, minbary, clp1] = project_point_triangle(p, triangle1);
   ret_clp = clp1;
@@ -804,27 +803,26 @@ float project_point_neighborhood(const GMesh& mesh, const Point& p, Face& pf, Ba
     ret_bary = minbary;
     return mind2;
   }
+  // The visited faces are few (typically 10 to 20), so inline storage avoids heap allocation.
+  InlinedSet<Face, 64> faces_visited;
+  faces_visited.enter(pf);
   int nvis = 1;
-  setfvis.enter(pf);
   int ni = 0;
   for (;; ni++) {
     // Look at faces adjacent to vertices with minbary > bnearvertex.
-    Set<Face> setf;
-    Array<Vertex> va;
-    mesh.get_vertices(pf, va);
-    assertx(va.num() == 3);
+    InlinedSet<Face, 32> faces;  // Faces not yet visited.
+    const Vec3<Vertex> va = mesh.triangle_vertices(pf);
     for_int(j, 3) {
       if (pfsmooth && minbary[mod3(j + 1)] > bnearedge && minbary[mod3(j + 2)] > bnearedge) continue;
       for (Face f : mesh.faces(va[j]))
-        if (!setfvis.contains(f)) setf.add(f);
+        if (!faces_visited.contains(f)) faces.add(f);
     }
     struct S {
       Face f;
       float d2;
     };
-    Array<S> ar;
-    ar.reserve(setf.num());
-    for (Face f : setf) {
+    InlinedArray<S, 32> ar;
+    for (Face f : faces) {
       const Vec3<Point> triangle2 = mesh.triangle_points(f);
       const float d2 = square(lb_dist_point_triangle(p, triangle2));
       ar.push(S{f, d2});
@@ -846,8 +844,8 @@ float project_point_neighborhood(const GMesh& mesh, const Point& p, Face& pf, Ba
       for (Edge e : mesh.edges(pf))
         if (mesh.flags(e).flag(GMesh::eflag_sharp)) pfsmooth = false;
     }
-    if (setfvis.contains(pf)) break;
-    for (Face f : setf) setfvis.enter(f);
+    if (faces_visited.contains(pf)) break;
+    for (Face f : faces) faces_visited.enter(f);
   }
   HH_SSTAT(Sprojnei, ni);
   HH_SSTAT(Sprojf, nvis);

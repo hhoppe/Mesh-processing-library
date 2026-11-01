@@ -3,10 +3,12 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./_initdemos.sh
 
-# This is how the file was converted from Blender via *.ply:
-# ply_to_mesh data/standingblob.ply | Filtermesh -genus -gmerge -genus -flip -triangulate -angle 20 -mark -genus >data/standingblob.orig.m
+r=standingblob
 
-FilterPM data/standingblob.pm -geom_nfaces 10 -geom_nfaces 20 -geom_nfaces 40 -geom_nfaces 80 -geom_nfaces 160 -geom_nfaces 320 -geom_nfaces 640 -geom_nfaces 1280 -geom_nfaces 2560 -geom_nfaces 5000 -geom_nfaces 10000 -geom_nfaces 20000 >results/standingblob.geomorphs
+# This is how the file was converted from Blender via *.ply:
+# ply_to_mesh data/$r.ply | Filtermesh -genus -removekey normal -gmerge -genus -flip -triangulate -angle 20 -mark -genus >data/$r.orig.m
+
+FilterPM data/$r.pm -geom_nfaces 10 -geom_nfaces 20 -geom_nfaces 40 -geom_nfaces 80 -geom_nfaces 160 -geom_nfaces 320 -geom_nfaces 640 -geom_nfaces 1280 -geom_nfaces 2560 -geom_nfaces 5000 -geom_nfaces 10000 -geom_nfaces 20000 >results/$r.geomorphs
 
 echo '.'
 echo 'Use view_geomorphs.sh to view the resulting geomorphs.'

@@ -4,17 +4,18 @@ setlocal
 cd "%~p0"
 call ./_initdemos.bat
 
+set r=distcap
+
 echo Running phase 1 - Recon.
-Recon <data/distcap.pts -samplingd 0.02 | Filtermesh -genus -fillholes 30 -triangulate -genus >results/distcap.recon.m
+Recon <data/%r%.pts -samplingd 0.02 | Filtermesh -genus -fillholes 20 -triangulate -genus >results/%r%.recon.m
 
 echo Running phase 2 - Meshfit.
-Meshfit -mfile results/distcap.recon.m -file data/distcap.pts -crep 1e-5 -reconstruct >results/distcap.opt.m
+Meshfit -mfile results/%r%.recon.m -file data/%r%.pts -reconstruct >results/%r%.opt.m
 
 echo Running phase 3 - Subdivfit.
-:: Initially tagging edges sharp if dihedral angle exceeds 52 degrees.
-Filtermesh results/distcap.opt.m -angle 52 -mark | Subdivfit -mfile - -file data/distcap.pts -reconstruct >results/distcap.sub0.m
+Filtermesh results/%r%.opt.m -angle 52 -mark -genus | Subdivfit -mfile - -file data/%r%.pts -reconstruct >results/%r%.sub0.m
 
 echo Computing final subdivided surface.
-Subdivfit -mfile results/distcap.sub0.m -nsub 2 -outn >results/distcap.sub2limit.m
+Subdivfit -mfile results/%r%.sub0.m -nsub 2 -outn >results/%r%.sub2limit.m
 
 echo Use view_reconstruction_distcap.bat to view the results.

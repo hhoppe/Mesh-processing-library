@@ -4,17 +4,18 @@ setlocal
 cd "%~p0"
 call ./_initdemos.bat
 
+set r=mannequin
+
 echo Running phase 1 - Recon.
-Recon <data/mannequin.pts -samplingd 5.5 | Filtermesh -genus -fillholes 20 -triangulate -genus >results/mannequin.recon.m
+Recon <data/%r%.pts -samplingd 5.5 | Filtermesh -genus -fillholes 20 -triangulate -genus >results/%r%.recon.m
 
 echo Running phase 2 - Meshfit.
-Meshfit -mfile results/mannequin.recon.m -file data/mannequin.pts -crep 1e-5 -reconstruct >results/mannequin.opt.m
+Meshfit -mfile results/%r%.recon.m -file data/%r%.pts -reconstruct >results/%r%.opt.m
 
 echo Running phase 3 - Subdivfit.
-:: Initially tagging edges sharp if dihedral angle exceeds 40 degrees.
-Filtermesh results/mannequin.opt.m -angle 40 -mark -genus | Subdivfit -mfile - -file data/mannequin.pts -reconstruct >results/mannequin.sub0.m
+Filtermesh results/%r%.opt.m -angle 40 -mark -genus | Subdivfit -mfile - -file data/%r%.pts -csharp 8e-6 -reconstruct >results/%r%.sub0.m
 
 echo Computing final subdivided surface.
-Subdivfit -mfile results/mannequin.sub0.m -nsub 2 -outn >results/mannequin.sub2limit.m
+Subdivfit -mfile results/%r%.sub0.m -nsub 2 -outn >results/%r%.sub2limit.m
 
 echo Use view_reconstruction_mannequin.bat to view the results.

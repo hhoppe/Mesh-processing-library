@@ -49,8 +49,8 @@ CGridView<D, T>             (const elements)
 
 - `Map<Key, Value>`: hash map, a wrapper around `std::unordered_map`.
 - `Set<T>`: hash set, a wrapper around `std::unordered_set`.
-- `InlinedSet<T, n>`: set whose first `n` elements are searched linearly in built-in storage, before moving into a
-  hash `Set`.
+- `InlinedSet<T, n>`: set stored in an `InlinedArray` (iterated in insertion order), searched linearly up to `n`
+  elements and then through a hash index.
 - `Queue<T>`: FIFO queue, a wrapper around `std::deque` with `dequeue()`.
 - `Stack<T>`: LIFO stack, based on `std::vector`.
 - `PriorityQueue<T>`: min-priority queue of elements with `float` priorities.

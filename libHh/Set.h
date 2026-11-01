@@ -4,6 +4,8 @@
 
 #include <unordered_set>
 
+#include "libHh/Array.h"
+#include "libHh/Map.h"
 #include "libHh/Random.h"
 #include "libHh/Vec.h"
 
@@ -163,12 +165,12 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
   // Default operator=() and copy_constructor are safe.
 };
 
-// Set with built-in storage for inline_capacity elements, which are searched linearly; when a new element exceeds this
-// capacity, all elements move into a hash Set, which is used from then on.  Like InlinedArray, it avoids heap
-// allocation while the set is small; the Set is constructed only at that first move, because an empty
-// std::unordered_set may itself allocate (as in the MSVC library).  Elements must be default-constructible, copyable,
-// and cheap to compare, and Hash and Equal must be consistent (as for any Set).  Unlike Set, it offers neither
-// iteration nor references to its elements.
+// Set whose elements are stored in an InlinedArray, in the order of insertion (except that remove() moves the last
+// element into the place of the removed one), which is also the order of iteration.  While the elements fit in the
+// built-in storage for inline_capacity elements, they are searched linearly, without heap allocation; once they
+// exceed it, a hash Map from each element to its array index is added for the searches (and kept until destruction,
+// even after clear()).  Elements must be copyable and cheap to compare, and Hash and Equal must be consistent (as for
+// any Set).
 template <typename T, int inline_capacity, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
 class InlinedSet {
   static_assert(Hashable<T, Hash, Equal>);
@@ -176,38 +178,53 @@ class InlinedSet {
 
  public:
   void clear() {
-    _n = 0;
-    if (_large) _large->clear();  // (Keeping its allocated storage for reuse.)
+    _elements.clear();
+    if (_index) _index->clear();  // (Keeping its allocated storage for reuse.)
   }
   void enter(const T& e) {  // Element e must be new.
     [[maybe_unused]] const bool is_new = add(e);
     ASSERTX(is_new);
   }
   bool add(const T& e) {  // Returns true if e is new.
-    if (_n <= inline_capacity) {
-      if (contains_inline(e)) return false;
-      if (_n < inline_capacity) return _builtin[_n++] = e, true;
-      if (!_large) _large.emplace();
-      for (const T& ee : _builtin) _large->enter(ee);
-      _n = inline_capacity + 1;
+    if (find(e) >= 0) return false;
+    _elements.push(e);
+    if (_index) {
+      _index->enter(e, _elements.num() - 1);
+    } else if (_elements.num() > inline_capacity) {
+      _index.emplace();
+      for_int(i, _elements.num()) _index->enter(_elements[i], i);
     }
-    return _large->add(e);
+    return true;
   }
-  [[nodiscard]] bool contains(const T& e) const {
-    return _n <= inline_capacity ? contains_inline(e) : _large->contains(e);
+  bool remove(const T& e) {  // Returns true if e was present.
+    const int i = find(e);
+    if (i < 0) return false;
+    if (_index) (void)_index->remove(e);
+    if (i < _elements.num() - 1) {
+      _elements[i] = _elements.last();
+      if (_index) _index->get(_elements[i]) = i;
+    }
+    (void)_elements.pop();
+    return true;
   }
-  [[nodiscard]] int num() const { return _n <= inline_capacity ? _n : _large->num(); }
+  [[nodiscard]] bool contains(const T& e) const { return find(e) >= 0; }
+  [[nodiscard]] int num() const { return _elements.num(); }
   [[nodiscard]] bool empty() const { return !num(); }
+  [[nodiscard]] auto begin() const { return std::as_const(_elements).begin(); }
+  [[nodiscard]] auto end() const { return std::as_const(_elements).end(); }
 
  private:
-  int _n{0};  // Number of elements in _builtin, or inline_capacity + 1 once the elements are in _large.
-  Vec<T, inline_capacity> _builtin;
-  std::optional<Set<T, Hash, Equal>> _large;  // Constructed when the elements first exceed _builtin.
-  [[nodiscard]] bool contains_inline(const T& e) const {
-    for_int(i, _n) {
-      if (Equal{}(_builtin[i], e)) return true;
+  InlinedArray<T, inline_capacity> _elements;
+  std::optional<Map<T, int, Hash, Equal>> _index;  // Element -> index in _elements; created upon the first overflow.
+  [[nodiscard]] int find(const T& e) const {  // Returns the index of e in _elements, or -1.
+    if (_index) {
+      const int* pi = _index->find_ptr(e);
+      return pi ? *pi : -1;
     }
-    return false;
+    for_int(i, _elements.num()) {
+      if (Equal{}(_elements[i], e)) return i;
+    }
+    return -1;
   }
 };
 

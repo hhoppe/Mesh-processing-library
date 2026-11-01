@@ -266,12 +266,12 @@ int main() {
   {
     InlinedSet<int, 4> set;
     SHOW(set.num(), set.empty());
-    for (const int e : {3, 1, 4, 1, 5, 9, 2, 6, 5, 3}) {  // The fifth distinct element moves all into the hash Set.
+    for (const int e : {3, 1, 4, 1, 5, 9, 2, 6, 5, 3}) {  // The fifth distinct element adds the hash index.
       const bool is_new = set.add(e);
       SHOW(e, is_new, set.num());
     }
     SHOW(set.contains(9), set.contains(7));
-    set.clear();  // Returns to the built-in storage.
+    set.clear();  // (The hash index is kept for reuse.)
     SHOW(set.num(), set.empty(), set.contains(3));
     set.enter(7);
     SHOW(set.num(), set.contains(7), set.contains(3));
@@ -292,6 +292,27 @@ int main() {
       assertx(iset.num() == set.num());
       for_int(j, 30) assertx(iset.contains(j) == set.contains(j));
     }
+    SHOW(iset.num());
+  }
+  {  // Iteration follows the order of insertion, except that remove() moves the last element into the vacated place.
+    InlinedSet<char, 3> set;
+    for (const char ch : string("abcde")) set.enter(ch);  // Beyond 3 elements, the hash index is used.
+    assertx(set.remove('b') && !set.remove('b'));
+    SHOW(string(set.begin(), set.end()));
+  }
+  {  // Random additions and removals, compared with Set, both with and without the hash index.
+    Random random(3);
+    InlinedSet<int, 8> iset;
+    Set<int> set;
+    for_int(i, 20'000) {
+      const int e = int(random.get_unsigned(i < 10'000 ? 20 : 6));  // Later, a smaller set of elements.
+      if (random.get_unsigned(2))
+        assertx(iset.add(e) == set.add(e));
+      else
+        assertx(iset.remove(e) == set.remove(e));
+      assertx(iset.num() == set.num() && iset.contains(e) == set.contains(e));
+    }
+    assertx(sort(Array(iset)) == sort(Array(set)));
     SHOW(iset.num());
   }
   test_random_operations();

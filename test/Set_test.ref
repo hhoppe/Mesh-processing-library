@@ -53,6 +53,8 @@ s=d is_new=1 set.num()=4
 s=b is_new=0 set.num()=4
 s=e is_new=1 set.num()=5
 iset.num() = 23
+string(set.begin(), set.end()) = aecd
+iset.num() = 8
 sort(Array<int>(s1)) = Array<int>(6) {
   1
   2

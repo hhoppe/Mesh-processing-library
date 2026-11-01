@@ -2,7 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_COMBINATION_H_
 #define MESH_PROCESSING_LIBHH_COMBINATION_H_
 
-#include "libHh/InlinedMap.h"
+#include "libHh/Map.h"
 #include "libHh/RangeOp.h"
 
 #if 0
@@ -14,11 +14,10 @@
 
 namespace hh {
 
-// Represents a weighted combination of elements where the weights are float.
-// A weighted combination of a few elements (e.g., the vertices that define a subdivided vertex), stored without heap
-// allocation for up to 8 elements.
-template <typename T> class Combination : public InlinedMap<T, float, 8> {
-  using base = InlinedMap<T, float, 8>;
+// A weighted combination of a few elements (e.g., the vertices that define a subdivided vertex) with float weights,
+// stored without heap allocation for up to 7 elements.
+template <typename T> class Combination : public InlinedMap<T, float, 7> {
+  using base = InlinedMap<T, float, 7>;
 
  public:
   [[nodiscard]] float sum() const { return hh::sum<float>(values()); }

@@ -4,6 +4,7 @@
 
 #include <unordered_map>
 
+#include "libHh/Array.h"
 #include "libHh/Random.h"
 
 #if 0
@@ -202,6 +203,109 @@ class Map {
 
 template <typename Key, typename Value> HH_DECLARE_OSTREAM_RANGE(Map<Key, Value>);
 template <typename Key, typename Value> HH_DECLARE_OSTREAM_EOL(Map<Key, Value>);
+
+// Map whose entries are stored in an InlinedArray of key-value pairs, in the order of insertion (except that remove()
+// moves the last entry into the place of the removed one), which is also the order of iteration.  While the entries
+// fit in the built-in storage for inline_capacity entries, they are searched linearly, without heap allocation; once
+// they exceed it, a hash Map from each key to its array index is added for the searches (and kept until destruction,
+// even after clear()), unless the keys are move-only (whose searches remain linear).  Keys must be cheap to compare,
+// and Hash and Equal must be consistent (as for any Map).  See also InlinedSet in Set.h.
+template <typename Key, typename Value, int inline_capacity, typename Hash = std::hash<Key>,
+          typename Equal = std::equal_to<Key>>
+class InlinedMap {
+  static_assert(Hashable<Key, Hash, Equal>);
+  static_assert(inline_capacity > 0);
+  using Index = Map<Key, int, Hash, Equal>;
+  // Linear searches are faster than hashing for up to a few dozen entries, even beyond the built-in storage.
+  static constexpr int k_index_threshold = std::max(inline_capacity, 32);
+
+ public:
+  using value_type = std::pair<Key, Value>;
+  InlinedMap() = default;
+  InlinedMap(const InlinedMap& m) requires Copyable<Key> && Copyable<Value>
+      : _index(m._index ? make_unique<Index>(*m._index) : nullptr), _entries(m._entries) {}
+  InlinedMap& operator=(const InlinedMap& m) requires Copyable<Key> && Copyable<Value> {
+    if (this != &m) {
+      _entries = m._entries;
+      _index = m._index ? make_unique<Index>(*m._index) : nullptr;
+    }
+    return *this;
+  }
+  InlinedMap(InlinedMap&&) noexcept = default;
+  InlinedMap& operator=(InlinedMap&&) noexcept = default;
+  void clear() {
+    _entries.clear();
+    if (_index) _index->clear();  // (Keeping its allocated storage for reuse.)
+  }
+  void enter(Key key, Value value) {  // Key must be new!
+    ASSERTX(find(key) < 0);
+    _entries.push(value_type{std::move(key), std::move(value)});
+    index_last_entry();
+  }
+  [[nodiscard]] bool contains(const Key& key) const { return find(key) >= 0; }
+  // Returns the value of the key if present, else a default value.
+  [[nodiscard]] Value retrieve(const Key& key) const requires Copyable<Value> {
+    const int i = find(key);
+    return i >= 0 ? _entries[i].second : Value{};
+  }
+  [[nodiscard]] auto& get(this auto&& self, const Key& key) {
+    const int i = self.find(key);
+    assertx(i >= 0);
+    return self._entries[i].second;
+  }
+  const Value& operator[](const Key& key) const { return get(key); }  // Key must be present.
+  Value& operator[](const Key& key) requires Copyable<Key> {
+    const int i = find(key);
+    if (i >= 0) return _entries[i].second;
+    _entries.push(value_type{key, Value{}});
+    index_last_entry();
+    return _entries.last().second;
+  }
+  Value remove(const Key& key) {  // Key must be present.
+    const int i = find(key);
+    assertx(i >= 0);
+    Value value = std::move(_entries[i].second);
+    if (_index) (void)_index->remove(key);
+    if (i < _entries.num() - 1) {
+      _entries[i] = std::move(_entries.last());
+      if (_index) _index->get(_entries[i].first) = i;
+    }
+    (void)_entries.pop();
+    return value;
+  }
+  [[nodiscard]] int num() const { return _entries.num(); }
+  [[nodiscard]] bool empty() const { return !num(); }
+  [[nodiscard]] auto begin(this auto&& self) { return self._entries.begin(); }
+  [[nodiscard]] auto end(this auto&& self) { return self._entries.end(); }
+  [[nodiscard]] auto keys() const { return views::keys(_entries); }
+  [[nodiscard]] auto values(this auto&& self) { return views::values(self._entries); }
+
+ private:
+  // (_index precedes _entries, so that its test in each search lies in the same cache line as the array header.)
+  unique_ptr<Index> _index;  // Key -> index in _entries; created upon the first overflow (unless keys are move-only).
+  InlinedArray<value_type, inline_capacity> _entries;
+  [[nodiscard]] int find(const Key& key) const {  // Returns the index of key in _entries, or -1.
+    if (_index) {
+      const int* pi = _index->find_ptr(key);
+      return pi ? *pi : -1;
+    }
+    for_int(i, _entries.num()) {
+      if (Equal{}(_entries[i].first, key)) return i;
+    }
+    return -1;
+  }
+  void index_last_entry() {
+    if constexpr (Copyable<Key>) {
+      const int n = _entries.num();
+      if (_index) {
+        _index->enter(_entries[n - 1].first, n - 1);
+      } else if (n > k_index_threshold) {
+        _index = make_unique<Index>();
+        for_int(i, n) _index->enter(_entries[i].first, i);
+      }
+    }
+  }
+};
 
 }  // namespace hh
 

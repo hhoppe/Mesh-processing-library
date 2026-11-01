@@ -170,13 +170,28 @@ template <typename T, typename Hash = std::hash<T>, typename Equal = std::equal_
 // built-in storage for inline_capacity elements, they are searched linearly, without heap allocation; once they
 // exceed it, a hash Map from each element to its array index is added for the searches (and kept until destruction,
 // even after clear()).  Elements must be copyable and cheap to compare, and Hash and Equal must be consistent (as for
-// any Set).
+// any Set).  See also InlinedMap in Map.h.
 template <typename T, int inline_capacity, typename Hash = std::hash<T>, typename Equal = std::equal_to<T>>
 class InlinedSet {
   static_assert(Hashable<T, Hash, Equal>);
   static_assert(inline_capacity > 0);
+  using Index = Map<T, int, Hash, Equal>;
+  // Linear searches are faster than hashing for up to a few dozen elements, even beyond the built-in storage.
+  static constexpr int k_index_threshold = std::max(inline_capacity, 32);
 
  public:
+  InlinedSet() = default;
+  InlinedSet(const InlinedSet& set)
+      : _elements(set._elements), _index(set._index ? make_unique<Index>(*set._index) : nullptr) {}
+  InlinedSet& operator=(const InlinedSet& set) {
+    if (this != &set) {
+      _elements = set._elements;
+      _index = set._index ? make_unique<Index>(*set._index) : nullptr;
+    }
+    return *this;
+  }
+  InlinedSet(InlinedSet&&) noexcept = default;
+  InlinedSet& operator=(InlinedSet&&) noexcept = default;
   void clear() {
     _elements.clear();
     if (_index) _index->clear();  // (Keeping its allocated storage for reuse.)
@@ -190,8 +205,8 @@ class InlinedSet {
     _elements.push(e);
     if (_index) {
       _index->enter(e, _elements.num() - 1);
-    } else if (_elements.num() > inline_capacity) {
-      _index.emplace();
+    } else if (_elements.num() > k_index_threshold) {
+      _index = make_unique<Index>();
       for_int(i, _elements.num()) _index->enter(_elements[i], i);
     }
     return true;
@@ -215,7 +230,7 @@ class InlinedSet {
 
  private:
   InlinedArray<T, inline_capacity> _elements;
-  std::optional<Map<T, int, Hash, Equal>> _index;  // Element -> index in _elements; created upon the first overflow.
+  unique_ptr<Index> _index;                   // Element -> index in _elements; created upon the first overflow.
   [[nodiscard]] int find(const T& e) const {  // Returns the index of e in _elements, or -1.
     if (_index) {
       const int* pi = _index->find_ptr(e);

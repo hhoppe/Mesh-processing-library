@@ -2,12 +2,13 @@
 #include "libHh/Map.h"
 
 #include <map>
+#include <utility>  // as_const()
 
 #include "libHh/Array.h"
 #include "libHh/Geometry.h"
 #include "libHh/HashTuple.h"
 #include "libHh/Random.h"
-#include "libHh/RangeOp.h"  // sort()
+#include "libHh/RangeOp.h"  // sort(), sum()
 #include "libHh/Set.h"
 using namespace hh;
 
@@ -148,6 +149,73 @@ void test_stateful_functors() {  // Hash and equality functors with state, passe
   bool is_new;
   assertx(m.enter(33, 7, is_new) == 1 && !is_new);
   assertx(m.remove(103) == 1 && m.num() == 1 && m.get_one_key() == 14);
+}
+
+// Random operations on an InlinedMap, whose entries often exceed its inline capacity (and then use its hash index),
+// compared with a std::map.
+void test_inlined_map_random_operations() {
+  Random random(1);
+  InlinedMap<int, int, 4> imap;
+  std::map<int, int> model;
+  for_int(iter, 20'000) {
+    const int key = int(random.get_unsigned(iter < 10'000 ? 12 : 3));  // Later, a smaller set of keys.
+    const int value = 1 + int(random.get_unsigned(1000));              // Nonzero, unlike the default Value().
+    const auto it = model.find(key);
+    const bool present = it != model.end();
+    const int old_value = present ? it->second : 0;
+    switch (random.get_unsigned(5)) {
+      case 0:
+        if (!present) {
+          imap.enter(key, value);
+          model.emplace(key, value);
+        }
+        break;
+      case 1:
+        if (present) {
+          assertx(imap.remove(key) == old_value);
+          model.erase(key);
+        }
+        break;
+      case 2:  // The non-const operator[] enters a default Value() if the key is absent.
+        imap[key] += value;
+        model[key] += value;
+        break;
+      case 3:
+        if (present) assertx(std::as_const(imap)[key] == old_value && imap.get(key) == old_value);
+        break;
+      default:  // Retrieving an absent key returns the default Value().
+        assertx(imap.retrieve(key) == old_value);
+    }
+    assertx(imap.num() == narrow_cast<int>(model.size()) && imap.empty() == model.empty());
+    assertx(imap.contains(key) == model.contains(key));
+  }
+  Array<std::pair<int, int>> ar;
+  for (const auto& [key, value] : imap) ar.push({key, value});
+  sort(ar);
+  assertx(ar.num() == narrow_cast<int>(model.size()));
+  int i = 0;
+  for (const auto& [key, value] : model) assertx(ar[i++] == std::pair(key, value));
+  SHOW(imap.num());
+}
+
+// The iteration of an InlinedMap follows the order of insertion, except that remove() moves the last entry into the
+// vacated place.
+void test_inlined_map_order() {
+  InlinedMap<char, int, 3> imap;
+  for (const char ch : string("abcde")) imap[ch] = ch - 'a';  // Beyond 3 entries, the hash index is used.
+  assertx(imap.remove('b') == 1);
+  string s;
+  for (const auto& [ch, value] : imap) s += ch;
+  SHOW(s);
+  SHOW(sum(imap.values()));
+  string keys;
+  for (const char ch : imap.keys()) keys += ch;
+  assertx(keys == s);
+  for (int& value : imap.values()) value *= 10;
+  assertx(imap.get('e') == 40);
+  const InlinedMap<char, int, 3> imap2 = imap;  // A copy (including its hash index) is independent of the original.
+  imap.clear();
+  assertx(imap.empty() && !imap.contains('a') && imap2.num() == 4 && imap2.get('d') == 30 && !imap2.contains('b'));
 }
 
 }  // namespace
@@ -308,6 +376,8 @@ int main() {
   test_accessors();
   test_move_only_values();
   test_stateful_functors();
+  test_inlined_map_random_operations();
+  test_inlined_map_order();
 }
 
 template class hh::Map<int, unsigned>;
@@ -316,3 +386,5 @@ template class hh::Map<string, string>;
 template class hh::Map<void*, unique_ptr<int>>;
 template class hh::Map<unique_ptr<int>, double*>;
 template class hh::Map<unique_ptr<int>, unique_ptr<int>>;
+template class hh::InlinedMap<int, int, 4>;
+template class hh::InlinedMap<char, int, 3>;

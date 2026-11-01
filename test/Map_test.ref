@@ -29,3 +29,6 @@ sort(InlinedArray<int, 1>(map.values() | views::transform([](int i) { return 100
   102
 }
 m.num() = 157
+imap.num() = 10
+s = aecd
+sum(imap.values()) = 9

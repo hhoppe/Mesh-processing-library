@@ -83,6 +83,11 @@ for variant in light dark; do
     -sr_screen_thresh 0.003846 -lightambient .7 -st $data/gcanyon_4k2k_fly2.s3d"
   render canyon_tex 1280x960 $canyon -key Dt
   render canyon_mesh 1280x960 $canyon -key De
+  # For the overview, the textured terrain with the mesh shown on its left half.
+  read -r w _ < <(Filterimage "$tmp/canyon_mesh.png" -sizes -nooutput)
+  Filterimage "$tmp/canyon_mesh.png" -cropr $((w - w / 2)) -to png >"$tmp/canyon_mesh_left.png" 2>/dev/null
+  Filterimage "$tmp/canyon_tex.png" -overlayimage 0 0 "$tmp/canyon_mesh_left.png" -to png >"$tmp/canyon_split.png" \
+    2>/dev/null
   # Spherical parameterization: original bunny, its parameterization on the sphere (shaded using the original
   # normals), the remesh, the normal-mapped remesh, and the normal map itself.
   render bunny_orig 1100x1100 $data/bunny.orig.m -st $data/bunny.s3d
@@ -104,8 +109,8 @@ for variant in light dark; do
       -st $data/drumset.s3d -key , -lightambient .4
   done
 
-  row overview1 mannequin_points mannequin_recon mannequin_subdiv bunny_remesh drumset_0.08373
-  row overview2 cessna_edges_800 cessna_full canyon_tex
+  row overview1 mannequin_points mannequin_recon mannequin_subdiv bunny_sphere drumset_0.08373
+  row overview2 cessna_edges_800 cessna_full canyon_split
   Filterimage -assemble 1 2 "$tmp/overview1.png" "$tmp/overview2.png" -to jpg >$images/overview$suffix.jpg 2>/dev/null
   row reconstruction mannequin_points_wide mannequin_recon_wide mannequin_opt_wide mannequin_sub0_wide \
     mannequin_subdiv_wide

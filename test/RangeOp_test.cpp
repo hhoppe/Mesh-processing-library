@@ -183,21 +183,23 @@ int main() {
     SHOW(chars);
   }
   {
-    // Exercise the substitute for std::views::enumerate on all platforms, even where the standard one exists.
-    constexpr details::EnumerateFallback enumerate_fallback;
     Array<int> ar{5, 6, 7};
-    for (auto [i, e] : ar | enumerate_fallback) e += int(i) * 10;  // The elements are references.
+    for (auto [i, e] : enumerate(ar)) e += int(i) * 10;  // The elements are references.
     SHOW(ar);
-    using Index = std::remove_cvref_t<decltype(std::get<0>(*ranges::begin(ar | enumerate_fallback)))>;
-    static_assert(std::is_same_v<Index, ranges::range_difference_t<Array<int>>>);  // As in the standard.
-    const auto to_array = [](auto&& range) -> Array<std::pair<int, char>> {
-      Array<std::pair<int, char>> result;
-      for (const auto [i, ch] : range) result.push({int(i), ch});
-      return result;
-    };
-    const Array<std::pair<int, char>> pairs = to_array(enumerate_fallback(string("ABC")));
+    const auto index_type = [](auto&& range) { return std::get<0>(*ranges::begin(enumerate(range))); };
+    static_assert(std::is_same_v<decltype(index_type(ar)), int>);  // The type of Array::num().
+    static_assert(std::is_same_v<decltype(index_type(string())), ranges::range_difference_t<string>>);  // As in std.
+    static_assert(ranges::sized_range<decltype(enumerate(ar))>);
+    for (const auto [i, e] : enumerate(ar)) assertx(ar[i] == e);  // The int index needs no conversion.
+    Array<std::pair<int, char>> pairs;
+    for (const auto [i, ch] : enumerate<int>(string("ABC"))) pairs.push({i, ch});  // An explicit index type.
     SHOW(pairs);
-    assertx(to_array(enumerate(string("ABC"))) == pairs);  // The standard one, where it exists.
+    int count = 0;
+    for (const auto [i, value] : enumerate<int>(views::iota(10) | views::take_while([](int v) { return v < 13; }))) {
+      assertx(value == 10 + i);  // An unsized range.
+      count++;
+    }
+    assertx(count == 3);
   }
   {
     static_assert(ranges::range<Array<float>>);

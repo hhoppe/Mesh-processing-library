@@ -323,22 +323,6 @@ namespace ranges = std::ranges;
 template <typename R> using range_value_t = ranges::range_value_t<R>;
 namespace views = std::views;
 
-namespace details {
-// A substitute for the C++23 std::views::enumerate, which libc++ (as of LLVM 21 and Xcode 26) still lacks.
-struct EnumerateFallback : ranges::range_adaptor_closure<EnumerateFallback> {
-  template <ranges::viewable_range R> constexpr auto operator()(R&& range) const {
-    return views::zip(views::iota(ranges::range_difference_t<R>{0}), std::forward<R>(range));
-  }
-};
-}  // namespace details
-
-// Pairs of (index, element) of a range, used as either enumerate(range) or range | enumerate.
-#if defined(__cpp_lib_ranges_enumerate)
-inline constexpr const auto& enumerate = views::enumerate;
-#else
-inline constexpr details::EnumerateFallback enumerate;
-#endif
-
 // *** Useful type abbreviations
 
 using uchar = unsigned char;
@@ -367,6 +351,32 @@ template <typename Target, typename Source> [[nodiscard]] constexpr Target narro
 
 // Bounds-safe conversion, checked even in Release configuration.
 template <typename Target, typename Source> [[nodiscard]] constexpr Target assert_narrow_cast(Source v);
+
+namespace details {
+// The default index type of enumerate(): the type of num() for a range that has it (e.g., int for an Array), else the
+// difference type of the range.
+template <typename R> constexpr auto enumerate_default_index() {
+  if constexpr (requires(R& r) { r.num(); })
+    return decltype(std::declval<R&>().num()){};
+  else
+    return ranges::range_difference_t<R>{};
+}
+}  // namespace details
+
+// Pairs of (index, element) of a range, as in `for (const auto [i, element] : enumerate(range))`.  The index has the
+// type of the range's num() if it has one (e.g., int for an Array, so that it indexes the Array without a narrowing
+// conversion), else its difference type; another type may be given, as in `enumerate<int>(range)`.  It is like the
+// C++23 std::views::enumerate (which libc++, as of LLVM 21 and Xcode 26, still lacks), except for this choice of
+// index type and that it does not support the form `range | enumerate`.
+template <typename Index = void, ranges::viewable_range R> [[nodiscard]] constexpr auto enumerate(R&& range) {
+  using I = std::conditional_t<std::is_void_v<Index>, decltype(details::enumerate_default_index<R>()), Index>;
+  if constexpr (ranges::sized_range<R>) {
+    const I n = narrow_cast<I>(ranges::size(range));
+    return views::zip(views::iota(I{0}, n), std::forward<R>(range));
+  } else {
+    return views::zip(views::iota(I{0}), std::forward<R>(range));
+  }
+}
 
 // Type conversion, but avoiding a warning in the case that Source is already of the same type as Target.
 template <typename Target, typename Source> [[nodiscard]] constexpr Target possible_cast(Source v) {

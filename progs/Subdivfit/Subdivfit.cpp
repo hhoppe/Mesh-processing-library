@@ -42,10 +42,11 @@ bool esha = false;
 bool eswa = false;
 bool espl = false;
 int batch = 32;  // Number of edges whose operations stoc tries concurrently.
+int affect = 3;  // After an operation, extent of the edges near the vertices it moved that return to ecand.
 float feshaasym = .05f;
 float feswaasym = .05f;
-float crep = 0.f;
-float csharp = 0.f;
+float crep = 1e-5f;
+float csharp = 2e-6f;  // Often set to crep / 5.
 float wcrep = 0.f;
 float wcsharp = 0.f;
 float spring = 0.f;
@@ -1336,6 +1337,37 @@ EdgeAttempt evaluate_edge(Edge e) {
   return attempt;
 }
 
+// After a committed operation, return to ecand some edges near the vertices that it moved (in addition to the edges
+// near the operation that its commit returns), as the change may make an operation on these edges beneficial: none if
+// affect == 0, the edges of these vertices if affect == 1, the edges of their faces if affect == 2, and the edges of
+// the faces within (affect - 2) rings of these vertices if affect >= 3.  On the mannequin and distcap demos, compared
+// to affect == 0, affect == 3 lowered the final energy by 1.6% (with 2% fewer vertices) at the cost of 60-90% more
+// time, affect == 2 by 1% at 25-45% more time, and affect == 4 no more than affect == 3.
+void add_affected_edges(const Footprint& fp) {
+  if (!affect) return;
+  Array<Vertex> verts;  // The moved vertices that remain, and then those within (affect - 2) rings of them.
+  Set<Vertex> visited;
+  for (const int id : fp.write_vertices) {
+    Vertex v = gmesh.id_retrieve_vertex(id);
+    if (v && visited.add(v)) verts.push(v);
+  }
+  int i0 = 0;
+  for_int(ring, affect - 2) {
+    const int i1 = verts.num();
+    for (; i0 < i1; i0++)
+      for (Vertex vv : gmesh.vertices(verts[i0]))
+        if (visited.add(vv)) verts.push(vv);
+  }
+  for (Vertex v : verts) {
+    if (affect == 1) {
+      for (Edge e : gmesh.edges(v)) ecand.add(e);
+    } else {
+      for (Face f : gmesh.faces(v))
+        for (Edge e : gmesh.edges(f)) ecand.add(e);
+    }
+  }
+}
+
 // Whether an attempt read any state that has since been modified.
 bool conflicts(const Footprint& fp, const Set<int>& written_vertices, const Set<int>& written_faces) {
   for (const int id : fp.read_vertices)
@@ -1462,6 +1494,7 @@ void do_stoc() {
       for (const auto& [op, result] : attempt.tried) op_stat[int(op), int(result)]++;
       if (attempt.result == R_success) {
         attempt.commit();
+        add_affected_edges(attempt.footprint);
         wf_frame();
         for (const int id : attempt.footprint.write_vertices) written_vertices.add(id);
         for (const int id : attempt.footprint.write_faces) written_faces.add(id);
@@ -1561,6 +1594,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(espl, ":  try edge splits");
   HH_ARGSD(stoc, ": run local discrete optimization");
   HH_ARGSP(batch, "n : edges tried concurrently (affects result)");
+  HH_ARGSP(affect, "i : edges retried after a change (0=none..4)");
   HH_ARGSC("", ":");
   HH_ARGSD(outmesh, "file.m : output current mesh0 to file");
   HH_ARGSF(nooutput, ": do not print final mesh0");

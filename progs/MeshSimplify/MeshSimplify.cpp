@@ -3142,7 +3142,7 @@ bool compute_hull_point(Edge e, const NewMeshNei& nn, Point& newpoint) {
     return false;
   }
   if (status == ELpStatus::unbounded) {
-    Warning("hull: objective function is unbounded");
+    if (verb >= 2) Warning("hull: objective function is unbounded");
     return false;
   }
   for_int(c, 3) {

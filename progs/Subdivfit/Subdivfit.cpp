@@ -735,8 +735,7 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, LocalPoi
   }
   TriangleFaceSpatial spatial(trianglefaces, 60);  // Not MeshSearch because of face subset selection using `setgoodf`.
   HH_STIMER("____lspatialproject");
-  for_int(i, lp.point.num()) {
-    const int pi = lp.point[i];
+  for (const auto [i, pi] : enumerate(lp.point)) {
     if (setbadpts.contains(pi)) {
       SpatialSearch<TriangleFace*> ss(&spatial, co[pi] * xform);
       const TriangleFace* triangleface = (*ss.begin()).id;
@@ -757,8 +756,7 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, LocalPoi
   const GMesh& mesh = smesh.mesh();
   {
     HH_STIMER("____lneighproject");
-    for_int(i, lp.point.num()) {
-    const int pi = lp.point[i];
+    for (const auto [i, pi] : enumerate(lp.point)) {
       Point dummy_clp;
       project_point_neighborhood(mesh, co[pi], lp.scmf[i], lp.bary[i], dummy_clp, true);
     }
@@ -778,8 +776,7 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, LocalPoi
     HH_STIMER("____lcombinations");
     Array<Vertex> va;
     Array<double> row(n);
-    for_int(i, lp.point.num()) {
-    const int pi = lp.point[i];
+    for (const auto [i, pi] : enumerate(lp.point)) {
       mesh.get_vertices(lp.scmf[i], va);
       assertx(va.num() == 3);
       const Vec3<double> baryd = convert<double>(lp.bary[i]);
@@ -919,6 +916,7 @@ void build_lmesh2(GMesh& lmesh, const Set<Vertex>& setmv, Set<Face>& setmf) {
 void subdiv_trim(SubMesh& smesh, const Set<Face>& setmf) {
   subdivide(smesh, true);
   GMesh& mesh = smesh.mesh();
+  // Trim faces from smesh outside setmf.
   Array<Face> arf;
   for (Face f : mesh.faces())
     if (!setmf.contains(smesh.orig_face(f))) arf.push(f);
@@ -937,8 +935,7 @@ void local_update_gmesh(const SubMesh& smesh, const Set<Vertex>& setmv, const Lo
     Vertex vg = v == v1l ? v1g : trvmm(v, lmesh, gmesh);
     gmesh.set_point(vg, lmesh.point(v));
   }
-  for_int(i, lp.point.num()) {
-    const int pi = lp.point[i];
+  for (const auto [i, pi] : enumerate(lp.point)) {
     const GMesh& mesh = smesh.mesh();
     const Vec3<Point> triangle = mesh.triangle_points(lp.scmf[i]);
     gdis2[pi] = project_point_triangle(co[pi], triangle).d2;
@@ -1410,9 +1407,16 @@ void do_stoc() {
   double cedis = get_edis(), cetot = get_etot();
   int i = 0, nbad = 0, ndiscarded = 0;
   // The edges are drawn from ecand in batches.  The attempts of a batch are evaluated in parallel on the state at the
-  // start of the batch, and are then committed in the order drawn, except that an attempt that read any state
-  // modified by an earlier successful attempt of the batch is discarded, and its edge is returned to ecand.  Unlike
-  // the number of threads, the batch size affects the result; a batch size of 1 gives the sequential algorithm.
+  // start of the batch, and are then processed in sequence.  Processing an attempt either commits its successful
+  // operation (which modifies the mesh and returns the neighboring edges to ecand) or accepts its failure (whose
+  // edge then stays out of ecand), but only if the evaluation remains valid, i.e., if the attempt read no state
+  // modified by an operation committed earlier in the batch; otherwise, the attempt is discarded and its edge
+  // returns to ecand, to be evaluated again.  This is equivalent to a sequential run in the processing order.  That
+  // order is the order drawn, except that the successful attempts are reordered among their positions by
+  // decreasing energy reduction.  (A failure keeps its position, so that it is processed before the successes
+  // drawn after it; processing all the successes first would invalidate more failures, as an evaluation reads a
+  // larger neighborhood than the edges that a commit returns to ecand.)  Unlike the number of threads, the batch
+  // size affects the result; a batch size of 1 gives the sequential algorithm.
   assertx(batch >= 1);
   // The threads allocate mesh elements from their own caches, which persist across batches.
   const Pool::ThreadSafe pool_thread_safe;
@@ -1431,8 +1435,21 @@ void do_stoc() {
         for (int i_edge; (i_edge = next_index++) < edges.num();) attempts[i_edge] = evaluate_edge(edges[i_edge]);
       });
     }
+    Array<int> order(attempts.num());
+    for_int(i_edge, attempts.num()) order[i_edge] = i_edge;
+    {
+      Array<int> successes;
+      for_int(i_edge, attempts.num())
+        if (attempts[i_edge].result == R_success) successes.push(i_edge);
+      Array<int> sorted_successes(successes);
+      sort(sorted_successes, [&](int i1, int i2) {
+        return std::pair{attempts[i1].edrss, i1} < std::pair{attempts[i2].edrss, i2};
+      });
+      for_int(j, successes.num()) order[successes[j]] = sorted_successes[j];
+    }
     Set<int> written_vertices, written_faces;
-    for (EdgeAttempt& attempt : attempts) {
+    for (const int i_edge : order) {
+      EdgeAttempt& attempt = attempts[i_edge];
       if (conflicts(attempt.footprint, written_vertices, written_faces)) {
         ndiscarded++;
         Vertex v1 = gmesh.id_retrieve_vertex(attempt.vertex_ids[0]);

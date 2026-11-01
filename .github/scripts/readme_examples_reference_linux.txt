@@ -20,7 +20,7 @@ c3298c38_1.png 195.80 78.91 195.80 78.91 196.13 78.62
 # Filtermesh demos/data/blob5.orig.m -randpts 10000 -vertexpts | (screenshot 1)
 c520f53d_1.png 207.09 66.68 207.09 66.68 207.50 66.17
 # Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts (screenshot 1)
-8be1bbe0_1.png 195.83 78.88 195.83 78.88 196.15 78.59
+5a7ea2ef_1.png 196.14 78.68 196.14 78.68 196.43 78.42
 # Polyfit -pfile curve1.a3d -file demos/data/curve1.pts -crep 3e-4 -spring 1 -reconstruct | (screenshot 1)
 5e0f6f3e_1.png 254.37 10.63 254.37 10.63 254.37 10.63
 # G3dOGL distcap.sub0.m "Subdivfit -mf distcap.sub0.m -nsub 2 -outn |" (screenshot 1)

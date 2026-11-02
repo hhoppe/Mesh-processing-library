@@ -446,7 +446,7 @@ void do_fgfit(Args& args) {
         global_neighb_project(_smesh);
         g_force_global_project = bu_force_global_project;
       }
-      if (verb >= 2) analyze_mesh(sform("it%2d/%-2d", _iter, _niter));
+      if (verb >= 3) analyze_mesh(sform("it%2d/%-2d", _iter, _niter));
       {
         const double prev_etot = _etot;
         _etot = get_etot();
@@ -853,7 +853,7 @@ struct Footprint {
 
 // Record in fp the gmesh state that the commit of a successful operation on eg modifies.  A new vertex vnew of lmesh
 // has no counterpart in gmesh.
-void register_writes(Footprint& fp, const GMesh& lmesh, const Set<Vertex>& setmv, Edge eg, Vertex vnew = nullptr) {
+void declare_writes(Footprint& fp, const GMesh& lmesh, const Set<Vertex>& setmv, Edge eg, Vertex vnew = nullptr) {
   for (Vertex v : setmv)
     if (v != vnew) fp.write_vertices.push(lmesh.vertex_id(v));
   for (Vertex v : gmesh.vertices(eg)) fp.write_vertices.push(gmesh.vertex_id(v));
@@ -1072,7 +1072,7 @@ EResult try_ecol(Edge eg, double& edrss, Commit& commit, Footprint& fp) {
   const float mina = min_dihedral_about_vertices(lmesh, v1);
   if (mina < k_min_cos && mina < minb) return R_dih;
   // ALL SYSTEMS GO.
-  register_writes(fp, lmesh, setmv, eg);
+  declare_writes(fp, lmesh, setmv, eg);
   commit = [local, setmv, lp, eg] {
     Face f1g = gmesh.face1(eg), f2g = gmesh.face2(eg);
     for (Vertex v : gmesh.vertices(eg))
@@ -1142,7 +1142,7 @@ EResult try_esha(Edge eg, double& edrss, Commit& commit, Footprint& fp) {
   }
   // ALL SYSTEMS GO.
   is_sharp = !is_sharp;
-  register_writes(fp, lmesh, setmv, eg);
+  declare_writes(fp, lmesh, setmv, eg);
   commit = [local, setmv, lp, eg, is_sharp] {
     gmesh.flags(eg).flag(GMesh::eflag_sharp) = is_sharp;
     if (wf_record) {
@@ -1214,7 +1214,7 @@ EResult try_eswa(Edge eg, double& edrss, Commit& commit, Footprint& fp) {
   const double threshrss = rssf - wcrep * feswaasym + (is_sharp ? 1. : 0.) * wcsharp;
   if (!try_opt(smesh, setmv, lp, mvcvih, threshrss, edrss)) return R_energy;
   // ALL SYSTEMS GO.
-  register_writes(fp, lmesh, setmv, eg);
+  declare_writes(fp, lmesh, setmv, eg);
   commit = [local, setmv, lp, eg, v1g, v2g, vo1g, vo2g, of1g, of2g, nf1l, nf2l] {
     ecand.remove(eg);
     Edge neg = gmesh.swap_edge(eg);  // The new edge is not sharp!
@@ -1284,7 +1284,7 @@ EResult try_espl(Edge eg, double& edrss, Commit& commit, Footprint& fp) {
   const double threshrss = rssf - wcrep - (is_sharp ? 1. : 0.) * wcsharp;
   if (!try_opt(smesh, setmv, lp, mvcvih, threshrss, edrss)) return R_energy;
   // ALL SYSTEMS GO.
-  register_writes(fp, lmesh, setmv, eg, vn);
+  declare_writes(fp, lmesh, setmv, eg, vn);
   commit = [local, setmv, lp, eg, v2g, nf1l, nf2l, vn] {
     for (Face f : gmesh.faces(eg))
       for (Edge ee : gmesh.edges(f)) ecand.remove(ee);
@@ -1540,25 +1540,35 @@ void do_reconstruct() {
   showdf("Starting reconstruction sequence\n");
   showdf(" crep=%g, csharp=%g\n", crep, csharp);
   initialize();
-  // do_gfit(Args{"20"}.use());  // -gfit 20
-  // do_fgfit(Args{"40"}.use());  // -fgfit 40
-  do_gfit(Args{"6"}.use());  // -gfit 6
-  do_gfit(Args{"6"}.use());  // -gfit 6
-  do_gfit(Args{"6"}.use());  // -gfit 6
-  ecol = true;               // -ecol
-  do_stoc();                 // -stoc
-  // do_fgfit(Args{"10"}.use());  // -fgfit 10
-  do_gfit(Args{"6"}.use());  // -gfit 6
-  esha = true;               // -esha
-  do_stoc();                 // -stoc
-  // do_fgfit(Args{"10"}.use());  // -fgfit 10
-  do_gfit(Args{"6"}.use());  // -gfit 6
-  gecol = true;              // -gecol
-  esha = true;               // -esha
-  eswa = true;               // -eswa
-  do_stoc();                 // -stoc
-  // do_fgfit(Args{"10"}.use());  // -fgfit 10
-  do_gfit(Args{"6"}.use());  // -gfit 6
+  if (0) {
+    do_fgfit(Args{"50"}.use());  // -fgfit 50
+    ecol = true;                 // -ecol
+    do_stoc();                   // -stoc
+    do_fgfit(Args{"10"}.use());  // -fgfit 10
+    esha = true;                 // -esha
+    do_stoc();                   // -stoc
+    do_fgfit(Args{"10"}.use());  // -fgfit 10
+    gecol = true;                // -gecol
+    esha = true;                 // -esha
+    eswa = true;                 // -eswa
+    do_stoc();                   // -stoc
+    do_fgfit(Args{"10"}.use());  // -fgfit 10
+  } else {
+    do_gfit(Args{"6"}.use());  // -gfit 6
+    do_gfit(Args{"6"}.use());  // -gfit 6
+    do_gfit(Args{"6"}.use());  // -gfit 6
+    ecol = true;               // -ecol
+    do_stoc();                 // -stoc
+    do_gfit(Args{"6"}.use());  // -gfit 6
+    esha = true;               // -esha
+    do_stoc();                 // -stoc
+    do_gfit(Args{"6"}.use());  // -gfit 6
+    gecol = true;              // -gecol
+    esha = true;               // -esha
+    eswa = true;               // -eswa
+    do_stoc();                 // -stoc
+    do_gfit(Args{"6"}.use());  // -gfit 6
+  }
 }
 
 void do_outmesh(Args& args) {

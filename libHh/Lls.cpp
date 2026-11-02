@@ -2,6 +2,7 @@
 #include "libHh/Lls.h"
 
 #include "libHh/MatrixOp.h"  // mat_mul()
+#include "libHh/Parallel.h"
 #include "libHh/RangeOp.h"
 #include "libHh/SingularValueDecomposition.h"
 #include "libHh/Stat.h"
@@ -170,20 +171,19 @@ bool SparseLls::solve(double* prssb, double* prssa) {
   _solved = true;
   if (sdebug) showf("SparseLls: solving %dx%d system, nonzerofrac=%f\n", _m, _n, float(_entries.num()) / _m / _n);
   compress();
-  if (prssb) *prssb = 0.;
-  if (prssa) *prssa = 0.;
-  Array<float> x(_n), rhv(_m);
-  bool success = true;
-  for_int(di, _nd) {
+  // The dimensions are independent problems, solved in parallel; their residuals are then summed in order.
+  Array<double> rssb(_nd, 0.), rssa(_nd, 0.);
+  Array<int> success(_nd);
+  parallel_for(range(_nd), [&](const int di) {
+    Array<float> x(_n), rhv(_m);
     for_int(i, _m) rhv[i] = _b[di, i];
     for_int(j, _n) x[j] = _x[di, j];
-    if (!do_cg(x, rhv, prssb, prssa)) {
-      success = false;
-      if (0 && _max_iter == std::numeric_limits<int>::max()) continue;
-    }
+    success[di] = do_cg(x, rhv, &rssb[di], &rssa[di]);
     for_int(j, _n) _x[di, j] = x[j];
-  }
-  return success;
+  });
+  if (prssb) *prssb = sum(rssb);
+  if (prssa) *prssa = sum(rssa);
+  return min(success) != 0;
 }
 
 void SparseLls::set_tolerance(float tolerance) { _tolerance = tolerance; }

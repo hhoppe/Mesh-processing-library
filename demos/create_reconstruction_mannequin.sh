@@ -6,7 +6,7 @@ source ./_initdemos.sh
 r=mannequin
 
 echo 'Running phase 1 - Recon.'
-Recon <data/$r.pts -samplingd 5.5 | Filtermesh -genus -fillholes 20 -triangulate -genus >results/$r.recon.m
+Recon <data/$r.pts -samplingd 5.5 | Filtermesh -genus -fillholes 40 -triangulate -genus >results/$r.recon.m
 
 echo 'Running phase 2 - Meshfit.'
 Meshfit -mfile results/$r.recon.m -file data/$r.pts -reconstruct >results/$r.opt.m

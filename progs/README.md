@@ -182,7 +182,7 @@ Filtermesh demos/data/blob5.orig.m -randpts 10000 -vertexpts |
 To view the real-time fitting optimization,
 ```shell
 Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts \
-  -crep 1e-5 -outmesh - -record -reconstruct |
+  -crep 1e-5 -record - -nooutput -reconstruct |
   G3dOGL -st demos/data/distcap.s3d -key DmDeDC -async -terse
 ```
 - writes both the initial mesh and the stream of mesh modifications, and

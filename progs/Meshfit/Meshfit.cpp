@@ -17,6 +17,7 @@
 #include "libHh/MeshOp.h"
 #include "libHh/MeshSearch.h"
 #include "libHh/NonlinearOptimization.h"
+#include "libHh/Parallel.h"
 #include "libHh/Polygon.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
@@ -111,7 +112,8 @@ class DataPts {
   Array<Point> clp;  // Here, clp[i] is only defined if cmf[i].
 };
 
-using SetInt = Set<int>;
+// The points projecting onto a face (typically fewer than a dozen), without heap allocation for up to 8 points.
+using SetInt = InlinedSet<int, 8>;
 HH_SACABLE(SetInt);
 HH_SAC_ALLOCATE_CD_FUNC(Mesh::MFace, SetInt, f_setpts);
 
@@ -130,6 +132,13 @@ bool boundaryfixed = false;
 bool nooutput = false;
 int verb = 1;
 float feswaasym = .01f;
+// Number of edges whose operations stoc tries concurrently.  The operations are cheaper than in Subdivfit, so larger
+// batches better amortize their parallel scheduling.
+int batch = 128;
+// After an operation, extent of the edges near the vertices it moved that return to ecand.  Over 10 seeds of the
+// mannequin and distcap reconstructions, -batch 128 -affect 2 changed the final energy by +0.2% (t = 0.9) and -1.5%
+// (t = -3.7) relative to the former sequential algorithm, in 33% less time.
+int affect = 2;
 
 WSA3dStream oa3d{std::cout};
 const int sdebug = getenv_int("MESHFIT_DEBUG");  // 0, 1, or 2.
@@ -151,7 +160,7 @@ constexpr bool k_simp96 = true;                // Improvements.
 constexpr float k_mincos = -1.f / 3.f;         // Equals cos(109.471 degrees), the tetrahedral angle.
 constexpr auto k_spring_sched = V(1e-2f, 1e-3f, 1e-4f, 1e-8f);
 constexpr int k_max_gfit_iter = 30;
-std::optional<WFile> file_spawn;
+std::optional<WFile> wf_record;
 float gdiam;
 Bary dummy_bary;
 bool have_quads = false;
@@ -295,8 +304,8 @@ void point_change_face(int i, Face newf) {
 
 // Make the face's points project nowhere and remove them from pt.
 void remove_face(Face f) {
-  const Set<int>& set = f_setpts(f);
-  while (!set.empty()) point_change_face(set.get_one(), nullptr);
+  const SetInt& set = f_setpts(f);
+  while (!set.empty()) point_change_face(*set.begin(), nullptr);
 }
 
 void mark_mesh() {
@@ -309,6 +318,12 @@ void mark_mesh() {
 //       for quad face, bary[3](undefined) == 1.f - bary[0] - bary[1] - bary[2]
 
 float project_point(const Point& p, Face f, Bary& ret_bary, Point& ret_clp) {
+  if (!have_quads) {
+    const Vec3<Point> triangle = mesh.triangle_points(f);
+    const auto proj = project_point_triangle(p, triangle);
+    ret_bary = proj.bary, ret_clp = proj.clp;
+    return proj.d2;
+  }
   Polygon poly;
   mesh.polygon(f, poly);
   if (poly.num() == 3) {
@@ -378,31 +393,16 @@ float project_point_neighborhood_helper(const Point& p, Face& cf, Bary& ret_bary
   return mind2;
 }
 
+// The projections of the points are computed in parallel, and then the points are moved among the face point sets.
 void global_project_aux() {
+  Array<Face> ar_face(pt.co.num());
   if (!have_quads) {
-    const MeshSearch mesh_search(mesh, {});
-    if (1) {
-      Face hint_f = nullptr;
-      for_int(i, pt.co.num()) {
-        const auto [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
-        hint_f = f;
-        point_change_face(i, f);
-        pt.clp[i] = clp;
-      }
-    } else {  // TODO: Make this parallel version run without crashing?
-      Array<Face> ar_face(pt.co.num());
-      Array<Point> ar_clp(pt.co.num());
-      parallel_for(range(pt.co.num()), [&](const int i) {
-        Face hint_f = pt.cmf[i];  // Different semantics now.
-        const auto [f, bary, clp, d2] = mesh_search.search(pt.co[i], hint_f);
-        ar_face[i] = f;
-        ar_clp[i] = clp;
-      });
-      for_int(i, pt.co.num()) {
-        point_change_face(i, ar_face[i]);
-        pt.clp[i] = ar_clp[i];
-      }
-    }
+    const MeshSearch mesh_search(mesh, {});  // Without allow_local_project, the search ignores any hint face.
+    parallel_for({.cycles_per_elem = 2'000}, range(pt.co.num()), [&](const int i) {
+      const auto result = mesh_search.search(pt.co[i], nullptr);
+      ar_face[i] = result.f;
+      pt.clp[i] = result.clp;
+    });
   } else {
     Array<TriangleFace> trianglefaces;
     Polygon poly(4);
@@ -421,26 +421,31 @@ void global_project_aux() {
     // const int gridn = nv < 10'000 ? 15 : nv < 30'000 ? 25 : 35
     const int gridn = clamp(int(sqrt(mesh.num_faces() * .05f)), 15, 200);
     TriangleFaceSpatial spatial(trianglefaces, gridn);  // Not MeshSearch because of triangulated mesh quads.
-    for_int(i, pt.co.num()) {
+    parallel_for({.cycles_per_elem = 2'000}, range(pt.co.num()), [&](const int i) {
       SpatialSearch<TriangleFace*> ss(&spatial, pt.co[i]);
       const TriangleFace* triangleface = (*ss.begin()).id;
-      Face f = triangleface->face;
-      point_change_face(i, f);
-      project_point(pt.co[i], f, dummy_bary, pt.clp[i]);
-    }
+      ar_face[i] = triangleface->face;
+      Bary bary;
+      project_point(pt.co[i], ar_face[i], bary, pt.clp[i]);
+    });
   }
+  for_int(i, pt.co.num()) point_change_face(i, ar_face[i]);
 }
 
+// The projections of the points are computed in parallel, and then the points are moved among the face point sets.
 void local_project_aux() {
-  for_int(i, pt.co.num()) {
+  Array<Face> ar_face(pt.co.num());
+  parallel_for({.cycles_per_elem = 1'000}, range(pt.co.num()), [&](const int i) {
     Face cf = pt.cmf[i];
+    Bary bary;
     if (restrictfproject) {
-      project_point(pt.co[i], cf, dummy_bary, pt.clp[i]);
+      project_point(pt.co[i], cf, bary, pt.clp[i]);
     } else {
-      project_point_neighborhood_helper(pt.co[i], cf, dummy_bary, pt.clp[i]);
+      project_point_neighborhood_helper(pt.co[i], cf, bary, pt.clp[i]);
     }
-    point_change_face(i, cf);
-  }
+    ar_face[i] = cf;
+  });
+  for_int(i, pt.co.num()) point_change_face(i, ar_face[i]);
 }
 
 void global_project() {
@@ -686,22 +691,35 @@ void do_fgfit(Args& args) {
       if (0) assertw(echange < 0.);
       // Compute gradient.
       fill(ret_grad, 0.);
-      // D edis.
-      Array<Vertex> va;
-      for_int(i, pt.co.num()) {
-        mesh.get_vertices(pt.cmf[i], va);
-        assertx(va.num() <= 4);
+      // D edis.  The contributions of the points are computed in parallel, and then accumulated in order.
+      struct Contribution {
+        Vec4<int> vi;  // Index in _x of each face vertex, or -1.
+        Vec4<Vector> vd;
+        int num;
+      };
+      Array<Contribution> contributions(pt.co.num());
+      parallel_for({.cycles_per_elem = 300}, range(pt.co.num()), [&](const int i) {
+        Contribution& contribution = contributions[i];
         Bary bary;
         Point clp;
         project_point(pt.co[i], pt.cmf[i], bary, clp);
         const Vector vtop = pt.co[i] - clp;
-        for_int(k, va.num()) {
+        int k = 0;
+        for (Vertex v : mesh.vertices(pt.cmf[i])) {
+          assertx(k < 4);
           const float baryk = k < 3 ? bary[k] : 1.f - sum<float>(bary);
-          Vector vd = vtop * (-2.f * baryk);
-          const int* pvi = _mvi.find_ptr(va[k]);
-          if (!pvi) continue;
-          const int vi = *pvi;
-          for_int(c, 3) ret_grad[vi * 3 + c] += vd[c];
+          const int* pvi = _mvi.find_ptr(v);
+          contribution.vi[k] = pvi ? *pvi : -1;
+          contribution.vd[k] = vtop * (-2.f * baryk);
+          k++;
+        }
+        contribution.num = k;
+      });
+      for (const Contribution& contribution : contributions) {
+        for_int(k, contribution.num) {
+          const int vi = contribution.vi[k];
+          if (vi < 0) continue;
+          for_int(c, 3) ret_grad[vi * 3 + c] += contribution.vd[k][c];
         }
       }
       // D espr.
@@ -812,9 +830,9 @@ void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {
   const auto vertex_point = [&](Vertex v) { return mesh.point(v); };
   const auto face_bbox = [&](Face f) { return Bbox{mesh.vertices(f) | views::transform(vertex_point)}; };
   const Array<Bbox<float, 3>> ar_bbox{ar_faces | views::transform(face_bbox)};
+  InlinedArray<float, 32> ar_d2;
   for (const int pi : ar_pts) {
     const Point& p = pt.co[pi];
-    static Array<float> ar_d2;
     ar_d2.init(nf);
     for_int(i, nf) ar_d2[i] = square(lb_dist_point_bbox(p, ar_bbox[i]));
     float mind2 = BIGFLOAT;
@@ -859,15 +877,15 @@ void local_fit(CArrayView<int> ar_pts, CArrayView<const Point*> wa, int niter, P
   const float sqrtit = sqrt(spring), sqrtbt = sqrt(spring * spbf);
   double rss1;
   dummy_init(rss1);
+  InlinedArray<Bbox<float, 3>, 32> ar_bbox;
+  InlinedArray<float, 32> ar_d2;
   for_int(ni, niter) {
-    static Array<Bbox<float, 3>> ar_bbox;
     ar_bbox.init(nw - 1);
     for_int(i, nw - 1) ar_bbox[i] = Bbox{V(newp, *wa[i], *wa[i + 1])};
     UPointLls ulls(newp);
     for (const int pi : ar_pts) {
       // HH_SSTAT(SLFconsid, nw - 1);
       const Point& p = pt.co[pi];
-      static Array<float> ar_d2;
       ar_d2.init(nw - 1);
       for_int(i, nw - 1) {
         // ar_d2[i] = square(lb_dist_point_triangle(p, newp, *wa[i], *wa[i + 1]));
@@ -1013,17 +1031,20 @@ void do_pclp() {
   oa3d.flush();
 }
 
-void do_record() {
-  // Here, xform is not undone!
-  mesh.record_changes(&std::cout);
-  nooutput = true;
+// Write the mesh and then the stream of its changes to a file.  (They are in the coordinates of the unit cube; xform
+// is not undone.)
+void do_record(Args& args) {
+  wf_record.emplace(args.get_filename());
+  std::ostream& os = (*wf_record)();
+  mesh.write(os);
+  mesh.record_changes(&os);
 }
 
-void do_spawn(Args& args) {
-  // Here, xform is not undone!
-  file_spawn.emplace(args.get_filename());
-  mesh.write((*file_spawn)());
-  mesh.record_changes(&(*file_spawn)());
+void wf_frame() {
+  if (!wf_record) return;
+  std::ostream& os = (*wf_record)();
+  os << "# frame\n";
+  os.flush();
 }
 
 bool get_vertex_normal(Vertex v, Vector& ret_nor) { return parse_key_vec(mesh.get_string(v), "normal", ret_nor); }
@@ -1041,7 +1062,33 @@ int vertex_num_sharp_edges(Vertex v) {
   return nsharpe;
 }
 
-EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
+// The ids of the vertices and faces whose state an attempted operation reads, and of those that its commit modifies.
+// For a face, the state is the set of points projecting onto it (f_setpts) and their projections (pt.cmf, pt.clp).
+struct Footprint {
+  Array<int> read_vertices, read_faces;  // These may contain duplicates.
+  Array<int> write_vertices, write_faces;
+};
+
+// Applies a successful operation to the mesh and to the projections of the points.
+using Commit = std::function<void()>;
+
+// Record in fp the state modified by the commit of an operation that moves the vertices `moved` (and that may create
+// vertices and faces, which no other attempt can have read): the positions of these vertices, and the points of their
+// faces, which get reprojected.
+void declare_writes(Footprint& fp, CArrayView<Vertex> moved) {
+  for (Vertex v : moved) {
+    fp.write_vertices.push(mesh.vertex_id(v));
+    for (Face f : mesh.faces(v)) fp.write_faces.push(mesh.face_id(f));
+  }
+}
+
+// The vertices moved by cleanup_neighborhood(v, nri) in addition to v: its neighbors.
+void push_ring(const Vertex v, Array<Vertex>& moved) {
+  moved.push(v);
+  for (Vertex w : mesh.vertices(v)) moved.push(w);
+}
+
+EResult try_ecol(Edge e, int ni, int nri, float& edrss, Commit& commit, Footprint& fp) {
   HH_STIMER("__try_ecol");
   if (!mesh.nice_edge_collapse(e)) return R_illegal;  // Not a legal move.
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
@@ -1133,37 +1180,45 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss) {
   if (verb >= 4) SHOW("ecol:", rssf, minrss1, drss);
   if (drss >= 0.) return R_energy;  // The energy function does not decrease.
   // ALL SYSTEMS GO.
-  HH_SSTAT(Sminii, minii == 1);
-  HH_STIMER("__doecol");
-  if (k_simp96) {
-    string str;
-    Vector nor1, nor2;
-    if (get_vertex_normal(v1, nor1) && get_vertex_normal(v2, nor2)) {
-      const Vector nnor = normalized(interp(nor1, nor2, w1));
-      mesh.update_string(v1, "normal", csform_vec(str, nnor));
-    }
-    Uv uv1, uv2;
-    if (get_vertex_uv(v1, uv1) && get_vertex_uv(v2, uv2)) {
-      const Uv uvn = interp(uv1, uv2, w1);
-      mesh.update_string(v1, "uv", csform_vec(str, uvn));
-    }
+  {
+    Array<Vertex> moved;
+    push_ring(v1, moved);
+    push_ring(v2, moved);
+    declare_writes(fp, moved);
   }
-  for (Vertex v : mesh.vertices(e))
-    for (Edge ee : mesh.edges(v)) ecand.remove(ee);
-  remove_face(f1);
-  if (f2) remove_face(f2);
-  mesh.collapse_edge(e);  // Here, v1 is kept.
-  // Add about 12 to 16 edges.
-  for (Edge ee : mesh.edges(v1)) ecand.add(ee);
-  for (Face f : mesh.faces(v1)) ecand.add(mesh.opp_edge(v1, f));
-  if (sdebug >= 2) assertx(mesh.is_nice());
-  mesh.set_point(v1, minp);
-  reproject_locally(ar_pts, ar_faces);
-  cleanup_neighborhood(v1, nri);
+  commit = [e, v1, v2, f1, f2, minii, w1, minp, ar_pts, ar_faces, nri] {
+    HH_SSTAT(Sminii, minii == 1);
+    HH_STIMER("__doecol");
+    if (k_simp96) {
+      string str;
+      Vector nor1, nor2;
+      if (get_vertex_normal(v1, nor1) && get_vertex_normal(v2, nor2)) {
+        const Vector nnor = normalized(interp(nor1, nor2, w1));
+        mesh.update_string(v1, "normal", csform_vec(str, nnor));
+      }
+      Uv uv1, uv2;
+      if (get_vertex_uv(v1, uv1) && get_vertex_uv(v2, uv2)) {
+        const Uv uvn = interp(uv1, uv2, w1);
+        mesh.update_string(v1, "uv", csform_vec(str, uvn));
+      }
+    }
+    for (Vertex v : mesh.vertices(e))
+      for (Edge ee : mesh.edges(v)) ecand.remove(ee);
+    remove_face(f1);
+    if (f2) remove_face(f2);
+    mesh.collapse_edge(e);  // Here, v1 is kept.
+    // Add about 12 to 16 edges.
+    for (Edge ee : mesh.edges(v1)) ecand.add(ee);
+    for (Face f : mesh.faces(v1)) ecand.add(mesh.opp_edge(v1, f));
+    if (sdebug >= 2) assertx(mesh.is_nice());
+    mesh.set_point(v1, minp);
+    reproject_locally(ar_pts, ar_faces);
+    cleanup_neighborhood(v1, nri);
+  };
   return R_success;
 }
 
-EResult try_espl(Edge e, int ni, int nri, float& edrss) {
+EResult try_espl(Edge e, int ni, int nri, float& edrss, Commit& commit, Footprint& fp) {
   HH_STIMER("__try_espl");
   // Always legal.
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
@@ -1185,19 +1240,26 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
   if (verb >= 4) SHOW("espl:", rssf, rss1, drss);
   if (drss >= 0.) return R_energy;  // The energy function does not decrease.
   // ALL SYSTEMS GO.
-  HH_STIMER("__doespl");
-  for (Face f : mesh.faces(e))
-    for (Edge ee : mesh.edges(f))  // One duplication.
-      ecand.remove(ee);
-  Vertex v = mesh.split_edge(e);
-  mesh.set_point(v, newp);
-  // Add 8 edges (5 if boundary).
-  for (Face f : mesh.faces(v))
-    for (Edge ee : mesh.edges(f))  // Four duplications.
-      ecand.add(ee);
-  // Since ar_pts project onto f1 + f2 (which are still there), it is easy to update the projections:
-  fit_ring(v, 2);
-  cleanup_neighborhood(v, nri);
+  {
+    Array<Vertex> moved{v1, v2, vo1};  // The new vertex has no id yet; its neighbors are moved.
+    if (vo2) moved.push(vo2);
+    declare_writes(fp, moved);
+  }
+  commit = [e, newp, nri] {
+    HH_STIMER("__doespl");
+    for (Face f : mesh.faces(e))
+      for (Edge ee : mesh.edges(f))  // One duplication.
+        ecand.remove(ee);
+    Vertex v = mesh.split_edge(e);
+    mesh.set_point(v, newp);
+    // Add 8 edges (5 if boundary).
+    for (Face f : mesh.faces(v))
+      for (Edge ee : mesh.edges(f))  // Four duplications.
+        ecand.add(ee);
+    // Since ar_pts project onto f1 + f2 (which are still there), it is easy to update the projections:
+    fit_ring(v, 2);
+    cleanup_neighborhood(v, nri);
+  };
   return R_success;
 }
 
@@ -1205,7 +1267,7 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss) {
 // Try swapping edge (v1, v2) into edge (vo1, vo2), allowing vertex vo1 to move.
 // To do this, gather points in current ring of vo1 plus points on f2.
 EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Face f2, Face f1, int ni, int nri,
-                        float& edrss) {
+                        float& edrss, Commit& commit, Footprint& fp) {
   Array<const Point*> wa;
   {
     assertx(mesh.ccw_vertex(vo1, v1) == v2);
@@ -1255,33 +1317,40 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
     return R_illegal;
   }
   // ALL SYSTEMS GO.
-  HH_STIMER("__doeswa");
-  ecand.remove(e);
-  remove_face(f1);
-  remove_face(f2);
-  Edge enew = assertx(mesh.swap_edge(e));
-  mesh.set_point(vo1, newp);
-  // Add about 9 edges.
-  ecand.add(mesh.edge(vo2, v1));
-  ecand.add(mesh.edge(vo2, v2));
-  for (Edge ee : mesh.edges(vo1)) ecand.add(ee);
-  for (Face f : mesh.faces(enew)) ar_faces.push(f);
-  reproject_locally(ar_pts, ar_faces);
-  if (nri) {
-    fit_ring(vo2, nri);
-    fit_ring(v1, nri);
-    fit_ring(v2, nri);
-    fit_ring(vo1, nri);
-    cleanup_neighborhood(vo1, nri);
-    fit_ring(vo2, nri);
-    fit_ring(v1, nri);
-    fit_ring(v2, nri);
-    fit_ring(vo1, nri);
+  {
+    Array<Vertex> moved{vo2, v1, v2};
+    push_ring(vo1, moved);
+    declare_writes(fp, moved);
   }
+  commit = [e, vo1, v1, vo2, v2, f1, f2, newp, ar_pts, ar_faces, nri] mutable {
+    HH_STIMER("__doeswa");
+    ecand.remove(e);
+    remove_face(f1);
+    remove_face(f2);
+    Edge enew = assertx(mesh.swap_edge(e));
+    mesh.set_point(vo1, newp);
+    // Add about 9 edges.
+    ecand.add(mesh.edge(vo2, v1));
+    ecand.add(mesh.edge(vo2, v2));
+    for (Edge ee : mesh.edges(vo1)) ecand.add(ee);
+    for (Face f : mesh.faces(enew)) ar_faces.push(f);
+    reproject_locally(ar_pts, ar_faces);
+    if (nri) {
+      fit_ring(vo2, nri);
+      fit_ring(v1, nri);
+      fit_ring(v2, nri);
+      fit_ring(vo1, nri);
+      cleanup_neighborhood(vo1, nri);
+      fit_ring(vo2, nri);
+      fit_ring(v1, nri);
+      fit_ring(v2, nri);
+      fit_ring(vo1, nri);
+    }
+  };
   return R_success;
 }
 
-EResult try_eswa(Edge e, int ni, int nri, float& edrss) {
+EResult try_eswa(Edge e, int ni, int nri, bool swap_first, float& edrss, Commit& commit, Footprint& fp) {
   HH_STIMER("__try_eswa");
   if (!mesh.legal_edge_swap(e)) return R_illegal;  // Not a legal move.
   if (k_simp96 && edge_sharp(e)) {
@@ -1295,31 +1364,97 @@ EResult try_eswa(Edge e, int ni, int nri, float& edrss) {
   const float minb = edge_dihedral_angle_cos(mesh, e);
   const float mina = dihedral_angle_cos(mesh.point(vo1), mesh.point(vo2), mesh.point(v1), mesh.point(v2));
   if (mina < k_mincos && mina < minb) return R_dih;
-  // Will try both cases, but randomly select which one to try first.
+  // Will try both cases, in the (random) order selected by swap_first.
   EResult result;
-  if (Random::G.get_unsigned(2)) {
-    result = check_half_eswa(e, vo1, v1, vo2, v2, f2, f1, ni, nri, edrss);
+  if (swap_first) {
+    result = check_half_eswa(e, vo1, v1, vo2, v2, f2, f1, ni, nri, edrss, commit, fp);
     if (result == R_success) return result;
-    result = check_half_eswa(e, vo2, v2, vo1, v1, f1, f2, ni, nri, edrss);
+    result = check_half_eswa(e, vo2, v2, vo1, v1, f1, f2, ni, nri, edrss, commit, fp);
   } else {
-    result = check_half_eswa(e, vo2, v2, vo1, v1, f1, f2, ni, nri, edrss);
+    result = check_half_eswa(e, vo2, v2, vo1, v1, f1, f2, ni, nri, edrss, commit, fp);
     if (result == R_success) return result;
-    result = check_half_eswa(e, vo1, v1, vo2, v2, f2, f1, ni, nri, edrss);
+    result = check_half_eswa(e, vo1, v1, vo2, v2, f2, f1, ni, nri, edrss, commit, fp);
   }
   return result;
 }
 
-EResult try_op(Edge e, EOperation op, float& edrss) {
-  HH_STIMER("__try_op");
-  EResult result;
-  result = (op == OP_ecol   ? try_ecol(e, int(4.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
-            : op == OP_espl ? try_espl(e, int(3.f * fliter + .5f), int(4.f * fliter + .5f), edrss)
-            : op == OP_eswa ? try_eswa(e, int(3.f * fliter + .5f), int(2.f * fliter + .5f), edrss)
-                            : (assertnever(""), R_success));
-  op_stat.na[op]++;
-  if (result == R_success) op_stat.ns[op]++;
-  op_stat.nor[result]++;
-  return result;
+// The outcome of trying the operations on an edge, in order, until one succeeds.  It only reads the mesh and the
+// projections of the points; any successful operation is applied by commit.
+struct EdgeAttempt {
+  Vec2<int> vertex_ids;  // The ids of the vertices of the edge.
+  EOperation op{OP_ecol};
+  EResult result{R_illegal};
+  float edrss{0.f};
+  Array<std::pair<EOperation, EResult>> tried;  // Each operation tried, with its result.
+  Commit commit;
+  Footprint footprint;
+};
+
+EdgeAttempt evaluate_edge(Edge e, bool swap_first) {
+  EdgeAttempt attempt;
+  attempt.vertex_ids = V(mesh.vertex_id(mesh.vertex1(e)), mesh.vertex_id(mesh.vertex2(e)));
+  Footprint& fp = attempt.footprint;
+  // The operations read the positions within the 2-ring of the edge vertices, and the points of the faces adjacent
+  // to their 1-ring.
+  for (Vertex v : mesh.vertices(e))
+    for (Vertex vv : mesh.vertices(v)) {
+      for (Vertex vvv : mesh.vertices(vv)) fp.read_vertices.push(mesh.vertex_id(vvv));
+      for (Face f : mesh.faces(vv)) fp.read_faces.push(mesh.face_id(f));
+    }
+  const auto try_op = [&](EOperation op) {
+    if (attempt.result == R_success) return;
+    attempt.op = op;
+    Commit& commit = attempt.commit;
+    attempt.result =
+        (op == OP_ecol   ? try_ecol(e, int(4.f * fliter + .5f), int(2.f * fliter + .5f), attempt.edrss, commit, fp)
+         : op == OP_espl ? try_espl(e, int(3.f * fliter + .5f), int(4.f * fliter + .5f), attempt.edrss, commit, fp)
+         : op == OP_eswa
+             ? try_eswa(e, int(3.f * fliter + .5f), int(2.f * fliter + .5f), swap_first, attempt.edrss, commit, fp)
+             : (assertnever(""), R_success));
+    attempt.tried.push({op, attempt.result});
+  };
+  try_op(OP_ecol);
+  if (fliter) try_op(OP_espl);  // Do not try edge splits under zippysimplify.
+  try_op(OP_eswa);
+  return attempt;
+}
+
+// Whether an attempt read any state that has since been modified.
+bool conflicts(const Footprint& fp, const Set<int>& written_vertices, const Set<int>& written_faces) {
+  for (const int id : fp.read_vertices)
+    if (written_vertices.contains(id)) return true;
+  for (const int id : fp.read_faces)
+    if (written_faces.contains(id)) return true;
+  return false;
+}
+
+// After a committed operation, return to ecand some edges near the vertices that it moved (in addition to the edges
+// near the operation that its commit returns): none if affect == 0, the edges of these vertices if affect == 1, the
+// edges of their faces if affect == 2, and the edges of the faces within (affect - 2) rings of these vertices if
+// affect >= 3.  (See also Subdivfit.)
+void add_affected_edges(const Footprint& fp) {
+  if (!affect) return;
+  Array<Vertex> verts;  // The moved vertices that remain, and then those within (affect - 2) rings of them.
+  Set<Vertex> visited;
+  for (const int id : fp.write_vertices) {
+    Vertex v = mesh.id_retrieve_vertex(id);
+    if (v && visited.add(v)) verts.push(v);
+  }
+  int i0 = 0;
+  for_int(ring, affect - 2) {
+    const int i1 = verts.num();
+    for (; i0 < i1; i0++)
+      for (Vertex vv : mesh.vertices(verts[i0]))
+        if (visited.add(vv)) verts.push(vv);
+  }
+  for (Vertex v : verts) {
+    if (affect == 1) {
+      for (Edge e : mesh.edges(v)) ecand.add(e);
+    } else {
+      for (Face f : mesh.faces(v))
+        for (Edge e : mesh.edges(f)) ecand.add(e);
+    }
+  }
 }
 
 void do_stoc() {
@@ -1332,49 +1467,89 @@ void do_stoc() {
   fill(op_stat.ns, 0);
   fill(op_stat.nor, 0);
   op_stat.notswaps = 0;
-  int ni = 0, nbad = 0, lecol = 0, lespl = 0, leswa = 0;
+  int ni = 0, nbad = 0, ndiscarded = 0, lecol = 0, lespl = 0, leswa = 0;
   for (Edge e : mesh.edges()) ecand.enter(e);
+  // As in Subdivfit, the edges are drawn from ecand in batches.  The attempts of a batch are evaluated in parallel on
+  // the state at the start of the batch, and are then processed in sequence.  Processing an attempt either commits
+  // its successful operation or accepts its failure, but only if the evaluation remains valid, i.e., if the attempt
+  // read no state modified by an operation committed earlier in the batch; otherwise, the attempt is discarded and
+  // its edge returns to ecand.  The processing order is the order drawn, except that the successful attempts are
+  // reordered among their positions by decreasing energy reduction.  Unlike the number of threads, the batch size
+  // affects the result.
+  assertx(batch >= 1);
   while (!ecand.empty()) {
-    ni++;
-    Edge e = ecand.remove_random(Random::G);
-    ASSERTX((mesh.valid(e), true));
-    EOperation op;
-    op = OP_ecol;  // dummy_init(op)
-    EResult result = R_illegal;
-    float edrss;
-    dummy_init(edrss);
-    if (result != R_success) {
-      op = OP_ecol;
-      result = try_op(e, op, edrss);
+    Array<Edge> edges;
+    Array<bool> swap_first;  // The random order of the two halves of an edge swap.
+    while (edges.num() < batch && !ecand.empty()) {
+      Edge e = ecand.remove_random(Random::G);
+      ASSERTX((mesh.valid(e), true));
+      edges.push(e);
+      swap_first.push(Random::G.get_unsigned(2) != 0);
     }
-    // Do not try edge_splits under zippysimplify.
-    if (result != R_success && fliter) {
-      op = OP_espl;
-      result = try_op(e, op, edrss);
+    Array<EdgeAttempt> attempts(edges.num());
+    const int num_threads = min(get_max_threads(), edges.num());
+    {
+      std::atomic<int> next_index{0};
+      parallel_for_chunk(range(num_threads), num_threads, [&](int, auto) {
+        for (int i_edge; (i_edge = next_index++) < edges.num();)
+          attempts[i_edge] = evaluate_edge(edges[i_edge], swap_first[i_edge]);
+      });
     }
-    if (result != R_success) {
-      op = OP_eswa;
-      result = try_op(e, op, edrss);
+    Array<int> order(attempts.num());
+    for_int(i_edge, attempts.num()) order[i_edge] = i_edge;
+    {
+      Array<int> successes;
+      for_int(i_edge, attempts.num()) {
+        if (attempts[i_edge].result == R_success) successes.push(i_edge);
+      }
+      Array<int> sorted_successes(successes);
+      sort(sorted_successes,
+           [&](int i1, int i2) { return std::pair{attempts[i1].edrss, i1} < std::pair{attempts[i2].edrss, i2}; });
+      for_int(j, successes.num()) order[successes[j]] = sorted_successes[j];
     }
-    if (verb >= 2 && ni % 100 == 0) {
-      showdf("it %5d, ecol=%2d  espl=%2d  eswa=%2d   [%5d/%-5d]\n",  //
-             ni, op_stat.ns[OP_ecol] - lecol, op_stat.ns[OP_espl] - lespl, op_stat.ns[OP_eswa] - leswa, ecand.num(),
-             mesh.num_edges());
-      lecol = op_stat.ns[OP_ecol];
-      lespl = op_stat.ns[OP_espl];
-      leswa = op_stat.ns[OP_eswa];
+    Set<int> written_vertices, written_faces;
+    for (const int i_edge : order) {
+      EdgeAttempt& attempt = attempts[i_edge];
+      if (conflicts(attempt.footprint, written_vertices, written_faces)) {
+        ndiscarded++;
+        Vertex v1 = mesh.id_retrieve_vertex(attempt.vertex_ids[0]);
+        Vertex v2 = mesh.id_retrieve_vertex(attempt.vertex_ids[1]);
+        if (v1 && v2)
+          if (Edge e = mesh.query_edge(v1, v2)) ecand.add(e);
+        continue;
+      }
+      ni++;
+      for (const auto& [op, result] : attempt.tried) {
+        op_stat.na[op]++;
+        if (result == R_success) op_stat.ns[op]++;
+        op_stat.nor[result]++;
+      }
+      const EOperation op = attempt.op;
+      if (verb >= 2 && ni % 100 == 0) {
+        showdf("it %5d, ecol=%2d  espl=%2d  eswa=%2d   [%5d/%-5d]\n",  //
+               ni, op_stat.ns[OP_ecol] - lecol, op_stat.ns[OP_espl] - lespl, op_stat.ns[OP_eswa] - leswa, ecand.num(),
+               mesh.num_edges());
+        lecol = op_stat.ns[OP_ecol];
+        lespl = op_stat.ns[OP_espl];
+        leswa = op_stat.ns[OP_eswa];
+      }
+      if (attempt.result != R_success) {
+        nbad++;
+        continue;
+      }
+      attempt.commit();
+      add_affected_edges(attempt.footprint);
+      for (const int id : attempt.footprint.write_vertices) written_vertices.add(id);
+      for (const int id : attempt.footprint.write_faces) written_faces.add(id);
+      if (verb >= 3)
+        showf("it %5d, %s (after %3d) [%5d/%-5d] edrss=%e\n",  //
+              ni, op_name[op].c_str(), nbad, ecand.num(), mesh.num_edges(), attempt.edrss);
+      wf_frame();
+      nbad = 0;
     }
-    if (result != R_success) {
-      nbad++;
-      continue;
-    }
-    if (verb >= 3)
-      showf("it %5d, %s (after %3d) [%5d/%-5d] edrss=%e\n",  //
-            ni, op_name[op].c_str(), nbad, ecand.num(), mesh.num_edges(), edrss);
-    if (file_spawn) (*file_spawn)().flush();
-    nbad = 0;
   }
   if (verb >= 2) showdf("it %d, last search: %d wasted attempts\n", ni, nbad);
+  if (verb >= 2 && ndiscarded) showdf("Discarded %d conflicting attempts\n", ndiscarded);
   const int nat = narrow_cast<int>(sum(op_stat.na));
   const int nst = narrow_cast<int>(sum(op_stat.ns));
   if (verb >= 2) {
@@ -1474,13 +1649,14 @@ int main(int argc, const char** argv) {
   HH_ARGSD(gfit, "niter : do global fit (0=until convergence)");
   HH_ARGSD(fgfit, "niter : use conjugate gradients");
   HH_ARGSD(stoc, ": do local stochastic mesh operations");
+  HH_ARGSP(batch, "n : edges tried concurrently (affects result)");
+  HH_ARGSP(affect, "i : edges retried after a change (0=none..4)");
   HH_ARGSD(lfit, "ni nli : do ni iters, each nli local fits");
   HH_ARGSD(four1split, ": do global four-to-one split");
   HH_ARGSD(outmesh, "file.m : output current mesh to file");
   HH_ARGSC("", ":");
   HH_ARGSD(pclp, ": print projections onto mesh (lines)");
-  HH_ARGSD(record, ": print mesh changes on std::cout, -noout");
-  HH_ARGSD(spawn, "'command' : send record to popen");
+  HH_ARGSD(record, "file.m : send orig + changes to file");
   HH_ARGSF(nooutput, ": don't print final mesh on stdout");
   HH_ARGSP(verb, "i : verbosity level (1=avg, 2=more, 3=lots, 4=huge)");
   HH_ARGSC("", ":");
@@ -1503,6 +1679,6 @@ int main(int argc, const char** argv) {
     mesh.write(std::cout);
   }
   mesh.record_changes(nullptr);
-  file_spawn.reset();
+  wf_record.reset();
   return 0;
 }

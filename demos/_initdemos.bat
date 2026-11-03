@@ -38,7 +38,7 @@ for /f "tokens=2,3" %%a in ('G3dOGL -hwquery 2^>nul ^<nul') do (
 :: crashes, assertion failures, and sanitizer reports; it compares no rendered pixels.  A display is still
 :: required (X11 or the Windows desktop); only the mapping of the window is suppressed.
 set HIDDEN_ARGS=
-if defined DEMOS_HIDDEN set HIDDEN_ARGS=-hidden -hwdelay 1 -hwkey \2\c
+if defined DEMOS_HIDDEN set HIDDEN_ARGS=-hidden -hwdelay 0.5 -hwkey \2\c
 
 :: Other arguments for all viewers, including each window of g3d_cmp.
 set G3D_ARGS=-bigfont %HIDDEN_ARGS%

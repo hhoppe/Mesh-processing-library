@@ -67,7 +67,7 @@ export G3D_GEOM="-geom $win_size$win_pos"
 # required (X11 or the Windows desktop); only the mapping of the window is suppressed.
 hidden_args=''
 if [[ -n $DEMOS_HIDDEN ]]; then
-  hidden_args='-hidden -hwdelay 1 -hwkey \2\c'
+  hidden_args='-hidden -hwdelay 0.5 -hwkey \2\c'
 fi
 
 # Other arguments for all viewers, including each window of g3d_cmp.

@@ -92,7 +92,8 @@ depend $(make_dep):
 # Any build-order dependencies.
 determine_approximation_error.sh: create_progressive_mesh_club.sh
 
-# Similar to all_demos_view_results.sh (still sequential).
+# Similar to all_demos_view_results.sh.  With DEMOS_HIDDEN, the demos run concurrently (no window is mapped, so they
+# do not interfere), each with its output collected and then shown in order; otherwise they run sequentially.
 # Run every demo even if some fail, and report the last failing status.
 # Export DEMOS_HIDDEN so that it also works when given as a make variable rather than in the environment.
 # Its viewers quit on their own, so bound any demo that instead hangs before its window would be created
@@ -103,10 +104,24 @@ export DEMOS_HIDDEN
 view:
 	@status=0; \
 	timeout=; if [[ -n "$$DEMOS_HIDDEN" ]] && type -P timeout >/dev/null; then timeout='timeout 300'; fi; \
-	for i in $(view_scripts); do \
-	  echo '**' $$i; \
-	  $$timeout $$i || { s=$$?; echo "*** $$i exited with status $$s." >&2; status=$$s; }; \
-	done; \
+	if [[ -n "$$DEMOS_HIDDEN" ]]; then \
+	  logs=$$(mktemp -d); \
+	  for i in $(view_scripts); do \
+	    { $$timeout $$i >$$logs/$$i.log 2>&1; echo $$? >$$logs/$$i.status; } & \
+	  done; \
+	  wait; \
+	  for i in $(view_scripts); do \
+	    echo '**' $$i; cat $$logs/$$i.log; \
+	    [[ -z $$(tail -c 1 $$logs/$$i.log) ]] || echo; s=$$(cat $$logs/$$i.status); \
+	    if ((s != 0)); then echo "*** $$i exited with status $$s." >&2; status=$$s; fi; \
+	  done; \
+	  rm -rf $$logs; \
+	else \
+	  for i in $(view_scripts); do \
+	    echo '**' $$i; \
+	    $$timeout $$i || { s=$$?; echo "*** $$i exited with status $$s." >&2; status=$$s; }; \
+	  done; \
+	fi; \
 	exit $$status
 
 mostlyclean clean deepclean:

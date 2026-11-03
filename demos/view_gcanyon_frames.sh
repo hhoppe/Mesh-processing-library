@@ -14,4 +14,8 @@ loadtexture="-key Dt"
 
 export ASSERTW_IGNORE='fl,fr._matid ignored'
 
-G3dOGL -eyeob data/unit_frustum.a3d -sr_mode data/gcanyon_4k2k.l1.srm -texturemap data/gcanyon_color_4k2k.png -sr_screen_thresh 0.003846 -lightambient .7 -st data/gcanyon_4k2k_fly2.s3d -sr_regulatenf $nfaces -sr_fracvtrav .3333 -sr_gain .3333 -key De0------l -hither .0001 $loadtexture $G3D_GEOM $G3D_ARGS -input <data/gcanyon_4k2k_fly4.edited.frames
+# When hidden, run longer than the other viewers (4 seconds), so that the terrain is rendered along the frames.
+hidden_hold=''
+if [[ -n $DEMOS_HIDDEN ]]; then hidden_hold='-hwkey \7\c'; fi
+
+G3dOGL -eyeob data/unit_frustum.a3d -sr_mode data/gcanyon_4k2k.l1.srm -texturemap data/gcanyon_color_4k2k.png -sr_screen_thresh 0.003846 -lightambient .7 -st data/gcanyon_4k2k_fly2.s3d -sr_regulatenf $nfaces -sr_fracvtrav .3333 -sr_gain .3333 -key De0------l -hither .0001 $loadtexture $G3D_GEOM $G3D_ARGS $hidden_hold -input <data/gcanyon_4k2k_fly4.edited.frames

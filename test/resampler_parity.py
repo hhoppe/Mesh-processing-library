@@ -66,8 +66,12 @@ def per_dim(word: str) -> str | tuple[str, ...]:
 
 
 def format_value(value: float) -> str:
-  """Return the value rounded to 6 decimals, without trailing zeros."""
-  s = f'{value:.6f}'.rstrip('0').rstrip('.')
+  """Return the value rounded to 6 decimals, without trailing zeros.
+
+  Rounding first to 9 decimals snaps a value that is a few ulps off a decimal tie such as 0.1328125
+  onto the double nearest that tie, so that its last digit does not depend on the machine.
+  """
+  s = f'{round(value, 9):.6f}'.rstrip('0').rstrip('.')
   return '0' if s == '-0' else s
 
 

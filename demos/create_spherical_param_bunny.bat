@@ -17,7 +17,8 @@ del results\v_sharp.pm results\v.m 2>nul
 
 
 echo From the original mesh data/bunny.orig.m, compute a progressive mesh, then the spherical parameterization results/bunny.sphparam.m.
-mesh_to_pm.bat data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - -rot data/bunny.s3d -split_meridian >results/bunny.sphparam.m
+call mesh_to_pm.bat data/bunny.orig.m -minqem -vsgeom -dihallow >results/bunny.for_sphereparam.pm
+SphereParam results/bunny.for_sphereparam.pm -rot data/bunny.s3d -split_meridian >results/bunny.sphparam.m
 
 
 echo Resample the bunny spherical parameterization into a remesh and an associated normal map.

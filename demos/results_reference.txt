@@ -38,6 +38,7 @@ gcanyon_sq129_b44.l1t.stitched.pm 365635
 gcanyon_sq129_b44.l2.pm 621066
 office.nf200000.mincycles.m 17956675
 bunny.vertexcache.m 10979171
+bunny.for_sphereparam.pm 1813154
 bunny.sphparam.m 7796624
 octaflat_eg128.uv.sphparam.m 2873389
 bunny.spheresample.remesh.m 2724209

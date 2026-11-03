@@ -4,10 +4,11 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./_initdemos.sh
 
 
-# SphereParam creates its own viewer window, so omit it when hidden; the parameterization still runs.
-visualize_args='-visualize -wait_on_visualizer'
-if [[ -n $DEMOS_HIDDEN ]]; then visualize_args=''; fi
-mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - $visualize_args -nooutput >/dev/null
+# Show the optimization of SphereParam on the progressive mesh created by create_spherical_param_bunny.sh.
+# SphereParam creates its own viewer window, so skip it when hidden (it would only repeat the create step).
+if [[ -z $DEMOS_HIDDEN ]]; then
+  SphereParam results/bunny.for_sphereparam.pm -visualize -wait_on_visualizer -nooutput >/dev/null
+fi
 
 
 VideoViewer results/bunny.spheresample.octaflat.unrotated.normalmap.png $VIDEOVIEWER_ARGS

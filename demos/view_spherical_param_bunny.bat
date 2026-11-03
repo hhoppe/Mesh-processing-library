@@ -5,12 +5,9 @@ cd "%~p0"
 call ./_initdemos.bat
 
 
-:: SphereParam creates its own viewer window, so omit it when hidden; the parameterization still runs.
-set VISUALIZE_ARGS=-visualize -wait_on_visualizer
-if defined DEMOS_HIDDEN set VISUALIZE_ARGS=
-
-:: Because a pipe command is run in a subshell, the syntax "call script.bat" is unnecessary (and wrong) here.
-mesh_to_pm.bat data/bunny.orig.m -minqem -vsgeom -dihallow | SphereParam - %VISUALIZE_ARGS% -nooutput >nul
+:: Show the optimization of SphereParam on the progressive mesh created by create_spherical_param_bunny.bat.
+:: SphereParam creates its own viewer window, so skip it when hidden (it would only repeat the create step).
+if not defined DEMOS_HIDDEN SphereParam results/bunny.for_sphereparam.pm -visualize -wait_on_visualizer -nooutput >nul
 
 
 VideoViewer results/bunny.spheresample.octaflat.unrotated.normalmap.png %VIDEOVIEWER_ARGS%

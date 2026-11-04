@@ -7,7 +7,7 @@ call ./_initdemos.bat
 set r=curve1
 
 echo Running phase 1 - Recon.
-Recon <data/%r%.pts -samplingd 0.06 -grid 30 >results/%r%.recon.a3d
+Recon data/%r%.pts -samplingd 0.06 -grid 30 >results/%r%.recon.a3d
 
 echo Joining unorganized line segments into a single polyline.
 Filtera3d <results/%r%.recon.a3d -joinlines >results/%r%.joined.a3d

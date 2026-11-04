@@ -116,7 +116,7 @@ This program reads a list of 3D (x, y, z) points assumed to be sampled near some
 and reconstructs an approximating triangle mesh.
 For example,
 ```shell
-Recon <demos/data/distcap.pts -samplingd 0.02 |
+Recon demos/data/distcap.pts -samplingd 0.02 |
   Filtermesh -genus -fillholes 30 -triangulate -genus | tee distcap.recon.m |
   G3dOGL -st demos/data/distcap.s3d -key DmDe
 ```
@@ -132,7 +132,7 @@ Recon <demos/data/distcap.pts -samplingd 0.02 |
 
 To show the progression of the Marching Cubes algorithm,
 ```shell
-Recon <demos/data/distcap.pts -samplingd 0.02 -what c |
+Recon demos/data/distcap.pts -samplingd 0.02 -what c |
   Filtera3d -split 30 | G3dOGL -key DCDb -st demos/data/distcap_backside.s3d -terse
 ```
 - selects the 'c' (cubes) output stream,
@@ -141,7 +141,7 @@ Recon <demos/data/distcap.pts -samplingd 0.02 -what c |
 
 To show a similar streaming reconstruction of the surface mesh,
 ```shell
-Recon <demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d |
+Recon demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d |
   Filtera3d -split 30 |
   G3dOGL demos/data/distcap.pts -key DCDb -st demos/data/distcap_backside.s3d -terse -input -key _Jo
 ```
@@ -152,7 +152,7 @@ Recon <demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d |
 
 The same program can also read a list of 2D (y, z) points to reconstruct an approximating curve:
 ```shell
-Recon <demos/data/curve1.pts -samplingd 0.06 -grid 30 |
+Recon demos/data/curve1.pts -samplingd 0.06 -grid 30 |
   Filtera3d -joinlines | tee curve1.a3d |
   G3dOGL demos/data/curve1.pts -input -st demos/data/curve1.s3d
 ```

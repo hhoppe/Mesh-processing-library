@@ -48,6 +48,7 @@ namespace {
 
 // Necessary.
 string rootname;
+string filename = "-";  // Input points; "-" is stdin.
 string what = "m";
 float samplingd = 0.f;
 int gridsize = 0;
@@ -109,7 +110,8 @@ void close_mk(unique_ptr<Mk3d>& pmk) {
 
 void process_read() {
   HH_TIMER("_read");
-  std::istream& is = std::cin;
+  RFile fi(filename);
+  std::istream& is = fi();
   for (string line; is.peek() == '#';) {
     assertx(my_getline(is, line));
     if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
@@ -159,9 +161,10 @@ void compute_xform() {
 unique_ptr<Mk3d> process_arg(char ch) {
   if (!what.contains(ch)) return nullptr;
   if (rootname == "") assertx(what.size() == 1);
-  auto pfi = make_unique<WFile>(rootname != "" ? sform("%s.%c", rootname.c_str(), ch) : "-");
+  const string out_filename = rootname != "" ? sform("%s.%c%s", rootname.c_str(), ch, ch == 'm' ? "" : ".a3d") : "-";
+  auto pfi = make_unique<WFile>(out_filename);
   WFile& fi = *pfi;
-  if (rootname != "") fi() << g_header;
+  if (rootname != "") fi() << "# " << g_header;
   WSA3dStream* oa3d = new WSA3dStream(fi());  // Deallocated by "delete oa3d" in close_mk().
   auto pmk = make_unique<Mk3d>(*oa3d);
   pmk->oa3d().write_comment(sform(" Output of option '%c'", ch));
@@ -740,8 +743,8 @@ void process() {
 
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
-  HH_ARGSC("An 'a3d stream' of points is read from stdin.  Subsequent options are:");
-  HH_ARGSP(rootname, "string : name for output files (optional)");
+  HH_ARGSC("An 'a3d stream' of points is read from stdin or first arg.  Subsequent options are:");
+  HH_ARGSP(rootname, "string : write outputs to rootname.m, rootname.X.a3d");
   HH_ARGSP(what, "string : output ch codes 'dbufgpohlcm' (default mesh 'm')");
   HH_ARGSP(samplingd, "f : sampling density + noise (delta + rho)");
   HH_ARGSP(gridsize, "n : contouring # grid cells (opt.)");
@@ -750,10 +753,15 @@ int main(int argc, const char** argv) {
   HH_ARGSP(unsigneddis, "f : use unsigned distance, set value");
   HH_ARGSP(prop, "i : orient. prop. (0=naive, 1=emst, 2=mst)");
   HH_ARGSP(usenormals, "i : use data normals (1=orient_opt, 2=orient, 3=exact)");
-  args.parse();
-  assertx(samplingd);
+  {
+    const string arg0 = args.num() ? args.peek_string() : "";
+    if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
+    if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
+  }
   g_header = args.header();
   showff("%s", g_header.c_str());
+  args.parse();
+  assertx(samplingd);
   process();
   hh_clean_up();
   // We close iom here so that the mesh comes after everything else in the file.

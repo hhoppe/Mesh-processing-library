@@ -29,7 +29,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   // Set a function called after each successful line search, when _x holds the new iterate; the most recent call
   //  to eval was at that _x.  It is not called for the trial points rejected by the line search.
   void set_iteration_callback(std::function<void()> callback) { _iteration_callback = std::move(callback); }
-  [[nodiscard]] bool solve() { return solve_i(); }               // Returns success.
+  [[nodiscard]] bool solve() { return solve_i(); }  // Returns success.
  private:
   // ** Approach-independent:
   ArrayView<double> _x;  // View of the user-supplied vector; stores the initial estimate and final solution.

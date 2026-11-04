@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_LIBHH_NONLINEAROPTIMIZATION_H_
 #define MESH_PROCESSING_LIBHH_NONLINEAROPTIMIZATION_H_
 
+#include <functional>  // std::function
+
 #include "libHh/Array.h"
 #include "libHh/MathOp.h"  // my_mod()
 #include "libHh/Matrix.h"
@@ -24,6 +26,9 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
     _debug = getenv_int("NLOPT_DEBUG");
   }
   void set_max_neval(int max_neval) { _max_neval = max_neval; }  // Default is -1, which signifies infinity.
+  // Set a function called after each successful line search, when _x holds the new iterate; the most recent call
+  //  to eval was at that _x.  It is not called for the trial points rejected by the line search.
+  void set_iteration_callback(std::function<void()> callback) { _iteration_callback = std::move(callback); }
   [[nodiscard]] bool solve() { return solve_i(); }               // Returns success.
  private:
   // ** Approach-independent:
@@ -32,6 +37,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   const Eval _eval;      // Callback function to evaluate both the value f and the gradient _grad at _x.
   int _max_neval{-1};    // Here, -1 is infinity.
   int _debug;            // 0 == no_output, 1 == show_final, 2 == show_each_iteration.
+  std::function<void()> _iteration_callback;
   void show_debug(const string& s, int iter, int neval, double f, double magg) {
     showf("NonlinearOptimization %s iter=%-3d neval=%-3d f=%.12g mag(g)=%.12g\n", s.c_str(), iter, neval, f, magg);
   }
@@ -110,6 +116,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
         if (_debug >= 1) show_debug("line_search_failed", iter, neval, f, mag(_g));
         return false;
       }
+      if (_iteration_callback) _iteration_callback();
       if (_max_neval >= 0 && neval >= _max_neval) {  // Reached the maximum number of function evaluations?
         if (_debug >= 1) show_debug("max_neval", iter, neval, f, mag(_g));
         return true;

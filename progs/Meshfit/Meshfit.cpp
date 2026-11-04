@@ -534,6 +534,22 @@ void do_outlierdelete(Args& args) {
   initial_projection();
 }
 
+// Write the mesh and then the stream of its changes to a file.  (They are in the coordinates of the unit cube; xform
+// is not undone.)
+void do_record(Args& args) {
+  wf_record.emplace(args.get_filename());
+  std::ostream& os = (*wf_record)();
+  mesh.write(os);
+  mesh.record_changes(&os);
+}
+
+void record_comment(std::string_view s) {
+  if (!wf_record) return;
+  std::ostream& os = (*wf_record)();
+  os << "# " << s << "\n";
+  os.flush();
+}
+
 void global_fit() {
   Map<Vertex, int> mvi;
   Array<Vertex> gva;
@@ -580,6 +596,7 @@ void global_fit() {
     lls.get_x_r(i, p);
     mesh.set_point(gva[i], p);
   }
+  record_comment("frame gfit");
 }
 
 void do_gfit(Args& args) {
@@ -749,7 +766,17 @@ void do_fgfit(Args& args) {
   NonlinearOptimization opt(eval_grad._x, func_eval);
   assertx(niter > 0);
   opt.set_max_neval(niter + 1);
+  // Record only the accepted iterates, not the trial points of the line searches.
+  std::ostream* const os = mesh.record_changes(nullptr);
+  if (os)
+    opt.set_iteration_callback([&] {
+      mesh.record_changes(os);
+      for (Vertex v : eval_grad._iv) mesh.set_point(v, mesh.point(v));
+      record_comment("frame fgfit");
+      mesh.record_changes(nullptr);
+    });
   assertw(opt.solve());
+  mesh.record_changes(os);
   if (0) eval_grad.unpack_vertices();  // Unnecessary because _x was the last state evaluated using EvalGrad::feval().
   if (verb >= 2) show_energies("end    ");
   if (verb >= 2) analyze_mesh("after_fgfit");
@@ -1029,22 +1056,6 @@ void do_pclp() {
     oa3d.write(el);
   }
   oa3d.flush();
-}
-
-// Write the mesh and then the stream of its changes to a file.  (They are in the coordinates of the unit cube; xform
-// is not undone.)
-void do_record(Args& args) {
-  wf_record.emplace(args.get_filename());
-  std::ostream& os = (*wf_record)();
-  mesh.write(os);
-  mesh.record_changes(&os);
-}
-
-void wf_frame() {
-  if (!wf_record) return;
-  std::ostream& os = (*wf_record)();
-  os << "# frame\n";
-  os.flush();
 }
 
 bool get_vertex_normal(Vertex v, Vector& ret_nor) { return parse_key_vec(mesh.get_string(v), "normal", ret_nor); }
@@ -1544,7 +1555,6 @@ void do_stoc() {
       if (verb >= 3)
         showf("it %5d, %s (after %3d) [%5d/%-5d] edrss=%e\n",  //
               ni, op_name[op].c_str(), nbad, ecand.num(), mesh.num_edges(), attempt.edrss);
-      wf_frame();
       nbad = 0;
     }
   }

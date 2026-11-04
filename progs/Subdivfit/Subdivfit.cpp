@@ -151,10 +151,11 @@ void initialize() {
 
 // *** auxiliary
 
-void wf_frame() {
+void record_comment(std::string_view s) {
   if (!wf_record) return;
-  (*wf_record)() << "# frame\n";
-  (*wf_record)().flush();
+  std::ostream& os = (*wf_record)();
+  os << "# " << s << "\n";
+  os.flush();
 }
 
 void subdivide(SubMesh& smesh, bool triang) {
@@ -337,14 +338,14 @@ void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
 void do_record(Args& args) {
   wf_record.emplace(args.get_filename());
   mark_mesh(gmesh);
-  gmesh.write((*wf_record)());
-  gmesh.record_changes(&(*wf_record)());
+  std::ostream& os = (*wf_record)();
+  gmesh.write(os);
+  gmesh.record_changes(&os);
 }
 
 void do_gfit(Args& args) {
   assertx(co.num() && !gmesh.empty());
   initialize();
-  std::ostream* os = gmesh.record_changes(nullptr);
   if (verb >= 2) showdf("\n");
   HH_TIMER("_gfit");
   const int niter = args.get_int();
@@ -360,12 +361,8 @@ void do_gfit(Args& args) {
     global_lls(smesh, rss0, rss1);
     if (verb >= 3) showf(" gopt %d/%d lls rss0=%g rss1=%g\n", ni + 1, niter, rss0, rss1);
     smesh.update_vertex_positions();
+    record_comment("frame gfit");
     global_neighb_project(smesh);
-  }
-  if (os) {
-    gmesh.record_changes(os);
-    for (Vertex v : gmesh.vertices()) gmesh.set_point(v, gmesh.point(v));
-    wf_frame();
   }
   if (verb >= 2) analyze_mesh("gfit_after ");
 }
@@ -384,7 +381,6 @@ void do_fgfit(Args& args) {
   initialize();
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("fgfit with %d iterations\n", niter);
-  std::ostream* os = gmesh.record_changes(nullptr);
   for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = true;
   SubMesh smesh(gmesh);
   g_psmesh = &smesh;
@@ -515,12 +511,17 @@ void do_fgfit(Args& args) {
   NonlinearOptimization opt(eval_grad._x, func_eval);
   assertx(niter > 0);
   opt.set_max_neval(niter + 1);
+  // Record only the accepted iterates, not the trial points of the line searches.
+  std::ostream* const os = gmesh.record_changes(nullptr);
+  if (os)
+    opt.set_iteration_callback([&] {
+      gmesh.record_changes(os);
+      for (Vertex v : eval_grad._iv) gmesh.set_point(v, gmesh.point(v));
+      record_comment("frame fgfit");
+      gmesh.record_changes(nullptr);
+    });
   assertw(opt.solve());
-  if (os) {
-    gmesh.record_changes(os);
-    for (Vertex v : gmesh.vertices()) gmesh.set_point(v, gmesh.point(v));
-    wf_frame();
-  }
+  gmesh.record_changes(os);
   if (verb >= 2) analyze_mesh("fgfit_after ");
   g_psmesh = nullptr;
 }
@@ -1495,7 +1496,6 @@ void do_stoc() {
       if (attempt.result == R_success) {
         attempt.commit();
         add_affected_edges(attempt.footprint);
-        wf_frame();
         for (const int id : attempt.footprint.write_vertices) written_vertices.add(id);
         for (const int id : attempt.footprint.write_faces) written_faces.add(id);
       }

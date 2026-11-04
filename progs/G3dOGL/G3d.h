@@ -46,6 +46,7 @@ extern int info;    // Infoline (1 = small, 2 = verbose).
 // Mode of stream input.
 extern bool input;              // Look at input (== watch_fd0 state).
 extern bool asynchronousinput;  // Update between EndFrames.
+extern bool synchronousinput;   // Block reading input until EndFrame or wait.
 extern bool keep_stdin_open;    // Do not close stdin even if no input.
 extern bool killeof;            // Kill g3d when EOF is read.
 

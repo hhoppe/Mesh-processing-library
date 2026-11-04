@@ -42,6 +42,7 @@ int obview = 0;
 int info = 1;
 bool input = false;
 bool asynchronousinput = false;
+bool synchronousinput = false;
 bool keep_stdin_open = false;
 bool killeof = false;
 bool output = false;
@@ -283,9 +284,11 @@ int main(int argc, const char** argv) {
   HH_ARGSD(frame, "'frame' : change an object's frame");
   HH_ARGSF(input, ": read stdin even if have filenames");
   HH_ARGSF(asynchronousinput, ": update between EndFrames");
+  HH_ARGSF(synchronousinput, ": block reading input until EndFrame or wait");
   HH_ARGSP(anglethresh, "angle : sharp dihedral angle");
   args.other_args_ok();
   if (!args.parse_and_extract(g_aargs1) || !hb_success) return 0;
+  assertx(!(asynchronousinput && synchronousinput));
   g_aargs1.shift();  // Ignore argv0.
   if (hither >= 0.f) {
     auto_hither = false;

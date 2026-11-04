@@ -231,7 +231,7 @@ bool read_buffer(RBuffer& buf, RBufferedA3dStream& ra3d, bool during_init) {
     {
       auto ret = buf.refill();
       if (ret == RBuffer::ERefill::no) {  // No more data to fill.
-        if (!asynchronousinput && during_init) {
+        if (!asynchronousinput && (during_init || synchronousinput)) {
           buf.wait_for_input();
           continue;
         }

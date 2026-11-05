@@ -275,11 +275,10 @@ void local_fit(CArrayView<int> arpts, Vec2<vertex>& v, int niter, Point& newp, d
   assertx(v[0] || v[1]);
   const float sqrtit = sqrt(spring);
   for_int(ni, niter) {
-    Vec3<double> UtU, Utb, btb;
+    Vec3<double> UtU, Utb;
     fill(UtU, 0.);
     fill(Utb, 0.);
-    fill(btb, 0.);
-    double rss0 = 0., rss1 = 0.;
+    double rss0 = 0.;
     // Enter projections.
     for (const int pi : arpts) {
       const Point& p = pt.co[pi];
@@ -294,7 +293,6 @@ void local_fit(CArrayView<int> arpts, Vec2<vertex>& v, int niter, Point& newp, d
         const double b = p[c] - bary * v[mini]->p[c];
         UtU[c] += u * u;
         Utb[c] += u * b;
-        btb[c] += b * b;
         rss0 += square(u * newp[c] - b);
       }
     }
@@ -305,21 +303,19 @@ void local_fit(CArrayView<int> arpts, Vec2<vertex>& v, int niter, Point& newp, d
         const double u = sqrtit, b = double(v[i]->p[c]) * sqrtit;
         UtU[c] += u * u;
         Utb[c] += u * b;
-        btb[c] += b * b;
         rss0 += square(u * newp[c] - b);
       }
     }
-    // Solve.
+    // Solve.  Because newv minimizes the rss, its value there is rss0 - UtU * (newv - newp)^2.  This avoids the
+    //  cancellation in the equivalent btb - UtU * newv^2, whose roundoff error can exceed the reduction in rss.
+    double rss1 = rss0;
     for_int(c, 3) {
       const double newv = assertw(UtU[c]) ? Utb[c] / UtU[c] : newp[c];
+      rss1 -= UtU[c] * square(newv - newp[c]);
       newp[c] = float(newv);
-      const double a = btb[c] - UtU[c] * square(newv);
-      assertw(a > -1e-8);
-      if (a > 0.) rss1 += a;
     }
-    assertw(rss1 - rss0 < 1e-13);
     if (!ni) prss0 = rss0;
-    prss1 = rss1;
+    prss1 = max(rss1, 0.);
   }
 }
 

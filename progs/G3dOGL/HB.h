@@ -47,6 +47,8 @@ void update_seg(int segn, const Frame& frame, bool vis);
 void draw_space();
 bool special_keypress(char ch);  // Returns true if recognized.
 string show_info();              // Info line state string.
+// Like key_press(), but "<C-x>" and "<C-S-x>" press control keys; see HwBase::simulate_key_press().
+void simulate_key_press(const string& s);
 
 struct VdcResult {
   float zs;

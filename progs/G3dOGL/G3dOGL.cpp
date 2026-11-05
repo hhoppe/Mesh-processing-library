@@ -3083,6 +3083,8 @@ void HB::flush() { hw.hard_flush(); }
 
 void HB::beep() { hw.beep(); }
 
+void HB::simulate_key_press(const string& s) { hw.simulate_key_press(s); }
+
 int HB::id() { return 2000; }
 
 void* HB::escape(int code, void* data) {

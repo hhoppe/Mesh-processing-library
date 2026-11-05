@@ -711,7 +711,16 @@ static void show_globe() {
 
 void Draw() {
   if (keystring != "") {
-    for (const char ch : keystring) KeyPressed(string(1, ch));
+    // Each character is a key, except that "<C-x>" and "<C-S-x>" are control keys; other '<' and '>' remain keys.
+    for (string::size_type i = 0; i < keystring.size(); i++) {
+      const auto j = keystring.compare(i, 3, "<C-") == 0 ? keystring.find('>', i) : string::npos;
+      if (j != string::npos) {
+        HB::simulate_key_press(keystring.substr(i, j + 1 - i));
+        i = j;
+      } else {
+        KeyPressed(string(1, keystring[i]));
+      }
+    }
     keystring = "";
   }
   cur_needs_redraw = false;

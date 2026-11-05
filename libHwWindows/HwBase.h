@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHWWINDOWS_HWBASE_H_
 
 #include <atomic>
+#include <cctype>  // std::isalpha(), std::toupper()
 
 #if defined(GL_VERSION)  // OpenGL.
 #if defined(_WIN32)
@@ -85,6 +86,10 @@ class HwBase : noncopyable {
   // Call within draw_window():
   virtual void clear_window() = 0;
   void process_keystring(string& keystring);  // Makes calls to key_press() and clears keystring.
+  // Calls key_press(s), except that "<C-x>" and "<C-S-x>" press x with control (and shift): a letter becomes its
+  //  control character (e.g. "<C-g>" is uchar{7}), as delivered by the keyboard, and get_key_modifier() reports the
+  //  modifiers during the call.
+  void simulate_key_press(const string& s);
 
   // Query the user for values; returns true with <enter>, false with <esc>.
   [[nodiscard]] bool query(const Vec2<int>& yx, string prompt, string& buffer);
@@ -143,6 +148,8 @@ class HwBase : noncopyable {
   bool _is_keyintr{false};
   string _hwkey;
   float _hwdelay{2.f};
+  bool _simulated_control{false};  // Set during simulate_key_press() of "<C-x>" or "<C-S-x>".
+  bool _simulated_shift{false};    // Set during simulate_key_press() of "<C-S-x>".
   bool _query{false};
   Vec2<int> _query_yx;
   string _query_prompt;
@@ -306,9 +313,7 @@ inline void HwBase::handle_keyintr() {
     const char ch = _hwkey[0];
     _hwkey.erase(0, 1);
     string press = string(1, ch);
-    if (ch == '<') {
-      auto j = _hwkey.find('>');
-      if (j == string::npos) assertnever("No matching '>' in string '" + _hwkey + "'");
+    if (const auto j = ch == '<' ? _hwkey.find('>') : string::npos; j != string::npos) {  // A key name.
       press = ch + _hwkey.substr(0, j + 1);
       _hwkey = _hwkey.substr(j + 1);
     } else if (ch == '\\' && _hwkey != "") {
@@ -338,7 +343,7 @@ inline void HwBase::handle_keyintr() {
     if (_hwkey == "") end_hwkey();
     if (skip) break;
     if (is_group == 2) break;
-    key_press(press);
+    simulate_key_press(press);
     if (!is_group) break;
   }
 }
@@ -362,16 +367,31 @@ inline void HwBase::process_keystring(string& keystring) {
       keystring = "";
       return;
     }
-    if (ch == '<') {
-      auto j = keystring.find('>', i + 1);
-      if (j == string::npos) assertnever("No matching '>' in string '" + keystring.substr(i) + "'");
-      key_press(keystring.substr(i, j + 1 - i));
+    const auto j = ch == '<' ? keystring.find('>', i + 1) : string::npos;
+    if (j != string::npos) {  // A key name such as "<enter>" or "<C-g>".
+      simulate_key_press(keystring.substr(i, j + 1 - i));
       i = j + 1;
-    } else {
+    } else {  // Any other character, including a '<' without a subsequent '>', is a key.
       key_press(string(1, ch));
       i++;
     }
   }
+}
+
+inline void HwBase::simulate_key_press(const string& s) {
+  if (!(s.starts_with("<C-") && s.ends_with('>'))) {
+    key_press(s);
+    return;
+  }
+  const std::string_view name = std::string_view(s).substr(3, s.size() - 4);  // E.g. "g" or "S-g".
+  const bool shift = name.size() == 3 && name.starts_with("S-");
+  if (!(name.size() == 1 || shift)) assertnever("Unrecognized key name '" + s + "'");
+  const uchar ch = name.back();
+  const char key = std::isalpha(ch) ? char(std::toupper(ch) - 64) : char(ch);
+  _simulated_control = true;
+  _simulated_shift = shift;
+  key_press(string(1, key));
+  _simulated_control = _simulated_shift = false;
 }
 
 inline void HwBase::query_keypress(string s) {

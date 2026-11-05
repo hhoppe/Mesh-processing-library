@@ -761,6 +761,8 @@ std::optional<Vec2<int>> Hw::get_pointer() {
 }
 
 bool Hw::get_key_modifier(EModifier modifier) {
+  if ((modifier == EModifier::control && _simulated_control) || (modifier == EModifier::shift && _simulated_shift))
+    return true;
   int virt_key;
   switch (modifier) {
     case EModifier::shift: virt_key = VK_SHIFT; break;

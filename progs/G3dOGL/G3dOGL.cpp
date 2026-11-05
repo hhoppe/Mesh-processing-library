@@ -2611,10 +2611,6 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   mesh_color = create_mat_color(A3dVertexColor(A3dColor(meshcold), A3dColor(meshcols), A3dColor(meshcolp)));
   assertx(meshcola[0] >= 0.f && meshcola[0] <= 1.f);
   mesh_color.d[3] = uint8_from_unit(meshcola[0]);
-  // Without a visible window, the program can only end upon the completion of a picture, movie, or video,
-  // the "\c" escape in an -hwkey sequence, or -killeof.
-  if (hw.is_hidden() && !hw.is_offscreen() && !picture && !hw.has_hwkey() && !g3d::killeof)
-    assertnever("Option -hidden requires -picture, -movie, -video, -hwkey, or -killeof (or use -offscreen)");
   if (picture) nice_rendering = true;
   if (pm_filename != "") {
 #if defined(DEF_PM)
@@ -2675,6 +2671,10 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
 void HB::set_window_title(string s) { hw.set_window_title(std::move(s)); }
 
 void HB::open() {
+  // Without a visible window, the program can only end upon the completion of a picture, movie, or video,
+  // the "\c" escape in an -hwkey sequence, or -killeof.  (HB::init() runs before G3d parses -killeof.)
+  if (hw.is_hidden() && !hw.is_offscreen() && !picture && !hw.has_hwkey() && !g3d::killeof)
+    assertnever("Option -hidden requires -picture, -movie, -video, -hwkey, or -killeof (or use -offscreen)");
   // hw.set_default_background("#5987B3");  // Equivalently: .35 .53 .70; "hhblue" == 89, 135, 179.
   hw.set_default_background("white");
   hw.set_default_foreground("black");

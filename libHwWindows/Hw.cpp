@@ -131,6 +131,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   args.p("-offscreen", _offscreen, "imagefilename : save image");
   args.f("-hidden", _hidden, ": render without any visible window (e.g. to save images or videos)");
   args.f("-nosetforeground", _nosetforeground, ": do not ask that window receive focus");
+  args.f("-forceforeground", _forceforeground, ": take focus even if Windows would deny it");
   args.other_args_ok();
   args.other_options_ok();
   args.disallow_prefixes();
@@ -1146,6 +1147,7 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     const int y = yxpos[0] < 0 ? CW_USEDEFAULT : yxpos[0];
     const int width = rect.right - rect.left;
     const int height = rect.bottom - rect.top;
+    if (_fbefore_window) _fbefore_window();
     _hwnd = CreateWindowW(utf16_from_utf8(_argv0).c_str(),         // Window class name.
                           utf16_from_utf8(_window_title).c_str(),  // Window title bar.
                           style,
@@ -1172,15 +1174,33 @@ void Hw::ogl_create_window(const Vec2<int>& yxpos) {
     _hRenderDC = _hDC;
     if (!_hidden) {
       // Display the window.
-      ShowWindow(_hwnd, (_iconic ? SW_SHOWMINIMIZED : _maximize ? SW_MAXIMIZE : SW_SHOWDEFAULT));
+      ShowWindow(_hwnd, (_iconic            ? SW_SHOWMINIMIZED
+                         : _maximize        ? SW_MAXIMIZE
+                         : _nosetforeground ? SW_SHOWNOACTIVATE
+                                            : SW_SHOWDEFAULT));
       assertx(UpdateWindow(_hwnd));
-      // Grabbing focus often fails because of focus rules.  G3dcmp uses -nosetforeground but it does not fix it.
+      // Grabbing focus often fails because of focus rules.
       if (!_nosetforeground) {
+        // Windows lets the process that generated the last input event take the foreground, so tap the Shift key, which
+        //  alone has no effect on the current foreground window.  (Calling AttachThreadInput instead gives this window
+        //  the keyboard focus without activating it: its title bar and the taskbar do not reflect the change.)
+        if (_forceforeground) {
+          keybd_event(VK_SHIFT, 0, 0, 0);
+          keybd_event(VK_SHIFT, 0, KEYEVENTF_KEYUP, 0);
+        }
         SetForegroundWindow(_hwnd);
         if (!_iconic) {
           assertx(SetFocus(_hwnd));
           if (0) assertx(SetWindowPos(_hwnd, HWND_TOP, x, y, width, height, 0));  // Does not help.
         }
+      }
+      // If user input arrived after this process started, Windows denies activation and places the window below the
+      //  foreground window, where it may be hidden.  Raise it without activating it; unlike HWND_TOP, toggling the
+      //  topmost state requires no foreground rights.
+      if (!_iconic) {
+        const unsigned flags = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE;
+        assertw(SetWindowPos(_hwnd, HWND_TOPMOST, 0, 0, 0, 0, flags));
+        assertw(SetWindowPos(_hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, flags));
       }
     }
   }

@@ -2670,6 +2670,8 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
 
 void HB::set_window_title(string s) { hw.set_window_title(std::move(s)); }
 
+void HB::before_window(void (*pfbefore)()) { hw._fbefore_window = pfbefore; }
+
 void HB::open() {
   // Without a visible window, the program can only end upon the completion of a picture, movie, or video,
   // the "\c" escape in an -hwkey sequence, or -killeof.  (HB::init() runs before G3d parses -killeof.)

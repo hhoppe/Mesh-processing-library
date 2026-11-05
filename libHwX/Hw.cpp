@@ -158,6 +158,7 @@ bool Hw::init_aux(Array<string>& aargs) {
   args.p("-offscreen", _offscreen, "imagefilename : save image");
   args.f("-hidden", _hidden, ": render without any visible window (e.g. to save images or videos)");
   args.f("-nosetforeground", _nosetforeground, ": do not ask that window receive focus");
+  args.f("-forceforeground", _forceforeground, ": ignored (Windows only)");
   args.other_args_ok();
   args.other_options_ok();
   args.disallow_prefixes();
@@ -399,6 +400,7 @@ void Hw::open() {
     swa.colormap = _cmap;
     swa.border_pixel = _pixel_border;
     swa.background_pixel = _pixel_background;
+    if (_fbefore_window) _fbefore_window();
     _win = XCreateWindow(_display, RootWindow(_display, _screen), pxsh->x, pxsh->y, pxsh->width, pxsh->height,
                          border_width, _depth, InputOutput, visual, CWColormap | CWBorderPixel | CWBackPixel, &swa);
   }

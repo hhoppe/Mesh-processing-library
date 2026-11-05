@@ -44,6 +44,7 @@ bool input = false;
 bool asynchronousinput = false;
 bool synchronousinput = false;
 bool keep_stdin_open = false;
+bool waitframe = false;
 bool killeof = false;
 bool output = false;
 bool obinary = false;
@@ -293,6 +294,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(input, ": read stdin even if have filenames");
   HH_ARGSF(asynchronousinput, ": update between EndFrames");
   HH_ARGSF(synchronousinput, ": block reading input until EndFrame or wait");
+  HH_ARGSF(waitframe, ": open the window after the first input frame");
   HH_ARGSP(anglethresh, "angle : sharp dihedral angle");
   args.other_args_ok();
   if (!args.parse_and_extract(g_aargs1) || !hb_success) return 0;
@@ -329,7 +331,13 @@ int main(int argc, const char** argv) {
   if (g_filename == "" && statefile != "") g_filename = statefile;
   if (g_filename == "") g_filename = "-";
   ReadFiles(true);
-  if (input) ReadInput(true);
+  // With -waitframe, wait for the input frame as late as possible, so that the time-consuming setup of graphics in
+  //  HB::open() occurs concurrently across the windows of g3d_cmp.
+  if (input && waitframe) {
+    HB::before_window([] { ReadInput(true); });
+  } else if (input) {
+    ReadInput(true);
+  }
   // For command "PMview parasauru.pm -key Dt -st parasaur", window title ("parasaur") is poor choice;
   //  it occurs because PMview passes name through -st, which is overridden.?
   {

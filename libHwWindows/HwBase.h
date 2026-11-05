@@ -54,6 +54,7 @@ class HwBase : noncopyable {
   // Call anytime after init():
   virtual void set_window_title(string s) = 0;  // Set text for window title bar.
   virtual void beep() = 0;
+  void (*_fbefore_window)(){nullptr};  // Called just before creating the window.
   void watch_fd0(bool b) { assertx(_state != EState::uninit), _watch_fd0 = b; }
   void redraw_later();
   void redraw_now();
@@ -171,6 +172,7 @@ class HwBase : noncopyable {
   Vec3<unsigned> _hidden_renderbuffers{0u, 0u, 0u};  // Names of the drawn color, drawn depth, and resolved color.
 
   bool _nosetforeground{false};
+  bool _forceforeground{false};
   Pixel _color_foreground{0, 0, 0, 0};  // 24-bit foreground/drawing color.
   Pixel _color_background{0, 0, 0, 0};  // 24-bit background/clear color.
   bool _bigfont{false};

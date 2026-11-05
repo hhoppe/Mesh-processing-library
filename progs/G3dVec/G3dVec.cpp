@@ -1017,6 +1017,8 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
 
 void HB::set_window_title(string s) { hw.set_window_title(std::move(s)); }
 
+void HB::before_window(void (*pfbefore)()) { hw._fbefore_window = pfbefore; }
+
 void HB::open() {
   hw.set_default_geometry(k_default_geometry);
   dbuffer = true;

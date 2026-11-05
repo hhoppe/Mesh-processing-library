@@ -186,6 +186,7 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
       if (!object_frame) return ETryInput::success;
       UpdateFrame(*object_frame);
       num_input_frames++;
+      waitframe = false;
       return ETryInput::success;
     }
     case FrameIO::ERecognize::no:
@@ -231,7 +232,7 @@ bool read_buffer(RBuffer& buf, RBufferedA3dStream& ra3d, bool during_init) {
     {
       auto ret = buf.refill();
       if (ret == RBuffer::ERefill::no) {  // No more data to fill.
-        if (!asynchronousinput && (during_init || synchronousinput)) {
+        if ((!asynchronousinput && (during_init || synchronousinput)) || (during_init && waitframe)) {
           buf.wait_for_input();
           continue;
         }

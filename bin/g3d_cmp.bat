@@ -30,9 +30,9 @@ setlocal EnableExtensions EnableDelayedExpansion
 set gap=0
 
 set g3d=G3dOGL
-set winf=-key "&Oii"
-set winm=-nosetforeground -key "&Oii" -async -killeof -input
-set winl=-nosetforeground -async -killeof -key ii -input
+set winf=-forceforeground -key "&Oii"
+set winm=-nosetforeground -key "&Oii" -async -waitframe -killeof -input
+set winl=-nosetforeground -key "ii" -async -waitframe -killeof -input
 
 set "self=%~f0"
 set status=

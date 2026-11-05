@@ -26,6 +26,7 @@ bool init(Array<string>& aargs,
 
 // Call after init() and before open():
 void set_window_title(string s);
+void before_window(void (*pfbefore)());  // Call before open().
 void open();
 
 // Call after init():

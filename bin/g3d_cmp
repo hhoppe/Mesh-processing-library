@@ -27,10 +27,10 @@ if [[ $# == 0 || $1 == --help ]]; then echo "$usage"; exit 0; fi
 gap=0  # Number of pixels between adjacent windows; windows overlap on a shared border line when gap=0.
 
 g3d=(G3dOGL)
-winx=()                                                     # Extra options for each window, indexed from 1.
-winf=(-key '&Oii')                                          # Options for first window.
-winm=(-nosetforeground -key '&Oii' -async -killeof -input)  # Options for middle windows.
-winl=(-nosetforeground -async -killeof -key ii -input)      # Options for last window.
+winx=()                                                                # Extra options for each window, indexed from 1.
+winf=(-forceforeground -key '&Oii')                                    # Options for first window.
+winm=(-nosetforeground -key '&Oii' -async -waitframe -killeof -input)  # Options for middle windows.
+winl=(-nosetforeground -key 'ii'   -async -waitframe -killeof -input)  # Options for last window.
 
 ob=()
 

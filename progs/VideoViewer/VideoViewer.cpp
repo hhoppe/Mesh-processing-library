@@ -4091,6 +4091,10 @@ void crop_spatial_dimensions_to_multiple(VideoNv12& onv12, int k) {
 // Time the creation of a video loop (without the overhead of opening and updating the window).
 //  E.g.:  VideoViewer -batch_create_loop ~/data/video/HDgardensea.mp4 v.mp4
 void do_batch_create_loop(Args& args) {
+#if !defined(HH_HAVE_VIDEO_LOOP)
+  // Unlike the interactive looping, which falls back to fixed loop parameters, fail rather than output a poor loop.
+  assertnever_ret("-batch_create_loop requires a VideoViewer compiled with HH_HAVE_VIDEO_LOOP");
+#endif
   const string input_filename = args.get_filename();
   string output_filename = args.get_string();
   if (output_filename != "") {
@@ -4369,5 +4373,12 @@ int main(int argc, const char** argv) {
   hw.set_default_foreground("yellow");
   g_text_shadow_color = Pixel::black();
   hw.open();
+  if (g_request_loop) {
+    // The detached background thread is still creating a loop using the thread pool, so skip the static
+    //  destructors, which would destroy the pool while its tasks run.
+    std::cout.flush();
+    std::cerr.flush();
+    exit_immediately(0);
+  }
   return 0;
 }

@@ -224,6 +224,8 @@ def main() -> int:
     if not (scratch / name).exists():
       os.symlink(root / name, scratch / name, target_is_directory=True)
   env = dict(os.environ)
+  # Report any state file that a locally installed s3dname would supply.
+  env['G3D_NO_S3DNAME'] = '1'
   if PLATFORM == 'linux':
     # The renderer of the reference values (rather than a GPU), without multisampling, which depends
     # on the visuals offered by the X server (e.g., WSLg offers it, but Xvfb does not).

@@ -214,6 +214,14 @@ bool try_finding_it(const string& name) {
       if (k_debug) std::cerr << "(s3dname did not function)\n";
       return false;
     }
+    // With G3D_NO_S3DNAME (set by the demos), report the found file instead of using it, so that a missing -st
+    //  shows up rather than being silently filled in by a locally installed s3dname.
+    static const bool no_s3dname = getenv_bool("G3D_NO_S3DNAME");
+    if (no_s3dname) {
+      showf("G3d: s3dname found '%s' for '%s'\n", line.c_str(), name.c_str());
+      Warning("Ignoring the state file found by s3dname (G3D_NO_S3DNAME); specify it using -st");
+      return false;
+    }
     statefile = line;
   } catch (const std::runtime_error& ex) {
     if (k_debug) std::cerr << string("Could not launch s3dname: ") + ex.what();

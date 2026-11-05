@@ -33,6 +33,7 @@ width=1760  # Width of each row (and of the images).
 gap=8       # Half the spacing between tiles.
 export ASSERTW_IGNORE='fl,fr._matid ignored|Isolated vertex has undefined normal|Display lists should be off'
 export JPG_QUALITY=88
+export G3D_NO_S3DNAME=1  # Report any state file that a locally installed s3dname would supply.
 data=demos/data; results=demos/results
 
 # render name geometry [args...] : render a view into $tmp/name.png, cropped to its content and scaled to $height,

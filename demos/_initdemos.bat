@@ -46,3 +46,6 @@ set VIDEOVIEWER_ARGS=%HIDDEN_ARGS%
 
 :: Make g3d_cmp wait for its windows to close (and report their failures) rather than run them in the background.
 set G3D_CMP_FOREGROUND=1
+
+:: Make G3dOGL warn about, rather than use, a state file that a locally installed s3dname would supply in place of -st.
+set G3D_NO_S3DNAME=1

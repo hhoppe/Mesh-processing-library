@@ -10,4 +10,5 @@ echo '.'
 echo 'Press "N" and "P" to manually advance to next and previous objects.'
 echo '.'
 
-G3dOGL data/curve1.pts results/curve1.recon.a3d results/curve1.opt.a3d -key ojo -backcolor white $G3D_GEOM $G3D_ARGS
+G3dOGL data/curve1.pts results/curve1.recon.a3d results/curve1.opt.a3d -st data/curve1.s3d -key ojo -backcolor white \
+  $G3D_GEOM $G3D_ARGS

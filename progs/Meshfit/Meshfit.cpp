@@ -796,8 +796,10 @@ void do_fgfit(Args& args) {
 // and Ut b is simply the dot product of U and b.
 // To do this efficiently, Ut U and Ut b can be accumulated for all 3
 // coordinates simultaneously, while traversing U and b row-by-row.
-// To compute the rss (||U x - b||^2), Werner observed that
-// rss= ||b||^2-||U x||^2 = ||b||^2 - x^2 * ||U||^2.
+// Because x minimizes the rss (||U x - b||^2), its value there relates to its value at the initial p as
+// rss(x) = rss(p) - ||U||^2 * (x - p)^2.
+// This avoids the cancellation in the equivalent ||b||^2 - x^2 * ||U||^2, whose roundoff error can exceed the
+// reduction in rss.
 class UPointLls {
  public:
   explicit UPointLls(Point& p) : _p(p) {}
@@ -810,7 +812,6 @@ class UPointLls {
   Point& _p;
   Vec3<double> _vUtU{0., 0., 0.};
   Vec3<double> _vUtb{0., 0., 0.};
-  Vec3<double> _btb{0., 0., 0.};
   double _rss0{0.};
 };
 
@@ -820,7 +821,6 @@ inline void UPointLls::enter_spring(const Point& pother, float sqrt_tension) {
     const double b = double(pother[c]) * sqrt_tension;
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
-    _btb[c] += b * b;
     _rss0 += square(u * _p[c] - b);
   }
 }
@@ -833,23 +833,19 @@ inline void UPointLls::enter_projection(const Point& pdata, const Point& p1, con
     const double b = pdata[c] - pa1 * p1[c] - pa2 * p2[c];
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
-    _btb[c] += b * b;
     _rss0 += square(u * _p[c] - b);
   }
 }
 
 void UPointLls::solve(double* prss0, double* prss1) {
-  double rss1 = 0.;
+  double rss1 = _rss0;
   for_int(c, 3) {
     const double newv = assertw(_vUtU[c]) ? _vUtb[c] / _vUtU[c] : _p[c];
+    rss1 -= _vUtU[c] * square(newv - _p[c]);
     _p[c] = float(newv);
-    const double a = _btb[c] - _vUtU[c] * square(newv);
-    assertw(a > -1e-8);
-    if (a > 0) rss1 += a;
   }
-  assertw(rss1 - _rss0 < 1e-13);
   if (prss0) *prss0 = _rss0;
-  if (prss1) *prss1 = rss1;
+  if (prss1) *prss1 = max(rss1, 0.);
 }
 
 void reproject_locally(CArrayView<int> ar_pts, CArrayView<Face> ar_faces) {

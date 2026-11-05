@@ -767,13 +767,17 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, LocalPoi
   assertx(n == setmv.num());  // Optional.
   // The new positions x of setmv (n rows, 3 columns) minimize |A x - b|^2, where each point contributes a row of A
   // (its affine combination of setmv) and a row of b (the point minus the constant term of that combination).
-  // The minimum satisfies the normal equations A^T A x = A^T b, and its residual is |A x - b|^2 = b^T b - x^T A^T b
-  // (per column).  We accumulate in double precision ata = A^T A (only its lower triangle), atb = A^T b, and the
-  // diagonal btb of b^T b, where each point adds its row of A as `row` and its row of b as `rhs`.
+  // Solve for the change d = x - p from the current positions p, using the residual r = b - A p: A^T A d = A^T r.
+  // Its residual is |A x - b|^2 = |r|^2 - d^T A^T r, which avoids the cancellation in b^T b - x^T A^T b, whose
+  // roundoff error can exceed the reduction in rss.  We accumulate in double precision ata = A^T A (only its lower
+  // triangle), atb = A^T r, and rss0 = |r|^2, where each point adds its row of A as `row` and its row of r as `rhs`.
   Matrix<double> ata(n, n), atb(n, 3);
   fill(ata, 0.);
   fill(atb, 0.);
-  Vec3<double> btb{};
+  double rss0 = 0.;
+  GMesh& omesh = smesh.orig_mesh();
+  Array<Vec3<double>> p0(n);
+  for_int(j, n) p0[j] = convert<double>(omesh.point(mvcvih.iv[j]));
   {
     HH_STIMER("____lcombinations");
     Array<Vertex> va;
@@ -792,9 +796,13 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, LocalPoi
       for_int(k, 3) {
         const double h = baryd[0] * cvihhf[0][k] + baryd[1] * cvihhf[1][k] + baryd[2] * cvihhf[2][k];
         rhs[k] = co[pi][k] - h;
-        btb[k] += square(rhs[k]);
       }
       for_int(j, n) row[j] = baryd[0] * cvihcf[0][j] + baryd[1] * cvihcf[1][j] + baryd[2] * cvihcf[2][j];
+      for_int(j, n) {
+        if (!row[j]) continue;
+        for_int(c, 3) rhs[c] -= row[j] * p0[j][c];
+      }
+      for_int(c, 3) rss0 += square(rhs[c]);
       for_int(j, n) {
         if (!row[j]) continue;
         for_int(k, j + 1) ata[j, k] += row[j] * row[k];
@@ -821,18 +829,16 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, LocalPoi
         ata[i, j] = sum / d;
       }
     }
-    // Solve L y = A^T b and then L^T x = y, in place in atb.  As x^T A^T b = y^T L^-1 L y = |y|^2, the residual
-    // is btb - |y|^2.
-    rss1 = 0.;
+    // Solve L y = A^T r and then L^T d = y, in place in atb.  As d^T A^T r = y^T L^-1 L y = |y|^2, the residual
+    // is rss0 - |y|^2.
+    rss1 = rss0;
     for_int(c, 3) {
-      double rss = btb[c];
       for_int(j, n) {
         double sum = atb[j, c];
         for_int(k, j) sum -= ata[j, k] * atb[k, c];
         atb[j, c] = sum / ata[j, j];
-        rss -= square(atb[j, c]);
+        rss1 -= square(atb[j, c]);
       }
-      rss1 += max(rss, 0.);
       for (int j = n - 1; j >= 0; --j) {
         double sum = atb[j, c];
         for_intL(k, j + 1, n) sum -= ata[k, j] * atb[k, c];
@@ -840,8 +846,12 @@ void local_all_project(const SubMesh& smesh, const Set<Face>& setgoodf, LocalPoi
       }
     }
   }
-  GMesh& omesh = smesh.orig_mesh();
-  for_int(i, n) omesh.set_point(mvcvih.iv[i], Point(float(atb[i, 0]), float(atb[i, 1]), float(atb[i, 2])));
+  rss1 = max(rss1, 0.);
+  for_int(i, n) {
+    Point newp;
+    for_int(c, 3) newp[c] = float(p0[i][c] + atb[i, c]);
+    omesh.set_point(mvcvih.iv[i], newp);
+  }
   return true;
 }
 

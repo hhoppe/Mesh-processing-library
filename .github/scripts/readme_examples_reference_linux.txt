@@ -7,14 +7,14 @@
 a5d28dee_1.png 229.59 64.71 229.59 64.71 229.59 64.71
 # FilterPM demos/data/spheretext.pm -nf 2000 -outmesh | (screenshot 1)
 0c5a400e_1.png 165.66 94.81 165.72 94.22 170.50 90.67
-# Recon <demos/data/distcap.pts -samplingd 0.02 | (screenshot 1)
-d7a87466_1.png 192.24 85.36 192.24 85.36 192.54 85.13
-# Recon <demos/data/distcap.pts -samplingd 0.02 -what c | (screenshot 1)
-121f2762_1.png 225.05 63.33 162.32 106.34 148.26 121.30
-# Recon <demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d | (screenshot 1)
-e9efebfb_1.png 203.87 71.87 204.55 70.85 203.87 71.87
-# Recon <demos/data/curve1.pts -samplingd 0.06 -grid 30 | (screenshot 1)
-1df2cfd3_1.png 254.87 4.80 254.67 7.11 254.51 9.12
+# Recon demos/data/distcap.pts -samplingd 0.02 | (screenshot 1)
+2203928f_1.png 192.24 85.36 192.24 85.36 192.54 85.13
+# Recon demos/data/distcap.pts -samplingd 0.02 -what c | (screenshot 1)
+bfab6ef7_1.png 225.05 63.33 162.32 106.34 148.26 121.30
+# Recon demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d | (screenshot 1)
+4c5a220c_1.png 203.87 71.87 204.55 70.85 203.87 71.87
+# Recon demos/data/curve1.pts -samplingd 0.06 -grid 30 | (screenshot 1)
+da8d483d_1.png 254.87 4.80 254.67 7.11 254.51 9.12
 # Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts -crep 1e-5 -reconstruct | (screenshot 1)
 c3298c38_1.png 195.80 78.91 195.80 78.91 196.13 78.62
 # Filtermesh demos/data/blob5.orig.m -randpts 10000 -vertexpts | (screenshot 1)

@@ -86,9 +86,10 @@ class HwBase : noncopyable {
   // Call within draw_window():
   virtual void clear_window() = 0;
   void process_keystring(string& keystring);  // Makes calls to key_press() and clears keystring.
-  // Calls key_press(s), except that "<C-x>" and "<C-S-x>" press x with control (and shift): a letter becomes its
-  //  control character (e.g. "<C-g>" is uchar{7}), as delivered by the keyboard, and get_key_modifier() reports the
-  //  modifiers during the call.
+  // Calls key_press(s), except that a key name may have modifier prefixes "C-" (control), "S-" (shift), and "M-"
+  //  (alt), as in "<C-g>", "<C-S-g>", "<S-left>", or "<C-home>"; get_key_modifier() then reports these modifiers
+  //  during the call.  As delivered by the keyboard, a letter with control becomes its control character (e.g.
+  //  "<C-g>" is uchar{7}), a letter with just shift becomes uppercase, and a named key such as "<left>" is unchanged.
   void simulate_key_press(const string& s);
 
   // Query the user for values; returns true with <enter>, false with <esc>.
@@ -148,8 +149,9 @@ class HwBase : noncopyable {
   bool _is_keyintr{false};
   string _hwkey;
   float _hwdelay{2.f};
-  bool _simulated_control{false};  // Set during simulate_key_press() of "<C-x>" or "<C-S-x>".
-  bool _simulated_shift{false};    // Set during simulate_key_press() of "<C-S-x>".
+  bool _simulated_control{false};  // Modifiers set during simulate_key_press() of a name such as "<C-S-left>".
+  bool _simulated_shift{false};
+  bool _simulated_alt{false};
   bool _query{false};
   Vec2<int> _query_yx;
   string _query_prompt;
@@ -379,19 +381,40 @@ inline void HwBase::process_keystring(string& keystring) {
 }
 
 inline void HwBase::simulate_key_press(const string& s) {
-  if (!(s.starts_with("<C-") && s.ends_with('>'))) {
+  bool control = false, shift = false, alt = false;
+  std::string_view name;  // The key name without its modifier prefixes, e.g. "g" or "left".
+  if (s.size() > 2 && s.front() == '<' && s.back() == '>') {
+    name = std::string_view(s).substr(1, s.size() - 2);
+    for (; name.size() > 2 && name[1] == '-'; name.remove_prefix(2)) {
+      if (name[0] == 'C') {
+        control = true;
+      } else if (name[0] == 'S') {
+        shift = true;
+      } else if (name[0] == 'M') {
+        alt = true;
+      } else {
+        break;
+      }
+    }
+  }
+  if (!(control || shift || alt)) {
     key_press(s);
     return;
   }
-  const std::string_view name = std::string_view(s).substr(3, s.size() - 4);  // E.g. "g" or "S-g".
-  const bool shift = name.size() == 3 && name.starts_with("S-");
-  if (!(name.size() == 1 || shift)) assertnever("Unrecognized key name '" + s + "'");
-  const uchar ch = name.back();
-  const char key = std::isalpha(ch) ? char(std::toupper(ch) - 64) : char(ch);
-  _simulated_control = true;
+  string key = "<" + string(name) + ">";
+  if (name.size() == 1) {
+    const uchar ch = name[0];
+    key = string(1, char(ch));
+    if (std::isalpha(ch) && control)
+      key[0] = char(std::toupper(ch) - 64);
+    else if (std::isalpha(ch) && shift)
+      key[0] = char(std::toupper(ch));
+  }
+  _simulated_control = control;
   _simulated_shift = shift;
-  key_press(string(1, key));
-  _simulated_control = _simulated_shift = false;
+  _simulated_alt = alt;
+  key_press(key);
+  _simulated_control = _simulated_shift = _simulated_alt = false;
 }
 
 inline void HwBase::query_keypress(string s) {

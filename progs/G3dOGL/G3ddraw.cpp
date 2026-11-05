@@ -711,9 +711,12 @@ static void show_globe() {
 
 void Draw() {
   if (keystring != "") {
-    // Each character is a key, except that "<C-x>" and "<C-S-x>" are control keys; other '<' and '>' remain keys.
+    // Each character is a key, except for a key name with modifiers such as "<C-l>" or "<S-left>" (see
+    //  HwBase::simulate_key_press()); other '<' and '>' remain keys.
     for (string::size_type i = 0; i < keystring.size(); i++) {
-      const auto j = keystring.compare(i, 3, "<C-") == 0 ? keystring.find('>', i) : string::npos;
+      const bool modified = keystring[i] == '<' && i + 2 < keystring.size() &&
+                            std::string_view("CSM").contains(keystring[i + 1]) && keystring[i + 2] == '-';
+      const auto j = modified ? keystring.find('>', i) : string::npos;
       if (j != string::npos) {
         HB::simulate_key_press(keystring.substr(i, j + 1 - i));
         i = j;

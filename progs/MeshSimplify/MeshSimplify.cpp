@@ -1902,7 +1902,10 @@ float compute_spring(const NewMeshNei& nn) {
 // To solve it using (UtU)x=Utb, note that UtU is simply the norm of U, and Utb is simply the dot product of U and b.
 // To do this efficiently, UtU and Utb can be accumulated for all nd coordinates simultaneously,
 //  while traversing U and b row-by-row.
-// To compute the rss (||Ux-b||^2), Werner observed that rss= ||b||^2-||Ux||^2 = ||b||^2 - x^2*||U||^2.
+// Because x minimizes the rss (||Ux-b||^2), its value there relates to its value at the initial p as
+//  rss(x) = rss(p) - ||U||^2 * (x-p)^2.
+// This avoids the cancellation in the equivalent ||b||^2 - x^2*||U||^2, whose roundoff error can exceed the
+//  reduction in rss, particularly for a mesh far from the origin.
 class ULls : noncopyable {
  public:
   ULls(float* sol, int nd);
@@ -1917,12 +1920,11 @@ class ULls : noncopyable {
  private:
   float* _sol;
   int _nd;
-  Array<double> _vUtU, _vUtb, _btb;
+  Array<double> _vUtU, _vUtb;
+  double _rss0{0.};
 };
 
-ULls::ULls(float* sol, int nd) : _sol(sol), _nd(nd), _vUtU(nd), _vUtb(nd), _btb(nd) {
-  for_int(c, _nd) _vUtU[c] = _vUtb[c] = _btb[c] = 0.;
-}
+ULls::ULls(float* sol, int nd) : _sol(sol), _nd(nd), _vUtU(nd), _vUtb(nd) { for_int(c, _nd) _vUtU[c] = _vUtb[c] = 0.; }
 
 inline void ULls::enter_fprojection(const Vec3<float>& pdata, const Vec3<float>& p1, const Vec3<float>& p2,
                                     float param1, float param2) {
@@ -1931,7 +1933,7 @@ inline void ULls::enter_fprojection(const Vec3<float>& pdata, const Vec3<float>&
     const double b = pdata[c] - pa1 * p1[c] - pa2 * p2[c];
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
-    _btb[c] += b * b;
+    _rss0 += square(u * _sol[c] - b);
   }
 }
 
@@ -1941,7 +1943,7 @@ inline void ULls::enter_eprojection(const Point& pdata, const Point& p1, float p
     const double b = pdata[c] - pa1 * p1[c];
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
-    _btb[c] += b * b;
+    _rss0 += square(u * _sol[c] - b);
   }
 }
 
@@ -1951,20 +1953,18 @@ inline void ULls::enter_spring(const Point& pother, float sqrt_spring) {
     const double b = double(pother[c]) * sqrt_spring;
     _vUtU[c] += u * u;
     _vUtb[c] += u * b;
-    _btb[c] += b * b;
+    _rss0 += square(u * _sol[c] - b);
   }
 }
 
 void ULls::solve(double& prss1) {
-  double rss1 = 0.;
+  double rss1 = _rss0;
   for_int(c, _nd) {
     const double newv = _vUtU[c] ? _vUtb[c] / _vUtU[c] : (Warning("ULls ill-conditioned"), _sol[c]);
+    rss1 -= _vUtU[c] * square(newv - _sol[c]);
     _sol[c] = float(newv);
-    const double a = _btb[c] - _vUtU[c] * square(newv);
-    assertw(a > -1e-8);
-    if (a > 0.) rss1 += a;
   }
-  prss1 = rss1;
+  prss1 = max(rss1, 0.);
 }
 
 // ***

@@ -16,22 +16,28 @@ filter=(perl -s -pe '
   if (/^# frame/) { $n = int($pause - $j++ * $speedup); print "f 0 0 0\n" x ($n > 1 ? $n : 1); }
   if ($s && /^E/ && $k++ % $every == 0) { print "f 0 0 0\n"; $j = 0; }' --)
 
-stream=results/$r.view.tmp
-trap 'rm -f "$stream"' EXIT
+split=results/$r.split.tmp
+opt=results/$r.opt.tmp
+sub0=results/$r.sub0.tmp
+trap 'rm -f "$split" "$opt" "$sub0"' EXIT
 
-# Precompute the input stream to avoid stutters in the viewer.
+# Generate the slow parts in the background, so that the viewer starts at once and only finished files feed its pipe,
+# which avoids stutters.  The background processes start after the .pts file, whose size exceeds the pipe capacity,
+# so that they do not compete with the viewer startup.
 (
-  cat data/$r.pts;                       echo wait 2.0; echo O 0 1 0
-  cat results/$r.u.a3d;                  echo wait 1.5; echo O 0 1 0
-  cat results/$r.g.a3d;                  echo wait 2.0; echo O 0 1 0
-  cat results/$r.p.a3d;                  echo wait 1.5; echo O 0 1 0
-  cat results/$r.o.a3d;                  echo wait 1.5
-  Filtera3d results/$r.c.a3d -split 30;  echo wait 1.5; echo O 0 1 0
-  cat results/$r.l.a3d;                  echo wait 1.5; echo O 0 1 0
-  cat results/$r.m;                      echo wait 2.0; echo O 0 1 0
-  "${filter[@]}" -wait=2.0 -pause=20 -speedup=0.3 -every=14 results/$r.opt.record; echo wait 1.5; echo O 0 1 0
-  "${filter[@]}" -wait=2.0 -pause=30 -speedup=0.0 -every=1 results/$r.sub0.record; echo wait 1.5; echo O 0 1 0
-  cat results/$r.sub2limit.m;            echo keys DmDe
-) >"$stream"
-
-G3dOGL -st data/$r.s3d -backcolor hhblue -key oJ---- -key DmDeDbDC -terse -sync $G3D_GEOM $G3D_ARGS <"$stream"
+  cat data/$r.pts;                echo wait 2.0; echo O 0 1 0
+  Filtera3d results/$r.c.a3d -split 30 >"$split" & pid_split=$!
+  cat results/$r.u.a3d;           echo wait 1.5; echo O 0 1 0
+  "${filter[@]}" -wait=2.0 -pause=20 -speedup=0.3 -every=14 results/$r.opt.record >"$opt" & pid_opt=$!
+  cat results/$r.g.a3d;           echo wait 2.0; echo O 0 1 0
+  "${filter[@]}" -wait=2.0 -pause=30 -speedup=0.0 -every=1 results/$r.sub0.record >"$sub0" & pid_sub0=$!
+  cat results/$r.p.a3d;           echo wait 1.5; echo O 0 1 0
+  cat results/$r.o.a3d;           echo wait 1.5
+  wait $pid_split; cat "$split";  echo wait 1.5; echo O 0 1 0
+  cat results/$r.l.a3d;           echo wait 1.5; echo O 0 1 0
+  cat results/$r.m;               echo wait 2.0; echo O 0 1 0
+  wait $pid_opt; cat "$opt";      echo wait 1.5; echo O 0 1 0
+  wait $pid_sub0; cat "$sub0";    echo wait 1.5; echo O 0 1 0
+  cat results/$r.sub2limit.m;     echo keys DmDe
+) | G3dOGL -st data/$r.s3d -backcolor hhblue -key oJ---- -key DmDeDbDC -terse -sync $G3D_GEOM $G3D_ARGS \
+  || allow_sigpipe

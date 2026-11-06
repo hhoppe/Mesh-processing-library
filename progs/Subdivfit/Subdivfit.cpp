@@ -32,6 +32,21 @@ bool nolimit = false;
 float selective = 0.f;  // Set to 180 to refine near sharp only.
 bool s222 = false;      // Use s222 instead of n222 (not C1 for n = 3).
 float weighta = 0.f;    // For the extraordinary interior case, the interior weight.
+
+// The optimizer begins with a line search whose initial step has unit length, measured over its entire vector of
+// coordinates of all n vertices.  If the gradient is roughly uniform, the average displacement of a vertex is
+// therefore proportional to 1 / sqrt(n).  For roughly uniform triangles on a surface of given area, the average edge
+// length is also proportional to 1 / sqrt(n).  Consequently, this first step displaces the vertices by a fixed
+// fraction of the average edge length, irrespective of n.  This edge length argument seems to obviate the need to
+// explicitly account for mesh density in the scale factor below.
+// (For k_fgfit_scale == 1, that fraction is about 0.8 on the mannequin, for both n == 7836 and n == 689.)
+// The optimizer has no parameter for this step length, so we instead scale the coordinates that it sees: the step
+// becomes 1 / k_fgfit_scale of the size of the object.
+// A smaller factor can cause line search failures on coarse meshes, because a large step leaves points projecting
+// onto the wrong faces of the subdivided mesh.  Values from 100 to 10'000 are within a few percent of each other; 300
+// is the smallest of those tested that does not exhibit large increases in energy.
+constexpr double k_fgfit_scale = 300.;
+
 float xformsize = .8f;
 bool markcuts = false;
 bool outn = false;
@@ -107,7 +122,6 @@ void do_mfilename(Args& args) {
   }
   gmesh.read(fi());
   showdf("Initial mesh: %s\n", mesh_genus_string(gmesh).c_str());
-  for (Vertex v : gmesh.vertices()) gbbox.union_with(gmesh.point(v));
   if (getenv_bool("FORCE_GLOBAL_PROJECT")) {
     Warning("Using FORCE_GLOBAL_PROJECT");
     g_force_global_project = true;
@@ -128,7 +142,6 @@ void do_filename(Args& args) {
       continue;
     }
     co.push(el[0].p);
-    gbbox.union_with(el[0].p);
     gcmf.push(nullptr);
     gscmfi.push(0);
     gdis2.push(0.f);
@@ -141,6 +154,7 @@ void do_filename(Args& args) {
 
 void initialize() {
   if (!xform[0, 0]) {
+    gbbox = Bbox{concatenate(co, gmesh.vertices() | views::transform([&](Vertex v) { return gmesh.point(v); }))};
     xform = gbbox.get_frame_to_small_cube(xformsize);
     if (verb >= 2) showdf(" internal xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
     xform_scale = assertx(xform[0, 0]);
@@ -150,6 +164,14 @@ void initialize() {
 }
 
 // *** auxiliary
+
+// Return the largest absolute coordinate, or the object size if greater.  The default tolerances of SparseLls assume
+// a value of 1, because they reflect the float precision of the solution.
+float coord_magnitude() {
+  float magnitude = 1.f / xform_scale;
+  for_int(i, 2) for_int(c, 3) magnitude = max(magnitude, abs(gbbox[i][c]));
+  return magnitude;
+}
 
 void record_comment(std::string_view s) {
   if (!wf_record) return;
@@ -261,7 +283,9 @@ void analyze_mesh(const string& s) {
 void global_all_project(const SubMesh& smesh) {
   HH_STIMER("___gallproject");
   const GMesh& mesh = smesh.mesh();
-  const MeshSearch mesh_search(mesh, {});
+  // The points may lie outside the bbox of the mesh.
+  const Bbox mesh_bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
+  const MeshSearch mesh_search(mesh, {.bbox = bbox_union(gbbox, mesh_bbox)});
   parallel_for({.cycles_per_elem = 2'000}, range(co.num()), [&](const int i) {
     const auto result = mesh_search.search(co[i], nullptr);
     gscmf[i] = result.f;
@@ -296,6 +320,7 @@ void global_lls(SubMesh& smesh, double& rss0, double& rss1) {
   const int m = co.num(), n = iv.num();
   const int mm = spring ? m + n : m;
   SparseLls lls(mm, n, 3);
+  lls.set_tolerance(square(SparseLls::k_default_row_error * coord_magnitude()) * mm);
   lls.set_max_iter(10);
   Array<Vertex> va;
   for_int(i, m) {
@@ -388,7 +413,10 @@ void do_fgfit(Args& args) {
   smesh.update_vertex_positions();
   global_all_project(smesh);
   if (verb >= 2) analyze_mesh("fgfit_before");
+  // See k_fgfit_scale.
   struct EvalGrad {
+    // Maps original coordinates to those seen by the optimizer.
+    const double _scale{k_fgfit_scale * xform_scale};
     Map<Vertex, int> _mvi;  // Maps vertex -> index in _x.
     Array<Vertex> _iv;      // Maps index -> mesh vertex.
     Array<double> _x;       // Linearized unknown vertex coordinates.
@@ -410,13 +438,13 @@ void do_fgfit(Args& args) {
     void pack_vertices() {
       for_int(j, _iv.num()) {
         const Point& p = gmesh.point(_iv[j]);
-        for_int(c, 3) _x[j * 3 + c] = p[c];
+        for_int(c, 3) _x[j * 3 + c] = double(p[c]) * _scale;
       }
     }
     void unpack_vertices() const {
       for_int(j, _iv.num()) {
         Point p;
-        for_int(c, 3) p[c] = float(_x[j * 3 + c]);
+        for_int(c, 3) p[c] = float(_x[j * 3 + c] / _scale);
         gmesh.set_point(_iv[j], p);
       }
     }
@@ -498,10 +526,10 @@ void do_fgfit(Args& args) {
       }
       for_int(j, gmesh.num_vertices()) {
         const Vector& grad = v_grad(_iv[j]);
-        for_int(c, 3) ret_grad[j * 3 + c] = grad[c];
+        for_int(c, 3) ret_grad[j * 3 + c] = double(grad[c]) * _scale;
       }
       _iter++;
-      return _etot;
+      return _etot * square(_scale);
     }
   };
   EvalGrad eval_grad(smesh);
@@ -544,6 +572,7 @@ void do_interp() {
   const int n = iv.num();
   // auto up_lls = Lls::make(n, n, 3, 12.f / n); Lls& lls = *up_lls;
   SparseLls lls(n, n, 3);
+  lls.set_tolerance(square(SparseLls::k_default_row_error * coord_magnitude()) * n);
   for_int(i, n) {
     Vertex v = iv[i];
     Point p = gmesh.point(v);
@@ -641,7 +670,7 @@ void do_imagefit() {
     lls.enter_xest_r(i, p);
   }
   static const float tolerance = getenv_float("LLS_TOLERANCE", 1e-9f, true);  // Larger than the default 1e-10f.
-  lls.set_tolerance(tolerance);
+  lls.set_tolerance(tolerance * square(coord_magnitude()));
   const int max_iter = getenv_int("LLS_MAXITER", std::numeric_limits<int>::max(), true);
   lls.set_max_iter(max_iter);
   double rss0, rss1;

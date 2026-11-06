@@ -3,7 +3,6 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./_initdemos.sh
 
-# The visualization only works for models (e.g., distcap) pretransformed into the unit cube, due to *.record xform.
 r=distcap
 
 # Insert end-of-frame elements into a *.record stream, after skipping the initial mesh (up to the first MVertex):

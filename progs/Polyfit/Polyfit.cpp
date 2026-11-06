@@ -5,7 +5,6 @@
 #include "libHh/Bbox.h"
 #include "libHh/Facedistance.h"
 #include "libHh/FileIO.h"
-#include "libHh/FrameIO.h"
 #include "libHh/Lls.h"
 #include "libHh/Map.h"
 #include "libHh/Polygon.h"
@@ -49,8 +48,12 @@ bool nooutput = false;
 int verb = 1;
 
 WSA3dStream g_oa3d{std::cout};
-Frame xform;  // Original verts + pts -> verts + pts in the unit cube.
-Frame xform_inverse;
+
+// The optimization operates in the original coordinates.  The scale of the frame to the unit cube defines the units
+// of the parameter crep: it is relative to the object size.
+float xform_scale = 0.f;
+float coord_magnitude = 0.f;  // Largest absolute coordinate, or the object size if greater.
+
 enum EOperation { OP_ecol, OP_espl, OP_NUM };
 const Vec<string, OP_NUM> op_name = {"ecol", "espl"};
 enum EResult { R_success, R_energy, R_illegal, R_NUM };
@@ -78,7 +81,9 @@ float get_espr() {
   return float(espr);
 }
 
-float get_erep() { return crep * verts.num(); }
+double wcrep() { return double(crep) / square(double(xform_scale)); }
+
+float get_erep() { return float(wcrep()) * verts.num(); }
 
 void analyze_poly(int indent, const string& s) {
   string str;
@@ -92,18 +97,12 @@ void analyze_poly(int indent, const string& s) {
   showdf("%s  energies: edis=%g espr=%g erep=%g etot=%g\n", str.c_str(), edis, espr, erep, etot);
 }
 
-void poly_transform(const Frame& frame) {
-  for (vertex v : verts) v->p *= frame;
-}
-
 void compute_xform() {
   assertx(pt.n == pt.co.num());
   const Bbox bbox{concatenate(pt.co, verts | views::transform([](vertex v) { return v->p; }))};
-  xform = bbox.get_frame_to_small_cube();
-  if (verb >= 1) showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
-  xform_inverse = ~xform;
-  for_int(i, pt.n) pt.co[i] *= xform;
-  poly_transform(xform);
+  xform_scale = bbox.get_frame_to_small_cube()[0, 0];
+  coord_magnitude = 1.f / xform_scale;
+  for_int(i, 2) for_int(c, 3) coord_magnitude = max(coord_magnitude, abs(bbox[i][c]));
 }
 
 void initial_projection() {
@@ -131,7 +130,7 @@ void initial_projection() {
 }
 
 void perhaps_initialize() {
-  if (xform[0, 0]) return;  // Already initialized.
+  if (xform_scale) return;  // Already initialized.
   assertx(pt.n && verts.num());
   assertw(spring > 0.f);  // Just warn the user.
   compute_xform();
@@ -140,7 +139,6 @@ void perhaps_initialize() {
 
 void output_poly(WSA3dStream& oa3d, bool clearobject = false) {
   perhaps_initialize();
-  poly_transform(xform_inverse);
   if (clearobject) oa3d.write_clear_object();
   A3dElem el;
   SetVertex setv;
@@ -161,7 +159,6 @@ void output_poly(WSA3dStream& oa3d, bool clearobject = false) {
     oa3d.write(el);
   }
   oa3d.os().flush();
-  poly_transform(xform);
 }
 
 void enter_point(const Point& p, vertex v) {
@@ -236,6 +233,8 @@ void global_fit() {
   }
   if (verb >= 2) showf("GlobalFit: about to solve a %dx%d Lls system\n", m, n);
   SparseLls lls(m, n, 3);
+  // The default assumes coordinates of magnitude 1.
+  lls.set_tolerance(square(SparseLls::k_default_row_error * coord_magnitude) * m);
   // Add point constraints.
   for_int(i, pt.n) {
     vertex cle = assertx(pt.cle[i]);
@@ -384,7 +383,7 @@ EResult try_ecol(vertex v, int ni, int nri, float& edrss) {
   Point newp = interp(v->p, v1->p, minii * .5f);
   double rss0, rss1;
   local_fit(arpts, va, ni, newp, rss0, rss1);
-  const double drss = rss1 - rssf - double(crep);
+  const double drss = rss1 - rssf - wcrep();
   edrss = float(drss);
   if (verb >= 4) SHOW("ecol:", rssf, rss1, drss);
   if (drss >= 0.) return R_energy;  // The energy function does not decrease.
@@ -416,7 +415,7 @@ EResult try_espl(vertex v, int ni, int nri, float& edrss) {
   Point newp = interp(va[0]->p, va[1]->p);
   double rss0, rss1;
   local_fit(arpts, va, ni, newp, rss0, rss1);
-  const double drss = rss1 - rssf + double(crep);
+  const double drss = rss1 - rssf + wcrep();
   edrss = float(drss);
   if (verb >= 4) SHOW("espl:", rssf, rss1, drss);
   if (drss >= 0.) return R_energy;  // The energy function does not decrease.
@@ -562,7 +561,7 @@ void do_gfit(Args& args) {
       showdf(" change in energy=%g\n", echange);
     }
     if (a3d_spawn) output_poly(*a3d_spawn, true);
-    if (!niter && echange > -1e-4f) break;
+    if (!niter && echange * square(xform_scale) > -1e-4f) break;
     ecsc = necsc;
   }
   if (verb >= 2) showdf("Finished gfit, did %d iterations\n", i);

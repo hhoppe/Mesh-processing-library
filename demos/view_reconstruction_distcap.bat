@@ -6,7 +6,6 @@ call ./_initdemos.bat
 
 where perl >nul 2>nul || (echo This demo requires Perl, which is not on PATH.& exit /b 1)
 
-:: The visualization only works for models (e.g., distcap) pretransformed into the unit cube, due to *.record xform.
 set r=distcap
 
 :: Insert end-of-frame elements into a *.record stream, after skipping the initial mesh (up to the first MVertex):

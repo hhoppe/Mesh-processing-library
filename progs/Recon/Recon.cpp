@@ -64,13 +64,17 @@ int num;            // # data points
 bool is_3d;         // Is it a 3D problem (vs. 2D)?
 int minora;         // Minor axis: 1 in 2D, 2 in 3D.
 bool have_normals;  // The data contains normal information.
-
 string g_header;  // Header to place at the top of output files.
-Frame xform;      // Original pts -> pts in the unit cube.
-Frame xform_inverse;
 
-std::optional<PointSpatial<int>> SPp;   // Spatial partition on co.
-std::optional<PointSpatial<int>> SPpc;  // Spatial partition on pcorg.
+// All geometry is in the original coordinates.  The unit cube is the domain of the spatial structures and the
+// contouring grid, which are therefore accessed using xform and xform_inverse.
+Frame xform;  // Original pts -> pts in the unit cube.
+Frame xform_inverse;
+float xform_scale;
+float samplingd_cube;  // Parameter samplingd in the unit cube.
+
+std::optional<PointSpatial<int>> SPp;   // Spatial partition on co_cube.
+std::optional<PointSpatial<int>> SPpc;  // Spatial partition on pcorg_cube.
 std::optional<Graph<int>> gpcpseudo;    // Riemannian on pc centers (based on co).
 std::optional<Graph<int>> gpcpath;      // Path of orientation propagation.
 
@@ -91,13 +95,15 @@ unique_ptr<Mk3d> iol;  // Projections co[i] to the nearest tp.
 unique_ptr<Mk3d> ioc;  // Visited marching cubes.
 unique_ptr<Mk3d> iom;  // Final mesh (not a3d!), a3d curve if !is_3d.
 
-Array<Point> co;    // Data points.
-Array<Vector> nor;  // Normal at the point (is_zero() if none).
+Array<Point> co;       // Data points.
+Array<Point> co_cube;  // Data points in the unit cube.
+Array<Vector> nor;     // Normal at the point (is_zero() if none).
 // The following are allocated after points have been read in.
-Array<Point> pcorg;    // Origins of tangent planes.
-Array<Vector> pcnor;   // Normals of tangent planes.
-Array<bool> pciso;     // The tangent plane has been oriented.
-Array<Frame> pctrans;  // Defined if ioo.
+Array<Point> pcorg;       // Origins of tangent planes.
+Array<Point> pcorg_cube;  // Origins of tangent planes in the unit cube.
+Array<Vector> pcnor;      // Normals of tangent planes.
+Array<bool> pciso;        // The tangent plane has been oriented.
+Array<Frame> pctrans;     // Defined if ioo.
 
 void close_mk(unique_ptr<Mk3d>& pmk) {
   if (!pmk) return;
@@ -149,13 +155,12 @@ void compute_xform() {
   const Bbox bbox{co};
   xform = bbox.get_frame_to_small_cube();
   if (!is_3d) xform.p()[0] = 0.f;  // Preserve x == 0.
-  const float xform_scale = xform[0, 0];
-  showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
+  xform_scale = xform[0, 0];
+  showdf("Spatial xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
   xform_inverse = ~xform;
-  for_int(i, num) co[i] *= xform;
-  // Here, nor[] is unchanged.
-  samplingd *= xform_scale;
-  unsigneddis *= xform_scale;
+  co_cube.init(num);
+  for_int(i, num) co_cube[i] = co[i] * xform;
+  samplingd_cube = samplingd * xform_scale;
 }
 
 unique_ptr<Mk3d> process_arg(char ch) {
@@ -189,9 +194,9 @@ void init_output() {
 
 void compute_tp(int i, int& n, Frame& frame) {
   InlinedArray<Point, 40> pa;
-  SpatialSearch<int> ss(&*SPp, co[i]);
+  SpatialSearch<int> ss(&*SPp, co_cube[i]);
   for (const auto [pi, d2] : ss) {
-    if ((pa.num() >= minkintp && d2 > square(samplingd)) || pa.num() >= maxkintp) break;
+    if ((pa.num() >= minkintp && d2 > square(samplingd_cube)) || pa.num() >= maxkintp) break;
     pa.push(co[pi]);
     if (pi != i && !gpcpseudo->contains(i, pi)) gpcpseudo->enter_undirected(i, pi);
   }
@@ -232,7 +237,7 @@ void print_principal(const Frame& frame) {
     iob->specular(.5f, .5f, .5f);
     iob->phong(4.f);
     iob->push();
-    iob->apply(frame * xform_inverse);
+    iob->apply(frame);
     draw_pc_extent(*iob);
     iob->pop();
   }
@@ -243,7 +248,7 @@ void print_principal(const Frame& frame) {
     iof->begin_force_polyline(true);
     {
       iof->push();
-      iof->apply(frame * xform_inverse);
+      iof->apply(frame);
       draw_pc_linear(*iof);
       iof->pop();
     }
@@ -254,7 +259,7 @@ void print_principal(const Frame& frame) {
     iou->specular(.6f, .6f, .2f);
     iou->phong(3.f);
     iou->push();
-    iou->apply(frame * xform_inverse);
+    iou->apply(frame);
     draw_pc_linear(*iou);
     iou->pop();
   }
@@ -297,8 +302,8 @@ void process_principal() {
     iod->specular(0.f, 0.f, 0.f);
     iod->phong(1.f);
     for_int(i, num) {
-      iod->point(co[i] * xform_inverse);
-      iod->point(pcorg[i] * xform_inverse);
+      iod->point(co[i]);
+      iod->point(pcorg[i]);
       iod->end_polyline();
     }
   }
@@ -387,9 +392,9 @@ void show_propagation(int i, int j, float dotp) {
   iop->diffuse(.2f + .8f * f, .8f + .2f * f, .5f + .5f * f);
   iop->specular(0.f, 0.f, 0.f);
   iop->phong(3.f);
-  iop->point(pcorg[i] * xform_inverse);
+  iop->point(pcorg[i]);
   iop->normal(pcnor[i]);
-  iop->point(pcorg[j] * xform_inverse);
+  iop->point(pcorg[j]);
   iop->normal(pcnor[j]);
   iop->end_polyline();
 }
@@ -442,7 +447,7 @@ void draw_oriented_tps() {
       frame.v(0) = -frame.v(0);
     }
     ioo->push();
-    ioo->apply(frame * xform_inverse);
+    ioo->apply(frame);
     draw_pc_linear(*ioo);
     if (!is_3d) {
       ioo->point(0.f, 0.f, 0.f);
@@ -457,9 +462,9 @@ void print_graph(Mk3d& mk, const Graph<int>& g, CArrayView<Point> pa, CArrayView
   for_int(i, num) {
     for (const int j : g.edges(i)) {
       if (j >= i) continue;
-      mk.point(pa[i] * xform_inverse);
+      mk.point(pa[i]);
       if (pn) mk.normal((*pn)[i]);
-      mk.point(pa[j] * xform_inverse);
+      mk.point(pa[j]);
       if (pn) mk.normal((*pn)[j]);
       mk.end_polyline();
     }
@@ -525,9 +530,10 @@ void orient_tp() {
   }
 }
 
-// Find the unsigned distance to the centroid of the k nearest data points.
-float compute_unsigned(const Point& p, Point& proj) {
-  SpatialSearch<int> ss(&*SPp, p);
+// Given the point p and its version p_cube in the unit cube, find the unsigned distance to the centroid of the k
+// nearest data points.
+float compute_unsigned(const Point& p, const Point& p_cube, Point& proj) {
+  SpatialSearch<int> ss(&*SPp, p_cube);
   Homogeneous h;
   const int k = 1;  // Make a parameter?
   for (const auto [pi, unused_d2] : ss | truncate(k)) h += co[pi];
@@ -535,30 +541,32 @@ float compute_unsigned(const Point& p, Point& proj) {
   return dist(p, proj) - unsigneddis;
 }
 
-// Find the closest tangent plane origin and compute the signed distance to that tangent plane.
+// Given the point p and its version p_cube in the unit cube, find the closest tangent plane origin and compute the
+// signed distance to that tangent plane.
 // Was: check to see if the projection onto the tangent plane lies farther than samplingd from any data point.
 // Now: check to see if the sample point is farther than samplingd + cube_size from any data point.
-float compute_signed(const Point& p, Point& proj) {
+float compute_signed(const Point& p, const Point& p_cube, Point& proj) {
   int tpi;
   {
-    SpatialSearch<int> ss(&*SPpc, p);
+    SpatialSearch<int> ss(&*SPpc, p_cube);
     tpi = (*ss.begin()).id;
   }
   const Vector vptopc = p - pcorg[tpi];
   const float dis = dot(vptopc, pcnor[tpi]);
   proj = p - dis * pcnor[tpi];
   if (!is_3d) assertx(!proj[0]);
-  if ((is_3d && (proj[0] <= 0.f || proj[0] >= 1.f)) || proj[1] <= 0.f || proj[1] >= 1.f || proj[2] <= 0.f ||
-      proj[2] >= 1.f)
+  const Point proj_cube = proj * xform;
+  if ((is_3d && (proj_cube[0] <= 0.f || proj_cube[0] >= 1.f)) || proj_cube[1] <= 0.f || proj_cube[1] >= 1.f ||
+      proj_cube[2] <= 0.f || proj_cube[2] >= 1.f)
     return k_Contour_undefined;
   if (1) {
     // Check that the projected point is close to a data point.
-    SpatialSearch<int> ss(&*SPp, proj);
-    if ((*ss.begin()).d2 > square(samplingd)) return k_Contour_undefined;
+    SpatialSearch<int> ss(&*SPp, proj_cube);
+    if ((*ss.begin()).d2 > square(samplingd_cube)) return k_Contour_undefined;
   }
   if (prop) {
     // Check that the grid point is close to a data point.
-    SpatialSearch<int> ss(&*SPp, p);
+    SpatialSearch<int> ss(&*SPp, p_cube);
     const float d2 = (*ss.begin()).d2;
     const float grid_diagonal2 = square(1.f / gridsize) * 3.f;
     const float fudge = 1.2f;
@@ -573,9 +581,9 @@ void print_directed_seg(Mk3d& mk, const Point& p1, const Point& p2, const A3dCol
   mk.diffuse(col);
   mk.specular(0.f, 0.f, 0.f);
   mk.phong(3.f);
-  mk.point(p1 * xform_inverse);
+  mk.point(p1);
   mk.normal(v);
-  mk.point(p2 * xform_inverse);
+  mk.point(p2);
   mk.normal(v);
   mk.end_polyline();
 }
@@ -586,9 +594,10 @@ Point build_Point(const Vec2<float>& p) { return Point(0.f, p[0], p[1]); }
 template <int D> struct EvalPoint {
   float operator()(const Vec<float, D>& pp) const {
     ASSERTX((D == 3) == is_3d);
-    const Point p = build_Point(pp);
+    const Point p_cube = build_Point(pp);  // The contouring grid lies in the unit cube.
+    const Point p = p_cube * xform_inverse;
     Point proj;
-    const float dis = unsigneddis ? compute_unsigned(p, proj) : compute_signed(p, proj);
+    const float dis = unsigneddis ? compute_unsigned(p, p_cube, proj) : compute_signed(p, p_cube, proj);
     if (dis == k_Contour_undefined) return dis;
     if (iol) {
       if (dis < 0.f)
@@ -596,7 +605,7 @@ template <int D> struct EvalPoint {
       else
         print_directed_seg(*iol, proj, p, A3dColor(1.f, 1.f, 1.f));
     }
-    return dis;
+    return dis * xform_scale;  // The contouring works in the unit cube.
   }
 };
 
@@ -641,16 +650,16 @@ struct OutputContour2d {
 template <typename Contour> void contour_3d(Contour& contour) {  // With or without a border.
   contour.set_ostream(&std::cout);
   if (unsigneddis) {
-    Point p = co[0];
+    Point p = co_cube[0];
     for_intL(i, 1, num) {
-      if (co[i][2] > p[2]) p = co[i];
+      if (co_cube[i][2] > p[2]) p = co_cube[i];
     }
     for_int(i, 20) {
       p[2] += float(i) / gridsize;
       if (contour.march_from(p) > 1) break;
     }
   } else {
-    for_int(i, num) contour.march_from(pcorg[i]);
+    for_int(i, num) contour.march_from(pcorg_cube[i]);
   }
 }
 
@@ -658,9 +667,9 @@ template <typename Contour> void contour_2d(Contour& contour) {  // With or with
   contour.set_ostream(&std::cout);
   assertx(!pcorg[0][0]);
   if (unsigneddis) {
-    Point p = co[0];
+    Point p = co_cube[0];
     for_intL(i, 1, num) {
-      if (co[i][2] > p[2]) p = co[i];
+      if (co_cube[i][2] > p[2]) p = co_cube[i];
     }
     for_int(i, 20) {
       p[2] += float(i) / gridsize;
@@ -668,7 +677,7 @@ template <typename Contour> void contour_2d(Contour& contour) {  // With or with
     }
   } else {
     for_int(i, num) {
-      Point p = pcorg[i];
+      const Point& p = pcorg_cube[i];
       contour.march_from(V(p[1], p[2]));
     }
   }
@@ -703,7 +712,7 @@ void process() {
   HH_TIMER("Recon");
   process_read();
   compute_xform();
-  if (!gridsize) gridsize = int(1.f / samplingd + .5f);
+  if (!gridsize) gridsize = int(1.f / samplingd_cube + .5f);
   showdf("gridsize=%d\n", gridsize);
   assertx(gridsize >= 2);
   init_output();
@@ -718,7 +727,7 @@ void process() {
     HH_TIMER("_SPp");
     const int n = is_3d ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
     SPp.emplace(n);
-    for_int(i, num) SPp->enter(i, &co[i]);
+    for_int(i, num) SPp->enter(i, &co_cube[i]);
   }
   if (!unsigneddis) {
     gpcpseudo.emplace();
@@ -728,7 +737,11 @@ void process() {
       HH_TIMER("_SPpc");
       const int n = is_3d ? (num > 100'000 ? 60 : num > 5000 ? 36 : 20) : (num > 1000 ? 36 : 20);
       SPpc.emplace(n);
-      for_int(i, num) SPpc->enter(i, &pcorg[i]);
+      pcorg_cube.init(num);
+      for_int(i, num) {
+        pcorg_cube[i] = pcorg[i] * xform;
+        SPpc->enter(i, &pcorg_cube[i]);
+      }
     }
     orient_tp();
     gpcpseudo.reset();

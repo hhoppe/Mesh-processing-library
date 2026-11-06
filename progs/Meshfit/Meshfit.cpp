@@ -142,8 +142,13 @@ int affect = 2;
 
 WSA3dStream oa3d{std::cout};
 const int sdebug = getenv_int("MESHFIT_DEBUG");  // 0, 1, or 2.
-Frame xform;                                     // Original mesh + pts -> mesh + pts in the unit cube.
-Frame xform_inverse;
+
+// The optimization operates in the original coordinates.  The frame to the unit cube is used for spatial queries, and
+// its scale defines the units of the parameters crep and do_outlierdelete(): they are relative to the object size.
+Frame xform;  // Original mesh + pts -> mesh + pts in the unit cube.
+float xform_scale = 0.f;
+Bbox<float, 3> gbbox;  // Bounding box of the original mesh + pts.
+
 enum EOperation { OP_ecol, OP_espl, OP_eswa, OP_NUM };
 const Vec<string, OP_NUM> op_name = {"ecol", "espl", "eswa"};
 enum EResult { R_success, R_energy, R_dih, R_illegal, R_NUM };
@@ -160,6 +165,19 @@ constexpr bool k_simp96 = true;                // Improvements.
 constexpr float k_mincos = -1.f / 3.f;         // Equals cos(109.471 degrees), the tetrahedral angle.
 constexpr auto k_spring_sched = V(1e-2f, 1e-3f, 1e-4f, 1e-8f);
 constexpr int k_max_gfit_iter = 30;
+
+// The optimizer begins with a line search whose initial step has unit length, measured over its entire vector of
+// coordinates of all n vertices.  If the gradient is roughly uniform, the average displacement of a vertex is
+// therefore proportional to 1 / sqrt(n).  For roughly uniform triangles on a surface of given area, the average edge
+// length is also proportional to 1 / sqrt(n).  Consequently, this first step displaces the vertices by a fixed
+// fraction of the average edge length, irrespective of n.  This edge length argument seems to obviate the need to
+// explicitly account for mesh density in the scale factor below.
+// (For k_fgfit_scale == 1, that fraction is about 0.8 on the mannequin, for both n == 7836 and n == 689.)
+// The optimizer has no parameter for this step length, so we instead scale the coordinates that it sees: the step
+// becomes 1 / k_fgfit_scale of the size of the object.
+// A larger factor reduces the energy of short runs on coarse meshes, and avoids line search failures caused by points
+// left projecting onto the wrong faces.  Values from 10 to 10'000 are within a few percent of each other.
+constexpr double k_fgfit_scale = 10.;
 std::optional<WFile> wf_record;
 float gdiam;
 Bary dummy_bary;
@@ -179,24 +197,18 @@ void DataPts::ok() const {
     assertx(f_setpts(f).contains(i));
     Point tclp;
     project_point(co[i], f, dummy_bary, tclp);
-    assertx(dist2(tclp, clp[i]) < 1e-10f);
+    assertx(dist2(tclp, clp[i]) * square(xform_scale) < 1e-10f);
   }
 }
 
 // *** utility
 
-void mesh_transform(const Frame& frame) {
-  for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * frame);
-}
-
 void compute_xform() {
-  const Bbox bbox{concatenate(pt.co, mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); }))};
-  gdiam = bbox.max_side();
-  xform = bbox.get_frame_to_small_cube();
-  if (verb >= 2) showdf("Applying xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
-  xform_inverse = ~xform;
-  for_int(i, pt.co.num()) pt.co[i] *= xform;
-  mesh_transform(xform);
+  gbbox = Bbox{concatenate(pt.co, mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); }))};
+  gdiam = gbbox.max_side();
+  xform = gbbox.get_frame_to_small_cube();
+  xform_scale = xform[0, 0];
+  if (verb >= 2) showdf("Spatial xform: %s", FrameIO::create_string(ObjectFrame{xform, 1}).c_str());
 }
 
 int get_nbv() {
@@ -265,7 +277,10 @@ double get_edih() {
   return edih;
 }
 
-double get_erep() { return crep * (mesh.num_vertices() + get_nbv() * (crbf - 1)); }
+// The representation energy per vertex, whose parameter crep is relative to the object size.
+double wcrep() { return double(crep) / square(double(xform_scale)); }
+
+double get_erep() { return wcrep() * (mesh.num_vertices() + get_nbv() * (crbf - 1)); }
 
 double show_energies(const string& s) {
   const double edis = get_edis(), espr = get_espr(), edih = get_edih();
@@ -281,10 +296,10 @@ void analyze_mesh(const string& s) {
   showdf("%-12s: mesh v=%d f=%d e=%d (nbv=%d)\n",  //
          s.c_str(), mesh.num_vertices(), mesh.num_faces(), mesh.num_edges(), get_nbv());
   showdf("  F=%g S=%g D=%g R=%g T=%g\n", edis, espr, edih, erep, etot);
-  const float drms = float(sqrt(edis / pt.co.num()) * xform_inverse[0, 0]);
+  const float drms = float(sqrt(edis / pt.co.num()));
   float dmax2 = 0.f;
   for_int(i, pt.co.num()) dmax2 = max(dmax2, dist2(pt.co[i], pt.clp[i]));
-  const float dmax = my_sqrt(dmax2) * xform_inverse[0, 0];
+  const float dmax = my_sqrt(dmax2);
   showdf("  distances: rms=%g (%.3f%%)  max=%g (%.3f%% of bbox)\n",  //
          drms, drms / gdiam * 100, dmax, dmax / gdiam * 100);
 }
@@ -397,7 +412,9 @@ float project_point_neighborhood_helper(const Point& p, Face& cf, Bary& ret_bary
 void global_project_aux() {
   Array<Face> ar_face(pt.co.num());
   if (!have_quads) {
-    const MeshSearch mesh_search(mesh, {});  // Without allow_local_project, the search ignores any hint face.
+    // Without allow_local_project, the search ignores any hint face.  The points may lie outside the bbox of the mesh.
+    const Bbox mesh_bbox{mesh.vertices() | views::transform([&](Vertex v) { return mesh.point(v); })};
+    const MeshSearch mesh_search(mesh, {.bbox = bbox_union(gbbox, mesh_bbox)});
     parallel_for({.cycles_per_elem = 2'000}, range(pt.co.num()), [&](const int i) {
       const auto result = mesh_search.search(pt.co[i], nullptr);
       ar_face[i] = result.f;
@@ -408,12 +425,15 @@ void global_project_aux() {
     Polygon poly(4);
     for (Face f : mesh.faces()) {
       if (mesh.is_triangle(f)) {
-        trianglefaces.push({mesh.triangle_points(f), f});
+        Vec3<Point> triangle = mesh.triangle_points(f);
+        for_int(i, 3) triangle[i] *= xform;
+        trianglefaces.push({triangle, f});
       } else {
         mesh.polygon(f, poly);
         assertx(poly.num() == 4);
         if (dist2(poly[0], poly[2]) > dist2(poly[1], poly[3]) * square(k_gim_diagonal_factor))
           rotate(poly, poly.begin() + 1);
+        for_int(i, 4) poly[i] *= xform;
         trianglefaces.push({V(poly[0], poly[1], poly[2]), f});
         trianglefaces.push({V(poly[0], poly[2], poly[3]), f});
       }
@@ -422,7 +442,7 @@ void global_project_aux() {
     const int gridn = clamp(int(sqrt(mesh.num_faces() * .05f)), 15, 200);
     TriangleFaceSpatial spatial(trianglefaces, gridn);  // Not MeshSearch because of triangulated mesh quads.
     parallel_for({.cycles_per_elem = 2'000}, range(pt.co.num()), [&](const int i) {
-      SpatialSearch<TriangleFace*> ss(&spatial, pt.co[i]);
+      SpatialSearch<TriangleFace*> ss(&spatial, pt.co[i] * xform);
       const TriangleFace* triangleface = (*ss.begin()).id;
       ar_face[i] = triangleface->face;
       Bary bary;
@@ -524,7 +544,7 @@ void do_outlierdelete(Args& args) {
   Array<Point> ar_pt;
   for_int(i, pt.co.num()) {
     assertx(pt.cmf[i]);
-    if (dist(pt.co[i], pt.clp[i]) <= vdist) ar_pt.push(pt.co[i]);
+    if (dist(pt.co[i], pt.clp[i]) * xform_scale <= vdist) ar_pt.push(pt.co[i]);
     point_change_face(i, nullptr);
   }
   showdf("Removing %d outlier points (dist>%g): #pts reduced from %d to %d\n",  //
@@ -534,8 +554,7 @@ void do_outlierdelete(Args& args) {
   initial_projection();
 }
 
-// Write the mesh and then the stream of its changes to a file.  (They are in the coordinates of the unit cube; xform
-// is not undone.)
+// Write the mesh and then the stream of its changes to a file.
 void do_record(Args& args) {
   wf_record.emplace(args.get_filename());
   std::ostream& os = (*wf_record)();
@@ -563,6 +582,10 @@ void global_fit() {
   if (verb >= 2) showf("GlobalFit: about to solve a %dx%d Lls system\n", m, n);
   SparseLls lls(m, n, 3);
   lls.set_max_iter(200);
+  // The default tolerance assumes coordinates of magnitude 1, because x is float.
+  float coord_magnitude = 1.f / xform_scale;
+  for_int(i, 2) for_int(c, 3) coord_magnitude = max(coord_magnitude, abs(gbbox[i][c]));
+  lls.set_tolerance(square(SparseLls::k_default_row_error * coord_magnitude) * m);
   // Add point constraints.
   for_int(i, pt.co.num()) {
     Face cmf = assertx(pt.cmf[i]);
@@ -629,7 +652,7 @@ void do_gfit(Args& args) {
     etot = show_energies(verb >= 3 ? sform("it%2d/%-2d", i, niter) : "");
     const double echange = etot - oetot;
     assertw(echange < 0);
-    if (!niter && echange > -1e-4) break;
+    if (!niter && echange * square(double(xform_scale)) > -1e-4) break;
   }
   if (verb >= 2) {
     showdf("Finished gfit, did %d iterations\n", i);
@@ -650,8 +673,10 @@ void do_fgfit(Args& args) {
   assertx(pt.co.num() && !mesh.empty());
   if (verb >= 2) showdf("\n");
   if (verb >= 1) showdf("Beginning fgfit, %d iterations, spr=%g dihfac=%g\n", niter, spring, dihfac);
-  // Evaluation objective for nonlinear optimization.
+  // Evaluation objective for nonlinear optimization; see k_fgfit_scale.
   struct EvalGrad {
+    // Maps original coordinates to those seen by the optimizer.
+    const double _scale{k_fgfit_scale * xform_scale};
     Map<Vertex, int> _mvi;  // Maps vertex -> index in _x.
     Array<Vertex> _iv;      // Maps index -> mesh vertex.
     Array<double> _x;       // Linearized unknown vertex coordinates.
@@ -671,14 +696,14 @@ void do_fgfit(Args& args) {
     void pack_vertices() {
       for_int(j, _iv.num()) {
         const Point& p = mesh.point(_iv[j]);
-        for_int(c, 3) _x[j * 3 + c] = p[c];
+        for_int(c, 3) _x[j * 3 + c] = double(p[c]) * _scale;
       }
     }
     void unpack_vertices() const {
       bool vertices_moved = false;
       for_int(j, _iv.num()) {
         Point p;
-        for_int(c, 3) p[c] = float(_x[j * 3 + c]);
+        for_int(c, 3) p[c] = float(_x[j * 3 + c] / _scale);
         if (p != mesh.point(_iv[j])) {
           vertices_moved = true;
           mesh.set_point(_iv[j], p);
@@ -756,7 +781,8 @@ void do_fgfit(Args& args) {
       }
       assertx(!dihfac);
       _iter++;
-      return _etot;
+      for_int(i, ret_grad.num()) ret_grad[i] *= _scale;
+      return _etot * square(_scale);
     }
   };
   EvalGrad eval_grad;
@@ -1032,10 +1058,8 @@ void do_four1split() {
 void do_outmesh(Args& args) {
   perhaps_initialize();
   WFile os(args.get_filename());
-  mesh_transform(xform_inverse);
   mark_mesh();
   mesh.write(os());
-  mesh_transform(xform);
 }
 
 void do_pclp() {
@@ -1044,9 +1068,8 @@ void do_pclp() {
   A3dElem el;
   for_int(i, pt.co.num()) {
     el.init(A3dElem::EType::polyline);
-    Point pco = pt.co[i], pclp = pt.clp[i];
-    pco *= xform_inverse;
-    pclp *= xform_inverse;
+    const Point& pco = pt.co[i];
+    const Point& pclp = pt.clp[i];
     el.push(A3dVertex(pco, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
     el.push(A3dVertex(pclp, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
     oa3d.write(el);
@@ -1182,7 +1205,7 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss, Commit& commit, Footprin
     const float mina = min_local_dihedral(wa, minp);
     if (mina < k_mincos && mina < minb) return R_dih;  // Change disallowed.
   }
-  const double drss = minrss1 - rssf - (nbvb == 2 ? crbf : 1) * double(crep);
+  const double drss = minrss1 - rssf - (nbvb == 2 ? crbf : 1) * wcrep();
   edrss = float(drss);
   if (verb >= 4) SHOW("ecol:", rssf, minrss1, drss);
   if (drss >= 0.) return R_energy;  // The energy function does not decrease.
@@ -1242,7 +1265,7 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss, Commit& commit, Footprin
   local_fit(ar_pts, wa, (ni ? ni : 1), newp, rss0, rss1);
   const float mina = min_local_dihedral(wa, newp);
   if (mina < k_mincos && mina < minb) return R_dih;  // Change disallowed.
-  const double drss = rss1 - rssf + (vo2 ? 1.f : crbf) * double(crep);
+  const double drss = rss1 - rssf + (vo2 ? 1.f : crbf) * wcrep();
   edrss = float(drss);
   if (verb >= 4) SHOW("espl:", rssf, rss1, drss);
   if (drss >= 0.) return R_energy;  // The energy function does not decrease.
@@ -1307,7 +1330,7 @@ EResult check_half_eswa(Edge e, Vertex vo1, Vertex v1, Vertex vo2, Vertex v2, Fa
   local_fit(ar_pts, wa, (ni ? ni : 1), newp, rss0, rss1);
   const float mina = min_local_dihedral(wa, newp);
   if (mina < k_mincos && mina < minb) return R_dih;  // Change disallowed.
-  const double drss = rss1 - rssf + crep * feswaasym;
+  const double drss = rss1 - rssf + wcrep() * feswaasym;
   edrss = float(drss);
   if (verb >= 4) SHOW("eswa:", rssf, rss1, drss);
   if (drss > 0) return R_energy;
@@ -1680,7 +1703,6 @@ int main(int argc, const char** argv) {
   }
   hh_clean_up();
   if (!nooutput) {
-    mesh_transform(xform_inverse);
     mark_mesh();
     mesh.write(std::cout);
   }

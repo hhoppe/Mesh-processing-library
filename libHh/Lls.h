@@ -64,13 +64,15 @@ class Lls : noncopyable {
 // Sparse conjugate-gradient approach.
 class SparseLls : public Lls {
  public:
-  explicit SparseLls(int m, int n, int nd) : Lls(m, n, nd), _tolerance(square(8e-7f) * m) {}
+  // Rounding error per row of the system, for coordinates of magnitude 1 (because x is float).
+  static constexpr float k_default_row_error = 8e-7f;
+  explicit SparseLls(int m, int n, int nd) : Lls(m, n, nd), _tolerance(square(k_default_row_error) * m) {}
   void clear() override;
   void enter_a_rc(int r, int c, float val) override;
   void enter_a_r(int r, CArrayView<float> ar) override;
   void enter_a_c(int c, CArrayView<float> ar) override;
   [[nodiscard]] bool solve(double* rssb = nullptr, double* rssa = nullptr) override;
-  void set_tolerance(float tolerance);  // Default square(8e-7) * m  (because x is float) (was 1e-10f).
+  void set_tolerance(float tolerance);  // Default square(k_default_row_error) * m (was 1e-10f).
   void set_max_iter(int max_iter);      // Default std::numeric_limits<int>::max().
   void set_verbose(int verb);           // Default 0.
  private:

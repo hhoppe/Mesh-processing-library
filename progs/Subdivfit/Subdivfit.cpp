@@ -230,6 +230,11 @@ bool ok_sharp_edge_change(Edge e) {
 
 double get_edis() { return sum(gdis2); }
 
+// Unlike the edge springs of Meshfit, these are vertex springs, with different effects.  An edge spring, on
+// mag2(v1 - v2), is zero only for an edge of zero length, so it pulls vertices together and shrinks the mesh.  A
+// vertex spring, on mag2(v - average(neighbors of v)), is zero for example on a planar regular grid of any size, so it
+// penalizes bending rather than size.  Moreover, because the limit position of a vertex under Loop subdivision lies
+// on the segment from v to that average, a vertex spring keeps each control vertex near the limit surface.
 double get_espr() {
   if (!spring) return 0.;
   double sum = 0.;
@@ -495,13 +500,16 @@ void do_fgfit(Args& args) {
           for_combination(comb.c, [&](Vertex v, float val) { v_grad(v) += vtop * (a * val); });
         }
       }
+      // D espr.  The energy of each vertex v is spring * mag2(h), where h = v - average(neighbors of v), so it also
+      // depends on those neighbors.
       if (spring) {
-        const float sqrt_spring = sqrt(spring);
         for (Vertex v : gmesh.vertices()) {
-          Homogeneous h(gmesh.point(v));
+          Homogeneous hh(gmesh.point(v));
           const float fac = 1.f / gmesh.degree(v);
-          for (Vertex vv : gmesh.vertices(v)) h -= fac * Homogeneous(gmesh.point(vv));
-          v_grad(v) += to_Vector(h) * sqrt_spring;
+          for (Vertex vv : gmesh.vertices(v)) hh -= fac * Homogeneous(gmesh.point(vv));
+          const Vector vd = to_Vector(hh) * (2 * spring);
+          v_grad(v) += vd;
+          for (Vertex vv : gmesh.vertices(v)) v_grad(vv) -= vd * fac;
         }
       }
       if (areafac) {

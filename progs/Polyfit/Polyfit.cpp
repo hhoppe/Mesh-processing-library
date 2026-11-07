@@ -474,8 +474,8 @@ void create_poly(bool pclosed, int n) {
 
 void do_pfilename(Args& args) {
   HH_TIMER("_pfilename");
-  RFile is(args.get_filename());
-  RSA3dStream ia3d(is());
+  RFile fi(args.get_filename());
+  RSA3dStream ia3d(fi());
   A3dElem el;
   Polygon poly;
   for (;;) {
@@ -512,8 +512,8 @@ void do_sample(Args& args) {
 void do_filename(Args& args) {
   HH_TIMER("_filename");
   assertx(!pt.n);
-  RFile is(args.get_filename());
-  RSA3dStream ia3d(is());
+  RFile fi(args.get_filename());
+  RSA3dStream ia3d(fi());
   A3dElem el;
   for (;;) {
     ia3d.read(el);
@@ -669,8 +669,8 @@ void do_simplify() {
 
 void do_outpoly(Args& args) {
   HH_TIMER("_outpoly");
-  WFile os(args.get_filename());
-  WSA3dStream oa3d(os());
+  WFile fi(args.get_filename());
+  WSA3dStream oa3d(fi());
   output_poly(oa3d);
 }
 

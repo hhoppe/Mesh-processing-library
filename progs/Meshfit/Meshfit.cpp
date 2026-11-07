@@ -514,8 +514,8 @@ void do_mfilename(Args& args) {
 void do_filename(Args& args) {
   HH_TIMER("_filename");
   assertx(!pt.co.num());
-  RFile is(args.get_filename());
-  RSA3dStream ia3d(is());
+  RFile fi(args.get_filename());
+  RSA3dStream ia3d(fi());
   A3dElem el;
   for (;;) {
     ia3d.read(el);
@@ -1057,9 +1057,9 @@ void do_four1split() {
 
 void do_outmesh(Args& args) {
   perhaps_initialize();
-  WFile os(args.get_filename());
+  WFile fi(args.get_filename());
   mark_mesh();
-  mesh.write(os());
+  mesh.write(fi());
 }
 
 void do_pclp() {

@@ -7,7 +7,7 @@ call ./_initdemos.bat
 set r=distcap
 
 echo Running phase 1 - Recon.
-Recon data/%r%.pts -rootname results/%r% -samplingd 0.02 -what ugpoclm
+Recon data/%r%.pts -rootname results/%r% -samplingd 0.02 -what ugpoclm >results/%r%.m
 
 echo Filling any small reconstruction holes.
 Filtermesh results/%r%.m -genus -fillholes 40 -triangulate -genus >results/%r%.recon.m

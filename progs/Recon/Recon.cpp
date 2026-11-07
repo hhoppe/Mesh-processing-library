@@ -93,7 +93,9 @@ unique_ptr<Mk3d> ioo;  // Oriented tangent planes.
 unique_ptr<Mk3d> ioh;  // Here, iog with normals.
 unique_ptr<Mk3d> iol;  // Projections co[i] to the nearest tp.
 unique_ptr<Mk3d> ioc;  // Visited marching cubes.
-unique_ptr<Mk3d> iom;  // Final mesh (not a3d!), a3d curve if !is_3d.
+
+bool want_mesh;                         // Write to stdout the final mesh, or the contour a3d curve if !is_3d.
+std::optional<WSA3dStream> oa3d_curve;  // Contour curve on stdout, if !is_3d and want_mesh.
 
 Array<Point> co;       // Data points.
 Array<Point> co_cube;  // Data points in the unit cube.
@@ -166,11 +168,11 @@ void compute_xform() {
 
 unique_ptr<Mk3d> process_arg(char ch) {
   if (!what.contains(ch)) return nullptr;
-  if (rootname == "") assertx(what.size() == 1);
-  const string out_filename = rootname != "" ? sform("%s.%c%s", rootname.c_str(), ch, ch == 'm' ? "" : ".a3d") : "-";
+  const string out_filename = what.size() == 1 ? "-" : sform("%s.%c.a3d", rootname.c_str(), ch);
   auto pfi = make_unique<WFile>(out_filename);
   WFile& fi = *pfi;
-  if (rootname != "") fi() << "# " << g_header;
+  // On stdout, main() has already written the header.
+  if (out_filename != "-") fi() << "# " << g_header;
   WSA3dStream* oa3d = new WSA3dStream(fi());  // Deallocated by "delete oa3d" in close_mk().
   auto pmk = make_unique<Mk3d>(*oa3d);
   pmk->oa3d().write_comment(sform(" Output of option '%c'", ch));
@@ -190,7 +192,7 @@ void init_output() {
   ioh = process_arg('h');
   iol = process_arg('l');
   ioc = process_arg('c');
-  iom = process_arg('m');
+  want_mesh = what.contains('m');
 }
 
 void compute_tp(int i, int& n, Frame& frame) {
@@ -422,8 +424,14 @@ void orient_set(const Set<int>& nodes) {
   gpcpath.emplace();
   {
     HH_TIMER("__graphmst");
+    Graph<int> component;  // This component of gpcpseudo, together with the exterior node.
+    for (const int i : nodes) component.enter(i);
+    component.enter(num);
+    for (const int i : nodes)
+      for (const int j : gpcpseudo->edges(i)) component.enter(i, j);
+    for (const int j : gpcpseudo->edges(num)) component.enter(num, j);
     // Must be connected here!
-    auto [graph, is_connected] = graph_mst<int>(*gpcpseudo, pc_corr);
+    auto [graph, is_connected] = graph_mst<int>(component, pc_corr);
     assertx(is_connected);
     *gpcpath = std::move(graph);
   }
@@ -637,14 +645,14 @@ struct OutputBorder2d {
 
 struct OutputContour2d {
   void operator()(CArrayView<Vec2<float>> poly) const {
-    if (!iom) return;
+    if (!oa3d_curve) return;
     ASSERTX(poly.num() == 2);
     A3dElem el(A3dElem::EType::polyline);
     for_int(i, poly.num()) {
       el.push(A3dVertex(Point(0.f, poly[i][0], poly[i][1]) * xform_inverse, Vector(0.f, 0.f, 0.f),
                         A3dVertexColor(A3dColor(.7f, .3f, .1f))));
     }
-    iom->oa3d().write(el);
+    oa3d_curve->write(el);
   }
 };
 
@@ -687,7 +695,6 @@ template <typename Contour> void contour_2d(Contour& contour) {  // With or with
 void process_contour() {
   HH_TIMER("_contour");
   if (is_3d) {
-    // Note: now mesh is always created even if !iom.
     if (ioc) {
       Contour3dMesh<EvalPoint<3>, OutputBorder3d> contour(gridsize, &mesh);
       contour_3d(contour);
@@ -696,6 +703,7 @@ void process_contour() {
       contour_3d(contour);
     }
   } else {
+    if (want_mesh) oa3d_curve.emplace(std::cout);
     if (ioc) {
       Contour2d<EvalPoint<2>, OutputContour2d, OutputBorder2d> contour(gridsize);
       contour_2d(contour);
@@ -703,8 +711,8 @@ void process_contour() {
       Contour2d<EvalPoint<2>, OutputContour2d> contour(gridsize);
       contour_2d(contour);
     }
+    oa3d_curve.reset();  // Flush the stream, because main() may skip the destructors of globals.
   }
-  // Here, iom is closed back in main().
   close_mk(ioc);
   close_mk(iol);
 }
@@ -747,8 +755,8 @@ void process() {
     orient_tp();
     gpcpseudo.reset();
   }
-  if (iol || ioc || iom) process_contour();
-  if (iom && is_3d) showdf("%s\n", mesh_genus_string(mesh).c_str());
+  if (iol || ioc || want_mesh) process_contour();
+  if (want_mesh && is_3d) showdf("%s\n", mesh_genus_string(mesh).c_str());
   SPp.reset();
   SPpc.reset();
 }
@@ -758,8 +766,8 @@ void process() {
 int main(int argc, const char** argv) {
   ParseArgs args(argc, argv);
   HH_ARGSC("An 'a3d stream' of points is read from stdin or first arg.  Subsequent options are:");
-  HH_ARGSP(rootname, "string : write outputs to rootname.m, rootname.X.a3d");
-  HH_ARGSP(what, "string : output ch codes 'dbufgpohlcm' (default mesh 'm')");
+  HH_ARGSP(rootname, "string : for multiple `what` options: write rootname.X.a3d");
+  HH_ARGSP(what, "string : output codes 'dbufgpohlcm'; 'm' to stdout");
   HH_ARGSP(samplingd, "f : sampling density + noise (delta + rho)");
   HH_ARGSP(gridsize, "n : contouring # grid cells (opt.)");
   HH_ARGSP(maxkintp, "k : max # points in tp");
@@ -775,15 +783,13 @@ int main(int argc, const char** argv) {
   g_header = args.header();
   args.parse();
   assertx(samplingd);
+  assertx((what.size() > 1) == (rootname != ""));
   process();
   hh_clean_up();
-  // We close iom here so that the mesh comes after everything else in the file.
-  if (iom && is_3d) {
+  if (want_mesh && is_3d) {
     for (Vertex v : mesh.vertices()) mesh.set_point(v, mesh.point(v) * xform_inverse);
-    // mesh.write(assertx(dynamic_cast<WSA3dStream*>(&iom->oa3d()))->os());  // Note: would require RTTI.
-    mesh.write(down_cast<WSA3dStream*>(&iom->oa3d())->os());
+    mesh.write(std::cout);
   }
-  close_mk(iom);
   if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().
   return 0;
 }

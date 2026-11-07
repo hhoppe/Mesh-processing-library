@@ -45,6 +45,30 @@ void test_invert() {
     SHOW(invert(m, mo));
   }
   {
+    // A matrix with a row of zeros is singular.
+    Matrix<float> m(3, 3);
+    const Array<float> values{1.f, 2.f, 3.f, 0.f, 0.f, 0.f, 4.f, 5.f, 7.f};
+    for_int(y, 3) for_int(x, 3) m[y, x] = values[y * 3 + x];
+    Matrix<float> mo(3, 3);
+    assertx(!invert(m, mo));
+  }
+  {
+    // Orthogonal rows of very different magnitudes, from a Recon principal frame over coplanar points.  Elimination
+    // reduces an entry of a large row to rounding noise (about 1e-13), which exceeds the true pivot in the small row
+    // (about 1e-15), so the choice of pivot must consider the scale of each row.
+    Matrix<float> m(3, 3);
+    const Array<float> values{-8.3155182e-06f, 3.5425424e-07f, 0.0075689461f,   //
+                              0.0027747226f,   -0.0001182073f, 3.0539434e-06f,  //
+                              4.2562876e-17f,  9.9909378e-16f, -1.1468295e-25f};
+    for_int(y, 3) for_int(x, 3) m[y, x] = values[y * 3 + x];
+    const Matrix<float> mi = inverse(m);
+    // Given orthogonal rows, column x of the inverse equals row x divided by its squared length.
+    for_int(x, 3) {
+      const float len = std::sqrt(square(m[x, 0]) + square(m[x, 1]) + square(m[x, 2]));
+      for_int(y, 3) assertx(abs(mi[y, x] * len - m[x, y] / len) < 1e-5f);
+    }
+  }
+  {
     // Diagonally dominant (hence well-conditioned) random matrices must invert accurately.
     Random random(1);
     for (const int n : {1, 2, 5, 20}) {

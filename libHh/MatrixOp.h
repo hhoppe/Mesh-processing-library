@@ -34,6 +34,7 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
   const T tolerance = T{16} * T(n) * std::numeric_limits<T>::epsilon();
   Array<T> row_scale(n, T{0});
   for_int(i, n) for_int(j, n) row_scale[i] = max(row_scale[i], abs(mi[i, j]));
+  for_int(i, n) if (!row_scale[i]) return false;
   Matrix<T> t(n, 2 * n);
   for_int(i, n) for_int(j, n) {
     t[i, j] = mi[i, j];
@@ -41,11 +42,11 @@ template <typename T> [[nodiscard]] bool invert(CMatrixView<T> mi, MatrixView<T>
   }
   for_int(i, n) { t[i, n + i] = T{1}; }
   for_int(i, n) {
-    if (i < n - 1) {  // Swap the row with the largest front coefficient.
-      T a = abs(t[i, i]), max_a;
+    if (i < n - 1) {  // Swap the row with the largest front coefficient relative to the scale of its row.
+      T a = abs(t[i, i]) / row_scale[i], max_a;
       int max_i = i;
       for_intL(l, i + 1, n) {
-        if ((max_a = abs(t[l, i])) > a) {
+        if ((max_a = abs(t[l, i]) / row_scale[l]) > a) {
           a = max_a;
           max_i = l;
         }

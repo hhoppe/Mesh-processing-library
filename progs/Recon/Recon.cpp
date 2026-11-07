@@ -64,7 +64,7 @@ int num;            // # data points
 bool is_3d;         // Is it a 3D problem (vs. 2D)?
 int minora;         // Minor axis: 1 in 2D, 2 in 3D.
 bool have_normals;  // The data contains normal information.
-string g_header;  // Header to place at the top of output files.
+string g_header;    // Header to place at the top of output files.
 
 // All geometry is in the original coordinates.  The unit cube is the domain of the spatial structures and the
 // contouring grid, which are therefore accessed using xform and xform_inverse.

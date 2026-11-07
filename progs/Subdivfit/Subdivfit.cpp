@@ -113,6 +113,12 @@ void mark_mesh(GMesh& m) {
   }
 }
 
+string g_header;  // Printed by show_header(), after the comments of the first input.
+
+void show_header() {
+  if (g_header != "") showff("%s", g_header.c_str()), g_header = "";
+}
+
 void do_mfilename(Args& args) {
   assertx(gmesh.empty());
   RFile fi(args.get_filename());
@@ -120,6 +126,7 @@ void do_mfilename(Args& args) {
     assertx(my_getline(fi(), line));
     if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
   }
+  show_header();
   gmesh.read(fi());
   showdf("Initial mesh: %s\n", mesh_genus_string(gmesh).c_str());
   if (getenv_bool("FORCE_GLOBAL_PROJECT")) {
@@ -1671,8 +1678,9 @@ int main(int argc, const char** argv) {
   HH_ARGSC("Examples: Subdivfit -mf - -outn");
   HH_ARGSC("          Subdivfit -mf v.m -fi v.pts  -gfit 10  -ecol -stoc >v");
   Timer timer("Subdivfit");
-  showff("%s", args.header().c_str());
+  g_header = args.header();
   args.parse();
+  show_header();
   if (outn) {
     assertx(!gmesh.empty());
     for (Vertex v : gmesh.vertices()) gmesh.flags(v).flag(SubMesh::vflag_variable) = false;

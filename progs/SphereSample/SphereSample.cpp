@@ -1023,6 +1023,12 @@ void verify_good_sphparam(const GMesh& mesh) {
   }
 }
 
+string g_header;  // Printed by show_header(), after the comments of the first input.
+
+void show_header() {
+  if (g_header != "") showff("%s", g_header.c_str()), g_header = "";
+}
+
 GMesh read_sphparam_mesh(const string& filename) {
   HH_TIMER("_read_sphparam_mesh");
   assertx(filename != "");
@@ -1031,6 +1037,7 @@ GMesh read_sphparam_mesh(const string& filename) {
     assertx(my_getline(fi(), line));
     if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
   }
+  show_header();
   GMesh sphparam_mesh;
   sphparam_mesh.read(fi());
   assertx(sphparam_mesh.num_faces());
@@ -1815,9 +1822,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(create_lonlat_checker, "size file : write image with longlat domain checker");
   HH_ARGSF(nooutput, ": do not print mesh at program end");
   {
-    showff("%s", args.header().c_str());
+    g_header = args.header();
     HH_TIMER("SphereSample");
     args.parse();
+    show_header();
   }
   hh_clean_up();
   if (!nooutput) {

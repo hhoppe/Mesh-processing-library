@@ -852,8 +852,13 @@ int main(int argc, const char** argv) {
   assertx(!(toasciit && tobinary));
   if (toasciit) my_setenv("A3D_BINARY", "0");
   if (tobinary) my_setenv("A3D_BINARY", "1");
-  RFile is(filename);
-  RSA3dStream ia3d(is());
+  RFile fi(filename);
+  for (string line; fi().peek() == '#';) {
+    assertx(my_getline(fi(), line));
+    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+  }
+  showff("%s", args.header().c_str());
+  RSA3dStream ia3d(fi());
   process(ia3d);
   return 0;
 }

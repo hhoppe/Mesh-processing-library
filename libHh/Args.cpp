@@ -148,6 +148,7 @@ ParseArgs::ParseArgs(CArrayView<string> aargs, string name) : _name(std::move(na
 
 void ParseArgs::common_construction() {
   _argv0 = get_canonical_path(_argv0);
+  _header = create_header();
   if (_argv0 != "") {
     iadd(option{"-?", 0, &ParseArgs::fquestion, nullptr, ": print available options (also --help, --version)"});
     iadd(option{"--help", 0, &ParseArgs::fquestion, nullptr, ": (<unlisted>) show help"});
@@ -475,7 +476,7 @@ void ParseArgs::fversion(Args& args) {
   k_fast_exit ? exit_immediately(0) : exit(0);
 }
 
-string ParseArgs::header() {
+string ParseArgs::create_header() const {
   const string s_main = "Created at " + get_header_info() + " using:\n";
   const int thresh_line_len = 120 - 5;
   int len = 0;

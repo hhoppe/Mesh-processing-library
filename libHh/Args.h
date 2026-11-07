@@ -119,7 +119,7 @@ class ParseArgs : public Args {
   bool parse();  // Main function; returns success (false if "-?" is found).
   [[nodiscard]] bool parse_and_extract(Array<string>& aargs);
   void copy_parse(const ParseArgs& pa);
-  [[nodiscard]] string header();
+  [[nodiscard]] const string& header() const { return _header; }  // Includes all the original arguments.
   void problem(const string& s) override;
   ParseArgs(const ParseArgs&) = delete;  // Not noncopyable because the private operator=() is defined below.
 
@@ -134,6 +134,7 @@ class ParseArgs : public Args {
   };
   string _name;  // Name of options (e.g. "Hw").
   string _argv0;
+  string _header;
   bool _other_args_ok{false};
   bool _other_options_ok{false};
   bool _disallow_prefixes{false};
@@ -143,6 +144,7 @@ class ParseArgs : public Args {
   Array<string> _unrecognized_args;
   [[nodiscard]] bool parse_internal();  // Returns success (false if "-?" is found).
   void common_construction();
+  [[nodiscard]] string create_header() const;
   [[nodiscard]] string get_executable_name();
   void iadd(option o);
   [[nodiscard]] const option* match(const string& s, bool skip_options);

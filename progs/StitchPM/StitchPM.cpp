@@ -18,6 +18,12 @@ int blocks;
 Matrix<PMesh> pmeshes;
 PMesh pmesh;
 
+string g_header;  // Printed by show_header(), after the comments of the first input.
+
+void show_header() {
+  if (g_header != "") showdf("%s", g_header.c_str()), g_header = "";
+}
+
 void read_pms() {
   pmeshes.init(blockx, blocky);
   for_int(bx, blockx) for_int(by, blocky) {
@@ -28,6 +34,7 @@ void read_pms() {
         assertx(my_getline(fi(), line));
         if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
       }
+      show_header();
     }
     pmeshes[bx, by].read(fi());
   }
@@ -212,8 +219,9 @@ int main(int argc, const char** argv) {
   HH_ARGSP(blocky, "ny : number of blocks along y axis");
   HH_ARGSP(blocks, "n : block size (num_vertices - 1 per side)");
   HH_ARGSD(stitch, ": stitch the PM's together");
-  showdf("%s", args.header().c_str());
+  g_header = args.header();
   HH_TIMER("StitchPM");
   args.parse();
+  show_header();
   return 0;
 }

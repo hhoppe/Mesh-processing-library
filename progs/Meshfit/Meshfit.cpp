@@ -494,6 +494,12 @@ void initial_projection() {
 
 // *** commands
 
+string g_header;  // Printed by show_header(), after the comments of the first input.
+
+void show_header() {
+  if (g_header != "") showff("%s", g_header.c_str()), g_header = "";
+}
+
 void do_mfilename(Args& args) {
   HH_TIMER("_mfilename");
   assertx(mesh.empty());
@@ -502,6 +508,7 @@ void do_mfilename(Args& args) {
     assertx(my_getline(fi(), line));
     if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
   }
+  show_header();
   mesh.read(fi());
   for (Face f : mesh.faces()) {
     const int nv = mesh.num_vertices(f);
@@ -1696,8 +1703,9 @@ int main(int argc, const char** argv) {
   HH_ARGSP(feswaasym, "f : set drss threshold (fraction of crep)");
   {
     HH_TIMER("Meshfit");
-    showff("%s", args.header().c_str());
+    g_header = args.header();
     args.parse();
+    show_header();
     perhaps_initialize();
     analyze_mesh("FINAL");
   }

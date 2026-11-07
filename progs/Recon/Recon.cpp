@@ -122,6 +122,7 @@ void process_read() {
     assertx(my_getline(is, line));
     if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
   }
+  showff("%s", g_header.c_str());
   RSA3dStream ia3d(is);
   A3dElem el;
   int nnor = 0;
@@ -772,7 +773,6 @@ int main(int argc, const char** argv) {
     if (args.num() && (arg0 == "-" || arg0[0] != '-')) filename = args.get_filename();
   }
   g_header = args.header();
-  showff("%s", g_header.c_str());
   args.parse();
   assertx(samplingd);
   process();

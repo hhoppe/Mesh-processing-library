@@ -206,6 +206,11 @@ int main(int argc, const char** argv) {
   statistics = stat;
   b_frame = frame;
   RFile fi(filename);
+  for (string line; fi().peek() == '#';) {
+    assertx(my_getline(fi(), line));
+    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+  }
+  showff("%s", args.header().c_str());
   process_frames(fi());
   return 0;
 }

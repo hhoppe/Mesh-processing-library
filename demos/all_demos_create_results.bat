@@ -5,7 +5,7 @@ cd "%~p0"
 
 if .==. (
   call create_reconstruction_mannequin.bat
-  call create_reconstruction_distcap.bat
+  call create_reconstruction_animated.bat
   call create_reconstruction_polygon.bat
 
   call create_simplified_using_meshopt.bat

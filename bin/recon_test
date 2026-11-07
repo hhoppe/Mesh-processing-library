@@ -1,0 +1,71 @@
+#!/bin/bash
+
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: recon_test -pts file.pts -out prefix [options]
+
+Run the surface reconstruction of demos/create_reconstruction_animated.sh on any point set, with other parameters,
+and show the steps using demos/view_reconstruction_animated.sh.  All output files are named prefix.*.
+The viewer uses the state file named like the points but with suffix .s3d, if it exists, unless the environment
+variable RECON_S3D gives an absolute path or a name for s3dname to find.
+
+Options (each default is the setting of the demo):
+  -samplingd d                 Recon sampling density (default 0.02).
+  -recon_params 'args'         Additional Recon arguments (e.g. '-grid 60'), placed after its -samplingd.
+  -fillholes n                 Fill holes with at most n edges, using Filtermesh (default 40; 0 fills none).
+  -angle deg                   Mark sharp the edges with a dihedral angle above deg, for Subdivfit (default 52).
+  -meshfit_params 'args'       Additional Meshfit arguments, placed before its -reconstruct.
+  -subdivfit_params 'args'     Additional Subdivfit arguments, placed before its -reconstruct.
+  -view_only                   Show the existing output files of a previous run.
+
+Examples:
+recon_test -pts demos/data/knot108s.pts -out ~/tmp/recon/knot108s -samplingd .025 -fillholes 0 -angle 180 \
+  -meshfit_params '-crep 1e-4' -subdivfit_params '-crep 1e-4 -csharp 2e-5'
+recon_test -pts demos/data/distcap.pts -out ~/tmp/recon/distcap_a \
+  -meshfit_params '-crep 1e-4' -subdivfit_params '-crep 1e-4 -csharp 2e-5'
+recon_test -pts ~/data/recon/new/mechpart.4102.pts -out ~/tmp/recon/mechpart -samplingd .035 -angle 50
+recon_test -pts ~/data/recon/new/mechpart.4102.pts -out ~/tmp/recon/mechpart -view_only
+END_USAGE_EXAMPLES
+
+if [[ $1 == --help ]]; then echo "$usage"; exit 0; fi
+
+set -e
+
+export RECON_PTS RECON_OUT RECON_SAMPLINGD RECON_RECON_PARAMS RECON_FILLHOLES RECON_ANGLE RECON_MESHFIT_PARAMS RECON_SUBDIVFIT_PARAMS
+
+view_only=0
+while (($#)); do
+  case $1 in
+    -pts) RECON_PTS=$2; shift 2 ;;
+    -out) RECON_OUT=$2; shift 2 ;;
+    -samplingd) RECON_SAMPLINGD=$2; shift 2 ;;
+    -recon_params) RECON_RECON_PARAMS=$2; shift 2 ;;
+    -fillholes) RECON_FILLHOLES=$2; shift 2 ;;
+    -angle) RECON_ANGLE=$2; shift 2 ;;
+    -meshfit_params) RECON_MESHFIT_PARAMS=$2; shift 2 ;;
+    -subdivfit_params) RECON_SUBDIVFIT_PARAMS=$2; shift 2 ;;
+    -view_only) view_only=1; shift ;;
+    *) echo "$0: unrecognized argument '$1'" >&2; exit 1 ;;
+  esac
+done
+if [[ -z $RECON_PTS || -z $RECON_OUT ]]; then echo "$usage" >&2; exit 1; fi
+
+# The demos change the current directory, and native Windows programs cannot open Cygwin paths.
+absolute_path() {
+  if [[ $OSTYPE == cygwin ]]; then
+    cygpath -ma "$1"
+  elif [[ $1 == /* ]]; then
+    echo "$1"
+  else
+    echo "$PWD/$1"
+  fi
+}
+RECON_PTS=$(absolute_path "$RECON_PTS")
+RECON_OUT=$(absolute_path "$RECON_OUT")
+export RECON_S3D=${RECON_S3D:-${RECON_PTS%.pts}.s3d}
+
+demos_dir=$(dirname "${BASH_SOURCE[0]}")/../demos
+if ((!view_only)); then
+  mkdir -p "$(dirname "$RECON_OUT")"
+  "$demos_dir/create_reconstruction_animated.sh"
+fi
+"$demos_dir/view_reconstruction_animated.sh"

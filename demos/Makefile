@@ -19,7 +19,7 @@ $(call assert_prepend_PATH,$(MeshRoot)/demos)  # Allow running bash scripts in l
 
 create_scripts = \
   create_reconstruction_mannequin.sh \
-  create_reconstruction_distcap.sh \
+  create_reconstruction_animated.sh \
   create_reconstruction_polygon.sh \
   create_simplified_using_meshopt.sh \
   create_progressive_mesh_gaudipark.sh \
@@ -41,7 +41,7 @@ create_scripts = \
 
 view_scripts = \
   view_reconstruction_mannequin.sh \
-  view_reconstruction_distcap.sh \
+  view_reconstruction_animated.sh \
   view_reconstruction_polygon.sh \
   view_simplified_using_meshopt.sh \
   view_progressive_mesh_gaudipark.sh \

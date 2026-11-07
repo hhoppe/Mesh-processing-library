@@ -7,7 +7,7 @@ PATH=.:$PATH # allow running bash scripts in local directory
 set -v
 
 view_reconstruction_mannequin.sh
-view_reconstruction_distcap.sh
+view_reconstruction_animated.sh
 view_reconstruction_polygon.sh
 
 view_simplified_using_meshopt.sh

@@ -13,6 +13,8 @@ built by Visual Studio.
   the material colors used by `obj_to_mesh`.
 - `g3d_cmp` (and `g3d_cmp.bat` for the Windows command prompt) compares geometric objects side-by-side in a grid
   of `G3dOGL` windows whose viewpoints stay synchronized.
+- `recon_test` runs and shows the animated surface reconstruction demo on any point set, with other
+  parameters, and writes its results outside the repository (see `recon_test --help`).
 - `hcheck` runs the [unit tests](../make/README.md#unit-tests) and compares their outputs (`*.ou`)
   with the expected reference files (`*.ref`).
 - `check_reference_values` checks generated files against reference values (statistics of images and videos,

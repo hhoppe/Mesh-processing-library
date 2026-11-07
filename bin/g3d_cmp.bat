@@ -93,12 +93,20 @@ if defined status (
 )
 
 :: Get the screen size, the work area (excluding the taskbar), the visible window frame (left, top, right, bottom)
-::  around the client area, and the offset from a -geom position to the visible frame.
+::  around the client area, and the offset from a -geom position to the visible frame.  Windows given -hidden (as in
+::  the demos with DEMOS_HIDDEN) are never mapped, so their placement does not matter, and the query is skipped.
 for /f "tokens=1" %%u in ("%g3d%") do set g3d0=%%u
 set oy=
-for /f "tokens=2,3,5-8,10-13,15,16" %%a in ('%g3d0% -hwquery ^<nul') do (
-  set sw=%%a& set sh=%%b& set wx=%%c& set wy=%%d& set ww=%%e& set wh=%%f
-  set fl=%%g& set ft=%%h& set fr=%%i& set fb=%%j& set ox=%%k& set oy=%%l
+set hidden=
+set "probe= !gopts! "
+if not "!probe: -hidden =!"=="!probe!" set hidden=1
+if defined hidden (
+  set /a "sw=1920, sh=1080, wx=0, wy=0, ww=1920, wh=1080, fl=0, ft=0, fr=0, fb=0, ox=0, oy=0"
+) else (
+  for /f "tokens=2,3,5-8,10-13,15,16" %%a in ('%g3d0% -hwquery ^<nul') do (
+    set sw=%%a& set sh=%%b& set wx=%%c& set wy=%%d& set ww=%%e& set wh=%%f
+    set fl=%%g& set ft=%%h& set fr=%%i& set fb=%%j& set ox=%%k& set oy=%%l
+  )
 )
 if not defined oy (
   >&2 echo g3d_cmp: '%g3d0% -hwquery' failed

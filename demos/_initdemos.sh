@@ -53,8 +53,12 @@ PATH=.:$PATH
 if [[ $(type -P G3dOGL) == */bin/cygwin/* ]]; then ensure_x11_server; fi
 
 # Define the default window geometry of the viewers, doubled on a screen of at least 2560x1600 pixels (if the viewer
-# can report it).  It is not given to g3d_cmp, which arranges its own windows.
-read -r _ screen_width screen_height _ < <(G3dOGL -hwquery </dev/null 2>/dev/null) || true
+# can report it).  It is not given to g3d_cmp, which arranges its own windows.  Only the view demos with visible
+# windows use it, so the others skip the query of the display: under Cygwin, a connection to the X server once hung
+# forever in XOpenDisplay(), within the select() of the Cygwin DLL (socket_cleanup() waiting on its socket thread).
+if [[ -z $DEMOS_HIDDEN && $(basename "$0") == view_* ]]; then
+  read -r _ screen_width screen_height _ < <(G3dOGL -hwquery </dev/null 2>/dev/null) || true
+fi
 win_size=1000x750
 if ((${screen_width:-0} >= 2560 && ${screen_height:-0} >= 1600)); then win_size=2000x1500; fi
 win_pos=+150+0

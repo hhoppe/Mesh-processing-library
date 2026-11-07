@@ -1064,7 +1064,11 @@ void ButtonPressed(int butnum, bool pressed, bool shift, const Vec2<float>& yx) 
       SHOW(butnum);
       return;
     }
-    if (flightmode == EFlightmode::automatic) flightmode = EFlightmode::none;
+    if (flightmode == EFlightmode::automatic) {
+      // A demo may turn off object_mode to vary the automatic rotation; restore it when the user takes control.
+      flightmode = EFlightmode::none;
+      object_mode = true;
+    }
     keep_active = false;
     button_active = butnum;
     selected.shift = shift;
@@ -1091,8 +1095,11 @@ void WheelTurned(float v) {
   //  scrolling (the Windows default) reports a two-finger swipe upward as the wheel turning backward, so that swipe
   //  moves away from the scene.  Windows delivers a touchpad pinch as ctrl-wheel, so spreading the fingers moves
   //  toward the scene.
+  // The wheel always moves in object_mode, since no button press has selected a frame for the other mode.
   const float yq = v * .15f;
+  const bool saved_object_mode = std::exchange(object_mode, true);
   Dolly(V(yq, 0.f));
+  object_mode = saved_object_mode;
   HB::redraw_later();
 }
 

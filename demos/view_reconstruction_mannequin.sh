@@ -4,8 +4,7 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./_initdemos.sh
 
 echo '.'
-echo 'To take interactive control, select the first window, press "o" to remove object-centric motion,'
-echo '  then drag using any of the mouse buttons.'
+echo 'To take interactive control, drag in the first window using any of the mouse buttons.'
 echo '.'
 
 r=mannequin

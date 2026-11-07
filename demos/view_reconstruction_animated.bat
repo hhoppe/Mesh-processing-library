@@ -25,17 +25,17 @@ set IGNORE_DOS_EOL=1
 
 :: Precompute the input stream to avoid stutters in the viewer.
 (
-  type data\%r%.pts &                       (echo wait 2.0) & (echo O 0 1 0)
-  type results\%r%.u.a3d &                  (echo wait 1.5) & (echo O 0 1 0)
-  Filtera3d results/%r%.g.a3d -tobinary &   (echo wait 2.0) & (echo O 0 1 0)
-  Filtera3d results/%r%.p.a3d -tobinary &   (echo wait 1.5) & (echo O 0 1 0)
-  type results\%r%.o.a3d &                  (echo wait 1.5)
-  Filtera3d results/%r%.c.a3d -split 30 &   (echo wait 1.5) & (echo O 0 1 0)
-  Filtera3d results/%r%.l.a3d -tobinary &   (echo wait 1.5) & (echo O 0 1 0)
-  type results\%r%.m &                      (echo wait 2.0) & (echo O 0 1 0)
-  %filter_opt% &                            (echo wait 1.5) & (echo O 0 1 0)
-  %filter_sub0% &                           (echo wait 1.5) & (echo O 0 1 0)
-  type results\%r%.sub2limit.m &            (echo keys DmDe)
+  type data\%r%.pts &                                 (echo wait 2.0) & (echo O 0 1 0)
+  Filtera3d results/%r%.u.a3d -tobinary &             (echo wait 1.5) & (echo O 0 1 0)
+  Filtera3d results/%r%.g.a3d -tobinary &             (echo wait 2.0) & (echo O 0 1 0)
+  Filtera3d results/%r%.p.a3d -tobinary &             (echo wait 1.5) & (echo O 0 1 0)
+  Filtera3d results/%r%.o.a3d -tobinary &             (echo wait 1.5)
+  Filtera3d results/%r%.c.a3d -split 30 -tobinary &   (echo wait 1.5) & (echo O 0 1 0)
+  Filtera3d results/%r%.l.a3d -tobinary &             (echo wait 1.5) & (echo O 0 1 0)
+  type results\%r%.m &                                (echo wait 2.0) & (echo O 0 1 0)
+  %filter_opt% &                                      (echo wait 1.5) & (echo O 0 1 0)
+  %filter_sub0% &                                     (echo wait 1.5) & (echo O 0 1 0)
+  type results\%r%.sub2limit.m &                      (echo keys DmDe)
 ) >%stream%
 
 G3dOGL -st data/%r%.s3d -backcolor hhblue -key oJ---- -key DmDeDbDC -terse -sync %G3D_GEOM% %G3D_ARGS% <%stream%

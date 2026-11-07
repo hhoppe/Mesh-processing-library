@@ -13,6 +13,18 @@ set -e -o pipefail
 # Usage: `writer | viewer || allow_sigpipe`.  Any other failure status is preserved.
 allow_sigpipe() { local status=$?; ((status == 141)) || return $status; }
 
+# Some environments (e.g., GitHub Actions) start the scripts with SIGPIPE ignored, so that the writers to a closed
+# viewer instead fail with write errors.  Bash cannot restore a signal ignored on entry, so rerun the calling script
+# once through Perl with the default action.  The variable prevents a second rerun, and the scripts run in their own
+# directory, so the script name suffices.  (Under Cygwin, Perl is the native Windows build, which lacks SIGPIPE.)
+if [[ $(trap -p PIPE) == *"''"* && -z $DEMOS_SIGPIPE_RESET && $OSTYPE != cygwin ]] && type -P perl >/dev/null; then
+  script=$(basename "${BASH_SOURCE[${#BASH_SOURCE[@]} - 1]}")
+  if [[ -f $script ]]; then
+    export DEMOS_SIGPIPE_RESET=1
+    exec perl -e '$SIG{PIPE} = "DEFAULT"; exec @ARGV or die "exec failed: $!\n"' "$BASH" "$script" "$@"
+  fi
+fi
+
 # Report the failing command's line and status, since errexit otherwise exits silently.
 trap 'echo "${BASH_SOURCE[0]}: line $LINENO: exit status $?" >&2' ERR
 

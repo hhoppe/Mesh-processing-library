@@ -21,28 +21,25 @@ filter=(perl -s -pe '
   if (/^# frame/) { $n = int($pause - $j++ * $speedup); print "f 0 0 0\n" x ($n > 1 ? $n : 1); }
   if ($s && /^E/ && $k++ % $every == 0) { print "f 0 0 0\n"; $j = 0; }' --)
 
-split=$out.split.tmp
-opt=$out.opt.tmp
-sub0=$out.sub0.tmp
-trap 'rm -f "$split" "$opt" "$sub0"' EXIT
+rest=$out.view.tmp
+trap 'rm -f "$rest"' EXIT
 
-# Generate the slow parts in the background, so that the viewer starts at once and only finished files feed its pipe,
-# which avoids stutters.  The background processes start after the .pts file, whose size exceeds the pipe capacity,
-# so that they do not compete with the viewer startup.
+# Send the points first, so that the viewer starts at once.  Meanwhile, gather the rest of the stream into a single
+# file, which then feeds the viewer without stutters.
 (
-  cat "$pts";                        echo wait 2.0; echo O 0 1 0
-  Filtera3d "$out.c.a3d" -split 30 >"$split" & pid_split=$!
-  cat "$out.u.a3d";                  echo wait 1.5; echo O 0 1 0
-  "${filter[@]}" -wait=2.0 -pause=20 -speedup=0.3 -every=14 "$out.opt.record" >"$opt" & pid_opt=$!
-  Filtera3d "$out.g.a3d" -tobinary;  echo wait 2.0; echo O 0 1 0
-  "${filter[@]}" -wait=2.0 -pause=30 -speedup=0.0 -every=1 "$out.sub0.record" >"$sub0" & pid_sub0=$!
-  Filtera3d "$out.p.a3d" -tobinary;  echo wait 1.5; echo O 0 1 0
-  cat "$out.o.a3d";                  echo wait 1.5
-  wait $pid_split; cat "$split";     echo wait 1.5; echo O 0 1 0
-  Filtera3d "$out.l.a3d" -tobinary;  echo wait 1.5; echo O 0 1 0
-  cat "$out.m";                      echo wait 2.0; echo O 0 1 0
-  wait $pid_opt; cat "$opt";         echo wait 1.5; echo O 0 1 0
-  wait $pid_sub0; cat "$sub0";       echo wait 1.5; echo O 0 1 0
-  cat "$out.sub2limit.m";            echo keys DmDe
+  cat "$pts";                                    echo wait 2.0; echo O 0 1 0
+  {
+    Filtera3d "$out.u.a3d" -tobinary;            echo wait 1.5; echo O 0 1 0
+    Filtera3d "$out.g.a3d" -tobinary;            echo wait 2.0; echo O 0 1 0
+    Filtera3d "$out.p.a3d" -tobinary;            echo wait 1.5; echo O 0 1 0
+    Filtera3d "$out.o.a3d" -tobinary;            echo wait 1.5
+    Filtera3d "$out.c.a3d" -split 30 -tobinary;  echo wait 1.5; echo O 0 1 0
+    Filtera3d "$out.l.a3d" -tobinary;            echo wait 1.5; echo O 0 1 0
+    cat "$out.m";                                echo wait 2.0; echo O 0 1 0
+    "${filter[@]}" -wait=2.0 -pause=20 -speedup=0.3 -every=14 "$out.opt.record"; echo wait 1.5; echo O 0 1 0
+    "${filter[@]}" -wait=2.0 -pause=30 -speedup=0.0 -every=1 "$out.sub0.record"; echo wait 1.5; echo O 0 1 0
+    cat "$out.sub2limit.m";                      echo keys DmDe
+  } >"$rest"
+  cat "$rest"
 ) | G3dOGL -st "$s3d" -backcolor hhblue -key oJ---- -key DmDeDbDC -terse -sync $G3D_GEOM $G3D_ARGS \
   || allow_sigpipe

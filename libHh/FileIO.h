@@ -8,7 +8,7 @@ namespace hh {
 
 // Create a read stream (FILE and istream) from a file, compressed file, URL, or input pipe command.
 // Supports "-" (std::cin), ".Z", ".gz", "https://...", and "command args... |".
-// Note that it is best to close stdin within an input pipe: "command </dev/null ... |"!
+// A command that may read stdin should redirect it: "command </dev/null ... |" (or ffmpeg -nostdin).
 // The exit status of a pipe command is meaningful only if its output was read to the end, because a reader that
 //  stops early may make the command fail with a broken pipe.  Given that, the failure of a command that RFile runs
 //  itself (to decompress ".gz" or ".Z", or to download "https://..." using wget) is a fatal error when the stream

@@ -1196,7 +1196,7 @@ void do_loadpj(Args& args) {
   const string filename = args.get_filename();
   auto pfi = make_unique<RFile>(filename);
   if ((*pfi)().peek() == 31)  // Decompress a gzip-compressed pjo/pjr file.
-    pfi = make_unique<RFile>("gzip -d -c <" + filename + " |");
+    pfi = make_unique<RFile>("gzip -d -c <" + quote_arg_for_shell(filename) + " |");
   std::istream& is = (*pfi)();
   g_lp.mat_static.init(video.spatial_dims());
   g_lp.mat_start.init(video.spatial_dims());

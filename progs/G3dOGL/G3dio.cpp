@@ -128,9 +128,7 @@ bool try_g3d_command(const string& pstr) {
   string str = pstr;
   if (0) {
   } else if (remove_at_start(str, "keys ")) {
-    // assertx(str.size() == 1);  // New 2012-12-13.
-    // KeyPressed(str);
-    for (const char ch : str) KeyPressed(string(1, ch));
+    KeysPressed(str);
     return true;
   } else if (remove_at_start(str, "wait ")) {
     wait_command = Args::parse_float(str);

@@ -16,7 +16,7 @@ echo 'Running phase 1 - Recon.'
 Recon "$pts" -rootname "$out" -samplingd $samplingd $RECON_RECON_PARAMS -what ugpoclm >"$out.m"
 
 echo 'Filling any small reconstruction holes.'
-Filtermesh "$out.m" -genus -rmcomp 100 -fillholes $fillholes -triangulate -genus >"$out.recon.m"
+Filtermesh "$out.m" -genus -rmcomp 100 -fillholes $fillholes -triangulate -fixvertices -genus >"$out.recon.m"
 
 echo 'Running phase 2 - Meshfit.'
 Meshfit -mfile "$out.recon.m" -file "$pts" -record "$out.opt.record" $RECON_MESHFIT_PARAMS -reconstruct >"$out.opt.m"

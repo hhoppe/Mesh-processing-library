@@ -709,21 +709,25 @@ static void show_globe() {
   }
 }
 
+void KeysPressed(const string& keys) {
+  // Each character is a key, except for a key name with modifiers such as "<C-l>" or "<S-left>" (see
+  //  HwBase::simulate_key_press()); other '<' and '>' remain keys.
+  for (string::size_type i = 0; i < keys.size(); i++) {
+    const bool modified =
+        keys[i] == '<' && i + 2 < keys.size() && std::string_view("CSM").contains(keys[i + 1]) && keys[i + 2] == '-';
+    const auto j = modified ? keys.find('>', i) : string::npos;
+    if (j != string::npos) {
+      HB::simulate_key_press(keys.substr(i, j + 1 - i));
+      i = j;
+    } else {
+      KeyPressed(string(1, keys[i]));
+    }
+  }
+}
+
 void Draw() {
   if (keystring != "") {
-    // Each character is a key, except for a key name with modifiers such as "<C-l>" or "<S-left>" (see
-    //  HwBase::simulate_key_press()); other '<' and '>' remain keys.
-    for (string::size_type i = 0; i < keystring.size(); i++) {
-      const bool modified = keystring[i] == '<' && i + 2 < keystring.size() &&
-                            std::string_view("CSM").contains(keystring[i + 1]) && keystring[i + 2] == '-';
-      const auto j = modified ? keystring.find('>', i) : string::npos;
-      if (j != string::npos) {
-        HB::simulate_key_press(keystring.substr(i, j + 1 - i));
-        i = j;
-      } else {
-        KeyPressed(string(1, keystring[i]));
-      }
-    }
+    KeysPressed(keystring);
     keystring = "";
   }
   cur_needs_redraw = false;

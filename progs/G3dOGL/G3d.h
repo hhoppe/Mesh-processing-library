@@ -178,6 +178,7 @@ void DoJump();
 
 // G3ddraw
 void Applyq(const Frame& tq);
+void KeysPressed(const string& keys);
 void Draw();
 void ShowInfo();
 void RecomputeSharpEdges(GMesh& mesh);

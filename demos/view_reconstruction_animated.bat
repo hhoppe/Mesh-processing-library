@@ -18,23 +18,28 @@ set filter=%filter% if ($s && /^E/ && $k++ %% $every == 0) { print qq(f 0 0 0\n)
 set filter_opt=%filter% -wait=2.0 -pause=20 -speedup=0.3 -every=14 results/%r%.opt.record
 set filter_sub0=%filter% -wait=2.0 -pause=30 -speedup=0.0 -every=1 results/%r%.sub0.record
 
+echo At the end of the animation, press 'P' and 'N' to move backwards and forwards through the objects.
+
 set stream=results\%r%.view.tmp
 
 :: Both echo and the native Perl end their lines with CRLF, which G3dOGL strips; suppress its warning about it.
 set IGNORE_DOS_EOL=1
 
-:: Precompute the input stream to avoid stutters in the viewer.
+:: Precompute the input stream to avoid stutters in the viewer.  After each object: pause for some duration; get ready
+:: to read the next object slot ("o 1 1 0"); and simulate keys, by default hiding the current object (u) and advancing
+:: to the next object (<C-n>).  In cmd, ^< and ^> escape the angle brackets of the key names.
 (
-  type data\%r%.pts &                                 (echo wait 2.0) & (echo O 0 1 0)
-  Filtera3d results/%r%.u.a3d -tobinary &             (echo wait 1.5) & (echo O 0 1 0)
-  Filtera3d results/%r%.g.a3d -tobinary &             (echo wait 2.0) & (echo O 0 1 0)
-  Filtera3d results/%r%.p.a3d -tobinary &             (echo wait 1.5) & (echo O 0 1 0)
-  Filtera3d results/%r%.o.a3d -tobinary &             (echo wait 1.5)
-  Filtera3d results/%r%.c.a3d -split 30 -tobinary &   (echo wait 1.5) & (echo O 0 1 0)
-  Filtera3d results/%r%.l.a3d -tobinary &             (echo wait 1.5) & (echo O 0 1 0)
-  type results\%r%.m &                                (echo wait 2.0) & (echo O 0 1 0)
-  %filter_opt% &                                      (echo wait 1.5) & (echo O 0 1 0)
-  %filter_sub0% &                                     (echo wait 1.5) & (echo O 0 1 0)
+  type data\%r%.pts &                                 (echo wait 2.0) & (echo o 1 1 0) & (echo keys u^<C-n^>)
+  Filtera3d results/%r%.u.a3d -tobinary &             (echo wait 2.5) & (echo o 1 1 0) & (echo keys u^<C-n^>)
+  Filtera3d results/%r%.g.a3d -tobinary &             (echo wait 2.0) & (echo o 1 1 0) & (echo keys u^<C-n^>)
+  Filtera3d results/%r%.p.a3d -tobinary &             (echo wait 1.5) & (echo o 1 1 0) & (echo keys u^<C-n^>)
+  Filtera3d results/%r%.o.a3d -tobinary &             (echo wait 1.5) & (echo o 1 1 0)
+  Filtera3d results/%r%.c.a3d -split 30 -tobinary &   (echo wait 1.5) & (echo o 1 1 0) & (echo keys ^<C-n^>u^<C-n^>)
+  Filtera3d results/%r%.l.a3d -tobinary &             (echo wait 2.0) & (echo o 1 1 0)
+  (echo keys ^<C-p^>^<C-p^>u^<C-n^>^<C-n^>u^<C-n^>)
+  type results\%r%.m &                                (echo wait 4.0) & (echo o 1 1 0) & (echo keys u^<C-n^>)
+  %filter_opt% &                                      (echo wait 1.5) & (echo o 1 1 0) & (echo keys u^<C-n^>)
+  %filter_sub0% &                                     (echo wait 2.5) & (echo o 1 1 0) & (echo keys u^<C-n^>)
   type results\%r%.sub2limit.m &                      (echo keys DmDe)
 ) >%stream%
 

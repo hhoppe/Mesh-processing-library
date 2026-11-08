@@ -24,20 +24,26 @@ filter=(perl -s -pe '
 rest=$out.view.tmp
 trap 'rm -f "$rest"' EXIT
 
+echo "At the end of the animation, press 'P' and 'N' to move backwards and forwards through the objects."
+
+# After each object, pause for some duration; get ready to read the next object slot ("o 1 1 0"); and simulate keys,
+# by default hiding the current object (u) and advancing to the next object (<C-n>).
+next() { local duration="$1" keys="${2-u<C-n>}"; echo wait "$duration"; echo o 1 1 0; echo "keys $keys"; }
+
 # Send the points first, so that the viewer starts at once.  Meanwhile, gather the rest of the stream into a single
 # file, which then feeds the viewer without stutters.
 (
-  cat "$pts";                                    echo wait 2.0; echo O 0 1 0
+  cat "$pts";                                    next 2.0
   {
-    Filtera3d "$out.u.a3d" -tobinary;            echo wait 1.5; echo O 0 1 0
-    Filtera3d "$out.g.a3d" -tobinary;            echo wait 2.0; echo O 0 1 0
-    Filtera3d "$out.p.a3d" -tobinary;            echo wait 1.5; echo O 0 1 0
-    Filtera3d "$out.o.a3d" -tobinary;            echo wait 1.5
-    Filtera3d "$out.c.a3d" -split 30 -tobinary;  echo wait 1.5; echo O 0 1 0
-    Filtera3d "$out.l.a3d" -tobinary;            echo wait 1.5; echo O 0 1 0
-    cat "$out.m";                                echo wait 2.0; echo O 0 1 0
-    "${filter[@]}" -wait=2.0 -pause=20 -speedup=0.3 -every=14 "$out.opt.record"; echo wait 1.5; echo O 0 1 0
-    "${filter[@]}" -wait=2.0 -pause=30 -speedup=0.0 -every=1 "$out.sub0.record"; echo wait 1.5; echo O 0 1 0
+    Filtera3d "$out.u.a3d" -tobinary;            next 2.5
+    Filtera3d "$out.g.a3d" -tobinary;            next 2.0
+    Filtera3d "$out.p.a3d" -tobinary;            next 1.5
+    Filtera3d "$out.o.a3d" -tobinary;            next 1.5 ''  # Keep the object visible as the next one streams in.
+    Filtera3d "$out.c.a3d" -split 30 -tobinary;  next 1.5 '<C-n>u<C-n>'
+    Filtera3d "$out.l.a3d" -tobinary;            next 2.0 '<C-p><C-p>u<C-n><C-n>u<C-n>'
+    cat "$out.m";                                next 4.0
+    "${filter[@]}" -wait=2.0 -pause=20 -speedup=0.3 -every=14 "$out.opt.record"; next 1.5
+    "${filter[@]}" -wait=2.0 -pause=30 -speedup=0.0 -every=1 "$out.sub0.record"; next 2.5
     cat "$out.sub2limit.m";                      echo keys DmDe
   } >"$rest"
   cat "$rest"

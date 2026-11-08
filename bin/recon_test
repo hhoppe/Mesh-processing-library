@@ -20,6 +20,7 @@ Options (each default is the setting of the demo):
 Examples:
 recon_test -pts demos/data/knot108s.pts -out ~/tmp/recon/knot108s -samplingd .025 -fillholes 0 -angle 180 \
   -meshfit_params '-crep 1e-4' -subdivfit_params '-crep 1e-4 -csharp 2e-5'
+recon_test -pts ~/data/recon/new/oilpmp.30937.pts -out ~/tmp/recon/oilpmp -samplingd .0109 -fillholes 30 -angle 40
 recon_test -pts demos/data/distcap.pts -out ~/tmp/recon/distcap_a \
   -meshfit_params '-crep 1e-4' -subdivfit_params '-crep 1e-4 -csharp 2e-5'
 recon_test -pts ~/data/recon/new/mechpart.4102.pts -out ~/tmp/recon/mechpart -samplingd .035 -angle 50

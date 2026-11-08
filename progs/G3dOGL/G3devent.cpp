@@ -974,6 +974,16 @@ bool KeyPressed(const string& ps) {
     case 'P':
       if (ob_prev()) HB::redraw_now();
       break;
+    case 'N' - 64:  // C-n.
+      cob += 1;
+      HB::set_current_object(cob);
+      HB::redraw_now();
+      break;
+    case 'P' - 64:  // C-p.
+      cob = max(cob - 1, 0);
+      HB::set_current_object(cob);
+      HB::redraw_now();
+      break;
     case 'D':
       // Prefix code.
       break;

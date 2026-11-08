@@ -112,6 +112,33 @@ void test_max_neval() {
   }
 }
 
+// A small relative decrease of the function value stops the optimization before it converges.  The function has a
+// nonzero minimum (1), as the criterion is relative to its magnitude.
+void test_min_relative_decrease() {
+  const int n = 20;
+  Array<double> x(n, 0.);
+  Array<double> grad(n);
+  int neval = 0;
+  const auto eval = [&](ArrayView<double> ret_grad) { return 1. + Quadratic{x, neval}(ret_grad); };
+  const double finit = eval(grad);
+  neval = 0;
+  {
+    NonlinearOptimization opt(x, eval);
+    assertx(opt.solve());
+  }
+  const int neval_converged = neval;
+  fill(x, 0.);
+  neval = 0;
+  NonlinearOptimization opt(x, eval);
+  opt.set_min_relative_decrease(1e-3, 3);
+  assertx(opt.solve());
+  assertx(neval < neval_converged);
+  const double f = eval(grad);
+  assertx(f < finit);
+  assertx(f - 1. < 1e-2);     // The solution is close to the minimum,
+  assertx(mag(grad) > 1e-6);  // but it has not yet converged.
+}
+
 }  // namespace
 
 int main() {
@@ -159,4 +186,5 @@ int main() {
   test_rosenbrock();
   test_quadratic();
   test_max_neval();
+  test_min_relative_decrease();
 }

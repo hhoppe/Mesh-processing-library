@@ -165,6 +165,14 @@ constexpr bool k_simp96 = true;                // Improvements.
 constexpr float k_mincos = -1.f / 3.f;         // Equals cos(109.471 degrees), the tetrahedral angle.
 constexpr auto k_spring_sched = V(1e-2f, 1e-3f, 1e-4f, 1e-8f);
 constexpr int k_max_gfit_iter = 30;
+// For -fgfit 0, the L-BFGS optimization stops when the energy decreases by less than this fraction over the last
+// k_fgfit_window iterations.  On 20 surface reconstructions (Nov 2026), it stopped after 33 to 146 evaluations (57 on
+// average), and the final energies of -reconstruct matched those obtained after a converged fgfit, within the noise
+// of the stochastic simplification; tolerances of 3e-3 and 1e-3 were no better.  In contrast, a fixed budget of 50
+// evaluations was too few for some meshes.
+constexpr double k_fgfit_min_relative_decrease = 1e-2;
+constexpr int k_fgfit_window = 10;
+constexpr int k_max_fgfit_neval = 300;
 
 // The optimizer begins with a line search whose initial step has unit length, measured over its entire vector of
 // coordinates of all n vertices.  If the gradient is roughly uniform, the average displacement of a vertex is
@@ -797,8 +805,13 @@ void do_fgfit(Args& args) {
   if (getenv_string("NLOPT_DEBUG") == "") my_setenv("NLOPT_DEBUG", "1");
   const auto func_eval = [&](ArrayView<double> ret_grad) { return eval_grad.feval(ret_grad); };
   NonlinearOptimization opt(eval_grad._x, func_eval);
-  assertx(niter > 0);
-  opt.set_max_neval(niter + 1);
+  assertx(niter >= 0);
+  if (niter) {
+    opt.set_max_neval(niter + 1);
+  } else {
+    opt.set_max_neval(k_max_fgfit_neval);
+    opt.set_min_relative_decrease(k_fgfit_min_relative_decrease, k_fgfit_window);
+  }
   // Record only the accepted iterates, not the trial points of the line searches.
   std::ostream* const os = mesh.record_changes(nullptr);
   if (os)
@@ -1620,8 +1633,9 @@ void do_reconstruct() {
   HH_TIMER("reconstruct");
   if (!spring) spring = k_spring_sched[0];
   perhaps_initialize();
-  do_fgfit(Args{"100"}.use());  // -fgfit 100  // was "20"
-  do_gfit(Args{"30"}.use());    // -gfit 30
+  // A subsequent "-gfit 30" no longer measurably improved the final energy, because its alternating projections
+  //  hardly let the vertices slide along the surface.
+  do_fgfit(Args{"0"}.use());  // -fgfit 0
   apply_schedule();
 }
 
@@ -1683,7 +1697,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":");
   HH_ARGSD(outlierdelete, "dist : remove points farther than dist from initial mesh");
   HH_ARGSD(gfit, "niter : do global fit (0=until convergence)");
-  HH_ARGSD(fgfit, "niter : use conjugate gradients");
+  HH_ARGSD(fgfit, "neval : do L-BFGS global fit (0=until convergence)");
   HH_ARGSD(stoc, ": do local stochastic mesh operations");
   HH_ARGSP(batch, "n : edges tried concurrently (affects result)");
   HH_ARGSP(affect, "i : edges retried after a change (0=none..4)");

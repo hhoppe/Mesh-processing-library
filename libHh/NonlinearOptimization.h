@@ -26,6 +26,14 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
     _debug = getenv_int("NLOPT_DEBUG");
   }
   void set_max_neval(int max_neval) { _max_neval = max_neval; }  // Default is -1, which signifies infinity.
+  // Also stop when the function value decreases by less than the fraction tol of its magnitude over the last window
+  //  iterations (successful line searches), i.e. when f_{k-window} - f_k < tol * |f_k|.  This criterion suits
+  //  functions whose minimum is far from zero, and it is disabled by the default tol == 0.
+  void set_min_relative_decrease(double tol, int window) {
+    assertx(tol >= 0. && window > 0);
+    _min_relative_decrease = tol;
+    _relative_decrease_window = window;
+  }
   // Set a function called after each successful line search, when _x holds the new iterate; the most recent call
   //  to eval was at that _x.  It is not called for the trial points rejected by the line search.
   void set_iteration_callback(std::function<void()> callback) { _iteration_callback = std::move(callback); }
@@ -38,6 +46,8 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
   int _max_neval{-1};    // Here, -1 is infinity.
   int _debug;            // 0 == no_output, 1 == show_final, 2 == show_each_iteration.
   std::function<void()> _iteration_callback;
+  double _min_relative_decrease{0.};
+  int _relative_decrease_window{1};
   void show_debug(const string& s, int iter, int neval, double f, double magg) {
     showf("NonlinearOptimization %s iter=%-3d neval=%-3d f=%.12g mag(g)=%.12g\n", s.c_str(), iter, neval, f, magg);
   }
@@ -110,6 +120,7 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
     for_int(i, _n) _as[ic, i] = -_g[i];  // The initial line search direction.
     double alpha = 1. / mag(_g);         // The initial step size.
     double gamma = alpha;                // Scale of the initial inverse Hessian; then set from the latest stored pair.
+    Array<double> fs{f};                 // The function value at the start and after each iteration.
     for_int(iter, 1000) {
       _tmp.assign(_g);  // Archive the current gradient.
       if (!line_search(f, _as[ic], alpha, neval, iter)) {
@@ -123,6 +134,12 @@ template <typename Eval> class NonlinearOptimization : noncopyable {
       }
       if (mag(_g) / max(mag(_x), 1.) <= _eps) {  // Numerically converged?
         if (_debug >= 1) show_debug("converged", iter, neval, f, mag(_g));
+        return true;
+      }
+      fs.push(f);
+      if (_min_relative_decrease && fs.num() > _relative_decrease_window &&
+          fs[fs.num() - 1 - _relative_decrease_window] - f < _min_relative_decrease * abs(f)) {
+        if (_debug >= 1) show_debug("small_decrease", iter, neval, f, mag(_g));
         return true;
       }
       _as[ic] *= alpha;                             // Record the search step.

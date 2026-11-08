@@ -9,17 +9,30 @@ namespace hh {
 // Create a read stream (FILE and istream) from a file, compressed file, URL, or input pipe command.
 // Supports "-" (std::cin), ".Z", ".gz", "https://...", and "command args... |".
 // Note that it is best to close stdin within an input pipe: "command </dev/null ... |"!
+// The exit status of a pipe command is meaningful only if its output was read to the end, because a reader that
+//  stops early may make the command fail with a broken pipe.  Given that, the failure of a command that RFile runs
+//  itself (to decompress ".gz" or ".Z", or to download "https://..." using wget) is a fatal error when the stream
+//  is closed.  For "command args... |", call close() to check that the command succeeded.
 class RFile : noncopyable {
  public:
   explicit RFile(string filename);
   ~RFile();
   [[nodiscard]] std::istream& operator()() const { return *_is; }
   [[nodiscard]] FILE* cfile() { return _file; }
+  // Close the stream, which must not be used afterward.  If it was read to the end of the output of a command that
+  //  failed, throw std::runtime_error.
+  // A failed download has a message starting with "Network failure" if the server could not be reached, or else
+  //  "Failed to download".
+  void close();
 
  private:
   bool _file_isstd{false};
   bool _file_ispipe{false};
+  bool _check_command{false};  // The failure of the pipe command is fatal (if the output was read to the end).
+  string _command;             // The pipe command, for error messages.
+  string _url;                 // The downloaded URL, for error messages.
   FILE* _file{nullptr};
+  [[nodiscard]] string close_internal(bool check_command);
   class Implementation;
   unique_ptr<Implementation> _impl;
   std::istream* _is{nullptr};

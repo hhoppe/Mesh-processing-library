@@ -290,36 +290,61 @@ class WFile::Implementation {
 
 // *** RFile
 
+namespace {
+
+// Return the exit code of a command given the status returned by my_pclose(), or -1 if it did not exit normally.
+int exit_code_of_status(int status) {
+#if defined(_WIN32)
+  return status;
+#else
+  return status != -1 && WIFEXITED(status) ? WEXITSTATUS(status) : -1;
+#endif
+}
+
+}  // namespace
+
 RFile::RFile(string filename) {
   std::scoped_lock lock(s_mutex);  // For popen(), and just to be safe, for fopen() as well.
-
-  if (filename.starts_with("https://") || filename.starts_with("http://")) {
-#if defined(_WIN32) && !defined(__MINGW32__)
-    // Note: opening a FILE on an in-memory buffer using fmemopen() is unavailable on Windows.
-    // Retry after a failure, as wget does by default on Unix, so that a transient network error is not fatal.
-    WCHAR cache_filename[MAX_PATH];
-    const int max_attempts = 3;
-    for (int attempt = 1;; attempt++) {
-      if (SUCCEEDED(URLDownloadToCacheFileW(nullptr, utf16_from_utf8(filename).c_str(), cache_filename, MAX_PATH, 0,
-                                            nullptr)))
-        break;
-      if (attempt == max_attempts) assertnever("Failed to download '" + filename + "'");
-      my_sleep(1.);
-    }
-    filename = utf8_from_utf16(cache_filename);
-#else
-    filename = "wget -qO- " + portable_simple_quote(filename) + " |";
-#endif
-  }
-
   const string original_filename = filename;
   filename = get_canonical_path(filename);
   const string mode = "r";
-  if (filename.ends_with('|')) {
+  if (original_filename.starts_with("https://") || original_filename.starts_with("http://")) {
+    _url = original_filename;
+#if defined(_WIN32) && !defined(__MINGW32__)
+    // Download the complete content, as streaming (e.g. using fmemopen()) is unavailable on Windows.
+    // Retry after a failure, as wget does below, so that a transient network error is not fatal.
+    WCHAR cache_filename[MAX_PATH];
+    const int max_attempts = 3;
+    for (int attempt = 1;; attempt++) {
+      const HRESULT hr =
+          URLDownloadToCacheFileW(nullptr, utf16_from_utf8(_url).c_str(), cache_filename, MAX_PATH, 0, nullptr);
+      if (SUCCEEDED(hr)) break;
+      if (attempt == max_attempts) {
+        const bool network_failure =
+            hr == INET_E_RESOURCE_NOT_FOUND || hr == INET_E_CANNOT_CONNECT || hr == INET_E_CONNECTION_TIMEOUT;
+        throw std::runtime_error(sform("%s '%s' (HRESULT 0x%08lX)",
+                                       network_failure ? "Network failure downloading" : "Failed to download",
+                                       _url.c_str(), static_cast<unsigned long>(hr)));
+      }
+      my_sleep(1.);
+    }
+    _file = _wfopen(cache_filename, L"rb");
+#else
+    // Stream the content; a failure of wget (exit status 4 for a network failure) is detected when closing.
     _file_ispipe = true;
-    _file = my_popen(original_filename.substr(0, original_filename.size() - 1), mode);  // No quoting at all.
+    _check_command = true;
+    _file = my_popen(V<string>("wget", "--quiet", "--tries=3", "--waitretry=1", "--retry-connrefused",
+                               "--retry-on-host-error", "--output-document=-", _url),
+                     mode);
+#endif
+  } else if (filename.ends_with('|')) {
+    _file_ispipe = true;
+    _command = original_filename.substr(0, original_filename.find_last_not_of(" |") + 1);
+    _file = my_popen(_command, mode);  // No quoting at all.
   } else if (filename.ends_with(".gz") || filename.ends_with(".Z")) {
     _file_ispipe = true;
+    _check_command = true;
+    _command = "gzip -d -c " + filename;
     _file = my_popen(V<string>("gzip", "-d", "-c", filename), mode);  // Gzip supports .Z (replacement for zcat).
   } else if (filename == "-") {
     // assertw(!HH_POSIX(isatty)(0));
@@ -334,12 +359,12 @@ RFile::RFile(string filename) {
 #else
     _file = fopen(filename.c_str(), "rb");
 #endif
-  } else if (file_exists(filename + ".gz")) {
+  } else if (file_exists(filename + ".gz") || file_exists(filename + ".Z")) {
+    const string compressed_filename = filename + (file_exists(filename + ".gz") ? ".gz" : ".Z");
     _file_ispipe = true;
-    _file = my_popen(V<string>("gzip", "-d", "-c", filename + ".gz"), mode);
-  } else if (file_exists(filename + ".Z")) {
-    _file_ispipe = true;
-    _file = my_popen(V<string>("gzip", "-d", "-c", filename + ".Z"), mode);
+    _check_command = true;
+    _command = "gzip -d -c " + compressed_filename;
+    _file = my_popen(V<string>("gzip", "-d", "-c", compressed_filename), mode);
   }
   if (_file && !_is) {
     _impl = make_unique<Implementation>(_file);
@@ -349,24 +374,40 @@ RFile::RFile(string filename) {
 }
 
 RFile::~RFile() {
+  const string error = close_internal(_check_command);
+  if (error != "") assertnever(error);
+}
+
+void RFile::close() {
+  const string error = close_internal(true);
+  if (error != "") throw std::runtime_error(error);
+}
+
+// Close the stream.  If check_command and the stream was read to the end of the output of a pipe command, return a
+//  description of any failure of the command, else return "".
+string RFile::close_internal(bool check_command) {
+  if (!_file) return "";
+  bool check = false;
+  if (check_command && _file_ispipe) {  // (Not within the lock, as peek() may wait for the command.)
+    _is->clear();                       // A failed read (e.g. of malformed content) need not be at the end.
+    check = _is->peek() < 0;            // Was the output read to the end?
+  }
   std::scoped_lock lock(s_mutex);  // For pclose(), and just to be safe, for fclose() as well.
-  if (_file_ispipe) {
-#if defined(_WIN32)
-    // Avoids the "Broken pipe" error message, but takes too long for huge streams!
-    if (0) _is->ignore(std::numeric_limits<int>::max());
-#endif
-  }
   _impl = nullptr;
-  if (_file) {
-    if (_file_ispipe) {
-      const int ret = my_pclose(_file);
-      // PIPE signal may cause source process to return signal information, so ignore return value here.
-      dummy_use(ret);
-      if (0) assertw(!ret);
-    } else {
-      if (!_file_isstd) assertw(!fclose(_file));
-    }
+  _is = nullptr;
+  int exit_code = 0;
+  if (_file_ispipe) {
+    exit_code = exit_code_of_status(my_pclose(_file));
+  } else if (!_file_isstd) {
+    assertw(!fclose(_file));
   }
+  _file = nullptr;
+  if (!check || !exit_code) return "";
+  if (exit_code == 2 && _command.starts_with("gzip ")) return "";  // Just a warning, e.g. "trailing garbage ignored".
+  if (_url != "")
+    return sform("%s '%s' (wget exit status %d)",
+                 exit_code == 4 ? "Network failure downloading" : "Failed to download", _url.c_str(), exit_code);
+  return sform("Command '%s' failed (exit status %d)", _command.c_str(), exit_code);
 }
 
 // *** WFile

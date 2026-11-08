@@ -9,25 +9,25 @@ using namespace hh;
 
 namespace {
 
+// Return the content of the file, after checking that any pipe command succeeded.
 string read_all(const string& filename) {
   RFile fi(filename);
   std::ostringstream oss;
   oss << fi().rdbuf();
+  fi.close();
   return oss.str();
 }
 
-}  // namespace
-
-int main() {
+// Read files from GitHub.
+void test_urls_aux() {
   {
-    const string url = "https://github.com/hhoppe/data/raw/main/LICENSE";
-    RFile fi(url);
+    std::istringstream iss(read_all("https://github.com/hhoppe/data/raw/main/LICENSE"));
     string line;
-    assertx(my_getline(fi(), line, true));
+    assertx(my_getline(iss, line, true));
     assertx(line == "CC0 1.0 Universal");
-    assertx(my_getline(fi(), line, true));
+    assertx(my_getline(iss, line, true));
     assertx(line == "");
-    assertx(my_getline(fi(), line, true));
+    assertx(my_getline(iss, line, true));
     assertx(line == "Statement of Purpose");
   }
   {
@@ -36,6 +36,7 @@ int main() {
     string filename;
     {
       const TmpFile tmp_file("png", fi());
+      fi.close();
       filename = tmp_file.filename();
       assertx(file_exists(filename));
       const Image image{filename};
@@ -49,6 +50,55 @@ int main() {
     const Image image{tmp_file.filename()};
     assertx(image.dims() == V(128, 128));
   }
+  {  // A missing file is an error (HTTP 404), rather than an empty file.
+    try {
+      (void)read_all("https://github.com/hhoppe/data/raw/main/nonexistent_file");
+      assertnever("Missing file was not reported");
+    } catch (const std::runtime_error& ex) {
+      assertx(std::string_view(ex.what()).starts_with("Failed to download"));
+    }
+  }
+}
+
+// Skip the downloads if the network is unavailable, without any output that would differ from the reference.
+// Any other failure, such as a wget command that is malformed, is an error.
+void test_urls() {
+  try {
+    test_urls_aux();
+  } catch (const std::runtime_error& ex) {
+    if (!std::string_view(ex.what()).starts_with("Network failure")) throw;
+  }
+}
+
+// The failure of a pipe command is reported by close() if its output was read to the end.
+void test_pipe_close() {
+  const string command = "sh -c 'echo a; echo b; exit 3' |";
+  try {
+    (void)read_all(command);
+    assertnever("Failed command was not reported");
+  } catch (const std::runtime_error& ex) {
+    assertx(std::string_view(ex.what()).contains("failed (exit status 3)"));
+  }
+  {
+    RFile fi(command);  // The exit status is meaningless if the output is not read to the end.
+    string line;
+    assertx(my_getline(fi(), line, true) && line == "a");
+    fi.close();
+    fi.close();  // A second close does nothing.
+  }
+  {
+    RFile fi(command);  // Without close(), the exit status of a "command |" pipe is ignored.
+    std::ostringstream oss;
+    oss << fi().rdbuf();
+    assertx(oss.str() == "a\nb\n");
+  }
+}
+
+}  // namespace
+
+int main() {
+  test_urls();
+  test_pipe_close();
   {
     RFile fi("echo a b |");
     string line;

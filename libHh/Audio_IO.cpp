@@ -226,6 +226,7 @@ void Audio::read_file(const string& pfilename) {
           *this = crop(*this, twice(0), V(0, nsamples() - nread));  // Remove unused samples.
         }
       }
+      fi.close();
       // special_reduce_dim0(nread);
     }
 #else  // defined(HH_AUDIO_HAVE_FFMPEG)

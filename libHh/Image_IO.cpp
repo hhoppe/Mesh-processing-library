@@ -102,6 +102,7 @@ void Image::read_file_ffmpeg(const string& pfilename, bool bgra) {
     RFile fi(command);
     if (!read_binary_raw(fi(), array_view()))
       throw std::runtime_error("Error reading pixels from image '" + filename + "'");
+    fi.close();
   }
 }
 

@@ -33,6 +33,8 @@ void self_test() {
   // Special frames.
   assertx(FrameIO::is_not_a_frame(read3->frame) && !FrameIO::is_not_a_frame(Frame::identity()));
   assertx(FrameIO::parse_frame("F 0  1 0 0  0 1 0  0 0 1  0 0 0  0").is_ident());
+  // Comment lines before the frame, as in the output of Filterframe, are ignored.
+  assertx(FrameIO::parse_frame("# Created at ...\n#  Filterframe -inverse\n" + str) == object_frame.frame);
 }
 
 }  // namespace

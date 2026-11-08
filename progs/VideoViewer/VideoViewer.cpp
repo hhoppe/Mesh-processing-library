@@ -3727,6 +3727,14 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
       ar.push(string("Status: ") + (ob._unsaved ? "unsaved" : "saved"));
       if (1 && ob._video.attrib().audio.size()) ar.push("Audio: " + ob._video.attrib().audio.diagnostic_string());
       const string lower_filename = to_lower(ob._filename);
+      // A failure of the command (e.g. on a file without metadata) is shown in the list.
+      const auto close_showing_failure = [&](RFile& fi) {
+        try {
+          fi.close();
+        } catch (const std::runtime_error& ex) {
+          ar.push(string(" ") + ex.what());
+        }
+      };
       if (1 && command_exists_in_path("exiftool")) {
         // (Omit some tags using "--tagname"; but not --ExifToolVersion.)
         RFile fi("exiftool --system:all --file:all -coordFormat '%-.6f' " + quote_arg_for_shell(ob._filename) +
@@ -3738,6 +3746,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
         ar.push("EXIFTOOL:");
         string line;
         while (my_getline(fi(), line, k_no_dos_eol_warnings)) ar.push(" " + line);
+        close_showing_failure(fi);
       } else if (1 && (lower_filename.ends_with(".jpg") || lower_filename.ends_with(".jpeg")) &&
                  command_exists_in_path("exif")) {
         RFile fi("exif " + quote_arg_for_shell(ob._filename) + " 2>&1 |");
@@ -3757,6 +3766,7 @@ void DerivedHw::draw_window(const Vec2<int>& dims) {
           if (!line.starts_with("EXIF tags")) line = " " + line;
           ar.push(line);
         }
+        close_showing_failure(fi);
       }
     }
     const int top_rows = 4;

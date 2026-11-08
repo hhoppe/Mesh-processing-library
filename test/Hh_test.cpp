@@ -600,6 +600,7 @@ line2)";
     string line;
     assertx(my_getline(fi(), line));
     assertx(line == " abc");
+    fi.close();
   }
   {
     // Test std::forward in assertx().

@@ -1219,6 +1219,7 @@ void do_loadpj(Args& args) {
   } else {
     while (is) is.get();  // Flush the remainder of the input to avoid any "dropped pipe" event.
   }
+  pfi->close();
   verify_loop_parameters();
 }
 

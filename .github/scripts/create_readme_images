@@ -10,7 +10,7 @@
 #  --update DIR: likewise create the images in DIR, and update these reference values.
 #
 # The programs must be built (any CONFIG), and the demos create_reconstruction_mannequin, create_spherical_param_bunny,
-# and create_progressive_mesh_cessna must have been run (e.g., using "make -C demos create").
+# and create_progressive_mesh_57chevy must have been run (e.g., using "make -C demos create").
 
 set -e -o pipefail
 cd "$(dirname "${BASH_SOURCE[0]}")/../.."
@@ -71,14 +71,19 @@ for variant in light dark; do
   hgap=40 render mannequin_opt_wide 640x960 $results/mannequin.opt.m -st $data/mannequin.s3d -key DmDe
   hgap=40 render mannequin_sub0_wide 640x960 $results/mannequin.sub0.m -st $data/mannequin.s3d -key DmDe
   hgap=40 render mannequin_subdiv_wide 640x960 $results/mannequin.sub2limit.m -st $data/mannequin.s3d
-  # Progressive mesh at three levels of detail: 800 faces, 3000 faces, and its full resolution.
-  for nf in 800 3000; do
-    FilterPM $results/cessna.pm -nf $nf -outmesh >"$tmp/cessna_$nf.m" 2>/dev/null
-    render cessna_edges_$nf 1280x960 "$tmp/cessna_$nf.m" -st $data/cessna.s3d -key De -lightambient .4
+  # Progressive mesh at several levels of detail, each showing its edges.
+  for nf in 1500 3000 5000 6000; do
+    FilterPM $results/57chevy.pm -nf $nf -outmesh >"$tmp/chevy_$nf.m" 2>/dev/null
+    render chevy_edges_$nf 1280x960 "$tmp/chevy_$nf.m" -st $data/57chevy.s3d -key De -lightambient .4
   done
-  FilterPM $results/cessna.pm -finest -outmesh >"$tmp/cessna_full.m" 2>/dev/null
-  render cessna_edges_full 1280x960 "$tmp/cessna_full.m" -st $data/cessna.s3d -key De -lightambient .4
-  render cessna_full 1280x960 "$tmp/cessna_full.m" -st $data/cessna.s3d -lightambient .4
+  FilterPM $results/57chevy.pm -finest -outmesh >"$tmp/chevy_full.m" 2>/dev/null
+  render chevy_edges_full 1280x960 "$tmp/chevy_full.m" -st $data/57chevy.s3d -key De -lightambient .4
+  # For the overview, the cars abut one another, with some space before the terrain to their right.
+  for nf in 1500 5000 full; do
+    hgap=0 render chevy_tight_$nf 1280x960 "$tmp/chevy_$nf.m" -st $data/57chevy.s3d -key De -lightambient .4
+  done
+  Filterimage "$tmp/chevy_tight_full.png" -color $rgb 255 -boundary border -cropsides 0 -40 0 0 -to png \
+    >"$tmp/chevy_tight_full_spaced.png" 2>/dev/null
   # View-dependent refinement of a terrain, textured and as a mesh.
   canyon="-eyeob $data/unit_frustum.a3d -sr_mode $data/gcanyon_4k2k.l1.srm -texturemap $data/gcanyon_color_4k2k.png
     -sr_screen_thresh 0.003846 -lightambient .7 -st $data/gcanyon_4k2k_fly2.s3d"
@@ -111,11 +116,11 @@ for variant in light dark; do
   done
 
   row overview1 mannequin_points mannequin_recon mannequin_subdiv bunny_sphere drumset_0.08373
-  row overview2 cessna_edges_800 cessna_full canyon_split
+  row overview2 chevy_tight_1500 chevy_tight_5000 chevy_tight_full_spaced canyon_split
   Filterimage -assemble 1 2 "$tmp/overview1.png" "$tmp/overview2.png" -to jpg >$images/overview$suffix.jpg 2>/dev/null
   row reconstruction mannequin_points_wide mannequin_recon_wide mannequin_opt_wide mannequin_sub0_wide \
     mannequin_subdiv_wide
-  row progressive_mesh cessna_edges_800 cessna_edges_3000 cessna_edges_full
+  row progressive_mesh chevy_edges_1500 chevy_edges_3000 chevy_edges_6000 chevy_edges_full
   row terrain canyon_tex canyon_mesh
   row spherical bunny_orig bunny_sphere bunny_remesh bunny_normalmap normalmap
   row simplicial_complex drumset_0.05 drumset_1.0

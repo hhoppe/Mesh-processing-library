@@ -25,7 +25,7 @@ The source code has been updated to modern C++ style and for cross-platform use.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset=".github/images/overview_dark.jpg">
-  <img src=".github/images/overview.jpg" alt="Renderings of results: reconstruction of a mannequin head from points, a bunny parameterized on a sphere, a drum set approximated using simplices of mixed dimension, an airplane at two levels of detail, and a terrain shown with its mesh on the left half.">
+  <img src=".github/images/overview.jpg" alt="Renderings of results: reconstruction of a mannequin head from points, a bunny parameterized on a sphere, a drum set approximated using simplices of mixed dimension, a car at three levels of detail, and a terrain shown with its mesh on the left half.">
 </picture>
 
 <em>Results rendered by the viewer `G3dOGL`.

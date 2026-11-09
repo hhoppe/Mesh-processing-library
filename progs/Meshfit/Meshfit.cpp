@@ -416,8 +416,9 @@ float project_point_neighborhood_helper(const Point& p, Face& cf, Bary& ret_bary
   return mind2;
 }
 
+// Project all points using a spatial search over the whole mesh.
 // The projections of the points are computed in parallel, and then the points are moved among the face point sets.
-void global_project_aux() {
+void project_points_spatially() {
   Array<Face> ar_face(pt.co.num());
   if (!have_quads) {
     // Without allow_local_project, the search ignores any hint face.  The points may lie outside the bbox of the mesh.
@@ -460,11 +461,21 @@ void global_project_aux() {
   for_int(i, pt.co.num()) point_change_face(i, ar_face[i]);
 }
 
+// Update the projections of all points, each using a local search from its current closest face.
 // The projections of the points are computed in parallel, and then the points are moved among the face point sets.
-void local_project_aux() {
+void reproject_from_cmf() {
+  // A debugging aid: the global search makes the energy independent of earlier projections, at several times the cost.
+  // For a mesh with quads, its spatial structure assumes that the mesh stays within the unit bbox, which fgfit may
+  // violate.
+  static const bool force_global_project = getenv_bool("FORCE_GLOBAL_PROJECT");
+  if (force_global_project) {
+    Warning("Using FORCE_GLOBAL_PROJECT");
+    project_points_spatially();
+    return;
+  }
   Array<Face> ar_face(pt.co.num());
   parallel_for({.cycles_per_elem = 1'000}, range(pt.co.num()), [&](const int i) {
-    Face cf = pt.cmf[i];
+    Face cf = assertx(pt.cmf[i]);
     Bary bary;
     if (restrictfproject) {
       project_point(pt.co[i], cf, bary, pt.clp[i]);
@@ -476,24 +487,10 @@ void local_project_aux() {
   for_int(i, pt.co.num()) point_change_face(i, ar_face[i]);
 }
 
-void global_project() {
-  int nzcmf = 0;
-  for_int(i, pt.co.num()) nzcmf += !pt.cmf[i];
-  // Problem with FORCE_GLOBAL_PROJECT is that with fgfit, the first
-  //  optimization iteration often pushes vertices out of the unit bbox.
-  static const bool force_global_project = getenv_bool("FORCE_GLOBAL_PROJECT");
-  if (nzcmf == pt.co.num() || force_global_project)
-    global_project_aux();
-  else if (!nzcmf)
-    local_project_aux();
-  else
-    assertnever("");
-}
-
 void initial_projection() {
   {
     HH_TIMER("_initialproj");
-    global_project();
+    project_points_spatially();
   }
   assertw(!sdebug);
   if (sdebug) pt.ok();
@@ -657,7 +654,7 @@ void do_gfit(Args& args) {
     }
     {
       HH_STIMER("__gproject");
-      global_project();
+      reproject_from_cmf();
     }
     if (sdebug) {
       pt.ok();
@@ -726,7 +723,7 @@ void do_fgfit(Args& args) {
       }
       if (vertices_moved) {
         HH_STIMER("__fgproject");
-        global_project();
+        reproject_from_cmf();
       }
     }
     double feval(ArrayView<double> ret_grad) {  // Evaluate the function and its gradient.
@@ -1295,18 +1292,20 @@ EResult try_espl(Edge e, int ni, int nri, float& edrss, Commit& commit, Footprin
     if (vo2) moved.push(vo2);
     declare_writes(fp, moved);
   }
-  commit = [e, newp, nri] {
+  commit = [e, newp, nri, ar_pts] {
     HH_STIMER("__doespl");
-    for (Face f : mesh.faces(e))
+    for (Face f : mesh.faces(e)) {
       for (Edge ee : mesh.edges(f))  // One duplication.
         ecand.remove(ee);
+      remove_face(f);  // Because split_edge() destroys the face.
+    }
     Vertex v = mesh.split_edge(e);
     mesh.set_point(v, newp);
     // Add 8 edges (5 if boundary).
     for (Face f : mesh.faces(v))
       for (Edge ee : mesh.edges(f))  // Four duplications.
         ecand.add(ee);
-    // Since ar_pts project onto f1 + f2 (which are still there), it is easy to update the projections:
+    reproject_locally(ar_pts, Array<Face>(mesh.faces(v)));
     fit_ring(v, 2);
     cleanup_neighborhood(v, nri);
   };

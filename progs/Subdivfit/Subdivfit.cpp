@@ -42,9 +42,9 @@ float weighta = 0.f;    // For the extraordinary interior case, the interior wei
 // (For k_fgfit_scale == 1, that fraction is about 0.8 on the mannequin, for both n == 7836 and n == 689.)
 // The optimizer has no parameter for this step length, so we instead scale the coordinates that it sees: the step
 // becomes 1 / k_fgfit_scale of the size of the object.
-// A smaller factor can cause line search failures on coarse meshes, because a large step leaves points projecting
-// onto the wrong faces of the subdivided mesh.  Values from 100 to 10'000 are within a few percent of each other; 300
-// is the smallest of those tested that does not exhibit large increases in energy.
+// A smaller factor spends the evaluations of a short run on backtracking: on 6 coarse meshes after 5 iterations, the
+// energy relative to the best result was 2.67 with a factor of 1 and 1.05 with 300.  Values from 100 to 10'000 are
+// within a few percent of each other.
 constexpr double k_fgfit_scale = 300.;
 
 float xformsize = .8f;
@@ -77,7 +77,6 @@ Bbox<float, 3> gbbox;
 Frame xform;
 float xform_scale;
 SubMesh* g_psmesh;
-bool g_force_global_project = false;
 
 const FlagMask eflag_cut = Mesh::allocate_Edge_flag();
 
@@ -129,10 +128,6 @@ void do_mfilename(Args& args) {
   show_header();
   gmesh.read(fi());
   showdf("Initial mesh: %s\n", mesh_genus_string(gmesh).c_str());
-  if (getenv_bool("FORCE_GLOBAL_PROJECT")) {
-    Warning("Using FORCE_GLOBAL_PROJECT");
-    g_force_global_project = true;
-  }
 }
 
 void do_filename(Args& args) {
@@ -309,7 +304,10 @@ void global_all_project(const SubMesh& smesh) {
 
 void global_neighb_project(const SubMesh& smesh) {
   HH_STIMER("___gneighproject");
-  if (g_force_global_project) {
+  // A debugging aid: the global search makes the energy independent of earlier projections, at several times the cost.
+  static const bool force_global_project = getenv_bool("FORCE_GLOBAL_PROJECT");
+  if (force_global_project) {
+    Warning("Using FORCE_GLOBAL_PROJECT");
     global_all_project(smesh);
   } else {
     parallel_for({.cycles_per_elem = 1'000}, range(co.num()), [&](const int i) {
@@ -410,7 +408,8 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Vector, v_grad);
 
 // Test using:
 // Filtermesh demos/results/mannequin.opt.m -angle 40 -mark | Subdivfit -mf - -fi demos/data/mannequin.pts -verb 3 -fgfit 60 >~/tmp/mannequin.fgfit.m && g3d_cmp demos/results/mannequin.sub0.m ~/tmp/mannequin.fgfit.m -key DmDe
-// Verdict: not stable enough; often jumps out of initial minimum to worse state; use do_gfit instead.
+// Line searches no longer fail now that each trial starts from the last accepted projections.  On 20 surface
+// reconstructions (Nov 2026), -reconstruct using fgfit instead of gfit gave the same final energy, within noise.
 void do_fgfit(Args& args) {
   HH_TIMER("_fgfit");
   const int niter = args.get_int();
@@ -436,7 +435,7 @@ void do_fgfit(Args& args) {
     int _iter{0};
     int _niter;
     double _etot{0.};
-    bool _desire_global_project{false};
+    Array<Face> _accepted_scmf{gscmf};  // Projections at the last accepted iterate.
     explicit EvalGrad(SubMesh& smesh) : _smesh(smesh) {
       _iv.reserve(gmesh.num_vertices());
       for (Vertex v : gmesh.vertices()) {
@@ -473,24 +472,13 @@ void do_fgfit(Args& args) {
       HH_STIMER("___computegrad");
       unpack_vertices();
       _smesh.update_vertex_positions();
-      {
-        const bool bu_force_global_project = g_force_global_project;
-        if (_desire_global_project) {
-          g_force_global_project = true;
-          _desire_global_project = false;
-        }
-        global_neighb_project(_smesh);
-        g_force_global_project = bu_force_global_project;
-      }
+      // Each trial of a line search starts from the last accepted projections.  Otherwise, a rejected trial that
+      // overshoots leaves the points on faces from which the local search cannot recover, and the energy of a later
+      // trial is overestimated.
+      gscmf.assign(_accepted_scmf);
+      global_neighb_project(_smesh);
       if (verb >= 3) analyze_mesh(sform("it%2d/%-2d", _iter, _niter));
-      {
-        const double prev_etot = _etot;
-        _etot = get_etot();
-        if (_etot > prev_etot * 1.1) {
-          showdf("Large increase in energy after it%d, so next iteration uses global projection\n", _iter);
-          _desire_global_project = true;
-        }
-      }
+      _etot = get_etot();
       // Compute the gradient.
       for (Vertex v : gmesh.vertices()) v_grad(v) = Vector(0.f, 0.f, 0.f);
       Array<Vertex> va;
@@ -556,13 +544,14 @@ void do_fgfit(Args& args) {
   opt.set_max_neval(niter + 1);
   // Record only the accepted iterates, not the trial points of the line searches.
   std::ostream* const os = gmesh.record_changes(nullptr);
-  if (os)
-    opt.set_iteration_callback([&] {
-      gmesh.record_changes(os);
-      for (Vertex v : eval_grad._iv) gmesh.set_point(v, gmesh.point(v));
-      record_comment("frame fgfit");
-      gmesh.record_changes(nullptr);
-    });
+  opt.set_iteration_callback([&] {
+    eval_grad._accepted_scmf.assign(gscmf);
+    if (!os) return;
+    gmesh.record_changes(os);
+    for (Vertex v : eval_grad._iv) gmesh.set_point(v, gmesh.point(v));
+    record_comment("frame fgfit");
+    gmesh.record_changes(nullptr);
+  });
   assertw(opt.solve());
   gmesh.record_changes(os);
   if (verb >= 2) analyze_mesh("fgfit_after ");

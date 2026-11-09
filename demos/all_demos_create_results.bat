@@ -12,11 +12,11 @@ if .==. (
 
   call create_progressive_mesh_gaudipark.bat
   call create_progressive_mesh_cessna.bat
-  call create_progressive_mesh_club.bat
-  call determine_approximation_error.bat
+  call create_progressive_mesh_57chevy.bat
 
   call create_geomorphs.bat
   call create_progressive_hulls_bunny.bat
+  call determine_approximation_error.bat
   call create_progressive_hulls_standingblob.bat
 
   call create_selectively_refined_office.bat

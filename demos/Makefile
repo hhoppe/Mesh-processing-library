@@ -24,10 +24,10 @@ create_scripts = \
   create_simplified_using_meshopt.sh \
   create_progressive_mesh_gaudipark.sh \
   create_progressive_mesh_cessna.sh \
-  create_progressive_mesh_club.sh \
-  determine_approximation_error.sh \
+  create_progressive_mesh_57chevy.sh \
   create_geomorphs.sh \
   create_progressive_hulls_bunny.sh \
+  determine_approximation_error.sh \
   create_progressive_hulls_standingblob.sh \
   create_selectively_refined_office.sh \
   create_selectively_refined_terrain.sh \
@@ -46,7 +46,7 @@ view_scripts = \
   view_simplified_using_meshopt.sh \
   view_progressive_mesh_gaudipark.sh \
   view_progressive_mesh_cessna.sh \
-  view_progressive_mesh_club.sh \
+  view_progressive_mesh_57chevy.sh \
   view_geomorphs.sh \
   view_progressive_hulls_bunny.sh \
   view_progressive_hulls_standingblob.sh \
@@ -90,7 +90,7 @@ $(view_scripts):
 depend $(make_dep):
 
 # Any build-order dependencies.
-determine_approximation_error.sh: create_progressive_mesh_club.sh
+determine_approximation_error.sh: create_progressive_hulls_bunny.sh
 
 # Similar to all_demos_view_results.sh.  With DEMOS_HIDDEN, the demos run concurrently (no window is mapped, so they
 # do not interfere), each with its output collected and then shown in order; otherwise they run sequentially.

@@ -259,7 +259,7 @@ edges tagged as sharp, and vertex and corner attributes
 
 For example,<a id="prog_MeshSimplify"></a>
 ```shell
-MeshSimplify demos/data/club.orig.m -prog club.prog -simplify >club.base.m
+MeshSimplify demos/data/57chevy.orig.m -prog 57chevy.prog -simplify >57chevy.base.m
 ```
 - reads the original mesh and randomly samples points over its surface,
 - progressively simplifies it by examining point residual distances, while recording changes to a `*.prog` file, and
@@ -272,12 +272,12 @@ We construct a concise <em>progressive mesh</em> by encoding the base mesh toget
 with the sequence of <em>vertex splits</em> that exactly recover the original mesh,
 obtained by reading the stored edge collapses in reverse order:<a id="prog_Filterprog"></a>
 ```shell
-Filterprog -fbase club.base.m -fprog club.prog -pm_encode >club.pm
+Filterprog -fbase 57chevy.base.m -fprog 57chevy.prog -pm_encode >57chevy.pm
 ```
 
 Alternatively, the last two steps can be expressed using the script call:
 ```shell
-bin/mesh_to_pm demos/data/club.orig.m >club.pm
+bin/mesh_to_pm demos/data/57chevy.orig.m >57chevy.pm
 ```
 (or `bin/mesh_to_pm.bat` under the Windows `cmd` shell).
 
@@ -288,7 +288,7 @@ bin/mesh_to_pm demos/data/bunny.orig.m -hull -minvolume >bunny.outer_hull.pm
 
 Given a progressive mesh, we can interactively traverse its continuous levels of detail:
 ```shell
-PM_LOD_LEVEL=0.05 G3dOGL -pm_mode club.pm -st demos/data/club.s3d -lightambient .4 -key De
+PM_LOD_LEVEL=0.05 G3dOGL -pm_mode 57chevy.pm -st demos/data/57chevy.s3d -lightambient .4 -key De
 ```
 - starting at the level of detail `0.05` (set using the environment variable `PM_LOD_LEVEL`),
 - with mesh edges shown (toggled using the <kbd>De</kbd> key sequence), and
@@ -297,8 +297,8 @@ PM_LOD_LEVEL=0.05 G3dOGL -pm_mode club.pm -st demos/data/club.s3d -lightambient 
 
 We can also define geomorphs between discrete levels of detail, for example:
 ```shell
-FilterPM club.pm -nfaces 2000 -geom_nfaces 3300 -geom_nfaces 5000 -geom_nfaces 8000 |
-  G3dOGL -st demos/data/club.s3d -key SPDeN -lightambient .5 -thickboundary 1 -video 101 - |
+FilterPM 57chevy.pm -nfaces 2000 -geom_nfaces 3300 -geom_nfaces 5000 -geom_nfaces 8000 |
+  G3dOGL -st demos/data/57chevy.s3d -key SPDeN -lightambient .5 -thickboundary 1 -video 101 - |
   VideoViewer - -key m
 ```
 - creates a geomorph between 2000 and 3300 faces, another between 3300 and 5000 faces,

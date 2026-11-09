@@ -14,7 +14,7 @@ view_simplified_using_meshopt.sh
 
 view_progressive_mesh_gaudipark.sh
 view_progressive_mesh_cessna.sh
-view_progressive_mesh_club.sh
+view_progressive_mesh_57chevy.sh
 view_geomorphs.sh
 view_progressive_hulls_bunny.sh
 view_progressive_hulls_standingblob.sh

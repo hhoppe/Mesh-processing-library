@@ -108,7 +108,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>Computers &amp; Graphics</cite>, 22(1), 1998.</div>
    <div><em>Progressive mesh data structures compatible with GPU vertex buffers.</em></div>
    <div>Programs: <a href="progs/README.md#prog_FilterPM"><code>FilterPM</code></a>, <a href="progs/README.md#prog_G3dOGL"><code>G3dOGL</code></a></div>
-   <div>Demos: <code>{create,view}_progressive_mesh_club</code>,&ensp;<code>determine_approximation_error</code></div>
+   <div>Demos: <code>{create,view}_progressive_mesh_57chevy</code>,&ensp;<code>determine_approximation_error</code></div>
   </td>
  </tr>
 

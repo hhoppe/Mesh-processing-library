@@ -5,10 +5,10 @@ cd "%~p0"
 call ./_initdemos.bat
 
 echo .
-echo Compute the approximation error between original club and club simplified to 1000 faces.
+echo Compute the approximation error between original bunny and its progressive outer hull at 10000 faces.
 echo .
 
-FilterPM results/club.pm -nfaces 1000 -outmesh >results/club.nf1000.m
+FilterPM results/bunny.outer_hull.pm -nfaces 10000 -outmesh >results/bunny.outer_hull.nf10000.m
 
 echo .
 echo Columns are: geometric error, color error, vertex_normal error
@@ -17,8 +17,9 @@ echo  L2=root_mean_square_error,  Li=maximum_error
 echo .
 
 :: The saved output is compared against reference values by check_created_outputs.sh.
-MeshDistance -mfile data/club.orig.m -mfile results/club.nf1000.m -bothdir 1 -maxerror 1 -verb 2 -distance >results/club.approximation_error.txt 2>&1
+MeshDistance -mfile data/bunny.orig.m -mfile results/bunny.outer_hull.nf10000.m -bothdir 1 -maxerror 1 -verb 2 ^
+  -distance >results/bunny.outer_hull.approximation_error.txt 2>&1
 :: (The command "type" does not accept "/" as a path separator.)
-type results\club.approximation_error.txt
+type results\bunny.outer_hull.approximation_error.txt
 
-del results\club.nf1000.m 2>nul
+del results\bunny.outer_hull.nf10000.m 2>nul

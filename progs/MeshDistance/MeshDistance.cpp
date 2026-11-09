@@ -16,10 +16,11 @@
 #include "libHh/Timer.h"
 using namespace hh;
 
-// (cd ~/git/mesh_processing/demos; FilterPM results/club.pm -nfaces 1000 -outmesh | MeshDistance -mfile data/club.orig.m -mfile - -bothdir 1 -maxerror 1 -verb 2 -distance)
-// #  B(  38272)  dL2=%0.0315      cL2=inf         nL2=0.05242
-// # PSNR=70.0  nPSNR=31.6
-// #  B(  38272)  dLi=%0.2407      cLi=inf         nLi=1.544
+// (cd ~/git/mesh_processing/demos; FilterPM results/bunny.outer_hull.pm -nfaces 10000 -outmesh |
+//  MeshDistance -mfile data/bunny.orig.m -mfile - -bothdir 1 -maxerror 1 -verb 2 -distance)
+// #  B( 139260)  dL2=%0.0416      cL2=inf         nL2=0.08564
+// # PSNR=67.6  nPSNR=27.4
+// #  B( 139260)  dLi=%0.2659      cLi=inf         nLi=0.6792
 
 namespace {
 

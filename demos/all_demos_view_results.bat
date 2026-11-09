@@ -12,7 +12,7 @@ if .==. (
 
   call view_progressive_mesh_gaudipark.bat
   call view_progressive_mesh_cessna.bat
-  call view_progressive_mesh_club.bat
+  call view_progressive_mesh_57chevy.bat
   call view_geomorphs.bat
   call view_progressive_hulls_bunny.bat
   call view_progressive_hulls_standingblob.bat

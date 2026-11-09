@@ -19,11 +19,11 @@ blob5.meshopt.simplified.m 186352
 gaudipark.orig.m 4683456
 gaudipark.pm 2561536
 cessna.pm 391574
-club.pm 508276
-club.approximation_error.txt 0.0232 0.06162 0.1623 1.919
+57chevy.pm 841634
 standingblob.geomorphs 4717324
 bunny.outer_hull.pm 2231632
 bunny.inner_hull.pm 2231082
+bunny.outer_hull.approximation_error.txt 0.0416 0.08564 0.2659 0.6792
 standingblob.nf20000.m 1108142
 standingblob.outer_hull.pm 647827
 standingblob.inner_hull.pm 647167

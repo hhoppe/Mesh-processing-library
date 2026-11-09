@@ -13,4 +13,4 @@ echo .
 
 set PM_LOD_LEVEL=0.1
 
-G3dOGL -pm_mode results/57chevy.pm -st data/57chevy.s3d -key , -lightambient .4 %G3D_GEOM% %G3D_ARGS%
+call pm_view results/57chevy.pm -st data/57chevy.s3d -key , -lightambient .4 %G3D_GEOM% %G3D_ARGS%

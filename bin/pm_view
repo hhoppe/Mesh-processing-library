@@ -1,0 +1,25 @@
+#!/bin/bash
+
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: pm_view file.pm [G3dOGL_args...]
+       pm_view - [G3dOGL_args...] <file.pm
+
+View a progressive mesh using G3dOGL.
+
+Instructions:
+  Use the left and middle buttons on the slider to change the complexity of the mesh.
+  Use the key sequence 'De' to toggle edges on/off.
+  Use the key sequence 'Db' to toggle backface-culling on/off.
+  Use the key ',' to return to the initial viewing parameters.
+  Outside the slider area, drag the 3 mouse buttons to change view parameters.
+
+Examples:
+pm_view demos/results/cessna.pm -st demos/data/cessna.s3d -key Da  # "Da" jumps to all-detail.
+<demos/data/57chevy.orig.m mesh_to_pm | pm_view - -st demos/data/57chevy.s3d -key Da
+PM_LOD_LEVEL=0.005 g3d_cmp -g3d pm_view -win1 "-key --J" demos/results/bunny.{outer_hull,inner_hull}.pm \
+  -key De -st demos/data/bunny.s3d
+END_USAGE_EXAMPLES
+
+if [[ $# == 0 || $1 == --help ]]; then echo "$usage"; exit 0; fi
+
+exec G3dOGL -pm_mode "$@"

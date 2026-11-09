@@ -24,4 +24,4 @@ echo 'Press "De" to toggle visibility of mesh edges.'
 echo 'Press "Dt" to toggle use of normal map.'
 echo '.'
 
-PM_LOD_LEVEL="0.0145" G3dOGL -pm_mode results/bunny.split_meridian.pm -st data/bunny.s3d -texturemap results/bunny.lonlat.unrotated.normalmap.png -texturenormal 1 -key De -lighta .25 -lights .8 -hwkey '(DtDe)' -hwdelay 1.0 $G3D_GEOM $G3D_ARGS
+PM_LOD_LEVEL="0.0145" pm_view results/bunny.split_meridian.pm -st data/bunny.s3d -texturemap results/bunny.lonlat.unrotated.normalmap.png -texturenormal 1 -key De -lighta .25 -lights .8 -hwkey '(DtDe)' -hwdelay 1.0 $G3D_GEOM $G3D_ARGS

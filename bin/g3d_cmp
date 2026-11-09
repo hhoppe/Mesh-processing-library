@@ -18,7 +18,7 @@ The script g3d_cmp.bat provides the same command for the Windows command prompt.
 Examples:
 g3d_cmp mesh.m mesh.modified.m -key DmDe
 g3d_cmp -win1 "-key Dm" -win2 "-key De" mesh1.m mesh2.m
-g3d_cmp -g3d "G3dOGL -pm_mode" demos/data/bunny.split_meridian.pm demos/data/bunny.outer_hull.pm
+g3d_cmp -g3d pm_view demos/data/bunny.split_meridian.pm demos/data/bunny.outer_hull.pm
 g3d_cmp -g3d "G3dOGL -ply_mode" pr.ply ssd.ply
 END_USAGE_EXAMPLES
 

@@ -82,6 +82,16 @@ void test_parse_args() {
   // The unrecognized (non-option) arguments remain available.
   assertx(args.num() == 2 && args.get_filename() == "file1" && args.get_filename() == "file2");
   args.print_help();  // It shows the current values.
+  {
+    // The header shows only the first line of a multi-line argument, but the option receives all of it.
+    string multi_line;
+    ParseArgs args2(V<string>("prog", "-multi_line", "# comment\nF 0  1"));
+    args2.p("-multi_line", multi_line, "string : a parameter");
+    assertx(args2.header().contains("-multi_line # comment <+other_lines>"));
+    assertx(!args2.header().contains("F 0  1"));
+    assertx(args2.parse());
+    assertx(multi_line == "# comment\nF 0  1");
+  }
 }
 
 void test_prefixes() {

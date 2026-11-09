@@ -135,13 +135,12 @@ string create_string(const ObjectFrame& object_frame) {
 }
 
 Frame parse_frame(const string& s) {
+  if (!s.starts_with("F ")) assertnever("Could not parse Frame '" + s + "'");
   std::istringstream iss(s);
-  // Skip any comment lines, such as the header that Filterframe writes, e.g. for -transf "$(Filterframe ...)".
-  for (string line; iss.peek() == '#';) assertx(my_getline(iss, line));
   auto object_frame = read(iss);
   if (!object_frame) assertnever("Could not parse Frame '" + s + "'");
   for (string line; my_getline(iss, line);)
-    if (line != "" && line[0] != '#') assertnever("Expected a single frame in '" + s + "'");
+    if (line != "") assertnever("Expected a single frame in '" + s + "'");
   return object_frame->frame;
 }
 

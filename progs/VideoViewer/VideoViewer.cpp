@@ -886,7 +886,7 @@ void view_externally() {
   }
   message("Externally opening " + optionally_quote(filename), 5.);
   // This works best in Windows, even with Unicode filenames.
-  // Using a C++ raw string in the next line may confuse Emacs highlighting about 700 lines later.
+  // NOLINTNEXTLINE(modernize-raw-string-literal): a raw string may confuse Emacs highlighting 700 lines later.
   if (!my_spawn(V<string>("cmd", "/s/c", "start \"dummy_window_title\" \"" + filename + "\""), true)) {
     if (g_verbose) SHOW("spawned using cmd");
     return;  // Success.

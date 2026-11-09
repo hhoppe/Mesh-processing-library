@@ -483,12 +483,15 @@ string ParseArgs::create_header() const {
   string s = g_comment_prefix_string;
   for_int(i, 1 + _args.num()) {
     const string& arg = !i ? _argv0 : _args[i - 1];
-    len += narrow_cast<int>(arg.size()) + 1;
+    // Show only the first line of a multi-line argument, so that each header line remains a comment.
+    const size_t pos = arg.find_first_of("\r\n");
+    const string shown = pos == string::npos ? arg : arg.substr(0, pos) + " <+other_lines>";
+    len += narrow_cast<int>(shown.size()) + 1;
     if (i && len > thresh_line_len) {
       s = s + "\n" + g_comment_prefix_string + " ";
-      len = narrow_cast<int>(arg.size()) + 1;
+      len = narrow_cast<int>(shown.size()) + 1;
     }
-    s = s + " " + arg;
+    s = s + " " + shown;
   }
   s = s + "\n";
   return s_main + s;

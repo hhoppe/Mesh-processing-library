@@ -1960,7 +1960,9 @@ inline void ULls::enter_spring(const Point& pother, float sqrt_spring) {
 void ULls::solve(double& prss1) {
   double rss1 = _rss0;
   for_int(c, _nd) {
-    const double newv = _vUtU[c] ? _vUtb[c] / _vUtU[c] : (Warning("ULls ill-conditioned"), _sol[c]);
+    // _vUtU[c] is zero if every sample has zero weight on the variable (e.g., all samples project onto the outer ring
+    // of the neighborhood and there is no spring).  The energy is then independent of the variable, so keep its value.
+    const double newv = _vUtU[c] ? _vUtb[c] / _vUtU[c] : _sol[c];
     rss1 -= _vUtU[c] * square(newv - _sol[c]);
     _sol[c] = float(newv);
   }

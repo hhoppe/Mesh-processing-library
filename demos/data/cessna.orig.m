@@ -1,3 +1,7 @@
+#| Adapted from "5 Free 1994" models from Viewpoint Datalabs:
+#| https://web.archive.org/web/19981203150649/http://www.viewpoint.com/freestuff/5free/
+#| https://discmaster.textfiles.com/view/7821/DataShop%205.0.1%20-%20Disc%201.iso/readme/infotext.txt
+#| Model file: https://discmaster.textfiles.com/file/16097/PCF9.iso/viewpoin/obj/cessna.obj
 # Created using:
 #  Filtermesh cessna.orig.poly.m -genus -removekey mat -removekey groups
 #   -fixvertices -fixfaces -genus -rmcomp 0 -genus -assign_normals -removekey

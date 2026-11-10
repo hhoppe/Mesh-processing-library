@@ -598,7 +598,8 @@ p       position        m       motion          s       step      $ expo
 MOUSE BUTTON DRAG:
 left:           rotate (z-axis yaw & y-axis pitch)
 right:          pan (left/right/up/down translation)
-middle, wheel:  dolly (front/back translation)
+middle:         dolly (front/back translation)
+wheel:          dolly along the 3D ray under the cursor
 shift-left:     pan (left/right/up/down translation)
 shift-right:    roll (x rotation)
 shift-middle:   zoom (change focal length; dolly-zoom unless eye is current object)
@@ -1106,9 +1107,14 @@ void WheelTurned(float v) {
   //  moves away from the scene.  Windows delivers a touchpad pinch as ctrl-wheel, so spreading the fingers moves
   //  toward the scene.
   // The wheel always moves in object_mode, since no button press has selected a frame for the other mode.
+  // Moving along the ray under the cursor, without rotating, leaves that ray as the same 3D line at the same pixel.
   const float yq = v * .15f;
+  Vector vray(1.f, 0.f, 0.f);
+  if (!sizemode && !editmode && !viewmode && tview.is_ident())
+    if (auto pointer = HB::get_pointer(); pointer && min(*pointer) >= 0.f && max(*pointer) <= 1.f)
+      vray = HB::view_ray(*pointer);
   const bool saved_object_mode = std::exchange(object_mode, true);
-  Dolly(V(yq, 0.f));
+  Dolly(V(yq, 0.f), vray);
   object_mode = saved_object_mode;
   HB::redraw_later();
 }

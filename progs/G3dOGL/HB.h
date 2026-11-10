@@ -56,6 +56,7 @@ struct VdcResult {
   std::optional<Vec2<float>> xys;  // Encodes: in_front ? (xs, ys) : {}.
 };
 VdcResult vdc_from_world(const Point& pi);
+Vector view_ray(const Vec2<float>& yx);  // Camera-frame direction (with x = 1) through the window location yx.
 
 void draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2);
 Vec2<int> get_font_dims();  // Height, width.

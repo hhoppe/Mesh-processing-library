@@ -247,12 +247,15 @@ static void handle_sliders(bool show, float yq) {
   }
 }
 
-void Dolly(const Vec2<float>& yxq) {
-  Vector v(yxq[0] * ddistance, 0.f, 0.f);
+// Translate along the direction vray, expressed in the camera frame with vray[0] == 1.
+void Dolly(const Vec2<float>& yxq, const Vector& vray) {
+  Vector v = vray * (yxq[0] * ddistance);
   if (0) v[1] = yxq[1] * ddistance;  // Control y too (no).
   if (cob != obview) {
     float d = (viewmode ? dist(tview.p(), Point(0.f, 0.f, 0.f))
                         : dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t()));
+    // Off-axis, use the depth of the object center, so that its depth plane zooms about the cursor as a 2D image would.
+    if (vray != Vector(1.f, 0.f, 0.f)) d = std::abs((g_obs[cob].center() * g_obs[cob].t() * ~g_obs[obview].t())[0]);
     d = max(d, .001f) * 2;
     v *= d;
   }

@@ -182,7 +182,7 @@ void KeysPressed(const string& keys);
 void Draw();
 void ShowInfo();
 void RecomputeSharpEdges(GMesh& mesh);
-void Dolly(const Vec2<float>& yxq);
+void Dolly(const Vec2<float>& yxq, const Vector& vray = Vector(1.f, 0.f, 0.f));
 void update_lod();
 
 // G3dio

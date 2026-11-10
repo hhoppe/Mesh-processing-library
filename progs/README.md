@@ -550,7 +550,8 @@ The mouse/keyboard UI controls include:
  Mouse movements:
  left mouse:          rotate
  right mouse:         pan
- middle mouse, wheel: dolly
+ middle mouse:        dolly
+ mouse wheel:         dolly along the 3D ray under the cursor
  shift-left:          pan
  shift-right mouse:   roll
  shift-middle mouse:  dolly-zoom

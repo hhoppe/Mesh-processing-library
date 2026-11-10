@@ -1207,6 +1207,11 @@ string HB::show_info() {
                           : ' ');
 }
 
+Vector HB::view_ray(const Vec2<float>& yx) {
+  const Vec2<float> extents = zoom * convert<float>(win_dims) / float(min(win_dims));
+  return Vector(1.f, (1.f - yx[1] * 2.f) * extents[1], (1.f - yx[0] * 2.f) * extents[0]);
+}
+
 HB::VdcResult HB::vdc_from_world(const Point& pi) {
   HB::VdcResult result;
   Point p = pi * tcami;

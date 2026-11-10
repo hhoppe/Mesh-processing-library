@@ -3031,6 +3031,12 @@ HB::VdcResult HB::vdc_from_world(const Point& pi) {
   return result;
 }
 
+Vector HB::view_ray(const Vec2<float>& yx) {
+  if (!perspec) return Vector(1.f, 0.f, 0.f);
+  const Vec2<float> extents = view_zoom * convert<float>(win_dims) / float(min(win_dims));
+  return Vector(1.f, (1.f - yx[1] * 2.f) * extents[1], (1.f - yx[0] * 2.f) * extents[0]);
+}
+
 void HB::draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2) {
   hw.draw_segment(yx1 * convert<float>(win_dims), yx2 * convert<float>(win_dims));
 }

@@ -4,7 +4,7 @@
 # "create_readme_images --update DIR", or from the images of a macOS CI run (uploaded in readme_images/).
 overview.jpg 176.36 82.94 183.05 74.54 178.59 77.75
 reconstruction.jpg 182.34 80.59 182.35 80.59 183.03 80.15
-progressive_mesh.jpg 164.32 95.59 190.24 71.01 191.53 69.92
+progressive_mesh.jpg 163.03 96.56 189.59 72.67 190.19 72.13
 terrain.jpg 200.58 66.64 179.96 65.43 143.96 79.01
 spherical.jpg 170.53 74.76 171.50 75.29 170.19 76.01
 simplicial_complex.jpg 195.00 81.94 195.41 81.68 194.75 88.96

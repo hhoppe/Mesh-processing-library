@@ -1001,11 +1001,11 @@ bool try_opt(SubMesh& smesh, const Set<Vertex>& setmv, LocalPoints& lp, const Mv
   double lrss = BIGFLOAT, rss1;
   dummy_init(rss1);
   const float anticipation = 3;
-  const int maxtni = 10;
-  const int minni = 6, maxni = 12;
+  const int maxtni = 5;
+  const int minni = 6, maxni = 7;
   // It is worthwhile investing into the fit since it may eliminate future operations.
   int ni;
-  for (ni = 0; ni < maxtni; ni++) {
+  for (ni = 0; ni < maxtni;) {
     if (!optimize_local(smesh, setmv, lp, mvcvih, rss1)) return edrss = BIGFLOAT, false;
     ni++;
     if (rss1 - (lrss - rss1) * anticipation > threshrss) break;

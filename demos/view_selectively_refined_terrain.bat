@@ -16,4 +16,4 @@ echo .
 
 set G3D_REV_AUTO=1
 
-call g3d_cmp -win1 "-key ,o----J" -win2 "-key Dg" -g3d "G3dOGL -sr_mode" results/gcanyon_sq200.pm results/gcanyon_sq200.pm -eyeob data/unit_frustum.a3d -st data/gcanyon_fly_v98.s3d -texturemap data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 -lightambient .5 %G3D_ARGS%
+call g3d_cmp -win1 "-key o----J" -win2 "-key Dg" -g3d "G3dOGL -sr_mode" results/gcanyon_sq200.pm results/gcanyon_sq200.pm -eyeob data/unit_frustum.a3d -st data/gcanyon_fly_v98.s3d -texturemap data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 -lightambient .5 %G3D_ARGS%

@@ -13,4 +13,4 @@ echo .
 
 set PM_LOD_LEVEL=0.1
 
-call pm_view results/cessna.pm -st data/cessna.s3d -key , -lightambient .4 %G3D_GEOM% %G3D_ARGS%
+call pm_view results/cessna.pm -st data/cessna.s3d -lightambient .4 %G3D_GEOM% %G3D_ARGS%

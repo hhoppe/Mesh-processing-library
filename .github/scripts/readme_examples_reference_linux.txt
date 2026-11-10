@@ -32,9 +32,9 @@ a8bcaba1_1.png 194.38 79.56 194.41 79.51 196.43 77.76
 # Filterimage demos/data/gaudipark.png -scaletox 200 -tomesh | (screenshot 1)
 fa2c4131_1.png 144.43 76.28 159.88 72.25 174.31 75.64
 # G3dOGL -eyeob demos/data/unit_frustum.a3d -sr_mode office.sr.pm -st demos/data/office_srfig.s3d (screenshot 1)
-dd707799_1.png 227.68 64.49 227.97 63.94 227.68 64.49
+6ae74a4d_1.png 227.68 64.49 227.97 63.94 227.68 64.49
 # (common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcany (screenshot 1)
-116f788c_1.png 135.54 46.81 98.54 49.02 43.54 63.11
+d8b6f22c_1.png 135.54 46.81 98.54 49.02 43.54 63.11
 # FilterPM demos/data/office.pm -nf 200000 -outmesh | (screenshot 1)
 09b4df8a_1.png 238.09 27.88 238.09 27.88 238.13 27.69
 # G3dOGL bunny.vertexcache.m -st demos/data/bunny.s3d -key DmDTDC (screenshot 1)

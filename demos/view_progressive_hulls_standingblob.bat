@@ -12,4 +12,4 @@ echo .
 
 set PM_LOD_LEVEL=0.005
 
-call g3d_cmp -g3d pm_view results/standingblob.outer_hull.pm results/standingblob.inner_hull.pm -st data/standingblob.s3d -key ,De %G3D_ARGS%
+call g3d_cmp -g3d pm_view results/standingblob.outer_hull.pm results/standingblob.inner_hull.pm -st data/standingblob.s3d -key De %G3D_ARGS%

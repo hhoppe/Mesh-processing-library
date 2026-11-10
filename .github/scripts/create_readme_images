@@ -112,7 +112,7 @@ for variant in light dark; do
   # resolution.
   for lod in 0.05 0.08373 1.0; do
     PSC_LOD_LEVEL=$lod render drumset_$lod 1280x960 -psc_mode $data/drumset_trunc.psc $data/drumset.box.a3d \
-      -st $data/drumset.s3d -key , -lightambient .4
+      -st $data/drumset.s3d -lightambient .4
   done
 
   row overview1 mannequin_points mannequin_recon mannequin_subdiv bunny_sphere drumset_0.08373

@@ -11,4 +11,4 @@ echo '.'
 
 export PM_LOD_LEVEL="0.005"
 
-g3d_cmp -g3d pm_view results/standingblob.{outer,inner}_hull.pm -st data/standingblob.s3d -key ,De $G3D_ARGS
+g3d_cmp -g3d pm_view results/standingblob.{outer,inner}_hull.pm -st data/standingblob.s3d -key De $G3D_ARGS

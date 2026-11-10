@@ -997,12 +997,14 @@ void local_update_gmesh(const SubMesh& smesh, const Set<Vertex>& setmv, const Lo
 }
 
 bool try_opt(SubMesh& smesh, const Set<Vertex>& setmv, LocalPoints& lp, const Mvcvih& mvcvih, double threshrss,
-             double& edrss) {
+             double& edrss, bool is_esha = false) {
   double lrss = BIGFLOAT, rss1;
   dummy_init(rss1);
-  const float anticipation = 3;
-  const int maxtni = 5;
-  const int minni = 6, maxni = 7;
+  // Changing the sharpness of an edge may need many more iterations before the local geometry reaches a lower
+  // energy.  On 13 reconstructions (Nov 2026), this larger effort for esha lowered the final energy by about 5%.
+  const float anticipation = is_esha ? 30.f : 3.f;
+  const int maxtni = is_esha ? 30 : 5;
+  const int minni = is_esha ? 31 : 6, maxni = is_esha ? 35 : 7;
   // It is worthwhile investing into the fit since it may eliminate future operations.
   int ni;
   for (ni = 0; ni < maxtni;) {
@@ -1178,7 +1180,7 @@ EResult try_esha(Edge eg, double& edrss, Commit& commit, Footprint& fp) {
   update_local(smesh, mvcvih);
   local_all_project(smesh, setgoodf, lp, setbadpts);
   const double threshrss = rssf - wcrep * feshaasym + (is_sharp ? 1. : -1.) * wcsharp;
-  if (!try_opt(smesh, setmv, lp, mvcvih, threshrss, edrss)) return R_energy;
+  if (!try_opt(smesh, setmv, lp, mvcvih, threshrss, edrss, true)) return R_energy;
   if (testdih) {
     float mina = BIGFLOAT;
     for (Vertex v : lmesh.vertices(e)) mina = min(mina, min_dihedral_about_vertices(lmesh, v));
@@ -1584,6 +1586,13 @@ void do_reconstruct() {
   showdf(" crep=%g, csharp=%g\n", crep, csharp);
   initialize();
   if (0) {
+    // Fitting with fgfit (Nov 2026, 20 reconstructions) reached a lower energy than gfit, but it is not used, because:
+    // - Longer runs (more evaluations, or an adaptive stop) overfit the geometry to the initial assignment of sharp
+    //   edges, which makes it harder for esha to change that assignment later; at a high esha effort, starting from
+    //   fgfit gave no lower final energy than starting from gfit.
+    // - It extends the surface beyond an open boundary of the points (e.g. distcap) and adds self-intersections, which
+    //   lower the energy without improving the surface.  Vertex springs (-spring 1e-2) reduced the self-intersections
+    //   the most, and edge springs less so; neither prevents the surface from extending.
     do_fgfit(Args{"50"}.use());  // -fgfit 50
     ecol = true;                 // -ecol
     do_stoc();                   // -stoc
@@ -1596,7 +1605,8 @@ void do_reconstruct() {
     eswa = true;                 // -eswa
     do_stoc();                   // -stoc
     do_fgfit(Args{"10"}.use());  // -fgfit 10
-  } else {
+  } else if (0) {
+    // The schedule before Nov 2026, which collapses edges before changing their sharpness.
     do_gfit(Args{"6"}.use());  // -gfit 6
     do_gfit(Args{"6"}.use());  // -gfit 6
     do_gfit(Args{"6"}.use());  // -gfit 6
@@ -1611,6 +1621,21 @@ void do_reconstruct() {
     eswa = true;               // -eswa
     do_stoc();                 // -stoc
     do_gfit(Args{"6"}.use());  // -gfit 6
+  } else {
+    // Changing the sharpness of edges before collapsing them, together with the larger esha effort in try_opt(),
+    // lowered the final energy by about 5% on 13 reconstructions (Nov 2026).
+    do_gfit(Args{"18"}.use());  // -gfit 18
+    esha = true;                // -esha
+    do_stoc();                  // -stoc
+    do_gfit(Args{"6"}.use());   // -gfit 6
+    ecol = true;                // -ecol
+    do_stoc();                  // -stoc
+    do_gfit(Args{"6"}.use());   // -gfit 6
+    gecol = true;               // -gecol
+    esha = true;                // -esha
+    eswa = true;                // -eswa
+    do_stoc();                  // -stoc
+    do_gfit(Args{"6"}.use());   // -gfit 6
   }
 }
 

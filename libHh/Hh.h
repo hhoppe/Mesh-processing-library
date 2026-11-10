@@ -476,7 +476,8 @@ extern int g_unoptimized_zero;
 // If !expr, throw std::runtime_error exception; otherwise return expr.
 #define assertt(...) hh::details::assertt_aux((__VA_ARGS__), "assertt(" #__VA_ARGS__ ")" HH_FL)
 
-// The environment variable ASSERTW_IGNORE may contain a regular expression; matching warnings are not reported.
+// The environment variable ASSERTW_IGNORE may contain a regular expression; matching warnings are not reported,
+// either when they occur or in the summary of warnings at program exit.
 
 // If !expr, report warning once.  Returns expr.
 #define assertw(...) hh::details::assertw_aux((__VA_ARGS__), "assertw(" #__VA_ARGS__ ")" HH_FL)

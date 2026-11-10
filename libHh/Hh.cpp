@@ -255,6 +255,20 @@ class CleanUp {
   std::vector<Function> _functions;
 };
 
+// Returns true if the warning message matches the regular expression in the environment variable ASSERTW_IGNORE.
+bool warning_is_ignored(const string& message) {
+  static const string pattern = getenv_string("ASSERTW_IGNORE");
+  if (pattern == "") return false;
+  static const std::regex regex = [&] {
+    try {
+      return std::regex(pattern);
+    } catch (const std::regex_error& e) {
+      assertnever("Invalid regular expression in ASSERTW_IGNORE='" + pattern + "': " + e.what());
+    }
+  }();
+  return std::regex_search(message, regex);
+}
+
 class Warnings {
  public:
   static int increment_count(const char* s) { return instance().increment_count_(s); }
@@ -272,36 +286,23 @@ class Warnings {
     return ++_map[s];
   }
   void flush_internal() {
-    if (_map.empty()) return;
     struct string_less {  // Lexicographic comparison; deterministic, unlike pointer comparison.
       bool operator()(const void* s1, const void* s2) const {
         return strcmp(static_cast<const char*>(s1), static_cast<const char*>(s2)) < 0;
       }
     };
-    const std::map<const char*, int, string_less> sorted_map(_map.begin(), _map.end());
-    // const std::map<const char*, int, string_less> sorted_map(std::from_range_t{}, _map);  // C++23; cygwin gcc<15
+    std::map<const char*, int, string_less> sorted_map;
+    for (const auto& [s, n] : _map)
+      if (!warning_is_ignored(details::forward_slash(s))) sorted_map.emplace(s, n);
+    _map.clear();
+    if (sorted_map.empty()) return;
     const auto show_local = getenv_bool("HH_HIDE_SUMMARIES") ? showff : showdf;
     show_local("Summary of warnings:\n");
     for (const auto& [s, n] : sorted_map) show_local(" %5d '%s'\n", n, details::forward_slash(s).c_str());
-    _map.clear();
   }
   std::mutex _mutex;
   std::unordered_map<const char*, int> _map;
 };
-
-// Returns true if the warning message matches the regular expression in the environment variable ASSERTW_IGNORE.
-bool warning_is_ignored(const string& message) {
-  static const string pattern = getenv_string("ASSERTW_IGNORE");
-  if (pattern == "") return false;
-  static const std::regex regex = [&] {
-    try {
-      return std::regex(pattern);
-    } catch (const std::regex_error& e) {
-      assertnever("Invalid regular expression in ASSERTW_IGNORE='" + pattern + "': " + e.what());
-    }
-  }();
-  return std::regex_search(message, regex);
-}
 
 }  // namespace
 

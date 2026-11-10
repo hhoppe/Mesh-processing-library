@@ -586,7 +586,7 @@ float compute_signed(const Point& p, const Point& p_cube, Point& proj) {
 
 void print_directed_seg(Mk3d& mk, const Point& p1, const Point& p2, const A3dColor& col) {
   Vector v = p2 - p1;
-  assertx(v.normalize());
+  if (!v.normalize()) return;  // The grid point can lie exactly on the surface, leaving no segment to draw.
   mk.diffuse(col);
   mk.specular(0.f, 0.f, 0.f);
   mk.phong(3.f);

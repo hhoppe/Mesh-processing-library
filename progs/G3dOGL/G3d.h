@@ -168,6 +168,7 @@ extern objects g_obs;
 void UpdateFrame(const ObjectFrame& object_frame);
 void ExpandStateFilename();
 void UpdateOb1Bbox(const Bbox<float, 3>& bbox);
+void UpdateOb1Points(CArrayView<Point> points);
 
 // G3devent
 bool KeyPressed(const string& s);

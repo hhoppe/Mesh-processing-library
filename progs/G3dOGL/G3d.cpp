@@ -161,15 +161,16 @@ objects g_obs;
 
 // A hook from HB.
 void UpdateOb1Bbox(const Bbox<float, 3>& bbox) {
+  Array<Point> corners;
+  for_int(i, 2) for_int(j, 2) for_int(k, 2) corners.push(Point(bbox[i, 0], bbox[j, 1], bbox[k, 2]));
+  UpdateOb1Points(corners);
+}
+
+// A hook from HB, for an object 1 whose geometry is not read as a mesh; its centroid and radius are those of
+// the given points.
+void UpdateOb1Points(CArrayView<Point> points) {
   assertx(!g_obs[1].defined());
-  g_obs[1].enter_point(Point(bbox[0, 0], bbox[0, 1], bbox[0, 2]));
-  g_obs[1].enter_point(Point(bbox[0, 0], bbox[0, 1], bbox[1, 2]));
-  g_obs[1].enter_point(Point(bbox[0, 0], bbox[1, 1], bbox[0, 2]));
-  g_obs[1].enter_point(Point(bbox[0, 0], bbox[1, 1], bbox[1, 2]));
-  g_obs[1].enter_point(Point(bbox[1, 0], bbox[0, 1], bbox[0, 2]));
-  g_obs[1].enter_point(Point(bbox[1, 0], bbox[0, 1], bbox[1, 2]));
-  g_obs[1].enter_point(Point(bbox[1, 0], bbox[1, 1], bbox[0, 2]));
-  g_obs[1].enter_point(Point(bbox[1, 0], bbox[1, 1], bbox[1, 2]));
+  for (const Point& p : points) g_obs[1].enter_point(p);
   g_obs[1].update_stats();
   g_obs.last = 1;
   HB::open_segment(1);

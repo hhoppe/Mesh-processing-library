@@ -52,6 +52,7 @@ extern int info;           // For SR diagnostics.
 extern string g_filename;  // To override filename for ob1.
 extern float lod_level;    // In movie/video.
 extern void UpdateOb1Bbox(const Bbox<float, 3>& bbox);
+extern void UpdateOb1Points(CArrayView<Point> points);
 extern void update_lod();
 extern bool keep_stdin_open;
 extern float override_frametime;
@@ -3977,11 +3978,25 @@ void read_psc(const string& filename) {
     }
     return;
   }
+  {
+    // Let the bounding box, centroid, and radius of object 1 be those of the vertices at full detail, whose
+    // positions are obtained by replaying the vertex splits on the positions alone (from the base complex).
+    Map<int, Point> positions;  // Vertex id -> position.
+    for (Simplex v : Kmesh.simplices_dim(0)) positions.enter(v->getId(), v->getPosition());
+    for_int(i, psc_lod_list.num() - 1) {
+      const SplitRecord& vsplit = psc_lod_list[i];
+      const Point ps = positions.get(vsplit.getVs());
+      const Vector dp = Vec3<float>(vsplit.getDeltap());
+      positions.enter(vsplit.getVt(), ps + dp);
+      if (vsplit.vsp() == 0) positions.replace(vsplit.getVs(), ps - dp);  // Vs was at the midpoint.
+    }
+    Array<Point> points;
+    for (const Point& p : positions.values()) points.push(p);
+    g3d::UpdateOb1Points(points);
+  }
   toggle_attribute(g_xobs.cullface);
   if (psc_lod_level != 0.f) psc_update_lod();
   slidermode = true;
-  // No bbox information yet.
-  // g3d::UpdateOb1Bbox(...);
   if (g3d::g_filename == "") g3d::g_filename = filename;
   g_twosided = true;
 }

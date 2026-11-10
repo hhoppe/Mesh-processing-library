@@ -111,7 +111,7 @@ for variant in light dark; do
   # Progressive simplicial complex at a coarse level, at level 1500 of 17921 (for the overview), and at its full
   # resolution.
   for lod in 0.05 0.08373 1.0; do
-    PSC_LOD_LEVEL=$lod render drumset_$lod 1280x960 -psc_mode $data/drumset_trunc.psc $data/drumset.box.a3d \
+    PSC_LOD_LEVEL=$lod render drumset_$lod 1280x960 -psc_mode $data/drumset_trunc.psc \
       -st $data/drumset.s3d -lightambient .4
   done
 

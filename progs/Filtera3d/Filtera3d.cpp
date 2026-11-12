@@ -680,20 +680,21 @@ void join_lines() {
 
 void compute_outlier() {
   Array<bool> ar_is_outlier(g_outlier.pa.num(), false);
-  const Bbox bbox{g_outlier.pa};
-  const Frame xform = bbox.get_frame_to_cube(), xform_inverse = ~xform;
+  const Frame xform = Bbox{g_outlier.pa}.get_frame_to_cube();
+  // Search a normalized copy, so that the output points are the input points exactly.
+  Array<Point> pa_cube(g_outlier.pa.num());
   PointSpatial<int> SPp(30);
-  for (auto [i, p] : enumerate(g_outlier.pa)) {
-    p *= xform;
-    SPp.enter(i, &p);
+  for_int(i, pa_cube.num()) {
+    pa_cube[i] = g_outlier.pa[i] * xform;
+    SPp.enter(i, &pa_cube[i]);
   }
   int num_outliers = 0;
   assertx(g_outlier.pa.num() > outliern);  // Else the search below advances past the end.
   for_int(i, g_outlier.pa.num()) {
-    SpatialSearch<int> ss(&SPp, g_outlier.pa[i]);
+    SpatialSearch<int> ss(&SPp, pa_cube[i]);
     // The first search result is this point itself, so advancing outliern times reaches its outliern'th neighbor.
     const auto [unused_id, d2] = *ranges::next(ss.begin(), outliern);
-    const float d = my_sqrt(d2) * xform_inverse[0, 0];
+    const float d = my_sqrt(d2) / xform[0, 0];
     HH_SSTAT(Soutlierd, d);
     if (d >= outlierd) {
       ar_is_outlier[i] = true;
@@ -706,7 +707,7 @@ void compute_outlier() {
   for_int(i, g_outlier.pa.num()) {
     if (ar_is_outlier[i]) continue;
     el.init(A3dElem::EType::point);
-    el.push(A3dVertex(g_outlier.pa[i] * ~xform, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
+    el.push(A3dVertex(g_outlier.pa[i], Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
     loop(el);
   }
 }

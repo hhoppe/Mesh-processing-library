@@ -18,6 +18,8 @@ namespace {
 int robn;  // Current a3d object to read.
 string filename = "-";
 float wait_command;
+bool read_end_frame;      // Whether the last read_buffer() ended at an end-of-frame.
+double next_input_time;  // With input_fps, the time at which to read the next input frame.
 
 void add_extra(int n) {
   if (!n) return;
@@ -220,6 +222,7 @@ bool read_buffer(RBuffer& buf, RBufferedA3dStream& ra3d, bool during_init) {
       }
       if (ret == ETryInput::eof) return true;
       if (ret == ETryInput::success_frame || wait_command) {  // End of frame.
+        read_end_frame = ret == ETryInput::success_frame;
         HB::redraw_later();
         cur_needs_redraw = true;
         break;
@@ -306,7 +309,19 @@ void ReadInput(bool during_init) {
     cur_needs_redraw = true;
     return;
   }
+  // With input_fps, hold back the next input frame until its scheduled time, while still redrawing (so that, e.g.,
+  //  selective refinement and its geomorphs advance at the display rate).  A frame that is due within a fifth of the
+  //  period is read now, so that jitter in the redraw times does not cause it to wait for another redraw.
+  const double period = input_fps > 0.f ? 1. / input_fps : 0.;
+  if (period && !during_init && get_precise_time() < next_input_time - period * .2) {
+    HB::redraw_later();
+    cur_needs_redraw = true;
+    return;
+  }
+  read_end_frame = false;
   const bool eof = read_buffer(buf, ra3d, during_init);
+  // Schedule the next frame one period later, unless rendering has fallen behind by more than a period.
+  if (period && read_end_frame) next_input_time = max(next_input_time + period, get_precise_time());
   if (eof) {
     HB::redraw_later();
     cur_needs_redraw = true;

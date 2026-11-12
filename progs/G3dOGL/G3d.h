@@ -49,6 +49,7 @@ extern bool asynchronousinput;  // Update between EndFrames.
 extern bool synchronousinput;   // Block reading input until EndFrame or wait.
 extern bool keep_stdin_open;    // Do not close stdin even if no input.
 extern bool waitframe;          // Open the window only after the first input frame (or EOF).
+extern float input_fps;         // If nonzero, read the input end-of-frames at most at this rate.
 extern bool killeof;            // Kill g3d when EOF is read.
 
 // Mode of stream output.

@@ -45,6 +45,7 @@ bool asynchronousinput = false;
 bool synchronousinput = false;
 bool keep_stdin_open = false;
 bool waitframe = false;
+float input_fps = 0.f;
 bool killeof = false;
 bool output = false;
 bool obinary = false;
@@ -296,6 +297,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(asynchronousinput, ": update between EndFrames");
   HH_ARGSF(synchronousinput, ": block reading input until EndFrame or wait");
   HH_ARGSF(waitframe, ": open the window after the first input frame");
+  HH_ARGSP(input_fps, "fps : pace the input frames to this rate");
   HH_ARGSP(anglethresh, "angle : sharp dihedral angle");
   args.other_args_ok();
   if (!args.parse_and_extract(g_aargs1) || !hb_success) return 0;

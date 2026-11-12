@@ -28,7 +28,7 @@ set normalmap=results/bunny.spheresample.octaflat.unrotated.normalmap.png
 call g3d_cmp -g3d pm_view ^
              -win1 "-texturemap %normalmap% -texturenormal 1 -key Dt -lighta .25 -lights .8 -st data/bunny.s3d" ^
              -win2 "-texturemap data/gradchecker256.png -key DeDt -lighta 1 -lights 0 -st data/bunny.s3d" ^
-             -win3 "-st data/bunny.s3d -key DU -edgecolor #00b000 -hwdelay .2 -hwkey O" ^
+             -win3 "-key DU -edgecolor #00b000 -hwdelay .2 -hwkey O -st data/bunny.s3d" ^
              -win4 "-texturemap %normalmap% -texturenormal 0 -key Dt -st data/imagesquare.s3d -hwdelay .4 -hwkey ," ^
              results/bunny.octaflat.pm results/bunny.octaflat.pm results/bunny.octaflat.pm data/imagesquare.pm ^
              %G3D_ARGS%
@@ -40,7 +40,7 @@ set normalmap=results/bunny.spheresample.lonlat.unrotated.normalmap.png
 call g3d_cmp -g3d pm_view ^
              -win1 "-texturemap %normalmap% -texturenormal 1 -key Dt -lighta .25 -lights .8 -st data/bunny.s3d" ^
              -win2 "-texturemap data/gradchecker256.png -key DeDt -lighta 1 -lights 0 -st data/bunny.s3d" ^
-             -win3 "-st data/bunny.s3d -key DU -edgecolor #00b000 -hwdelay .2 -hwkey O" ^
+             -win3 "-key DU -edgecolor #00b000 -hwdelay .2 -hwkey O -st data/bunny.s3d" ^
              -win4 "-texturemap %normalmap% -texturenormal 0 -key Dt -st data/imagesquare.s3d -hwdelay .4 -hwkey ," ^
              results/bunny.lonlat.pm results/bunny.lonlat.pm results/bunny.lonlat.pm data/imagesquare.pm ^
              %G3D_ARGS%

@@ -150,7 +150,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div><cite>IEEE Visualization 1998 Conference</cite>. (<a href="https://ieeevis.org/year/2023/info/awards/test-of-time-awards#scivis"><em>2023 Test of Time Award</em></a>.)</div>
    <div><em>Visually smooth adaptation of mesh refinement using cascaded temporal geomorphs.</em></div>
    <div>Programs: <a href="progs/README.md#prog_StitchPM"><code>StitchPM</code></a>, <a href="progs/README.md#prog_G3dOGL"><code>G3dOGL</code></a></div>
-   <div>Demos: <code>{create,view}_terrain_hierarchy</code>,&ensp;<code>{create,view}_selectively_refined_terrain</code>,&ensp;<code>view_gcanyon_*</code></div>
+   <div>Demos: <code>{create,view}_terrain_hierarchy</code>,&ensp;<code>view_gcanyon_*</code></div>
   </td>
  </tr>
 

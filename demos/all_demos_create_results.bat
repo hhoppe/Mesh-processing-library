@@ -17,10 +17,8 @@ if .==. (
   call create_geomorphs.bat
   call create_progressive_hulls_bunny.bat
   call determine_approximation_error.bat
-  call create_progressive_hulls_standingblob.bat
 
   call create_selectively_refined_office.bat
-  call create_selectively_refined_terrain.bat
 
   call create_terrain_hierarchy.bat
 
@@ -29,10 +27,4 @@ if .==. (
   call create_vertex_cached_bunny.bat
 
   call create_spherical_param_bunny.bat
-
-  call create_rendered_mechpart_image.bat
-  call create_rendered_mechpart_video.bat
-  call create_voronoi_fillin.bat
-
-
 )

@@ -17,10 +17,8 @@ view_progressive_mesh_cessna.sh
 view_progressive_mesh_57chevy.sh
 view_geomorphs.sh
 view_progressive_hulls_bunny.sh
-view_progressive_hulls_standingblob.sh
 
 view_selectively_refined_office.sh
-view_selectively_refined_terrain.sh
 
 view_terrain_hierarchy.sh
 view_gcanyon_frames.sh
@@ -33,10 +31,4 @@ view_vertex_cached_bunny.sh
 
 view_spherical_param_bunny.sh
 
-view_rendered_mechpart_image.sh
-view_rendered_mechpart_video.sh
-view_voronoi_fillin.sh
-
 view_hidden_line_removed.sh
-
-

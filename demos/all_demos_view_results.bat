@@ -15,10 +15,8 @@ if .==. (
   call view_progressive_mesh_57chevy.bat
   call view_geomorphs.bat
   call view_progressive_hulls_bunny.bat
-  call view_progressive_hulls_standingblob.bat
 
   call view_selectively_refined_office.bat
-  call view_selectively_refined_terrain.bat
 
   call view_terrain_hierarchy.bat
   call view_gcanyon_frames.bat
@@ -31,11 +29,5 @@ if .==. (
 
   call view_spherical_param_bunny.bat
 
-  call view_rendered_mechpart_image.bat
-  call view_rendered_mechpart_video.bat
-  call view_voronoi_fillin.bat
-
   call view_hidden_line_removed.bat
-
-
 )

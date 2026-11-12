@@ -24,13 +24,8 @@ standingblob.geomorphs 4717324
 bunny.outer_hull.pm 2231632
 bunny.inner_hull.pm 2231082
 bunny.outer_hull.approximation_error.txt 0.0416 0.08564 0.2659 0.6792
-standingblob.nf20000.m 1108142
-standingblob.outer_hull.pm 647827
-standingblob.inner_hull.pm 647167
 office.nf80000.orig.m 7140990
 office.nf80000.sr.pm 2311530
-gcanyon_sq200.orig.m 5562092
-gcanyon_sq200.pm 2082725
 gcanyon_sq129_b44.l-1.stitched.pm 909799
 gcanyon_sq129_b44.l0.stitched.pm 642222
 gcanyon_sq129_b44.l1.stitched.pm 624178
@@ -46,6 +41,3 @@ bunny.spheresample.octaflat.unrotated.normalmap.png 126.18 69.02 130.38 75.55 12
 bunny.spheresample.lonlat.unrotated.normalmap.png 127.49 63.33 117.24 81.36 120.55 74.00
 bunny.octaflat.pm 2260944
 bunny.lonlat.pm 2132211
-mechpart.image.bmp 208.44 66.62 208.44 66.62 208.44 66.62
-mechpart.video.mp4 224.98 59.14 224.98 59.14 224.98 59.14
-texture.output.png 108.59 59.61 110.27 57.93 116.21 54.04

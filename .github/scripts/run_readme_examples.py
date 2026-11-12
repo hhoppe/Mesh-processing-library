@@ -81,12 +81,14 @@ def hide_viewers(text: str, screenshots: list[pathlib.Path] | None = None) -> st
     words = segment.strip().lstrip('(').split()
     command = next((word for word in words if '=' not in word), '')
     if command in VIEWERS:
-      hidden = ' -hidden' if '-video' in words else HIDDEN
+      # A viewer that writes a video or an offscreen image is already window-less and self-terminating.
+      writes_file = '-video' in words or '-offscreen' in words
+      hidden = ' -hidden' if writes_file else HIDDEN
       if command == 'VideoViewer':
         # Resizing the hidden window with the "=" key crashes the X server of XQuartz (macOS).
         segment = re.sub(r'-key \S+', lambda m: m.group().replace('=', ''), segment)
       # (VideoViewer takes no screenshot: a hidden window cannot be resized, as its "=" key does.)
-      if screenshots is not None and '-video' not in words and command != 'VideoViewer':
+      if screenshots is not None and not writes_file and command != 'VideoViewer':
         path = screenshots[0].parent / f'{screenshots[0].stem}_{len(screenshots)}.png'
         screenshots.append(path)
         capture = f' -imagename {path} -picture' if command == 'G3dOGL' else f' -offscreen {path}'

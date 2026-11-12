@@ -355,17 +355,17 @@ or in the top view (key <kbd>Dr</kbd>).  Drag the mouse buttons to rotate, pan, 
 
 <em>View-dependent refinement of a Grand Canyon terrain, textured and as a mesh.</em>
 
-Within `demos/create_selectively_refined_terrain.{sh,bat}`,
+The commands
 ```shell
 Filterimage demos/data/gcanyon_elev_crop.bw.png -tobw -elevation -step 6 -scalez 0.000194522 \
     -removekinks -tomesh |
   Filtermesh -assign_normals >gcanyon_sq200.orig.m
 mesh_to_pm gcanyon_sq200.orig.m -vsgeom -terrain >gcanyon_sq200.pm
 ```
-- converts an elevation image to a smoothed terrain grid mesh, and
-- simplifies it to create a selectively refinable mesh.
+- convert an elevation image to a smoothed terrain grid mesh, and
+- simplify it to create a selectively refinable mesh.
 
-Then, within `demos/view_selectively_refined_terrain.sh`,
+Then, the command
 ```shell
 (common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcanyon_fly_v98.s3d \
    -texturemap demos/data/gcanyon_color.1024.png -key DeDtDG -sr_screen_thresh .02292 -sr_gtime 64 \
@@ -542,8 +542,7 @@ Please see the many examples presented earlier.
 The viewer can also read `*.frame` elements to position the viewer and the objects in world space.
 Elements of `*.a3d`, `*.m`, and `*.frame` streams can all be interleaved in a single input stream.
 
-The viewer can take image snapshots (see `demos/create_rendered_mechpart_image`) and
-record videos (see `demos/create_rendered_mechpart_video`).
+The viewer can also render images and record videos (see the examples below).
 
 The mouse/keyboard UI controls include:
 <pre>
@@ -581,6 +580,14 @@ The mouse/keyboard UI controls include:
  -=: decrease/increase the magnitude of all movements
  f : toggle flying (usually with '0' eye selected)
 </pre>
+
+To render an 800&times;600 image of a mesh (without any window) and then view the resulting image:
+
+```shell
+G3dOGL demos/data/standingblob.orig.m -st demos/data/standingblob.s3d -key ii -geom 800x600 \
+  -offscreen output_image.png
+VideoViewer output_image.png
+```
 
 To record a 6-second (360-frame) video of a rotating mesh and then view the resulting video:
 

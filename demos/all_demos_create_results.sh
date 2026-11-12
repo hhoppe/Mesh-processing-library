@@ -19,10 +19,8 @@ create_progressive_mesh_57chevy.sh
 create_geomorphs.sh
 create_progressive_hulls_bunny.sh
 determine_approximation_error.sh
-create_progressive_hulls_standingblob.sh
 
 create_selectively_refined_office.sh
-create_selectively_refined_terrain.sh
 
 create_terrain_hierarchy.sh
 
@@ -31,9 +29,3 @@ create_topologically_simplified.sh
 create_vertex_cached_bunny.sh
 
 create_spherical_param_bunny.sh
-
-create_rendered_mechpart_image.sh
-create_rendered_mechpart_video.sh
-create_voronoi_fillin.sh
-
-

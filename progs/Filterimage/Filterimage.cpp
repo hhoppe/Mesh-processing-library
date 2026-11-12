@@ -1247,7 +1247,7 @@ void do_softpullpush() {
 // *** voronoidilate
 
 void do_voronoidilate() {
-  // Filterimage ~/git/mesh_processing/demos/data/texture.input.png -filter impulse -scaleu 10 -color 255 0 0 255 -voronoidilate -noo
+  // Filterimage texture.input.png -filter impulse -scaleu 10 -color 255 0 0 255 -voronoidilate -noo
   // Using Vec2<float>:  win: 0.74  gcc: 0.23
   // Using Vec2<int>  :  win: 0.27  gcc: 0.19
   HH_TIMER("_voronoi");

@@ -124,7 +124,7 @@ float fdisplacepolygon = 1.f;
 float flinewidth = 1.f;
 float sphereradius = 0.f;  // Was .005.
 Array<string> texturemaps;
-bool texturenormal;
+int texturenormal = -1;  // -1: unassigned; 0: false; 1: true.
 bool texture_lit;
 float texturescale = 0.f;  // 0 == no wrapping
 bool worldlight;
@@ -924,7 +924,8 @@ void load_texturemaps() {
     }
     texturemaps.push(s);
   }
-  if (ranges::any_of(texturemaps, [](const string& name) { return name.contains(".nor"); })) texturenormal = true;
+  if (texturenormal < 0 && ranges::any_of(texturemaps, [](const string& name) { return name.contains(".nor"); }))
+    texturenormal = 1;
   assertx(!g_textures.num());
   g_textures.init(texturemaps.num());
   for_int(i, texturemaps.num()) {
@@ -977,7 +978,7 @@ void load_texturemaps() {
       glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
       texture_lit = false;  // Compatible with old.
       if (getenv_bool("G3D_TEXTURE_LIT")) texture_lit = true;
-      if (texturenormal) texture_lit = false;
+      if (texturenormal > 0) texture_lit = false;
       if (texture_lit) {
         glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
         // And must later set material color to white.
@@ -1034,9 +1035,9 @@ void load_texturemaps() {
     anisotropy = getenv_int("ANISOTROPY", anisotropy);
     set_anisotropy();
 
-    if (texturenormal && !normalmap_init()) {
-      Warning("Normal mapping unsupported -> texturenormal=false");
-      texturenormal = false;
+    if (texturenormal > 0 && !normalmap_init()) {
+      Warning("Normal mapping unsupported -> texturenormal=0");
+      texturenormal = 0;
     }
 
     bool texture_elev = getenv_bool("TEXTURE_ELEV");
@@ -1324,7 +1325,7 @@ bool setup_ob(int i) {
     glEnable(GL_TEXTURE_2D);
     glEnable(GL_TEXTURE_GEN_S);
     glEnable(GL_TEXTURE_GEN_T);
-    if (texturenormal) {
+    if (texturenormal > 0) {
       const Vector lightdirmodel = ok_normalized(k_lightdir_eye0 * ~fmodeltoeye);
       const Vector eyedirmodel = ok_normalized(Vector(-1.f, 0.f, 0.f) * ~fmodeltoeye);
       normalmap_setlight(lightdirmodel, eyedirmodel, lambient);
@@ -1743,11 +1744,11 @@ void draw_mesh(GMesh& mesh) {
         initialize_unlit();
         update_cur_color(mesh_color.d);
         set_light_ambient(0.f);
-        if (texturenormal) normalmap_activate();
+        if (texturenormal > 0) normalmap_activate();
       }
       if (0) {  // Debug: peek at primary colors.
         glDisable(GL_TEXTURE_2D);
-        if (texturenormal) normalmap_deactivate();
+        if (texturenormal > 0) normalmap_deactivate();
       }
     }
     int ii = lquickmode ? quicki : 0;
@@ -1913,7 +1914,7 @@ void draw_mesh(GMesh& mesh) {
   if (texture_active) {
     glDisable(GL_TEXTURE_2D);
     set_light_ambient(ambient);
-    if (texturenormal) normalmap_deactivate();
+    if (texturenormal > 0) normalmap_deactivate();
   }
   if (ledges) {
     glShadeModel(GL_FLAT);
@@ -2579,7 +2580,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   HH_ARGSP(meshcolp, "c 0 0 : mesh color phong coef");
   HH_ARGSP(meshcola, "a : mesh color alpha");
   HH_ARGSD(texturemap, "image_filename : load texture map");
-  HH_ARGSP(texturenormal, "bool : normal (not bump) map");
+  HH_ARGSP(texturenormal, "0 | 1 : normal (not bump) map instead of rgb map");
   HH_ARGSP(texturescale, "fac : scale texture coordinates (0=no_wrap)");
   args.p("-pm_mode", pm_filename, "file.pm : progressive mesh mode");
   args.p("-sr_mode", sr_filename, "file.pm : selective refinement");
@@ -3292,7 +3293,7 @@ void draw_pm() {
       initialize_unlit();
       update_cur_color(mesh_color.d);
       set_light_ambient(0.f);
-      if (texturenormal) normalmap_activate();
+      if (texturenormal > 0) normalmap_activate();
     }
     // static const int pm_strips = getenv_int("PM_STRIPS");
     // 2002-05-28: it now always seems faster with strips and it greatly helps when Display Lists are enabled.
@@ -3311,7 +3312,7 @@ void draw_pm() {
   if (texture_active) {
     glDisable(GL_TEXTURE_2D);
     set_light_ambient(ambient);
-    if (texturenormal) normalmap_deactivate();
+    if (texturenormal > 0) normalmap_deactivate();
   }
   if (ledges) {
     // Options cullbackedges, lquickmode not handled.
@@ -3498,7 +3499,7 @@ void draw_sr() {
       initialize_unlit();  // Disable lighting.
       update_cur_color(mesh_color.d);
       set_light_ambient(0.f);
-      if (texturenormal) normalmap_activate();
+      if (texturenormal > 0) normalmap_activate();
     }
     if (sr_no_strips) {
       Warning("SrMesh: not using strips for rendering");
@@ -3513,7 +3514,7 @@ void draw_sr() {
   if (texture_active) {
     glDisable(GL_TEXTURE_2D);
     set_light_ambient(ambient);
-    if (texturenormal) normalmap_deactivate();
+    if (texturenormal > 0) normalmap_deactivate();
   }
   if (sr_striplines) {
     assertw(!texture_active);
@@ -5019,7 +5020,7 @@ void draw_ply() {
       initialize_unlit();
       update_cur_color(mesh_color.d);
       set_light_ambient(0.f);
-      if (texturenormal) normalmap_activate();
+      if (texturenormal > 0) normalmap_activate();
     }
     const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
     int ntriangles = 0;
@@ -5073,7 +5074,7 @@ void draw_ply() {
   if (texture_active) {
     glDisable(GL_TEXTURE_2D);
     set_light_ambient(ambient);
-    if (texturenormal) normalmap_deactivate();
+    if (texturenormal > 0) normalmap_deactivate();
   }
   if (ledges) {
     glShadeModel(GL_FLAT);

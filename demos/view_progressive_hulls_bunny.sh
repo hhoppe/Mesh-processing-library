@@ -3,11 +3,9 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./_initdemos.sh
 
-echo '.'
+echo
 echo 'Press "De" to toggle edges on/off.'
-echo '.'
-echo 'Use right button to drag slider up/down.'
-echo '.'
+echo
 
 export PM_LOD_LEVEL="0.001"
 

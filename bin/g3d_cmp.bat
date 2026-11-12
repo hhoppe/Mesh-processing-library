@@ -19,7 +19,7 @@ setlocal EnableExtensions EnableDelayedExpansion
 ::: Examples:
 ::: g3d_cmp mesh.m mesh.modified.m -key DmDe
 ::: g3d_cmp -win1 "-key Dm" -win2 "-key De" mesh1.m mesh2.m
-::: g3d_cmp -g3d pm_view demos/data/bunny.split_meridian.pm demos/data/bunny.outer_hull.pm
+::: g3d_cmp -g3d pm_view demos/results/bunny.lonlat.pm demos/results/bunny.outer_hull.pm
 ::: g3d_cmp -g3d "G3dOGL -ply_mode" pr.ply ssd.ply
 
 :: The script uses no "goto" or "call :label", because cmd.exe may fail to find a label in a file with LF line

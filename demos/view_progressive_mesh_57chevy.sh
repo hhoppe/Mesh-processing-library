@@ -3,9 +3,9 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./_initdemos.sh
 
-echo '.'
+echo
 echo 'Use the left button to drag the slider (logarithmic in #vertices).'
-echo '.'
+echo
 
 export PM_LOD_LEVEL="0.1"
 

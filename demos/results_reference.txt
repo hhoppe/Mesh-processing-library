@@ -39,12 +39,13 @@ gcanyon_sq129_b44.l2.pm 621066
 office.nf200000.mincycles.m 17956675
 bunny.vertexcache.m 10979171
 bunny.for_sphereparam.pm 1813154
-bunny.sphparam.m 7796624
+bunny.sphparam.octaflat.m 8288179
+bunny.sphparam.lonlat.m 7804993
 octaflat_eg128.uv.sphparam.m 2873389
-bunny.spheresample.remesh.m 2724209
 bunny.spheresample.octaflat.unrotated.normalmap.png 126.18 69.02 130.38 75.55 123.24 75.89
-bunny.lonlat.unrotated.normalmap.png 127.42 63.16 117.33 81.50 120.78 74.02
-bunny.split_meridian.pm 2127301
+bunny.spheresample.lonlat.unrotated.normalmap.png 127.49 63.33 117.24 81.36 120.55 74.00
+bunny.octaflat.pm 2260944
+bunny.lonlat.pm 2132211
 mechpart.image.bmp 208.44 66.62 208.44 66.62 208.44 66.62
 mechpart.video.mp4 224.98 59.14 224.98 59.14 224.98 59.14
 texture.output.png 108.59 59.61 110.27 57.93 116.21 54.04

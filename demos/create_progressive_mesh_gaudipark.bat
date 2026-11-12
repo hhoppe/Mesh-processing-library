@@ -4,16 +4,17 @@ setlocal
 cd "%~p0"
 call ./_initdemos.bat
 
-echo Converting gaudipark image to a colored mesh.
-
+echo.
+echo We convert the gaudipark image to a colored mesh.
+echo.
 Filterimage data/gaudipark.png -scaletox 200 -tomesh >results/gaudipark.orig.m
 
-echo Given mesh results/gaudipark.orig.m (colors sampled from an image), creating progressive mesh results/gaudipark.pm
-echo (This will take a few minutes.)
-
+echo Given mesh results/gaudipark.orig.m (colors sampled from an image), we create the progressive mesh
+echo results/gaudipark.pm.
+echo.
 :: call mesh_to_pm.bat results/gaudipark.orig.m -fit_colors 1 >results/gaudipark.pm
 call mesh_to_pm.bat results/gaudipark.orig.m -minqem -norfac 0. -colfac 1. -neptfac 1e5 >results/gaudipark.pm
 
-echo .
+echo.
 echo Use view_progressive_mesh_gaudipark.bat to view the resulting progressive mesh.
-echo .
+echo.

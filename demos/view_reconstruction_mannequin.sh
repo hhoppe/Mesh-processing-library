@@ -3,9 +3,12 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./_initdemos.sh
 
-echo '.'
+echo
 echo 'To take interactive control, drag in the first window using any of the mouse buttons.'
-echo '.'
+echo
 
 r=mannequin
-g3d_cmp -win1 "-key o--J" -winl "-key DmDe" data/$r.pts results/$r.recon.m results/$r.opt.m results/$r.sub0.m results/$r.sub2limit.m -st data/$r.s3d -backcolor hhblue -key DmDeDb $G3D_ARGS
+
+g3d_cmp -win1 "-key o--J" -win5 "-key DmDe" \
+        data/$r.pts results/$r.recon.m results/$r.opt.m results/$r.sub0.m results/$r.sub2limit.m \
+        -st data/$r.s3d -backcolor hhblue -key DmDeDb $G3D_ARGS

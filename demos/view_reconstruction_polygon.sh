@@ -3,12 +3,12 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./_initdemos.sh
 
-echo '.'
+echo
 echo 'This demo shows the input points (black), the initial curve reconstructed (brown),'
 echo '  and the final fitted curve (black).'
-echo '.'
+echo
 echo 'Press "N" and "P" to manually advance to next and previous objects.'
-echo '.'
+echo
 
 G3dOGL data/curve1.pts results/curve1.recon.a3d results/curve1.opt.a3d -st data/curve1.s3d -key ojo \
-  -backcolor hhblue -thickpoint 8 -thicka3d 3 $G3D_GEOM $G3D_ARGS
+       -backcolor hhblue -thickpoint 8 -thicka3d 3 $G3D_GEOM $G3D_ARGS

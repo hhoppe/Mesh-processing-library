@@ -3,9 +3,9 @@
 cd "$(dirname "${BASH_SOURCE[0]}")"
 source ./_initdemos.sh
 
-echo '.'
-echo 'Use left button to drag slider up/down.'
-echo '.'
+echo
+echo 'Use left button to drag the slider up/down.'
+echo
 
 export PSC_LOD_LEVEL="0.1"
 

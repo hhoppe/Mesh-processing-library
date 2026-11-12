@@ -18,7 +18,9 @@ set filter=%filter% if ($s && /^E/ && $k++ %% $every == 0) { print qq(f 0 0 0\n)
 set filter_opt=%filter% -wait=2.0 -pause=20 -speedup=0.3 -every=14 results/%r%.opt.record
 set filter_sub0=%filter% -wait=2.0 -pause=30 -speedup=0.0 -every=1 results/%r%.sub0.record
 
+echo.
 echo At the end of the animation, press 'P' and 'N' to move backwards and forwards through the objects.
+echo.
 
 set stream=results\%r%.view.tmp
 

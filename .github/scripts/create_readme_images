@@ -35,6 +35,11 @@ export ASSERTW_IGNORE='fl,fr._matid ignored|Isolated vertex has undefined normal
 export JPG_QUALITY=88
 export G3D_NO_S3DNAME=1  # Report any state file that a locally installed s3dname would supply.
 data=demos/data; results=demos/results
+# The remesh of the bunny, sampled from its spherical parameterization over the octahedral domain, whose texture
+# coordinates address the octaflat normal map.
+SphereSample -domain octaflat -egrid 128 -sample_map $results/octaflat_eg128.uv.sphparam.m \
+  -param $results/bunny.sphparam.octaflat.m -rot $data/bunny.s3d -keys imageuv -remesh 2>/dev/null |
+  Filtermesh -renamekey v imageuv uv >"$tmp/bunny_remesh.m" 2>/dev/null
 
 # render name geometry [args...] : render a view into $tmp/name.png, cropped to its content and scaled to $height,
 # with a margin of $gap pixels (horizontally $hgap if set).
@@ -97,13 +102,13 @@ for variant in light dark; do
   # Spherical parameterization: original bunny, its parameterization on the sphere (shaded using the original
   # normals), the remesh, the normal-mapped remesh, and the normal map itself.
   render bunny_orig 1100x1100 $data/bunny.orig.m -st $data/bunny.s3d
-  Filtermesh $results/bunny.sphparam.m -renamekey v sph P \
+  Filtermesh $results/bunny.sphparam.lonlat.m -renamekey v sph P \
     -normaltransf "$(Filterframe $data/bunny.s3d -snap_to_axes -inverse 2>/dev/null)" >"$tmp/bunny_sphere.m" \
     2>/dev/null
   render bunny_sphere 1100x1100 "$tmp/bunny_sphere.m" -st $data/unitsphere_ang.s3d
-  render bunny_remesh 1100x1100 $results/bunny.spheresample.remesh.m -st $data/bunny.s3d -key DmDe
+  render bunny_remesh 1100x1100 "$tmp/bunny_remesh.m" -st $data/bunny.s3d -key DmDe
   normalmap=$results/bunny.spheresample.octaflat.unrotated.normalmap.png
-  render bunny_normalmap 1100x1100 $results/bunny.spheresample.remesh.m -st $data/bunny.s3d \
+  render bunny_normalmap 1100x1100 "$tmp/bunny_remesh.m" -st $data/bunny.s3d \
     -texturemap $normalmap -texturenormal 1 -key Dt
   side=$((height * 9 / 10)); pad=$(((height - side) / 2))  # The normal map, as a square slightly smaller.
   Filterimage $normalmap -filter lanczos3 -scaletoy $side -color $rgb 255 -boundary border \

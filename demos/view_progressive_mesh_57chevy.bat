@@ -4,9 +4,9 @@ setlocal
 cd "%~p0"
 call ./_initdemos.bat
 
-echo .
+echo.
 echo Use the left button to drag the slider (logarithmic in #vertices).
-echo .
+echo.
 
 set PM_LOD_LEVEL=0.1
 

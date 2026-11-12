@@ -24,7 +24,9 @@ filter=(perl -s -pe '
 rest=$out.view.tmp
 trap 'rm -f "$rest"' EXIT
 
+echo
 echo "At the end of the animation, press 'P' and 'N' to move backwards and forwards through the objects."
+echo
 
 # After each object, pause for some duration; get ready to read the next object slot ("o 1 1 0"); and simulate keys,
 # by default hiding the current object (u) and advancing to the next object (<C-n>).

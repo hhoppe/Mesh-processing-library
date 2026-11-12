@@ -18,7 +18,7 @@ namespace {
 int robn;  // Current a3d object to read.
 string filename = "-";
 float wait_command;
-bool read_end_frame;      // Whether the last read_buffer() ended at an end-of-frame.
+bool read_end_frame;     // Whether the last read_buffer() ended at an end-of-frame.
 double next_input_time;  // With input_fps, the time at which to read the next input frame.
 
 void add_extra(int n) {

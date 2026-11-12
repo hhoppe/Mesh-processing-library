@@ -266,6 +266,14 @@ using namespace g3d;
 int main(int argc, const char** argv) {
   ensure_utf8_encoding(argc, argv);
   Array<string> aargs(ArrayView(argv, argc));
+  // G3D_IMAGE=image_file (or "-" for a png on stdout) renders a picture into that file without any window, as if
+  //  given these options first (so that later ones override them); G3D_IGNORE_IMAGE=1 instead shows the window.
+  if (const string image_name = getenv_string("G3D_IMAGE"); image_name != "" && !getenv_bool("G3D_IGNORE_IMAGE")) {
+    if (image_name == "-") my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");  // Before any diagnostics are written.
+    showf("G3d: writing a picture to '%s' (G3D_IMAGE)\n", image_name.c_str());
+    const Array<string> options{"-hidden", "-imagename", image_name, "-picture", "-noinfo", "1"};
+    aargs = Array<string>(concatenate(aargs.head(1), options, aargs.slice(1)));
+  }
 #if defined(SIGPIPE)
   // Let writes to a closed pipe fail (handled in WriteOutput()) instead of killing the process.
   std::signal(SIGPIPE, SIG_IGN);

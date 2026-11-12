@@ -2256,6 +2256,7 @@ void process_print() {
     string name = imagefilename;
     if (movie_nframes) name = sform("%s.%03d.bmp", movie_root_name.c_str(), movie_frame);
     if (name[0] == '|') image.set_suffix("bmp");
+    if (name == "-") image.set_suffix("png");
     if (movie_nframes) image.set_silent_io_progress(true);
     image.write_file(name);
   }

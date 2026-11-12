@@ -24,6 +24,12 @@ END_USAGE_EXAMPLES
 
 if [[ $# == 0 || $1 == --help ]]; then echo "$usage"; exit 0; fi
 
+# With G3D_IMAGE, each G3dOGL window would write a picture into the same file instead of showing itself.
+if [[ -n $G3D_IMAGE ]]; then
+  echo "g3d_cmp: G3D_IMAGE is set; unset it to compare objects." >&2
+  exit 1
+fi
+
 gap=0  # Number of pixels between adjacent windows; windows overlap on a shared border line when gap=0.
 
 g3d=(G3dOGL)

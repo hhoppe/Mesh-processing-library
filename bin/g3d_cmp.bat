@@ -92,6 +92,12 @@ if defined status (
   exit /b !status!
 )
 
+:: With G3D_IMAGE, each G3dOGL window would write a picture into the same file instead of showing itself.
+if defined G3D_IMAGE (
+  >&2 echo g3d_cmp: G3D_IMAGE is set; unset it to compare objects.
+  exit /b 1
+)
+
 :: Get the screen size, the work area (excluding the taskbar), the visible window frame (left, top, right, bottom)
 ::  around the client area, and the offset from a -geom position to the visible frame.  Windows given -hidden (as in
 ::  the demos with DEMOS_HIDDEN) are never mapped, so their placement does not matter, and the query is skipped.

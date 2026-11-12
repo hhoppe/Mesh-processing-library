@@ -589,6 +589,12 @@ G3dOGL demos/data/standingblob.orig.m -st demos/data/standingblob.s3d -key ii -g
 VideoViewer output_image.png
 ```
 
+Alternatively, the environment variable `G3D_IMAGE` makes any command that runs `G3dOGL` (including scripts such as
+`pm_view`) render a picture into the named file instead of showing a window, without changing the command's
+arguments, e.g. `G3D_IMAGE=output_image.png pm_view demos/results/cessna.pm -st demos/data/cessna.s3d`.
+With `G3D_IMAGE=-`, the picture is written to stdout as a png image.
+Setting `G3D_IGNORE_IMAGE=1` instead shows the window as usual.
+
 To record a 6-second (360-frame) video of a rotating mesh and then view the resulting video:
 
 ```shell

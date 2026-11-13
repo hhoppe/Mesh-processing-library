@@ -316,9 +316,10 @@ reports the genus of the new mesh, and shows it in an interactive viewer.
 
 The directory `bin` also contains scripts:
 `mesh_to_pm` creates a progressive mesh from a mesh (using `MeshSimplify` and `Filterprog`),
-`pm_simplify` further simplifies the base mesh of a progressive mesh, and
+`pm_simplify` further simplifies the base mesh of a progressive mesh,
 `obj_to_mesh`, `ply_to_mesh`, `mesh_to_obj`, and `mesh_to_ply` convert between the mesh format (`*.m`) and
-Wavefront `*.obj` or Stanford `*.ply` files.
+Wavefront `*.obj` or Stanford `*.ply` files, and
+`ply_to_pts` converts the vertices of a `*.ply` file into a stream of points (`*.pts`).
 
 All programs recognize the argument `--help` (or `-?`) to show their many options.
 See [`progs/README.md`](progs/README.md) for a description of each program with example commands,

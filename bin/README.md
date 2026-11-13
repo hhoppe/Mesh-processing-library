@@ -11,6 +11,8 @@ built by Visual Studio.
 - `obj_to_mesh`, `ply_to_mesh`, `mesh_to_obj`, and `mesh_to_ply` (Perl scripts) convert between the mesh format
   (`*.m`) and Wavefront `*.obj` or Stanford `*.ply` files; `Materials_lib.pm` and `Materials_rgb.db` provide
   the material colors used by `obj_to_mesh`.
+- `ply_to_pts` (Perl script) converts the vertices of a Stanford `*.ply` file, with their normals if present, into
+  a stream of points (`*.pts`), e.g. for `Recon` and `Meshfit`.
 - `g3d_cmp` (and `g3d_cmp.bat` for the Windows command prompt) compares geometric objects side-by-side in a grid
   of `G3dOGL` windows whose viewpoints stay synchronized.
 - `pm_view` (and `pm_view.bat` for the Windows command prompt) views a progressive mesh using `G3dOGL -pm_mode`.

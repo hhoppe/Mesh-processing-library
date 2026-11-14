@@ -653,11 +653,21 @@ float dihedral_penalty(const Dihedral& dih, const NewMeshNei& nn, const Point& n
     // for a flat sliver, yet only as its inverse for a needle, whose circumradius stays near half its longest edge.
     // It is computed in double, like the quadric in Qem::set_distance_hh99(), so that an exactly degenerate face
     // gives exactly zero; in float, its rounding noise can exceed the threshold.
+    // However, the vertex coordinates are themselves rounded to float, so vertices that are collinear in exact
+    // arithmetic (e.g., on the planar grid of demos/create_progressive_mesh_gaudipark.sh) still give a residual
+    // measure.  Each coordinate is within half an ulp, i.e. eps / 2 * max_coord, so the distance of a vertex from
+    // the line through the other two is perturbed by at most about 3 * sqrt(3) / 2 * eps * max_coord, and the
+    // measure by that distance divided by the longest edge.  The threshold is raised to 8 * eps * max_coord / edge
+    // when that bound exceeds it, which happens for small faces far from the origin.  (On gaudipark, faces with
+    // measure 1.5e-6 to 3e-6 passed the fixed threshold, and the hh99 solve failed on one of them.)
     const auto is_sliver = [](const Point& p0, const Point& p1, const Point& p2) {
       const Vec3<double> d0 = convert<double>(p0);
       const Vec3<double> v1 = convert<double>(p1) - d0, v2 = convert<double>(p2) - d0;
       const double max_edge2 = max({mag2(v1), mag2(v2), mag2(v2 - v1)});
-      return !max_edge2 || mag2(cross(v1, v2)) < square(1e-6 * max_edge2);
+      if (!max_edge2) return true;
+      const float max_coord = max({max_abs_element(p0), max_abs_element(p1), max_abs_element(p2)});
+      const double rounding_measure = 8. * std::numeric_limits<float>::epsilon() * max_coord / std::sqrt(max_edge2);
+      return mag2(cross(v1, v2)) < square(max(1e-6, rounding_measure) * max_edge2);
     };
     bad = ranges::any_of(nn.ar_corners, [&](const Vec3<Corner>& corners) {
       const Point& p0 = mesh.point(mesh.corner_vertex(corners[0]));

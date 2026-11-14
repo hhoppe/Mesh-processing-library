@@ -49,6 +49,8 @@ CGridView<D, T>             (const elements)
 
 - `Map<Key, Value>`: hash map, a wrapper around `std::unordered_map`.
 - `Set<T>`: hash set, a wrapper around `std::unordered_set`.
+- `IdTable<T>`: hash map from `int` ids to non-null `T*`, with contiguous entries iterated in insertion order and an
+  open-addressing index; it holds the vertices and faces of a `Mesh`.
 - `InlinedSet<T, n>`: set stored in an `InlinedArray` (iterated in insertion order), searched linearly up to `n`
   elements and then through a hash index.
 - `InlinedMap<Key, Value, n>`: map stored in an `InlinedArray`, searched linearly up to `n` entries,

@@ -1,0 +1,13 @@
+iterated_ids = Array<int>(6) {
+  -1
+  1
+  -2147483648
+  2147483647
+  2000000000
+  -2000000000
+}
+name=dense max_num=3282 table.num()=0
+name=sparse max_num=14885 table.num()=0
+name=strided max_num=3282 table.num()=0
+table.num()=10000 count=10000
+table.num()=100 uniform

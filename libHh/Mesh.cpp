@@ -67,26 +67,21 @@ void swap(Mesh& l, Mesh& r) noexcept {
 
 void Mesh::clear() {
   if (debug() >= 1) ok();
-  if (0) {
-    while (num_faces()) destroy_face(_id2face.get_one_value());
-    while (!empty()) destroy_vertex(_id2vertex.get_one_value());
-  } else {  // Faster.
-    for (Face f : _id2face.values()) {
-      HEdge he = assertx(herep(f)), he_first = he;
-      for (;;) {
-        // Delete each edge once, from one of its half-edges, without reading an edge that may already be deleted.
-        if (!he->_sym || std::less<HEdge>{}(he, he->_sym)) delete he->_edge;
-        HEdge hen = he->_next;
-        delete he;
-        he = hen;
-        if (he == he_first) break;
-      }
-      delete f;
+  for (Face f : _id2face.values()) {
+    HEdge he = assertx(herep(f)), he_first = he;
+    for (;;) {
+      // Delete each edge once, from one of its half-edges, without reading an edge that may already be deleted.
+      if (!he->_sym || std::less<HEdge>{}(he, he->_sym)) delete he->_edge;
+      HEdge hen = he->_next;
+      delete he;
+      he = hen;
+      if (he == he_first) break;
     }
-    for (Vertex v : _id2vertex.values()) delete v;
-    _id2face.clear();
-    _id2vertex.clear();
+    delete f;
   }
+  for (Vertex v : _id2vertex.values()) delete v;
+  _id2face.clear();
+  _id2vertex.clear();
   _vertexnum = 1;
   _facenum = 1;
   _nedges = 0;
@@ -435,12 +430,12 @@ Edge Mesh::ordered_edge(Vertex v1, Vertex v2) const {
 
 Vertex Mesh::random_vertex(Random& r) const {
   assertx(num_vertices());
-  return _id2vertex.get_random_value(r);
+  return _id2vertex.get_random(r);
 }
 
 Face Mesh::random_face(Random& r) const {
   assertx(num_faces());
-  return _id2face.get_random_value(r);
+  return _id2face.get_random(r);
 }
 
 Edge Mesh::random_edge(Random& r) const {
@@ -970,15 +965,11 @@ void Mesh::face_renumber_id_private(Face f, int newid) {
 }
 
 void Mesh::ok() const {
-  // Check consistency of id2x (one way).
-  for (const auto& [id, v] : _id2vertex) {
-    valid(v);
-    assertx(v->_id == id);
-  }
-  for (const auto& [id, f] : _id2face) {
-    valid(f);
-    assertx(f->_id == id);
-  }
+  // Check consistency of id2x (one way); valid() verifies that each element is found under its own id.
+  assertx(ranges::distance(_id2vertex.values()) == num_vertices());
+  for (Vertex v : _id2vertex.values()) valid(v);
+  assertx(ranges::distance(_id2face.values()) == num_faces());
+  for (Face f : _id2face.values()) valid(f);
   // Look over Vertices.
   Set<HEdge> sethe;
   for (Vertex v1 : vertices()) {

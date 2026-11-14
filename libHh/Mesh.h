@@ -5,6 +5,7 @@
 #include "libHh/Array.h"
 #include "libHh/Flags.h"
 #include "libHh/Geometry.h"  // because of Point, too bad.
+#include "libHh/IdTable.h"
 #include "libHh/Map.h"
 #include "libHh/Pool.h"
 #include "libHh/Sac.h"
@@ -55,11 +56,6 @@ class Mesh : noncopyable {
   friend void swap(Mesh& l, Mesh& r) noexcept;
 
  private:
-  // Ids are hashed to themselves, as libstdc++ does for int.  MSVC's std::hash<int> (FNV-1a) would instead scatter
-  // the mostly consecutive ids across the buckets, which made Filtermesh on a 1M-face mesh about 28% slower.
-  struct IdentityHash {
-    [[nodiscard]] size_t operator()(int id) const noexcept { return size_t(id); }
-  };
   struct Edges_range;
   struct OrderedVertices_range;
   struct OrderedFaces_range;
@@ -343,8 +339,8 @@ class Mesh : noncopyable {
     }
     type operator++(int) { return postfix_increment(*this); }
     //
-    CArrayView<HEdge>::iterator _hcur{nullptr}, _hend{nullptr};     // _hcur points at current element.
-    Map<int, Vertex, IdentityHash>::cvalues_iterator _vcur, _vend;  // _vcur points one vertex ahead.
+    CArrayView<HEdge>::iterator _hcur{nullptr}, _hend{nullptr};  // _hcur points at current element.
+    IdTable<MVertex>::iterator _vcur, _vend;                     // _vcur points one vertex ahead.
     void next() {
       for (;;) {
         if (_hcur != _hend) {
@@ -612,10 +608,10 @@ class Mesh : noncopyable {
   [[nodiscard]] static int debug();  // 0 = no, 1 = min, 3 = max.
  private:
   Flags _flags;
-  Map<int, Vertex, IdentityHash> _id2vertex;  // Also acts as the set of vertices.
-  Map<int, Face, IdentityHash> _id2face;      // Also acts as the set of faces.
-  int _vertexnum{1};                          // Id to assign to the next new vertex.
-  int _facenum{1};                            // Id to assign to the next new face.
+  IdTable<MVertex> _id2vertex;  // Also acts as the set of vertices.
+  IdTable<MFace> _id2face;      // Also acts as the set of faces.
+  int _vertexnum{1};            // Id to assign to the next new vertex.
+  int _facenum{1};              // Id to assign to the next new face.
   int _nedges{0};
 
   [[nodiscard]] HEdge most_clw_hedge(Vertex v) const;                        // is_nice(v), may return nullptr

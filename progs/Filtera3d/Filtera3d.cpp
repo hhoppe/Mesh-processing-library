@@ -101,7 +101,7 @@ struct S_join {
 } g_join;
 
 struct S_outlier {
-  Array<Point> pa;
+  Array<A3dVertex> va;  // Each point with its normal and color.
 } g_outlier;
 
 HH_STAT_NP(Slnvert);    // Polyline number of vertices.
@@ -400,7 +400,7 @@ bool loop(A3dElem& el) {
     return false;
   }
   if (outliern && point) {
-    g_outlier.pa.push(el[0].p);
+    g_outlier.va.push(el[0]);
     return false;
   }
   if (polyg && nopolygons) return false;
@@ -679,18 +679,20 @@ void join_lines() {
 }
 
 void compute_outlier() {
-  Array<bool> ar_is_outlier(g_outlier.pa.num(), false);
-  const Frame xform = Bbox{g_outlier.pa}.get_frame_to_cube();
+  const Array<A3dVertex>& va = g_outlier.va;
+  Array<bool> ar_is_outlier(va.num(), false);
+  const auto points = va | views::transform([](const A3dVertex& vertex) { return vertex.p; });
+  const Frame xform = Bbox{points}.get_frame_to_cube();
   // Search a normalized copy, so that the output points are the input points exactly.
-  Array<Point> pa_cube(g_outlier.pa.num());
+  Array<Point> pa_cube(va.num());
   PointSpatial<int> SPp(30);
   for_int(i, pa_cube.num()) {
-    pa_cube[i] = g_outlier.pa[i] * xform;
+    pa_cube[i] = va[i].p * xform;
     SPp.enter(i, &pa_cube[i]);
   }
   int num_outliers = 0;
-  assertx(g_outlier.pa.num() > outliern);  // Else the search below advances past the end.
-  for_int(i, g_outlier.pa.num()) {
+  assertx(va.num() > outliern);  // Else the search below advances past the end.
+  for_int(i, va.num()) {
     SpatialSearch<int> ss(&SPp, pa_cube[i]);
     // The first search result is this point itself, so advancing outliern times reaches its outliern'th neighbor.
     const auto [unused_id, d2] = *ranges::next(ss.begin(), outliern);
@@ -701,13 +703,13 @@ void compute_outlier() {
       num_outliers++;
     }
   }
-  showdf("found %d/%d outliers\n", num_outliers, g_outlier.pa.num());
+  showdf("found %d/%d outliers\n", num_outliers, va.num());
   outliern = 0;  // Note that loop() is called below!
   A3dElem el;
-  for_int(i, g_outlier.pa.num()) {
+  for_int(i, va.num()) {
     if (ar_is_outlier[i]) continue;
     el.init(A3dElem::EType::point);
-    el.push(A3dVertex(g_outlier.pa[i], Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
+    el.push(va[i]);
     loop(el);
   }
 }

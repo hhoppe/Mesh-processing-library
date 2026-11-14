@@ -2646,7 +2646,7 @@ void do_procedure(Args& args) {
         if (!file_exists(str)) assertnever("image file '" + str + "' does not exist");
         image_names.push(str);
       }
-      assertx(!image_names.empty());
+      assertx(image_names.num());
     }
     Array<Image> ar_thumbnails(image_names.num());
     {

@@ -336,7 +336,7 @@ int main(int argc, const char** argv) {
     g_filename = str;
   };
   if (eyeob && g_aargs1.num() >= 2) func_try_set_gfilename(g_aargs1[1]);
-  if (!eyeob && !g_aargs1.empty()) func_try_set_gfilename(g_aargs1[0]);
+  if (!eyeob && g_aargs1.num()) func_try_set_gfilename(g_aargs1[0]);
   if (statefilename != "") statefile = statefilename;
   initial_statefile();
   if (g_filename == "" && statefile != "") g_filename = statefile;

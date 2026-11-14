@@ -509,7 +509,7 @@ class Mesh : noncopyable {
 
   // Ccw iterators around a vertex, requiring the vertex to be nice.
 
-  struct WV_range : InlinedArray<Vertex, 10> {  // A ccw Vertex Iter; one extra Vertex if v is on a boundary.
+  struct WV_range : InlinedArray<Vertex, 16> {  // A ccw Vertex Iter; one extra Vertex if v is on a boundary.
     WV_range(const Mesh& m, Vertex v) {
       for (HEdge he : m.ccw_corners(v)) {
         push(he->_next->_vert);
@@ -518,7 +518,7 @@ class Mesh : noncopyable {
     }
   };
 
-  struct WE_range : InlinedArray<Edge, 10> {  // A ccw Edge Iter; one extra Edge if v is on a boundary.
+  struct WE_range : InlinedArray<Edge, 16> {  // A ccw Edge Iter; one extra Edge if v is on a boundary.
     WE_range(const Mesh& m, Vertex v) {
       for (HEdge he : m.ccw_corners(v)) {
         push(he->_next->_edge);

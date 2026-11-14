@@ -300,13 +300,13 @@ struct NewMeshNei : noncopyable {
     for (AnyQem* qemp : ar_wq) delete qemp;
   }
   // The inline capacities cover most neighborhoods; the new vertex ring has on average about 9 faces.
-  InlinedArray<Vertex, 16> va;                // CCW, va[0] repeated if closed (== #faces + 1).
+  InlinedArray<Vertex, 24> va;                // CCW, va[0] repeated if closed (== #faces + 1).
   InlinedArray<int, 4> ar_vdisc;              // Sharp edges, indices into va[].
-  InlinedArray<Vec3<Corner>, 16> ar_corners;  // 3 corners for each face (third is center).
+  InlinedArray<Vec3<Corner>, 24> ar_corners;  // 3 corners for each face (third is center).
 
-  InlinedArray<P2WedgeInfo, 16> ar_p2wi;  // The winfo of outside ar_corners.
+  InlinedArray<P2WedgeInfo, 24> ar_p2wi;  // The winfo of outside ar_corners.
 
-  InlinedArray<int, 16> ar_nwid;    // For each new corner, new fake wedge id.
+  InlinedArray<int, 24> ar_nwid;    // For each new corner, new fake wedge id.
   InlinedArray<int, 4> ar_rwid_v1;  // For each nwid, would-be real wid on v1.
   InlinedArray<int, 4> ar_rwid_v2;  // For each nwid, would-be real wid on v2.
 

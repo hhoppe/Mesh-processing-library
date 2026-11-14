@@ -1,155 +1,264 @@
 #!/usr/bin/env perl
-# Takes Stanford ply file (ascii or binary), and converts it to a mesh.
+# Converts a Stanford ply file (ascii or binary) into a mesh (*.m).
 
 use strict;
 use POSIX 'strftime';
 use File::Basename;
+use Sys::Hostname;
+use Getopt::Long;
+
+my $usage = <<'END_USAGE_EXAMPLES';
+Usage: ply_to_mesh [file.ply | -]
+
+Converts a Stanford ply file (ascii, binary_little_endian, or binary_big_endian) into a mesh, written to stdout.
+The vertex properties nx, ny, nz become the attribute {normal=(...)}, and red, green, blue (uchar or float) become
+{rgb=(...)}.  The faces come from the element "face" (its list vertex_indices or vertex_index) and the element
+"tristrips" (its list vertex_indices, where each index -1 starts a new strip and degenerate triangles are omitted).
+A face list texcoord (u and v for each corner) becomes the attribute {uv=(...)} of each corner.  All other
+properties and elements are ignored, as reported on stderr.  The output begins with comments giving the command and
+the ply header.  Each vertex coordinate is printed with 7 significant digits, or with 8 or 9 where needed to
+read back as the same float; the attributes are printed with 6.
+
+Examples:
+  ply_to_mesh ~/data/recon/new/bunny.poissonrecon.ply >bunny.m
+  zcat dragon.ply.gz | ply_to_mesh | Filtermesh -genus
+END_USAGE_EXAMPLES
 
 my @original_argv = @ARGV;
 
-binmode(STDOUT);
+# Unpack template letter and size of each ply scalar type.
+my %k_type_info = (
+  char => ['c', 1], int8 => ['c', 1], uchar => ['C', 1], uint8 => ['C', 1],
+  short => ['s', 2], int16 => ['s', 2], ushort => ['S', 2], uint16 => ['S', 2],
+  int => ['l', 4], int32 => ['l', 4], uint => ['L', 4], uint32 => ['L', 4],
+  float => ['f', 4], float32 => ['f', 4], double => ['d', 8], float64 => ['d', 8],
+);
 
-@ARGV = ("-") if @ARGV == 0;
-die unless @ARGV == 1;
-
-my $date = strftime("%Y-%m-%d %H:%M:%S", localtime);
-my $script_name = basename($0);
-print("# Created on $date using: $script_name @original_argv\n");
-
-open(FILE, "<@ARGV") or die "Cannot open '@ARGV': $!";
-binmode(FILE);
-
-# Not handled:
-#  property list uchar float texcoord    # which would define "6 u1 v1 u2 v2 u3 v3" for 3 corners of each face
-
-my $binary = 0; my $little_endian = 0;
-my $nvproperties = 0; my $nvpropbytes = 0;
-my $ucharintensity = 0; my $ucharlist = 0; my $rgb_byte_offset = 0; my $nor_byte_offset = 0;
-my $nv = 0; my $nf = 0; my $nstrips;
-
-while (<FILE>) {
-  s/\cM\cJ$/\cJ/;               # dos to unix
-  s/ *$//;
-  print "# $_";
-  if (/^element vertex/) { ($nv) = /vertex\s+(\d+)$/ or die "? '$_'"; }
-  if (/^element face/) { ($nf) = /face\s+(\d+)$/ or die "?"; }
-  if (/^element tristrips/) { ($nstrips) = /tristrips\s+(\d+)$/ or die "?"; die "?" unless $nstrips == 1; }
-  if (/^property /) {
-    if ($nf) {
-      if (/^property uchar intensity/) {
-        $ucharintensity = 1;
-      } elsif (/^property list.*indices$/) {
-      } else {
-        die "?";
-      }
-      if (/list uchar int/) { $ucharlist = 1; }
-    } elsif ($nstrips) {
-      if (/^property list int int vertex_indices$/) {
-      } else {
-        die "?";
-      }
-    } else {
-      if (/ vertex_indices$/) { next; }
-      $nvproperties++;
-      if (/ red$/) { $rgb_byte_offset = $nvpropbytes; }
-      if (/ float nx$/) { $nor_byte_offset = $nvpropbytes; }
-      if (/ uchar /) {
-        $nvpropbytes += 1;
-      } elsif (/ float /) {
-        $nvpropbytes += 4;
-      } else {
-        die "?";
-      }
+# Returns the float values, each formatted with 7 significant digits, or with 8 or 9 where needed to read back as
+# the same float.  (Fewer digits can flip or collapse the sliver triangles of meshes such as marching-cubes output.)
+sub format_floats {
+  my @f = unpack('f*', pack('f*', @_));
+  my @s = map { sprintf('%.7g', $_) } @f;
+  return @s if pack('f*', @s) eq pack('f*', @f);
+  for my $i (0 .. $#f) {
+    my $packed = pack('f', $f[$i]);
+    for my $precision (8, 9) {
+      last if pack('f', $s[$i]) eq $packed;
+      $s[$i] = sprintf('%.*g', $precision, $f[$i]);
     }
   }
-  $little_endian = 1 if /^format.*binary_little_endian/;
-  $binary = 1 if /binary_/;
-  if (/^end_header$/) { last; }
+  return @s;
 }
 
-warn "ply: binary=$binary nvproperties=$nvproperties nvpropbytes=$nvpropbytes ucharlist=$ucharlist nv=$nv nf=$nf\n";
+sub main {
+  my $help;
+  GetOptions('help' => \$help) or die "ply_to_mesh: bad arguments\n$usage";
+  if ($help) { print $usage; exit 0; }
+  @ARGV <= 1 or die "ply_to_mesh: expected at most one file argument\n$usage";
+  my $filename = @ARGV ? $ARGV[0] : '-';
 
-warn "processing vertices\n";
-for (my $i = 1; $i <= $nv; $i++) {
-  my $attrib = ""; my @F;
-  if (!$binary) {
-    $_ = <FILE>;
-    @F = split(' ');
-    @F == $nvproperties or die "?";
-    if ($rgb_byte_offset && $nvproperties == 6) {
-      $attrib = sprintf(" {rgb=(%g %g %g)}", $F[3] / 255., $F[4] / 255., $F[5] / 255.);
-    }
-    if ($nor_byte_offset && $nvproperties == 6) {
-      $attrib = sprintf(" {normal=(%g %g %g)}", $F[3], $F[4], $F[5]);
-    }
+  binmode(STDOUT);
+  my $fh;
+  if ($filename eq '-') {
+    $fh = \*STDIN;
   } else {
-    read(FILE, $_, $nvpropbytes) == $nvpropbytes or die "?";
-    @F = unpack("fff", pack("LLL", unpack($little_endian ? "VVV" : "NNN", substr($_, 0, 12))));
-    die "?" unless @F == 3;
-    if ($rgb_byte_offset) {
-      my $rgb = substr($_, $rgb_byte_offset, 3);
-      # die "?" unless length($_) == 3;
-      $attrib = sprintf(" {rgb=(%g %g %g)}",
-                        unpack("C", substr($rgb, 0, 1)) / 255.,
-                        unpack("C", substr($rgb, 1, 1)) / 255.,
-                        unpack("C", substr($rgb, 2, 1)) / 255.);
-    }
-    if ($nor_byte_offset) {
-      my @N = unpack("fff", pack("LLL", unpack($little_endian ? "VVV" : "NNN", substr($_, $nor_byte_offset, 12))));
-      $attrib = sprintf(" {normal=(%g %g %g)}", @N[0..2]);
+    open($fh, '<', $filename) or die "ply_to_mesh: cannot open '$filename': $!\n";
+  }
+  binmode($fh);
+
+  # Parse the header.
+  my @header_lines;
+  my $format;
+  my @elements;  # Each element is {name, count, props}; each prop is {name, type, and count_type if a list}.
+  while (my $line = <$fh>) {
+    $line =~ s/\r?\n$//;
+    push(@header_lines, $line);
+    if (@header_lines == 1) {
+      $line eq 'ply' or die "ply_to_mesh: '$filename' does not begin with 'ply'\n";
+    } elsif ($line =~ /^format\s+(\S+)\s+1\.0$/) {
+      $format = $1;
+    } elsif ($line =~ /^element\s+(\S+)\s+(\d+)$/) {
+      push(@elements, {name => $1, count => $2, props => []});
+    } elsif ($line =~ /^property\s+(?:list\s+(\S+)\s+)?(\S+)\s+(\S+)$/) {
+      my ($count_type, $type, $name) = ($1, $2, $3);
+      @elements or die "ply_to_mesh: property before any element: '$line'\n";
+      for my $t (grep { defined } $count_type, $type) {
+        exists $k_type_info{$t} or die "ply_to_mesh: unknown property type in '$line'\n";
+      }
+      push(@{$elements[-1]{props}}, {name => $name, type => $type, count_type => $count_type});
+    } elsif ($line eq 'end_header') {
+      last;
+    } elsif ($line !~ /^(comment|obj_info)\b/) {
+      die "ply_to_mesh: unexpected header line '$line'\n";
     }
   }
-  # print "Vertex $i  @F[0..2]$attrib\n";
-  printf "Vertex $i  %g %g %g%s\n", @F[0..2], $attrib;
+  $header_lines[-1] eq 'end_header' or die "ply_to_mesh: '$filename' has no end_header\n";
+  defined $format or die "ply_to_mesh: '$filename' has no format line\n";
+  $format =~ /^(ascii|binary_(little|big)_endian)$/ or die "ply_to_mesh: unknown format '$format'\n";
+  my $endian = $format eq 'binary_big_endian' ? '>' : '<';
+  $elements[0]{name} eq 'vertex' or die "ply_to_mesh: the first element must be 'vertex'\n";
+
+  # Returns the index of the named property of the element, or undef if absent.  It also records which properties
+  # are used, so that the others can be reported as ignored.
+  my %used;
+  my $find_prop = sub {
+    my ($element, $name, $is_list) = @_;
+    my @props = @{$element->{props}};
+    for my $i (0 .. $#props) {
+      next if $props[$i]{name} ne $name;
+      !!$props[$i]{count_type} == !!$is_list or
+          die "ply_to_mesh: property '$name' of $element->{name} is ", ($is_list ? "not " : ""), "a list\n";
+      $used{"$element->{name} $name"} = 1;
+      return $i;
+    }
+    return undef;
+  };
+  my $find_props = sub {  # Returns the indices of all the named properties, or () if any is absent.
+    my ($element, @names) = @_;
+    my %has = map { ($_->{name} => 1) } @{$element->{props}};
+    return () if grep { !$has{$_} } @names;
+    return map { $find_prop->($element, $_) } @names;
+  };
+
+  # Output the comments.
+  my $date = strftime('%Y-%m-%d %H:%M:%S', localtime);
+  my $host = hostname();
+  my $script_name = basename($0);
+  print("# Created at $date on $host using:\n");
+  print("#  $script_name @original_argv\n");
+  print("# ply header:\n");
+  print("#  $_\n") for @header_lines;
+
+  # Create a function to output each record of each element.
+  my ($nv, $nf, $nstrips) = (0, 0, 0);
+  my $output_face = sub {
+    for (@_) { $_ >= 0 && $_ < $nv or die "ply_to_mesh: face vertex index $_ is out of range for $nv vertices\n"; }
+    my $face = join(' ', map { $_ + 1 } @_);
+    $nf++;
+    print("Face $nf  $face\n");
+  };
+  my %output_record;
+  for my $element (@elements) {
+    my $name = $element->{name};
+    if ($name eq 'vertex') {
+      my @ixyz = map { $find_prop->($element, $_) // die "ply_to_mesh: vertices lack property '$_'\n" } qw(x y z);
+      my @inor = $find_props->($element, qw(nx ny nz));
+      my @irgb = $find_props->($element, qw(red green blue));
+      my $rgb_scale = 1;
+      if (@irgb) {
+        my $type = $element->{props}[$irgb[0]]{type};
+        $rgb_scale = $type =~ /^(float|double)/ ? 1 : $type =~ /^u(char|int8)$/ ? 255 :
+            die "ply_to_mesh: unsupported color type '$type'\n";
+      }
+      $output_record{$element} = sub {
+        my @xyz = format_floats(@_[@ixyz]);
+        my @attribs;
+        push(@attribs, sprintf('normal=(%g %g %g)', @_[@inor])) if @inor;
+        push(@attribs, sprintf('rgb=(%g %g %g)', map { $_ / $rgb_scale } @_[@irgb])) if @irgb;
+        $nv++;
+        print("Vertex $nv  @xyz", (@attribs ? " {@attribs}" : ''), "\n");
+      };
+    } elsif ($name eq 'face') {
+      my $ivi = $find_prop->($element, 'vertex_indices', 1) // $find_prop->($element, 'vertex_index', 1) //
+          die "ply_to_mesh: faces lack property 'vertex_indices'\n";
+      my $iuv = $find_prop->($element, 'texcoord', 1);
+      $output_record{$element} = sub {
+        my @vi = @{$_[$ivi]};
+        $output_face->(@vi);
+        return if !defined $iuv;
+        my @uv = @{$_[$iuv]};
+        @uv == 2 * @vi or
+            die "ply_to_mesh: face $nf has ", scalar(@uv), " texcoord values for ", scalar(@vi), " vertices\n";
+        printf("Corner %d $nf {uv=(%g %g)}\n", $vi[$_] + 1, $uv[2 * $_], $uv[2 * $_ + 1]) for 0 .. $#vi;
+      };
+    } elsif ($name eq 'tristrips') {
+      my $ivi = $find_prop->($element, 'vertex_indices', 1) // die "ply_to_mesh: tristrips lack 'vertex_indices'\n";
+      $output_record{$element} = sub {
+        my @strip;  # Vertex indices of the current strip.
+        for my $vi (@{$_[$ivi]}, -1) {
+          if ($vi == -1 || $vi == 4294967295) {  # The end of a strip.
+            $nstrips++ if @strip;
+            @strip = ();
+            next;
+          }
+          push(@strip, $vi);
+          next if @strip < 3;
+          my ($v0, $v1, $v2) = @strip[-3 .. -1];
+          next if $v0 == $v1 || $v1 == $v2 || $v2 == $v0;
+          $output_face->(@strip % 2 ? ($v0, $v1, $v2) : ($v1, $v0, $v2));
+        }
+      };
+    }
+  }
+  my @ignored;
+  for my $element (@elements) {
+    if (!$output_record{$element}) {
+      push(@ignored, "element $element->{name}");
+      next;
+    }
+    my @names = map { "$element->{name} $_->{name}" } @{$element->{props}};
+    push(@ignored, grep { !$used{$_} } @names);
+  }
+  warn("ply_to_mesh: ignoring " . join(', ', @ignored) . "\n") if @ignored;
+
+  # Read the elements.  Each list property is read as its count followed by its values, then made into an array ref.
+  my $data = $format eq 'ascii' ? undef : do { local $/; <$fh> };
+  my $pos = 0;  # Byte offset into the binary $data.
+  for my $element (@elements) {
+    my @props = @{$element->{props}};
+    my $output = $output_record{$element} // sub {};
+    my $has_list = grep { $_->{count_type} } @props;
+    my $take_record = sub {  # Removes one record from the front of @$values and outputs it.
+      my ($values) = @_;
+      my @record;
+      if (!$has_list) {  # A faster path.
+        @record = splice(@$values, 0, scalar(@props));
+        @record == @props or die "ply_to_mesh: missing values in element $element->{name}\n";
+        return $output->(@record);
+      }
+      for my $prop (@props) {
+        @$values or die "ply_to_mesh: missing values in element $element->{name}\n";
+        my $value = shift(@$values);
+        if ($prop->{count_type}) {
+          @$values >= $value or die "ply_to_mesh: missing values in element $element->{name}\n";
+          $value = [splice(@$values, 0, $value)];
+        }
+        push(@record, $value);
+      }
+      $output->(@record);
+    };
+    if ($format eq 'ascii') {
+      for my $i (1 .. $element->{count}) {
+        my $line = <$fh> // die "ply_to_mesh: file ends within element $element->{name}\n";
+        $line =~ s/\r?\n$//;
+        my @values = split(' ', $line);
+        $take_record->(\@values);
+        !@values or die "ply_to_mesh: extra values in element $element->{name}: '$line'\n";
+      }
+    } else {
+      my $template = '';
+      for my $prop (@props) {
+        my ($letter, $size) = @{$k_type_info{$prop->{type}}};
+        $letter .= $endian if $size > 1;
+        if ($prop->{count_type}) {  # Read the count, then back up and read it again as the length of the list.
+          my ($count_letter, $count_size) = @{$k_type_info{$prop->{count_type}}};
+          $count_letter .= $endian if $count_size > 1;
+          $letter = "$count_letter X$count_size $count_letter/$letter";
+        }
+        $template .= "$letter ";
+      }
+      my $k_chunk = 65536;  # Number of records read at a time.
+      for (my $i = 0; $i < $element->{count}; $i += $k_chunk) {
+        my $n = $element->{count} - $i < $k_chunk ? $element->{count} - $i : $k_chunk;
+        $pos < length($data) or die "ply_to_mesh: file ends within element $element->{name}\n";
+        my @values = unpack("x$pos ($template)$n .*", $data);  # The final '.*' gives the new offset.
+        $pos = pop(@values);
+        $take_record->(\@values) for 1 .. $n;
+      }
+    }
+  }
+  warn("ply_to_mesh: $nv vertices, $nf faces" . ($nstrips ? " from $nstrips triangle strips" : '') .
+       ", format $format\n");
 }
 
-warn "processing faces\n";
-if ($nstrips) {
-  die "?" unless $binary;
-  read(FILE, $_, 4) == 4 or die "?";
-  my $numi = unpack($little_endian ? "V" : "N", $_);
-  my $ii = 0; my $nstrips = 0; my ($vi0, $vi1, $vi2);
-  for (my $i = 0; $i < $numi; $i++) {
-    read(FILE, $_, 4) == 4 or die "?";
-    my $vi = unpack($little_endian ? "V" : "N", $_);
-    if ($vi == 4294967295) { $nstrips++; $ii = 0; next; }
-    $vi += 1; $ii++; $vi2 = $vi1; $vi1 = $vi0; $vi0 = $vi;
-    next if $ii < 3;
-    $nf++;
-    if ($ii & 1) {
-      print "Face $nf  $vi2 $vi1 $vi0\n";
-    } else {
-      print "Face $nf  $vi1 $vi2 $vi0\n";
-    }
-  }
-  die "?" unless $ii == 0;
-  warn "nstrips=$nstrips nfaces=$nf\n";
-} else {
-  for (my $i = 1; $i <= $nf; $i++) {
-    my $nfv;
-    my @F;
-    if (!$binary) {
-      $_ = <FILE>;
-      @F = split(' ');
-      die "?" unless @F == $F[0] + 1;
-      $nfv = $F[0];
-      shift(@F);
-    } else {
-      if ($ucharintensity) { read(FILE, $_, 1); }
-      if (!$ucharlist) {
-        read(FILE, $_, 4) == 4 or die "?";
-        $nfv = unpack($little_endian ? "V" : "N", $_);
-      } else {
-        read(FILE, $_, 1) == 1 or die "?";
-        $nfv = unpack("C", $_);
-      }
-      read(FILE, $_, $nfv * 4) == $nfv * 4 or die "?";
-      @F = unpack(($little_endian ? "V" : "N") . $nfv, $_);
-    }
-    for my $a (@F) {
-      $a += 1;
-      if ($a < 1 || $a > $nv) { warn "references to $a outside 1..$nv\n"; }
-    }
-    print "Face $i  @F\n";
-  }
-}
+main();

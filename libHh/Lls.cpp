@@ -523,7 +523,9 @@ bool SvdLls::solve_aux() {
   return true;
 }
 
-SvdDoubleLls::SvdDoubleLls(int m, int n, int nd) : FullLls(m, n, nd), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
+// Here _fa, _fb, and _work (the LAPACK buffers) serve as scratch storage, so that solve_aux() does not allocate.
+SvdDoubleLls::SvdDoubleLls(int m, int n, int nd)
+    : FullLls(m, n, nd), _fa(_m * _n), _fb(_m), _work(_n), _mU(m, n), _mS(_n), _mVT(_n, _n) {}
 
 // Rejecting a rank-deficient system, as in the LAPACK version (where a singular value counts as zero unless it exceeds
 // rcond times the largest one), is disabled.  MeshSimplify solves quadric systems with condition numbers up to about
@@ -532,7 +534,8 @@ SvdDoubleLls::SvdDoubleLls(int m, int n, int nd) : FullLls(m, n, nd), _mU(m, n),
 constexpr bool k_svd_double_reject_rank_deficient = false;
 
 bool SvdDoubleLls::solve_aux() {
-  const Matrix<double> A = convert<double>(_a);
+  MatrixView<double> A(_fa.data(), V(_m, _n));
+  for_int(i, _m) for_int(j, _n) A[i, j] = _a[i, j];
   if (!singular_value_decomposition(A, _mU, _mS, _mVT)) return false;
   sort_singular_values(_mU, _mS, _mVT);
   if (!_mS.last()) return false;
@@ -542,7 +545,13 @@ bool SvdDoubleLls::solve_aux() {
   if (cond > k_double_cond_warning) HH_SSTAT(Ssvdlls_cond, cond);
   for (double& s : _mS) s = 1. / s;
   for_int(d, _nd) {
-    _x[d].assign(convert<float>(mat_mul(_mVT, mat_mul(convert<double>(_b[d]), _mU) * _mS)));  // Slow.
+    // _x[d].assign(convert<float>(mat_mul(_mVT, mat_mul(convert<double>(_b[d]), _mU) * _mS)));
+    for_int(i, _m) _fb[i] = _b[d, i];
+    mat_mul(_fb, _mU, _work);
+    _work *= _mS;
+    ArrayView<double> x = _fb.head(_n);  // Reuse _fb, whose content is no longer needed.
+    mat_mul(_mVT, _work, x);
+    for_int(j, _n) _x[d, j] = float(x[j]);
   }
   return true;
 }

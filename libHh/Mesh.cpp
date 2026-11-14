@@ -491,7 +491,7 @@ bool Mesh::nice_edge_collapse(Edge e) const {
   if (!is_boundary(e) && is_boundary(v1) && is_boundary(v2)) return false;
   // * 2 - For all vertices adjacent to both v1 and v2, there exists a face.
   Vertex vo1 = side_vertex1(e), vo2 = side_vertex2(e);
-  Set<Vertex> set;
+  InlinedSet<Vertex, 12> set;  // Searched linearly, without heap allocation for up to 12 vertices.
   for (Vertex v : vertices(v1))
     if (v != vo1 && v != vo2) set.enter(v);
   for (Vertex v : vertices(v2))

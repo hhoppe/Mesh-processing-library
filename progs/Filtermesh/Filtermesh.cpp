@@ -792,7 +792,7 @@ void do_merge(Args& args) {
   HH_TIMER("_merge");
   int i = 0;
   for (;;) {
-    if (!args.num()) break;
+    if (args.empty()) break;
     if (args.peek_string()[0] == '-') break;
     const string filename = args.get_filename();
     GMesh omesh;
@@ -882,7 +882,7 @@ void gather_follow_seg(Face f, Map<Face, int>& mfseg, int segnum, int& pnf, Poin
 }
 
 void gather_segments(Map<Face, int>& mfseg, Array<Face>& arepf) {
-  assertx(mfseg.empty() && !arepf.num());
+  assertx(mfseg.empty() && arepf.empty());
   PriorityQueue<Face> pq;
   {
     HH_STAT(Sseg);
@@ -1688,7 +1688,7 @@ void do_triangulate() {
       mesh.center_split_face(f);
     }
   }
-  if (!Sfverts.num()) Sfverts.set_print(false);
+  if (Sfverts.empty()) Sfverts.set_print(false);
 }
 
 void do_splitvalence(Args& args) {
@@ -2692,7 +2692,7 @@ void do_reduce() {
       for_int(i, ar_edge.num()) pqe.enter(ar_edge[i], ar_cost[i]);
       edges_to_update.clear();
     }
-    if (pqe.min_priority() > maxcrit && !edges_to_update.num()) break;
+    if (pqe.min_priority() > maxcrit && edges_to_update.empty()) break;
     Edge e = pqe.remove_min();
     for (Vertex v : mesh.vertices(e))
       for (Vertex vv : mesh.vertices(v))

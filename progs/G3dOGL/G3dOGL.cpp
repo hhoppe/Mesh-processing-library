@@ -895,7 +895,7 @@ void load_texturemaps() {
   if (debug) display_texture_size_info();
   // HH_TIMER("_load_texturemap");
   textures_loaded = true;
-  if (!texturemaps.num()) {
+  if (texturemaps.empty()) {
     string name = g3d::g_filename;
     if (name == "") {
       Warning("No name for texture map");
@@ -926,7 +926,7 @@ void load_texturemaps() {
   }
   if (texturenormal < 0 && ranges::any_of(texturemaps, [](const string& name) { return name.contains(".nor"); }))
     texturenormal = 1;
-  assertx(!g_textures.num());
+  assertx(g_textures.empty());
   g_textures.init(texturemaps.num());
   for_int(i, texturemaps.num()) {
     if (debug) SHOW("defining texture", i);
@@ -4995,7 +4995,7 @@ void read_ply(const string& filename) {
 }
 
 void draw_ply() {
-  if (lsmooth && !ply_vnor.num()) {
+  if (lsmooth && ply_vnor.empty()) {
     ply_vnor.init(ply_vpos.num(), Vector{});
     for_int(i, ply_findices.num()) {
       Polygon poly;
@@ -5060,7 +5060,7 @@ void draw_ply() {
       if (!ntriangles) glEnd();  // GL_POLYGON
     }
     if (ntriangles) glEnd();    // GL_TRIANGLES
-    if (!ply_findices.num()) {  // Draw points.
+    if (ply_findices.empty()) {  // Draw points.
       initialize_unlit();
       glBegin(GL_POINTS);
       for_int(i, ply_vpos.num()) {

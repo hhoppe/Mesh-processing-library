@@ -819,7 +819,7 @@ void do_assemble(Args& args) {
   assertx(images.size() >= lfilenames.size());
   Matrix<string> filenames(images.dims());
   for (const auto& yx : range(filenames.dims())) {
-    if (!lfilenames.num()) continue;
+    if (lfilenames.empty()) continue;
     const string filename = lfilenames.shift();
     filenames[yx] = filename;
     if (!file_requires_pipe(filename) && !file_exists(filename)) assertnever("file '" + filename + "' not found");

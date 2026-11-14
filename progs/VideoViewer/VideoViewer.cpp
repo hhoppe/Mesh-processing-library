@@ -946,7 +946,7 @@ bool replace_with_other_object_in_directory(int increment) {
   const string directory = get_path_head(filename0);
   const string filename0_tail = get_path_tail(filename0);
   CArrayView<string> filenames = get_directory_media_filenames(filename0);
-  if (!filenames.num()) {
+  if (filenames.empty()) {
     message("No media files in directory");
     return false;
   }

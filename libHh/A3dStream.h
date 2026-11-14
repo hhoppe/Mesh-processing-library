@@ -75,6 +75,7 @@ class A3dElem {
 
   // For EType::polygon || EType::polyline || EType::point:
   [[nodiscard]] int num() const { return _v.num(); }
+  [[nodiscard]] bool empty() const { return _v.empty(); }
   [[nodiscard]] size_t size() const { return _v.size(); }
   void push(const A3dVertex& vertex) { push_i(vertex); }
   [[nodiscard]] auto& operator[](this auto&& self, int i) { return self._v[i]; }

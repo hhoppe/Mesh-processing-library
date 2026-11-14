@@ -14,7 +14,7 @@ Mk3d::~Mk3d() {
   assertw(_stack_color.empty());
   assertw(_stack_force_polyline.empty());
   assertw(_stack_force_flip.empty());
-  assertw(!_el.num());
+  assertw(_el.empty());
 }
 
 void Mk3d::scale(float x, float y, float z) {

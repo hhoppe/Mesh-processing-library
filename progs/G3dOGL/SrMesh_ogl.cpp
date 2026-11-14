@@ -21,7 +21,7 @@ void SrMesh::ogl_process_materials() {
 }
 
 void SrMesh::ogl_render_faces_individually(bool unlit_texture) {
-  if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
+  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
   glBegin(GL_TRIANGLES);
   if (unlit_texture) {
     for (const SrAFace* f : HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, activef)) {
@@ -180,7 +180,7 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
 }
 
 void SrMesh::ogl_render_faces_strips(bool unlit_texture) {
-  if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
+  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
   ASSERTX(verify_all_faces_visited());
   if (unlit_texture) {
     ogl_render_faces_strips_aux<true>();
@@ -191,7 +191,7 @@ void SrMesh::ogl_render_faces_strips(bool unlit_texture) {
 }
 
 int SrMesh::ogl_render_striplines() {
-  if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
+  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
   ASSERTX(verify_all_faces_visited());
   int ntstrips = 0;
   // Doesn't need to be all that fast, so not carefully optimized.
@@ -395,7 +395,7 @@ void SrMesh::ogl_show_residuals(bool uniform_too) {
 constexpr int k_cache_size = 16;
 
 int SrMesh::ogl_render_tvclines() {
-  if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
+  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
   ASSERTX(verify_all_faces_visited());
   ASSERTX(verify_all_vertices_uncached());
   int cache_time = _cache_time;
@@ -501,7 +501,7 @@ int SrMesh::ogl_render_tvclines() {
 
 void SrMesh::ogl_render_faces_tvc(bool unlit_texture) {
   dummy_use(unlit_texture);
-  if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
+  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
   ASSERTX(verify_all_faces_visited());
   ASSERTX(verify_all_vertices_uncached());
   int cache_time = _cache_time;

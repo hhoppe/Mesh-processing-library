@@ -20,7 +20,7 @@ template <typename T> void verify_against_sorted(CArrayView<T> array) {
     assertx(rankf_element(array, rankf) == sorted[min(int(std::floor(rankf * n)), n - 1)]);
   Array<T> unique;
   for (const T& e : sorted)
-    if (!unique.num() || unique.last() != e) unique.push(e);
+    if (unique.empty() || unique.last() != e) unique.push(e);
   assertx(sort_unique(array) == unique);
 }
 

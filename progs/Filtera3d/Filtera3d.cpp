@@ -554,7 +554,7 @@ using KD = Kdtree<Polygon*, 3>;
 
 void compute_intersect() {
   // E.g.:  Filtermesh ~/data/mesh/peedy.orig.m -toa | Filtera3d -inter | G3dOGL ~/data/mesh/peedy.orig.m -input -key NN
-  if (!g_inter.vpoly.num()) return;
+  if (g_inter.vpoly.empty()) return;
   const Frame xform = g_inter.bbox.get_frame_to_cube();
   KD kd(8);
   A3dElem el;
@@ -568,7 +568,7 @@ void compute_intersect() {
       const Polygon& p1 = *id;
       const Polygon& p2 = poly;
       pa = intersect_poly_poly(p1, p2);
-      if (!pa.num()) return KD::ECallbackReturn::nothing;
+      if (pa.empty()) return KD::ECallbackReturn::nothing;
       el.init(A3dElem::EType::polyline, false, 2);
       for_int(i, pa.num() / 2) {
         el[0] = A3dVertex(pa[i * 2 + 0], Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red()));

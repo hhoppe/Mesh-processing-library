@@ -1484,7 +1484,7 @@ void do_write_texture(Args& args) {
   image.write_file(image_name);
   nooutput = true;
 
-  if (k_fast_exit && !args.num()) hh_clean_up(), exit_immediately(0);  // Skip ~Mesh() and ~MeshSearch().
+  if (k_fast_exit && args.empty()) hh_clean_up(), exit_immediately(0);  // Skip ~Mesh() and ~MeshSearch().
   // (Immediate exit loses running timers though.)
 
   // Reinitialize to allow more subsequent do_write_texture():

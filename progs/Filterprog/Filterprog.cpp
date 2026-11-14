@@ -82,7 +82,7 @@ class MapWedgeInfo {
 };
 
 void MapWedgeInfo::copy_from(const MapWedgeInfo& mwi) {
-  assertx(!_map.num());
+  assertx(_map.empty());
   for (const auto& [wid, wi] : mwi._map) set(wid, wi);
 }
 
@@ -1423,7 +1423,7 @@ void do_pm_encode() {
   pmesh._info._full_bbox = pm_bbox;
   pmesh._info._has_wad2 = pm_has_wad2;
   pmesh._vsplits.reserve(pmesh._info._tot_nvsplits);
-  assertx(!pmesh._vsplits.num());
+  assertx(pmesh._vsplits.empty());
   // Parse vsplit records and encode.
   for (;;) {
     vspl.resid_uni = 0.f;

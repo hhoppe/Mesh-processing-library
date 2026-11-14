@@ -88,7 +88,7 @@ inline bool remove_at_end(string& s, std::string_view suffix) {
 }
 
 [[nodiscard]] inline bool is_path_absolute(const string& s) {
-  assertx(!s.empty());
+  assertx(s != "");
   return ((s[0] == '/' || s[0] == '\\') || (((s[0] >= 'a' && s[0] <= 'z') || (s[0] >= 'A' && s[0] <= 'Z')) &&
                                             s[1] == ':' && (s[2] == '/' || s[2] == '\\')));
 }

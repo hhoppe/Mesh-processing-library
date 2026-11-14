@@ -103,7 +103,7 @@ inline double SimpleTimer::get_seconds_per_counter() {
 }
 
 inline SimpleTimer::~SimpleTimer() {
-  if (!_name.empty()) {
+  if (_name != "") {
     fprintf(stderr, " (%-20.20s %8.2f)\n", _name.c_str(), elapsed());
     fflush(stderr);
   }

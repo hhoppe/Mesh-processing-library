@@ -67,7 +67,7 @@ template <int D> void test_random_searches(int maxlevel, float fsize) {
     sort(found);
     Array<int> distinct;
     for (const int id : found) {
-      if (!distinct.num() || distinct.last() != id) distinct.push(id);
+      if (distinct.empty() || distinct.last() != id) distinct.push(id);
     }
     if (!fsize) assertx(distinct.num() == found.num());  // Without duplication, each element is reported once.
     assertx(distinct == expected);

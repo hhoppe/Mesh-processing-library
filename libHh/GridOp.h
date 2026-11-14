@@ -518,7 +518,7 @@ Grid<D, T> resize_nearest(CGridView<D, T> grid, const Vec<int, D>& ndims, Grid<D
     }
   }
   if constexpr (D == 1) {
-    ASSERTX(!maps[0].num());
+    ASSERTX(maps[0].empty());
     parallel_for({.cycles_per_elem = 3}, range(ndims[0]), [&](const int i) {
       const int ii = int((i + .5f) / ndims[0] * dims[0] - 1e-4f);
       ngrid[i] = grid[ii];

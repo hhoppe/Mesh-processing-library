@@ -374,7 +374,7 @@ void SrMesh::display_hierarchy_height() const {
 
 void SrMesh::read_pm(PMeshRStream& pmrs) {
   HH_TIMER("__read_pm");
-  assertx(!_base_vertices.num());
+  assertx(_base_vertices.empty());
   assertx(!_refine_morph_time && !_coarsen_morph_time);
   assertw(!pmrs._info._has_rgb);
   assertw(!pmrs._info._has_uv);
@@ -815,7 +815,7 @@ void SrMesh::write_srm(std::ostream& os) const {
 
 void SrMesh::read_srm(std::istream& is) {
   HH_TIMER("__read_srm");
-  assertx(!_base_vertices.num());
+  assertx(_base_vertices.empty());
   assertx(!_refine_morph_time && !_coarsen_morph_time);  // Just to be safe.
   // Read past comments.
   for (string line;;) {

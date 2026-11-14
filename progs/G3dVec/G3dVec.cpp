@@ -585,15 +585,15 @@ void enter_hidden_polygon(Polygon& poly, int and_codes, int or_codes) {
     const float s = 1.95f;
     // s = 2.2;  // Debug: shrink inside screen boundaries.
     poly.intersect_hyperplane(Point(hither, 0.f, 0.f), Vector(+1.f, 0.f, 0.f));
-    if (!poly.num()) return;
+    if (poly.empty()) return;
     poly.intersect_hyperplane(Point(0.f, 0.f, 0.f), Vector(1.f, +s * tzp1, 0.f));
-    if (!poly.num()) return;
+    if (poly.empty()) return;
     poly.intersect_hyperplane(Point(0.f, 0.f, 0.f), Vector(1.f, -s * tzp1, 0.f));
-    if (!poly.num()) return;
+    if (poly.empty()) return;
     poly.intersect_hyperplane(Point(0.f, 0.f, 0.f), Vector(1.f, 0.f, +s * tzp2));
-    if (!poly.num()) return;
+    if (poly.empty()) return;
     poly.intersect_hyperplane(Point(0.f, 0.f, 0.f), Vector(1.f, 0.f, -s * tzp2));
-    if (!poly.num()) return;
+    if (poly.empty()) return;
   }
   for (auto& p : poly) {
     if (!assertw(p[0] > 0.f)) return;

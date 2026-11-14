@@ -173,7 +173,7 @@ std::weak_ordering compare(const PmWedgeAttrib& a1, const PmWedgeAttrib& a2, flo
 // *** WMesh
 
 void WMesh::read(std::istream& is, const PMeshInfo& pminfo) {
-  assertx(!_vertices.num());
+  assertx(_vertices.empty());
   _materials.read(is);
   int nvertices, nwedges, nfaces;
   {
@@ -1692,7 +1692,7 @@ const Vsplit* PMeshRStream::peek_next_vsplit() {
   Vsplit* pvspl;
   if (_pm) {
     Array<Vsplit>& vsplits = _pm->_vsplits;
-    if (!vsplits.num()) vsplits.reserve(_pm->_info._tot_nvsplits);  // Note: initializes all ar_wad members.
+    if (vsplits.empty()) vsplits.reserve(_pm->_info._tot_nvsplits);  // Note: initializes all ar_wad members.
     vsplits.access(_vspliti);
     pvspl = &vsplits[_vspliti];
   } else {
@@ -1722,7 +1722,7 @@ const Vsplit* PMeshRStream::next_vsplit() {
   Vsplit* pvspl;
   if (_pm) {
     Array<Vsplit>& vsplits = _pm->_vsplits;
-    if (!vsplits.num()) vsplits.reserve(_pm->_info._tot_nvsplits);
+    if (vsplits.empty()) vsplits.reserve(_pm->_info._tot_nvsplits);
     _vspliti++;
     vsplits.resize(_vspliti);
     pvspl = &vsplits.last();
@@ -1831,7 +1831,7 @@ bool Geomorph::construct(PMeshIter& pmi, EWant want, int num) {
   // or to allocate a separate array to record the attributes of orphan wedges when they are first created,
   // which does not seem so nice.
   bool ret = true;
-  assertx(!_vertices.num() && !_vgattribs.num() && !_wgattribs.num());
+  assertx(_vertices.empty() && _vgattribs.empty() && _wgattribs.empty());
   // Initialize ancestry to current attributes (identity).
   // Optimize: could reserve final size for arrays.
   Ancestry ancestry;

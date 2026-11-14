@@ -112,7 +112,7 @@ void do_stitch() {
   AWMesh& bmesh = pmesh._base_mesh;
   Matrix<int> m_basematid;  // Maps [bx, by] -> first matid in the base mesh.
   m_basematid.init(blockx, blocky);
-  assertx(!bmesh._materials.num());
+  assertx(bmesh._materials.empty());
   string str;
   for_int(bx, blockx) for_int(by, blocky) {
     const PMesh& pmxy = pmeshes[bx, by];

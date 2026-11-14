@@ -1124,7 +1124,7 @@ void Hw::make_fullscreen(bool b) {
 }
 
 void Hw::flush_seg() {
-  if (!_ar_seg.num()) return;
+  if (_ar_seg.empty()) return;
   if (_oglx) {
 #if defined(HH_OGLX)
     flush_seg_ogl();
@@ -1143,7 +1143,7 @@ void Hw::flush_seg() {
 }
 
 void Hw::flush_point() {
-  if (!_ar_point.num()) return;
+  if (_ar_point.empty()) return;
   if (_oglx) {
 #if defined(HH_OGLX)
     flush_point_ogl();

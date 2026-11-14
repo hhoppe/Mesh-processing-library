@@ -87,7 +87,7 @@ void Mvcvh::compose(const Mvcvh& mconv) {
   Mvcvh nthis;
   for (const auto& [v, comb] : mconv) {
     assertx(is_zero(comb.h));
-    if (!comb.c.num()) {
+    if (comb.c.empty()) {
       // Identity assumed; keep unchanged.
     } else if (comb.c.num() == 1) {
       Warning("Waste of space");

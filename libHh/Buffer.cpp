@@ -38,7 +38,7 @@ void Buffer::shift() {
 
 void Buffer::expand() {
   assertw(!_beg);  // Not necessary in the current implementation.
-  _ar.resize(assert_narrow_cast<int>(!_ar.num() ? k_initial_size : int64_t{_ar.num()} * 2));
+  _ar.resize(assert_narrow_cast<int>(_ar.empty() ? k_initial_size : int64_t{_ar.num()} * 2));
 }
 
 //----------------------------------------------------------------------------

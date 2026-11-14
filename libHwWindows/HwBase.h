@@ -755,7 +755,7 @@ inline void HwBase::fill_polygon_ogl(CArrayView<Vec2<float>> points) {
 }
 
 inline void HwBase::flush_seg_ogl() {
-  if (!_ar_seg.num()) return;
+  if (_ar_seg.empty()) return;
   glBegin(GL_LINES);
   for (const auto& s : _ar_seg) {
     // glVertex2fv(s[0].rev().data());
@@ -768,7 +768,7 @@ inline void HwBase::flush_seg_ogl() {
 }
 
 inline void HwBase::flush_point_ogl() {
-  if (!_ar_point.num()) return;
+  if (_ar_point.empty()) return;
   glBegin(GL_POINTS);
   for (const auto& p : _ar_point) {
     // glVertex2fv(p.rev().data());

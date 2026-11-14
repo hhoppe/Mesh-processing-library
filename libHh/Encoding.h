@@ -128,7 +128,7 @@ template <typename T> class Encoding : noncopyable {
       if (!assertw(tot_prob)) tot_prob = 1.f;
       float cumu_prob = 0.f;
       for_int(i, ntop) {
-        if (!pq.num()) break;
+        if (pq.empty()) break;
         const float prob = max_prob - pq.min_priority();
         cumu_prob += prob;
         T e = pq.remove_min();
@@ -185,7 +185,7 @@ class DeltaEncoding {
   int analyze(const string& s) const {
     const int total_bits = int(ceil(total_entropy()));
     const float enc_signs = _enc_sign[0].entropy() + _enc_sign[1].entropy();
-    if (!s.empty())
+    if (s != "")
       showdf("DE %s: n=%d  nbits=%.1f  sign=%.1f  bdelta=%.1f  total=%.1f  (%d)\n",  //
              s.c_str(), _num, _enc_nbits.entropy() / _num, enc_signs / _num, float(_delta_bits) / _num,
              float(total_bits) / _num, total_bits);

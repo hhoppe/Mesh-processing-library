@@ -59,7 +59,7 @@ template <typename T> class Graph : noncopyable {
 template <typename T> bool Graph<T>::remove(T v) {
   if (!contains(v)) return false;
   const atype ar = _m.remove(v);
-  assertx(!ar.num());
+  assertx(ar.empty());
   return true;
 }
 

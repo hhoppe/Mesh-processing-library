@@ -57,7 +57,7 @@ void BasePointSpatial::remove(Univ id, const Point* pp) {
   }
   assertx(ind >= 0);
   ar.erase(ind, 1);
-  if (!ar.num()) _map.remove(en);
+  if (ar.empty()) _map.remove(en);
 }
 
 void BasePointSpatial::shrink_to_fit() {

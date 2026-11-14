@@ -48,7 +48,7 @@ template <typename T, int D> class Kdtree : noncopyable {
   bool search(Vec<float, D>& bb0, Vec<float, D>& bb1, Func cbfunc, CBloc loc = 0) const {
     return search_i(bb0, bb1, cbfunc, loc);
   }
-  void print() const requires Copyable<T> { rec_print((!_arnode.num() ? -1 : 0), 0); }
+  void print() const requires Copyable<T> { rec_print((_arnode.empty() ? -1 : 0), 0); }
 
  private:
   const int _maxlevel;  // The maximum number of subdivisions on each axis.
@@ -147,7 +147,7 @@ template <typename T, int D> class Kdtree : noncopyable {
     _arnode[ni]._stackei.push(ei);
   }
   template <typename Func> bool search_i(Vec<float, D>& bb0, Vec<float, D>& bb1, Func cbfunc, int ni) const {
-    if (!_arnode.num()) return false;
+    if (_arnode.empty()) return false;
     int nelemvis = 0;
     const bool ret = rec_search(ni, ni, bb0, bb1, cbfunc, nelemvis);
     if (0) {  // Not thread-safe.

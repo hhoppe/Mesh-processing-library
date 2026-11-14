@@ -38,6 +38,7 @@ class RBuffer : public Buffer {
   [[nodiscard]] ERefill refill();
   void extract(int n);  // Have read n bytes.
   [[nodiscard]] int num() const { return _n; }
+  [[nodiscard]] bool empty() const { return _n == 0; }
   [[nodiscard]] size_t size() const { return num(); }
   [[nodiscard]] char operator[](int bi) const;
   [[nodiscard]] bool has_line() const;

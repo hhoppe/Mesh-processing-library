@@ -150,7 +150,7 @@ bool try_g3d_command(const string& pstr) {
 enum class ETryInput { nothing, success, success_frame, eof };
 
 ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
-  if (!buf.num()) return ETryInput::nothing;
+  if (buf.empty()) return ETryInput::nothing;
   if (buf[0] == '\x0d') {  // DOS eol.
     if (buf.num() >= 2 && buf[1] == '\x0a') {
       buf.extract(2);

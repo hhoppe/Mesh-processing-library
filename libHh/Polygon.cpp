@@ -160,7 +160,7 @@ void Polygon::intersect_plane(const Vector& poly_normal, const Vector& plane_nor
     pa.push(interp(self[i0], self[i1], sa[i1] / (sa[i1] - sa[i0])));
   }
   assertx((pa.num() & 0x1) == 0);
-  if (!pa.num()) return;
+  if (pa.empty()) return;
   Vector vint = get_vint(poly_normal, plane_normal);
   const auto by_increasing_intersection_t = [&](const Point& p1, const Point& p2) {
     return cmp_inter(p1, p2, vint) == -1;

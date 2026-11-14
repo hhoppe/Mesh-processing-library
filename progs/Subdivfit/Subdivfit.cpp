@@ -131,7 +131,7 @@ void do_mfilename(Args& args) {
 }
 
 void do_filename(Args& args) {
-  assertx(!co.num());
+  assertx(co.empty());
   RFile fi(args.get_filename());
   RSA3dStream ia3d(fi());
   A3dElem el;
@@ -1469,7 +1469,7 @@ void stoc_end() {
     global_all_project(smesh);
   }
   for (Face f : gmesh.faces()) mfpts.remove(f);
-  assertx(!mfpts.num());
+  assertx(mfpts.empty());
 }
 
 void do_stoc() {

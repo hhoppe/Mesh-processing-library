@@ -47,6 +47,7 @@ class Stat {
   [[nodiscard]] const string& name() const { return _name; }
   [[nodiscard]] int64_t num() const { return _n; }
   [[nodiscard]] int inum() const { return narrow_cast<int>(_n); }
+  [[nodiscard]] bool empty() const { return _n == 0; }
   [[nodiscard]] float min() const { return _min; }
   [[nodiscard]] float max() const { return _max; }
   [[nodiscard]] float avg() const;

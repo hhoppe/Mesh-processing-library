@@ -590,22 +590,22 @@ void SimplicialComplex::write(std::ostream& os) const {
       // Print vattributes.
       string out;
       if (s->get_string()) {
-        if (!out.empty()) out += ' ';
+        if (out != "") out += ' ';
         out += s->get_string();
       }
 
       if (s->isPrincipal()) {
         assertx(s->getVAttribute() != -1);
-        if (!out.empty()) out += ' ';
+        if (out != "") out += ' ';
         out += sform("attrid=%d", s->getVAttribute());
       }
 
       if (s->isPrincipal()) {
-        if (!out.empty()) out += ' ';
+        if (out != "") out += ' ';
         out += sform("area=%g", s->getArea());
       }
 
-      if (!out.empty()) os << "  {" << out << "}";
+      if (out != "") os << "  {" << out << "}";
       assertx(os << "\n");
     }
   }

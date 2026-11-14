@@ -249,7 +249,7 @@ int main(int argc, const char** argv) {
   // To disable parallelism: OMP_NUM_THREADS=1.
   ParseArgs args(argc, argv);
   const bool standard_test = 1;
-  if (standard_test && !args.num()) {  // Verify multigrid convergence with different grid dimensions.
+  if (standard_test && args.empty()) {  // Verify multigrid convergence with different grid dimensions.
     if (1) {
       test(Grid<1, float>(1025));
       test(Grid<1, float>(257));
@@ -333,7 +333,7 @@ int main(int argc, const char** argv) {
     } else if (args.num() == 3) {
       test_random<3>(args);
       return 0;
-    } else if (args.num() > 0) {
+    } else if (!args.empty()) {
       assertnever("");
     }
   }

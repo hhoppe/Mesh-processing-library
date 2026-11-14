@@ -622,7 +622,7 @@ class Mesh : noncopyable {
   [[nodiscard]] HEdge most_ccw_hedge(Vertex v) const;                        // is_nice(v), may return nullptr
   [[nodiscard]] HEdge clw_hedge(HEdge he) const { return he->_next->_sym; }  // May return nullptr.
   [[nodiscard]] HEdge ccw_hedge(HEdge he) const { return he->_sym ? he->_sym->_prev : nullptr; }
-  [[nodiscard]] HEdge herep(Vertex v) const { return !v->_arhe.num() ? nullptr : v->_arhe[0]->_prev; }
+  [[nodiscard]] HEdge herep(Vertex v) const { return v->_arhe.empty() ? nullptr : v->_arhe[0]->_prev; }
   [[nodiscard]] HEdge herep(Face f) const { return f->_herep; }
   [[nodiscard]] HEdge herep(Edge e) const { return e->_herep; }
   [[nodiscard]] bool is_boundary(HEdge he) const { return !he->_sym; }

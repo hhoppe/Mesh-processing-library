@@ -18,7 +18,7 @@ namespace hh {
 class Materials {
  public:
   void read(std::istream& is) {  // Must be empty.
-    assertx(!_matstrings.num());
+    assertx(_matstrings.empty());
     int nmaterials;
     {
       string line;
@@ -43,6 +43,7 @@ class Materials {
     return _matstrings[matid];
   }
   [[nodiscard]] int num() const { return _matstrings.num(); }
+  [[nodiscard]] bool empty() const { return _matstrings.empty(); }
   [[nodiscard]] size_t size() const { return _matstrings.size(); }
   [[nodiscard]] bool ok(int i) const { return _matstrings.ok(i); }
 

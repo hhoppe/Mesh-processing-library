@@ -110,7 +110,7 @@ void perform_in_records() {
       break;
     }
   }
-  assertx(!have_line && rb.num() == 0);  // No partial record remains.
+  assertx(!have_line && rb.empty());  // No partial record remains.
   SHOW(nrecords);
   assertx(nrecords == k_num_records);
 }

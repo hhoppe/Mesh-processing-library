@@ -637,7 +637,7 @@ class UvFaceRepair {
           if (found) break;
         }
       }
-      if (!edges_to_split.num()) break;
+      if (edges_to_split.empty()) break;
       for_int(i, edges_to_split.num()) {
         Edge e = edges_to_split[i];
         const Point sph1 = v_sph(_mesh.vertex1(e)), sph2 = v_sph(_mesh.vertex2(e));

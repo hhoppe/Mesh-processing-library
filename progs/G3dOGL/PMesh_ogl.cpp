@@ -22,7 +22,7 @@ void AWMesh::ogl_process_materials() {
 }
 
 void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int use_texture) {
-  if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
+  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
   int omatid = -1;
   // Prefer texture over color if texture is enabled.
   if (pminfo._has_uv && use_texture) {
@@ -59,7 +59,7 @@ void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int use_text
 }
 
 void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
-  if (!_ogl_mat_byte_rgba.num()) ogl_process_materials();
+  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
   if (0) {
     for_int(f, _faces.num()) {
       assertx((_faces[f].attrib.matid & k_Face_visited_mask) == _cur_frame_mask);

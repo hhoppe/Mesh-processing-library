@@ -112,7 +112,7 @@ int main() {
     SHOW(stat1.num(), stat1.sum());
     stat1.zero();
     SHOW(stat1.short_string());
-    assertx(stat1.num() == 0 && stat1.min() == BIGFLOAT && stat1.max() == -BIGFLOAT);
+    assertx(stat1.empty() && stat1.min() == BIGFLOAT && stat1.max() == -BIGFLOAT);
   }
   {
     // add() combines the statistics of two disjoint sets of values.

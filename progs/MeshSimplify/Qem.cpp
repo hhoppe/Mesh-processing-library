@@ -599,7 +599,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   lls.enter_b_rc(msize, 0, -lf[n]);
 #else
   thread_local Matrix<double> zt;
-  if (!zt.num() != msize - 1) zt.init(msize - 1, msize);
+  zt.init(msize - 1, msize);  // (No-op if the dims are unchanged.)
   {
     // Note: at present only handle extremely restricted case.
     for_intL(i, 3, n) assertx(lf[i] == 0.f);

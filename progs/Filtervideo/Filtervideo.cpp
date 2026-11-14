@@ -286,7 +286,7 @@ void do_assemble(Args& args) {
   const bool prev_silent = ConsoleProgress::set_all_silent(true);
   Matrix<string> filenames(videos.dims());
   for (const auto& yx : range(filenames.dims())) {
-    if (!lfilenames.num()) continue;
+    if (lfilenames.empty()) continue;
     const string filename = lfilenames.shift();
     filenames[yx] = filename;
     if (!file_requires_pipe(filename) && !file_exists(filename)) assertnever("file '" + filename + "' not found");
@@ -1383,7 +1383,7 @@ void compute_looping_regions() {
   possibly_rescale_loop_parameters();
   const bool small_looping_regions = getenv_bool("SMALL_LOOPING_REGIONS");  // Bad; used in *.wind1.
   if (small_looping_regions) assertx(use_activation && g_lp.mat_activation.ysize() > 0);
-  assertx(!g_lp.region_color.num());
+  assertx(g_lp.region_color.empty());
   {  // Compute g_lp.mat_iregion: index of the region at each pixel.
     UnionFind<Vec2<int>> uf;
     if (0) {

@@ -41,7 +41,7 @@ void test_args_stream() {
   assertx(args.get_string() == "str");
   assertx(args.get_filename() == "dir/file.txt");  // Backslashes are translated.
   assertx(args.get_filename() == "-");
-  assertx(args.num() == 0 && args.size() == 0);
+  assertx(args.num() == 0 && args.size() == 0 && args.empty());
 }
 
 int g_num_func0_calls = 0;

@@ -45,7 +45,7 @@ namespace hh {
 [[nodiscard]] inline int random_prime_under(int n, Random& random) {
   assertx(n < 100'000);
   static Array<int> primes;  // Not thread-safe.
-  if (!primes.num()) primes.push(2);
+  if (primes.empty()) primes.push(2);
   while (primes.last() < n) primes.push(next_prime(primes.last()));
   const int i = discrete_binary_search(primes, 0, primes.num() - 1, n - 1);
   return primes[random.get_unsigned(i + 1)];

@@ -43,7 +43,7 @@ class FifoVertexCache : public VertexCache {
   void init(int nverts1, int cs) override {
     assertx(nverts1 > 0 && cs >= 1);
     if (_vinqueue.num() != nverts1 || _queuev.num() != cs) {
-      assertx(!_vinqueue.num());
+      assertx(_vinqueue.empty());
       _vinqueue.init(nverts1, -1);
       _queuev.init(cs, k_no_entry);
     } else {
@@ -94,7 +94,7 @@ class FifoVertexCache : public VertexCache {
     if (0) {
       if (_vinqueue[vi] >= 0) return true;  // If there, do nothing.
       if (_iprev == 0) {
-        if (!_queuev.num()) return false;
+        if (_queuev.empty()) return false;
         _iprev = _queuev.num();
       }
       --_iprev;
@@ -177,7 +177,7 @@ class LruVertexCache : public VertexCache {
   void init(int nverts1, int cs) override {
     assertx(nverts1 > 0 && cs >= 1);
     if (_vinlist.num() != nverts1 || _cs != cs) {
-      assertx(!_vinlist.num());
+      assertx(_vinlist.empty());
       _vinlist.init(nverts1, nullptr);
       _cs = cs;
       _nodes.init(cs);

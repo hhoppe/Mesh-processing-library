@@ -53,7 +53,7 @@ int main() {
   {
     const Tally tally(Array<int>{});
     SHOW(tally.num(), tally.total(), tally[0]);
-    assertx(tally.stat().num() == 0);
+    assertx(tally.stat().empty());
   }
   {
     const Tally tally(Array<int>{0});

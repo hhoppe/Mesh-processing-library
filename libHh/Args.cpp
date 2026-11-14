@@ -46,7 +46,7 @@ bool Args::check_float(const string& s) {
 bool Args::check_double(const string& s) { return check_float(s); }
 
 bool Args::check_filename(const string& s) {
-  if (s.empty()) return false;
+  if (s == "") return false;
   if (s[0] == '-' && s != "-") return false;
   if (is_pipe(s) || is_url(s)) return true;
   if (s.find_first_of("*?\"<>|") != string::npos) return false;

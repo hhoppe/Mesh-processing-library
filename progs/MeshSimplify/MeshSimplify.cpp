@@ -786,7 +786,7 @@ void init_qem() {
       });
     }
   } else {
-    assertx(!gwq.num());
+    assertx(gwq.empty());
     gwq.init(gwinfo.num());
     for_int(i, gwq.num()) {
       gwq[i] = make_qem();
@@ -1484,7 +1484,7 @@ void analyze_mesh(const char* s) {
 // Sample the original mesh to obtain the set of face points and edge points.
 void sample_pts() {
   if (terrain || minarea || minvolume || minedgelength || minvdist || minqem || minaps || minrandom) {
-    assertx(!fpts.num());
+    assertx(fpts.empty());
     assertx(!numpts);
     showff("No points sampled.\n");
     return;
@@ -1504,7 +1504,7 @@ void sample_pts() {
     showff("Setting number of random points to %d\n", numpts);
   }
   {  // Reserve space to prevent over-allocation.
-    assertx(!fpts.num());
+    assertx(fpts.empty());
     fpts.init(numpts + mesh.num_vertices());
     fpts.init(0);
   }
@@ -1706,7 +1706,7 @@ void perhaps_initialize() {
   }
   sample_pts();
   analyze_mesh("INITIAL");
-  assertx(!pqecost.num());
+  assertx(pqecost.empty());
   bool boundaries_first;
   dummy_init(boundaries_first);
   assertx(is_zero(grid_dims) || product(grid_dims));
@@ -2083,7 +2083,7 @@ bool gather_nn_2(Edge e, NewMeshNei& nn) {
   Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
   const int nf = nn.ar_corners.num();
   const bool closed = nn.va[0] == nn.va.last();
-  assertx(!nn.ar_nwid.num());
+  assertx(nn.ar_nwid.empty());
   for_int(i, nf) nn.ar_nwid.push(-1);
   for_int(irep, nf) {
     if (nn.ar_nwid[irep] >= 0) continue;
@@ -2856,7 +2856,7 @@ double evaluate_normal(const NewMeshNei& nn, const Param& param, CArrayView<Wedg
 
 void compute_residual(CArrayView<Vector> ar_resid, CArrayView<float> ar_normaldist2, const Vector& vnormal,
                       float& uni_error, float& dir_error) {
-  if (!ar_resid.num()) {
+  if (ar_resid.empty()) {
     if (numpts) assertw(ar_resid.num());
     uni_error = 0.f;
     dir_error = 0.f;
@@ -4650,7 +4650,7 @@ void optimize() {
   }
   ConsoleProgress cprogress;
   cprogress.update(0.f);
-  if (!pqecost.num() && !invertexorder) {
+  if (pqecost.empty() && !invertexorder) {
     pqecost.reserve(mesh.num_edges());
     // showf("Entering %d edges into priority queue\n", mesh.num_edges());
     ConsoleProgress cprogress2;
@@ -4838,10 +4838,10 @@ void do_simplify() {
 //   E.g. for   -mresid 1e-6f -simp  -mresid 1e-4f -rebuildpq -prog x -simp
 // The removed costs need not equal k_bad_cost, e.g. if the preceding '-simplify' stopped at '-nf'.
 void do_rebuildpq() {
-  if (!pqecost.num()) return;  // Note that it is not built if using parallel_optimize().
+  if (pqecost.empty()) return;  // Note that it is not built if using parallel_optimize().
   assertx(pqecost.num() == mesh.num_edges());
   for (Edge e : mesh.edges()) assertx(pqecost.remove(e) >= 0.f);
-  assertx(!pqecost.num());
+  assertx(pqecost.empty());
 }
 
 void do_verb(Args& args) {

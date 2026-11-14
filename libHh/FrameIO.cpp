@@ -71,7 +71,7 @@ std::optional<ObjectFrame> read(std::istream& is) {
 }
 
 std::optional<ObjectFrame> read(RBuffer& b) {
-  if (!b.num()) return {};
+  if (b.empty()) return {};
   ObjectFrame object_frame;
   object_frame.binary = b[0] == k_binary_code;
   if (object_frame.binary) {

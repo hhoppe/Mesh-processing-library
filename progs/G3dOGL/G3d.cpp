@@ -94,7 +94,7 @@ void object::enter_point(const Point& p) {
 }
 
 void object::update_stats() {
-  if (!_stat_coord[0].num()) return;
+  if (_stat_coord[0].empty()) return;
   _radius = 0.f;
   for_int(c, 3) {
     _pavg[c] = _stat_coord[c].avg();

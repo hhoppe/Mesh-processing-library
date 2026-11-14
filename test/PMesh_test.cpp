@@ -248,7 +248,7 @@ void test_io() {
     SHOW(str.substr(0, str.find("PM base mesh:")));
     PMesh pmesh2;
     pmesh2.read(ss);
-    assertx(pmesh2._vsplits.num() == 0 && pmesh2._base_mesh._faces.num() == mesh._faces.num());
+    assertx(pmesh2._vsplits.empty() && pmesh2._base_mesh._faces.num() == mesh._faces.num());
     assertx(pmesh2._info._full_bbox == pmesh._info._full_bbox);
     std::stringstream ss2;
     pmesh2.write(ss2);

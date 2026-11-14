@@ -10,7 +10,7 @@
 namespace hh {
 
 // Given an input video with dimensions odims{num_frames, ysize, xsize}, provided either as a video grid
-//  (ovideo.size() > 0) or as an NV12 video grid (ovideo_nv12.size() > 0), optimize the per-pixel looping
+//  (!ovideo.empty()) or as an NV12 video grid (!ovideo_nv12.empty()), optimize the per-pixel looping
 //  parameters (start frames and looping periods) of a seamless video loop, for a (new) output loop of nnf frames.
 // The parameters are computed on a downsampled video, so mat_start and mat_period may be coarser than the input;
 //  compute_gdloop() in GradientDomainLoop.h rescales them when it assembles the loop.

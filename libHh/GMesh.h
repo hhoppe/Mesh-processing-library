@@ -5,6 +5,7 @@
 #include <charconv>  // to_chars(), chars_format
 #include <cstring>   // memcpy()
 
+#include "libHh/Map.h"
 #include "libHh/Mesh.h"
 #include "libHh/Polygon.h"
 

@@ -2548,7 +2548,7 @@ void do_procedure(Args& args) {
   } else if (name == "test_videoloop_mask_dilation") {
     // cd ~/proj/videoloops/data/test_bfs_mask_expansion
     // Filterimage TDpoolpalms_temp_opt0_3.png -procedure test_videoloop_mask_dilation
-    assertx(image.size() > 0);
+    assertx(!image.empty());
     Image image_periods("TDpoolpalms_labels_opt0_3_period.png");  // Period0: 128, 128, 255; 480x272.
     // Image image_periods("periods.png");  // period0: 0, 0, 0 but 480x270
     assertx(image_periods.dims() == image.dims());
@@ -2646,7 +2646,7 @@ void do_procedure(Args& args) {
         if (!file_exists(str)) assertnever("image file '" + str + "' does not exist");
         image_names.push(str);
       }
-      assertx(image_names.num() >= 1);
+      assertx(!image_names.empty());
     }
     Array<Image> ar_thumbnails(image_names.num());
     {
@@ -2714,7 +2714,7 @@ void do_procedure(Args& args) {
     // Filterimage ~/proj/videoloops/data/ReallyFreakinAll/out/HDdunravenpass1_loop.vlp -proc vlp_to_color_ramps v -noo
     // creates v.static.png v.start.png v.period.png v.activation.png
     const string root_name = args.get_filename();
-    assertx(image.size() > 0);
+    assertx(!image.empty());
     const Vec4<string> channel_name{"static", "start", "period", "activation"};
     int est_num_input_frames = 0;
     for_coords(image.dims(), [&](const Vec2<int>& yx) {
@@ -2737,7 +2737,7 @@ void do_procedure(Args& args) {
 
   } else if (name == "vlp_mask_to_color") {
     // Filterimage ~/proj/fastloops/data/test/HDmorningsteam1_vlp_level0_opt0.png -proc vlp_mask_to_color ~/proj/fastloops/data/test/HDmorningsteam1_mask_level0_opt0.png >v.png
-    assertx(image.size() > 0);
+    assertx(!image.empty());
     const string mask_name = args.get_filename();
     bool have_mask = mask_name != "none";
     Image image_mask;
@@ -2769,7 +2769,7 @@ void do_procedure(Args& args) {
 
   } else if (name == "entropy") {
     // Filterimage -create 256 20 -proc color_ramp -to png >~/data/image/color_ramp.png
-    assertx(image.size() > 0);
+    assertx(!image.empty());
     Encoding<Vec2<int>> encoding;
     for_coords(image.dims(), [&](const Vec2<int>& yx) {
       int start = image[yx][1];

@@ -71,6 +71,7 @@ class Video : public Grid<3, Pixel> {
 [[nodiscard]] std::string_view video_suffix_for_magic_byte(uchar c);
 
 // Video consisting of an 8-bit luminance grid and a 2*8-bit chroma grid at half spatial resolution.
+// VideoNv12(dims) and init(dims) leave the samples uninitialized.
 class VideoNv12 : noncopyable {
  public:
   VideoNv12() = default;
@@ -89,6 +90,7 @@ class VideoNv12 : noncopyable {
   void clear() { init(thrice(0)); }
   [[nodiscard]] int nframes() const { return _grid_Y.dim(0); }
   [[nodiscard]] size_t size() const { return _grid_Y.size(); }
+  [[nodiscard]] bool empty() const { return size() == 0; }
   [[nodiscard]] CNv12View operator[](int f) const { return CNv12View(_grid_Y[f], _grid_UV[f]); }
   [[nodiscard]] Nv12View operator[](int f) { return Nv12View(_grid_Y[f], _grid_UV[f]); }
   [[nodiscard]] auto get_Y(this auto&& self) { return grid_view_t<3, decltype(self._grid_Y.data())>(self._grid_Y); }
@@ -114,6 +116,7 @@ class VideoNv12View {
   VideoNv12View(VideoNv12& vnv12) : _grid_Y(vnv12.get_Y()), _grid_UV(vnv12.get_UV()) {}
   [[nodiscard]] int nframes() const { return _grid_Y.dim(0); }
   [[nodiscard]] size_t size() const { return _grid_Y.size(); }
+  [[nodiscard]] bool empty() const { return size() == 0; }
   [[nodiscard]] Nv12View operator[](int f) { return Nv12View(_grid_Y[f], _grid_UV[f]); }
   [[nodiscard]] auto get_Y(this auto&& self) { return grid_view_t<3, decltype(self._grid_Y.data())>(self._grid_Y); }
   [[nodiscard]] auto get_UV(this auto&& self) { return grid_view_t<3, decltype(self._grid_UV.data())>(self._grid_UV); }
@@ -133,6 +136,7 @@ class CVideoNv12View {
   CVideoNv12View(const VideoNv12& vnv12) : _grid_Y(vnv12.get_Y()), _grid_UV(vnv12.get_UV()) {}
   [[nodiscard]] int nframes() const { return _grid_Y.dim(0); }
   [[nodiscard]] size_t size() const { return _grid_Y.size(); }
+  [[nodiscard]] bool empty() const { return size() == 0; }
   [[nodiscard]] CNv12View operator[](int f) const { return CNv12View(_grid_Y[f], _grid_UV[f]); }
   [[nodiscard]] CGridView<3, uint8_t> get_Y() const { return _grid_Y; }
   [[nodiscard]] CGridView<3, Vec2<uint8_t>> get_UV() const { return _grid_UV; }

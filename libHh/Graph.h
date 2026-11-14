@@ -32,7 +32,7 @@ template <typename T> class Graph : noncopyable {
   Graph(type&& g) noexcept { swap(*this, g); }
   type& operator=(type&& g) noexcept { return clear(), swap(*this, g), *this; }
   void clear() { _m.clear(); }
-  [[nodiscard]] bool empty() const { return _m.num() == 0; }
+  [[nodiscard]] bool empty() const { return _m.empty(); }
   // Enter and remove domain vertices.
   void enter(T v) { _m.enter(v, atype()); }  // The vertex v must be new.
   [[nodiscard]] bool contains(T v) const { return _m.contains(v); }

@@ -403,7 +403,7 @@ int main() {
     const Grid<2, int> grid = grid_from_flat(V(2, 3), range(6));
     assertx(ranges::equal(resize_nearest(grid, V(2, 3)), grid));
     const Grid<2, int> grid0 = resize_nearest(grid, V(0, 3));
-    assertx(grid0.dims() == V(0, 3) && grid0.size() == 0);
+    assertx(grid0.dims() == V(0, 3) && grid0.empty());
   }
   {  // Pointwise evaluation with the triangle filter is linear interpolation, with boundary rules outside.
     const Grid<1, float> grid = {0.f, 10.f, 20.f, 40.f};

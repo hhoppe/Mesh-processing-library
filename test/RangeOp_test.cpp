@@ -292,7 +292,7 @@ int main() {
     SHOW(sort(ar2, std::greater<>()));
     const Array<int> ar3 = sorted(ar2);
     assertx(ar3 == V(1, 2, 3, 4, 5).view() && ar2 == V(5, 4, 3, 2, 1).view());
-    assertx(sort(Array<int>{}).num() == 0 && reverse(Array<int>{7}) == V(7).view());
+    assertx(sort(Array<int>{}).empty() && reverse(Array<int>{7}) == V(7).view());
   }
   {
     // swap_elements() on sized ranges and on a range that is not sized.
@@ -351,7 +351,7 @@ int main() {
   }
   {
     // concatenate() of empty ranges, of more than two ranges, and with mutable references.
-    assertx(to_int_array(concatenate(Array<int>{}, Array<int>{})).num() == 0);
+    assertx(to_int_array(concatenate(Array<int>{}, Array<int>{})).empty());
     assertx(to_int_array(concatenate(Array<int>{}, V(1), Array<int>{}, V(2, 3))) == V(1, 2, 3).view());
     const auto c = concatenate(V(1, 2), V(3), V(4, 5, 6));
     SHOW(c.size(), ranges::distance(c), sum(c));
@@ -365,9 +365,9 @@ int main() {
     // truncate() yields at most count elements.
     const Array<int> ar{1, 2, 3, 4};
     assertx(to_int_array(ar | truncate(2)) == V(1, 2).view());
-    assertx(to_int_array(ar | truncate(0)).num() == 0);
+    assertx(to_int_array(ar | truncate(0)).empty());
     assertx(to_int_array(ar | truncate(10)) == ar);
-    assertx(to_int_array(Array<int>{} | truncate(3)).num() == 0);
+    assertx(to_int_array(Array<int>{} | truncate(3)).empty());
     assertx(to_int_array(range(100) | truncate(3)) == V(0, 1, 2).view());
     // Unlike views::take(), truncate() does not advance a single-pass source beyond the last yielded element.
     CountingCursor cursor1(10);

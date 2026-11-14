@@ -983,7 +983,7 @@ intptr_t my_sh(const string& command, bool wait) {
 }
 
 intptr_t my_sh(CArrayView<string> sargv, bool wait) {
-  assertx(sargv.num() > 0);
+  assertx(!sargv.empty());
   string command;
   for_int(i, sargv.num()) {
     if (i) command += ' ';

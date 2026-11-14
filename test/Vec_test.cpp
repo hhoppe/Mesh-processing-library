@@ -440,8 +440,8 @@ int main() {
     static_assert(std::is_same_v<decltype(std::as_const(v).head<2>()), const Vec2<int>&>);
     static_assert(std::is_same_v<decltype(std::as_const(v)[0]), const int&>);
     assertx(v.head(2) == V(1, 2).view() && v.tail(1) == V(40).view());
-    assertx(v.segment(1, 2) == V(2, 3).view() && v.slice(1, 3) == V(2, 3).view() && v.head(0).num() == 0);
-    assertx(v.slice(1) == V(2, 3, 40).view() && v.slice(4).num() == 0);
+    assertx(v.segment(1, 2) == V(2, 3).view() && v.slice(1, 3) == V(2, 3).view() && v.head(0).empty());
+    assertx(v.slice(1) == V(2, 3, 40).view() && v.slice(4).empty());
     assertx((v.segment<1, 2>() == V(2, 3)) && v.segment<2>(2) == V(3, 40));
     assertx(&v.tail<3>()[0] == &v[1]);
     v.head<2>() = V(10, 20);  // Writes through the reinterpreted reference.
@@ -509,7 +509,7 @@ int main() {
     static_assert(Vec<int, 3>::create([](int i) { return i * i; }) == V(0, 1, 4));
     static_assert(Vec3<int>::all(2) == V(2, 2, 2));
     constexpr Vec<int, 0> v0;
-    static_assert(v0.num() == 0 && v0.begin() == v0.end());
+    static_assert(v0.empty() && v0.begin() == v0.end());
     SHOW(concat(V(1, 2), V(3)), type_name<decltype(concat(V(1, 2), V(3)))>());
   }
   {

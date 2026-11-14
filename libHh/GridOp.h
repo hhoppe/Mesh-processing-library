@@ -262,7 +262,7 @@ Grid<D, T> crop(CGridView<D, T> grid, const Vec<int, D>& dL, const Vec<int, D>& 
                 const T* cval) {
   for_int(i, D) {
     if (extensions[i] == Extension::border) assertx(cval);
-    if (grid.size() == 0)
+    if (grid.empty())
       assertx(extensions[i] != Extension::reflect && extensions[i] != Extension::wrap &&
               extensions[i] != Extension::clamp && extensions[i] != Extension::reflect_primal);
     if (extensions[i] == Extension::undefined) {

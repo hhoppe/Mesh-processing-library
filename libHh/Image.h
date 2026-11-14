@@ -169,6 +169,7 @@ template <typename T> [[nodiscard]] Image as_image(CMatrixView<T> matrix) {
 // *** Conversions between YUV and RGB color spaces
 
 // Image consisting of an 8-bit luminance matrix and a 2*8-bit chroma matrix at half spatial resolution.
+// Nv12(dims) and init(dims) leave the samples uninitialized.
 class Nv12 {
  public:
   Nv12() = default;

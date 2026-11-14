@@ -249,7 +249,7 @@ int main() {
     assertx(directory_exists(dir) && !file_exists(dir) && directory_exists(dir + "/sub1"));
     SHOW(sort(get_files_in_directory(dir)));
     SHOW(sort(get_directories_in_directory(dir)));
-    assertx(get_files_in_directory(dir + "/sub1").num() == 0);
+    assertx(get_files_in_directory(dir + "/sub1").empty());
     assertx(std::filesystem::remove_all(dir) == 5u);
     assertx(!directory_exists(dir));
   }

@@ -177,7 +177,7 @@ class Multigrid : noncopyable {
   static constexpr int k_default_num_vcycles = 0 ? 25 : std::is_same_v<T, double> ? 12 : 5;  // 5, 12, 16, 25, 50
   static constexpr bool k_enable_specializations = b_no_periodicity && 1;
 
-  [[nodiscard]] bool have_orig() const { return _grid_orig.size() > 0; }
+  [[nodiscard]] bool have_orig() const { return !_grid_orig.empty(); }
 
   static Vec<int, D> generate_interior_offsets(const Vec<int, D>& dims) {
     // Each offset is the product of the subsequent dims.  (Using product(dims.slice(c + 1)) instead caused a

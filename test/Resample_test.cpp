@@ -194,7 +194,7 @@ int main() {
     assertx(resizer2.apply(grid, &cval)[0] > 3.f);  // The border value (10) shows at the ends: .286 * 10 + .714 * 1.
     // The rules that alter only the boundary rows ("natural" here) keep the dense weights of the interior rows.
     const Resizer<1> resizer3(V(100), V(201), {.filter = "cubic", .boundary = "natural"});
-    assertx(resizer3.row(0, 100).indices.num() == 0 && resizer3.row(0, 0).indices.num() > 0);
+    assertx(resizer3.row(0, 100).indices.empty() && !resizer3.row(0, 0).indices.empty());
   }
   {  // Sampler: point reconstruction with any kernel (after its digital filter) and boundary rule.
     Random random(31);

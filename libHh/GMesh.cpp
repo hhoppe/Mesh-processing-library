@@ -215,7 +215,7 @@ const char* GMesh::string_key(string& str, const char* ss, const char* key) {
 }
 
 bool parse_key_vec(const char* ss, const char* key, ArrayView<float> ar) {
-  assertx(key && ar.num() >= 1);
+  assertx(key && !ar.empty());
   if (!ss) return false;
   string str;
   const char* s = GMesh::string_key(str, ss, key);
@@ -225,7 +225,7 @@ bool parse_key_vec(const char* ss, const char* key, ArrayView<float> ar) {
 }
 
 bool GMesh::parse_corner_key_vec(Corner c, const char* key, ArrayView<float> ar) const {
-  assertx(c && key && ar.num() >= 1);
+  assertx(c && key && !ar.empty());
   string str;
   const char* s = corner_key(str, c, key);
   if (!s) return false;

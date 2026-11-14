@@ -893,7 +893,7 @@ bool will_write_ply(const ParseArgs& args_) {
   args.copy_parse(args_);
   Array<string> strings;
   while (args.num()) strings.push(args.get_string());
-  return strings.num() > 0 && strings.last() == "ply";
+  return !strings.empty() && strings.last() == "ply";
 }
 
 }  // namespace

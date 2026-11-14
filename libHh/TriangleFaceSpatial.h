@@ -49,7 +49,7 @@ class TriangleFaceSpatial
       const auto func_triangleface_in_bbox = [&](const Bbox<float, 3>& spatial_bbox) -> bool {
         for_int(c, 3) if (bbox[0][c] > spatial_bbox[1][c] || bbox[1][c] < spatial_bbox[0][c]) return false;
         const bool modified = poly.intersect_bbox(spatial_bbox);
-        const bool ret = poly.num() > 0;
+        const bool ret = !poly.empty();
         if (modified) poly = opoly;
         return ret;
       };

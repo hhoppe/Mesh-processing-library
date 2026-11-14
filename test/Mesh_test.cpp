@@ -409,7 +409,7 @@ void test_vertex_operations() {
     assertx(mesh.degree(va[0]) == 2 && mesh.degree(new_vertices[0]) == 2);
     SHOW(mesh.num_vertices(), mesh.num_edges());
     // Fixing a nice vertex does nothing.
-    assertx(mesh.fix_vertex(va[1]).num() == 0);
+    assertx(mesh.fix_vertex(va[1]).empty());
   }
   {
     // Faces (0, 1, 2) and (0, 2, 1) form a legal but not nice mesh.

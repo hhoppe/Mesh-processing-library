@@ -5011,7 +5011,7 @@ void draw_ply() {
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
   }
-  const bool has_rgb = ply_vrgb.num() > 0;
+  const bool has_rgb = !ply_vrgb.empty();
   if (!ledges || lshading) {
     glShadeModel(lsmooth || has_rgb ? GL_SMOOTH : GL_FLAT);
     initialize_lit();

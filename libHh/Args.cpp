@@ -140,7 +140,7 @@ ParseArgs::ParseArgs(int& argc, const char**& argv) {
 }
 
 ParseArgs::ParseArgs(CArrayView<string> aargs, string name) : _name(std::move(name)) {
-  assertx(aargs.num() > 0);
+  assertx(!aargs.empty());
   _argv0 = aargs[0];
   _args = aargs.slice(1);
   common_construction();

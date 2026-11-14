@@ -30,6 +30,7 @@ template <typename T> class CStridedArrayView {
   type& operator=(type&& a) & noexcept { return _a = a._a, _n = a._n, _stride = a._stride, *this; }  // For view<T>.
   [[nodiscard]] int num() const { return _n; }
   [[nodiscard]] size_t size() const noexcept { return _n; }
+  [[nodiscard]] bool empty() const noexcept { return _n == 0; }
   [[nodiscard]] ptrdiff_t stride() const { return _stride; }
   [[nodiscard]] auto& operator[](this auto&& self, int i) {
     HH_CHECK_BOUNDS(i, self.num());

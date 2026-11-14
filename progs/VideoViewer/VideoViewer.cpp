@@ -174,7 +174,7 @@ std::mutex& g_mutex_obs = *new std::mutex;
 // Signaled by the background thread after it publishes g_videoloop_ready_obj or clears
 //  g_working_on_loop_creation; guarded by g_mutex_obs.  Never destroyed, like g_mutex_obs.
 std::condition_variable& g_cond_obs = *new std::condition_variable;
-std::atomic<int> g_cob{-1};  // Currently selected object (0 .. g_obs.num() - 1), or -1 if g_obs.num() == 0.
+std::atomic<int> g_cob{-1};  // Currently selected object (0 .. g_obs.num() - 1), or -1 if g_obs is empty.
 Object& getob(int cob) {
   assertx(g_obs.ok(cob));  // (Bounds-check even in Release.)
   return *g_obs[cob];

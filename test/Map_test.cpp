@@ -235,7 +235,7 @@ int main() {
   }
   {
     Map<int, int> m;
-    assertx(m.num() == 0);
+    assertx(m.empty());
     assertx(m.keys().begin() == m.keys().end());
     for_int(i, 100) m.enter(i, i * 8);
     assertx(m.num() == 100);
@@ -280,7 +280,7 @@ int main() {
       const int num = 10000;
       for_int(i, num) m.enter(i, 0);
       for_int(i, num) m.remove(i);
-      assertx(m.num() == 0);
+      assertx(m.empty());
     }
 
     m.clear();

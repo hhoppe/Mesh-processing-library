@@ -244,7 +244,7 @@ int main() {
   {
     // Grids with zero-size dimensions.
     Grid<2, int> grid0;
-    assertx(grid0.dims() == V(0, 0) && grid0.size() == 0 && grid0.data() == nullptr && grid0.begin() == grid0.end());
+    assertx(grid0.dims() == V(0, 0) && grid0.empty() && grid0.data() == nullptr && grid0.begin() == grid0.end());
     const Grid<2, int> grid05(0, 5);
     SHOW(grid05.dims(), grid05.size(), grid05.dim(1));
     SHOW(grid05);
@@ -254,11 +254,11 @@ int main() {
     SHOW((Grid<1, int>(0)));
     Grid<2, int> grid(V(2, 3), 7);
     grid.init(V(4, 0));
-    assertx(grid.size() == 0 && grid.data() == nullptr);
+    assertx(grid.empty() && grid.data() == nullptr);
     grid.init(V(2, 2), 3);
     assertx(sum(grid) == 12);
     grid.clear();
-    assertx(grid.dims() == V(0, 0) && grid.size() == 0);
+    assertx(grid.dims() == V(0, 0) && grid.empty());
   }
   {
     // Reinitializing to a different shape with the same volume reuses the allocation.
@@ -277,7 +277,7 @@ int main() {
     const int* const p1 = grid1.data();
     Grid<2, int> grid3(std::move(grid1));
     assertx(grid3.data() == p1 && grid3.dims() == V(2, 3));
-    assertx(grid1.size() == 0 && grid1.dims() == V(0, 0));  // NOLINT(bugprone-use-after-move)
+    assertx(grid1.empty() && grid1.dims() == V(0, 0));  // NOLINT(bugprone-use-after-move)
     Grid<2, int> grid4(V(1, 1), 9);
     swap(grid3, grid4);
     assertx(grid4.data() == p1 && grid3.dims() == V(1, 1) && grid3[0, 0] == 9);
@@ -355,9 +355,9 @@ int main() {
     for (const size_t i : range(grid.size())) grid.flat(i) = int(i);
     const auto slice = grid.slice(1, 3);
     SHOW(slice.dims(), (slice[0, 0, 0]), (slice[1, 1, 2]));
-    assertx(grid.slice(4, 4).size() == 0 && grid.slice(0, 4).data() == grid.data());
-    assertx(grid.slice(1).dims() == V(3, 2, 3) && grid.slice(1).data() == grid[1].data() && grid.slice(4).size() == 0);
-    assertx(grid.head(1).dims() == V(1, 2, 3) && grid.head(2).data() == grid.data() && grid.head(0).size() == 0);
+    assertx(grid.slice(4, 4).empty() && grid.slice(0, 4).data() == grid.data());
+    assertx(grid.slice(1).dims() == V(3, 2, 3) && grid.slice(1).data() == grid[1].data() && grid.slice(4).empty());
+    assertx(grid.head(1).dims() == V(1, 2, 3) && grid.head(2).data() == grid.data() && grid.head(0).empty());
     grid.slice(2, 3)[0, 1, 1] = -1;  // Write through a mutable slice.
     assertx(grid[2, 1, 1] == -1);
     int count = 0;
@@ -424,10 +424,10 @@ int main() {
     const int* const p = grid2.data();
     Grid<3, int> grid3 = increase_grid_rank(std::move(grid2));
     assertx(grid3.dims() == V(1, 3, 2) && grid3.data() == p && grid3[0, 2, 1] == 5);
-    assertx(grid2.size() == 0 && grid2.data() == nullptr);  // NOLINT(bugprone-use-after-move)
+    assertx(grid2.empty() && grid2.data() == nullptr);  // NOLINT(bugprone-use-after-move)
     Grid<2, int> grid2b = reduce_grid_rank(std::move(grid3));
     assertx(grid2b.dims() == V(3, 2) && grid2b.data() == p);
-    assertx(grid3.size() == 0 && grid3.data() == nullptr);  // NOLINT(bugprone-use-after-move)
+    assertx(grid3.empty() && grid3.data() == nullptr);  // NOLINT(bugprone-use-after-move)
     const Grid<1, int> grid1 = reduce_grid_rank(Grid<2, int>(V(1, 4), 2));
     assertx(grid1.dims() == V(4) && sum(grid1) == 8);
     grid2b.special_reduce_dim0(2);  // Retains the allocation but shrinks the first dimension.

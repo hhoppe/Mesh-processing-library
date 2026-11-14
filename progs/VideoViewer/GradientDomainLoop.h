@@ -51,15 +51,15 @@ enum class GdLoopScheme { no_blend, precise, fast, exact };
 // Given an input video with specified dimensions videodims{num_frames, ysize, xsize},
 //  provided either as
 //    (1) a file (video_filename != ""),
-//    (2) a preloaded video grid (video.size() > 0), or
-//    (3) a preloaded NV12 video grid (video_nv12.size() > 0),
+//    (2) a preloaded video grid (!video.empty()), or
+//    (3) a preloaded NV12 video grid (!video_nv12.empty()),
 //  2D matrices of per-pixel looping parameters (start frames and looping periods),
 //  a specified number of frames nnf for the (new) output loop,
 // compute an optimized video loop using scheme,
 // and either
 //    (1) write it to the video write stream (pwvideo != nullptr),
-//    (2) save it to a video grid (videoloop.size() > 0), or
-//    (3) save it to an Nv12 video grid (videoloop_nv12.size() > 0).
+//    (2) save it to a video grid (!videoloop.empty()), or
+//    (3) save it to an Nv12 video grid (!videoloop_nv12.empty()).
 // If the output is to the stream *pwvideo, one may write multiple instances (num_loops > 1) of the loop,
 //  else num_loops must equal 1.
 void compute_gdloop(const Vec3<int>& videodims, const string& video_filename, CGridView<3, Pixel> video,

@@ -107,7 +107,7 @@ int main() {
     const Audio audio2(audio1);  // The copy includes the attributes.
     assertx(audio2.attrib().samplerate == 100. && ranges::equal(audio2, audio1));
     Audio audio3(std::move(audio1));
-    assertx(audio3.dims() == V(2, 4) && audio1.size() == 0);  // NOLINT(bugprone-use-after-move)
+    assertx(audio3.dims() == V(2, 4) && audio1.empty());  // NOLINT(bugprone-use-after-move)
     Grid<2, float> grid(V(1, 3), -.25f);
     Audio audio4(std::move(grid));  // Move of a grid transfers its allocation.
     assertx(audio4.nchannels() == 1 && audio4.nsamples() == 3 && audio4[0, 2] == -.25f);
@@ -119,7 +119,7 @@ int main() {
     swap(audio4, audio3);
     assertx(audio4.dims() == V(2, 4) && audio4.attrib().samplerate == 100. && audio3.dims() == V(2, 2));
     audio4.clear();
-    assertx(audio4.size() == 0);
+    assertx(audio4.empty());
   }
   {
     // Filename and magic-byte recognition.

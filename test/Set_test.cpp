@@ -189,7 +189,7 @@ int main() {
   }
   {
     Set<int> s;
-    assertx(s.num() == 0);
+    assertx(s.empty());
     assertx(s.begin() == s.end());
     for_int(i, 50) s.enter(i);
     for_intL(i, 50, 100) assertx(s.add(i));

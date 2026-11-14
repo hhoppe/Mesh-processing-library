@@ -95,6 +95,8 @@ template <int D, typename T> class CGridView {
   [[nodiscard]] const Vec<int, D>& dims() const { return _dims; }
   [[nodiscard]] int dim(int c) const { return _dims[c]; }
   [[nodiscard]] size_t size() const noexcept { return product_dims<D>(_dims.data()); }
+  // True if some dimension is zero, whatever the others; e.g., a grid with dims (0, 5) is empty.
+  [[nodiscard]] bool empty() const noexcept { return size() == 0; }
   template <std::integral... A> [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, A... dd);
   template <int n> [[nodiscard]] constexpr decltype(auto) operator[](this auto&& self, const Vec<int, n>& u);
   [[nodiscard]] auto& flat(this auto&& self, size_t i) { return ASSERTXX(i < self.size()), self.data()[i]; }
@@ -227,6 +229,9 @@ template <typename T> CGridView<1, T> CGrid1View(const T&&) = delete;
 template <typename T> [[nodiscard]] GridView<1, T> Grid1View(T& e) { return GridView<1, T>(&e, V(1)); }
 
 // Heap-allocated D-dimensional contiguous grid.  Any or all of the dimensions may be zero.
+// Grid(dims) and init(dims) leave the elements uninitialized if T is trivially default-constructible (e.g., float
+// or Pixel), and init(dims) keeps the old elements if the size is unchanged; likewise for the derived Matrix,
+// Image, Video, and Audio.  To set them, use Grid(dims, v) or init(dims, v).
 // Grid(10, 20) or Grid(V(10, 20)) both create a 10x20 grid, whereas Grid({10, 20}) creates a 1x2 grid.
 template <int D, typename T> class Grid : public GridView<D, T> {
   using base = GridView<D, T>;

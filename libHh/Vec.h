@@ -50,6 +50,9 @@ using grid_view_t = std::conditional_t<std::is_const_v<std::remove_pointer_t<Ptr
 
 // Allocated fixed-size 1D array with n elements of type T.
 // Like std::array<T, n>, but with constructors and "empty base class optimization" support for n == 0.
+// As with std::array, the default constructor leaves the elements uninitialized if T is trivially
+// default-constructible (e.g., int or float); so do the classes derived from Vec, such as Point, Vector, Uv,
+// Bary, Pixel, and Frame, and the nested SGrid.
 template <typename T, int n> class Vec : details::VecBase<T, n> {
   static_assert(n >= 0);
   using type = Vec<T, n>;
@@ -85,6 +88,7 @@ template <typename T, int n> class Vec : details::VecBase<T, n> {
   //  it is safest to not include any copy-constructor, not even a default one.
   [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const noexcept { return n; }
   [[nodiscard]] constexpr size_t size() const noexcept { return static_cast<size_t>(n); }
+  [[nodiscard]] constexpr bool empty() const noexcept { return n == 0; }
   [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) noexcept {
     return HH_CHECK_BOUNDS(i, n), as_vec(self).data()[i];  // NOLINT(misc-redundant-expression): n may be 0.
   }

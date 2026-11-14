@@ -42,7 +42,7 @@ class Vector4 {
   using type = Vector4;
 
  public:
-  Vector4() = default;
+  Vector4() = default;  // Uninitialized.
   explicit Vector4(float v) { fill(v); }
   explicit Vector4(const Pixel& pixel) { *this = to_Vector4_norm(pixel); }
   explicit Vector4(const Vec4<float>& a) { load_unaligned(a.data()); }

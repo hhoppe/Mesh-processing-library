@@ -27,7 +27,7 @@ void test1() {
 void test2() {
   {
     PriorityQueue<int> pq;
-    assertx(pq.num() == 0);
+    assertx(pq.empty());
     assertx(pq.empty());
     for_int(i, 100) pq.enter(i, i * 2.f + 1.f);
     assertx(pq.num() == 100);
@@ -48,7 +48,7 @@ void test2() {
   }
   {
     UpdatablePriorityQueue<int> pq;
-    assertx(pq.num() == 0);
+    assertx(pq.empty());
     assertx(pq.empty());
     for_int(i, 100) pq.enter(i, i * 2.f + 1.f);
     assertx(pq.num() == 100);
@@ -77,7 +77,7 @@ void test2() {
       pq.remove_min();
     }
     assertx(pq.empty());
-    assertx(pq.num() == 0);
+    assertx(pq.empty());
   }
 }
 

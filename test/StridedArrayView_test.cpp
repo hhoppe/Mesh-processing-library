@@ -93,7 +93,7 @@ int main() {
     const CStridedArrayView<int> v1(ar.data(), ar.num(), 1);
     assertx(ranges::equal(v1, ar));
     const CStridedArrayView<int> v0(ar.data(), 0, 5);
-    assertx(v0.num() == 0 && v0.begin() == v0.end() && ranges::empty(v0));
+    assertx(v0.empty() && v0.begin() == v0.end() && ranges::empty(v0));
   }
   {
     // The random-access iterator operations, compared with the indices of the underlying array.

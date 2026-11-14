@@ -27,7 +27,7 @@ Array<int> values(const IntrusiveList& list) {
   Array<int> ar_reverse;
   for (const A* pa : HH_INTRUSIVE_LIST_RANGE(list, A, _node) | views::reverse) ar_reverse.push(pa->_i);
   assertx(ar_reverse == reverse(Array<int>(ar)));
-  assertx(list.empty() == (ar.num() == 0));
+  assertx(list.empty() == ar.empty());
   return ar;
 }
 
@@ -78,7 +78,7 @@ int main() {
     assertx(list.empty());
     assertx(list.begin() == list.end());
     assertx(list.delim()->next() == list.delim() && list.delim()->prev() == list.delim());
-    assertx(values(list).num() == 0);
+    assertx(values(list).empty());
     const A a(0);
     assertx(!a._node.linked());
     a._node.ok();  // An unlinked node is trivially consistent.

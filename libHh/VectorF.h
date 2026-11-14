@@ -18,7 +18,7 @@ template <int n> class VectorF : Vec<Vector4, n / 4>, Vec<float, n % 4> {
   static constexpr int max_unroll = 4;
 
  public:
-  VectorF() = default;  // Was: { fill(0.f); }.
+  VectorF() = default;  // Uninitialized.  Was: { fill(0.f); }.
   explicit VectorF(float v) { fill(v); }
   VectorF(const VectorF<n>&) = default;
   [[nodiscard]] constexpr int num() const { return n; }

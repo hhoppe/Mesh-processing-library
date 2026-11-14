@@ -81,6 +81,7 @@ template <typename T> class CArrayView {
   void reinit(type a) { *this = std::move(a); }
   [[HH_GNU_PURE]] [[nodiscard]] constexpr int num() const noexcept { return _n; }
   [[nodiscard]] constexpr size_t size() const noexcept { return narrow_cast<size_t>(_n); }
+  [[nodiscard]] constexpr bool empty() const noexcept { return _n == 0; }
   [[HH_GNU_PURE]] [[nodiscard]] constexpr auto& operator[](this auto&& self, int i) noexcept {
     HH_CHECK_BOUNDS(i, self.num());
     return self.data()[i];
@@ -239,6 +240,10 @@ template <typename T> class ArrayStorage<T, 0> : public ArrayView<T> {  // Witho
 // inline_capacity (e.g., a function that resizes any such array) and in explicit instantiations.
 // Type T must have a public operator= (which may be operator=(&&)).
 // Unlike std::vector<T>, Array<T> constructs/destructs elements based on capacity() rather than num().
+// Hence, unlike std::vector<T>(n), the constructors Array<T>(n) and InlinedArray<T, m>(n) and the members init(n),
+// resize(n), add(n), and access(i) do not value-initialize the elements they expose: these are uninitialized if T is
+// trivially default-constructible (e.g., int or Point), and otherwise default-constructed or left with earlier
+// values.  To set them, use Array<T>(n, v), InlinedArray<T, m>(n, v), or init(n, v).
 // Under AddressSanitizer, the elements beyond num() are marked as unaddressable, so that an access to them (e.g.
 // through a pointer or view obtained before the array shrank) is reported.  For an array whose storage is on the
 // heap, the unused built-in storage is entirely unaddressable.

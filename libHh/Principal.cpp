@@ -94,7 +94,7 @@ void principal_components(CArrayView<Vec3<float>> va, const Vec3<float>& avgp, F
 }  // namespace
 
 void principal_components(CArrayView<Point> pa, Frame& frame, Vec3<float>& eimag) {
-  assertx(pa.num() > 0);
+  assertx(!pa.empty());
   Homogeneous hp;
   for_int(i, pa.num()) hp += pa[i];
   const Point avgp = to_Point(hp / float(pa.num()));
@@ -102,7 +102,7 @@ void principal_components(CArrayView<Point> pa, Frame& frame, Vec3<float>& eimag
 }
 
 void principal_components(CArrayView<Vector> va, Frame& frame, Vec3<float>& eimag) {
-  assertx(va.num() > 0);
+  assertx(!va.empty());
   principal_components(CArrayView<Vec3<float>>(va.data(), va.num()), Point(0.f, 0.f, 0.f), frame, eimag);
 }
 

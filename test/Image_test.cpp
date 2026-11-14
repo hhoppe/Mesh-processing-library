@@ -80,18 +80,18 @@ int main() {
     SHOW(image2.zsize(), image2.suffix());
     Image image3(std::move(image));
     // NOLINTNEXTLINE(bugprone-use-after-move,clang-analyzer-cplusplus.Move): the moved-from object is left empty.
-    assertx(image3.zsize() == 4 && image3.dims() == V(2, 3) && image.size() == 0);
+    assertx(image3.zsize() == 4 && image3.dims() == V(2, 3) && image.empty());
     Matrix<Pixel> matrix(V(1, 2), Pixel::red());
     const Image image4(matrix);  // Copy of a matrix has default attributes.
     SHOW(image4.dims(), image4.zsize(), (image4[0, 1]));
     Image image5(std::move(matrix));                          // Move of a matrix transfers its allocation.
-    assertx(image5.dims() == V(1, 2) && matrix.size() == 0);  // NOLINT(bugprone-use-after-move)
+    assertx(image5.dims() == V(1, 2) && matrix.empty());  // NOLINT(bugprone-use-after-move)
     image5 = image3;
     assertx(image5.dims() == V(2, 3) && image5.zsize() == 4 && image5.suffix() == "png");
     image5.clear();
     assertx(image5.dims() == V(0, 0));
     swap(image5, image3);
-    assertx(image5.dims() == V(2, 3) && image3.size() == 0 && image5.zsize() == 4);
+    assertx(image5.dims() == V(2, 3) && image3.empty() && image5.zsize() == 4);
     for (const int zsize : {1, 3, 4}) {
       image5.set_zsize(zsize);
       assertx(image5.zsize() == zsize);

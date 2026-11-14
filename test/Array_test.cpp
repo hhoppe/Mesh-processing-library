@@ -321,7 +321,7 @@ void test_views() {
 
   assertx(ar.head(2) == V(0, 1).view() && ar.tail(2) == V(4, 5).view());
   assertx(ar.segment(1, 3) == V(1, 2, 3).view() && ar.slice(2, 4) == V(2, 3).view() && ar.slice(4) == V(4, 5).view());
-  assertx(ar.head(0).num() == 0 && ar.tail(0).num() == 0 && ar.segment(6, 0).num() == 0);
+  assertx(ar.head(0).empty() && ar.tail(0).empty() && ar.segment(6, 0).empty());
   assertx(ar.tail(0).data() == ar.data() + 6);
   assertx(ar.head(4).tail(2) == V(2, 3).view());  // Subviews compose.
   assertx(ar.last() == 5 && &ar.last() == &ar[5]);
@@ -453,7 +453,7 @@ void test_operations() {
   c %= 4;
   assertx(c == V(2, 0, 2).view());
   // The binary operators allocate their result, also for empty arrays.
-  assertx((Array<int>{} + Array<int>{}).num() == 0);
+  assertx((Array<int>{} + Array<int>{}).empty());
   // Interpolation, with weights that give exact results.
   const Array<float> f1{0.f, 4.f}, f2{8.f, 12.f}, f3{16.f, 20.f};
   assertx(interp(f1, f2) == V(4.f, 8.f).view());
@@ -475,7 +475,7 @@ void test_construction() {
     const Array<int> ar(3, 7);
     assertx(ar == V(7, 7, 7).view() && ar.capacity() == 3);
     const Array<int> empty(0);
-    assertx(empty.num() == 0 && empty.data() == nullptr && empty.begin() == empty.end());
+    assertx(empty.empty() && empty.data() == nullptr && empty.begin() == empty.end());
     const Array<int> ar2(ar);  // NOLINT(performance-unnecessary-copy-initialization): the copy constructor is tested.
     assertx(ar2 == ar && ar2.data() != ar.data());
     Array<int> ar3;
@@ -496,11 +496,11 @@ void test_construction() {
     Array<int> ar2 = std::move(ar1);
     assertx(ar2.data() == data && ar2.num() == 3);
     // NOLINTNEXTLINE(bugprone-use-after-move, clang-analyzer-cplusplus.Move): it checks the moved-from state.
-    assertx(ar1.num() == 0 && ar1.capacity() == 0 && ar1.data() == nullptr);
+    assertx(ar1.empty() && ar1.capacity() == 0 && ar1.data() == nullptr);
     ar1 = std::move(ar2);
     assertx(ar1.data() == data);
     // NOLINTNEXTLINE(bugprone-use-after-move, clang-analyzer-cplusplus.Move): it checks the moved-from state.
-    assertx(ar2.num() == 0);
+    assertx(ar2.empty());
     Array<int> ar3{4};
     swap(ar1, ar3);
     assertx(ar1 == V(4).view() && ar3.data() == data);
@@ -518,7 +518,7 @@ void test_construction() {
     ar.shrink_to_fit();
     assertx(ar.capacity() == 1000 && ar[999] == 999);
     ar.clear();
-    assertx(ar.num() == 0 && ar.capacity() == 0);
+    assertx(ar.empty() && ar.capacity() == 0);
   }
   {
     // An array of move-only elements.
@@ -588,7 +588,7 @@ void test_asan_annotations() {
     // the array to a CArrayView copies, so it must remain addressable; the next element is poisoned.
     InlinedArray<int, 3> ar;
     const CArrayView<int> view = ar;
-    assertx(view.num() == 0 && poisoned(ar.data() + 1));
+    assertx(view.empty() && poisoned(ar.data() + 1));
   }
   {
     InlinedArray<std::string, 2> ar1, ar2;

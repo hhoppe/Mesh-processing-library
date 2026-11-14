@@ -13,7 +13,7 @@ class Vector4i {
   using type = Vector4i;
 
  public:
-  Vector4i() = default;
+  Vector4i() = default;  // Uninitialized.
   explicit Vector4i(int j) { fill(j); }
   [[nodiscard]] size_t size() const noexcept { return 4; }
   [[nodiscard]] auto& operator[](this auto&& self, int i) { return HH_CHECK_BOUNDS(i, 4), self._c[i]; }

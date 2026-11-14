@@ -106,7 +106,7 @@ namespace {
 
 // Gather a ring of vertices around vertex v.
 auto gather_vertex_ring(const GMesh& mesh, Vertex v) {
-  Array<Vertex> va;
+  InlinedArray<Vertex, 16> va;  // Without heap allocation for vertex degrees below 16.
   for (Vertex w = mesh.most_clw_vertex(v);;) {
     va.push(w);
     w = mesh.ccw_vertex(v, w);
@@ -144,7 +144,7 @@ float min_local_dihedral(const GMesh& mesh, CArrayView<Vertex> va, const Point& 
 
 // Returns the smallest dihedral value in the mesh neighborhood around vertex v.
 float min_dihedral_about_vertex(const GMesh& mesh, Vertex v) {
-  const Array<Vertex> va = gather_vertex_ring(mesh, v);
+  const auto va = gather_vertex_ring(mesh, v);
   return min_local_dihedral(mesh, va, mesh.point(v));
 }
 
@@ -292,15 +292,6 @@ HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, BoundingSphere, v_bsphere);
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, bool, v_global);  // The vertex is a feature.
 
 HH_SAC_ALLOCATE_FUNC(Mesh::MVertex, Point, v_sph);  // Spherical parameterization.
-
-// Index of an edge into the sorted array of parallel_optimize(), or -1 if it is not there (e.g. an edge created by a
-// collapse).  It is constructed (unlike plain SAC data), so that every edge has a defined value.
-struct EdgeIndex {
-  int index{-1};
-};
-HH_SACABLE(EdgeIndex);
-HH_SAC_ALLOCATE_CD_FUNC(Mesh::MEdge, EdgeIndex, e_edge_index);
-int& e_index(Edge e) { return e_edge_index(e).index; }
 
 // Information relating to the mesh neighborhood following a speculative edge collapse.
 // Note that this information is independent of orientation of edge (v1, v2).
@@ -3671,15 +3662,27 @@ void write_corners(std::ostream& os, Vertex v, string& str) {
 #pragma clang diagnostic ignored "-Wnrvo"  // Silence warnings on multiple return object constructions in try_ecol().
 #endif
 
+// The best configuration found by the search in try_ecol().
+struct EcolConfig {
+  double rssa{0.};
+  Point p{};
+  Array<WedgeInfo> ar_wi;  // Indexed by nn.ar_nwid.
+  float dir_error{0.f};
+  bool bswap{false};  // Result of desire_edge_orientation_swap(); set by parallel_optimize() for a prior.
+};
+
 struct EcolResult {
   EResult result;
   float cost{k_bad_cost};
   int min_ii{-1};
   Vertex vs{nullptr};
+  EcolConfig config{};  // Set only if !commit and result == R_success.
 };
 
-// Consider the edge collapse of edge e.
-EcolResult try_ecol(Edge e, bool commit) {
+// Consider the edge collapse of edge e.  If prior is given, it is the result of an evaluation (with !commit) of the
+// same edge in the same neighborhood, whose best configuration is committed without searching again.
+EcolResult try_ecol(Edge e, bool commit, const EcolResult* prior = nullptr) {
+  if (prior) assertx(commit && prior->result == R_success);
   EcolResult ecol_result;
   if (commit)
     ASSERTX(mesh.nice_edge_collapse(e));
@@ -3753,9 +3756,9 @@ EcolResult try_ecol(Edge e, bool commit) {
   Point min_p;
   Array<WedgeInfo> min_ar_wi;
   float min_dir_error;
-  dummy_init(min_dir_error);
+  dummy_init(min_p, min_dir_error);
   const bool have_fakeii = (minqem && !no_fit_geom) || hull;
-  for_int(fakeii, 3 + have_fakeii) {
+  for_int(fakeii, prior ? 0 : 3 + have_fakeii) {
     int ii = fakeii;
     bool strict_ii = false;
     if (fakeii == 3) {
@@ -4163,6 +4166,13 @@ EcolResult try_ecol(Edge e, bool commit) {
       min_dir_error = dir_error;
     }
   }
+  if (prior) {
+    min_rssa = prior->config.rssa;
+    min_ii = prior->min_ii;
+    min_p = prior->config.p;
+    min_ar_wi = prior->config.ar_wi;
+    min_dir_error = prior->config.dir_error;
+  }
   if (min_ii < 0) return {R_dih};  // No dihedrally admissible configuration.
   const float raw_cost = float(min_rssa - rssf);
   ecol_result.cost = raw_cost + offset_cost;
@@ -4177,7 +4187,10 @@ EcolResult try_ecol(Edge e, bool commit) {
   }
   ecol_result.min_ii = min_ii;  // May change below due to bswap.
   ecol_result.result = R_success;
-  if (!commit) return ecol_result;
+  if (!commit) {
+    ecol_result.config = {min_rssa, min_p, std::move(min_ar_wi), min_dir_error, false};
+    return ecol_result;
+  }
 
   // ALL SYSTEMS GO.
   if (verb >= 3) SHOW("ecol:", rssf, min_rssa, raw_cost);
@@ -4206,7 +4219,7 @@ EcolResult try_ecol(Edge e, bool commit) {
     }
   }
   // Consider swapping the orientation of the edge.
-  const bool bswap = desire_edge_orientation_swap(e, min_ii);
+  const bool bswap = prior ? prior->config.bswap : desire_edge_orientation_swap(e, min_ii);
   Vertex vs = !bswap ? v1 : v2;
   Vertex vt = !bswap ? v2 : v1;
   Vertex vl = !bswap ? vo1 : vo2;
@@ -4520,6 +4533,7 @@ void parallel_optimize() {
       Edge e;
       float cost{0.f};
       int min_ii{-1};
+      Vec2<int> vids{0, 0};  // Vertex ids of the edge, which stay valid even after a collapse destroys the edge.
     };
     // Array<EdgeCost> ar_edgecost{mesh.edges() | views::transform([&](Edge e) { return EdgeCost{e}; })};
     Array<EdgeCost> ar_edgecost(mesh.num_edges());
@@ -4536,6 +4550,7 @@ void parallel_optimize() {
         const EcolResult ecol_result = try_ecol(e, false);
         edge_cost.cost = ecol_result.cost;
         edge_cost.min_ii = ecol_result.min_ii;
+        edge_cost.vids = {mesh.vertex_id(mesh.vertex1(e)), mesh.vertex_id(mesh.vertex2(e))};
       });
     }
     {
@@ -4543,23 +4558,42 @@ void parallel_optimize() {
       const auto by_increasing_cost = [&](auto& ec1, auto& ec2) { return ec1.cost < ec2.cost; };
       sort(ar_edgecost, by_increasing_cost);
     }
-    parallel_for(range(ar_edgecost.num()), [&](int index) { e_index(ar_edgecost[index].e) = index; });
+
+    // Evaluate again the prefix of edges that the commit loop below can reach once it has collapsed an edge, now
+    // retaining their best configurations (and edge orientations), so that the serial commits need not repeat them.
+    const float k_fraction_edges = 0.15f;
+    const int num_prefix = min(int(k_fraction_edges * ar_edgecost.num()) + 1, ar_edgecost.num());
+    Array<EcolResult> ar_prefix_result(num_prefix);
+    {
+      HH_STIMER("__opt_prefix");
+      parallel_for(range(num_prefix), [&](int index) {
+        const auto& [e, cost, min_ii, vids] = ar_edgecost[index];
+        if (cost == k_bad_cost) return;
+        EcolResult& result = ar_prefix_result[index];
+        result = try_ecol(e, false);
+        result.config.bswap = desire_edge_orientation_swap(e, result.min_ii);
+      });
+    }
 
     HH_STIMER("__opt_ecols");
-    const float k_fraction_edges = 0.15f;
     const bool vs_never_changes = minqem && minii2 && no_fit_geom;
     int num_edges_considered = 0, num_edges_collapsed = 0;
-    Array<bool> invalidated(ar_edgecost.num(), false);
+    // A collapse changes the cost of every edge incident to a vertex adjacent to v1 or v2 (and destroys some of these
+    // edges), so it marks those vertices, and an edge with a marked vertex is skipped for the rest of the sweep.
+    int max_vid = 0;
+    for (const EdgeCost& edge_cost : ar_edgecost) max_vid = max({max_vid, edge_cost.vids[0], edge_cost.vids[1]});
+    Array<bool> vertex_changed(max_vid + 1, false);
     for_int(index, ar_edgecost.num()) {
-      if (num_edges_collapsed > 0 && index > int(k_fraction_edges * ar_edgecost.num())) break;
-      const auto& [e, cost, min_ii] = ar_edgecost[index];
+      if (num_edges_collapsed > 0 && index >= num_prefix) break;
+      const auto& [e, cost, min_ii, vids] = ar_edgecost[index];
       if (cost == k_bad_cost) break;
       if (mesh.num_faces() <= nfaces || mesh.num_vertices() <= nvertices) break;
       num_edges_considered++;
-      // An invalidated edge may since have been destroyed by a collapse, so we must not access it.
-      if (invalidated[index]) continue;
+      // The edge may since have been destroyed by a collapse, so we must not access it.
+      if (vertex_changed[vids[0]] || vertex_changed[vids[1]]) continue;
       if (k_debug) mesh.valid(e);
-      const bool bswap = desire_edge_orientation_swap(e, min_ii);
+      const EcolResult* prior = index < num_prefix ? &ar_prefix_result[index] : nullptr;
+      const bool bswap = prior ? prior->config.bswap : desire_edge_orientation_swap(e, min_ii);
       Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       Vertex vs = !bswap ? v1 : v2;
       // The chart boundary-vertex counts may have changed since the evaluation, due to other collapses in the charts.
@@ -4568,17 +4602,11 @@ void parallel_optimize() {
       num_edges_collapsed++;
       for (Vertex v : V(v1, v2)) {
         if (vs_never_changes && v == vs) continue;
-        for (Vertex vv : mesh.vertices(v))
-          for (Edge ee : mesh.edges(vv))
-            if (const int i = e_index(ee); i >= 0) invalidated[i] = true;  // Invalidate the edge.
+        for (Vertex vv : mesh.vertices(v)) vertex_changed[mesh.vertex_id(vv)] = true;
       }
-      const EcolResult ecol_result = try_ecol(e, true);
+      const EcolResult ecol_result = try_ecol(e, true, prior);
       // Note: Edge e is now undefined.
       assertx(ecol_result.result == R_success);
-      if (minqem) {
-        assertx(ecol_result.min_ii == 2);
-        assertx(minii2 && no_fit_geom);
-      }
       assertw(ecol_result.vs == vs);
       assertw(ecol_result.cost == cost);  // Exact only without -ffast-math; see also -funsafe-math-optimizations.
       // assertw(abs(ecol_result.cost - cost) <= 1e-4f * cost);  // Else: relative, since cost scales as length^2.
@@ -4612,9 +4640,8 @@ void optimize() {
     }
   }
   if (get_max_threads() > 1) {
-    const bool qem_compatible = minii2;  // The only Qem method used is evaluate() which is thread-safe.
     // With -minrandom, try_ecol() draws from the shared Random::G, which cannot be used concurrently.
-    const bool can_use_parallelism = !invertexorder && !tvcfac && !minrandom && (!minqem || qem_compatible);
+    const bool can_use_parallelism = !invertexorder && !tvcfac && !minrandom;
     if (can_use_parallelism) {
       parallel_optimize();
       return;
@@ -4701,7 +4728,7 @@ void optimize() {
     const float thresh_cost = expect_cost + (nexte_cost - expect_cost) * a_factor + 1e-20f;
     ntested++;
     {
-      const auto [result, cost, unused_min_ii, unused_vs] = try_ecol(e, false);
+      const auto [result, cost, unused_min_ii, unused_vs, unused_config] = try_ecol(e, false);
       if (verb >= 4)
         showdf("op, expect=%e got=%e thresh=%e %s\n",  //
                expect_cost, cost, thresh_cost,
@@ -4732,7 +4759,7 @@ void optimize() {
     }
     // COMMIT.
     Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-    const auto [result, unused_cost, unused_min_ii, vs] = try_ecol(e, true);
+    const auto [result, unused_cost, unused_min_ii, vs, unused_config] = try_ecol(e, true);
     assertx(result == R_success);
     if (invertexorder) assertx(mesh.vertex_id(vs) <= mesh.num_vertices());
     // e = nullptr;  // Now undefined.

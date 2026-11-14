@@ -1,0 +1,24 @@
+#!/bin/bash
+
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: ply_view file.ply [G3dOGL_args...]
+       ply_view - [G3dOGL_args...] <file.ply
+
+View a Stanford ply mesh using G3dOGL, which reads it directly (with its float coordinates, normals, colors, and
+texture coordinates) rather than converting it to a mesh.
+
+Instructions:
+  Use the key sequence 'De' to toggle edges on/off.
+  Use the key sequence 'Db' to toggle backface-culling on/off.
+  Use the key ',' to return to the initial viewing parameters.
+  Drag the 3 mouse buttons to change view parameters.
+
+Examples:
+ply_view bunny.poissonrecon.ply -st bunny.s3d -key DmDb
+G3D_IMAGE=bunny.png ply_view bunny.poissonrecon.ply -st bunny.s3d  # Render a picture without a window.
+g3d_cmp -g3d ply_view bunny.poissonrecon.ply bunny.other.ply -key DmDb -st bunny.s3d  # Compare side by side.
+END_USAGE_EXAMPLES
+
+if [[ $# == 0 || $1 == --help ]]; then echo "$usage"; exit 0; fi
+
+exec G3dOGL -ply_mode "$@"

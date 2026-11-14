@@ -1611,7 +1611,8 @@ void sample_pts() {
     const int np = int(my_sqrt(sampling_density) * mesh_elen * neptfac + .5f);
     showff("mesh_area=%g mesh_elen=%g enp=%d\n", mesh_area, mesh_elen, np);
     if (!np) {
-      Warning("No points sampled on sharp edges");
+      // Expected for a mesh without sharp edges, or with -neptfac 0; otherwise its sharp edges are too short.
+      if (mesh_elen && neptfac) Warning("No points sampled on sharp edges");
     } else if (edge_regular_sampling) {
 #if !defined(ENABLE_EDGEPTS)
       assertnever("ENABLE_EDGEPTS was not set during compile");

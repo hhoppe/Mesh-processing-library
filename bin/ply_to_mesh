@@ -8,7 +8,7 @@ use Sys::Hostname;
 use Getopt::Long;
 
 my $usage = <<'END_USAGE_EXAMPLES';
-Usage: ply_to_mesh [file.ply | -]
+Usage: ply_to_mesh [--normalize_normals] [--flip_normals] [file.ply | -]
 
 Converts a Stanford ply file (ascii, binary_little_endian, or binary_big_endian) into a mesh, written to stdout.
 The vertex properties nx, ny, nz become the attribute {normal=(...)}, and red, green, blue (uchar or float) become
@@ -19,8 +19,15 @@ properties and elements are ignored, as reported on stderr.  The output begins w
 the ply header.  Each vertex coordinate is printed with 7 significant digits, or with 8 or 9 where needed to
 read back as the same float; the attributes are printed with 6.
 
+Options:
+  --normalize_normals  scale each vertex normal to unit length
+  --flip_normals       negate each vertex normal
+The vertex normals written by "PoissonRecon --gradients" are the gradients of its implicit function, which point
+inward and have arbitrary magnitudes, so they need both options.
+
 Examples:
   ply_to_mesh ~/data/recon/new/bunny.poissonrecon.ply >bunny.m
+  ply_to_mesh --normalize_normals --flip_normals angel.poissonrecon_gradients.ply >angel.m
   zcat dragon.ply.gz | ply_to_mesh | Filtermesh -genus
 END_USAGE_EXAMPLES
 
@@ -51,8 +58,9 @@ sub format_floats {
 }
 
 sub main {
-  my $help;
-  GetOptions('help' => \$help) or die "ply_to_mesh: bad arguments\n$usage";
+  my ($help, $normalize_normals, $flip_normals);
+  GetOptions('help' => \$help, 'normalize_normals' => \$normalize_normals, 'flip_normals' => \$flip_normals)
+      or die "ply_to_mesh: bad arguments\n$usage";
   if ($help) { print $usage; exit 0; }
   @ARGV <= 1 or die "ply_to_mesh: expected at most one file argument\n$usage";
   my $filename = @ARGV ? $ARGV[0] : '-';
@@ -143,6 +151,9 @@ sub main {
     if ($name eq 'vertex') {
       my @ixyz = map { $find_prop->($element, $_) // die "ply_to_mesh: vertices lack property '$_'\n" } qw(x y z);
       my @inor = $find_props->($element, qw(nx ny nz));
+      warn("ply_to_mesh: the vertices have no normals to normalize or flip\n")
+          if !@inor && ($normalize_normals || $flip_normals);
+      my $num_zero_normals = 0;
       my @irgb = $find_props->($element, qw(red green blue));
       my $rgb_scale = 1;
       if (@irgb) {
@@ -153,7 +164,19 @@ sub main {
       $output_record{$element} = sub {
         my @xyz = format_floats(@_[@ixyz]);
         my @attribs;
-        push(@attribs, sprintf('normal=(%g %g %g)', @_[@inor])) if @inor;
+        if (@inor) {
+          my @n = @_[@inor];
+          if ($normalize_normals) {
+            my $len = sqrt($n[0] ** 2 + $n[1] ** 2 + $n[2] ** 2);
+            if ($len) {
+              @n = map { $_ / $len } @n;
+            } elsif (!$num_zero_normals++) {
+              warn("ply_to_mesh: a zero vertex normal cannot be normalized\n");
+            }
+          }
+          @n = map { -$_ } @n if $flip_normals;
+          push(@attribs, sprintf('normal=(%g %g %g)', @n));
+        }
         push(@attribs, sprintf('rgb=(%g %g %g)', map { $_ / $rgb_scale } @_[@irgb])) if @irgb;
         $nv++;
         print("Vertex $nv  @xyz", (@attribs ? " {@attribs}" : ''), "\n");

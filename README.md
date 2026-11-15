@@ -93,7 +93,7 @@ The [programs page](progs/README.md) shows these and other results together with
    <div>Hugues Hoppe.</div>
    <div><cite>ACM SIGGRAPH 1996 Proceedings</cite>. (<a href="https://dl.acm.org/doi/book/10.1145/3596711"><em>2023 Seminal Paper</em></a>.)</div>
    <div><em>Efficient, lossless, continuous-resolution representation of surface triangulations.</em></div>
-   <div>Programs: <a href="progs/README.md#prog_MeshSimplify"><code>MeshSimplify</code></a>, <a href="progs/README.md#prog_Filterprog"><code>Filterprog</code></a></div>
+   <div>Programs: <a href="progs/README.md#prog_MeshSimplify"><code>MeshSimplify</code></a>, <a href="progs/README.md#prog_Filterprog"><code>Filterprog</code></a>, <a href="progs/README.md#prog_MeshToPm"><code>MeshToPm</code></a></div>
    <div>Demos: <code>{create,view}_geomorphs</code></div>
   </td>
  </tr>
@@ -277,6 +277,7 @@ reports the genus of the new mesh, and shows it in an interactive viewer.
 | [`MeshDistance`] | Measure the differences (in geometry, color, and normals) between two meshes. |
 | [`MeshSimplify`] | Simplify a mesh using a sequence of edge collapses, and record them. |
 | [`Filterprog`] | Encode a base mesh and its recorded edge collapses as a progressive mesh. |
+| [`MeshToPm`] | Create a progressive mesh in one process, using half-edge collapses and a quadric error metric. |
 | [`FilterPM`] | Process a progressive mesh (`*.pm`), e.g., to create level-of-detail meshes and geomorphs. |
 | [`StitchPM`] | Stitch the progressive meshes of adjacent terrain tiles into one. |
 | [`MinCycles`] | Remove topological noise from a mesh by pinching off its smallest nonseparating cycles. |
@@ -299,6 +300,7 @@ reports the genus of the new mesh, and shows it in an interactive viewer.
 [`MeshDistance`]: progs/README.md#prog_MeshDistance
 [`MeshSimplify`]: progs/README.md#prog_MeshSimplify
 [`Filterprog`]: progs/README.md#prog_Filterprog
+[`MeshToPm`]: progs/README.md#prog_MeshToPm
 [`FilterPM`]: progs/README.md#prog_FilterPM
 [`StitchPM`]: progs/README.md#prog_StitchPM
 [`MinCycles`]: progs/README.md#prog_MinCycles

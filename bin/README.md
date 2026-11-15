@@ -7,7 +7,8 @@ corresponding [configuration](../make/README.md#build-using-gnu-make), and `msbu
 built by Visual Studio.
 
 - `mesh_to_pm` creates a progressive mesh from a mesh (using `MeshSimplify` and `Filterprog`), and
-  `pm_simplify` further simplifies the base mesh of a progressive mesh.
+  `pm_simplify` further simplifies the base mesh of a progressive mesh.  (For half-edge collapses under the quadric
+  error metric, i.e. `-minqem -vsgeom`, the program `MeshToPm` does the same in a single process.)
 - `obj_to_mesh`, `ply_to_mesh`, `mesh_to_obj`, and `mesh_to_ply` (Perl scripts) convert between the mesh format
   (`*.m`) and Wavefront `*.obj` or Stanford `*.ply` files; `Materials_lib.pm` and `Materials_rgb.db` provide
   the material colors used by `obj_to_mesh`.

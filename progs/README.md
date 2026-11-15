@@ -281,6 +281,26 @@ bin/mesh_to_pm demos/data/57chevy.orig.m >57chevy.pm
 ```
 (or `bin/mesh_to_pm.bat` under the Windows `cmd` shell).
 
+For the common case of half-edge collapses (which keep the positions of the original vertices) under the
+quadric error metric, as in `bin/mesh_to_pm mesh.m -minqem -vsgeom`, the program `MeshToPm` performs all the steps
+in a single process, using much less memory (it reads a `*.m` mesh or a Stanford `*.ply` mesh with optional vertex
+normals):<a id="prog_MeshToPm"></a>
+```shell
+MeshToPm demos/data/bunny.orig.m >bunny.pm
+```
+Its arguments are processed in order, so that the simplification can proceed in stages, e.g.,
+`MeshToPm mesh.m -record 0 -nfaces 100000 -simplify -record 1 -simplify -dihallow -simplify >mesh.pm`
+first simplifies the mesh without recording the collapses (so that the progressive mesh starts at 100,000 faces),
+then records the collapses as far as they are legal, and finally allows bad dihedral angles to reach a minimal base
+mesh (e.g., the tetrahedron that `SphereParam` expects for a closed genus-zero mesh).
+The parameters `-nfaces` and `-nvertices` set the target of the next `-simplify` (by default, as far as possible),
+and a final `-simplify` is implied if none is given.
+The options `-colfac`, `-norfac`, `-bndfac`, `-trishapeafac`, `-maxvalence`, `-dihallow`, `-strict_sharp`,
+`-min_chart_bnd_vertices`, and `-keepglobalv` are as in `MeshSimplify`;
+`-original_indices file.txt` writes the original vertex ids of the progressive mesh in its vertex order (as read by
+`SphereParam -original_indices`), excluding the vertices removed before the recording started;
+and `-outmesh file.m` and `-outply file.ply` write the current mesh.
+
 A progressive <em>outer hull</em>, whose every level of detail encloses the original mesh, is created similarly:
 ```shell
 bin/mesh_to_pm demos/data/bunny.orig.m -hull -minvolume >bunny.outer_hull.pm

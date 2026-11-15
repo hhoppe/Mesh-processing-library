@@ -103,11 +103,13 @@ class DataPts {
   }
   void clear() {
     co.clear();
+    nor.clear();
     cmf.clear();
     clp.clear();
   }
   void ok() const;
   Array<Point> co;
+  Array<Vector> nor;  // Empty, or the normal of each point, whose magnitude may express a confidence.
   Array<Face> cmf;
   Array<Point> clp;  // Here, clp[i] is only defined if cmf[i].
 };
@@ -122,6 +124,13 @@ DataPts pt;
 
 float spring = 0.f;
 float spbf = 1.f;
+// The vertex springs and normal springs below are only used in fgfit.
+// A vertex spring, on mag2(v - average(neighbors of v)), penalizes bending rather than size; on the boundary, the
+// neighbors are the two adjacent boundary vertices.
+float vspring = 0.f;
+// A normal spring, on each edge of a face, penalizes the component of the edge along the sum s of the normals of the
+// points projecting onto the face: mag(s) * dot(normalized(s), edge)^2.  It is a spring along the data normal only.
+float nspring = 0.f;
 float dihfac = 0.f;
 float dihpower = 3.f;
 int restrictfproject = 0;  // 0 = never, 1 = first_iter, 2 = always.
@@ -271,12 +280,89 @@ double get_edis() {
   return edis;
 }
 
-double get_espr() {
-  if (spring == 0.f) return 0.f;
-  double espr = 0.;
-  for (Edge e : mesh.edges()) espr += spring_energy(e);
-  return espr;
+// Calls func(w) for each neighbor w of v that enters its vertex spring.
+template <typename Func> void for_vspring_neighbors(Vertex v, Func func) {
+  if (mesh.is_boundary(v)) {
+    func(assertx(mesh.most_clw_vertex(v)));
+    func(assertx(mesh.most_ccw_vertex(v)));
+  } else {
+    for (Vertex w : mesh.vertices(v)) func(w);
+  }
 }
+
+// Returns v - average(neighbors of v), and the weight 1 / (number of neighbors).
+std::pair<Vector, float> vspring_vector(Vertex v) {
+  Vector sum(0.f, 0.f, 0.f);
+  int num = 0;
+  for_vspring_neighbors(v, [&](Vertex w) {
+    sum += mesh.point(w) - mesh.point(v);
+    num++;
+  });
+  const float fac = 1.f / num;
+  return {sum * -fac, fac};
+}
+
+double get_evspr() {
+  if (vspring == 0.f) return 0.;
+  double sum = 0.;
+  for (Vertex v : mesh.vertices()) sum += mag2(vspring_vector(v).first);
+  return sum * vspring;
+}
+
+// During fgfit, the face data normals are frozen at their initial values, so that the energy of the normal springs
+// is a smooth (quadratic) function of the vertex positions; otherwise it jumps whenever a point projects onto another
+// face, which makes the line searches fail.
+std::optional<Map<Face, Vector>> g_frozen_face_nor;
+
+// Returns the sum of the normals of the points projecting onto face f (with vertices va), omitting those of points
+// whose normal opposes the face normal, which typically come from the other side of a thin structure.
+Vector face_data_normal(Face f, CArrayView<Vertex> va) {
+  if (g_frozen_face_nor) {
+    const Vector* pnor = g_frozen_face_nor->find_ptr(f);
+    return pnor ? *pnor : Vector(0.f, 0.f, 0.f);
+  }
+  Vector sum(0.f, 0.f, 0.f);
+  const Vector fnor = cross(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2]));
+  for (const int pi : f_setpts(f))
+    if (dot(pt.nor[pi], fnor) > 0.f) sum += pt.nor[pi];
+  return sum;
+}
+
+// Calls func(v1, v2, d, w, nor) for each edge (v1, v2) of each face with a data normal nor (unit length), where d is
+// the component along nor of the edge vector v2 - v1 and w is its weight, so that its energy is w * d^2.
+template <typename Func> void for_nspring_edges(Func func) {
+  InlinedArray<Vertex, 4> va;
+  for (Face f : mesh.faces()) {
+    if (g_frozen_face_nor ? !g_frozen_face_nor->contains(f) : f_setpts(f).empty()) continue;
+    va.clear();
+    for (Vertex v : mesh.vertices(f)) va.push(v);
+    Vector nor = face_data_normal(f, va);
+    const float w = mag(nor);
+    if (!w) continue;
+    nor /= w;
+    for_int(i, va.num()) {
+      Vertex v1 = va[i], v2 = va[(i + 1) % va.num()];
+      func(v1, v2, dot(nor, mesh.point(v2) - mesh.point(v1)), w * nspring, nor);
+    }
+  }
+}
+
+double get_enspr() {
+  if (nspring == 0.f) return 0.;
+  double sum = 0.;
+  for_nspring_edges([&](Vertex, Vertex, float d, float w, const Vector&) { sum += w * square(d); });
+  return sum;
+}
+
+double get_eespr() {
+  if (spring == 0.f) return 0.;
+  double sum = 0.;
+  for (Edge e : mesh.edges()) sum += spring_energy(e);
+  return sum;
+}
+
+// The energy of the edge springs and of the vertex and normal springs (the latter two only used in fgfit).
+double get_espr() { return get_eespr() + get_evspr() + get_enspr(); }
 
 double get_edih() {
   if (dihfac == 0.f) return 0.f;
@@ -515,6 +601,21 @@ void do_mfilename(Args& args) {
   }
   show_header();
   mesh.read(fi());
+  // Remove any normals, which would become stale as the vertices move.
+  int num_normals = 0;
+  for (Vertex v : mesh.vertices()) {
+    if (GMesh::string_has_key(mesh.get_string(v), "normal")) {
+      mesh.update_string(v, "normal", nullptr);
+      num_normals++;
+    }
+    for (Corner c : mesh.corners(v)) {
+      if (GMesh::string_has_key(mesh.get_string(c), "normal")) {
+        mesh.update_string(c, "normal", nullptr);
+        num_normals++;
+      }
+    }
+  }
+  if (num_normals) showdf("Removed %d vertex or corner normals from the input mesh\n", num_normals);
   for (Face f : mesh.faces()) {
     const int nv = mesh.num_vertices(f);
     assertx(nv <= 4);
@@ -538,14 +639,20 @@ void do_filename(Args& args) {
       continue;
     }
     pt.enter(el[0].p);
+    pt.nor.push(el[0].n);
   }
-  showdf("(%d points read)\n", pt.co.num());
+  // Keep the normals only if some point has one.
+  const int num_normals = int(std::ranges::count_if(pt.nor, [](const Vector& n) { return !is_zero(n); }));
+  if (!num_normals) pt.nor.clear();
+  if (num_normals && num_normals < pt.co.num()) Warning("Some points lack normals");
+  showdf("(%d points read%s)\n", pt.co.num(), pt.nor.num() ? " with normals" : "");
 }
 
 void perhaps_initialize() {
   assertx(pt.co.num() && !mesh.empty());
-  assertw(spring > 0);    // Just warn the user.
-  if (pt.cmf[0]) return;  // Already initialized.
+  assertw(spring > 0 || vspring > 0);  // Just warn the user.
+  if (nspring) assertx(pt.nor.num());  // The normal springs require point normals.
+  if (pt.cmf[0]) return;               // Already initialized.
   compute_xform();
   initial_projection();
 }
@@ -553,16 +660,20 @@ void perhaps_initialize() {
 void do_outlierdelete(Args& args) {
   const float vdist = args.get_float();
   perhaps_initialize();
-  Array<Point> ar_pt;
+  Array<int> ar_pi;
   for_int(i, pt.co.num()) {
     assertx(pt.cmf[i]);
-    if (dist(pt.co[i], pt.clp[i]) * xform_scale <= vdist) ar_pt.push(pt.co[i]);
+    if (dist(pt.co[i], pt.clp[i]) * xform_scale <= vdist) ar_pi.push(i);
     point_change_face(i, nullptr);
   }
+  const Array<Point> ar_pt{ar_pi | views::transform([](int i) { return pt.co[i]; })};
+  Array<Vector> ar_nor;
+  if (pt.nor.num()) ar_nor = Array<Vector>{ar_pi | views::transform([](int i) { return pt.nor[i]; })};
   showdf("Removing %d outlier points (dist>%g): #pts reduced from %d to %d\n",  //
          pt.co.num() - ar_pt.num(), vdist, pt.co.num(), ar_pt.num());
   pt.clear();
   for (const Point& p : ar_pt) pt.enter(p);
+  pt.nor = std::move(ar_nor);
   initial_projection();
 }
 
@@ -684,7 +795,9 @@ void do_fgfit(Args& args) {
   const int niter = args.get_int();
   assertx(pt.co.num() && !mesh.empty());
   if (verb >= 2) showdf("\n");
-  if (verb >= 1) showdf("Beginning fgfit, %d iterations, spr=%g dihfac=%g\n", niter, spring, dihfac);
+  if (verb >= 1)
+    showdf("Beginning fgfit, %d iterations, spr=%g vspr=%g nspr=%g dihfac=%g\n", niter, spring, vspring, nspring,
+           dihfac);
   // Evaluation objective for nonlinear optimization; see k_fgfit_scale.
   struct EvalGrad {
     // Maps original coordinates to those seen by the optimizer.
@@ -776,20 +889,36 @@ void do_fgfit(Args& args) {
           for_int(c, 3) ret_grad[vi * 3 + c] += contribution.vd[k][c];
         }
       }
-      // D espr.
+      const auto add_grad = [&](Vertex v, const Vector& vd) {
+        if (const int* pvi = _mvi.find_ptr(v)) for_int(c, 3) ret_grad[*pvi * 3 + c] += vd[c];
+      };
+      // D eespr.
       if (spring) {
-        for (Vertex v : mesh.vertices()) {
-          const int* pvi = _mvi.find_ptr(v);
-          if (!pvi) continue;
-          const int vi = *pvi;
-          for (Edge e : mesh.edges(v)) {
-            Vertex vv = mesh.opp_vertex(v, e);
-            const Vector vtovv = mesh.point(vv) - mesh.point(v);
-            const float sp = mesh.is_boundary(e) ? spring * spbf : spring;
-            Vector vd = vtovv * (-2 * sp);
-            for_int(c, 3) ret_grad[vi * 3 + c] += vd[c];
-          }
+        for (Edge e : mesh.edges()) {
+          Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
+          const float sp = mesh.is_boundary(e) ? spring * spbf : spring;
+          const Vector vd = (mesh.point(v2) - mesh.point(v1)) * (2.f * sp);
+          add_grad(v2, vd);
+          add_grad(v1, -vd);
         }
+      }
+      // D evspr.  The energy of each vertex v is vspring * mag2(h), where h = v - average(neighbors of v), so it
+      // also depends on those neighbors.
+      if (vspring) {
+        for (Vertex v : mesh.vertices()) {
+          const auto [h, fac] = vspring_vector(v);
+          const Vector vd = h * (2.f * vspring);
+          add_grad(v, vd);
+          for_vspring_neighbors(v, [&](Vertex w) { add_grad(w, vd * -fac); });
+        }
+      }
+      // D enspr.  The face data normals are treated as constant.
+      if (nspring) {
+        for_nspring_edges([&](Vertex v1, Vertex v2, float d, float w, const Vector& nor) {
+          const Vector vd = nor * (2.f * w * d);
+          add_grad(v2, vd);
+          add_grad(v1, -vd);
+        });
       }
       assertx(!dihfac);
       _iter++;
@@ -797,6 +926,20 @@ void do_fgfit(Args& args) {
       return _etot * square(_scale);
     }
   };
+  if (nspring) {
+    // The points already project onto faces (from perhaps_initialize()), so face_data_normal() computes the current
+    // face data normals here.  Outside of fgfit, g_frozen_face_nor is unset, and the normal-spring energy reported by
+    // analyze_mesh() is computed from the current projections.
+    Map<Face, Vector> frozen;
+    InlinedArray<Vertex, 4> va;
+    for (Face f : mesh.faces()) {
+      if (f_setpts(f).empty()) continue;
+      va.clear();
+      for (Vertex v : mesh.vertices(f)) va.push(v);
+      frozen.enter(f, face_data_normal(f, va));
+    }
+    g_frozen_face_nor = std::move(frozen);
+  }
   EvalGrad eval_grad;
   eval_grad._niter = niter;
   if (getenv_string("NLOPT_DEBUG") == "") my_setenv("NLOPT_DEBUG", "1");
@@ -819,6 +962,7 @@ void do_fgfit(Args& args) {
       mesh.record_changes(nullptr);
     });
   assertw(opt.solve());
+  g_frozen_face_nor.reset();
   mesh.record_changes(os);
   if (0) eval_grad.unpack_vertices();  // Unnecessary because _x was the last state evaluated using EvalGrad::feval().
   if (verb >= 2) show_energies("end    ");
@@ -1094,8 +1238,6 @@ void do_pclp() {
   oa3d.flush();
 }
 
-bool get_vertex_normal(Vertex v, Vector& ret_nor) { return parse_key_vec(mesh.get_string(v), "normal", ret_nor); }
-
 bool get_vertex_uv(Vertex v, Uv& ret_uv) { return parse_key_vec(mesh.get_string(v), "uv", ret_uv); }
 
 // *** stoc
@@ -1238,11 +1380,6 @@ EResult try_ecol(Edge e, int ni, int nri, float& edrss, Commit& commit, Footprin
     HH_STIMER("__doecol");
     if (k_simp96) {
       string str;
-      Vector nor1, nor2;
-      if (get_vertex_normal(v1, nor1) && get_vertex_normal(v2, nor2)) {
-        const Vector nnor = normalized(interp(nor1, nor2, w1));
-        mesh.update_string(v1, "normal", csform_vec(str, nnor));
-      }
       Uv uv1, uv2;
       if (get_vertex_uv(v1, uv1) && get_vertex_uv(v2, uv2)) {
         const Uv uvn = interp(uv1, uv2, w1);
@@ -1690,6 +1827,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(zippysimplify, ": faster simplification");
   HH_ARGSC("", ":");
   HH_ARGSP(spring, "tension : set spring constant");
+  HH_ARGSP(vspring, "tension : set vertex spring constant (fgfit only)");
+  HH_ARGSP(nspring, "tension : set normal spring constant (fgfit only)");
   HH_ARGSP(dihfac, "val : set edge dihedral energy factor");
   HH_ARGSP(dihpower, "pow : set edge dihedral energy exponent");
   HH_ARGSP(restrictfproject, "int : 0=never, 1=first_iter, 2=always");

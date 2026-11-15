@@ -542,7 +542,7 @@ void GMesh::write(std::ostream& os) const {
       w.write_line(os);
     }
   }
-  os.flush();
+  assertx(os.flush());
 }
 
 void GMesh::write(WA3dStream& oa3d, const A3dVertexColor& col) const {

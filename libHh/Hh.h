@@ -640,17 +640,7 @@ template <typename T> [[nodiscard]] constexpr T general_clamp(const T& v, const 
 [[nodiscard]] constexpr int mod3(int j);
 
 // Rounds floating-point value v to the nearest 1/fac increment (by default, fac == 1e5f).
-// MSVC -fp:fast would replace the division by a multiplication with the reciprocal, giving e.g. 0.29999998f rather
-// than 0.3f, which the shortest round-trip output of LineWriter reveals.
-#if defined(_MSC_VER) && !defined(__clang__)
-#pragma float_control(precise, on, push)
-#endif
-template <typename T> [[nodiscard]] constexpr T round_fraction_digits(T v, T fac = 1e5f) {
-  return floor(v * fac + .5f) / fac;
-}
-#if defined(_MSC_VER) && !defined(__clang__)
-#pragma float_control(pop)
-#endif
+template <typename T> [[nodiscard]] constexpr T round_fraction_digits(T v, T fac = 1e5f);
 
 // Higher-precision type to represent the sum of a set of elements.
 template <typename T> using sum_type_t = details::sum_type<T>::type;
@@ -1036,6 +1026,16 @@ constexpr int mod3(int j) {
   ASSERTX(j >= 0 && j < 6);
   return j < 3 ? j : j - 3;
 }
+
+// Without the pragma, MSVC -fp:fast replaces the division by a multiplication with the reciprocal, giving e.g.
+// 0.29999998f rather than 0.3f, which the shortest round-trip output of LineWriter reveals.
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma float_control(precise, on, push)
+#endif
+template <typename T> constexpr T round_fraction_digits(T v, T fac) { return floor(v * fac + .5f) / fac; }
+#if defined(_MSC_VER) && !defined(__clang__)
+#pragma float_control(pop)
+#endif
 
 template <typename T> string type_name() { return details::TypeNameAux<std::decay_t<T>>::name(); }
 

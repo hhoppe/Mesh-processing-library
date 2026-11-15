@@ -17,11 +17,8 @@ namespace hh {
 //   w << "Vertex " << vertex_id(v) << ' ';
 //   for_int(c, 3) w << ' ' << point(v)[c];
 //   w.write_line(std::cout);
-class LineWriter {
+class LineWriter : noncopyable {  // (Not copyable, because _s points into _buf.)
  public:
-  LineWriter() = default;
-  LineWriter(const LineWriter&) = delete;  // Because _s points into _buf.
-  LineWriter& operator=(const LineWriter&) = delete;
   LineWriter& operator<<(char ch) {
     assertx(_s < _buf + k_capacity);
     *_s++ = ch;
@@ -48,10 +45,10 @@ class LineWriter {
   }
   [[nodiscard]] std::string_view view() const { return std::string_view(_buf, _s); }
   void clear() { _s = _buf; }
-  // Appends '\n', writes the line to os, and clears the buffer.
+  // Appends '\n', writes the line to os, and clears the buffer.  The caller checks the state of os.
   void write_line(std::ostream& os) {
     *this << '\n';
-    assertx(os.write(_buf, _s - _buf));
+    os.write(_buf, _s - _buf);
     _s = _buf;
   }
 

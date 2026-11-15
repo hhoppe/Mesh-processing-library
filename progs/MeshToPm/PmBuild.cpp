@@ -55,16 +55,17 @@ void start_recording(const WorkMesh& mesh, PmRecorder& recorder) {
   assertx(!recorder.started);
   recorder.started = true;
   recorder.info = full_mesh_info(mesh);
-  Array<bool> used(mesh._wedges.num(), false);
-  for_int(f, mesh._faces.num()) if (mesh.face_alive(f)) for (const int w : mesh._faces[f].wedges) used[w] = true;
-  recorder.info._full_nwedges = int(ranges::count(used, true));
+  const int nv = recorder.info._full_nvertices;  // An upper bound on the number of collapses.
+  recorder.vsplits.reserve(nv);
+  recorder.flclw_corner.reserve(nv);
+  recorder.removed_original_ids.reserve(nv);
   recorder.num_faces_at_start = recorder.info._full_nfaces;
 }
 
 void collapse(WorkMesh& mesh, const EcolConfig& config, PmRecorder& recorder) {
   const int vs = config.vs, vt = config.vt, vl = config.vl, vr = config.vr, fl = config.fl, fr = config.fr;
   assertx(config.ii == 2);
-  const bool record = recorder.active && recorder.started;
+  const bool record = recorder.started;
   // The faces around fl and fr: fa across (vt, vl), fb across (vs, vl), fc across (vt, vr), fd across (vs, vr).
   const int fa = mesh.face_across(fl, vt, vl), fb = mesh.face_across(fl, vs, vl);
   const int fc = mesh.face_across(fr, vt, vr), fd = mesh.face_across(fr, vs, vr);
@@ -158,6 +159,7 @@ void collapse(WorkMesh& mesh, const EcolConfig& config, PmRecorder& recorder) {
     assertx(fc >= 0 || fd >= 0);
     mesh._someface[vr] = fc >= 0 ? fc : fd;
   }
+  if (mesh._vflags[vt] & WorkMesh::k_vflag_boundary) mesh._vflags[vs] |= WorkMesh::k_vflag_boundary;
   mesh._someface[vt] = -1;
   mesh._vflags[vt] |= WorkMesh::k_vflag_removed;
   if (!record) return;

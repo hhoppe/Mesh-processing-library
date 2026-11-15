@@ -19,7 +19,7 @@ blob5.meshopt.simplified.m 186352
 gaudipark.orig.m 4683456
 gaudipark.pm 2561536
 cessna.pm 391574
-57chevy.pm 841634
+57chevy.pm 719841
 standingblob.geomorphs 4717324
 bunny.outer_hull.pm 2231632
 bunny.inner_hull.pm 2231082

@@ -8,9 +8,8 @@
 
 namespace hh {
 
-// Records the vsplits that undo the edge collapses, from the moment the recording starts.
+// Records the vsplits that undo the edge collapses, once the recording has started (at the first '-simplify').
 struct PmRecorder {
-  bool active{true};                // Collapses are recorded (once started).
   bool started{false};              // The full mesh of the progressive mesh has been determined.
   PMeshInfo info;                   // Describes the full mesh (set when started).
   int num_faces_at_start{0};        // Number of faces of the full mesh.
@@ -23,7 +22,7 @@ struct PmRecorder {
 // Start the recording with the current live mesh as the full mesh.
 void start_recording(const WorkMesh& mesh, PmRecorder& recorder);
 
-// Perform the collapse.  If the recording is active, append the vsplit that undoes it.
+// Perform the collapse.  If the recording has started, append the vsplit that undoes it.
 void collapse(WorkMesh& mesh, const EcolConfig& config, PmRecorder& recorder);
 
 // Fill the (empty) progressive mesh: its base mesh is the live mesh, and its vsplits are the recorded ones (which

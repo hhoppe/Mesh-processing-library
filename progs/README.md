@@ -288,20 +288,18 @@ normals):<a id="prog_MeshToPm"></a>
 ```shell
 MeshToPm demos/data/bunny.orig.m >bunny.pm
 ```
-Its arguments are processed in order, so that the simplification can proceed in stages, e.g.,
-`MeshToPm mesh.m -record 0 -nfaces 100000 -simplify -record 1 -simplify -dihallow -simplify >mesh.pm`
-first simplifies the mesh without recording the collapses (so that the progressive mesh starts at 100,000 faces),
-then records the collapses as far as they are legal, and finally allows bad dihedral angles to reach a minimal base
-mesh (e.g., the tetrahedron that `SphereParam` expects for a closed genus-zero mesh).
-The parameters `-nfaces` and `-nvertices` set the target of the next `-simplify` (by default, as far as possible),
-and a final `-simplify` is implied if none is given.
-The options `-colfac`, `-norfac`, `-bndfac`, `-trishapeafac`, `-maxvalence`, `-dihallow`, `-strict_sharp`,
-`-min_chart_bnd_vertices`, and `-keepglobalv` are as in `MeshSimplify`;
-`-original_indices file.txt` writes the original vertex ids of the progressive mesh in its vertex order (as read by
-`SphereParam -original_indices`), excluding the vertices removed before the recording started;
-and `-outmesh file.m` and `-outply file.ply` write the current mesh.
+Its arguments are processed in order, as in the following example:
+```shell
+MeshToPm demos/data/bunny.orig.m -norfac 0 -nfaces 20000 -presimplify -simplify -dihallow >bunny2.pm
+```
+- reads the initial mesh,
+- configures the simplification to ignore fidelity to the interpolated normal field,
+- simplifies the mesh to 20,000 faces without recording the edge collapses,
+- continues simplifying while recording the progressive mesh,
+- disables the dihedral angle checks to allow further simplification,
+- (implicitly) continues simplifying, and finally writes the progressive mesh.
 
-A progressive <em>outer hull</em>, whose every level of detail encloses the original mesh, is created similarly:
+A progressive <em>outer hull</em>, whose every level of detail encloses the original mesh, is created using:
 ```shell
 bin/mesh_to_pm demos/data/bunny.orig.m -hull -minvolume >bunny.outer_hull.pm
 ```

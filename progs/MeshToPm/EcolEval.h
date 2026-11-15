@@ -8,7 +8,7 @@
 namespace hh {
 
 // Parameters of the simplification, with the defaults of MeshSimplify.
-struct EcolParams {
+struct EcolOptions {
   float colfac{.1f};              // Weight of color in the quadric (fraction of the diameter).
   float norfac{.02f};             // Weight of normals in the quadric (fraction of the diameter).
   float bndfac{0.f};              // Encourage boundary edge removal.
@@ -41,7 +41,7 @@ struct EcolResult {
 };
 
 // Evaluate the collapse of edge e, as MeshSimplify's try_ecol() does with "-minqem -vsgeom".
-[[nodiscard]] EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolParams& params);
+[[nodiscard]] EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolOptions& options);
 
 // The hh99 quadric of the face with corner vectors p0, p1, p2 (in R^n, n = 3, 6, or 9: a position followed by
 // attributes), evaluated at x, as Qem<double, n>::set_distance_hh99() and evaluate() compute it: the squared distance

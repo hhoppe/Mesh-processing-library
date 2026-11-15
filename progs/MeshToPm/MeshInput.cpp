@@ -86,16 +86,11 @@ int index_of_id(Array<int>& index_of_id, int id, const char* kind) {
 }
 
 void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
-  bool seen_element = false;
   string str;
   for (string line; my_getline(is, line);) {
     if (!line.empty() && line.back() == '\r') line.pop_back();
     const char* sline = line.c_str();
-    if (sline[0] == '#' || sline[0] == 0) {
-      if (!seen_element && line.size() > 1) showff("|%s\n", line.substr(2).c_str());
-      continue;
-    }
-    seen_element = true;
+    if (sline[0] == '#' || sline[0] == 0) continue;
     if (const char* s = after_prefix(sline, "Vertex ")) {
       const int id = int_from_chars(s);
       if (index_of_id(raw.vertex_of_id, id, "Vertex") >= 0) assertnever(sform("Vertex %d is defined twice", id));
@@ -238,17 +233,13 @@ class PlyValueReader {
   }
 };
 
-// Read a PLY file with a vertex element (x, y, z, and optionally nx, ny, nz) followed by a face element (a
-// vertex_indices list of triangles); other properties are skipped and later elements are ignored.  Returns the
-// vertex normals if present.
-Array<Vector> read_mesh_ply(std::istream& is, WorkMesh& mesh) {
-  string line;
-  if (!my_getline(is, line) || (line != "ply" && line != "ply\r")) assertnever("ply: missing 'ply' magic line");
+// Read the body of a PLY file (whose header lines are given) with a vertex element (x, y, z, and optionally nx, ny,
+// nz) followed by a face element (a "vertex_indices" or "vertex_index" list of triangles); other properties are
+// skipped and later elements are ignored.  Returns the vertex normals if present.
+Array<Vector> read_mesh_ply(std::istream& is, CArrayView<string> header_lines, WorkMesh& mesh) {
   bool binary = false, big_endian = false;
   Array<PlyElement> elements;
-  for (;;) {
-    if (!my_getline(is, line)) assertnever("ply: premature end of header");
-    if (!line.empty() && line.back() == '\r') line.pop_back();
+  for (const string& line : header_lines.slice(1, header_lines.num())) {
     std::istringstream iss(line);
     string keyword;
     iss >> keyword;
@@ -303,8 +294,10 @@ Array<Vector> read_mesh_ply(std::istream& is, WorkMesh& mesh) {
   const bool has_normals = min(inor) >= 0;
   for (const PlyProperty& property : evertex.properties)
     if (property.is_list) assertnever("ply: vertex list property '" + property.name + "' is not supported");
-  const int iindices = find_property(eface, "vertex_indices");
+  int iindices = find_property(eface, "vertex_indices");
+  if (iindices < 0) iindices = find_property(eface, "vertex_index");  // A less common spelling.
   if (iindices < 0 || !eface.properties[iindices].is_list) assertnever("ply: face lacks a vertex_indices list");
+  if (eface.count == 0) assertnever("ply: the mesh has no faces");
   PlyValueReader reader(is, binary, big_endian);
   const int nv = evertex.count, nf = eface.count;
   mesh._vertices.init(nv);
@@ -331,8 +324,8 @@ Array<Vector> read_mesh_ply(std::istream& is, WorkMesh& mesh) {
       for_int(k, count) {
         const double value = reader.read(property.type);
         if (i != iindices) continue;
+        if (!(value >= 0. && value < nv)) assertnever(sform("ply: face %d refers to undefined vertex %g", f, value));
         const int v = int(value);
-        if (v < 0 || v >= nv) assertnever(sform("ply: face %d refers to undefined vertex %d", f, v));
         mesh._faces[f].wedges[k] = v;
       }
     }
@@ -640,17 +633,37 @@ void create_general_wedges(WorkMesh& mesh, RawMesh& raw) {
 
 }  // namespace
 
-void read_mesh(const string& filename, WorkMesh& mesh) {
+MeshFileHeader read_mesh_header(std::istream& is) {
+  MeshFileHeader header;
+  string line;
+  if (is.peek() == 'p') {  // A .m file cannot start with 'p'.
+    header.is_ply = true;
+    for (;;) {
+      if (!my_getline(is, line)) assertnever("ply: premature end of header");
+      if (header.ply_lines.empty() && line != "ply")
+        assertnever("Unrecognized mesh file starting with '" + line + "'");
+      header.ply_lines.push(line);
+      showff("|%s\n", line.c_str());
+      if (line == "end_header") break;
+    }
+  } else {
+    while (is.peek() == '#') {
+      assertx(my_getline(is, line));
+      if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+    }
+  }
+  return header;
+}
+
+void read_mesh(std::istream& is, const MeshFileHeader& header, WorkMesh& mesh) {
   assertx(mesh._vertices.empty());
   RawMesh raw;
   Array<Vector> ply_normals;
-  {
-    RFile fi(filename);
-    if (filename.ends_with(".ply") || filename.ends_with(".ply.gz"))
-      ply_normals = read_mesh_ply(fi(), mesh);
-    else
-      read_mesh_m(fi(), mesh, raw);
-  }
+  if (header.is_ply)
+    ply_normals = read_mesh_ply(is, header.ply_lines, mesh);
+  else
+    read_mesh_m(is, mesh, raw);
+  if (mesh._faces.empty()) assertnever("The mesh has no faces");
   // Temporarily, each vertex has one wedge, with the same index.
   mesh._wedges.init(mesh._vertices.num());
   for_int(v, mesh._vertices.num()) mesh._wedges[v].vertex = v;

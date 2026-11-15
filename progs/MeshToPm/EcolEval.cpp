@@ -1,7 +1,7 @@
 // -*- C++ -*-  Copyright (c) Hugues Hoppe; see LICENSE.
 #include "progs/MeshToPm/EcolEval.h"
 
-#include "libHh/GeomOp.h"  // aspect_ratio(), dihedral_angle_cos()
+#include "libHh/GeomOp.h"  // aspect_ratio()
 #include "libHh/Geometry.h"
 #include "libHh/RangeOp.h"
 
@@ -315,11 +315,18 @@ struct FaceQuadric {
 };
 
 // The vector of a wedge in the space of the quadric: the position, then the scaled color and normal if used.
-InlinedArray<float, 9> qem_vector(const Point& p, const PmWedgeAttrib& wa, float cfac, float nfac) {
-  InlinedArray<float, 9> v;
-  for_int(c, 3) v.push(p[c]);
-  if (cfac) for_int(c, 3) v.push(wa.rgb[c] * cfac);
-  if (nfac) for_int(c, 3) v.push(wa.normal[c] * nfac);
+struct QemVector {
+  Vec<float, 9> values;
+  int num{0};
+  // NOLINTNEXTLINE(google-explicit-constructor)
+  operator CArrayView<float>() const { return CArrayView<float>(values.data(), num); }
+};
+
+QemVector qem_vector(const Point& p, const PmWedgeAttrib& wa, float cfac, float nfac) {
+  QemVector v;
+  for_int(c, 3) v.values[v.num++] = p[c];
+  if (cfac) for_int(c, 3) v.values[v.num++] = wa.rgb[c] * cfac;
+  if (nfac) for_int(c, 3) v.values[v.num++] = wa.normal[c] * nfac;
   return v;
 }
 
@@ -330,12 +337,21 @@ float min_local_dihedral(const WorkMesh& mesh, CArrayView<int> va, const Point& 
   assertx(nw > 1);
   const bool open = va[0] != va.last();
   const auto point = [&](int v) -> const Point& { return mesh._vertices[v].attrib.point; };
+  // The unit normal of each face (newp, va[k], va[k + 1]), computed once with the operations of dihedral_angle_cos().
+  InlinedArray<Vector, 32> normals(nw - 1);
+  InlinedArray<bool, 32> normals_ok(nw - 1);
+  for_int(k, nw - 1) {
+    normals[k] = cross(newp, point(va[k]), point(va[k + 1]));
+    normals_ok[k] = normals[k].normalize();
+  }
   float min_dih = 10.f;
   for_intL(i, 1, nw - open) {
     const int im1 = i - 1;
-    int ip1 = i + 1;
-    if (ip1 == nw) ip1 = 1;
-    min_dih = min(min_dih, dihedral_angle_cos(newp, point(va[i]), point(va[ip1]), point(va[im1])));
+    // As dihedral_angle_cos(newp, point(va[i]), point(va[ip1]), point(va[im1])) with ip1 = i + 1 (or 1 if i + 1 ==
+    // nw, where the closed ring has va[nw - 1] == va[0], so the face is (newp, va[0], va[1])).
+    const int k1 = i + 1 == nw ? 0 : i;
+    const float dih = !normals_ok[k1] || !normals_ok[im1] ? -2.f : clamp(dot(normals[k1], normals[im1]), -1.f, 1.f);
+    min_dih = min(min_dih, dih);
   }
   return min_dih;
 }
@@ -410,14 +426,14 @@ bool strict_mat_neighbors(const WorkMesh& mesh, int f, const Vec3<int>& fnei) {
   return matfc == matf1;
 }
 
-EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolParams& params) {
+EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolOptions& options) {
   const EdgeContext ec = edge_context(mesh, e);
   if (!nice_edge_collapse(mesh, ec)) return {};
-  if (params.maxvalence && mesh.degree(ec.v1) + mesh.degree(ec.v2) - (ec.is_boundary() ? 3 : 4) > params.maxvalence)
+  if (options.maxvalence && mesh.degree(ec.v1) + mesh.degree(ec.v2) - (ec.is_boundary() ? 3 : 4) > options.maxvalence)
     return {};
   const bool e_sharp = edge_sharp(mesh, e);
   const int v1nse = vertex_num_sharp_edges(mesh, ec.v1), v2nse = vertex_num_sharp_edges(mesh, ec.v2);
-  if (params.strict_sharp) {  // As in MeshSimplify's try_ecol_legal().
+  if (options.strict_sharp) {  // As in MeshSimplify's try_ecol_legal().
     if (!e_sharp) {
       if (v1nse >= 1 && v2nse >= 1) return {};  // The collapse would offend sharp edges.
     } else {
@@ -440,21 +456,26 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolParams& p
   if (!gather_nn_valid(mesh, ec)) return {};
   if (!gather_nn_2(mesh, ec, nn)) return {};
   const auto point = [&](int v) -> const Point& { return mesh._vertices[v].attrib.point; };
-  assertx(params.diam > 0.f);
-  const float cfac = mesh._has_rgb ? params.colfac * params.diam : 0.f;
-  const float nfac = params.norfac * params.diam;
-  const double gcostnorm = 1. / square(double(params.diam));
-  const float dihb = min(min_dihedral_about_vertex(mesh, ec.v1), min_dihedral_about_vertex(mesh, ec.v2));
+  assertx(options.diam > 0.f);
+  const float cfac = mesh._has_rgb ? options.colfac * options.diam : 0.f;
+  const float nfac = options.norfac * options.diam;
+  const double gcostnorm = 1. / square(double(options.diam));
+  float dihb_cached = BIGFLOAT;  // The min dihedral before the collapse, computed only when needed.
+  const auto dihb = [&] {
+    if (dihb_cached == BIGFLOAT)
+      dihb_cached = min(min_dihedral_about_vertex(mesh, ec.v1), min_dihedral_about_vertex(mesh, ec.v2));
+    return dihb_cached;
+  };
   // The face quadrics (with their weights) and the new wedge at which each is evaluated, as in gather_nn_qem().
   InlinedArray<std::pair<std::pair<FaceQuadric, double>, int>, 32> face_quadrics;
   const auto add_face_quadric = [&](int f, int nwid) {
     const Vec3<Point> triangle = mesh.face_points(f);
-    Vec3<InlinedArray<float, 9>> vectors;
+    Vec3<QemVector> vectors;
     for_int(j, 3) vectors[j] = qem_vector(triangle[j], mesh._wedges[mesh._faces[f].wedges[j]].attrib, cfac, nfac);
     FaceQuadric q;
     q.set(vectors[0], vectors[1], vectors[2]);
     const float face_area =
-        mag(cross(triangle[0], triangle[1], triangle[2])) * (1.f / square(k_frac_diam * params.diam));
+        mag(cross(triangle[0], triangle[1], triangle[2])) * (1.f / square(k_frac_diam * options.diam));
     face_quadrics.push(std::pair{std::pair{q, double(face_area)}, nwid});
   };
   for_int(i, nn.ar_corners.num()) add_face_quadric(nn.ar_corners[i][2].f, nn.ar_nwid[i]);
@@ -492,7 +513,7 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolParams& p
     }
     nor = cross(nor, pb - pa);
     assertw(nor.normalize());
-    nor *= dist(pa, pb) / (k_frac_diam * params.diam);
+    nor *= dist(pa, pb) / (k_frac_diam * options.diam);
     const float d = -dot(pa, nor);
     sharp_planes.push(std::pair{convert<double>(nor), double(d)});
   };
@@ -519,8 +540,8 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolParams& p
       if (mesh.is_boundary_vertex(ec.v1) && ii != 2) continue;
       if (mesh.is_boundary_vertex(ec.v2) && ii != 0) continue;
     }
-    if (params.keepglobalv && ii != 2 && (mesh._vflags[ec.v1] & WorkMesh::k_vflag_global)) continue;
-    if (params.keepglobalv && ii != 0 && (mesh._vflags[ec.v2] & WorkMesh::k_vflag_global)) continue;
+    if (options.keepglobalv && ii != 2 && (mesh._vflags[ec.v1] & WorkMesh::k_vflag_global)) continue;
+    if (options.keepglobalv && ii != 0 && (mesh._vflags[ec.v2] & WorkMesh::k_vflag_global)) continue;
     if (!e_sharp) {
       if (v1nse >= 1 && v2nse >= 1) {
         // Try both.
@@ -538,14 +559,14 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolParams& p
         if (ii > 0) continue;
       }
     }
-    if (params.strict_sharp >= 2) {  // Chart-compliant, as in MeshSimplify's try_ecol().
+    if (options.strict_sharp >= 2) {  // Chart-compliant, as in MeshSimplify's try_ecol().
       const int tv1 = ii == 2 ? ec.v1 : ec.v2, tv2 = ii == 2 ? ec.v2 : ec.v1;  // Here tv1 is kept and tv2 is lost.
       const auto matid = [&](int f) { return mesh._faces[f].attrib.matid; };
       const bool ok = [&] {
-        if (params.min_chart_bnd_vertices) {
-          assertx(params.chart_num_boundary_vertices);
+        if (options.min_chart_bnd_vertices) {
+          assertx(options.chart_num_boundary_vertices);
           for (const int chart : charts_with_boundary_vertex(mesh, tv2))
-            if ((*params.chart_num_boundary_vertices)[chart] <= params.min_chart_bnd_vertices) return false;
+            if ((*options.chart_num_boundary_vertices)[chart] <= options.min_chart_bnd_vertices) return false;
         }
         for (const int f : {ec.f1, ec.f2}) {
           if (f < 0) continue;
@@ -584,7 +605,7 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolParams& p
       bool bad = false;
       const float diha = min_local_dihedral(mesh, nn.va, newp);
       assertx(std::isfinite(diha));
-      bad = diha < k_gmindih && diha < dihb;
+      bad = diha < k_gmindih && diha < dihb();
       if (!bad)
         bad = ranges::any_of(nn.ar_corners, [&](const Vec3<MCorner>& corners) {
           const Point& p0 = point(mesh.corner_vertex(corners[0]));
@@ -592,7 +613,7 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolParams& p
           return is_sliver(p0, p1, newp) && !is_sliver(p0, p1, point(mesh.corner_vertex(corners[2])));
         });
       if (bad) {
-        if (!params.dihallow) continue;
+        if (!options.dihallow) continue;
         dihpenalty = k_bad_dih;
       }
     }
@@ -603,23 +624,23 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolParams& p
     }
     for (const auto& [nor, d] : sharp_planes) rssa += square(dot(nor, convert<double>(newp)) + d);
     rssa = max(rssa, 0.);
-    if (params.trishapeafac) {
+    if (options.trishapeafac) {
       for_int(i, nn.va.num() - 1) {
         const Point& p0 = point(nn.va[i]);
         const Point& p1 = point(nn.va[i + 1]);
-        rssa += params.trishapeafac * aspect_ratio(p0, p1, newp) * std::sqrt(area2(p0, p1, newp));
+        rssa += options.trishapeafac * aspect_ratio(p0, p1, newp) * std::sqrt(area2(p0, p1, newp));
       }
     }
-    if (params.bndfac) {
+    if (options.bndfac) {
       if (ec.is_boundary()) {
-        rssa /= params.bndfac;
+        rssa /= options.bndfac;
         if (dihpenalty) {
-          rssa *= std::sqrt(params.bndfac);
+          rssa *= std::sqrt(options.bndfac);
           dihpenalty = 0.f;
         }
-      } else if (params.maxvalence && ((ec.vo1 >= 0 && mesh.degree(ec.vo1) > params.maxvalence / 2) ||
-                                       (ec.vo2 >= 0 && mesh.degree(ec.vo2) > params.maxvalence / 2))) {
-        rssa /= params.bndfac;
+      } else if (options.maxvalence && ((ec.vo1 >= 0 && mesh.degree(ec.vo1) > options.maxvalence / 2) ||
+                                        (ec.vo2 >= 0 && mesh.degree(ec.vo2) > options.maxvalence / 2))) {
+        rssa /= options.bndfac;
       }
     }
     rssa *= gcostnorm;

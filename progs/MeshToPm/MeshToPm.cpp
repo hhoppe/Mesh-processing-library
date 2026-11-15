@@ -23,10 +23,9 @@ int nvertices = 0;             // Target number of vertices of the next '-simpli
 bool roundtrip_check = false;  // Verify that the progressive mesh reproduces its full mesh.
 string original_indices;       // File to which to write the original vertex ids of the progressive mesh.
 
-WorkMesh mesh;            // Current mesh.
-EcolParams options;       // Simplification parameters.
-PmRecorder recorder;      // Records the vsplits.
-bool simplified = false;  // A '-simplify' was performed.
+WorkMesh mesh;        // Current mesh.
+EcolOptions options;  // Simplification parameters.
+PmRecorder recorder;  // Records the vsplits.
 std::optional<RoundTripReference> roundtrip_reference;
 Array<int> chart_num_boundary_vertices;  // For min_chart_bnd_vertices: the boundary vertex count of each chart.
 
@@ -69,7 +68,7 @@ void do_print_costs(Args& args) {
 }
 
 void perhaps_start_recording() {
-  if (!recorder.active || recorder.started) return;
+  if (recorder.started) return;
   start_recording(mesh, recorder);
   if (roundtrip_check) roundtrip_reference = make_round_trip_reference(mesh);
 }
@@ -77,10 +76,7 @@ void perhaps_start_recording() {
 // Simplify the mesh until it has <= nfaces or <= nvertices, using sweeps as MeshSimplify's parallel_optimize():
 // evaluate all edges, sort them by cost, and collapse the cheapest ones whose neighborhoods are unaffected by the
 // preceding collapses of the sweep.
-void do_simplify() {
-  HH_TIMER("_simplify");
-  simplified = true;
-  perhaps_start_recording();
+void simplify_mesh() {
   if (options.min_chart_bnd_vertices) assertx(options.strict_sharp >= 2);
   if (options.strict_sharp == 2) {  // As in MeshSimplify's optimize().
     for_int(f, mesh._faces.num()) {
@@ -107,6 +103,17 @@ void do_simplify() {
   const int orig_nfaces = num_live_faces, orig_nvertices = num_live_vertices;
   ConsoleProgress cprogress;
   int num_sweeps = 0;
+  struct EdgeCost {
+    EdgeHandle e;
+    float cost;
+    Vec2<int> vertices;  // The edge vertices, which remain valid even after a collapse destroys the edge.
+  };
+  const auto edge_less = [](const EdgeCost& ec1, const EdgeCost& ec2) {
+    if (ec1.cost != ec2.cost) return ec1.cost < ec2.cost;
+    if (ec1.e.f != ec2.e.f) return ec1.e.f < ec2.e.f;
+    return ec1.e.j < ec2.e.j;
+  };
+  Array<EdgeCost> edge_costs;  // Its capacity is reused across sweeps.
   for (;;) {
     if (verb == 1) {
       const float fraction =
@@ -116,12 +123,8 @@ void do_simplify() {
     }
     if (num_live_faces <= nfaces || num_live_vertices <= nvertices) break;
     num_sweeps++;
-    struct EdgeCost {
-      EdgeHandle e;
-      float cost;
-      Vec2<int> vertices;  // The edge vertices, which remain valid even after a collapse destroys the edge.
-    };
-    Array<EdgeCost> edge_costs;
+    if (edge_costs.capacity() > 3 * num_live_faces) edge_costs.clear();  // Release excessive capacity.
+    edge_costs.init(0);                                                  // (Retaining the capacity.)
     for_int(f, mesh._faces.num()) {  // The canonical edges, as in canonical_edges() (without a separate array).
       if (!mesh.face_alive(f)) continue;
       for_int(j, 3) {
@@ -135,16 +138,14 @@ void do_simplify() {
       edge_cost.cost = evaluate_ecol(mesh, e, options).cost;
       edge_cost.vertices = V(mesh.vertex(e.f, mod3(e.j + 1)), mesh.vertex(e.f, mod3(e.j + 2)));
     });
-    sort(edge_costs, [](const EdgeCost& ec1, const EdgeCost& ec2) {
-      if (ec1.cost != ec2.cost) return ec1.cost < ec2.cost;
-      if (ec1.e.f != ec2.e.f) return ec1.e.f < ec2.e.f;
-      return ec1.e.j < ec2.e.j;
-    });
-    // Re-evaluate the prefix of edges that the commit loop can reach once it has collapsed an edge, retaining their
-    // best configurations.  To bound the memory, the prefix is evaluated in chunks, each just before it is reached;
-    // an edge whose vertices are unchanged by the preceding collapses of the sweep evaluates as it would have at the
-    // start of the sweep, and the other edges are skipped.
+    // Sort only the prefix of edges that the commit loop can reach once it has collapsed an edge (the rest is sorted
+    // only if needed); the ordering is a strict total order, so the result equals that of a full sort.
     const int num_prefix = min(int(0.15f * edge_costs.num()) + 1, edge_costs.num());
+    std::nth_element(edge_costs.begin(), edge_costs.begin() + num_prefix, edge_costs.end(), edge_less);
+    std::sort(edge_costs.begin(), edge_costs.begin() + num_prefix, edge_less);
+    // Re-evaluate the prefix, retaining the best configurations.  To bound the memory, the prefix is evaluated in
+    // chunks, each just before it is reached; an edge whose vertices are unchanged by the preceding collapses of the
+    // sweep evaluates as it would have at the start of the sweep, and the other edges are skipped.
     constexpr int k_chunk_size = 1 << 16;
     Array<EcolResult> chunk_results;
     int chunk_start = 0;
@@ -162,6 +163,8 @@ void do_simplify() {
     int num_collapsed = 0;
     for_int(i, edge_costs.num()) {
       if (num_collapsed > 0 && i >= num_prefix) break;
+      if (i == num_prefix && num_prefix < edge_costs.num())  // The rest of the edges is needed after all.
+        std::sort(edge_costs.begin() + num_prefix, edge_costs.end(), edge_less);
       const EdgeCost& edge_cost = edge_costs[i];
       if (edge_cost.cost == BIGFLOAT) break;
       if (num_live_faces <= nfaces || num_live_vertices <= nvertices) break;
@@ -200,14 +203,22 @@ void do_simplify() {
 }
 
 void do_roundtrip_check() {
-  if (recorder.started) assertnever("'-roundtrip_check' must precede the recording (e.g., the first '-simplify')");
+  if (recorder.started) assertnever("'-roundtrip_check' must precede the first '-simplify'");
   roundtrip_check = true;
 }
 
-void do_record(Args& args) {
-  const bool active = args.get_bool();
-  if (!active && recorder.started) assertnever("The recording cannot stop once it has started");
-  recorder.active = active;
+// Simplify, recording the edge collapses into the progressive mesh.
+void do_simplify() {
+  HH_TIMER("_simplify");
+  perhaps_start_recording();
+  simplify_mesh();
+}
+
+// Simplify without recording the edge collapses, so that the progressive mesh starts from the simplified mesh.
+void do_presimplify() {
+  HH_TIMER("_presimplify");
+  if (recorder.started) assertnever("'-presimplify' must precede '-simplify'");
+  simplify_mesh();
 }
 
 void do_outmesh(Args& args) {
@@ -225,12 +236,16 @@ void do_outply(Args& args) {
 }  // namespace
 
 int main(int argc, const char** argv) {
+  // A final '-simplify' is implied unless the last argument is '-simplify' (or an abbreviation such as '-simp').
+  // (This is determined before ParseArgs takes ownership of argv.)
+  const string last_arg = argc > 1 ? argv[argc - 1] : "";
+  const bool last_arg_is_simplify = last_arg.size() >= 5 && std::string_view("-simplify").starts_with(last_arg);
   ParseArgs args(argc, argv);
-  HH_ARGSC("A mesh (.m or .ply) is read from stdin or first arg.  Subsequent options are:");
+  HH_ARGSC("A mesh (.m or .ply, possibly .gz) is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSP(nfaces, "n : number of faces desired");
   HH_ARGSP(nvertices, "n : number of vertices desired");
-  HH_ARGSD(simplify, ": simplify (until nfaces/nvertices, or no legal collapse)");
-  HH_ARGSD(record, "bool : record collapses (default 1); when set, the current mesh becomes the full mesh");
+  HH_ARGSD(simplify, ": simplify (until nfaces/nvertices, or no legal collapse); implied at end");
+  HH_ARGSD(presimplify, ": simplify without recording (before '-simplify')");
   HH_ARGSC("", ":");
   HH_ARGSP_O(colfac, "f : weight of color (fraction of diam.)");
   HH_ARGSP_O(norfac, "f : weight of normals (fraction of diam.)");
@@ -253,26 +268,25 @@ int main(int argc, const char** argv) {
   const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
   const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
+  RFile fi(filename);
+  const MeshFileHeader header = read_mesh_header(fi());
   showdf("%s", args.header().c_str());
   Timer timer("MeshToPm", Timer::EMode::always);
   {
     HH_TIMER("_readmesh");
-    read_mesh(filename, mesh);
+    read_mesh(fi(), header, mesh);
   }
-  showdf("Read mesh: nvertices=%d nfaces=%d\n", mesh.num_live_vertices(), mesh.num_live_faces());
+  showdf("Read mesh: nvertices=%d nwedges=%d nfaces=%d nmaterials=%d\n", mesh.num_live_vertices(),
+         full_mesh_info(mesh)._full_nwedges, mesh.num_live_faces(), mesh._materials.num());
   options.diam = assertx(mesh.bbox().max_side());
   args.parse();
-  if (!simplified && !nooutput) do_simplify();
-  perhaps_start_recording();
-  if (!recorder.started) {
-    if (!nooutput) assertnever("The recording was never started ('-record 0' without '-record 1')");
-    start_recording(mesh, recorder);  // With '-nooutput', e.g. to only write '-outmesh' snapshots.
-  }
+  if (!last_arg_is_simplify && !nooutput) do_simplify();  // An implicit final '-simplify'.
+  perhaps_start_recording();                              // E.g., with '-nooutput' and only '-outmesh' snapshots.
   const Array<int> pm_ids = pm_original_ids(mesh, recorder);
   if (original_indices != "") {
-    WFile fi(original_indices);
-    fi() << pm_ids.num() << '\n';
-    for (const int id : pm_ids) fi() << id << '\n';
+    WFile fi_indices(original_indices);
+    fi_indices() << pm_ids.num() << '\n';
+    for (const int id : pm_ids) fi_indices() << id << '\n';
   }
   PMesh pmesh;
   if (!nooutput || roundtrip_reference) finalize_pm(mesh, recorder, pmesh);

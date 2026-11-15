@@ -100,7 +100,9 @@ int main(int argc, char** argv) {
       if (el.type() == A3dElem::EType::endfile) break;
       if (el.type() == A3dElem::EType::polygon || el.type() == A3dElem::EType::polyline) {
         for_int(i, el.num()) {
-          const float fac = 1e4f;
+          // Every coordinate lies at least 1e-5 from a rounding boundary of this 1/2000 increment (whereas 1e4f
+          // splits 5.41145), so the small floating-point differences between configurations do not change the output.
+          const float fac = 2e3f;
           round_elements(el[i].p, fac);
           round_elements(el[i].n, fac);
         }

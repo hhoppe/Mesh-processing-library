@@ -877,6 +877,28 @@ void set_fullscreen(bool v) {
   hw.make_fullscreen(v);
 }
 
+// Open a file, directory, or URL using the default program associated with it.  Returns success.
+bool open_with_default_program(const string& s) {
+  // The "start" builtin of cmd works best in Windows, even with Unicode filenames.
+  // NOLINTNEXTLINE(modernize-raw-string-literal): a raw string may confuse Emacs highlighting 700 lines later.
+  if (!my_spawn(V<string>("cmd", "/s/c", "start \"dummy_window_title\" \"" + s + "\""), true)) {
+    if (g_verbose) SHOW("spawned using cmd");
+    return true;
+  }
+  const Array<string> programs = {
+      "cygstart",  // Cygwin.
+      "xdg-open",  // Linux.
+      "open",      // Mac.
+  };
+  for (const string& program : programs) {
+    if (!my_spawn(V(program, s), true)) {
+      if (g_verbose) SHOW("spawned using", program);
+      return true;
+    }
+  }
+  return false;
+}
+
 // Open current object in default external program.
 void view_externally() {
   const string& filename = getob()._filename;
@@ -885,17 +907,7 @@ void view_externally() {
     if (file_requires_pipe(filename)) throw "file " + optionally_quote(filename) + " is a pipe";
   }
   message("Externally opening " + optionally_quote(filename), 5.);
-  // This works best in Windows, even with Unicode filenames.
-  // NOLINTNEXTLINE(modernize-raw-string-literal): a raw string may confuse Emacs highlighting 700 lines later.
-  if (!my_spawn(V<string>("cmd", "/s/c", "start \"dummy_window_title\" \"" + filename + "\""), true)) {
-    if (g_verbose) SHOW("spawned using cmd");
-    return;  // Success.
-  }
-  const Array<string> programs = {
-      "cygstart",  // Cygwin.
-      "xdg-open",  // Linux.
-      "open",      // Mac.
-  };
+  if (open_with_default_program(filename)) return;
   const Array<string> image_programs = {
       "irfan",
       "c:/Program Files/IrfanView/i_view64.exe",  // Difficulty: only works with backslash-delimited arg pathnames.
@@ -910,7 +922,7 @@ void view_externally() {
       "totem",                                        // Default program for "Videos" on Gnome.
   };
   const bool is_image = getob().is_image();
-  for (const string& program : concatenate(programs, is_image ? image_programs : video_programs)) {
+  for (const string& program : is_image ? image_programs : video_programs) {
     string tfilename = filename;
     if (program.contains("irfan") || program.contains("i_view")) tfilename = replace_all(tfilename, "/", "\\");
     // Unfortunately, quoting misbehaves and irfanview sees: ""\\"hh"\\"data"\\"image"\\"lake.png".
@@ -2014,8 +2026,7 @@ bool DerivedHw::key_press(string skey) {
         case 'd': {  // Open directory containing current object.
           string s = get_current_directory();
           if (g_cob >= 0 && directory_exists(get_path_head(getob()._filename))) s = get_path_head(getob()._filename);
-          if (my_sh(V<string>("start", s)) && my_sh(V<string>("cygstart", s)))
-            throw "Could not launch directory window on " + optionally_quote(s);
+          if (!open_with_default_program(s)) throw "Could not launch directory window on " + optionally_quote(s);
           break;
         }
         case '<':
@@ -2490,14 +2501,7 @@ bool DerivedHw::key_press(string skey) {
           assertt(pos != std::string::npos);
           const string coords = replace_all(line.substr(pos + 2), ", ", "%2C+");
           const string url = "https://www.google.com/maps/search/" + coords + "?hl=en&source=opensearch&authuser=0";
-          bool ok = false;
-          for (const string& launcher : V<string>("start", "cygstart", "xdg-open", "open")) {
-            if (!my_spawn(V(launcher, url), true)) {
-              ok = true;
-              break;
-            }
-          }
-          if (!ok) throw "Could not launch Google Maps on " + url;
+          if (!open_with_default_program(url)) throw "Could not launch Google Maps on " + url;
           break;
         }
         case 'i': {  // Info.

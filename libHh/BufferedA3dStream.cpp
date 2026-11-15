@@ -1,6 +1,8 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/BufferedA3dStream.h"
 
+#include "libHh/LineWriter.h"
+
 namespace hh {
 
 // *** RBufferedA3dStream
@@ -89,8 +91,10 @@ void WBufferedA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
     _buf.put(f[1]);
     _buf.put(f[2]);
   } else {
-    ssform(_stmp, "%c %g %g %g\n", ctype, f[0], f[1], f[2]);
-    _buf.put(_stmp.c_str(), narrow_cast<int>(_stmp.size()));
+    LineWriter w;
+    w << ctype << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << '\n';
+    const std::string_view sv = w.view();
+    _buf.put(sv.data(), narrow_cast<int>(sv.size()));
   }
 }
 

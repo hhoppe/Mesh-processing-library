@@ -3,6 +3,7 @@
 
 #include "libHh/BinaryIO.h"
 #include "libHh/Buffer.h"
+#include "libHh/LineWriter.h"
 #include "libHh/NetworkOrder.h"
 #include "libHh/Vec.h"
 
@@ -127,11 +128,13 @@ bool write(WBuffer& b, const ObjectFrame& object_frame) {
 }
 
 string create_string(const ObjectFrame& object_frame) {
-  // 2014-05-02: changed from %.7g .
+  // 2014-05-02: changed from %.7g to %.9g.  2026-11-14: changed to the shortest round-trip form.
   const Frame& frame = object_frame.frame;
-  return sform("F %d  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g %.9g %.9g  %.9g\n",  //
-               object_frame.obn, frame[0, 0], frame[0, 1], frame[0, 2], frame[1, 0], frame[1, 1], frame[1, 2],
-               frame[2, 0], frame[2, 1], frame[2, 2], frame[3, 0], frame[3, 1], frame[3, 2], object_frame.zoom);
+  LineWriter w;
+  w << "F " << object_frame.obn;
+  for_int(i, 4) for_int(j, 3) w << (j == 0 ? "  " : " ") << frame[i, j];
+  w << "  " << object_frame.zoom << '\n';
+  return string(w.view());
 }
 
 Frame parse_frame(const string& s) {

@@ -119,6 +119,8 @@ CGridView<D, T>             (const elements)
 - `ParseArgs`: parses command-line options and generates their usage text.
 - `RFile`, `WFile`: input and output file streams, which also accept `-` (stdin/stdout), pipe commands, and
   compressed files.
+- `LineWriter`: fast output of a line of text in a data file, writing each `float` with the fewest digits that read
+  back as the same value.
 - `MappedFile`: read-only view of the entire contents of a file, memory-mapped where possible.
 - `Random`: deterministic random-number generator, so that results are reproducible across platforms.
 - `HH_STAT(S)`, `HH_SSTAT(S, v)`: macros that accumulate a `Stat`, reported at program exit.

@@ -5,6 +5,7 @@
 #include "libHh/BoundingSphere.h"
 #include "libHh/FileIO.h"
 #include "libHh/GMesh.h"
+#include "libHh/LineWriter.h"
 #include "libHh/MathOp.h"
 #include "libHh/NetworkOrder.h"  // from_std()
 #include "libHh/PMesh.h"
@@ -767,8 +768,12 @@ void SrMesh::write_srm(std::ostream& os) const {
   os << "base_nvertices=" << _base_vertices.num() << " base_nfaces=" << _base_faces.num()
      << " nvsplits=" << _vsplits.num() << '\n';
   // Write out bounding box.
-  os << "bbox " << _bbox[0][0] << ' ' << _bbox[0][1] << ' ' << _bbox[0][2] << "  " << _bbox[1][0] << ' ' << _bbox[1][1]
-     << ' ' << _bbox[1, 2] << '\n';
+  {
+    LineWriter line;
+    line << "bbox";
+    for_int(i, 2) for_int(c, 3) line << (i == 1 && c == 0 ? "  " : " ") << _bbox[i][c];
+    line.write_line(os);
+  }
   // Write out materials.
   _materials.write(os);
   // Write out base mesh.

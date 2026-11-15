@@ -23,7 +23,9 @@ void test2d() {
   const auto func_polylinetoa3d = [](CArrayView<Vec2<float>> poly, A3dElem& el) {
     el.init(A3dElem::EType::polyline);
     for_int(i, poly.num()) {
-      el.push(A3dVertex(Point(0.f, poly[i][0], poly[i][1]), Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
+      // Rounding hides the small floating-point differences between configurations.
+      const Point p = round_elements(Point(0.f, poly[i][0], poly[i][1]), 1e5f);
+      el.push(A3dVertex(p, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
     }
   };
   const int gn = 20;
@@ -65,7 +67,11 @@ void test3d() {
   WSA3dStream wborder(fborder());
   const auto func_polygontoa3d = [](CArrayView<Vec3<float>> poly, A3dElem& el) {
     el.init(A3dElem::EType::polygon);
-    for_int(i, poly.num()) el.push(A3dVertex(poly[i], Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
+    for_int(i, poly.num()) {
+      // Rounding hides the small floating-point differences between configurations.
+      const Point p = round_elements(Point(poly[i]), 1e5f);
+      el.push(A3dVertex(p, Vector(0.f, 0.f, 0.f), A3dVertexColor(Pixel::red())));
+    }
   };
   A3dElem el;
   const auto func_contour = [&](CArrayView<Vec3<float>> poly) {

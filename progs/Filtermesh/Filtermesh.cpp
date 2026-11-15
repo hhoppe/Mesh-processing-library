@@ -19,6 +19,7 @@
 #include "libHh/HashTuple.h"  // hash<pair<...>>
 #include "libHh/Homogeneous.h"
 #include "libHh/Image.h"
+#include "libHh/LineWriter.h"
 #include "libHh/LinearFunc.h"
 #include "libHh/LinearProgram.h"  // maximize_over_halfspaces()
 #include "libHh/Lls.h"
@@ -4188,9 +4189,15 @@ void do_to_obj(Args& args) {
   std::cout << sform("mtllib %s\n", mtl_filename.c_str());
   const string material_name = get_first_material_name(mtl_filename);
   std::cout << sform("usemtl %s\n", material_name.c_str());
-  for (const Point& p : points) std::cout << sform("v %g %g %g\n", p[0], p[1], p[2]);
-  for (const Uv& uv : uvs) std::cout << sform("vt %g %g\n", uv[0], uv[1]);
-  for (const Vector& normal : normals) std::cout << sform("vn %g %g %g\n", normal[0], normal[1], normal[2]);
+  LineWriter line;
+  const auto write_line = [&](std::string_view prefix, const auto& vec) {
+    line << prefix;
+    for (const float f : vec) line << ' ' << f;
+    line.write_line(std::cout);
+  };
+  for (const Point& p : points) write_line("v", p);
+  for (const Uv& uv : uvs) write_line("vt", uv);
+  for (const Vector& normal : normals) write_line("vn", normal);
 
   const auto get_index = [&](Corner c, const char* key, const auto& indices) {
     std::decay_t<decltype(indices.get_one_key())> value;

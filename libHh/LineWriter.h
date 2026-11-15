@@ -10,8 +10,9 @@
 namespace hh {
 
 // Builds a line of text in a fixed-size buffer, for the fast output of data files.  Integers and floats are
-// written using std::to_chars(); a float is written as with printf("%g").  A double is rejected at compile time,
-// so that a value computed in double precision is not written inadvertently.
+// written using std::to_chars().  A float is written with the fewest significant digits that read back as the same
+// float, in the notation of printf("%g"); e.g., 0.1f is written as "0.1" rather than "0.100000001".  A double is
+// rejected at compile time, because its shortest form would have up to 17 digits.
 //   LineWriter w;
 //   w << "Vertex " << vertex_id(v) << ' ';
 //   for_int(c, 3) w << ' ' << point(v)[c];
@@ -37,8 +38,7 @@ class LineWriter {
   LineWriter& operator<<(T value) {
     std::to_chars_result result;
     if constexpr (std::same_as<T, float>) {
-      constexpr int precision = 6;  // Default for printf("%g").
-      result = std::to_chars(_s, _buf + k_capacity, value, std::chars_format::general, precision);
+      result = std::to_chars(_s, _buf + k_capacity, value, std::chars_format::general);
     } else {
       result = std::to_chars(_s, _buf + k_capacity, value);
     }

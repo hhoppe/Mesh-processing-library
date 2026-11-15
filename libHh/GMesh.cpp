@@ -79,7 +79,12 @@ void GMesh::merge(const GMesh& mo, Map<Vertex, Vertex>* pmvvn) {
 
 void GMesh::set_point(Vertex v, const Point& pp) {
   v->_point = pp;
-  if (_os) *_os << sform("MVertex %d  %g %g %g\n", vertex_id(v), pp[0], pp[1], pp[2]);
+  if (_os) {
+    LineWriter w;
+    w << "MVertex " << vertex_id(v) << ' ';
+    for_int(c, 3) w << ' ' << pp[c];
+    w.write_line(*_os);
+  }
 }
 
 void GMesh::polygon(Face f, Polygon& poly) const {

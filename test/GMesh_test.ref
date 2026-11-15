@@ -108,7 +108,7 @@ mesh.get_string(c32)=normal=(0 0 1) uv=(1 1) mesh.corner_key(str, c32, "uv")=(1 
 nor = [0, 0, -1]
 uv = [0.5, 0.5]
 nor = [1.5, -2, 300]
-csform_vec(str, V(1.5f, -2.f, 1e-7f))=(1.5 -2 1e-07) csform_vec(str, Vec2<float>(1.f / 3.f, 1e10f))=(0.333333 1e+10)
+csform_vec(str, V(1.5f, -2.f, 1e-7f))=(1.5 -2 1e-07) csform_vec(str, Vec2<float>(1.f / 3.f, 1e10f))=(0.33333334 1e+10)
 a='1'
 b=''
 c='(2 3)'
@@ -127,7 +127,7 @@ Vertex 2  2 0 0 {normal=(0 0 1)}
 Vertex 3  2 2 0
 Vertex 4  0 2 0
 Vertex 5  0 0 0 {uv=(.5 .5)}
-Vertex 7  1.33333 0.666667 0
+Vertex 7  1.3333334 0.6666667 0
 Face 9  4 5 3 {mat=2}
 Face 11  5 2 7 {mat=1}
 Face 12  2 3 7 {mat=1}
@@ -141,7 +141,7 @@ CVertex 7
 Face 11  5 2 7
 Face 12  2 3 7
 Face 13  3 5 7
-MVertex 7  1.33333 0.666667 0
+MVertex 7  1.3333334 0.6666667 0
 f=Face{6}=[5 2 4] mesh0.get_string(f)=<nullptr>
 f=Face{5}=[3 4 2] mesh0.get_string(f)=<nullptr>
 fn=Face{5}=[5 3 4 1] mesh.get_string(fn)=mat=2

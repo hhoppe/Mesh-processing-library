@@ -28,7 +28,6 @@ class WBufferedA3dStream : public WA3dStream {  // Write to a WBuffer.
 
  private:
   WBuffer& _buf;
-  string _stmp;
   void output(bool binary, char ctype, const Vec3<float>& f) override;
   void output_comment(const string& s) override;
   void blank_line() override;

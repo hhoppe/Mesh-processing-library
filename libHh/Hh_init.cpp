@@ -351,6 +351,8 @@ void change_default_io_precision() {
   //  such as "0.18000001", which just looks ugly.  Similarly "0.090000004" and "0.059999999".
   // This is likely the motivation for the default precision of 6.
   //  == std::numeric_limits<T>::digits10, the number of digits reliably encoded/decoded as float.
+  // Data files are instead written using LineWriter (libHh/LineWriter.h), whose shortest round-trip form of a float
+  //  is both exact and free of such approximations: 0.18f is written as "0.18".
   //
   // See experiments in ~/git/hh_src/test/misc/test_float_discrepancy.cpp
   //

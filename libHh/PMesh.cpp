@@ -5,7 +5,8 @@
 #include "libHh/BinaryIO.h"   // read_binary_std() and write_binary_std()
 #include "libHh/GMesh.h"      // in extract_gmesh()
 #include "libHh/HashTuple.h"  // hash<pair<...>>
-#include "libHh/RangeOp.h"    // fill()
+#include "libHh/LineWriter.h"
+#include "libHh/RangeOp.h"  // fill()
 #include "libHh/Set.h"
 #include "libHh/Vector4.h"
 
@@ -294,8 +295,9 @@ void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) co
       }
     }
   } else {
+    LineWriter line;
     const auto write_ascii = [&](const auto& v, bool space = true) {
-      for_int(c, v.Num) os << (space || c > 0 ? " " : "") << v[c];
+      for_int(c, v.Num) line << (space || c > 0 ? " " : "") << v[c];
     };
     for_int(w, _wedges.num()) {
       const int v = _wedges[w].vertex;
@@ -303,16 +305,16 @@ void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) co
       write_ascii(_wedges[w].attrib.normal);
       if (pminfo._has_rgb) write_ascii(convert<int>(pack_color(_wedges[w].attrib.rgb).head<3>()));
       if (pminfo._has_uv && uv_in_vertex) write_ascii(_wedges[w].attrib.uv);
-      os << "\n";
+      line.write_line(os);
     }
     for_int(f, _faces.num()) {
-      os << "3";
+      line << '3';
       write_ascii(_faces[f].wedges);
-      os << "\n";
+      line.write_line(os);
       if (pminfo._has_uv && !uv_in_vertex) {
-        os << "6";
+        line << '6';
         for_int(j, 3) write_ascii(_wedges[_faces[f].wedges[j]].attrib.uv);
-        os << "\n";
+        line.write_line(os);
       }
     }
   }
@@ -1536,7 +1538,12 @@ void PMesh::write(std::ostream& os) const {
   os << sform("nvsplits=%d nvertices=%d nwedges=%d nfaces=%d\n",  //
               _info._tot_nvsplits, _info._full_nvertices, _info._full_nwedges, _info._full_nfaces);
   const auto& bbox = _info._full_bbox;
-  os << sform("bbox %g %g %g  %g %g %g\n", bbox[0][0], bbox[0][1], bbox[0][2], bbox[1][0], bbox[1][1], bbox[1][2]);
+  {
+    LineWriter line;
+    line << "bbox";
+    for_int(i, 2) for_int(c, 3) line << (i == 1 && c == 0 ? "  " : " ") << bbox[i][c];
+    line.write_line(os);
+  }
   os << sform("has_rgb=%d\n", _info._has_rgb);
   os << sform("has_uv=%d\n", _info._has_uv);
   os << sform("has_resid=%d\n", _info._has_resid);

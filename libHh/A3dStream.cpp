@@ -2,6 +2,7 @@
 #include "libHh/A3dStream.h"
 
 #include "libHh/BinaryIO.h"
+#include "libHh/LineWriter.h"
 #include "libHh/NetworkOrder.h"
 #include "libHh/Polygon.h"
 #include "libHh/RangeOp.h"
@@ -330,8 +331,10 @@ void WSA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
     }
     write_binary_raw(_os, V(buf));
   } else {
-    // Precision determined by that in WFile::WFile().
-    _os << ctype << " " << f[0] << " " << f[1] << " " << f[2] << '\n';
+    LineWriter w;
+    w << ctype << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << '\n';
+    const std::string_view sv = w.view();
+    _os.write(sv.data(), std::streamsize(sv.size()));
   }
   if (!_os) {
     showf("Write failed, maybe due to broken pipe.\n");

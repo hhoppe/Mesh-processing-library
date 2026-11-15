@@ -5,6 +5,8 @@
 #include <utility>  // pair
 #include <vector>
 
+#include "libHh/LineWriter.h"
+
 namespace hh {
 
 int Stat::_s_show = -10;
@@ -136,7 +138,11 @@ string Stat::name_string() const {
   return (_name == "" ? "" : sform("%-20.28s", (_name.substr(0, 27) + ":").c_str())) + short_string() + "\n";
 }
 
-void Stat::output(float value) const { (*_ofs) << value << '\n'; }
+void Stat::output(float value) const {
+  LineWriter w;
+  w << value;
+  w.write_line(*_ofs);
+}
 
 Stat& Stat::thread_partial() {
   // With STAT_FILES, retain a single accumulator so that all values are written to the same file.

@@ -14,7 +14,7 @@ Converts the vertices of a Stanford ply file (ascii, binary_little_endian, or bi
 stream of points, written to stdout.  If the vertices have the properties nx, ny, and nz, each point is preceded
 by its normal ("n nx ny nz"), unless --no_normals is given.  Other vertex properties (e.g. colors) and all other
 elements (e.g. faces) are ignored.  The output begins with comments giving the command and the ply header.
-Each coordinate is printed with 7 significant digits, or with 8 or 9 where needed to read back as the same float.
+Each coordinate is printed with the fewest significant digits that read back as the same float.
 
 Examples:
   ply_to_pts ~/data/recon/new/bunny.points.ply >bunny.pts
@@ -31,20 +31,22 @@ my %k_type_info = (
   float => ['f', 4], float32 => ['f', 4], double => ['d', 8], float64 => ['d', 8],
 );
 
-# Returns the float values, each formatted with 7 significant digits, or with 8 or 9 where needed to read back as
-# the same float.  (Checking all the values with a single pack() is faster than finding the fewest digits for each.)
+# Returns the float values, each formatted with the fewest significant digits that read back as the same float, as
+# C++ std::to_chars(float) does (except for denormals).
 sub format_floats {
-  my @f = unpack('f*', pack('f*', @_));
-  my @s = map { sprintf('%.7g', $_) } @f;
-  return @s if pack('f*', @s) eq pack('f*', @f);
-  for my $i (0 .. $#f) {
-    my $packed = pack('f', $f[$i]);
-    for my $precision (8, 9) {
-      last if pack('f', $s[$i]) eq $packed;
-      $s[$i] = sprintf('%.*g', $precision, $f[$i]);
+  return map {
+    my $packed = pack('f', $_);
+    my $s = sprintf('%.7g', $_);
+    if (pack('f', $s) ne $packed) {
+      $s = sprintf('%.8g', $_);
+      $s = sprintf('%.9g', $_) if pack('f', $s) ne $packed;
+    } elsif ($s =~ /[19](?:e|$)/) {
+      # Six digits can suffice only if the seventh is 1 or 9, as floats are at most 0.6 seventh-digit units apart.
+      my $s6 = sprintf('%.6g', $_);
+      $s = $s6 if pack('f', $s6) eq $packed;
     }
-  }
-  return @s;
+    $s;
+  } unpack('f*', pack('f*', @_));
 }
 
 sub main {

@@ -16,8 +16,8 @@ The vertex properties nx, ny, nz become the attribute {normal=(...)}, and red, g
 "tristrips" (its list vertex_indices, where each index -1 starts a new strip and degenerate triangles are omitted).
 A face list texcoord (u and v for each corner) becomes the attribute {uv=(...)} of each corner.  All other
 properties and elements are ignored, as reported on stderr.  The output begins with comments giving the command and
-the ply header.  Each vertex coordinate is printed with 7 significant digits, or with 8 or 9 where needed to
-read back as the same float; the attributes are printed with 6.
+the ply header.  Each vertex coordinate is printed with the fewest significant digits that read back as the
+same float; the attributes are printed with 6.
 
 Options:
   --normalize_normals  scale each vertex normal to unit length
@@ -41,20 +41,23 @@ my %k_type_info = (
   float => ['f', 4], float32 => ['f', 4], double => ['d', 8], float64 => ['d', 8],
 );
 
-# Returns the float values, each formatted with 7 significant digits, or with 8 or 9 where needed to read back as
-# the same float.  (Fewer digits can flip or collapse the sliver triangles of meshes such as marching-cubes output.)
+# Returns the float values, each formatted with the fewest significant digits that read back as the same float, as
+# C++ std::to_chars(float) does (except for denormals).  (Fewer digits can flip or collapse the sliver triangles of
+# meshes such as marching-cubes output.)
 sub format_floats {
-  my @f = unpack('f*', pack('f*', @_));
-  my @s = map { sprintf('%.7g', $_) } @f;
-  return @s if pack('f*', @s) eq pack('f*', @f);
-  for my $i (0 .. $#f) {
-    my $packed = pack('f', $f[$i]);
-    for my $precision (8, 9) {
-      last if pack('f', $s[$i]) eq $packed;
-      $s[$i] = sprintf('%.*g', $precision, $f[$i]);
+  return map {
+    my $packed = pack('f', $_);
+    my $s = sprintf('%.7g', $_);
+    if (pack('f', $s) ne $packed) {
+      $s = sprintf('%.8g', $_);
+      $s = sprintf('%.9g', $_) if pack('f', $s) ne $packed;
+    } elsif ($s =~ /[19](?:e|$)/) {
+      # Six digits can suffice only if the seventh is 1 or 9, as floats are at most 0.6 seventh-digit units apart.
+      my $s6 = sprintf('%.6g', $_);
+      $s = $s6 if pack('f', $s6) eq $packed;
     }
-  }
-  return @s;
+    $s;
+  } unpack('f*', pack('f*', @_));
 }
 
 sub main {

@@ -1,12 +1,12 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/GMesh.h"
 
-#include <cctype>    // isalnum()
-#include <charconv>  // to_chars()
-#include <cstring>   // strncmp(), strlen(), memmove(), etc.
+#include <cctype>   // isalnum()
+#include <cstring>  // strncmp(), strlen(), memmove(), etc.
 
 #include "libHh/A3dStream.h"
 #include "libHh/Array.h"
+#include "libHh/LineWriter.h"
 #include "libHh/Polygon.h"
 #include "libHh/Set.h"
 
@@ -505,95 +505,36 @@ bool GMesh::recognize_line(std::string_view line) {
 }
 
 void GMesh::write(std::ostream& os) const {
-  constexpr int capacity = 500;
-  char buffer[capacity];
-  char* const end = buffer + capacity;
-
-  strcpy(buffer, "Vertex ");
-  char* beg = buffer + strlen(buffer);
+  LineWriter w;
   for (Vertex v : ordered_vertices()) {
-    char* s = beg;
-    s = std::to_chars(s, end - 4, vertex_id(v)).ptr;
-    *s++ = ' ';
+    w << "Vertex " << vertex_id(v) << ' ';
     const Point& p = point(v);
-    for_int(c, 3) {
-      *s++ = ' ';
-      constexpr int precision = 6;  // Default for printf("%g").
-      s = std::to_chars(s, end - 4, p[c], std::chars_format::general, precision).ptr;
-    }
-    if (const char* sinfo = get_string(v)) {
-      *s++ = ' ';
-      *s++ = '{';
-      assertx(s + strlen(sinfo) + 4 < end);
-      while (*sinfo) *s++ = *sinfo++;
-      *s++ = '}';
-    }
-    *s++ = '\n';
-    *s = '\0';
-    assertx(os << buffer);
+    for_int(c, 3) w << ' ' << p[c];
+    if (const char* sinfo = get_string(v)) w << " {" << sinfo << '}';
+    w.write_line(os);
   }
 
   const Array ar_faces(ordered_faces());
-  strcpy(buffer, "Face ");
-  beg = buffer + strlen(buffer);
   for (Face f : ar_faces) {
-    char* s = beg;
-    s = std::to_chars(s, end - 4, face_id(f)).ptr;
-    *s++ = ' ';
-    for (Vertex v : vertices(f)) {
-      *s++ = ' ';
-      s = std::to_chars(s, end - 4, vertex_id(v)).ptr;
-      assertx(s < end - 4);
-    }
-    if (const char* sinfo = get_string(f)) {
-      *s++ = ' ';
-      *s++ = '{';
-      assertx(s + strlen(sinfo) + 4 < end);
-      while (*sinfo) *s++ = *sinfo++;
-      *s++ = '}';
-    }
-    *s++ = '\n';
-    *s = '\0';
-    assertx(os << buffer);
+    w << "Face " << face_id(f) << ' ';
+    for (Vertex v : vertices(f)) w << ' ' << vertex_id(v);
+    if (const char* sinfo = get_string(f)) w << " {" << sinfo << '}';
+    w.write_line(os);
   }
 
-  strcpy(buffer, "Edge ");
-  beg = buffer + strlen(buffer);
   for (Edge e : edges()) {
     const char* sinfo = get_string(e);
     if (!sinfo) continue;
-    char* s = beg;
-    s = std::to_chars(s, end - 4, vertex_id(vertex1(e))).ptr;
-    *s++ = ' ';
-    s = std::to_chars(s, end - 4, vertex_id(vertex2(e))).ptr;
-    *s++ = ' ';
-    *s++ = '{';
-    assertx(s + strlen(sinfo) + 4 < end);
-    while (*sinfo) *s++ = *sinfo++;
-    *s++ = '}';
-    *s++ = '\n';
-    *s = '\0';
-    assertx(os << buffer);
+    w << "Edge " << vertex_id(vertex1(e)) << ' ' << vertex_id(vertex2(e)) << " {" << sinfo << '}';
+    w.write_line(os);
   }
 
-  strcpy(buffer, "Corner ");
-  beg = buffer + strlen(buffer);
   for (Face f : ar_faces) {
     for (Corner c : corners(f)) {
       const char* sinfo = get_string(c);
       if (!sinfo) continue;
-      char* s = beg;
-      s = std::to_chars(s, end - 4, vertex_id(corner_vertex(c))).ptr;
-      *s++ = ' ';
-      s = std::to_chars(s, end - 4, face_id(f)).ptr;
-      *s++ = ' ';
-      *s++ = '{';
-      assertx(s + strlen(sinfo) + 4 < end);
-      while (*sinfo) *s++ = *sinfo++;
-      *s++ = '}';
-      *s++ = '\n';
-      *s = '\0';
-      assertx(os << buffer);
+      w << "Corner " << vertex_id(corner_vertex(c)) << ' ' << face_id(f) << " {" << sinfo << '}';
+      w.write_line(os);
     }
   }
   os.flush();

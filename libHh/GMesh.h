@@ -2,9 +2,9 @@
 #ifndef MESH_PROCESSING_LIBHH_GMESH_H_
 #define MESH_PROCESSING_LIBHH_GMESH_H_
 
-#include <charconv>  // to_chars(), chars_format
-#include <cstring>   // memcpy()
+#include <cstring>  // memcpy()
 
+#include "libHh/LineWriter.h"
 #include "libHh/Map.h"
 #include "libHh/Mesh.h"
 #include "libHh/Polygon.h"
@@ -192,20 +192,14 @@ void for_cstring_key_value(const char* str, Array<char>& key, Array<char>& val, 
 //----------------------------------------------------------------------------
 
 template <int n> const char* csform_vec(string& str, const Vec<float, n>& vec) {
-  constexpr int size = 100;
-  static_assert(n * 15 < size);
-  if (str.size() < size) str.resize(size);
-  char* s = str.data();
-  char* end = s + size;
-  *s++ = '(';
+  LineWriter w;
+  w << '(';
   for_int(i, n) {
-    if (i) *s++ = ' ';
-    constexpr int precision = 6;  // Default for printf("%g").
-    s = std::to_chars(s, end, vec[i], std::chars_format::general, precision).ptr;
-    ASSERTXX(s < end - 2);
+    if (i) w << ' ';
+    w << vec[i];
   }
-  *s++ = ')';
-  *s++ = char{0};
+  w << ')';
+  str = w.view();
   return str.c_str();
 }
 

@@ -1,6 +1,4 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
-#include <charconv>  // to_chars(), chars_format
-
 #include "libHh/A3dStream.h"  // A3dColor
 #include "libHh/Args.h"
 #include "libHh/Array.h"
@@ -13,6 +11,7 @@
 #include "libHh/FileIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/GeomOp.h"  // dihedral_angle_cos()
+#include "libHh/LineWriter.h"
 #include "libHh/LinearFunc.h"
 #include "libHh/LinearProgram.h"  // maximize_over_halfspaces()
 #include "libHh/Map.h"
@@ -955,31 +954,21 @@ std::weak_ordering compare_wi(const WedgeInfo& wi1, const WedgeInfo& wi2) {
 const char* generate_corner_string(Corner c, string& str) {
   const int wid = c_wedge_id(c);
   const WedgeInfo& wi = gwinfo[wid];
-  constexpr int size = 200;
-  if (str.size() < size) str.resize(size);
-  char* s = str.data();
-  char* end = s + size;
-  const auto consider = [&](const char* key, const auto& vec) {
+  LineWriter w;
+  w << "wid=" << wid;
+  const auto consider = [&](std::string_view key, const auto& vec) {
     if (vec[0] == k_undefined) return;
-    *s++ = ' ';
-    while (*key) *s++ = *key++;
-    *s++ = '=';
-    *s++ = '(';
+    w << ' ' << key << "=(";
     for_int(i, vec.num()) {
-      if (i) *s++ = ' ';
-      constexpr int precision = 6;  // Default for printf("%g").
-      s = std::to_chars(s, end, vec[i], std::chars_format::general, precision).ptr;
-      ASSERTXX(s < end - 4);
+      if (i) w << ' ';
+      w << vec[i];
     }
-    *s++ = ')';
+    w << ')';
   };
-  const char* s1 = "wid=";
-  while (*s1) *s++ = *s1++;
-  s = std::to_chars(s, end, wid).ptr;
   consider("normal", wi.nor);
   consider("rgb", wi.col);
   consider("uv", wi.uv);
-  *s++ = char{0};
+  str = w.view();
   return str.c_str();
 }
 
@@ -3594,51 +3583,17 @@ bool desire_edge_orientation_swap(Edge e, int min_ii) {
 
 void write_mvertex(std::ostream& os, Vertex v, const char* sinfo) {
   const Point& p = mesh.point(v);
-  constexpr int capacity = 200;
-  char buffer[capacity];
-  char* const end = buffer + capacity;
-  strcpy(buffer, "MVertex ");
-  char* s = buffer + 8;
-  s = std::to_chars(s, end - 4, mesh.vertex_id(v)).ptr;
-  *s++ = ' ';
-  for_int(c, 3) {
-    *s++ = ' ';
-    constexpr int precision = 6;  // Default for printf("%g").
-    s = std::to_chars(s, end - 4, p[c], std::chars_format::general, precision).ptr;
-  }
-  if (sinfo) {
-    *s++ = ' ';
-    *s++ = '{';
-    assertx(s + strlen(sinfo) + 4 < end);
-    while (*sinfo) *s++ = *sinfo++;
-    *s++ = '}';
-  }
-  *s++ = '\n';
-  *s = '\0';
-  os << buffer;
+  LineWriter w;
+  w << "MVertex " << mesh.vertex_id(v) << ' ';
+  for_int(c, 3) w << ' ' << p[c];
+  if (sinfo) w << " {" << sinfo << '}';
+  w.write_line(os);
 }
 
 void write_corner(std::ostream& os, Vertex v, Corner c, const char* sinfo) {
-  if (0) {
-    os << "Corner " << mesh.vertex_id(v) << " " << mesh.face_id(mesh.corner_face(c)) << " {" << sinfo << "}\n";
-  } else {
-    constexpr int capacity = 300;
-    char buffer[capacity];
-    char* const end = buffer + capacity;
-    strcpy(buffer, "Corner ");
-    char* s = buffer + 7;
-    s = std::to_chars(s, end - 4, mesh.vertex_id(v)).ptr;
-    *s++ = ' ';
-    s = std::to_chars(s, end - 4, mesh.face_id(mesh.corner_face(c))).ptr;
-    *s++ = ' ';
-    *s++ = '{';
-    ASSERTXX(s + strlen(sinfo) + 4 < end);
-    while (*sinfo) *s++ = *sinfo++;
-    *s++ = '}';
-    *s++ = '\n';
-    *s = '\0';
-    os << buffer;
-  }
+  LineWriter w;
+  w << "Corner " << mesh.vertex_id(v) << ' ' << mesh.face_id(mesh.corner_face(c)) << " {" << sinfo << '}';
+  w.write_line(os);
 }
 
 void write_corners(std::ostream& os, Vertex v, string& str) {

@@ -145,6 +145,7 @@
     <ClInclude Include="LinearFunc.h" />
     <ClInclude Include="LinearProgram.h" />
     <ClInclude Include="LinearRegression.h" />
+    <ClInclude Include="LineWriter.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="MappedFile.h" />
     <ClInclude Include="Materials.h" />

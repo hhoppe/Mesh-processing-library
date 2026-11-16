@@ -122,7 +122,7 @@ bool write(WBuffer& b, const ObjectFrame& object_frame) {
     b.put(object_frame.zoom);
   } else {
     const string s = create_string(object_frame);
-    b.put(s.c_str(), narrow_cast<int>(s.size()));
+    b.put(s);
   }
   return true;
 }

@@ -255,6 +255,8 @@ void WBuffer::put(const void* buf, int nbytes) {
   if (_n >= k_write_size) flush(k_write_size);
 }
 
+void WBuffer::put(std::string_view s) { put(s.data(), narrow_cast<int>(s.size())); }
+
 void WBuffer::put(char ch) { put(&ch, 1); }
 
 void WBuffer::put(short i) {

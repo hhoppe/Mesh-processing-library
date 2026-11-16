@@ -93,15 +93,14 @@ void WBufferedA3dStream::output(bool binary, char ctype, const Vec3<float>& f) {
   } else {
     LineWriter w;
     w << ctype << ' ' << f[0] << ' ' << f[1] << ' ' << f[2] << '\n';
-    const std::string_view sv = w.view();
-    _buf.put(sv.data(), narrow_cast<int>(sv.size()));
+    _buf.put(w.view());
   }
 }
 
 void WBufferedA3dStream::output_comment(const string& s) {
-  _buf.put("#", 1);
-  _buf.put(s.c_str(), narrow_cast<int>(s.size()));
-  _buf.put("\n", 1);
+  _buf.put("#");
+  _buf.put(s);
+  _buf.put("\n");
 }
 
 void WBufferedA3dStream::blank_line() { _buf.put('\n'); }

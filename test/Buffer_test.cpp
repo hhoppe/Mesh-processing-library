@@ -25,8 +25,8 @@ float record_float(int i) { return float(i) * .25f - 3.f; }
 void perform_out() {
   WBuffer wb(1);
   for_int(i, bsize) {
-    wb.put("a", 1);
-    wb.put("b", 1);
+    wb.put("a");
+    wb.put("b");
     wb.flush();
     if (i % 2 == 0) my_precise_sleep(0.03);
     if (i % 3 == 0) my_precise_sleep(0.06);
@@ -66,7 +66,7 @@ void perform_out_records() {
   WBuffer wb(1);
   for_int(i, k_num_records) {
     const string line = record_line(i) + "\n";
-    wb.put(line.data(), narrow_cast<int>(line.size()));
+    wb.put(line);
     wb.put(record_char(i));
     wb.put(record_short(i));
     wb.put(record_int(i));

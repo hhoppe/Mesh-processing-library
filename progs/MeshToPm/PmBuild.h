@@ -9,10 +9,9 @@
 namespace hh {
 
 // A vsplit in compact form: for a half-edge collapse, vad_small and the residuals are zero, and its wedge attribute
-// deltas are stored contiguously in PmRecorder::wad_values.
+// deltas are stored contiguously in PmRecorder::wad_values (their number is given by Vsplit::expected_wad_num()).
 struct CompactVsplit {
-  int flclw;    // An AWMesh face index until finalize_pm(), then the index in the progressive mesh.
-  int wad_end;  // The end of its deltas (counted in deltas), which start at the wad_end of the previous record.
+  int flclw;  // An AWMesh face index until finalize_pm(), then the index in the progressive mesh.
   Vector vad_large;
   short vlr_offset1;
   ushort code;  // Its VSINDEX bits hold the AWMesh corner of vs in face flclw until finalize_pm().
@@ -31,7 +30,18 @@ struct PmRecorder {
   Array<float> wad_values;
   [[nodiscard]] int wad_stride() const { return 3 + (info._has_rgb ? 3 : 0) + (info._has_uv ? 2 : 0); }
   Array<int> removed_original_ids;           // For each recorded collapse, the original id of vt.
-  [[nodiscard]] Vsplit vsplit(int i) const;  // Returns the full form of vsplits[i].
+  // Returns the full form of vsplits[i], whose wedge attribute deltas end at the given delta index.
+  [[nodiscard]] Vsplit vsplit(int i, int wad_end) const;
+  // Call func(Vsplit&&) on the full form of each vsplit, in progressive mesh order (the reverse of collapse order).
+  template <typename Func> void for_each_vsplit_in_pm_order(Func func) const {
+    int wad_end = wad_values.num() / wad_stride();
+    for (int i = vsplits.num() - 1; i >= 0; --i) {
+      Vsplit vspl = vsplit(i, wad_end);
+      wad_end -= vspl.ar_wad.num();
+      func(std::move(vspl));
+    }
+    assertx(wad_end == 0);
+  }
 };
 
 // Start the recording with the current live mesh as the full mesh.

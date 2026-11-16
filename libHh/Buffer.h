@@ -57,11 +57,14 @@ class WBuffer : public Buffer {
   ~WBuffer() { assertw(!_n); }
   enum class EFlush { part, all, other };
   EFlush flush(int nb = 0);  // (nb == 0 is all)
-  void put(const void* buf, int nbytes);
+  void put(std::string_view s);
   void put(char ch);
   void put(short i);
   void put(int i);
   void put(float f);
+
+ private:
+  void put(const void* buf, int nbytes);
 };
 
 //----------------------------------------------------------------------------

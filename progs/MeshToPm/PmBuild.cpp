@@ -57,7 +57,10 @@ void start_recording(const WorkMesh& mesh, PmRecorder& recorder) {
   recorder.info = full_mesh_info(mesh);
   const int nv = recorder.info._full_nvertices;  // An upper bound on the number of collapses.
   recorder.vsplits.reserve(nv);
-  recorder.wad_values.reserve(nv * recorder.wad_stride());  // Typically about one delta per vsplit.
+  // There is at least one delta per vsplit, and their total is close to the number of wedges (all equal if each
+  // vertex has a single wedge), but it can exceed it slightly (by 0.14% in one test mesh).
+  const int nw = recorder.info._full_nwedges;
+  recorder.wad_values.reserve((nw + nw / 64) * recorder.wad_stride());
   recorder.removed_original_ids.reserve(nv);
   recorder.num_faces_at_start = recorder.info._full_nfaces;
 }
@@ -200,13 +203,14 @@ void collapse(WorkMesh& mesh, const EcolConfig& config, PmRecorder& recorder) {
     if (recorder.info._has_rgb) recorder.wad_values.push_array(ad.drgb);
     if (recorder.info._has_uv) recorder.wad_values.push_array(ad.duv);
   }
-  const int wad_end = recorder.wad_values.num() / recorder.wad_stride();
-  recorder.vsplits.push(CompactVsplit{vspl.flclw, wad_end, vspl.vad_large.dpoint, vspl.vlr_offset1,
-                                      narrow_cast<ushort>(code), vspl.fl_matid, vspl.fr_matid});
+  vspl.code = narrow_cast<ushort>(code);
+  assertx(vspl.ar_wad.num() == vspl.expected_wad_num(recorder.info));  // The count need not be stored.
+  recorder.vsplits.push(CompactVsplit{vspl.flclw, vspl.vad_large.dpoint, vspl.vlr_offset1, vspl.code,
+                                      vspl.fl_matid, vspl.fr_matid});
   recorder.removed_original_ids.push(mesh._vertex_original_id[vt]);
 }
 
-Vsplit PmRecorder::vsplit(int i) const {
+Vsplit PmRecorder::vsplit(int i, int wad_end) const {
   const CompactVsplit& cv = vsplits[i];
   Vsplit vspl;
   vspl.flclw = cv.flclw;
@@ -216,9 +220,10 @@ Vsplit PmRecorder::vsplit(int i) const {
   vspl.fr_matid = cv.fr_matid;
   vspl.vad_large.dpoint = cv.vad_large;
   vspl.vad_small.dpoint = Vector(0.f, 0.f, 0.f);
-  const int wad_start = i ? vsplits[i - 1].wad_end : 0;
+  const int num_wads = vspl.expected_wad_num(info), wad_start = wad_end - num_wads;
+  assertx(wad_start >= 0);
   const int stride = wad_stride();
-  vspl.ar_wad.init(cv.wad_end - wad_start);
+  vspl.ar_wad.init(num_wads);
   for_int(k, vspl.ar_wad.num()) {
     PmWedgeAttribD& ad = vspl.ar_wad[k];
     const float* p = &wad_values[(wad_start + k) * stride];
@@ -259,7 +264,7 @@ void finalize_pm(const WorkMesh& mesh, PmRecorder& recorder, AWMesh& base_mesh, 
 
 void write_pm(std::ostream& os, const AWMesh& base_mesh, const PMeshInfo& info, const PmRecorder& recorder) {
   PMesh::write_header_and_base_mesh(os, info, base_mesh);
-  for (int i = recorder.vsplits.num() - 1; i >= 0; --i) recorder.vsplit(i).write(os, info);
+  recorder.for_each_vsplit_in_pm_order([&](Vsplit&& vspl) { vspl.write(os, info); });
   PMesh::write_trailer(os);
 }
 
@@ -268,7 +273,7 @@ void make_pmesh(const AWMesh& base_mesh, const PMeshInfo& info, const PmRecorder
   pmesh._info = info;
   pmesh._vsplits.init(0);
   pmesh._vsplits.reserve(recorder.vsplits.num());
-  for (int i = recorder.vsplits.num() - 1; i >= 0; --i) pmesh._vsplits.push(recorder.vsplit(i));
+  recorder.for_each_vsplit_in_pm_order([&](Vsplit&& vspl) { pmesh._vsplits.push(std::move(vspl)); });
 }
 
 Array<int> pm_original_ids(const WorkMesh& mesh, const PmRecorder& recorder) {

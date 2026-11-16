@@ -4,8 +4,8 @@ read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
 Usage: ply_view file.ply [G3dOGL_args...]
        ply_view - [G3dOGL_args...] <file.ply
 
-View a Stanford ply mesh using G3dOGL, which reads it directly (with its float coordinates, normals, colors, and
-texture coordinates) rather than converting it to a mesh.
+View a Stanford ply mesh using G3dOGL, which recognizes it in any input file or stream and reads it directly (with
+its float coordinates, normals, colors, and texture coordinates) rather than converting it to a mesh.
 
 Instructions:
   Use the key sequence 'De' to toggle edges on/off.
@@ -21,4 +21,4 @@ END_USAGE_EXAMPLES
 
 if [[ $# == 0 || $1 == --help ]]; then echo "$usage"; exit 0; fi
 
-exec G3dOGL -ply_mode "$@"
+exec G3dOGL "$@"

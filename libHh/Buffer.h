@@ -3,6 +3,7 @@
 #define MESH_PROCESSING_LIBHH_BUFFER_H_
 
 #include <cstring>  // memcpy().
+#include <streambuf>
 
 #include "libHh/Array.h"
 #include "libHh/NetworkOrder.h"
@@ -41,6 +42,7 @@ class RBuffer : public Buffer {
   [[nodiscard]] bool empty() const { return _n == 0; }
   [[nodiscard]] size_t size() const { return num(); }
   [[nodiscard]] char operator[](int bi) const;
+  [[nodiscard]] char* data() { return _ar.data() + _beg; }  // The num() bytes in the buffer.
   [[nodiscard]] bool has_line() const;
   // The following function dies if len is not sufficient; string str includes '\n'; returns success.
   [[nodiscard]] bool extract_line(string& str);
@@ -49,6 +51,22 @@ class RBuffer : public Buffer {
   [[nodiscard]] short get_short(int bi) const;
   [[nodiscard]] float get_float(int bi) const;
   void wait_for_input();
+};
+
+// A read-only std::streambuf over the data of an RBuffer, which it refills as needed (waiting for input on fd 0).
+// Upon its destruction, the bytes read through it are extracted from the RBuffer, so that the RBuffer can continue
+// to be parsed after a section of the input is read through an std::istream.
+class RBufferStreambuf : public std::streambuf {
+ public:
+  explicit RBufferStreambuf(RBuffer& rbuffer) : _rbuffer(rbuffer) {}
+  ~RBufferStreambuf() override { extract_consumed(); }
+
+ protected:
+  int_type underflow() override;
+
+ private:
+  RBuffer& _rbuffer;
+  void extract_consumed();
 };
 
 class WBuffer : public Buffer {

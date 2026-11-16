@@ -1,8 +1,6 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
-#define DEF_PM
 #define DEF_SR
 #define DEF_SC
-#define DEF_PLY
 
 #include "Hw.h"
 #include "libHh/A3dStream.h"
@@ -14,8 +12,8 @@
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"  // Vnors
-#include "libHh/PMesh.h"   // DEF_PM
-#include "libHh/Ply.h"     // DEF_PLY
+#include "libHh/PMesh.h"
+#include "libHh/Ply.h"
 #include "libHh/Polygon.h"
 #include "libHh/SrMesh.h"  // DEF_SR
 #include "libHh/StringOp.h"
@@ -53,7 +51,6 @@ extern float lod_level;    // In movie/video.
 extern void UpdateOb1Bbox(const Bbox<float, 3>& bbox);
 extern void UpdateOb1Points(CArrayView<Point> points);
 extern void update_lod();
-extern bool keep_stdin_open;
 extern float override_frametime;
 extern bool lod_mode;
 
@@ -157,7 +154,7 @@ float edgeoffset;
 Frame tcami;
 Frame feyetomodel;
 // Frame fpostomodel;
-int cob;
+int cob = 1;      // As in g3d::cob, before HB::set_current_object() is first called.
 bool lquickmode;  // Is quickmode active now?
 bool lshading;
 bool lsmooth;
@@ -285,6 +282,15 @@ struct Texture {
 
 Array<Texture> g_textures;
 
+// A progressive mesh, traversed to a level of detail.
+struct PmState {
+  explicit PmState(unique_ptr<PMesh> ppmesh) : pmesh(std::move(ppmesh)), pmrs(*pmesh), pmi(pmrs) {}
+  unique_ptr<PMesh> pmesh;
+  PMeshRStream pmrs;
+  PMeshIter pmi;
+  float lod_level{0.f};  // Fraction of the vsplits that are applied.
+};
+
 class GxObject {
  public:
   ~GxObject() { assertx(!_opened); }
@@ -300,7 +306,9 @@ class GxObject {
     assertx(!_opened);
     return _arn;
   }
-  GMesh* _pmesh{nullptr};
+  GMesh* _mesh{nullptr};
+  unique_ptr<PmState> _pm;
+  unique_ptr<PlyMesh> _ply;  // Its normals are computed in draw_ply() if absent and needed.
 
  private:
   bool _opened{false};
@@ -335,6 +343,10 @@ class GxObjects {
   void make_link(int oldsegn, int newsegn);
   [[nodiscard]] bool defined(int segn) const { return !!obp(segn); }  // Recursion on links not permitted.
   [[nodiscard]] GxObject& operator[](int i) { return *assertx(obp(i)); }
+  [[nodiscard]] GxObject& opened() {
+    assertx(_segn != -1);
+    return *_ob[_segn];
+  }
 
  private:
   int _imin{k_max_object};
@@ -350,16 +362,14 @@ bool GxObject::s_idraw;
 
 GxObjects g_xobs;
 
-// *** PM stuff (progressive mesh)
+// *** PM stuff (progressive mesh of an object)
 
-bool pm_mode;
-#if defined(DEF_PM)
-void read_pm(const string& filename);
-void draw_pm();
-void pm_wrap_draw(bool show);
-void pm_set_lod(float lod);
-bool pm_key_press(char ch);
-#endif
+void init_pm_lod(PmState& pm);
+void draw_pm(PmState& pm);
+void pm_wrap_draw(PmState& pm, bool show);
+void pm_set_lod(PmState& pm, float lod);
+bool pm_key_press(PmState& pm, char ch);
+bool pm_slider_hidden;  // Hide the LOD slider of the progressive mesh of the current object ('DS').
 
 // *** SR stuff (selective refinement)
 
@@ -405,13 +415,27 @@ int sc_gm_num = -1;
 bool psc_key_press(char ch);
 #endif
 
-// *** PLY stuff
+// *** PLY stuff (PLY mesh of an object)
 
-bool ply_mode;
-#if defined(DEF_PLY)
-void read_ply_file(const string& filename);
-void draw_ply();
-#endif
+void draw_ply(PlyMesh& ply_mesh);
+
+// *** Sliders
+
+// The progressive mesh whose LOD slider is active: that of the current object if it has vsplits, unless a mode
+// (SR, PSC, or SC geomorph) takes over the slider.
+PmState* slider_pm() {
+  if (sr_mode || psc_mode || sc_gm_mode || !g_xobs.defined(cob)) return nullptr;
+  PmState* pm = g_xobs[cob]._pm.get();
+  return pm && pm->pmesh->_info._tot_nvsplits > 0 ? pm : nullptr;
+}
+
+// Whether the mouse button pressed at yx_pointer_old acts on a slider.
+bool pointer_in_slider() {
+  const bool in_left_area = yx_pointer_old[1] < k_one_slider_left_thresh;
+  if (psc_mode || sc_gm_mode) return slidermode && in_left_area;
+  if (slider_pm()) return !pm_slider_hidden && in_left_area;
+  return slidermode;
+}
 
 // *** lighting
 
@@ -572,9 +596,7 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
   const Vec2<float> yxf = convert<float>(yx) / convert<float>(win_dims);
   if (pressed) yx_pointer_old = yxf;
   const bool shift = get_key_modifier(EModifier::shift);
-  const bool in_slider = (slidermode && !(pm_mode && yx_pointer_old[1] >= k_one_slider_left_thresh) &&
-                          !(psc_mode && yx_pointer_old[1] >= k_one_slider_left_thresh) &&
-                          !(sc_gm_mode && yx_pointer_old[1] >= k_one_slider_left_thresh));
+  const bool in_slider = pointer_in_slider();
   if (pressed) {
     was_using_dl = use_dl;
     if (in_slider) {
@@ -2085,7 +2107,7 @@ void draw_all() {
     is_init = true;
     for (int i = g_xobs.min_segn(); i <= g_xobs.max_segn(); i++) {
       if (!setup_ob(i)) continue;
-      if (g_xobs[i]._pmesh) mesh_init(*g_xobs[i]._pmesh);
+      if (g_xobs[i]._mesh) mesh_init(*g_xobs[i]._mesh);
     }
   }
   static const bool no_dl = getenv_bool("G3D_NO_DL");
@@ -2108,7 +2130,7 @@ void draw_all() {
     //   .tmpm textured     6.4 -> 53.3
     //
     // If the mesh has been modified since cached, turn off all caching.
-    if (use_dl && svalid_dl.contains(i) && g_xobs[i]._pmesh && !g_xobs[i]._pmesh->gflags().flag(g3d::mflag_ok)) {
+    if (use_dl && svalid_dl.contains(i) && g_xobs[i]._mesh && !g_xobs[i]._mesh->gflags().flag(g3d::mflag_ok)) {
       svalid_dl.remove(i);
       static const bool g3d_force_dl1 = getenv_bool("G3D_FORCE_DL1");
       if (!g3d_force_dl1) use_dl = false;
@@ -2130,11 +2152,7 @@ void draw_all() {
       }
     }
 
-    if (i == 1 && pm_mode) {
-#if defined(DEF_PM)
-      draw_pm();
-#endif
-    } else if (i == 1 && sr_mode) {
+    if (i == 1 && sr_mode) {
 #if defined(DEF_SR)
       draw_sr();
 #endif
@@ -2146,15 +2164,14 @@ void draw_all() {
 #if defined(DEF_SC)
       draw_sc_gm(Gmorphs[sc_gm_morph].getK());
 #endif
-    } else if (i == 1 && ply_mode) {
-#if defined(DEF_PLY)
-      draw_ply();
-#endif
     } else {
-      if (g_xobs[i]._pmesh) draw_mesh(*g_xobs[i]._pmesh);
-      draw_list(g_xobs[i].traverse());
+      GxObject& ob = g_xobs[i];
+      if (ob._mesh) draw_mesh(*ob._mesh);
+      draw_list(ob.traverse());
+      if (ob._pm) draw_pm(*ob._pm);
+      if (ob._ply) draw_ply(*ob._ply);
     }
-    if (g_xobs[i]._pmesh) g_xobs[i]._pmesh->gflags().flag(g3d::mflag_ok) = true;  // If sc_mode, psc_mode, etc.
+    if (g_xobs[i]._mesh) g_xobs[i]._mesh->gflags().flag(g3d::mflag_ok) = true;  // If sc_mode, psc_mode, etc.
 
     if (defining_dl) {
       defining_dl = false;
@@ -2172,12 +2189,6 @@ void draw_all() {
 }
 
 void wrap_draw(bool show) {
-  if (pm_mode) {
-#if defined(DEF_PM)
-    pm_wrap_draw(show);
-#endif
-    return;
-  }
   if (sr_mode) {
 #if defined(DEF_SR)
     sr_wrap_draw(show);
@@ -2194,6 +2205,10 @@ void wrap_draw(bool show) {
 #if defined(DEF_SC)
     sc_gm_wrap_draw(show);
 #endif
+    return;
+  }
+  if (PmState* pm = slider_pm()) {
+    if (!pm_slider_hidden) pm_wrap_draw(*pm, show);
     return;
   }
   if (!slidermode) return;
@@ -2287,6 +2302,7 @@ void all_reset() {
   perspec = true;
   uvtopos = false;
   slidermode = false;
+  pm_slider_hidden = false;
   outside_frustum = false;
   butquick = false;
   quickmode = false;
@@ -2398,7 +2414,7 @@ void GxObject::close() {
 // NOLINTNEXTLINE(readability-make-member-function-const): it modifies the mesh.
 void GxObject::morph(float finterp) {  // Here, finterp == 1.f is new,   finterp == 0.f is old.
   use_dl = false;
-  GMesh& mesh = *_pmesh;
+  GMesh& mesh = *_mesh;
   mesh_init(mesh);
   const bool has_v_color = mesh.gflags().flag(mflag_v_colors);
   const bool has_c_color = mesh.gflags().flag(mflag_c_colors);
@@ -2546,12 +2562,10 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   Vec3<float> meshcols = {.5f, .5f, .5f};
   Vec3<float> meshcolp = {4.f, 0.f, 0.f};  // Value 4 to match normal-map; was 5 before 2002-01-17.
   Vec1<float> meshcola = {1.f};
-  string pm_filename;
   string sc_filename;
   string sc_gm_filename;
   string psc_filename;
   string sr_filename;
-  string ply_filename;
   const bool hw_success = hw.init(aargs);
   ParseArgs args(aargs, "HB_GL");
   HH_ARGSP(edgecolor, "#RRGGBB : set 'De' color");
@@ -2582,12 +2596,10 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   HH_ARGSD(texturemap, "image_filename : load texture map");
   HH_ARGSP(texturenormal, "0 | 1 : normal (not bump) map instead of rgb map");
   HH_ARGSP(texturescale, "fac : scale texture coordinates (0=no_wrap)");
-  args.p("-pm_mode", pm_filename, "file.pm : progressive mesh mode");
   args.p("-sr_mode", sr_filename, "file.pm : selective refinement");
   args.p("-sc_mode", sc_filename, "file.sc : simplicial complex mode");
   args.p("-psc_mode", psc_filename, "file.psc : sc unify stream");
   args.p("-sc_gm_mode", sc_gm_filename, "file.scg : sc geomorph");
-  args.p("-ply_mode", ply_filename, "file.ply : read ply file");
   HH_ARGSF(hpix, ": do standard work for profiling");
   HH_ARGSF(worldlight, ": bind light to world coordinates");
   HH_ARGSP(fdisplacepolygon, "f : change OpenGL setting");
@@ -2614,14 +2626,6 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   assertx(meshcola[0] >= 0.f && meshcola[0] <= 1.f);
   mesh_color.d[3] = uint8_from_unit(meshcola[0]);
   if (picture) nice_rendering = true;
-  if (pm_filename != "") {
-#if defined(DEF_PM)
-    pm_mode = true;
-    read_pm(pm_filename);
-#else
-    assertnever("not enabled");
-#endif
-  }
   if (sr_filename != "") {
 #if defined(DEF_SR)
     sr_mode = true;
@@ -2654,14 +2658,6 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
     read_sc_gm(sc_gm_filename);
     sc_gm_mode = true;
     use_dl = false;
-#else
-    assertnever("not enabled");
-#endif
-  }
-  if (ply_filename != "") {
-#if defined(DEF_PLY)
-    read_ply_file(ply_filename);
-    ply_mode = true;
 #else
     assertnever("not enabled");
 #endif
@@ -2845,11 +2841,9 @@ void HB::draw_space() {
 }
 
 bool HB::special_keypress(char ch) {
+  if (PmState* pm = slider_pm(); pm && pm_key_press(*pm, ch)) return true;
 #if defined(DEF_SR)
   if (sr_mode && sr_key_press(ch)) return true;
-#endif
-#if defined(DEF_PM)
-  if (pm_mode && pm_key_press(ch)) return true;
 #endif
 #if defined(DEF_SC)
   if (psc_mode && psc_key_press(ch)) return true;
@@ -2899,8 +2893,12 @@ bool HB::special_keypress(char ch) {
       hw.redraw_now();
       break;
     case 'S':
-      slidermode = !slidermode;
-      if (slidermode) use_dl = false;
+      if (slider_pm()) {
+        pm_slider_hidden = !pm_slider_hidden;
+      } else {
+        slidermode = !slidermode;
+        if (slidermode) use_dl = false;
+      }
       hw.redraw_now();
       break;
     case 'o':
@@ -3064,11 +3062,26 @@ void HB::open_segment(int segn) { g_xobs.open(segn); }
 
 void HB::segment_add_object(const A3dElem& el) { g_xobs.add(el); }
 
+void HB::segment_add_pmesh(unique_ptr<PMesh> pmesh) {
+  GxObject& ob = g_xobs.opened();
+  if (ob._pm) Warning("Object has more than one progressive mesh; keeping the last one");
+  ob._pm = make_unique<PmState>(std::move(pmesh));
+  init_pm_lod(*ob._pm);
+  invalidate_dls();
+}
+
+void HB::segment_add_ply(unique_ptr<PlyMesh> ply_mesh) {
+  GxObject& ob = g_xobs.opened();
+  if (ob._ply) Warning("Object has more than one PLY mesh; keeping the last one");
+  ob._ply = std::move(ply_mesh);
+  invalidate_dls();
+}
+
 void HB::close_segment() { g_xobs.close(); }
 
 void HB::segment_attach_mesh(int segn, GMesh* pmesh) {
   if (!assertw(g_xobs.defined(segn))) return;
-  g_xobs[segn]._pmesh = pmesh;
+  g_xobs[segn]._mesh = pmesh;
 }
 
 void HB::make_segment_link(int oldsegn, int newsegn) { g_xobs.make_link(oldsegn, newsegn); }
@@ -3079,7 +3092,7 @@ void HB::segment_morph_mesh(int segn, float finterp) {
   ledges = g_xobs.edges[segn];
   lcullface = g_xobs.cullface[segn];
   if (!lshading && ledges) lsmooth = false;  // Cheaper.
-  assertx(g_xobs[segn]._pmesh);              // LOD mode requires that each object be a mesh.
+  assertx(g_xobs[segn]._mesh);               // LOD mode requires that each object be a mesh.
   g_xobs[segn].morph(finterp);
 }
 
@@ -3109,9 +3122,7 @@ void* HB::escape(int code, void* data) {
           was_using_dl = use_dl;
           use_dl = false;
         }
-#if defined(DEF_PM)
-        if (pm_mode) pm_set_lod(fdata);
-#endif
+        if (PmState* pm = slider_pm()) pm_set_lod(*pm, fdata);
 #if defined(DEF_SC)
         if (psc_mode) psc_set_lod(fdata);
         if (sc_gm_mode) sc_gm_set_lod(fdata);
@@ -3194,98 +3205,84 @@ void draw_lod_slider(float lod, int nv0, int nv1) {
   }
 }
 
-// *** PM mode
+// *** PM of an object
 
-#if defined(DEF_PM)
-
-// Variables.
-PMesh pmesh;
-unique_ptr<RFile> g_fi;
-unique_ptr<PMeshRStream> pmrs;
-unique_ptr<PMeshIter> pmi;
-float pm_lod_level = getenv_float("PM_LOD_LEVEL", 0.f);
-
-void read_pm(const string& filename) {
-  // HH_TIMER("_read_pm");
-  // RFile fi(filename);
-  if (filename == "-") g3d::keep_stdin_open = true;
-  g_fi = make_unique<RFile>(filename);
-  pmrs = make_unique<PMeshRStream>((*g_fi)(), &pmesh);
-  pmi = make_unique<PMeshIter>(*pmrs);
-  if (0 && pm_lod_level == 0.f) pm_lod_level = 1.f;
-  const int pm_lod_num_faces = getenv_int("PM_LOD_NUM_FACES", 0);
-  const int base_nv = pmrs->base_mesh()._vertices.num();
-  const int full_nv = pmrs->_info._full_nvertices;
+// Set the initial level of detail of a progressive mesh, as given by the environment variable PM_LOD_LEVEL or
+// PM_LOD_NUM_FACES.
+void init_pm_lod(PmState& pm) {
+  static const float pm_lod_level = getenv_float("PM_LOD_LEVEL", 0.f);
+  static const int pm_lod_num_faces = getenv_int("PM_LOD_NUM_FACES", 0);
+  const PMeshInfo& info = pm.pmesh->_info;
+  const int base_nv = pm.pmesh->_base_mesh._vertices.num();
   if (pm_lod_num_faces > 0) {
-    pmi->goto_nfaces(pm_lod_num_faces);
-    pm_lod_level = clamp(float(pmi->_vertices.num() - base_nv) / max(full_nv - base_nv, 1), 0.f, 1.f);
+    pm.pmi.goto_nfaces(pm_lod_num_faces);
+    pm.lod_level = clamp(float(pm.pmi._vertices.num() - base_nv) / max(info._full_nvertices - base_nv, 1), 0.f, 1.f);
   } else {
-    pmi->goto_nvertices(base_nv + int(pmrs->_info._tot_nvsplits * pm_lod_level + .5f));
+    pm.lod_level = pm_lod_level;
+    pm.pmi.goto_nvertices(base_nv + int(info._tot_nvsplits * pm.lod_level + .5f));
   }
-  slidermode = pmrs->_info._tot_nvsplits > 0;
-  showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), pmrs->_info._full_nvertices, pmrs->_info._full_nfaces);
-  g3d::UpdateOb1Bbox(pmrs->_info._full_bbox);
-  if (g3d::g_filename == "") g3d::g_filename = filename;
 }
 
-float pm_nv_ratio() { return float(pmesh._info._full_nvertices) / pmesh._base_mesh._vertices.num(); }
+float pm_nv_ratio(const PmState& pm) {
+  return float(pm.pmesh->_info._full_nvertices) / pm.pmesh->_base_mesh._vertices.num();
+}
 
-void pm_update_lod() {
-  const float flevel = min(pm_lod_level, 1.f);
-  const int nv0 = pmesh._base_mesh._vertices.num();
-  const int nvsplits = pmesh._info._tot_nvsplits;
+void pm_update_lod(PmState& pm) {
+  const float flevel = min(pm.lod_level, 1.f);
+  const int nv0 = pm.pmesh->_base_mesh._vertices.num();
+  const int nvsplits = pm.pmesh->_info._tot_nvsplits;
   const int nv = nv0 + int((nvsplits + 1) * flevel * .999999f);
-  pmi->goto_nvertices(nv);
+  pm.pmi.goto_nvertices(nv);
   invalidate_dls();
   if (g3d::output) {
-    const float val = lod_use_nvertices ? pmi->_vertices.num() : pm_lod_level;
+    const float val = lod_use_nvertices ? pm.pmi._vertices.num() : pm.lod_level;
     std::cout << "lod " << val << '\n' << std::flush;
   }
 }
 
-void pm_wrap_draw(bool show) {
-  if (!slidermode) return;
+void pm_wrap_draw(PmState& pm, bool show) {
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
-      const float oldval = pm_lod_level;
-      pm_lod_level = drag_lod_slider(pm_lod_level, pm_nv_ratio());
-      if (pm_lod_level != oldval) pm_update_lod();
+      const float oldval = pm.lod_level;
+      pm.lod_level = drag_lod_slider(pm.lod_level, pm_nv_ratio(pm));
+      if (pm.lod_level != oldval) pm_update_lod(pm);
       hw.redraw_later();
     }
   } else {
     int lmargin = !bigfont() ? 6 : 3;
     if (win_dims[1] < 400 && !bigfont()) lmargin -= 3;
     HB::draw_row_col_text(V(1, lmargin), "LOD");
-    HB::draw_row_col_text(V(2, lmargin), sform(" %.3f", pm_lod_level));
+    HB::draw_row_col_text(V(2, lmargin), sform(" %.3f", pm.lod_level));
     HB::draw_row_col_text(V(1, lmargin + 8), "#Faces");
-    HB::draw_row_col_text(V(2, lmargin + 8), sform(" %d", pmi->_faces.num()));
+    HB::draw_row_col_text(V(2, lmargin + 8), sform(" %d", pm.pmi._faces.num()));
     // HB::draw_row_col_text(V(4, 21), "#Verts");
-    // HB::draw_row_col_text(V(5, 22), std::to_string(pmi->_vertices.num()));
-    draw_lod_slider(pm_lod_level, pmesh._base_mesh._vertices.num(), pmesh._info._full_nvertices);
+    // HB::draw_row_col_text(V(5, 22), std::to_string(pm.pmi._vertices.num()));
+    draw_lod_slider(pm.lod_level, pm.pmesh->_base_mesh._vertices.num(), pm.pmesh->_info._full_nvertices);
   }
 }
 
-void pm_set_lod(float lod) {
+void pm_set_lod(PmState& pm, float lod) {
   if (lod_use_nvertices) {
     const int nv = int(lod);
-    const int nv0 = pmesh._base_mesh._vertices.num();
-    const int nvsplits = pmesh._info._tot_nvsplits;
+    const int nv0 = pm.pmesh->_base_mesh._vertices.num();
+    const int nvsplits = pm.pmesh->_info._tot_nvsplits;
     if (!assertw(nvsplits)) return;
-    pm_lod_level = (float(nv) - nv0) / nvsplits;
+    pm.lod_level = (float(nv) - nv0) / nvsplits;
   } else {
-    pm_lod_level = lod;
+    pm.lod_level = lod;
   }
-  pm_lod_level = clamp(pm_lod_level, 0.f, 1.f);
-  pm_update_lod();
+  pm.lod_level = clamp(pm.lod_level, 0.f, 1.f);
+  pm_update_lod(pm);
   hw.redraw_later();
 }
 
-void draw_pm() {
-  AWMesh& wmesh = *pmi;
+void draw_pm(PmState& pm) {
+  AWMesh& wmesh = pm.pmi;
+  const PMeshInfo& info = pm.pmesh->_info;
   if (!ledges || lshading) {
     // Options lsmooth, lquickmode not handled.
-    if (!pmesh._info._has_rgb) assertw(lsmooth);
-    glShadeModel(lsmooth || pmesh._info._has_rgb ? GL_SMOOTH : GL_FLAT);
+    if (!info._has_rgb) assertw(lsmooth);
+    glShadeModel(lsmooth || info._has_rgb ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
     update_mat_color(mesh_color);
     if (texture_active && !texture_lit) {
@@ -3298,14 +3295,14 @@ void draw_pm() {
     // static const int pm_strips = getenv_int("PM_STRIPS");
     // 2002-05-28: it now always seems faster with strips and it greatly helps when Display Lists are enabled.
     static const bool pm_strips = !getenv_bool("PM_NOSTRIPS");
-    if (!pm_strips || pmesh._info._has_rgb) {
+    if (!pm_strips || info._has_rgb) {
       if (0) Warning("PMesh: no strips for rendering (may be slower)");
-      wmesh.ogl_render_faces_individually(pmesh._info, texture_active);
+      wmesh.ogl_render_faces_individually(info, texture_active);
     } else if (defining_dl && g_is_ati) {
       // Much faster to create display list, since fewer primitives.
-      wmesh.ogl_render_faces_individually(pmesh._info, texture_active);
+      wmesh.ogl_render_faces_individually(info, texture_active);
     } else {
-      wmesh.ogl_render_faces_strips(pmesh._info, texture_active);
+      wmesh.ogl_render_faces_strips(info, texture_active);
     }
     initialize_unlit(), initialize_lit();  // Re-synchronize.
   }
@@ -3320,7 +3317,7 @@ void draw_pm() {
     initialize_unlit();
     set_thickness(thicknormal);
     update_cur_color(pix_edgecolor);
-    if (uvtopos && pmesh._info._has_uv) {
+    if (uvtopos && info._has_uv) {
       // Draw the edges in the uv domain, as for a mesh (an inefficient path that draws interior edges twice).
       glBegin(GL_LINES);
       for_int(f, wmesh._faces.num()) for_int(j, 3) {
@@ -3337,17 +3334,17 @@ void draw_pm() {
   }
 }
 
-bool pm_key_press(char ch) {
+bool pm_key_press(PmState& pm, char ch) {
   switch (ch) {
     case 'c':
-      pm_lod_level = 0.f;
-      pm_update_lod();
+      pm.lod_level = 0.f;
+      pm_update_lod(pm);
       if (g3d::output) std::cout << "lod -1\n" << std::flush;
       hw.redraw_now();
       break;
     case 'a':
-      pm_lod_level = 1.f;
-      pm_update_lod();
+      pm.lod_level = 1.f;
+      pm_update_lod(pm);
       if (g3d::output) std::cout << "lod -1\n" << std::flush;
       hw.redraw_now();
       break;
@@ -3355,8 +3352,6 @@ bool pm_key_press(char ch) {
   }
   return true;
 }
-
-#endif  // defined(DEF_PM)
 
 // *** SR mode
 
@@ -4747,26 +4742,9 @@ bool psc_key_press(char ch) {
 
 #endif  // defined(DEF_SC)
 
-// *** PLY mode
+// *** PLY mesh of an object
 
-#if defined(DEF_PLY)
-
-PlyMesh ply_mesh;  // Its normals are computed in draw_ply() if absent and needed.
-
-void read_ply_file(const string& filename) {
-  // HH_TIMER("_read_ply");
-  RFile fi(filename);
-  ply_mesh = read_ply(fi());
-  if (ply_mesh.points.empty()) assertnever("ply: no vertices");
-  if (!ply_mesh.num_faces()) Warning("ply: no faces");
-  assertx(!(ply_mesh.uvs.num() && ply_mesh.corner_uvs.num()));
-  showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), ply_mesh.points.num(), ply_mesh.num_faces());
-  const Bbox bbox{ply_mesh.points};
-  g3d::UpdateOb1Bbox(bbox);
-  if (g3d::g_filename == "") g3d::g_filename = filename;
-}
-
-void draw_ply() {
+void draw_ply(PlyMesh& ply_mesh) {
   const CArrayView<Point> ply_vpos = ply_mesh.points;
   Array<Vector>& ply_vnor = ply_mesh.normals;
   const CArrayView<Pixel> ply_vrgb = ply_mesh.colors;
@@ -4873,7 +4851,5 @@ void draw_ply() {
     set_thickness(thicka3d);
   }
 }
-
-#endif  // defined(DEF_PLY)
 
 }  // namespace

@@ -51,3 +51,10 @@ record 1: B -1 99996 -2.75
 record 2: C -2 199999 -2.5
 record 499: F -499 49901490 121.75
 nrecords = 500
+get_line() = before ply
+# ply: ignoring element 'extra'
+ply: v=3 f=1 points[2]=[2, 2, 3] face(0)=0 1 2
+get_line() = after ply
+ply: v=3 f=1 points[2]=[0, 1, 0] face(0)=0 1 2
+get_line() = after ascii ply
+get_line() = <eof>

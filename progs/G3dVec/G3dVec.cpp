@@ -9,7 +9,9 @@
 #include "libHh/HiddenLineRemoval.h"
 #include "libHh/Map.h"
 #include "libHh/MathOp.h"  // floor(Vec<>)
+#include "libHh/PMesh.h"
 #include "libHh/Plot.h"
+#include "libHh/Ply.h"
 #include "libHh/Polygon.h"
 #include "libHh/Set.h"
 #include "progs/G3dOGL/HB.h"
@@ -1244,6 +1246,41 @@ void HB::clear_segment(int segn) { g_xobs.clear(segn); }
 void HB::open_segment(int segn) { g_xobs.open(segn); }
 
 void HB::segment_add_object(const A3dElem& el) { g_xobs.add(el); }
+
+namespace {
+
+// Add a polygon (or a point if it has a single vertex) to the open segment.
+void add_polygon_or_point(CArrayView<Point> points) {
+  A3dElem el(points.num() == 1 ? A3dElem::EType::point : A3dElem::EType::polygon);
+  for (const Point& p : points) el.push(A3dVertex(p, Vector(0.f, 0.f, 0.f), A3dVertexColor(A3dColor(1.f, 1.f, 1.f))));
+  g_xobs.add(el);
+}
+
+}  // namespace
+
+// A progressive mesh is shown at its full resolution.
+void HB::segment_add_pmesh(unique_ptr<PMesh> pmesh) {
+  PMeshRStream pmrs(*pmesh);
+  PMeshIter pmi(pmrs);
+  assertx(pmi.goto_nvertices(pmesh->_info._full_nvertices));
+  for_int(f, pmi._faces.num()) {
+    Vec3<Point> points;
+    for_int(j, 3) points[j] = pmi._vertices[pmi._wedges[pmi._faces[f].wedges[j]].vertex].attrib.point;
+    add_polygon_or_point(points);
+  }
+}
+
+void HB::segment_add_ply(unique_ptr<PlyMesh> ply_mesh) {
+  const PlyMesh& mesh = *ply_mesh;
+  Array<Point> points;
+  for_int(f, mesh.num_faces()) {
+    points.clear();
+    for (const int vi : mesh.face(f)) points.push(mesh.points[vi]);
+    if (points.num() >= 3) add_polygon_or_point(points);
+  }
+  if (!mesh.num_faces())
+    for (const Point& p : mesh.points) add_polygon_or_point(V(p));
+}
 
 void HB::close_segment() { g_xobs.close(); }
 

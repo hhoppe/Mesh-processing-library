@@ -6,6 +6,8 @@
 #include "libHh/FrameIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/MeshOp.h"
+#include "libHh/PMesh.h"
+#include "libHh/Ply.h"
 #include "libHh/Polygon.h"
 #include "libHh/StringOp.h"
 #include "progs/G3dOGL/G3d.h"
@@ -126,6 +128,49 @@ void read_mesh_line(char* sline) {
   mesh.gflags().flag(mflag_ok) = false;
 }
 
+// Whether the buffer starts with a complete line equal to s.
+bool buffer_has_line(const RBuffer& buf, std::string_view s) {
+  const int n = narrow_cast<int>(s.size());
+  if (buf.num() <= n) return false;
+  for_int(i, n) if (buf[i] != s[i]) return false;
+  return buf[n] == '\n' || (buf[n] == '\r' && buf.num() > n + 1 && buf[n + 1] == '\n');
+}
+
+// Read a progressive mesh (through its trailer "End of PM") into the current object.
+void read_pmesh(RBuffer& buf) {
+  open_if_closed();
+  auto pmesh = make_unique<PMesh>();
+  {
+    RBufferStreambuf streambuf(buf);
+    std::istream is(&streambuf);
+    pmesh->read(is);
+  }
+  const PMeshInfo& info = pmesh->_info;
+  const Bbox<float, 3>& bbox = info._full_bbox;
+  for_int(i, 2) for_int(j, 2) for_int(k, 2) g_obs[robn].enter_point(Point(bbox[i, 0], bbox[j, 1], bbox[k, 2]));
+  if (!terse)
+    showf("G3d: (%d) File:%s PM v=%d f=%d\n", robn, filename.c_str(), info._full_nvertices, info._full_nfaces);
+  HB::segment_add_pmesh(std::move(pmesh));
+}
+
+// Read a PLY mesh (through its last element) into the current object.
+void read_ply_mesh(RBuffer& buf) {
+  open_if_closed();
+  auto ply_mesh = make_unique<PlyMesh>();
+  {
+    RBufferStreambuf streambuf(buf);
+    std::istream is(&streambuf);
+    *ply_mesh = read_ply(is);
+  }
+  if (ply_mesh->points.empty()) Warning("ply: no vertices");
+  if (!ply_mesh->num_faces()) Warning("ply: no faces");
+  assertx(!(ply_mesh->uvs.num() && ply_mesh->corner_uvs.num()));
+  for (const Point& p : ply_mesh->points) g_obs[robn].enter_point(p);
+  if (!terse)
+    showf("G3d: (%d) File:%s ply v=%d f=%d\n", robn, filename.c_str(), ply_mesh->points.num(), ply_mesh->num_faces());
+  HB::segment_add_ply(std::move(ply_mesh));
+}
+
 bool try_g3d_command(const string& pstr) {
   string str = pstr;
   if (0) {
@@ -193,6 +238,15 @@ ETryInput try_input(RBuffer& buf, RBufferedA3dStream& ra3d, string& str) {
       // Fall-out.
       break;
     default: assertnever("");
+  }
+  // Try a progressive mesh or a PLY mesh.
+  if (buffer_has_line(buf, "PM")) {
+    read_pmesh(buf);
+    return ETryInput::success;
+  }
+  if (buffer_has_line(buf, "ply")) {
+    read_ply_mesh(buf);
+    return ETryInput::success;
   }
   if (!buf.extract_line(str)) return ETryInput::nothing;  // Partial something.
   // 2012-12-11: now trailing '\n' has been removed; all still OK?

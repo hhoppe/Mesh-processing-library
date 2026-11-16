@@ -1,12 +1,16 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/Buffer.h"
 
+#include <cstring>  // memcpy()
+
 #include "libHh/Args.h"
+#include "libHh/Ply.h"
 using namespace hh;
 
 // Run with:
 //   Buffer_test -out 1 -bsize 23 | Buffer_test -out 0
 //   Buffer_test -records -out 1 | Buffer_test -records -out 0
+//   Buffer_test -stream -out 1 | Buffer_test -stream -out 0
 
 namespace {
 
@@ -115,6 +119,74 @@ void perform_in_records() {
   assertx(nrecords == k_num_records);
 }
 
+// A binary PLY file with a triangle and a trailing element that is not used, followed by an ASCII PLY file.
+string binary_ply() {
+  string s =
+      "ply\nformat binary_little_endian 1.0\nelement vertex 3\nproperty float x\nproperty float y\n"
+      "property float z\nelement face 1\nproperty list uchar int vertex_indices\nelement extra 2\n"
+      "property uchar value\nend_header\n";
+  const auto put = [&](auto value) {
+    char bytes[sizeof(value)];
+    std::memcpy(bytes, &value, sizeof(value));
+    if constexpr (std::endian::native == std::endian::big) std::reverse(bytes, bytes + sizeof(value));
+    s.append(bytes, sizeof(value));
+  };
+  for_int(v, 3) for_int(c, 3) put((v == c ? 1.f : 0.f) + float(v));
+  put(uint8_t{3});
+  for_int(v, 3) put(int32_t{v});
+  for_int(i, 2) put(uint8_t(10 + i));
+  return s;
+}
+
+const string k_ascii_ply =
+    "ply\nformat ascii 1.0\nelement vertex 3\nproperty float x\nproperty float y\nproperty float z\n"
+    "element face 1\nproperty list uchar int vertex_indices\nend_header\n0 0 0\n1 0 0\n0 1 0\n3 0 1 2\n";
+
+// Send text lines with embedded PLY files, in pieces separated by delays.
+void perform_out_stream() {
+  WBuffer wb(1);
+  const string ply = binary_ply();
+  const int half = narrow_cast<int>(ply.size() / 2);
+  wb.put("before ply\n");
+  wb.put(std::string_view(ply).substr(0, half));
+  assertx(wb.flush() == WBuffer::EFlush::all);
+  my_precise_sleep(0.1);
+  wb.put(std::string_view(ply).substr(half));
+  wb.put("after ply\n");
+  wb.put(k_ascii_ply);
+  wb.put("after ascii ply\n");
+  assertx(wb.flush() == WBuffer::EFlush::all);
+}
+
+void perform_in_stream() {
+  RBuffer rb(0);
+  const auto get_line = [&] {
+    string line;
+    while (!rb.extract_line(line)) {
+      if (rb.eof()) {
+        line = "<eof>";
+        break;
+      }
+      if (rb.refill() == RBuffer::ERefill::no) rb.wait_for_input();
+      assertx(!rb.err());
+    }
+    return line;
+  };
+  const auto get_ply = [&] {
+    RBufferStreambuf streambuf(rb);
+    std::istream is(&streambuf);
+    const PlyMesh mesh = read_ply(is);
+    showf("ply: v=%d f=%d points[2]=%s face(0)=%d %d %d\n", mesh.points.num(), mesh.num_faces(),
+          make_string(mesh.points[2]).c_str(), mesh.face(0)[0], mesh.face(0)[1], mesh.face(0)[2]);
+  };
+  SHOW(get_line());
+  get_ply();
+  SHOW(get_line());
+  get_ply();
+  SHOW(get_line());
+  SHOW(get_line());
+}
+
 }  // namespace
 
 int main(int argc, const char** argv) {
@@ -124,8 +196,12 @@ int main(int argc, const char** argv) {
   HH_ARGSP(bsize, "bytes : size of transmission");
   bool records = false;
   HH_ARGSF(records, ": instead transmit records of text lines and binary values");
+  bool stream = false;
+  HH_ARGSF(stream, ": instead transmit text lines with embedded PLY files");
   args.parse();
-  if (records)
+  if (stream)
+    out ? perform_out_stream() : perform_in_stream();
+  else if (records)
     out ? perform_out_records() : perform_in_records();
   else if (out)
     perform_out();

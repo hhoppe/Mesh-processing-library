@@ -108,6 +108,7 @@ void all_reset() {
   for (int i = 0; i <= g_obs.last; i++) g_obs[i].tm() = Frame::identity();
   tview = Frame::identity();
   cob = 1;
+  HB::set_current_object(cob);
   zoom = 1.f;
   object_mode = true;
   eye_move = true;
@@ -1046,6 +1047,7 @@ bool KeyPressed(const string& ps) {
       } else if (lastch == 'a') {
         thisch = 'a';
         cob = clamp(ch - '0', 0, g_obs.last);
+        HB::set_current_object(cob);
         for_intL(ob, g_obs.first, g_obs.last + 1) {
           g_obs[ob].set_vis(ob == cob);
           g_obs[ob].update();

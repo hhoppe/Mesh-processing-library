@@ -26,10 +26,10 @@ c520f53d_1.png 207.00 67.40 207.00 67.40 207.29 67.04
 5e0f6f3e_1.png 254.37 10.86 254.37 10.86 254.37 10.86
 # G3dOGL distcap.sub0.m "Subdivfit -mf distcap.sub0.m -nsub 2 -outn |" (screenshot 1)
 a8bcaba1_1.png 194.37 79.65 194.37 79.65 196.32 77.97
-# PM_LOD_LEVEL=0.05 G3dOGL -pm_mode 57chevy.pm -st demos/data/57chevy.s3d -lightambient .4 -key De (screenshot 1)
-89bea2e2_1.png 200.28 86.53 217.38 62.56 217.75 62.17
+# PM_LOD_LEVEL=0.05 G3dOGL 57chevy.pm -st demos/data/57chevy.s3d -lightambient .4 -key De (screenshot 1)
+d07ba9af_1.png 200.28 86.53 217.38 62.56 217.75 62.17
 # FilterPM demos/data/standingblob.pm -nf 300 -truncate_prior -nf 10000 -truncate_beyond | (screenshot 1)
-9418e4b3_1.png 218.50 63.06 218.50 63.06 218.50 63.06
+c4f3f287_1.png 218.50 63.06 218.50 63.06 218.50 63.06
 # Filterimage demos/data/gaudipark.png -scaletox 200 -tomesh | (screenshot 1)
 fa2c4131_1.png 143.34 77.98 158.82 74.23 173.30 77.63
 # G3dOGL -eyeob demos/data/unit_frustum.a3d -sr_mode office.sr.pm -st demos/data/office_srfig.s3d (screenshot 1)

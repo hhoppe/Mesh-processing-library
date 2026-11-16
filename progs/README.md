@@ -306,7 +306,7 @@ bin/mesh_to_pm demos/data/bunny.orig.m -hull -minvolume >bunny.outer_hull.pm
 
 Given a progressive mesh, we can interactively traverse its continuous levels of detail:
 ```shell
-PM_LOD_LEVEL=0.05 G3dOGL -pm_mode 57chevy.pm -st demos/data/57chevy.s3d -lightambient .4 -key De
+PM_LOD_LEVEL=0.05 G3dOGL 57chevy.pm -st demos/data/57chevy.s3d -lightambient .4 -key De
 ```
 - starting at the level of detail `0.05` (set using the environment variable `PM_LOD_LEVEL`),
 - with mesh edges shown (toggled using the <kbd>De</kbd> key sequence), and
@@ -330,7 +330,7 @@ FilterPM 57chevy.pm -nfaces 2000 -geom_nfaces 3300 -geom_nfaces 5000 -geom_nface
 This example displays a progressive mesh after truncating all detail below 300 faces and above 10000 faces:
 ```shell
 FilterPM demos/data/standingblob.pm -nf 300 -truncate_prior -nf 10000 -truncate_beyond |
-  G3dOGL -pm_mode - -st demos/data/standingblob.s3d
+  G3dOGL -st demos/data/standingblob.s3d
 ```
 
 As an example of simplifying meshes with appearance attributes,
@@ -558,7 +558,9 @@ represented as
 
 Please see the many examples presented earlier.
 The viewer can also read `*.frame` elements to position the viewer and the objects in world space.
-Elements of `*.a3d`, `*.m`, and `*.frame` streams can all be interleaved in a single input stream.
+Elements of `*.a3d`, `*.m`, `*.pm`, `*.ply`, and `*.frame` streams can all be interleaved in a single input stream.
+Each object (e.g., each file named on the command line) can thus hold any mix of polygons, a mesh, a progressive
+mesh, and a PLY mesh; the level-of-detail slider is shown whenever the current object holds a progressive mesh.
 
 The viewer can also render images and record videos (see the examples below).
 

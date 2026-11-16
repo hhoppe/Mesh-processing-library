@@ -1567,6 +1567,10 @@ void PMesh::read(std::istream& is) {
   pmrs.read_base_mesh();
   for (;;)
     if (!pmrs.next_vsplit()) break;
+  // Consume the trailer, so that other data may follow the progressive mesh in the stream.
+  assertx(is.get() == k_magic_first_byte);
+  string line;
+  assertx(my_getline(is, line) && line == "End of PM");
 }
 
 void PMesh::write(std::ostream& os) const {

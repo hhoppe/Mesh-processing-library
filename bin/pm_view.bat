@@ -8,4 +8,4 @@
 ::  g3d_cmp -g3d pm_view demos/results/bunny.outer_hull.pm demos/results/bunny.inner_hull.pm ^
 ::    -key De -st demos/data/bunny.s3d
 
-G3dOGL -pm_mode %*
+G3dOGL %*

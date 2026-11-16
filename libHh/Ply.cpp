@@ -89,14 +89,15 @@ double load_value(const char* p, PlyType type, bool swap) {
   }
 }
 
-// Reads the values of the element instances: in ASCII, one line per instance; in binary, through a buffer that is
-// refilled in large chunks.
+// The number of bytes of fixed-size records that are read at once in binary.
+constexpr int k_chunk_bytes = 1 << 20;
+
+// Reads the values of the element instances: in ASCII, one line per instance; in binary, through a buffer.  It never
+// reads beyond the bytes that are requested, so that other data may follow the PLY data in the stream.
 class PlyValueReader {
  public:
   PlyValueReader(std::istream& is, bool binary, bool big_endian)
-      : _is(is), _binary(binary), _swap(big_endian != (std::endian::native == std::endian::big)) {
-    if (_binary) _buf.init(k_buffer_size);
-  }
+      : _is(is), _binary(binary), _swap(big_endian != (std::endian::native == std::endian::big)) {}
   [[nodiscard]] bool binary() const { return _binary; }
   [[nodiscard]] bool swap() const { return _swap; }
   // In ASCII, read the line of instance i of the named element.
@@ -127,8 +128,25 @@ class PlyValueReader {
     _s = end;
     return value;
   }
+  // Read count values of the given type, calling f(value) on each.
+  void read_values(PlyType type, int count, const auto& f) {
+    if (_binary) {
+      const int size = type_size(type);
+      const char* p = read_bytes(assert_narrow_cast<int>(int64_t{count} * size));
+      for_int(k, count) {
+        f(load_value(p, type, _swap));
+        p += size;
+      }
+    } else {
+      for_int(k, count) f(read(type));
+    }
+  }
   void skip(PlyType type, int count) {
-    for_int(k, count) { (void)read(type); }
+    if (_binary) {
+      (void)read_bytes(assert_narrow_cast<int>(int64_t{count} * type_size(type)));
+    } else {
+      for_int(k, count) { (void)read(type); }
+    }
   }
   // Read the count of a list property.
   int read_count(PlyType type) {
@@ -140,13 +158,13 @@ class PlyValueReader {
   // In binary, returns a pointer to the next n bytes, valid until the next read.
   const char* read_bytes(int n) {
     if (_end - _pos < n) refill(n);
+    ASSERTX(_end - _pos >= n);
     const char* p = _buf.data() + _pos;
     _pos += n;
     return p;
   }
 
  private:
-  static constexpr int k_buffer_size = 1 << 20;
   std::istream& _is;
   bool _binary;
   bool _swap;
@@ -158,14 +176,14 @@ class PlyValueReader {
   void skip_spaces() {
     while (*_s == ' ' || *_s == '\t' || *_s == '\r') _s++;
   }
+  // Read exactly the missing bytes, so that the stream is not read beyond the PLY data.
   void refill(int n) {
     const int remaining = _end - _pos;
-    std::memmove(_buf.data(), _buf.data() + _pos, remaining);
+    if (remaining) std::memmove(_buf.data(), _buf.data() + _pos, remaining);
     _pos = 0;
     _end = remaining;
     if (n > _buf.num()) _buf.resize(n);
-    _is.read(_buf.data() + _end, _buf.num() - _end);
-    _end += int(_is.gcount());
+    _end += int(_is.rdbuf()->sgetn(_buf.data() + _end, n - _end));
     if (_end < n) assertnever("ply: premature end of binary data");
   }
 };
@@ -174,7 +192,7 @@ class PlyValueReader {
 void skip_element(PlyValueReader& reader, const PlyElement& element) {
   if (reader.binary() && !element.has_list()) {
     const int record_size = element.record_size();
-    const int chunk = max((1 << 20) / max(record_size, 1), 1);
+    const int chunk = max(k_chunk_bytes / max(record_size, 1), 1);
     for (int i = 0; i < element.count; i += chunk)
       (void)reader.read_bytes(min(chunk, element.count - i) * record_size);
     return;
@@ -256,10 +274,15 @@ void read_vertices(PlyValueReader& reader, const PlyElement& element, PlyMesh& m
     Array<int> used_slots;
     for_int(s, k_num_slots) if (iprop[s] >= 0) used_slots.push(s);
     const bool swap = reader.swap();
-    for_int(v, nv) {
-      const char* record = reader.read_bytes(record_size);
-      for (const int s : used_slots) values[s] = load_value(record + offset[s], slot_type[s], swap);
-      store(v);
+    const int chunk = max(k_chunk_bytes / max(record_size, 1), 1);
+    for (int v0 = 0; v0 < nv; v0 += chunk) {
+      const int n = min(chunk, nv - v0);
+      const char* record = reader.read_bytes(n * record_size);
+      for_int(i, n) {
+        for (const int s : used_slots) values[s] = load_value(record + offset[s], slot_type[s], swap);
+        store(v0 + i);
+        record += record_size;
+      }
     }
     return;
   }
@@ -312,15 +335,14 @@ void read_faces(PlyValueReader& reader, const PlyElement& element, int nv, PlyMe
       const int count = property.is_list ? reader.read_count(property.count_type) : 1;
       if (i == iindices) {
         nfv = count;
-        for_int(k, count) {
-          const double value = reader.read(property.type);
+        reader.read_values(property.type, count, [&](double value) {
           if (!(value >= 0. && value < nv && value == std::floor(value)))
             assertnever(
                 sform("ply: face %d has an invalid vertex index %.17g (the number of vertices is %d)", f, value, nv));
           mesh.face_vertices.push(int(value));
-        }
+        });
       } else if (i == itexcoord) {
-        for_int(k, count) texcoords.push(float(reader.read(property.type)));
+        reader.read_values(property.type, count, [&](double value) { texcoords.push(float(value)); });
       } else {
         reader.skip(property.type, count);
       }
@@ -415,7 +437,6 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
   mesh.face_start.init(1, 0);
   Array<string> ignored;
   PlyValueReader reader(is, binary, big_endian);
-  const int ilast = max(ivertex, iface);  // The elements beyond it need not be read.
   for_int(i, elements.num()) {
     const PlyElement& element = elements[i];
     if (i == ivertex) {
@@ -424,7 +445,7 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
       read_faces(reader, element, nv, mesh, ignored);
     } else {
       ignored.push("element '" + element.name + "'");
-      if (i < ilast) skip_element(reader, element);
+      skip_element(reader, element);
     }
   }
   if (!ignored.empty()) {

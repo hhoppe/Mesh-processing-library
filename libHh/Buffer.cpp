@@ -221,6 +221,27 @@ void RBuffer::wait_for_input() {
 }
 
 //----------------------------------------------------------------------------
+// *** RBufferStreambuf
+
+void RBufferStreambuf::extract_consumed() {
+  const int n = int(gptr() - eback());
+  if (n) _rbuffer.extract(n);
+  setg(nullptr, nullptr, nullptr);
+}
+
+RBufferStreambuf::int_type RBufferStreambuf::underflow() {
+  extract_consumed();
+  while (_rbuffer.empty()) {
+    if (_rbuffer.eof()) return traits_type::eof();
+    if (_rbuffer.err()) assertnever("RBuffer error");
+    if (_rbuffer.refill() == RBuffer::ERefill::no) _rbuffer.wait_for_input();
+  }
+  char* p = _rbuffer.data();
+  setg(p, p, p + _rbuffer.num());
+  return traits_type::to_int_type(*p);
+}
+
+//----------------------------------------------------------------------------
 // *** WBuffer
 
 // No alignment problem to worry about since the buffer is never word-accessed (at least not by the user).

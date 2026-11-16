@@ -4,7 +4,7 @@ read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
 Usage: pm_view file.pm [G3dOGL_args...]
        pm_view - [G3dOGL_args...] <file.pm
 
-View a progressive mesh using G3dOGL.
+View a progressive mesh using G3dOGL, which recognizes it in any input file or stream.
 
 Instructions:
   Use the left and middle buttons on the slider to change the complexity of the mesh.
@@ -22,4 +22,4 @@ END_USAGE_EXAMPLES
 
 if [[ $# == 0 || $1 == --help ]]; then echo "$usage"; exit 0; fi
 
-exec G3dOGL -pm_mode "$@"
+exec G3dOGL "$@"

@@ -27,8 +27,8 @@ struct PlyMesh {
 
 // Read the body of a PLY file given its header lines.  The properties may have any order and type, a face list
 // named "vertex_indices" (or "vertex_index") may have any count type, and other properties and elements are
-// skipped (and reported in one line).  Dies with a descriptive message on malformed data.  In a binary file, the
-// stream may be read beyond the elements that are used.
+// skipped (and reported in one line).  Dies with a descriptive message on malformed data.  The stream is read
+// exactly up to the end of the PLY data, so other data may follow it.
 [[nodiscard]] PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines);
 
 // Read a PLY file (its header and body).

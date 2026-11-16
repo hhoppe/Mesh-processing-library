@@ -6,4 +6,4 @@
 ::  ply_view bunny.poissonrecon.ply -st bunny.s3d -key DmDb
 ::  g3d_cmp -g3d ply_view bunny.poissonrecon.ply bunny.other.ply -key DmDb -st bunny.s3d
 
-G3dOGL -ply_mode %*
+G3dOGL %*

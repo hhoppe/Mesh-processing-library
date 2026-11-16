@@ -404,7 +404,7 @@ class PMesh : noncopyable {
  public:
   PMesh();
   PMesh(AWMesh&& awmesh, const PMeshInfo& pminfo);
-  // A non-progressive read.
+  // A non-progressive read, through the trailer.
   void read(std::istream& is);  // Die unless empty.
   void write(std::ostream& os) const;
   // The parts of write(), for writing a progressive mesh whose vsplits are generated on the fly: the header and base

@@ -12,6 +12,8 @@ namespace hh {
 
 class A3dElem;
 class GMesh;
+class PMesh;
+struct PlyMesh;
 
 namespace HB {
 
@@ -65,6 +67,8 @@ void draw_row_col_text(const Vec2<int>& yx, const string& s);
 void clear_segment(int segn);
 void open_segment(int segn);
 void segment_add_object(const A3dElem& el);
+void segment_add_pmesh(unique_ptr<PMesh> pmesh);     // A progressive mesh, shown at a level of detail.
+void segment_add_ply(unique_ptr<PlyMesh> ply_mesh);  // A polygon mesh or point set read from a PLY file.
 void close_segment();
 void segment_attach_mesh(int segn, GMesh* mesh);
 void make_segment_link(int oldsegn, int newsegn);

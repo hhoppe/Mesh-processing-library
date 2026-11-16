@@ -121,6 +121,7 @@ jobs:
           path: |
             *.log
             readme_examples.jpg
+            readme_examples/*.pm
             readme_examples/screenshots/
             !readme_examples/screenshots/*.tile.png
             readme_images/

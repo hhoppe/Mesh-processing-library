@@ -25,15 +25,13 @@ struct AttribInfo {
 };
 
 struct CornerRecord {
-  int vertex_id;
-  int face_id;
+  int v;
+  int f;
   AttribInfo info;
 };
 
 // The information read from a file, beyond the vertex positions and face vertices stored in the mesh.
 struct RawMesh {
-  Array<int> vertex_of_id;  // Index of the vertex with a given original id, or -1.
-  Array<int> face_of_id;    // Index of the face with a given original id, or -1.
   bool any_strings{false};
   Array<int> vertex_info;  // For each vertex, an index into vertex_infos, or -1.
   Array<AttribInfo> vertex_infos;
@@ -42,7 +40,7 @@ struct RawMesh {
   Array<string> face_strings;  // The distinct face strings, in order of first occurrence.
   Map<string, int> index_of_face_string;
   Array<CornerRecord> corners;
-  Array<Vec2<int>> sharp_edges;  // Pairs of vertex ids.
+  Array<Vec2<int>> sharp_edges;  // Pairs of vertices.
 };
 
 void skip_spaces(const char*& s) {
@@ -84,6 +82,9 @@ int index_of_id(Array<int>& index_of_id, int id, const char* kind) {
 }
 
 void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
+  Array<int> vertex_of_id;  // Index of the vertex with a given original id, or -1.
+  Array<int> face_of_id;    // Index of the face with a given original id, or -1.
+  Array<Vec2<int>> corner_ids, sharp_edge_ids;  // Parallel to raw.corners and raw.sharp_edges until resolved.
   string str;
   for (string line; my_getline(is, line);) {
     if (!line.empty() && line.back() == '\r') line.pop_back();
@@ -91,11 +92,11 @@ void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
     if (sline[0] == '#' || sline[0] == 0) continue;
     if (const char* s = after_prefix(sline, "Vertex ")) {
       const int id = int_from_chars(s);
-      if (index_of_id(raw.vertex_of_id, id, "Vertex") >= 0) assertnever(sform("Vertex %d is defined twice", id));
+      if (index_of_id(vertex_of_id, id, "Vertex") >= 0) assertnever(sform("Vertex %d is defined twice", id));
       Point p{};
       for_int(c, 3) p[c] = float_from_chars(s);
       const int v = mesh._vertices.num();
-      raw.vertex_of_id[id] = v;
+      vertex_of_id[id] = v;
       mesh._vertices.push(PmVertex{{p}});
       mesh._vertex_original_id.push(id);
       int info_index = -1;
@@ -116,7 +117,7 @@ void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
     }
     if (const char* s = after_prefix(sline, "Face ")) {
       const int id = int_from_chars(s);
-      if (index_of_id(raw.face_of_id, id, "Face") >= 0) assertnever(sform("Face %d is defined twice", id));
+      if (index_of_id(face_of_id, id, "Face") >= 0) assertnever(sform("Face %d is defined twice", id));
       Vec3<int> vertices{};
       int nv = 0;
       for (;;) {
@@ -124,7 +125,7 @@ void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
         if (!*s || *s == '{') break;
         const int vid = int_from_chars(s);
         if (nv == 3) assertnever(sform("Face %d is not a triangle", id));
-        const int v = vid > 0 && vid < raw.vertex_of_id.num() ? raw.vertex_of_id[vid] : -1;
+        const int v = lookup_id(vertex_of_id, vid);
         if (v < 0) assertnever(sform("Face %d refers to undefined vertex %d", id, vid));
         vertices[nv++] = v;
       }
@@ -137,7 +138,7 @@ void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
       int& string_index = raw.index_of_face_string.enter(sinfo ? sinfo : "", raw.face_strings.num(), is_new);
       if (is_new) raw.face_strings.push(sinfo ? sinfo : "");
       raw.face_string.push(string_index);
-      raw.face_of_id[id] = mesh._faces.num();
+      face_of_id[id] = mesh._faces.num();
       PmFace face;
       face.wedges = vertices;  // Temporarily, one wedge per vertex.
       face.attrib.matid = 0;
@@ -150,18 +151,39 @@ void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
       const char* sinfo = get_string_info(s, str);
       if (!sinfo) assertnever("Corner line lacks a string: '" + line + "'");
       raw.any_strings = true;
-      raw.corners.push(CornerRecord{vertex_id, face_id, parse_attrib_info(sinfo)});
+      raw.corners.push(CornerRecord{-1, -1, parse_attrib_info(sinfo)});
+      corner_ids.push(V(vertex_id, face_id));
       continue;
     }
     if (const char* s = after_prefix(sline, "Edge ")) {
       const int vertex_id1 = int_from_chars(s), vertex_id2 = int_from_chars(s);
       if (const char* sinfo = get_string_info(s, str); sinfo && GMesh::string_has_key(sinfo, "sharp")) {
         raw.any_strings = true;
-        raw.sharp_edges.push(V(vertex_id1, vertex_id2));
+        sharp_edge_ids.push(V(vertex_id1, vertex_id2));
       }
       continue;
     }
     assertnever("Cannot parse line '" + line + "'");
+  }
+  // Resolve the ids in the Corner and Edge lines, which may precede the Vertex and Face lines they refer to.
+  int num_corners = 0;
+  for_int(i, raw.corners.num()) {
+    const int v = lookup_id(vertex_of_id, corner_ids[i][0]), f = lookup_id(face_of_id, corner_ids[i][1]);
+    if (v < 0) {
+      Warning("Corner vertex does not exist");
+    } else if (f < 0) {
+      Warning("Corner face does not exist");
+    } else {
+      raw.corners[num_corners++] = CornerRecord{v, f, raw.corners[i].info};
+    }
+  }
+  raw.corners.resize(num_corners);
+  for (const Vec2<int>& ids : sharp_edge_ids) {
+    const int a = lookup_id(vertex_of_id, ids[0]), b = lookup_id(vertex_of_id, ids[1]);
+    if (a < 0 || b < 0)
+      Warning("Did not find sharp edge in mesh");
+    else
+      raw.sharp_edges.push(V(a, b));
   }
 }
 
@@ -189,12 +211,6 @@ Array<Vector> mesh_from_ply(PlyMesh& ply, WorkMesh& mesh, RawMesh& raw) {
   }
   if (ply.colors.empty() && ply.uvs.empty() && ply.corner_uvs.empty()) return std::move(ply.normals);
   raw.any_strings = true;
-  raw.vertex_of_id.init(nv + 1);
-  raw.vertex_of_id[0] = -1;
-  for_int(v, nv) raw.vertex_of_id[v + 1] = v;
-  raw.face_of_id.init(nf + 1);
-  raw.face_of_id[0] = -1;
-  for_int(f, nf) raw.face_of_id[f + 1] = f;
   raw.face_strings.push("");
   raw.face_string.init(nf, 0);
   raw.vertex_info.init(nv);
@@ -211,7 +227,7 @@ Array<Vector> mesh_from_ply(PlyMesh& ply, WorkMesh& mesh, RawMesh& raw) {
     raw.corners.init(3 * nf);
     for_int(f, nf) for_int(j, 3) {
       CornerRecord& record = raw.corners[3 * f + j];
-      record = CornerRecord{mesh._faces[f].wedges[j] + 1, f + 1, AttribInfo{}};
+      record = CornerRecord{mesh._faces[f].wedges[j], f, AttribInfo{}};
       record.info.uv = ply.corner_uvs[3 * f + j];
     }
   }
@@ -300,26 +316,19 @@ void create_general_wedges(WorkMesh& mesh, RawMesh& raw) {
   // Corner c = 3 * f + j is the corner j of face f.
   Array<int> corner_record(3 * nf, -1);
   for_int(i, raw.corners.num()) {
-    const CornerRecord& record = raw.corners[i];
-    const int v = lookup_id(raw.vertex_of_id, record.vertex_id), f = lookup_id(raw.face_of_id, record.face_id);
-    if (v < 0) {
-      Warning("Corner vertex does not exist");
-    } else if (f < 0) {
-      Warning("Corner face does not exist");
-    } else {
-      int j = 0;
-      while (j < 3 && mesh.vertex(f, j) != v) j++;
-      if (j == 3)
-        assertnever(sform("Corner %d %d: the face does not contain the vertex", record.vertex_id, record.face_id));
-      corner_record[3 * f + j] = i;
-    }
+    const int v = raw.corners[i].v, f = raw.corners[i].f;
+    int j = 0;
+    while (j < 3 && mesh.vertex(f, j) != v) j++;
+    if (j == 3)
+      assertnever(sform("Corner %d %d: the face does not contain the vertex", mesh._vertex_original_id[v],
+                        mesh._face_original_id[f]));
+    corner_record[3 * f + j] = i;
   }
   // The edge opposite corner c is sharp.
   Array<bool> edge_sharp(3 * nf, false);
-  for (const Vec2<int>& vertex_ids : raw.sharp_edges) {
-    const int a = lookup_id(raw.vertex_of_id, vertex_ids[0]), b = lookup_id(raw.vertex_of_id, vertex_ids[1]);
+  for (const auto [a, b] : raw.sharp_edges) {
     bool found = false;
-    if (a >= 0 && b >= 0 && mesh._someface[a] >= 0) {
+    if (mesh._someface[a] >= 0) {
       for (const int f : mesh.ccw_faces(a, mesh._someface[a])) {
         const int ja = mesh.get_jvf(a, f);
         int jb = -1;
@@ -564,7 +573,7 @@ void read_mesh(std::istream& is, const MeshFileHeader& header, WorkMesh& mesh) {
   RawMesh raw;
   Array<Vector> ply_normals;
   if (header.is_ply) {
-    PlyMesh ply = read_ply(is, header.ply_lines);
+    PlyMesh ply = read_ply_body(is, header.ply_lines);
     ply_normals = mesh_from_ply(ply, mesh, raw);
   } else {
     read_mesh_m(is, mesh, raw);

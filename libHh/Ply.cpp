@@ -356,7 +356,7 @@ Array<string> read_ply_header(std::istream& is) {
   return lines;
 }
 
-PlyMesh read_ply(std::istream& is, CArrayView<string> header_lines) {
+PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
   if (header_lines.empty() || header_lines[0] != "ply") assertnever("ply: the header does not start with 'ply'");
   string format;
   Array<PlyElement> elements;
@@ -433,6 +433,11 @@ PlyMesh read_ply(std::istream& is, CArrayView<string> header_lines) {
     showdf("ply: ignoring %s\n", s.c_str());
   }
   return mesh;
+}
+
+PlyMesh read_ply(std::istream& is) {
+  const Array<string> header_lines = read_ply_header(is);
+  return read_ply_body(is, header_lines);
 }
 
 }  // namespace hh

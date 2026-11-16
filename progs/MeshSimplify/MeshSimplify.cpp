@@ -4477,14 +4477,16 @@ float fractional_progress(int orig_nfaces, int orig_nvertices) {
   return (orig_nvertices - float(mesh.num_vertices())) / max(1.f, orig_nvertices - float(nvertices));
 }
 
-// Simplify the mesh until it has <= nfaces or <= nvertices.
-void parallel_optimize() {
+// Simplify the mesh until it has <= nfaces or <= nvertices.  Returns the number of sweeps.
+int parallel_optimize() {
   HH_STIMER("_parallel_opt");
   const int orig_nfaces = mesh.num_faces(), orig_nvertices = mesh.num_vertices();
   ConsoleProgress cprogress;
+  int num_sweeps = 0;
   for (;;) {
     if (verb == 1) cprogress.update(fractional_progress(orig_nfaces, orig_nvertices));
     if (mesh.num_faces() <= nfaces || mesh.num_vertices() <= nvertices) break;
+    num_sweeps++;
 
     struct EdgeCost {
       Edge e;
@@ -4574,10 +4576,11 @@ void parallel_optimize() {
     if (num_edges_collapsed == 0) break;
   }
   nfaces = 0, nvertices = 0;  // Default for next '-simplify'.
+  return num_sweeps;
 }
 
-// Simplify the mesh until it has <= nfaces or <= nvertices.
-void optimize() {
+// Simplify the mesh until it has <= nfaces or <= nvertices.  Returns the number of sweeps, or 0 if sequential.
+int optimize() {
   if (minii2 && minqem) assertx(no_fit_geom);
   if (min_chart_bnd_vertices) {
     assertx(strict_sharp >= 2);
@@ -4601,8 +4604,7 @@ void optimize() {
     const bool can_use_parallelism = !invertexorder && !tvcfac && !minrandom;
     if (can_use_parallelism) {
       // It reevaluates all edges in each pass, so it ignores pqecost, and hence -affectpq and -rebuildpq.
-      parallel_optimize();
-      return;
+      return parallel_optimize();
     }
   }
   ConsoleProgress cprogress;
@@ -4768,6 +4770,7 @@ void optimize() {
     showdf("Operations successful: %d/%d  (%.1f%%)\n", nsuccess, ntested, float(nsuccess) / max(ntested, 1) * 100.f);
   if (tvcfac) showdf("Number of cache misses: %d\n", tvc_ncachemiss);
   nfaces = 0, nvertices = 0;  // Default for next '-simplify'.
+  return 0;
 }
 
 // Simplify the mesh until it has <= nfaces or <= nvertices.
@@ -4786,8 +4789,9 @@ void do_simplify() {
     }
     showdf("PM: nvertices=%d nwedges=%d nfaces=%d\n", mesh.num_vertices(), num_wedges, mesh.num_faces());
   }
-  optimize();
-  showdf("Simplified mesh: nvertices=%d nfaces=%d\n", mesh.num_vertices(), mesh.num_faces());
+  const int num_sweeps = optimize();
+  showdf("Simplified mesh: nvertices=%d nfaces=%d%s\n", mesh.num_vertices(), mesh.num_faces(),
+         num_sweeps ? sform(" (%d sweeps)", num_sweeps).c_str() : "");
   if (0) analyze_mesh("Simplified");
 }
 

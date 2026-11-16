@@ -29,7 +29,10 @@ struct PlyMesh {
 // named "vertex_indices" (or "vertex_index") may have any count type, and other properties and elements are
 // skipped (and reported in one line).  Dies with a descriptive message on malformed data.  In a binary file, the
 // stream may be read beyond the elements that are used.
-[[nodiscard]] PlyMesh read_ply(std::istream& is, CArrayView<string> header_lines);
+[[nodiscard]] PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines);
+
+// Read a PLY file (its header and body).
+[[nodiscard]] PlyMesh read_ply(std::istream& is);
 
 }  // namespace hh
 

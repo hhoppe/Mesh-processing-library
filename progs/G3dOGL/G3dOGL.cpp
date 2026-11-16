@@ -4756,8 +4756,7 @@ PlyMesh ply_mesh;  // Its normals are computed in draw_ply() if absent and neede
 void read_ply_file(const string& filename) {
   // HH_TIMER("_read_ply");
   RFile fi(filename);
-  const Array<string> header_lines = read_ply_header(fi());
-  ply_mesh = read_ply(fi(), header_lines);
+  ply_mesh = read_ply(fi());
   if (ply_mesh.points.empty()) assertnever("ply: no vertices");
   if (!ply_mesh.num_faces()) Warning("ply: no faces");
   assertx(!(ply_mesh.uvs.num() && ply_mesh.corner_uvs.num()));

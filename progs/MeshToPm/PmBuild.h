@@ -9,10 +9,10 @@
 namespace hh {
 
 // A vsplit in compact form: for a half-edge collapse, vad_small and the residuals are zero, and its wedge attribute
-// deltas are stored contiguously in PmRecorder::wads.
+// deltas are stored contiguously in PmRecorder::wad_values.
 struct CompactVsplit {
   int flclw;    // An AWMesh face index until finalize_pm(), then the index in the progressive mesh.
-  int wad_end;  // The end of its deltas in PmRecorder::wads (they start at the wad_end of the previous record).
+  int wad_end;  // The end of its deltas (counted in deltas), which start at the wad_end of the previous record.
   Vector vad_large;
   short vlr_offset1;
   ushort code;  // Its VSINDEX bits hold the AWMesh corner of vs in face flclw until finalize_pm().
@@ -26,7 +26,10 @@ struct PmRecorder {
   int num_faces_at_start{0};                 // Number of faces of the full mesh.
   int num_faces_removed{0};                  // Number of faces removed by the recorded collapses so far.
   Array<CompactVsplit> vsplits;              // In collapse order (the reverse of the progressive mesh order).
-  Array<PmWedgeAttribD> wads;                // The wedge attribute deltas of all the vsplits.
+  // The wedge attribute deltas of all the vsplits, each as wad_stride() floats: dnormal, then drgb if
+  // info._has_rgb, then duv if info._has_uv.
+  Array<float> wad_values;
+  [[nodiscard]] int wad_stride() const { return 3 + (info._has_rgb ? 3 : 0) + (info._has_uv ? 2 : 0); }
   Array<int> removed_original_ids;           // For each recorded collapse, the original id of vt.
   [[nodiscard]] Vsplit vsplit(int i) const;  // Returns the full form of vsplits[i].
 };

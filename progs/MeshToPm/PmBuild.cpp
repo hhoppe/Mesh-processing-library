@@ -57,7 +57,7 @@ void start_recording(const WorkMesh& mesh, PmRecorder& recorder) {
   recorder.info = full_mesh_info(mesh);
   const int nv = recorder.info._full_nvertices;  // An upper bound on the number of collapses.
   recorder.vsplits.reserve(nv);
-  recorder.wads.reserve(nv);  // Typically about one delta per vsplit.
+  recorder.wad_values.reserve(nv * recorder.wad_stride());  // Typically about one delta per vsplit.
   recorder.removed_original_ids.reserve(nv);
   recorder.num_faces_at_start = recorder.info._full_nfaces;
 }
@@ -195,8 +195,13 @@ void collapse(WorkMesh& mesh, const EcolConfig& config, PmRecorder& recorder) {
   if (code & Vsplit::R_NEW) vspl.ar_wad.push(diff_zero(a_vrfr));
   assertx(!(code & Vsplit::VSINDEX_MASK) && flclw_corner >= 0 && flclw_corner < 3);
   code |= unsigned(flclw_corner) << Vsplit::VSINDEX_SHIFT;  // Temporarily; see finalize_pm().
-  recorder.wads.push_array(vspl.ar_wad);
-  recorder.vsplits.push(CompactVsplit{vspl.flclw, recorder.wads.num(), vspl.vad_large.dpoint, vspl.vlr_offset1,
+  for (const PmWedgeAttribD& ad : vspl.ar_wad) {
+    recorder.wad_values.push_array(ad.dnormal);
+    if (recorder.info._has_rgb) recorder.wad_values.push_array(ad.drgb);
+    if (recorder.info._has_uv) recorder.wad_values.push_array(ad.duv);
+  }
+  const int wad_end = recorder.wad_values.num() / recorder.wad_stride();
+  recorder.vsplits.push(CompactVsplit{vspl.flclw, wad_end, vspl.vad_large.dpoint, vspl.vlr_offset1,
                                       narrow_cast<ushort>(code), vspl.fl_matid, vspl.fr_matid});
   recorder.removed_original_ids.push(mesh._vertex_original_id[vt]);
 }
@@ -212,7 +217,17 @@ Vsplit PmRecorder::vsplit(int i) const {
   vspl.vad_large.dpoint = cv.vad_large;
   vspl.vad_small.dpoint = Vector(0.f, 0.f, 0.f);
   const int wad_start = i ? vsplits[i - 1].wad_end : 0;
-  vspl.ar_wad = wads.slice(wad_start, cv.wad_end);
+  const int stride = wad_stride();
+  vspl.ar_wad.init(cv.wad_end - wad_start);
+  for_int(k, vspl.ar_wad.num()) {
+    PmWedgeAttribD& ad = vspl.ar_wad[k];
+    const float* p = &wad_values[(wad_start + k) * stride];
+    for_int(c, 3) ad.dnormal[c] = *p++;
+    ad.drgb = A3dColor(0.f, 0.f, 0.f);
+    if (info._has_rgb) for_int(c, 3) ad.drgb[c] = *p++;
+    ad.duv = Uv(0.f, 0.f);
+    if (info._has_uv) for_int(c, 2) ad.duv[c] = *p++;
+  }
   vspl.resid_uni = 0.f;
   vspl.resid_dir = 0.f;
   return vspl;

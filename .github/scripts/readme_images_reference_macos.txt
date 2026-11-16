@@ -10,7 +10,7 @@ spherical.jpg 170.53 74.76 171.50 75.29 170.19 76.01
 simplicial_complex.jpg 195.00 81.94 195.41 81.68 194.75 88.96
 overview_dark.jpg 84.09 64.58 90.78 63.86 86.39 61.19
 reconstruction_dark.jpg 83.89 64.11 83.90 64.11 84.58 64.45
-progressive_mesh_dark.jpg 60.87 49.46 86.81 60.78 88.12 61.65
+progressive_mesh_dark.jpg 58.95 48.18 85.84 61.25 86.55 61.69
 terrain_dark.jpg 140.15 86.36 119.42 69.33 83.25 49.20
 spherical_dark.jpg 99.50 64.60 100.48 66.25 99.16 65.75
 simplicial_complex_dark.jpg 63.14 49.81 63.56 50.30 62.88 59.73

@@ -10,7 +10,7 @@ source ./_initdemos.sh
 echo
 echo 'Running Meshfit.'
 echo
-Filtermesh data/blob5.orig.m -randpts 10000 -vertexpts |
+Filtermesh data/blob5.orig.m -removekey sharp -randpts 10000 -vertexpts |
   Meshfit -mfile data/blob5.orig.m -fi - -simplify >results/blob5.meshopt.simplified.m
 
 echo

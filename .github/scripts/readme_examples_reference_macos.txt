@@ -35,7 +35,10 @@ fa2c4131_1.png 143.34 77.98 158.82 74.23 173.30 77.63
 # G3dOGL -eyeob demos/data/unit_frustum.a3d -sr_mode office.sr.pm -st demos/data/office_srfig.s3d (screenshot 1)
 6ae74a4d_1.png 228.55 64.62 228.76 64.24 228.55 64.62
 # (common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcany (screenshot 1)
-d8b6f22c_1.png 135.64 46.79 98.64 49.07 43.56 63.15
+# Apple's software OpenGL renderer drops some large triangles that cross the near plane (Mesa clips them), so the
+# coarse foreground of this terrain has build-dependent gaps; the means are unchecked and the tolerance of the
+# standard deviations only rejects a blank image.
+d8b6f22c_1.png 135.64 46.79 98.64 49.07 43.56 63.15 tol=5,0.95,5,0.95,5,0.95
 # FilterPM demos/data/office.pm -nf 200000 -outmesh | (screenshot 1)
 09b4df8a_1.png 237.97 27.65 237.97 27.65 238.01 27.50
 # G3dOGL bunny.vertexcache.m -st demos/data/bunny.s3d -key DmDTDC (screenshot 1)

@@ -136,6 +136,14 @@ bool buffer_has_line(const RBuffer& buf, std::string_view s) {
   return buf[n] == '\n' || (buf[n] == '\r' && buf.num() > n + 1 && buf[n + 1] == '\n');
 }
 
+// Enter the bounding box of a progressive mesh into the current object, and report its size.
+void enter_pmesh_info(const PMeshInfo& info) {
+  const Bbox<float, 3>& bbox = info._full_bbox;
+  for_int(i, 2) for_int(j, 2) for_int(k, 2) g_obs[robn].enter_point(Point(bbox[i, 0], bbox[j, 1], bbox[k, 2]));
+  if (!terse)
+    showf("G3d: (%d) File:%s  PM v=%d f=%d\n", robn, filename.c_str(), info._full_nvertices, info._full_nfaces);
+}
+
 // Read a progressive mesh (through its trailer "End of PM") into the current object.
 void read_pmesh(RBuffer& buf) {
   open_if_closed();
@@ -145,12 +153,18 @@ void read_pmesh(RBuffer& buf) {
     std::istream is(&streambuf);
     pmesh->read(is);
   }
-  const PMeshInfo& info = pmesh->_info;
-  const Bbox<float, 3>& bbox = info._full_bbox;
-  for_int(i, 2) for_int(j, 2) for_int(k, 2) g_obs[robn].enter_point(Point(bbox[i, 0], bbox[j, 1], bbox[k, 2]));
-  if (!terse)
-    showf("G3d: (%d) File:%s PM v=%d f=%d\n", robn, filename.c_str(), info._full_nvertices, info._full_nfaces);
+  enter_pmesh_info(pmesh->_info);
   HB::segment_add_pmesh(std::move(pmesh));
+}
+
+// Read a progressive mesh file into the current object, lazily: its vsplits are read as its level of detail
+// increases.
+void read_pmesh_file_lazily() {
+  g_obs[robn].clear();
+  HB::clear_segment(robn);
+  open_if_closed();
+  enter_pmesh_info(HB::segment_add_pmesh_file(make_unique<RFile>(filename)));
+  CloseIfOpen();
 }
 
 // Read a PLY mesh (through its last element) into the current object.
@@ -166,7 +180,7 @@ void read_ply_mesh(RBuffer& buf) {
   assertx(!(ply_mesh->uvs.num() && ply_mesh->corner_uvs.num()));
   for (const Point& p : ply_mesh->points) g_obs[robn].enter_point(p);
   if (!terse)
-    showf("G3d: (%d) File:%s ply v=%d f=%d\n", robn, filename.c_str(), ply_mesh->points.num(), ply_mesh->num_faces());
+    showf("G3d: (%d) File:%s  ply v=%d f=%d\n", robn, filename.c_str(), ply_mesh->points.num(), ply_mesh->num_faces());
   HB::segment_add_ply(std::move(ply_mesh));
 }
 
@@ -317,17 +331,17 @@ void CloseIfOpen() {
   if (!terse) {
     const string s = sform("G3d: (%d) File:%s", robn, filename.c_str());
     if (total_gons + total_lines + total_points)
-      showf("%s %dgons %dlines %dpts\n", s.c_str(), total_gons, total_lines, total_points);
+      showf("%s  %dgons %dlines %dpts\n", s.c_str(), total_gons, total_lines, total_points);
     if (total_vertices + total_faces) {
       const GMesh& mesh = *g_obs[robn].get_mesh();
       if (total_vertices == mesh.num_vertices()) {
         if (mesh.num_vertices() <= 50'000) {  // For speed, only compute on smaller meshes.
           showf("%s  %s\n", s.c_str(), mesh_genus_string(mesh).c_str());
         } else {
-          showf("%s v=%d f=%d\n", s.c_str(), mesh.num_vertices(), mesh.num_faces());
+          showf("%s  v=%d f=%d\n", s.c_str(), mesh.num_vertices(), mesh.num_faces());
         }
       } else {
-        showf("%s %dv %df\n", s.c_str(), total_vertices, total_faces);
+        showf("%s  %dv %df\n", s.c_str(), total_vertices, total_faces);
       }
     }
   }
@@ -342,8 +356,12 @@ void ReadFiles(bool during_init) {
       add_extra(to_int(filename.substr(1)));
       continue;
     }
-    RFile fi(filename);
-    read_file(HH_POSIX(fileno)(fi.cfile()), during_init);
+    if (filename.ends_with(".pm") || filename.ends_with(".pm.gz")) {
+      read_pmesh_file_lazily();
+    } else {
+      RFile fi(filename);
+      read_file(HH_POSIX(fileno)(fi.cfile()), during_init);
+    }
     if (anglethresh >= 0.f) RecomputeSharpEdges(*g_obs[robn].get_mesh());
     robn++;
   }

@@ -60,7 +60,7 @@ void start_recording(const WorkMesh& mesh, PmRecorder& recorder) {
   // There is at least one delta per vsplit, and their total is close to the number of wedges (all equal if each
   // vertex has a single wedge), but it can exceed it slightly (by 0.14% in one test mesh).
   const int nw = recorder.info._full_nwedges;
-  recorder.wad_values.reserve((nw + nw / 64) * recorder.wad_stride());
+  recorder.wad_values.reserve(size_t(nw + nw / 64) * recorder.wad_stride());
   recorder.removed_original_ids.reserve(nv);
   recorder.num_faces_at_start = recorder.info._full_nfaces;
 }
@@ -198,10 +198,11 @@ void collapse(WorkMesh& mesh, const EcolConfig& config, PmRecorder& recorder) {
   if (code & Vsplit::R_NEW) vspl.ar_wad.push(diff_zero(a_vrfr));
   assertx(!(code & Vsplit::VSINDEX_MASK) && flclw_corner >= 0 && flclw_corner < 3);
   code |= unsigned(flclw_corner) << Vsplit::VSINDEX_SHIFT;  // Temporarily; see finalize_pm().
+  std::vector<float>& wad_values = recorder.wad_values;
   for (const PmWedgeAttribD& ad : vspl.ar_wad) {
-    recorder.wad_values.push_array(ad.dnormal);
-    if (recorder.info._has_rgb) recorder.wad_values.push_array(ad.drgb);
-    if (recorder.info._has_uv) recorder.wad_values.push_array(ad.duv);
+    wad_values.insert(wad_values.end(), ad.dnormal.begin(), ad.dnormal.end());
+    if (recorder.info._has_rgb) wad_values.insert(wad_values.end(), ad.drgb.begin(), ad.drgb.end());
+    if (recorder.info._has_uv) wad_values.insert(wad_values.end(), ad.duv.begin(), ad.duv.end());
   }
   vspl.code = narrow_cast<ushort>(code);
   assertx(vspl.ar_wad.num() == vspl.expected_wad_num(recorder.info));  // The count need not be stored.
@@ -226,7 +227,7 @@ Vsplit PmRecorder::vsplit(int i, int wad_end) const {
   vspl.ar_wad.init(num_wads);
   for_int(k, vspl.ar_wad.num()) {
     PmWedgeAttribD& ad = vspl.ar_wad[k];
-    const float* p = &wad_values[(wad_start + k) * stride];
+    const float* p = &wad_values[(size_t(wad_start) + k) * stride];
     for_int(c, 3) ad.dnormal[c] = *p++;
     ad.drgb = A3dColor(0.f, 0.f, 0.f);
     if (info._has_rgb) for_int(c, 3) ad.drgb[c] = *p++;

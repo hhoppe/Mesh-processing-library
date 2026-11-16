@@ -13,7 +13,9 @@ namespace hh {
 class A3dElem;
 class GMesh;
 class PMesh;
+struct PMeshInfo;
 struct PlyMesh;
+class RFile;
 
 namespace HB {
 
@@ -67,7 +69,9 @@ void draw_row_col_text(const Vec2<int>& yx, const string& s);
 void clear_segment(int segn);
 void open_segment(int segn);
 void segment_add_object(const A3dElem& el);
-void segment_add_pmesh(unique_ptr<PMesh> pmesh);     // A progressive mesh, shown at a level of detail.
+void segment_add_pmesh(unique_ptr<PMesh> pmesh);  // A progressive mesh, shown at a level of detail.
+// A progressive mesh file, whose vsplits may be read lazily (as its level of detail increases); returns its header.
+PMeshInfo segment_add_pmesh_file(unique_ptr<RFile> file);
 void segment_add_ply(unique_ptr<PlyMesh> ply_mesh);  // A polygon mesh or point set read from a PLY file.
 void close_segment();
 void segment_attach_mesh(int segn, GMesh* mesh);

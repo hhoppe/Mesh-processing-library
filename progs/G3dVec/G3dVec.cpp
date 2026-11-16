@@ -1270,6 +1270,14 @@ void HB::segment_add_pmesh(unique_ptr<PMesh> pmesh) {
   }
 }
 
+PMeshInfo HB::segment_add_pmesh_file(unique_ptr<RFile> file) {
+  auto pmesh = make_unique<PMesh>();
+  pmesh->read((*file)());
+  const PMeshInfo info = pmesh->_info;
+  segment_add_pmesh(std::move(pmesh));
+  return info;
+}
+
 void HB::segment_add_ply(unique_ptr<PlyMesh> ply_mesh) {
   const PlyMesh& mesh = *ply_mesh;
   Array<Point> points;

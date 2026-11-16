@@ -2,6 +2,8 @@
 #ifndef MESH_PROCESSING_PROGS_MESHTOPM_PMBUILD_H_
 #define MESH_PROCESSING_PROGS_MESHTOPM_PMBUILD_H_
 
+#include <vector>
+
 #include "libHh/PMesh.h"
 #include "progs/MeshToPm/EcolEval.h"
 #include "progs/MeshToPm/WorkMesh.h"
@@ -20,21 +22,21 @@ struct CompactVsplit {
 
 // Records the vsplits that undo the edge collapses, once the recording has started (at the first '-simplify').
 struct PmRecorder {
-  bool started{false};                       // The full mesh of the progressive mesh has been determined.
-  PMeshInfo info;                            // Describes the full mesh (set when started).
-  int num_faces_at_start{0};                 // Number of faces of the full mesh.
-  int num_faces_removed{0};                  // Number of faces removed by the recorded collapses so far.
-  Array<CompactVsplit> vsplits;              // In collapse order (the reverse of the progressive mesh order).
+  bool started{false};           // The full mesh of the progressive mesh has been determined.
+  PMeshInfo info;                // Describes the full mesh (set when started).
+  int num_faces_at_start{0};     // Number of faces of the full mesh.
+  int num_faces_removed{0};      // Number of faces removed by the recorded collapses so far.
+  Array<CompactVsplit> vsplits;  // In collapse order (the reverse of the progressive mesh order).
   // The wedge attribute deltas of all the vsplits, each as wad_stride() floats: dnormal, then drgb if
-  // info._has_rgb, then duv if info._has_uv.
-  Array<float> wad_values;
+  // info._has_rgb, then duv if info._has_uv.  (It is a std::vector because it may exceed the int size of an Array.)
+  std::vector<float> wad_values;
   [[nodiscard]] int wad_stride() const { return 3 + (info._has_rgb ? 3 : 0) + (info._has_uv ? 2 : 0); }
-  Array<int> removed_original_ids;           // For each recorded collapse, the original id of vt.
+  Array<int> removed_original_ids;  // For each recorded collapse, the original id of vt.
   // Returns the full form of vsplits[i], whose wedge attribute deltas end at the given delta index.
   [[nodiscard]] Vsplit vsplit(int i, int wad_end) const;
   // Call func(Vsplit&&) on the full form of each vsplit, in progressive mesh order (the reverse of collapse order).
   template <typename Func> void for_each_vsplit_in_pm_order(Func func) const {
-    int wad_end = wad_values.num() / wad_stride();
+    int wad_end = assert_narrow_cast<int>(wad_values.size() / wad_stride());
     for (int i = vsplits.num() - 1; i >= 0; --i) {
       Vsplit vspl = vsplit(i, wad_end);
       wad_end -= vspl.ar_wad.num();

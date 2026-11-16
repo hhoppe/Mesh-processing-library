@@ -287,17 +287,21 @@ constexpr int k_max_initial_pm_nfaces = 500'000;
 
 // A progressive mesh, traversed to a level of detail.
 struct PmState {
-  explicit PmState(unique_ptr<PMesh> ppmesh);  // Sets the initial level of detail.
+  // Both constructors set the initial level of detail.
+  explicit PmState(unique_ptr<PMesh> pmesh_);  // A progressive mesh that is completely read.
+  explicit PmState(unique_ptr<RFile> file_);   // A progressive mesh whose vsplits are read from a file as needed.
   void draw();
   void wrap_draw(bool show);  // Process (!show) or draw (show) its LOD slider.
   void set_lod(float lod);    // As given by an input "lod" command.
   bool key_press(char ch);    // Returns true if recognized.
+  unique_ptr<RFile> file;     // If nonnull, the file from which pmrs reads the vsplits that pmesh does not yet have.
   unique_ptr<PMesh> pmesh;
   PMeshRStream pmrs;
   PMeshIter pmi;
   float lod_level{0.f};  // Fraction of the vsplits that are applied.
 
  private:
+  void init_lod();
   [[nodiscard]] float nv_ratio() const;
   void update_lod();
 };
@@ -319,7 +323,8 @@ class GxObject {
   }
   GMesh* _mesh{nullptr};
   unique_ptr<PmState> _pms;
-  unique_ptr<PlyMesh> _ply;  // Its normals are computed in draw_ply() if absent and needed.
+  unique_ptr<PlyMesh> _ply;           // Its normals are computed in draw_ply() if absent and needed.
+  bool _points_are_uncolored{false};  // Its A3d elements are all black points, drawn in the foreground color.
 
  private:
   bool _opened{false};
@@ -468,6 +473,13 @@ void update_cur_color2(const Pixel& col) {
 
 inline void update_cur_color(const Pixel& col) {
   if (col != curcol) update_cur_color2(col);
+}
+
+// Set the color (for lines and points) to the foreground color of the theme.
+void set_color_to_foreground() {
+  assertx(!lmcad);
+  hw.set_color_to_foreground();
+  curcol = k_color_invalid;  // (The cached color no longer matches.)
 }
 
 // Lit colors.
@@ -1362,7 +1374,8 @@ bool setup_ob(int i) {
   return true;
 }
 
-void draw_list(CArrayView<unique_ptr<Node>> arn) {
+// If points_are_uncolored (all the nodes are black points), the points are drawn in the foreground color of the theme.
+void draw_list(CArrayView<unique_ptr<Node>> arn, bool points_are_uncolored = false) {
   glShadeModel(lsmooth ? GL_SMOOTH : GL_FLAT);
   int ii = lquickmode ? quicki : 0;
   const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
@@ -1442,9 +1455,10 @@ void draw_list(CArrayView<unique_ptr<Node>> arn) {
       case Node::EType::point: {
         const auto* n = down_cast<const NodePoint*>(un);
         initialize_unlit();
+        if (points_are_uncolored) set_color_to_foreground();
         glBegin(GL_POINTS);
         for (int j = 0;;) {
-          update_cur_color(n->color);
+          if (!points_are_uncolored) update_cur_color(n->color);
           glVertex3fv(n->p.data());
           if (i + 1 == arn.num()) break;
           n = down_cast<const NodePoint*>(arn[i + 1].get());  // Node* but not necessarily NodePoint*
@@ -2173,7 +2187,7 @@ void draw_all() {
     } else {
       GxObject& ob = g_xobs[i];
       if (ob._mesh) draw_mesh(*ob._mesh);
-      draw_list(ob.traverse());
+      draw_list(ob.traverse(), ob._points_are_uncolored);
       if (ob._pms) ob._pms->draw();
       if (ob._ply) draw_ply(*ob._ply);
     }
@@ -2411,6 +2425,9 @@ void GxObject::append(unique_ptr<Node> n) {
 void GxObject::close() {
   assertx(_opened);
   _opened = false;
+  _points_are_uncolored = !_arn.empty() && ranges::all_of(_arn, [](const unique_ptr<Node>& n) {
+    return n->_type == Node::EType::point && down_cast<const NodePoint*>(n.get())->color == Pixel(0, 0, 0, 255);
+  });
   if (s_idraw) {
     gl_fixup();
     hw.end_draw_visible();
@@ -3068,11 +3085,22 @@ void HB::open_segment(int segn) { g_xobs.open(segn); }
 
 void HB::segment_add_object(const A3dElem& el) { g_xobs.add(el); }
 
-void HB::segment_add_pmesh(unique_ptr<PMesh> pmesh) {
+namespace {
+
+void set_pms(unique_ptr<PmState> pms) {
   GxObject& ob = g_xobs.opened();
   if (ob._pms) Warning("Object has more than one progressive mesh; keeping the last one");
-  ob._pms = make_unique<PmState>(std::move(pmesh));
+  ob._pms = std::move(pms);
   invalidate_dls();
+}
+
+}  // namespace
+
+void HB::segment_add_pmesh(unique_ptr<PMesh> pmesh) { set_pms(make_unique<PmState>(std::move(pmesh))); }
+
+PMeshInfo HB::segment_add_pmesh_file(unique_ptr<RFile> file) {
+  set_pms(make_unique<PmState>(std::move(file)));
+  return g_xobs.opened()._pms->pmesh->_info;
 }
 
 void HB::segment_add_ply(unique_ptr<PlyMesh> ply_mesh) {
@@ -3214,7 +3242,14 @@ void draw_lod_slider(float lod, int nv0, int nv1) {
 
 // The initial level of detail is given by the environment variable PM_LOD_NUM_FACES or PM_LOD_LEVEL, or else it is
 // the full resolution limited to k_max_initial_pm_nfaces faces.
-PmState::PmState(unique_ptr<PMesh> ppmesh) : pmesh(std::move(ppmesh)), pmrs(*pmesh), pmi(pmrs) {
+PmState::PmState(unique_ptr<PMesh> pmesh_) : pmesh(std::move(pmesh_)), pmrs(*pmesh), pmi(pmrs) { init_lod(); }
+
+PmState::PmState(unique_ptr<RFile> file_)
+    : file(std::move(file_)), pmesh(make_unique<PMesh>()), pmrs((*file)(), pmesh.get()), pmi(pmrs) {
+  init_lod();
+}
+
+void PmState::init_lod() {
   static const int pm_lod_num_faces = getenv_int("PM_LOD_NUM_FACES", 0);
   static const float pm_lod_level = getenv_float("PM_LOD_LEVEL", -1.f);
   const PMeshInfo& info = pmesh->_info;
@@ -4754,7 +4789,7 @@ void draw_ply(PlyMesh& ply_mesh) {
   const CArrayView<Uv> ply_vuv = ply_mesh.uvs;
   const CArrayView<Uv> ply_fuv = ply_mesh.corner_uvs;
   const int nf = ply_mesh.num_faces();
-  if (lsmooth && ply_vnor.empty()) {
+  if (lsmooth && ply_vnor.empty() && nf) {
     ply_vnor.init(ply_vpos.num(), Vector{});
     for_int(i, nf) {
       Polygon poly;
@@ -4820,6 +4855,7 @@ void draw_ply(PlyMesh& ply_mesh) {
     if (ntriangles) glEnd();  // GL_TRIANGLES
     if (!nf) {                // Draw points.
       initialize_unlit();
+      if (ply_vrgb.empty()) set_color_to_foreground();
       glBegin(GL_POINTS);
       for_int(i, ply_vpos.num()) {
         if (ply_vnor.num()) glNormal3fv(ply_vnor[i].data());

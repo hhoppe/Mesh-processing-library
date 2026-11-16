@@ -641,9 +641,9 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolOptions& 
         const int jv = mesh.get_jvf(v, f);
         const EdgeHandle ee{f, mod3(jv + 1)};  // The edge (v, vertex(f, jv + 2)).
         if (!(v == ec.v2 && mesh.vertex(f, mod3(jv + 2)) == ec.v1)) add_sharp_plane(ee);
-        if (mesh._fnei[f].faces[mod3(jv + 2)] == AWMesh::k_undefined) {  // The clw boundary edge.
-          if (!(v == ec.v2 && mesh.vertex(f, mod3(jv + 1)) == ec.v1)) add_sharp_plane(EdgeHandle{f, mod3(jv + 2)});
-        }
+        const bool clw_boundary_edge = mesh._fnei[f].faces[mod3(jv + 2)] == AWMesh::k_undefined;
+        if (clw_boundary_edge && !(v == ec.v2 && mesh.vertex(f, mod3(jv + 1)) == ec.v1))
+          add_sharp_plane(EdgeHandle{f, mod3(jv + 2)});
       }
     }
   }
@@ -662,22 +662,12 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolOptions& 
     }
     if (options.keepglobalv && ii != 2 && (mesh._vflags[ec.v1] & WorkMesh::k_vflag_global)) continue;
     if (options.keepglobalv && ii != 0 && (mesh._vflags[ec.v2] & WorkMesh::k_vflag_global)) continue;
-    if (!e_sharp) {
-      if (v1nse >= 1 && v2nse >= 1) {
-        // Try both.
-      } else if (v1nse >= 1) {
-        if (ii < 2) continue;
-      } else if (v2nse >= 1) {
-        if (ii > 0) continue;
-      }
-    } else {
-      if (v1nse >= 3 && v2nse >= 3) {
-        // Try both.
-      } else if (v1nse >= 3) {
-        if (ii < 2) continue;
-      } else if (v2nse >= 3) {
-        if (ii > 0) continue;
-      }
+    {
+      // If only one vertex is on a sharp edge (or, for a sharp edge, is a corner), it is kept.
+      const int min_nse = e_sharp ? 3 : 1;
+      const bool v1_kept = v1nse >= min_nse, v2_kept = v2nse >= min_nse;
+      if (v1_kept && !v2_kept && ii < 2) continue;
+      if (v2_kept && !v1_kept && ii > 0) continue;
     }
     if (options.strict_sharp >= 2) {  // Chart-compliant, as in MeshSimplify's try_ecol().
       const int tv1 = ii == 2 ? ec.v1 : ec.v2, tv2 = ii == 2 ? ec.v2 : ec.v1;  // Here tv1 is kept and tv2 is lost.

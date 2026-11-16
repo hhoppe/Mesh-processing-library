@@ -239,7 +239,8 @@ void do_outply(Args& args) {
 int main(int argc, const char** argv) {
   // A final '-simplify' is implied unless the last argument is '-simplify' (or an abbreviation such as '-simp').
   // (This is determined before ParseArgs takes ownership of argv.)
-  const string last_arg = argc > 1 ? argv[argc - 1] : "";
+  const CArrayView<const char*> argv_view(argv, argc);
+  const string last_arg = argc > 1 ? argv_view.last() : "";
   const bool last_arg_is_simplify = last_arg.size() >= 5 && std::string_view("-simplify").starts_with(last_arg);
   ParseArgs args(argc, argv);
   HH_ARGSC("A mesh (.m or .ply, possibly .gz) is read from stdin or first arg.  Subsequent options are:");

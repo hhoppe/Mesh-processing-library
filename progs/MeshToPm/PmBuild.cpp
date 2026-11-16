@@ -57,7 +57,7 @@ void start_recording(const WorkMesh& mesh, PmRecorder& recorder) {
   recorder.info = full_mesh_info(mesh);
   const int nv = recorder.info._full_nvertices;  // An upper bound on the number of collapses.
   recorder.vsplits.reserve(nv);
-  recorder.flclw_corner.reserve(nv);
+  recorder.wads.reserve(nv);  // Typically about one delta per vsplit.
   recorder.removed_original_ids.reserve(nv);
   recorder.num_faces_at_start = recorder.info._full_nfaces;
 }
@@ -193,37 +193,67 @@ void collapse(WorkMesh& mesh, const EcolConfig& config, PmRecorder& recorder) {
   }
   if (code & Vsplit::L_NEW) vspl.ar_wad.push(diff_zero(a_vlfl));
   if (code & Vsplit::R_NEW) vspl.ar_wad.push(diff_zero(a_vrfr));
-  vspl.code = narrow_cast<ushort>(code);
-  recorder.vsplits.push(std::move(vspl));
-  recorder.flclw_corner.push(flclw_corner);
+  assertx(!(code & Vsplit::VSINDEX_MASK) && flclw_corner >= 0 && flclw_corner < 3);
+  code |= unsigned(flclw_corner) << Vsplit::VSINDEX_SHIFT;  // Temporarily; see finalize_pm().
+  recorder.wads.push_array(vspl.ar_wad);
+  recorder.vsplits.push(CompactVsplit{vspl.flclw, recorder.wads.num(), vspl.vad_large.dpoint, vspl.vlr_offset1,
+                                      narrow_cast<ushort>(code), vspl.fl_matid, vspl.fr_matid});
   recorder.removed_original_ids.push(mesh._vertex_original_id[vt]);
 }
 
-void finalize_pm(const WorkMesh& mesh, PmRecorder& recorder, PMesh& pmesh) {
+Vsplit PmRecorder::vsplit(int i) const {
+  const CompactVsplit& cv = vsplits[i];
+  Vsplit vspl;
+  vspl.flclw = cv.flclw;
+  vspl.vlr_offset1 = cv.vlr_offset1;
+  vspl.code = cv.code;
+  vspl.fl_matid = cv.fl_matid;
+  vspl.fr_matid = cv.fr_matid;
+  vspl.vad_large.dpoint = cv.vad_large;
+  vspl.vad_small.dpoint = Vector(0.f, 0.f, 0.f);
+  const int wad_start = i ? vsplits[i - 1].wad_end : 0;
+  vspl.ar_wad = wads.slice(wad_start, cv.wad_end);
+  vspl.resid_uni = 0.f;
+  vspl.resid_dir = 0.f;
+  return vspl;
+}
+
+void finalize_pm(const WorkMesh& mesh, PmRecorder& recorder, AWMesh& base_mesh, PMeshInfo& info) {
   assertx(recorder.started);
   Array<int> base_index(mesh._faces.num(), -1);
   {
     int i = 0;
     for_int(f, mesh._faces.num()) if (mesh.face_alive(f)) base_index[f] = i++;
   }
-  for_int(i, recorder.vsplits.num()) {
-    Vsplit& vspl = recorder.vsplits[i];
-    const int f = vspl.flclw;
+  for (CompactVsplit& cv : recorder.vsplits) {
+    const int f = cv.flclw;
     const bool alive = mesh.face_alive(f);
     const int pm_face = alive ? base_index[f] : mesh._faces[f].wedges[1];
     const int rotation = alive ? 0 : mesh._faces[f].wedges[2];
     assertx(pm_face >= 0);
-    vspl.flclw = pm_face;
-    const unsigned vs_index = mod3(recorder.flclw_corner[i] - rotation + 3);
-    vspl.code = narrow_cast<ushort>((vspl.code & ~Vsplit::VSINDEX_MASK) | (vs_index << Vsplit::VSINDEX_SHIFT));
+    cv.flclw = pm_face;
+    const int corner = (cv.code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
+    const unsigned vs_index = mod3(corner - rotation + 3);
+    cv.code = narrow_cast<ushort>((cv.code & ~Vsplit::VSINDEX_MASK) | (vs_index << Vsplit::VSINDEX_SHIFT));
   }
-  reverse(recorder.vsplits);
-  pmesh._base_mesh = compact_awmesh(mesh);
-  if (k_debug) pmesh._base_mesh.ok();
-  pmesh._info = recorder.info;
-  pmesh._info._tot_nvsplits = recorder.vsplits.num();
-  pmesh._vsplits = std::move(recorder.vsplits);
-  recorder.vsplits.init(0);
+  base_mesh = compact_awmesh(mesh);
+  if (k_debug) base_mesh.ok();
+  info = recorder.info;
+  info._tot_nvsplits = recorder.vsplits.num();
+}
+
+void write_pm(std::ostream& os, const AWMesh& base_mesh, const PMeshInfo& info, const PmRecorder& recorder) {
+  PMesh::write_header_and_base_mesh(os, info, base_mesh);
+  for (int i = recorder.vsplits.num() - 1; i >= 0; --i) recorder.vsplit(i).write(os, info);
+  PMesh::write_trailer(os);
+}
+
+void make_pmesh(const AWMesh& base_mesh, const PMeshInfo& info, const PmRecorder& recorder, PMesh& pmesh) {
+  pmesh._base_mesh = base_mesh;
+  pmesh._info = info;
+  pmesh._vsplits.init(0);
+  pmesh._vsplits.reserve(recorder.vsplits.num());
+  for (int i = recorder.vsplits.num() - 1; i >= 0; --i) pmesh._vsplits.push(recorder.vsplit(i));
 }
 
 Array<int> pm_original_ids(const WorkMesh& mesh, const PmRecorder& recorder) {

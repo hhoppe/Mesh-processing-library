@@ -433,7 +433,7 @@ float aps_bnd_fac = 3.f;      // Increase perceptual importance of boundaries.
 bool minrandom = false;       // Random sequence.
 bool qemgh98 = false;         // Use QEM from G&H98 paper (vs. my own).
 bool qemlocal = true;         // Memoryless QEM.
-bool qemvolume = true;        // Linearly constrained to preserve volume.
+bool qemvolume = true;        // Linearly constrained to preserve volume (only for a fitted position: !no_fit_geom).
 bool qemweight = true;        // Scale QEM with face_area / edge_len^2.
 bool qemcache = true;         // Cache qem at faces (for qemlocal); faster execution but uses more memory..
 bool no_fit_geom = false;     // Do not optimize geometry (e.g. mandrill).
@@ -4256,7 +4256,8 @@ EcolResult try_ecol(Edge e, bool commit, const EcolResult* prior = nullptr) {
     }
   }
   if (tvcfac) tvc_update_cache(e);
-  if (original_indices != "") ar_vt_indices.push(mesh.vertex_id(vt));
+  // Record only the collapses written to the PM stream, which may start later (e.g., "-prog placeholder").
+  if (original_indices != "" && wfile_prog) ar_vt_indices.push(mesh.vertex_id(vt));
   if (min_chart_bnd_vertices) {
     for (const int chart : charts_with_boundary_vertex(vt)) {
       assertx(chart_num_boundary_vertices[chart] > 0);
@@ -4599,6 +4600,7 @@ void optimize() {
     // With -minrandom, try_ecol() draws from the shared Random::G, which cannot be used concurrently.
     const bool can_use_parallelism = !invertexorder && !tvcfac && !minrandom;
     if (can_use_parallelism) {
+      // It reevaluates all edges in each pass, so it ignores pqecost, and hence -affectpq and -rebuildpq.
       parallel_optimize();
       return;
     }
@@ -4926,10 +4928,10 @@ int main(int argc, const char** argv) {
   HH_ARGSD(outmesh, "file.m : output current mesh to file");
   HH_ARGSD(fpclp, "file.pclp : print proj. onto mesh (lines)");
   HH_ARGSD(epclp, "file.eclp : print proj. onto mesh (lines)");
-  HH_ARGSD(rebuildpq, ": reevaluate all edges");
+  HH_ARGSD(rebuildpq, ": reevaluate all edges (sequential simplify only)");
   HH_ARGSD(verb, "i : verbosity level (1=avg, 2=more, 3=lots)");
   HH_ARGSP(neptfac, "f : fac # samples on sharp edges (def 1or4)");
-  HH_ARGSP(affectpq, "i : (2=avg, 3=all)");
+  HH_ARGSP(affectpq, "i : (2=avg, 3=all; sequential simplify only)");
   HH_ARGSD(vsgeom, ": for SR, '-minii2 -no_fit_geom'");
   HH_ARGSF(miniiall, ": search 3 new vertex pos");
   HH_ARGSF(minii1, ": force minii == 1 always");
@@ -4964,7 +4966,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(minrandom, ": use random simplification");
   HH_ARGSP(qemgh98, "bool : use scalar QEM from G&H98 (vs. HH99)");
   HH_ARGSP(qemlocal, "bool : use memoryless QEM");
-  HH_ARGSP(qemvolume, "bool : constrain to preserve vol");
+  HH_ARGSP(qemvolume, "bool : constrain to preserve vol (not with -vsgeom)");
   HH_ARGSP(qemweight, "bool : weight qem by area/length");
   HH_ARGSP(qemcache, "bool : cache Q on faces for qemlocal; faster but more mem.");
   HH_ARGSD(removesharp, ": delete attributes at edges and corners");

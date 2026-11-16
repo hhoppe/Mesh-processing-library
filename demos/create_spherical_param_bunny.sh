@@ -9,8 +9,8 @@ echo
 SphereSample -domain octaflat -scheme domain -egrid 128 -keys domaincorner,imageuv -mesh_sphere |
   Filtermesh -gmerge -removekey Ovi -cornermerge -renamekey v domaincorner global -renamekey vc imageuv uv \
              -assign_normals -removekey sharp |
-  mesh_to_pm -minqem -qemvolume 0 -dihallow -affectpq 3 -vsgeom -keepglobalv 1 -norfac 0 -trishapeafac 1e1 \
-             -strict_sharp 2 >results/octahedron_octaflat_sharp_tmp.pm
+  MeshToPm - -dihallow -keepglobalv 1 -norfac 0 -trishapeafac 1e1 -strict_sharp 2 \
+    >results/octahedron_octaflat_sharp_tmp.pm
 
 SphereParam results/octahedron_octaflat_sharp_tmp.pm -base coord -flatten_to_x0 -fix_base -optimize_inverse \
             -respect_sharp_edges -keep_uv 1 >results/octahedron_octaflat_sphparam_tmp.m
@@ -25,7 +25,7 @@ rm -f results/octahedron_octaflat_sharp_tmp.pm results/octahedron_octaflat_sphpa
 echo
 echo 'From the original mesh data/bunny.orig.m, compute a progressive mesh for SphereParam optimization.'
 echo
-mesh_to_pm data/bunny.orig.m -minqem -vsgeom -dihallow >results/bunny.for_sphereparam.pm
+MeshToPm data/bunny.orig.m -dihallow >results/bunny.for_sphereparam.pm
 
 echo
 echo 'Spherically parameterize and store octaflat uv coordinates in results/bunny.sphparam.octaflat.m.'
@@ -56,12 +56,12 @@ SphereSample -grid 1024 -param results/bunny.sphparam.lonlat.m -signal normal \
 echo
 echo 'Create an octaflat progressive mesh by minimizing an "Appearance-preserving simplification" (APS) metric.'
 echo
-mesh_to_pm results/bunny.sphparam.octaflat.m -minaps -nominii1 -strict 2 >results/bunny.octaflat.pm
+MeshToPm results/bunny.sphparam.octaflat.m -minaps -strict_sharp 2 >results/bunny.octaflat.pm
 
 echo
 echo 'Similarly create a longitude-latitude progressive mesh.'
 echo
-mesh_to_pm results/bunny.sphparam.lonlat.m -minaps -nominii1 -strict 2 >results/bunny.lonlat.pm
+MeshToPm results/bunny.sphparam.lonlat.m -minaps -strict_sharp 2 >results/bunny.lonlat.pm
 
 
 echo

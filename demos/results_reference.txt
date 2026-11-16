@@ -33,11 +33,11 @@ gcanyon_sq129_b44.l1t.stitched.pm 365635
 gcanyon_sq129_b44.l2.pm 621066
 office.nf200000.mincycles.m 17956675
 bunny.vertexcache.m 10979171
-bunny.for_sphereparam.pm 1813154
-bunny.sphparam.octaflat.m 8288179
-bunny.sphparam.lonlat.m 7804993
-octaflat_eg128.uv.sphparam.m 2873389
+bunny.for_sphereparam.pm 1533719
+bunny.sphparam.octaflat.m 8802377
+bunny.sphparam.lonlat.m 8282664
+octaflat_eg128.uv.sphparam.m 2967287
 bunny.spheresample.octaflat.unrotated.normalmap.png 126.18 69.02 130.38 75.55 123.24 75.89
 bunny.spheresample.lonlat.unrotated.normalmap.png 127.49 63.33 117.24 81.36 120.55 74.00
-bunny.octaflat.pm 2260944
-bunny.lonlat.pm 2132211
+bunny.octaflat.pm 1958415
+bunny.lonlat.pm 1845753

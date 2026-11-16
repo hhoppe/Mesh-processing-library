@@ -18,6 +18,8 @@ struct EcolOptions {
   int min_chart_bnd_vertices{0};  // With strict_sharp 2, keep at least this number of boundary vertices per chart.
   bool dihallow{false};           // Penalize but allow bad dihedral angles.
   bool keepglobalv{false};        // Do not remove vertices tagged global.
+  bool minaps{false};             // Use appearance-preserving simplification instead of the quadric error metric.
+  float aps_bnd_fac{3.f};         // With minaps, the factor on the displacement of a removed boundary vertex.
   // Set by the program with min_chart_bnd_vertices: the number of boundary vertices of each chart (material).
   const Array<int>* chart_num_boundary_vertices{nullptr};
   float diam{0.f};  // Set by the program: the largest side of the bounding box of the original mesh.

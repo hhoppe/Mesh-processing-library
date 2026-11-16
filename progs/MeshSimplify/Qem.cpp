@@ -2,7 +2,8 @@
 #include "progs/MeshSimplify/Qem.h"
 
 #include "libHh/Lls.h"
-#include "libHh/Polygon.h"  // orthogonal_vector()
+#include "libHh/MatrixOp.h"  // invert()
+#include "libHh/Polygon.h"   // orthogonal_vector()
 #include "libHh/RangeOp.h"
 #include "libHh/Vec.h"
 
@@ -175,28 +176,17 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
     // _c = square(d_s) are O(|p0|) and O(|p0|^2)).  Measured on demos/data/blob5.orig.m with -minqem, the local
     // frame perturbs the sequence of edge collapses but leaves both the L2 geometric error and its sensitivity to
     // a large translation of the mesh unchanged.
-    // static LudLls lls(4, 4, nattrib);
-    // lls.clear();
-    LudLls lls(4, 4, nattrib);  // Threadsafe.
-    for_int(c, 3) {
-      lls.enter_a_rc(0, c, p0[c]);
-      lls.enter_a_rc(1, c, p1[c]);
-      lls.enter_a_rc(2, c, p2[c]);
-      lls.enter_a_rc(3, c, float(nor[c]));
-    }
-    lls.enter_a_rc(0, 3, 1.f);
-    lls.enter_a_rc(1, 3, 1.f);
-    lls.enter_a_rc(2, 3, 1.f);
-    lls.enter_a_rc(3, 3, 0.f);
-    lls.enter_b_r(0, CArrayView(&p0[ngeom], nattrib));
-    lls.enter_b_r(1, CArrayView(&p1[ngeom], nattrib));
-    lls.enter_b_r(2, CArrayView(&p2[ngeom], nattrib));
-    // Row 3 of right-hand-side is kept zero.
-    if (!lls.solve()) {
+    // The system is solved in double precision (by inverting the matrix), because a float solve (as with LudLls)
+    // gives inaccurate gradients for a thin face, whose matrix is nearly singular.
+    Vec<double, 16> buffer;
+    MatrixView<double> mat(buffer.data(), V(4, 4));
+    for_int(c, 3) mat[0, c] = p0[c], mat[1, c] = p1[c], mat[2, c] = p2[c], mat[3, c] = nor[c];
+    mat[0, 3] = 1., mat[1, 3] = 1., mat[2, 3] = 1., mat[3, 3] = 0.;
+    if (!invert(mat, mat)) {
       // The 4x4 matrix has determinant +-2 * area, so the solve fails only if the face is degenerate.  Such a
       // face should not arise, because dihedral_penalty() in MeshSimplify.cpp rejects the edge collapses that
       // would create one.
-      Warning("set_distance_hh99: lls.solve() failed");
+      Warning("set_distance_hh99: invert() failed");
       // Geometric component OK; set qem to zero for scalars.
       for_int(si, nattrib) {
         {
@@ -213,10 +203,11 @@ template <typename T, int n> void Qem<T, n>::set_distance_hh99(const float* p0, 
       return;
     }
     for_int(si, nattrib) {
-      Vec4<float> sol;
-      lls.get_x_c(si, sol);
-      const Vec3<T> g_s = {sol[0], sol[1], sol[2]};
-      const T d_s = sol[3];
+      // The solution is the matrix inverse times the right-hand side (s0, s1, s2, 0).
+      Vec4<double> sol;
+      for_int(i, 4) sol[i] = mat[i, 0] * p0[ngeom + si] + mat[i, 1] * p1[ngeom + si] + mat[i, 2] * p2[ngeom + si];
+      const Vec3<T> g_s = {T(sol[0]), T(sol[1]), T(sol[2])};
+      const T d_s = T(sol[3]);
       {
         T* pa = _a.data();
         for_int(i, n) {

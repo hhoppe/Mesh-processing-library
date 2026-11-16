@@ -657,10 +657,14 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
         for_int(i, af.num()) {
           int i1 = i + 1;
           if (i1 == av.num()) i1 = 0;
+          mesh.polygon(af[i], poly);
+          const Vector face_normal = poly.get_normal();
+          // A degenerate face (e.g., with coincident vertices) has a zero normal and contributes nothing; skipping it
+          // also avoids passing a zero vector to angle_between_unit_vectors(), which asserts in debug builds.
+          if (is_zero(face_normal)) continue;
           const float ang = angle_between_unit_vectors(ok_normalized(mesh.point(av[i]) - vp),
                                                        ok_normalized(mesh.point(av[i1]) - vp));
-          mesh.polygon(af[i], poly);
-          vec += poly.get_normal() * ang;
+          vec += face_normal * ang;
         }
         break;
       case EType::sum:

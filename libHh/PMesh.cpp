@@ -2,10 +2,10 @@
 #include "libHh/PMesh.h"
 
 #include "libHh/Array.h"
-#include "libHh/BinaryIO.h"   // read_binary_std() and write_binary_std()
-#include "libHh/GMesh.h"      // in extract_gmesh()
-#include "libHh/HashTuple.h"  // hash<pair<...>>
+#include "libHh/BinaryIO.h"  // read_binary_std() and write_binary_std()
+#include "libHh/GMesh.h"     // in extract_gmesh()
 #include "libHh/LineWriter.h"
+#include "libHh/Parallel.h"
 #include "libHh/RangeOp.h"  // fill()
 #include "libHh/Set.h"
 #include "libHh/Vector4.h"
@@ -1488,22 +1488,59 @@ void AWMesh::split_edge(int f, int j, float frac1) {
   _fnei[fnew2].faces = V(f2, fnei2[mod3(j2 + 1)], fnew1);
 }
 
-void AWMesh::construct_adjacency() {
-  _fnei.init(_faces.num());
-  Map<std::pair<int, int>, int> mvv_face;  // Maps (Vertex, Vertex) -> Face.
-  for_int(f, _faces.num()) for_int(j, 3) {
-    const int j1 = mod3(j + 1), j2 = mod3(j + 2);
-    const int v0 = _wedges[_faces[f].wedges[j1]].vertex;
-    const int v1 = _wedges[_faces[f].wedges[j2]].vertex;
-    mvv_face.enter(std::pair(v0, v1), f);
+void AWMesh::construct_adjacency(CArrayView<int> vertex_ids, CArrayView<int> face_ids) {
+  const int nv = _vertices.num(), nf = _faces.num();
+  const auto vertex = [&](int f, int j) { return _wedges[_faces[f].wedges[j]].vertex; };
+  // The half-edge of corner c = 3 * f + j goes from the vertex of corner mod3(j + 1) to that of corner mod3(j + 2).
+  const auto hedge_start = [&](int c) { return vertex(c / 3, mod3(c % 3 + 1)); };
+  const auto hedge_end = [&](int c) { return vertex(c / 3, mod3(c % 3 + 2)); };
+  // Counting sort of the half-edges by their start vertex.
+  Array<int> hstart(nv + 1, 0);
+  for_int(f, nf) for_int(j, 3) hstart[vertex(f, j) + 1]++;
+  for_int(v, nv) hstart[v + 1] += hstart[v];
+  Array<int> hlist(3 * nf);
+  {
+    Array<int> fill(hstart.head(nv));
+    for_int(c, 3 * nf) hlist[fill[hedge_start(c)]++] = c;
   }
-  for_int(f, _faces.num()) for_int(j, 3) {
-    const int j1 = mod3(j + 1), j2 = mod3(j + 2);
-    const int v0 = _wedges[_faces[f].wedges[j1]].vertex;
-    const int v1 = _wedges[_faces[f].wedges[j2]].vertex;
-    const int* fn = mvv_face.find_ptr(std::pair(v1, v0));
-    _fnei[f].faces[j] = fn ? *fn : k_undefined;
+  constexpr int k_bad_edge = -3;  // Temporary value of _fnei for a non-manifold or inconsistently oriented edge.
+  static_assert(k_bad_edge != k_undefined);
+  _fnei.init(nf);
+  parallel_for({.cycles_per_elem = 100}, range(nf), [&](const int f) {
+    for_int(j, 3) {
+      const int c = 3 * f + j, a = hedge_start(c), b = hedge_end(c);
+      int nsame = 0;
+      for_intL(i, hstart[a], hstart[a + 1]) nsame += hedge_end(hlist[i]) == b;
+      int fn = k_undefined, nopp = 0;
+      for_intL(i, hstart[b], hstart[b + 1]) {
+        const int c2 = hlist[i];
+        if (hedge_end(c2) == a) fn = c2 / 3, nopp++;
+      }
+      _fnei[f].faces[j] = nsame != 1 || nopp > 1 ? k_bad_edge : fn;
+    }
+  });
+  // Report the bad edges deterministically, in the order of the faces.
+  const auto vertex_id = [&](int v) { return vertex_ids.num() ? vertex_ids[v] : v; };
+  const auto face_id = [&](int f) { return face_ids.num() ? face_ids[f] : f; };
+  const auto faces_with_hedge = [&](int a, int b) {  // The faces with the half-edge (a, b).
+    string s;
+    for_intL(i, hstart[a], hstart[a + 1]) if (hedge_end(hlist[i]) == b) s += sform(" %d", face_id(hlist[i] / 3));
+    return s;
+  };
+  constexpr int k_max_reports = 5;
+  int num_bad_edges = 0;
+  for_int(f, nf) for_int(j, 3) {
+    if (_fnei[f].faces[j] != k_bad_edge) continue;
+    const int c = 3 * f + j, a = hedge_start(c), b = hedge_end(c);
+    if (num_bad_edges++ < k_max_reports)
+      showdf("Edge (%d, %d) is in faces%s, and (%d, %d) in faces%s\n", vertex_id(a), vertex_id(b),
+             faces_with_hedge(a, b).c_str(), vertex_id(b), vertex_id(a), faces_with_hedge(b, a).c_str());
   }
+  if (num_bad_edges)
+    assertnever(
+        sform("The mesh has %d half-edges that are non-manifold or inconsistently oriented"
+              " (reading the mesh with 'Filtermesh -fixvertices -fixfaces' drops such faces and repairs the rest)",
+              num_bad_edges));
 }
 
 // *** PMesh
@@ -1533,24 +1570,32 @@ void PMesh::read(std::istream& is) {
 }
 
 void PMesh::write(std::ostream& os) const {
+  write_header_and_base_mesh(os, _info, _base_mesh);
+  for_int(i, _vsplits.num()) _vsplits[i].write(os, _info);
+  write_trailer(os);
+}
+
+void PMesh::write_header_and_base_mesh(std::ostream& os, const PMeshInfo& info, const AWMesh& base_mesh) {
   os << "PM\n";
   os << "version=2\n";
   os << sform("nvsplits=%d nvertices=%d nwedges=%d nfaces=%d\n",  //
-              _info._tot_nvsplits, _info._full_nvertices, _info._full_nwedges, _info._full_nfaces);
-  const auto& bbox = _info._full_bbox;
+              info._tot_nvsplits, info._full_nvertices, info._full_nwedges, info._full_nfaces);
+  const auto& bbox = info._full_bbox;
   {
     LineWriter line;
     line << "bbox";
     for_int(i, 2) for_int(c, 3) line << (i == 1 && c == 0 ? "  " : " ") << bbox[i][c];
     line.write_line(os);
   }
-  os << sform("has_rgb=%d\n", _info._has_rgb);
-  os << sform("has_uv=%d\n", _info._has_uv);
-  os << sform("has_resid=%d\n", _info._has_resid);
-  if (_info._has_wad2) os << sform("has_wad2=%d\n", _info._has_wad2);
+  os << sform("has_rgb=%d\n", info._has_rgb);
+  os << sform("has_uv=%d\n", info._has_uv);
+  os << sform("has_resid=%d\n", info._has_resid);
+  if (info._has_wad2) os << sform("has_wad2=%d\n", info._has_wad2);
   os << "PM base mesh:\n";
-  _base_mesh.write(os, _info);
-  for_int(i, _vsplits.num()) _vsplits[i].write(os, _info);
+  base_mesh.write(os, info);
+}
+
+void PMesh::write_trailer(std::ostream& os) {
   os << char(k_magic_first_byte);
   os << "End of PM\n";
   assertx(os);

@@ -78,6 +78,7 @@ void perhaps_start_recording() {
 // preceding collapses of the sweep.
 void simplify_mesh() {
   if (options.min_chart_bnd_vertices) assertx(options.strict_sharp >= 2);
+  if (options.minaps && !mesh._has_uv) assertnever("'-minaps' requires uv coordinates");
   if (options.strict_sharp == 2) {  // As in MeshSimplify's optimize().
     for_int(f, mesh._faces.num()) {
       if (!mesh.face_alive(f)) continue;
@@ -256,6 +257,8 @@ int main(int argc, const char** argv) {
   HH_ARGSP_O(strict_sharp, "i : preserve topology of discont. curves");
   HH_ARGSP_O(min_chart_bnd_vertices, "n : with -strict 2, keep >= n bnd vertices per chart");
   HH_ARGSP_O(keepglobalv, "bool : do not simplify vertices tagged global");
+  HH_ARGSF_O(minaps, ": use appearance-preserving simplification (needs uv)");
+  HH_ARGSP_O(aps_bnd_fac, "factor : boost perceptual importance of bnd vertices");
   HH_ARGSC("", ":");
   HH_ARGSP(original_indices, "file.txt : output original vertex indices in creation order");
   HH_ARGSD(outmesh, "file.m : write the current mesh");
@@ -288,13 +291,18 @@ int main(int argc, const char** argv) {
     fi_indices() << pm_ids.num() << '\n';
     for (const int id : pm_ids) fi_indices() << id << '\n';
   }
-  PMesh pmesh;
-  if (!nooutput || roundtrip_reference) finalize_pm(mesh, recorder, pmesh);
-  if (roundtrip_reference) check_round_trip(pmesh, *roundtrip_reference, pm_ids);
+  AWMesh base_mesh;
+  PMeshInfo pminfo;
+  if (!nooutput || roundtrip_reference) finalize_pm(mesh, recorder, base_mesh, pminfo);
+  if (roundtrip_reference) {
+    PMesh pmesh;
+    make_pmesh(base_mesh, pminfo, recorder, pmesh);
+    check_round_trip(pmesh, *roundtrip_reference, pm_ids);
+  }
   timer.terminate();
   hh_clean_up();  // Write the diagnostics before the progressive mesh, so that nothing follows it on stdout.
   if (!nooutput) {
-    pmesh.write(std::cout);
+    write_pm(std::cout, base_mesh, pminfo, recorder);
     std::cout.flush();
   }
   if (k_fast_exit) exit_immediately(0);

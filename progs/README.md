@@ -284,7 +284,7 @@ bin/mesh_to_pm demos/data/57chevy.orig.m >57chevy.pm
 For the common case of half-edge collapses (which keep the positions of the original vertices) under the
 quadric error metric, as in `bin/mesh_to_pm mesh.m -minqem -vsgeom`, the program `MeshToPm` performs all the steps
 in a single process, using much less memory (it reads a `*.m` mesh or a Stanford `*.ply` mesh with optional vertex
-normals):<a id="prog_MeshToPm"></a>
+normals, colors, and texture coordinates):<a id="prog_MeshToPm"></a>
 ```shell
 MeshToPm demos/data/bunny.orig.m >bunny.pm
 ```
@@ -296,7 +296,7 @@ MeshToPm demos/data/bunny.orig.m -norfac 0 -nfaces 20000 -presimplify -simplify 
 - configures the simplification to ignore fidelity to the interpolated normal field,
 - simplifies the mesh to 20,000 faces without recording the edge collapses,
 - continues simplifying while recording the progressive mesh,
-- disables the dihedral angle checks to allow further simplification,
+- allows bad dihedral angles as a last resort,
 - (implicitly) continues simplifying, and finally writes the progressive mesh.
 
 A progressive <em>outer hull</em>, whose every level of detail encloses the original mesh, is created using:
@@ -473,7 +473,7 @@ so as to minimize parametric stretch from the sphere to the surface mesh.
 
 For example, within `demos/create_spherical_param_bunny`,
 ```shell
-mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow |
+MeshToPm demos/data/bunny.orig.m -dihallow |
   SphereParam - -rot demos/data/bunny.s3d -split_meridian >bunny.sphparam.m
 ```
 - creates a progressive mesh (`*.pm`) stream minimizing a quadric error metric (`qem`),
@@ -483,7 +483,7 @@ mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow |
 
 Then, within `demos/view_spherical_param_bunny`,
 ```shell
-mesh_to_pm demos/data/bunny.orig.m -minqem -vsgeom -dihallow |
+MeshToPm demos/data/bunny.orig.m -dihallow |
   SphereParam - -visualize -wait_on_visualizer -nooutput
 ```
 - reruns the same spherical parameterization, piping its progress to an interactive `G3dOGL` viewer, and

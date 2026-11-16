@@ -263,11 +263,17 @@ class AWMesh : public WMesh {
   [[nodiscard]] bool is_boundary(int v, int f) const;
   [[nodiscard]] VF_range ccw_faces(int v, int f) const { return VF_range(*this, v, f); }
   [[nodiscard]] VV_range ccw_vertices(int v, int f) const { return VV_range(*this, v, f); }  // Range over [vv, ff].
+
   // Split the edge between _faces[f].wedges[j] and _faces[f].wedges[mod3(j + 1)] with interp(v1, v2, frac1).
   void split_edge(int f, int j, float frac1);
 
+  // Fill _fnei from _faces (whose wedges must refer to vertices), by matching each half-edge (a, b) with (b, a).
+  // Die if any edge is non-manifold or inconsistently oriented, after reporting the first few in face order.  The
+  // messages show vertex_ids[v] and face_ids[f] if these are given, and otherwise the indices v and f.
+  void construct_adjacency(CArrayView<int> vertex_ids = CArrayView<int>(nullptr, 0),
+                           CArrayView<int> face_ids = CArrayView<int>(nullptr, 0));
+
  private:
-  void construct_adjacency();
   void apply_vsplit_ancestry(Ancestry* ancestry, int vs, bool isr, int onumwedges, int code, int wvlfl, int wvrfr,
                              int wvsfl, int wvsfr, int wvtfl, int wvtfr);
   // Rendering using OpenGL.
@@ -401,6 +407,10 @@ class PMesh : noncopyable {
   // A non-progressive read.
   void read(std::istream& is);  // Die unless empty.
   void write(std::ostream& os) const;
+  // The parts of write(), for writing a progressive mesh whose vsplits are generated on the fly: the header and base
+  // mesh, then each Vsplit::write(os, info), and then the trailer.
+  static void write_header_and_base_mesh(std::ostream& os, const PMeshInfo& info, const AWMesh& base_mesh);
+  static void write_trailer(std::ostream& os);
   void truncate_beyond(PMeshIter& pmi);  // Remove all vsplits beyond the iterator.
   void truncate_prior(PMeshIter& pmi);   // Advance the base mesh.
  public:

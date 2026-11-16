@@ -271,6 +271,123 @@ bool nice_edge_collapse(const WorkMesh& mesh, const EdgeContext& ec) {
   return true;
 }
 
+// Returns false if the collapse would make a sharp edge not adjacent to the collapsed edge non-sharp, as MeshSimplify's
+// gather_nn() does (for metrics other than the quadric one), since the progressive mesh could not encode it.
+bool gather_nn_no_external_retire(const WorkMesh& mesh, const EdgeContext& ec, const NewMeshNei& nn) {
+  const int nc = nn.ar_corners.num();
+  const bool closed = nn.va[0] == nn.va.last();
+  for_int(i, nc - !closed) {
+    const int j = i < nc - 1 ? i + 1 : 0;  // Consider the edge between this ring face and the next one.
+    const MCorner c0 = nn.ar_corners[i][1], cc0 = nn.ar_corners[i][2];
+    const MCorner c1 = nn.ar_corners[j][0], cc1 = nn.ar_corners[j][2];
+    const int vc0 = mesh.corner_vertex(cc0), vc1 = mesh.corner_vertex(cc1), vo = mesh.corner_vertex(c0);
+    assertx(mesh.corner_vertex(c1) == vo);
+    // The edges (vc0, vo) in face i and (vc1, vo) in face j.
+    const bool expect_sharp = edge_sharp(mesh, EdgeHandle{cc0.f, nn.ar_corners[i][0].j}) ||
+                              (vc1 != vc0 && edge_sharp(mesh, EdgeHandle{cc1.f, nn.ar_corners[j][1].j}));
+    if (!expect_sharp) continue;
+    const bool will_be_sharp = mesh._faces[cc0.f].attrib.matid != mesh._faces[cc1.f].attrib.matid ||
+                               mesh.corner_wedge(c0) != mesh.corner_wedge(c1) || nn.ar_nwid[i] != nn.ar_nwid[j];
+    if (will_be_sharp) continue;
+    if (vo != ec.vo1 && vo != ec.vo2) return false;  // The collapse would retire an external edge.
+  }
+  return true;
+}
+
+// As MeshSimplify's intersect_segments().
+std::optional<std::pair<float, float>> intersect_segments(const Uv& p1, const Uv& p2, const Uv& p3, const Uv& p4) {
+  const double dx12 = double{p2[0]} - p1[0], dy12 = double{p2[1]} - p1[1];
+  const double dx34 = double{p4[0]} - p3[0], dy34 = double{p4[1]} - p3[1];
+  const double denominator = dx12 * dy34 - dy12 * dx34;
+  if (denominator == 0.) return {};  // The segments are parallel or collinear.
+  const double dx13 = double{p3[0]} - p1[0], dy13 = double{p3[1]} - p1[1];
+  const double t12 = (dx13 * dy34 - dy13 * dx34) / denominator;
+  const double t34 = (dx13 * dy12 - dy13 * dx12) / denominator;
+  if (t12 < 0. || t12 > 1. || t34 < 0. || t34 > 1.) return {};  // The intersection is outside the segments.
+  return std::pair{float(t12), float(t34)};
+}
+
+// Returns the face containing the half-edge (a, b), i.e., Mesh::face(a, b).
+int face_with_hedge(const WorkMesh& mesh, int a, int b) {
+  for (const int f : mesh.ccw_faces(a, mesh._someface[a]))
+    if (mesh.vertex(f, mod3(mesh.get_jvf(a, f) + 1)) == b) return f;
+  assertnever("");
+}
+
+// Returns the maximum displacement of any point on the mesh surface to its corresponding point with the same
+// parametric (uv) coordinate after the collapse that keeps the vertex at position ii (2: v1, 0: v2), or -1. if the
+// collapse is illegal, as MeshSimplify's evaluate_aps() computes it ("Appearance-preserving simplification" [Cohen
+// et al 1998]).  The maximum occurs at the removed vertex or at an edge-edge crossing in the parametric domain.
+double evaluate_aps(const WorkMesh& mesh, const EdgeContext& ec, int ii, float aps_bnd_fac) {
+  assertx(ii == 0 || ii == 2);
+  const int v1 = ii == 2 ? ec.v2 : ec.v1;  // The removed vertex.
+  const int v2 = ii == 2 ? ec.v1 : ec.v2;  // The kept vertex.
+  const int f1 = ec.f1, f2 = ec.f2;
+  const auto point = [&](int v) -> const Point& { return mesh._vertices[v].attrib.point; };
+  const auto uv = [&](MCorner c) -> const Uv& { return mesh._wedges[mesh.corner_wedge(c)].attrib.uv; };
+  const auto matid = [&](int f) { return mesh._faces[f].attrib.matid; };
+  const int wid_v1f1 = mesh.corner_wedge(mesh.corner(v1, f1));
+  const int wid_v1f2 = f2 >= 0 ? mesh.corner_wedge(mesh.corner(v1, f2)) : -1;
+  // The face (f1 or f2) whose wedge at v1 is that of corner c.
+  const auto face_of_wedge = [&](MCorner c) {
+    if (mesh.corner_wedge(c) == wid_v1f1) return f1;
+    assertx(f2 >= 0 && mesh.corner_wedge(c) == wid_v1f2);
+    return f2;
+  };
+  // The squared displacement at the removed vertex v1; also verify the parametric bijectivity.
+  double max_mag2 = -1.;
+  for (const int f : mesh.ccw_faces(v1, mesh._someface[v1])) {
+    const MCorner c = mesh.corner(v1, f);
+    const MCorner cs1 = WorkMesh::ccw_face_corner(c), cs2 = WorkMesh::clw_face_corner(c);
+    const int vs1 = mesh.corner_vertex(cs1), vs2 = mesh.corner_vertex(cs2);
+    if (vs1 == v2 || vs2 == v2) continue;  // The face becomes degenerate after the collapse.
+    const int ft = face_of_wedge(c);
+    assertx(matid(f) == matid(ft));  // (Necessary but not sufficient.)
+    const Vec3<Uv> pt{uv(mesh.corner(v2, ft)), uv(cs1), uv(cs2)};
+    if (signed_area(pt[0], pt[1], pt[2]) <= 0.f) return -1.;  // Parametric foldover (non-bijectivity).
+    const Uv& pt1 = uv(c);
+    const float b0 = signed_area(pt1, pt[1], pt[2]), b1 = signed_area(pt1, pt[2], pt[0]);
+    const float b2 = signed_area(pt1, pt[0], pt[1]);
+    if (b0 >= 0.f && b1 >= 0.f && b2 >= 0.f) {
+      const float reciprocal = 1.f / (b0 + b1 + b2);
+      const Bary bary(b0 * reciprocal, b1 * reciprocal, b2 * reciprocal);
+      const Point v1_correspondence = interp(point(v2), point(vs1), point(vs2), bary);
+      max_mag2 = max(max_mag2, dist2<double>(v1_correspondence, point(v1)));
+    }
+  }
+  if (max_mag2 == -1.) return -1.;  // The vertex is inside no new face in the texture domain.
+  // Also consider the displacements at all edge-edge crossings.
+  InlinedArray<int, 32> verts;  // The neighbors v of v1 other than v2 with (v1, v) not sharp.
+  for (const auto [v, f] : mesh.ccw_vertices(v1, mesh._someface[v1])) {
+    if (v == v2) continue;
+    const int j1 = mesh.get_jvf(v1, f);
+    // The edge (v1, v) in face f is opposite the corner of f that is neither v1 nor v.
+    const int jv = mesh.vertex(f, mod3(j1 + 1)) == v ? mod3(j1 + 1) : mod3(j1 + 2);
+    if (!edge_sharp(mesh, EdgeHandle{f, 3 - j1 - jv})) verts.push(v);
+  }
+  for (const int v : verts) {
+    const int fvv1 = face_with_hedge(mesh, v, v1);
+    const Uv& p = uv(mesh.corner(v, fvv1));
+    const Uv& p1 = uv(mesh.corner(v1, fvv1));
+    const Point& pv = point(v);
+    for (const int vv : verts) {
+      if (vv == v) continue;
+      const MCorner cvv = mesh.corner(v1, face_with_hedge(mesh, v1, vv));
+      const int ft = face_of_wedge(cvv);
+      const Uv& p2 = uv(mesh.corner(v2, ft));
+      const Uv& pp = uv(mesh.corner(vv, face_with_hedge(mesh, vv, v1)));
+      if (const auto result = intersect_segments(p1, p, p2, pp)) {
+        const auto [t12, t34] = *result;
+        const Point pp1 = interp(pv, point(v1), t12), pp2 = interp(point(vv), point(v2), t34);
+        max_mag2 = max(max_mag2, dist2<double>(pp1, pp2));
+      }
+    }
+  }
+  double max_mag = std::sqrt(max_mag2);
+  if (mesh.is_boundary_vertex(v1)) max_mag *= aps_bnd_fac;
+  return max_mag;
+}
+
 constexpr float k_frac_diam = 1e-3f;     // As frac_diam in MeshSimplify.
 constexpr float k_bad_dih = 1e28f;       // Cost penalty of a bad dihedral angle under "-dihallow".
 constexpr float k_gmindih = -1.f / 3.f;  // Minimum acceptable dihedral angle cosine (tetrahedron angle).
@@ -455,6 +572,7 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolOptions& 
   gather_ring(mesh, ec, nn);
   if (!gather_nn_valid(mesh, ec)) return {};
   if (!gather_nn_2(mesh, ec, nn)) return {};
+  if (options.minaps && !gather_nn_no_external_retire(mesh, ec, nn)) return {};
   const auto point = [&](int v) -> const Point& { return mesh._vertices[v].attrib.point; };
   assertx(options.diam > 0.f);
   const float cfac = mesh._has_rgb ? options.colfac * options.diam : 0.f;
@@ -478,52 +596,54 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolOptions& 
         mag(cross(triangle[0], triangle[1], triangle[2])) * (1.f / square(k_frac_diam * options.diam));
     face_quadrics.push(std::pair{std::pair{q, double(face_area)}, nwid});
   };
-  for_int(i, nn.ar_corners.num()) add_face_quadric(nn.ar_corners[i][2].f, nn.ar_nwid[i]);
-  for (const int f : {ec.f1, ec.f2}) {  // Try all neighboring corners with the same wedge to see if any survive.
-    if (f < 0) continue;
-    const int nwid = [&] {
-      for (const int v : {ec.v1, ec.v2}) {
-        const MCorner ci = mesh.corner(v, f);
-        const int wid = mesh.corner_wedge(ci);
-        for_int(dir, 2) {
-          for (MCorner c = ci;;) {
-            c = dir ? mesh.clw_corner(c) : mesh.ccw_corner(c);
-            assertx(c != ci);
-            if (!c || mesh.corner_wedge(c) != wid) break;
-            for_int(i, nn.ar_corners.num()) if (nn.ar_corners[i][2] == c) return nn.ar_nwid[i];
+  InlinedArray<std::pair<Vec3<double>, double>, 8> sharp_planes;
+  if (!options.minaps) {  // The quadric terms.
+    for_int(i, nn.ar_corners.num()) add_face_quadric(nn.ar_corners[i][2].f, nn.ar_nwid[i]);
+    for (const int f : {ec.f1, ec.f2}) {  // Try all neighboring corners with the same wedge to see if any survive.
+      if (f < 0) continue;
+      const int nwid = [&] {
+        for (const int v : {ec.v1, ec.v2}) {
+          const MCorner ci = mesh.corner(v, f);
+          const int wid = mesh.corner_wedge(ci);
+          for_int(dir, 2) {
+            for (MCorner c = ci;;) {
+              c = dir ? mesh.clw_corner(c) : mesh.ccw_corner(c);
+              assertx(c != ci);
+              if (!c || mesh.corner_wedge(c) != wid) break;
+              for_int(i, nn.ar_corners.num()) if (nn.ar_corners[i][2] == c) return nn.ar_nwid[i];
+            }
           }
         }
-      }
-      return -1;
-    }();
-    if (nwid >= 0) add_face_quadric(f, nwid);  // Else the wedge is lost.
-  }
-  // The planes through the sharp edges adjacent to v1 or v2, as in get_sharp_edge_qem() (with neptfac == 1).
-  InlinedArray<std::pair<Vec3<double>, double>, 8> sharp_planes;
-  const auto add_sharp_plane = [&](EdgeHandle ee) {
-    if (!edge_sharp(mesh, ee)) return;
-    const Point& pa = point(mesh.vertex(ee.f, mod3(ee.j + 1)));
-    const Point& pb = point(mesh.vertex(ee.f, mod3(ee.j + 2)));
-    Vector nor{};
-    for (const int f : {ee.f, mesh._fnei[ee.f].faces[ee.j]}) {
-      if (f == AWMesh::k_undefined) continue;
-      Vector fnor = get_normal_dir(mesh.face_points(f));
-      assertw(fnor.normalize());
-      nor += fnor;
+        return -1;
+      }();
+      if (nwid >= 0) add_face_quadric(f, nwid);  // Else the wedge is lost.
     }
-    nor = cross(nor, pb - pa);
-    assertw(nor.normalize());
-    nor *= dist(pa, pb) / (k_frac_diam * options.diam);
-    const float d = -dot(pa, nor);
-    sharp_planes.push(std::pair{convert<double>(nor), double(d)});
-  };
-  for (const int v : {ec.v1, ec.v2}) {
-    for (const int f : mesh.ccw_faces(v, mesh._someface[v])) {
-      const int jv = mesh.get_jvf(v, f);
-      const EdgeHandle ee{f, mod3(jv + 1)};  // The edge (v, vertex(f, jv + 2)).
-      if (!(v == ec.v2 && mesh.vertex(f, mod3(jv + 2)) == ec.v1)) add_sharp_plane(ee);
-      if (mesh._fnei[f].faces[mod3(jv + 2)] == AWMesh::k_undefined) {  // The clw boundary edge.
-        if (!(v == ec.v2 && mesh.vertex(f, mod3(jv + 1)) == ec.v1)) add_sharp_plane(EdgeHandle{f, mod3(jv + 2)});
+    // The planes through the sharp edges adjacent to v1 or v2, as in get_sharp_edge_qem() (with neptfac == 1).
+    const auto add_sharp_plane = [&](EdgeHandle ee) {
+      if (!edge_sharp(mesh, ee)) return;
+      const Point& pa = point(mesh.vertex(ee.f, mod3(ee.j + 1)));
+      const Point& pb = point(mesh.vertex(ee.f, mod3(ee.j + 2)));
+      Vector nor{};
+      for (const int f : {ee.f, mesh._fnei[ee.f].faces[ee.j]}) {
+        if (f == AWMesh::k_undefined) continue;
+        Vector fnor = get_normal_dir(mesh.face_points(f));
+        assertw(fnor.normalize());
+        nor += fnor;
+      }
+      nor = cross(nor, pb - pa);
+      assertw(nor.normalize());
+      nor *= dist(pa, pb) / (k_frac_diam * options.diam);
+      const float d = -dot(pa, nor);
+      sharp_planes.push(std::pair{convert<double>(nor), double(d)});
+    };
+    for (const int v : {ec.v1, ec.v2}) {
+      for (const int f : mesh.ccw_faces(v, mesh._someface[v])) {
+        const int jv = mesh.get_jvf(v, f);
+        const EdgeHandle ee{f, mod3(jv + 1)};  // The edge (v, vertex(f, jv + 2)).
+        if (!(v == ec.v2 && mesh.vertex(f, mod3(jv + 2)) == ec.v1)) add_sharp_plane(ee);
+        if (mesh._fnei[f].faces[mod3(jv + 2)] == AWMesh::k_undefined) {  // The clw boundary edge.
+          if (!(v == ec.v2 && mesh.vertex(f, mod3(jv + 1)) == ec.v1)) add_sharp_plane(EdgeHandle{f, mod3(jv + 2)});
+        }
       }
     }
   }
@@ -618,6 +738,10 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolOptions& 
       }
     }
     double rssa = 0.;
+    if (options.minaps) {
+      rssa = evaluate_aps(mesh, ec, ii, options.aps_bnd_fac);
+      if (rssa < 0.) continue;  // The collapse is illegal for the parameterization.
+    }
     for (const auto& [q, nwid] : face_quadrics) {
       const double weight = q.second;
       rssa += weight * q.first.evaluate(qem_vector(newp, ar_wi[nwid], cfac, nfac));

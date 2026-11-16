@@ -43,7 +43,9 @@ template <ranges::contiguous_range R> std::istream& read_binary_std(std::istream
 
 // Write an array of elements after Endian conversion from native to network (Big Endian) order.
 template <ranges::contiguous_range R> std::ostream& write_binary_std(std::ostream& os, const R& range) {
-  Array array(range);  // Copy is slow?
+  using T = ranges::range_value_t<R>;
+  // The built-in storage for 64 bytes avoids a heap allocation for the common small writes (e.g., one Point).
+  InlinedArray<T, std::max(int(64 / sizeof(T)), 1)> array(range);
   for (auto& e : array) to_std(&e);
   return write_binary_raw(os, array);
 }

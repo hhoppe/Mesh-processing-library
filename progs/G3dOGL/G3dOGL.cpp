@@ -8,15 +8,14 @@
 #include "libHh/A3dStream.h"
 #include "libHh/Args.h"
 #include "libHh/Array.h"
-#include "libHh/BinaryIO.h"
 #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"
 #include "libHh/GMesh.h"
 #include "libHh/Image.h"
 #include "libHh/MathOp.h"
-#include "libHh/MeshOp.h"        // Vnors
-#include "libHh/NetworkOrder.h"  // DEF_PLY
-#include "libHh/PMesh.h"         // DEF_PM
+#include "libHh/MeshOp.h"  // Vnors
+#include "libHh/PMesh.h"   // DEF_PM
+#include "libHh/Ply.h"     // DEF_PLY
 #include "libHh/Polygon.h"
 #include "libHh/SrMesh.h"  // DEF_SR
 #include "libHh/StringOp.h"
@@ -410,7 +409,7 @@ bool psc_key_press(char ch);
 
 bool ply_mode;
 #if defined(DEF_PLY)
-void read_ply(const string& filename);
+void read_ply_file(const string& filename);
 void draw_ply();
 #endif
 
@@ -2661,7 +2660,7 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   }
   if (ply_filename != "") {
 #if defined(DEF_PLY)
-    read_ply(ply_filename);
+    read_ply_file(ply_filename);
     ply_mode = true;
 #else
     assertnever("not enabled");
@@ -4752,261 +4751,40 @@ bool psc_key_press(char ch) {
 
 #if defined(DEF_PLY)
 
-using PlyIndices = InlinedArray<int, 4>;
-Array<Point> ply_vpos;
-Array<Vector> ply_vnor;
-Array<Pixel> ply_vrgb;
-Array<Uv> ply_vuv;
-Array<PlyIndices> ply_findices;
-Array<Vec3<Uv>> ply_fuv;
+PlyMesh ply_mesh;  // Its normals are computed in draw_ply() if absent and needed.
 
-// ply
-// format binary_big_endian 1.0
-// element vertex 255909
-// property float x
-// property float y
-// property float z
-// property float confidence
-// element face 441455
-// property list uchar int vertex_indices
-// end_header
-//
-// comment TextureFile TextureDouble_A.png
-// property list uchar uint vertex_indices  # Blender, on faces.
-// property list uchar float texcoord  # Meshlab, proj/evolving.
-
-// ply
-// format binary_little_endian 1.0
-// element vertex 5398641
-// property float x
-// property float y
-// property float z
-// property float value
-// property uchar red
-// property uchar green
-// property uchar blue
-// element face 5079921
-// property list int int vertex_indices
-// end_header
-
-void read_ply(const string& filename) {
+void read_ply_file(const string& filename) {
   // HH_TIMER("_read_ply");
   RFile fi(filename);
-  std::istream& is = fi();
-  string line;
-  assertx(my_getline(is, line));
-  assertx(line == "ply");
-  const Map<std::string, int> dsizes = {
-      {"char", 1}, {"uchar", 1}, {"short", 2}, {"ushort", 2}, {"int", 4}, {"uint", 4}, {"float", 4}, {"double", 8},
-  };
-  bool binary = false;
-  bool bigendian = false;
-  int num_element = 0;
-  string element;
-  int vnpos = 0, vnnor = 0, vnrgb = 0, vnuv = 0, vnother = 0, vnotherb = 0;
-  int len_nfv = 0;  // Size in bytes of number of vertex indices in each face.
-  int fnskip = 0, fnskipb = 0, fnother = 0, fnotherb = 0;
-  for (;;) {
-    assertx(my_getline(is, line));
-    if (0) {
-    } else if (line == "format ascii 1.0") {
-      assertx(element == "");
-    } else if (line == "format binary_big_endian 1.0") {
-      assertx(element == "");
-      binary = true;
-      bigendian = true;
-    } else if (line == "format binary_little_endian 1.0") {
-      assertx(element == "");
-      binary = true;
-    } else if (line.starts_with("comment ")) {
-      assertw(element == "");
-    } else if (line.starts_with("obj_info ")) {  // Ignore, e.g., "obj_info 3D colored patch boundaries ".
-      assertw(element == "");
-
-    } else if (line.starts_with("element ")) {
-      std::istringstream iss(line.substr(std::strlen("element ")));
-      int count;
-      assertx(iss >> element >> count && iss.eof());
-      assertx(count >= 0);
-      if (element == "vertex") {
-        assertx(num_element == 0);
-        if (count == 0) assertnever("ply: no vertices");
-        ply_vpos.init(count);
-      } else if (element == "face") {
-        assertx(num_element == 1);
-        if (count == 0) Warning("ply: no faces");
-        ply_findices.init(count);
-      } else {
-        assertx(num_element >= 2);
-        showf("ply: ignoring element named '%s'\n", element.c_str());
-      }
-      num_element++;
-
-    } else if (line.starts_with("property list ")) {
-      assertx(element == "face");
-      std::istringstream iss(line.substr(std::strlen("property list ")));
-      string sizetype, dtype, name;
-      assertx(iss >> sizetype >> dtype >> name && iss.eof());
-      if (name == "vertex_indices") {
-        assertx(len_nfv == 0);
-        assertx(dtype == "int" || dtype == "uint");
-        len_nfv = dsizes.get(sizetype);
-      } else if (name == "texcoord") {
-        assertx(len_nfv > 0 && fnother == 0);
-        assertx(sizetype == "uchar" && dtype == "float");
-        ply_fuv.init(ply_findices.num());
-      } else {
-        assertnever("ply: property list not recognized");
-      }
-
-    } else if (line.starts_with("property ")) {
-      assertx(element != "");
-      std::istringstream iss(line.substr(std::strlen("property ")));
-      string dtype, name;
-      assertx(iss >> dtype >> name && iss.eof());
-      const int dsize = dsizes.get(dtype);
-      if (element == "vertex") {
-        if (contains(V<std::string_view>("x", "y", "z"), name)) {
-          assertx(dtype == "float");
-          assertx(vnnor + vnrgb + vnuv + vnother == 0);
-          vnpos++;
-        } else if (contains(V<std::string_view>("nx", "ny", "nz"), name)) {
-          assertx(dtype == "float");
-          assertx(vnrgb + vnuv + vnother == 0);
-          vnnor++;
-        } else if (contains(V<std::string_view>("red", "green", "blue", "alpha"), name)) {
-          assertx(dsize == 1);
-          assertx(vnuv + vnother == 0);
-          vnrgb++;
-        } else if (contains(V<std::string_view>("s", "t"), name)) {
-          assertx(dtype == "float");
-          assertx(vnother == 0);
-          vnuv++;
-        } else {
-          showf("ply: ignoring vertex property '%s'\n", name.c_str());
-          vnotherb += dsize;
-          vnother++;
-        }
-      } else if (element == "face") {
-        showf("ply: ignoring face property '%s'\n", name.c_str());
-        if (len_nfv == 0) {
-          fnskipb += dsize;
-          fnskip++;
-        } else {
-          fnotherb += dsize;
-          fnother++;
-        }
-      } else {
-        // Ignore data after the faces.
-      }
-
-    } else if (line == "end_header") {
-      break;
-    } else {
-      assertnever("ply: field unknown in '" + line + "'");
-    }
-  }
-  assertx(vnpos == 3);
-  assertx(vnnor == 0 || vnnor == 3);
-  assertx(vnrgb == 0 || vnrgb == 3 || vnrgb == 4);
-  assertx(vnuv == 0 || vnuv == 2);
-  assertx(!(vnuv > 0 && ply_fuv.num()));
-
-  if (ply_findices.num()) assertx(len_nfv);
-  if (vnnor) ply_vnor.init(ply_vpos.num());
-  if (vnrgb) ply_vrgb.init(ply_vpos.num(), Pixel::gray(0));
-  if (vnuv) ply_vuv.init(ply_vpos.num());
-  if (binary) {
-    const auto read_value = [&](auto& value) {
-      assertx(read_binary_raw(is, ArView(value)));
-      if constexpr (sizeof(value) >= 2) bigendian ? from_std(&value) : from_dos(&value);
-    };
-    for_int(i, ply_vpos.num()) {
-      for_int(c, 3) read_value(ply_vpos[i][c]);
-      if (vnnor) for_int(c, vnnor) read_value(ply_vnor[i][c]);
-      for_int(c, vnrgb) read_value(ply_vrgb[i][c]);
-      for_int(c, vnuv) read_value(ply_vuv[i][c]);
-      if (vnotherb) is.ignore(vnotherb);
-    }
-    for_int(i, ply_findices.num()) {
-      if (fnskipb) is.ignore(fnskipb);
-      int nfv;
-      if (len_nfv == 1) {
-        uchar vi;
-        read_value(vi);
-        nfv = vi;
-      } else if (len_nfv == 4) {
-        int32_t vi;
-        read_value(vi);
-        nfv = vi;
-      } else {
-        assertnever("");
-      }
-      assertw(nfv >= 3);
-      ply_findices[i].init(nfv);
-      for_int(j, nfv) read_value(ply_findices[i][j]);
-      for_int(j, nfv) assertx(ply_findices[i][j] < ply_vpos.num());
-      if (ply_fuv.num()) {
-        uchar n;
-        read_value(n);
-        assertx(n == 6);
-        for_int(j, 3) for_int(c, 2) read_value(ply_fuv[i][j][c]);
-      }
-      if (fnotherb) is.ignore(fnotherb);
-    }
-
-  } else {
-    float dummy_float;
-    for_int(i, ply_vpos.num()) {
-      for_int(c, vnpos) assertx(is >> ply_vpos[i][c]);
-      for_int(c, vnnor) assertx(is >> ply_vnor[i][c]);
-      for_int(c, vnrgb) {
-        int v;
-        assertx(is >> v);
-        ply_vrgb[i][c] = assert_narrow_cast<uchar>(v);
-      }
-      for_int(c, vnuv) assertx(is >> ply_vuv[i][c]);
-      for_int(c, vnother) assertx(is >> dummy_float);
-    }
-    // SHOW(ply_vpos.last());
-    for_int(i, ply_findices.num()) {
-      for_int(c, fnskip) assertx(is >> dummy_float);
-      int nfv = 0;
-      assertx(is >> nfv);
-      assertw(nfv >= 3);
-      ply_findices[i].init(nfv);
-      for_int(j, nfv) {
-        assertx(is >> ply_findices[i][j]);
-        assertx(ply_findices[i][j] < ply_vpos.num());
-      }
-      if (ply_fuv.num()) {
-        int n = 0;
-        assertx(is >> n);
-        assertx(n == 6);
-        for_int(j, 3) for_int(c, 2) assertx(is >> ply_fuv[i][j][c]);
-      }
-      for_int(c, fnother) assertx(is >> dummy_float);
-    }
-  }
-  showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), ply_vpos.num(), ply_findices.num());
-  const Bbox bbox{ply_vpos};
+  const Array<string> header_lines = read_ply_header(fi());
+  ply_mesh = read_ply(fi(), header_lines);
+  if (ply_mesh.points.empty()) assertnever("ply: no vertices");
+  if (!ply_mesh.num_faces()) Warning("ply: no faces");
+  assertx(!(ply_mesh.uvs.num() && ply_mesh.corner_uvs.num()));
+  showf("G3d: (1) File:%s v=%d f=%d\n", filename.c_str(), ply_mesh.points.num(), ply_mesh.num_faces());
+  const Bbox bbox{ply_mesh.points};
   g3d::UpdateOb1Bbox(bbox);
   if (g3d::g_filename == "") g3d::g_filename = filename;
 }
 
 void draw_ply() {
+  const CArrayView<Point> ply_vpos = ply_mesh.points;
+  Array<Vector>& ply_vnor = ply_mesh.normals;
+  const CArrayView<Pixel> ply_vrgb = ply_mesh.colors;
+  const CArrayView<Uv> ply_vuv = ply_mesh.uvs;
+  const CArrayView<Uv> ply_fuv = ply_mesh.corner_uvs;
+  const int nf = ply_mesh.num_faces();
   if (lsmooth && ply_vnor.empty()) {
     ply_vnor.init(ply_vpos.num(), Vector{});
-    for_int(i, ply_findices.num()) {
+    for_int(i, nf) {
       Polygon poly;
-      for_int(j, ply_findices[i].num()) poly.push(ply_vpos[ply_findices[i][j]]);
+      for (const int vi : ply_mesh.face(i)) poly.push(ply_vpos[vi]);
       const Vector vnor = poly.get_normal();
-      for_int(j, ply_findices[i].num()) ply_vnor[ply_findices[i][j]] += vnor;
+      for (const int vi : ply_mesh.face(i)) ply_vnor[vi] += vnor;
     }
     for (Vector& vnor : ply_vnor) assertw(vnor.normalize());
   }
-  if (ply_findices.num() > 5'000'000 && defining_dl)
-    Warning("Graphics card may not have sufficient memory for display list");
+  if (nf > 5'000'000 && defining_dl) Warning("Graphics card may not have sufficient memory for display list");
   if (texture_active) {
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
@@ -5025,8 +4803,8 @@ void draw_ply() {
     }
     const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
     int ntriangles = 0;
-    for_int(i, ply_findices.num()) {
-      const auto& indices = ply_findices[i];
+    for_int(i, nf) {
+      const CArrayView<int> indices = ply_mesh.face(i);
       if (indices.num() == 3) {
         if (ntriangles == buffer_ntriangles) {
           glEnd();
@@ -5049,7 +4827,7 @@ void draw_ply() {
         const int vi = indices[j];
         if (texture_active) {
           if (ply_fuv.num())
-            glTexCoord2fv(ply_fuv[i][j].data());
+            glTexCoord2fv(ply_fuv[ply_mesh.face_start[i] + j].data());
           else if (ply_vuv.num())
             glTexCoord2fv(ply_vuv[vi].data());
         }
@@ -5059,8 +4837,8 @@ void draw_ply() {
       }
       if (!ntriangles) glEnd();  // GL_POLYGON
     }
-    if (ntriangles) glEnd();    // GL_TRIANGLES
-    if (ply_findices.empty()) {  // Draw points.
+    if (ntriangles) glEnd();  // GL_TRIANGLES
+    if (!nf) {                // Draw points.
       initialize_unlit();
       glBegin(GL_POINTS);
       for_int(i, ply_vpos.num()) {
@@ -5083,7 +4861,8 @@ void draw_ply() {
     set_thickness(thicknormal);
     update_cur_color(pix_edgecolor);
     glBegin(GL_LINES);
-    for (const auto& indices : ply_findices) {
+    for_int(i, nf) {
+      const CArrayView<int> indices = ply_mesh.face(i);
       const int n = indices.num();
       for_int(j, n) {
         // Draws most edges twice :-(

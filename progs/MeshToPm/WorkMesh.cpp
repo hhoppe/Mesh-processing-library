@@ -49,66 +49,20 @@ bool WorkMesh::vertex_has_multiple_wedges(int v) const {
 
 void build_adjacency(WorkMesh& mesh) {
   const int nv = mesh._vertices.num(), nf = mesh._faces.num();
-  // The half-edge of corner c = 3 * f + j goes from the vertex of corner mod3(j + 1) to that of corner mod3(j + 2).
-  const auto hedge_start = [&](int c) { return mesh.vertex(c / 3, mod3(c % 3 + 1)); };
-  const auto hedge_end = [&](int c) { return mesh.vertex(c / 3, mod3(c % 3 + 2)); };
-  // Counting sort of the half-edges by their start vertex.
-  Array<int> hstart(nv + 1, 0);
-  for_int(f, nf) for_int(j, 3) hstart[mesh.vertex(f, j) + 1]++;
-  for_int(v, nv) hstart[v + 1] += hstart[v];
-  Array<int> hlist(3 * nf);
-  {
-    Array<int> fill(hstart.head(nv));
-    for_int(c, 3 * nf) hlist[fill[hedge_start(c)]++] = c;
-  }
-  const auto vertex_id = [&](int v) { return mesh._vertex_original_id[v]; };
-  const auto face_id = [&](int f) { return mesh._face_original_id[f]; };
-  // The faces with the half-edge (a, b).
-  const auto faces_with_hedge = [&](int a, int b) {
-    string s;
-    for_intL(i, hstart[a], hstart[a + 1]) if (hedge_end(hlist[i]) == b) s += sform(" %d", face_id(hlist[i] / 3));
-    return s;
-  };
-  constexpr int k_bad_edge = -3;  // Temporary value of _fnei for a non-manifold or inconsistently oriented edge.
-  constexpr int k_max_reports = 5;
-  mesh._fnei.init(nf);
-  parallel_for(range(nf), [&](const int f) {
-    for_int(j, 3) {
-      const int c = 3 * f + j, a = hedge_start(c), b = hedge_end(c);
-      int nsame = 0;
-      for_intL(i, hstart[a], hstart[a + 1]) nsame += hedge_end(hlist[i]) == b;
-      int fn = AWMesh::k_undefined, nopp = 0;
-      for_intL(i, hstart[b], hstart[b + 1]) {
-        const int c2 = hlist[i];
-        if (hedge_end(c2) == a) fn = c2 / 3, nopp++;
-      }
-      mesh._fnei[f].faces[j] = nsame != 1 || nopp > 1 ? k_bad_edge : fn;
-    }
-  });
-  // Report the bad edges deterministically, in the order of the faces.
-  int num_bad_edges = 0;
+  mesh.construct_adjacency(mesh._vertex_original_id, mesh._face_original_id);
+  // For each vertex, the number of its faces and the first of them.
+  Array<int> nfaces_of_vertex(nv, 0);
+  mesh._someface.init(nv, -1);
   for_int(f, nf) for_int(j, 3) {
-    if (mesh._fnei[f].faces[j] != k_bad_edge) continue;
-    const int c = 3 * f + j, a = hedge_start(c), b = hedge_end(c);
-    if (num_bad_edges++ < k_max_reports)
-      showdf("Edge (%d, %d) is in faces%s, and (%d, %d) in faces%s\n", vertex_id(a), vertex_id(b),
-             faces_with_hedge(a, b).c_str(), vertex_id(b), vertex_id(a), faces_with_hedge(b, a).c_str());
+    const int v = mesh.vertex(f, j);
+    if (!nfaces_of_vertex[v]++) mesh._someface[v] = f;
   }
-  if (num_bad_edges)
-    assertnever(
-        sform("The mesh has %d half-edges that are non-manifold or inconsistently oriented"
-              " (reading the mesh with 'Filtermesh -fixvertices -fixfaces' drops such faces and repairs the rest)",
-              num_bad_edges));
-  mesh._someface.init(nv);
   mesh._vflags.resize(nv);
   int num_unreferenced = 0;
   for_int(v, nv) {
-    if (hstart[v] == hstart[v + 1]) {
-      mesh._someface[v] = -1;
+    if (mesh._someface[v] < 0) {
       mesh._vflags[v] |= WorkMesh::k_vflag_removed;
       num_unreferenced++;
-    } else {
-      mesh._someface[v] = hlist[hstart[v]] / 3;
     }
   }
   if (num_unreferenced) {
@@ -125,13 +79,14 @@ void build_adjacency(WorkMesh& mesh) {
   parallel_for(range(nv), [&](const int v) {
     if (mesh._someface[v] < 0) return;
     const int nfaces = narrow_cast<int>(ranges::distance(mesh.ccw_faces(v, mesh._someface[v])));
-    not_nice[v] = nfaces != hstart[v + 1] - hstart[v];
+    not_nice[v] = nfaces != nfaces_of_vertex[v];
   });
+  constexpr int k_max_reports = 5;
   int num_not_nice = 0;
   for_int(v, nv) {
     if (!not_nice[v]) continue;
     if (num_not_nice++ < k_max_reports)
-      showdf("Vertex %d: its %d faces do not form a single fan\n", vertex_id(v), hstart[v + 1] - hstart[v]);
+      showdf("Vertex %d: its %d faces do not form a single fan\n", mesh._vertex_original_id[v], nfaces_of_vertex[v]);
   }
   if (num_not_nice)
     assertnever(
@@ -240,7 +195,7 @@ PMeshInfo full_mesh_info(const WorkMesh& mesh) {
   pminfo._full_nfaces = mesh.num_live_faces();
   Array<bool> used(mesh._wedges.num(), false);
   for_int(f, mesh._faces.num()) if (mesh.face_alive(f)) for (const int w : mesh._faces[f].wedges) used[w] = true;
-  for (const bool b : used) pminfo._full_nwedges += b;
+  pminfo._full_nwedges = sum<int>(used);
   pminfo._full_bbox = mesh.bbox();
   return pminfo;
 }

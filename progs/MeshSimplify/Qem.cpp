@@ -247,7 +247,7 @@ template <typename T, int n> float Qem<T, n>::evaluate(const float* p) const {
 // Note: minp is unchanged if unsuccessful!
 template <typename T, int n> bool Qem<T, n>::compute_minp(float* minp) const {
   // minp = - A^-1 b        or     A * minp = -b
-  thread_local SvdDoubleLls lls(n, n, 1);
+  static thread_local SvdDoubleLls lls(n, n, 1);
   lls.clear();
   {
     const T* pa = _a.data();
@@ -273,8 +273,8 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_first(float* mi
   assertx(nf > 0 && nf < n);
   // Given fixed minp[0 .. nf - 1], optimize for minp[nf .. n - 1] .
   //  A_22 * x_2 = (-b_2 - A_21 * x_1)    (A_21 = A_12^T)
-  thread_local unique_ptr<SvdDoubleLls> plls;
-  thread_local int prev_nf;
+  static thread_local unique_ptr<SvdDoubleLls> plls;
+  static thread_local int prev_nf;
   if (!plls || prev_nf != nf) {
     plls = make_unique<SvdDoubleLls>(n - nf, n - nf, 1);
     prev_nf = nf;
@@ -316,7 +316,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
   //  x = x0 + Z * w
   //  (Z^T * A * Z) * w = (-Z^T * (A * x0 + b))
   assertx(n >= 2);
-  thread_local Matrix<double> a;
+  static thread_local Matrix<double> a;
   if (!a.ysize()) a.init(n, n);
   {
     const T* pa = _a.data();
@@ -331,7 +331,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
     }
     if (0) print_matrix(a);
   }
-  thread_local Matrix<double> zt;
+  static thread_local Matrix<double> zt;
   if (!zt.ysize()) zt.init(n - 1, n);
   {
     assertx(n >= 3);
@@ -351,7 +351,7 @@ template <typename T, int n> bool Qem<T, n>::compute_minp_constr_lf(float* minp,
     for_intL(i, 3, n) zt[i - 1, i] = 1.;
     if (0) print_matrix(zt);
   }
-  thread_local SvdDoubleLls lls(n, n, 1);
+  static thread_local SvdDoubleLls lls(n, n, 1);
   lls.clear();
   for_int(i, n - 1) for_int(j, n) {
     // Row i of Z^T times column j of A.
@@ -388,9 +388,9 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
   //   C1 = C - B * B^T / al;
   //   [p; gm] = [C1 g; g^T 0]^(-1) * [b1 - B * b2 / al; -d_v];
   //   s = (b2 - B^T * p) / al;
-  thread_local Matrix<double> c;
+  static thread_local Matrix<double> c;
   if (!c.ysize()) c.init(ngeom, ngeom);
-  thread_local Matrix<double> b;
+  static thread_local Matrix<double> b;
   if (!b.ysize() && nattrib) b.init(ngeom, nattrib);
   double alinv;  // Equals 1.0 / al.
   {
@@ -424,7 +424,7 @@ template <typename T, int n> bool Qem<T, n>::fast_minp_constr_lf(float* minp, co
     if (0) print_matrix(c);
     if (0) print_matrix(b);
   }
-  thread_local SvdDoubleLls lls(ngeom + 1, ngeom + 1, 1);
+  static thread_local SvdDoubleLls lls(ngeom + 1, ngeom + 1, 1);
   lls.clear();
   for_int(i, ngeom) {
     for_int(j, ngeom) {
@@ -462,8 +462,8 @@ bool Qem<T, n>::ar_compute_minp(CArrayView<Qem<T, n>*> ar_q, MatrixView<float> m
   assertx(nattrib >= 0);
   const int msize = ngeom + nattrib * nw;
   // Cache the previous size.
-  thread_local unique_ptr<SvdDoubleLls> plls;
-  thread_local int psize;
+  static thread_local unique_ptr<SvdDoubleLls> plls;
+  static thread_local int psize;
   if (msize != psize) {
     plls = make_unique<SvdDoubleLls>(msize, msize, 1);
     psize = msize;
@@ -528,10 +528,10 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   const int ngeom = 3, nattrib = n - ngeom;
   assertx(nattrib >= 0);
   const int msize = ngeom + nattrib * nw;
-  thread_local Matrix<double> a;
+  static thread_local Matrix<double> a;
   if (a.ysize() != msize) a.init(msize, msize);
   fill(a, 0.);
-  thread_local Array<double> b;
+  static thread_local Array<double> b;
   if (b.num() != msize) b.init(msize);
   fill(b, 0.);
   for_int(wi, nw) {
@@ -572,8 +572,8 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   const int msize1 = msize;
 #endif
   // Cache the previous size.
-  thread_local unique_ptr<SvdDoubleLls> plls;
-  thread_local int psize1;
+  static thread_local unique_ptr<SvdDoubleLls> plls;
+  static thread_local int psize1;
   if (msize1 != psize1) {
     plls = make_unique<SvdDoubleLls>(msize1, msize1, 1);
     psize1 = msize1;
@@ -589,7 +589,7 @@ bool Qem<T, n>::ar_compute_minp_constr_lf(CArrayView<Qem<T, n>*> ar_q, MatrixVie
   for_int(j, ngeom) lls.enter_a_rc(j, msize, lf[j]);
   lls.enter_b_rc(msize, 0, -lf[n]);
 #else
-  thread_local Matrix<double> zt;
+  static thread_local Matrix<double> zt;
   zt.init(msize - 1, msize);  // (No-op if the dims are unchanged.)
   {
     // Note: at present only handle extremely restricted case.

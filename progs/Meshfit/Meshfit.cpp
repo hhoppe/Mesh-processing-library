@@ -909,7 +909,8 @@ void do_fgfit(Args& args) {
           const auto [h, fac] = vspring_vector(v);
           const Vector vd = h * (2.f * vspring);
           add_grad(v, vd);
-          for_vspring_neighbors(v, [&](Vertex w) { add_grad(w, vd * -fac); });
+          const Vector vd_neighbor = vd * -fac;
+          for_vspring_neighbors(v, [&](Vertex w) { add_grad(w, vd_neighbor); });
         }
       }
       // D enspr.  The face data normals are treated as constant.

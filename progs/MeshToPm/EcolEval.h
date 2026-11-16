@@ -12,6 +12,7 @@ struct EcolOptions {
   float colfac{.1f};              // Weight of color in the quadric (fraction of the diameter).
   float norfac{.02f};             // Weight of normals in the quadric (fraction of the diameter).
   float bndfac{0.f};              // Encourage boundary edge removal.
+  float neptfac{1.f};             // Weight of the planes through sharp and boundary edges.
   float trishapeafac{0.f};        // Penalize the aspect ratio of triangles times area.
   int maxvalence{32};             // Maximum vertex valence resulting from a collapse.
   int strict_sharp{0};            // Disallow changes in the topology of discontinuity curves (0, 1, 2).

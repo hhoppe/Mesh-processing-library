@@ -252,6 +252,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP_O(colfac, "f : weight of color (fraction of diam.)");
   HH_ARGSP_O(norfac, "f : weight of normals (fraction of diam.)");
   HH_ARGSP_O(bndfac, "f : weight to encourage boundary simpl. (1e10)");
+  HH_ARGSP_O(neptfac, "f : weight of sharp and boundary edges (1)");
   HH_ARGSP_O(trishapeafac, "f : weight on tri aspect ratio times area");
   HH_ARGSP_O(maxvalence, "val : prevent ecols creating verts > valence");
   HH_ARGSF_O(dihallow, ": allow bad dihedral as last resort");

@@ -234,8 +234,17 @@ void do_tomesh() {
           mesh.create_face(v[y + s, x], v[y, x + s], v[y + s, x + s]);
         }
       } else if (best_diagonal) {
-        if (dist2(mesh.point(v[y + s, x]), mesh.point(v[y, x + s])) >
-            dist2(mesh.point(v[y, x]), mesh.point(v[y + s, x + s]))) {
+        // Connect the closer pair of opposite corners: in space for an elevation map, else in color (so that the
+        // diagonals run along color edges rather than across them).
+        const auto corner = [&](const Vec2<int>& yx) -> Vec3<float> {
+          if (elevation) return mesh.point(v[yx]);
+          // The color, with the vertical flip of assign_vertex().
+          return convert<float>(image[image.ysize() - 1 - (begy + yx[0]), begx + yx[1]].head<3>());
+        };
+        const auto dist2_corners = [&](const Vec2<int>& yx1, const Vec2<int>& yx2) {
+          return mag2(corner(yx1) - corner(yx2));
+        };
+        if (dist2_corners(V(y + s, x), V(y, x + s)) > dist2_corners(V(y, x), V(y + s, x + s))) {
           mesh.create_face(v[y + s, x], v[y, x], v[y + s, x + s]);
           mesh.create_face(v[y, x], v[y, x + s], v[y + s, x + s]);
         } else {
@@ -3525,7 +3534,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(bynum, "y : block number");
   HH_ARGSF(quads, ": generate quads instead of triangles");
   HH_ARGSF(strip_order, ": different order for lru cache size 3");
-  HH_ARGSF(best_diagonal, ": use shorter diagonal");
+  HH_ARGSF(best_diagonal, ": use shorter diagonal (or closer colors)");
   HH_ARGSF(toggle_order, ": toggle triangle diagonal on each row");
   HH_ARGSD(tomesh, ": output mesh on stdout");
   HH_ARGSD(tofloats, "f.floats : output file of binary elevations");

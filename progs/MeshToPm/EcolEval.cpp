@@ -618,7 +618,8 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolOptions& 
       }();
       if (nwid >= 0) add_face_quadric(f, nwid);  // Else the wedge is lost.
     }
-    // The planes through the sharp edges adjacent to v1 or v2, as in get_sharp_edge_qem() (with neptfac == 1).
+    // The planes through the sharp edges adjacent to v1 or v2, weighted by neptfac, as in get_sharp_edge_qem().
+    const float sqrt_neptfac = std::sqrt(options.neptfac);
     const auto add_sharp_plane = [&](EdgeHandle ee) {
       if (!edge_sharp(mesh, ee)) return;
       const Point& pa = point(mesh.vertex(ee.f, mod3(ee.j + 1)));
@@ -633,6 +634,7 @@ EcolResult evaluate_ecol(const WorkMesh& mesh, EdgeHandle e, const EcolOptions& 
       nor = cross(nor, pb - pa);
       assertw(nor.normalize());
       nor *= dist(pa, pb) / (k_frac_diam * options.diam);
+      nor *= sqrt_neptfac;
       const float d = -dot(pa, nor);
       sharp_planes.push(std::pair{convert<double>(nor), double(d)});
     };

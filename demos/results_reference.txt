@@ -17,7 +17,7 @@ curve1.joined.a3d 5421
 curve1.recon.a3d 10880
 blob5.meshopt.simplified.m 186352
 gaudipark.orig.m 4683456
-gaudipark.pm 2561536
+gaudipark.pm 2240644
 cessna.pm 391574
 57chevy.pm 719841
 standingblob.geomorphs 4717324

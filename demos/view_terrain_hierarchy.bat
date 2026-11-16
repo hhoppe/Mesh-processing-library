@@ -16,5 +16,5 @@ echo.
 
 set PM_LOD_LEVEL=0.27
 
-call pm_view results/gcanyon_sq129_b44.l2.pm -st data/gcanyon_sq129_b44_video.s3d ^
-             -key De -lightambient .4 %G3D_GEOM% %G3D_ARGS% %*
+G3dOGL results/gcanyon_sq129_b44.l2.pm -st data/gcanyon_sq129_b44_video.s3d ^
+       -key De -lightambient .4 %G3D_GEOM% %G3D_ARGS% %*

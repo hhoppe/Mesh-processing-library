@@ -29,7 +29,7 @@ a8bcaba1_1.png 194.37 79.65 194.37 79.65 196.32 77.97
 # PM_LOD_LEVEL=0.05 G3dOGL 57chevy.pm -st demos/data/57chevy.s3d -lightambient .4 -key De (screenshot 1)
 d07ba9af_1.png 200.28 86.53 217.38 62.56 217.75 62.17
 # FilterPM demos/data/standingblob.pm -nf 300 -truncate_prior -nf 10000 -truncate_beyond | (screenshot 1)
-c4f3f287_1.png 218.50 63.06 218.50 63.06 218.50 63.06
+c4f3f287_1.png 219.03 62.79 219.03 62.79 219.03 62.79
 # Filterimage demos/data/gaudipark.png -scaletox 200 -tomesh | (screenshot 1)
 fa2c4131_1.png 143.34 77.98 158.82 74.23 173.30 77.63
 # G3dOGL -eyeob demos/data/unit_frustum.a3d -sr_mode office.sr.pm -st demos/data/office_srfig.s3d (screenshot 1)

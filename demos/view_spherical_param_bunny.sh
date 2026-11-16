@@ -20,12 +20,14 @@ fi
 # g3d_cmp), so the third window writes a single frame ('!') and then turns off its output ('O').
 show_normal_mapped() {
   local normalmap=results/bunny.spheresample.$1.unrotated.normalmap.png
-  PM_LOD_LEVEL=0.0145 g3d_cmp -g3d pm_view \
-              -win1 "-texturemap $normalmap -texturenormal 1 -key Dt -lighta .25 -lights .8 -st data/bunny.s3d" \
-              -win2 "-texturemap data/gradchecker256.png -key DeDt -lighta 1 -lights 0 -st data/bunny.s3d" \
-              -win3 "-key DU!O -edgecolor #00b000 -st data/bunny.s3d" \
-              -win4 "-texturemap $normalmap -texturenormal 0 -key Dt -st data/imagesquare.s3d" \
-              results/bunny.$1.pm{,,} data/imagesquare.pm $G3D_ARGS
+  (
+    export PM_LOD_LEVEL=0.0145
+    g3d_cmp -win1 "-texturemap $normalmap -texturenormal 1 -key Dt -lighta .25 -lights .8 -st data/bunny.s3d" \
+            -win2 "-texturemap data/gradchecker256.png -key DeDt -lighta 1 -lights 0 -st data/bunny.s3d" \
+            -win3 "-key DU!O -edgecolor #00b000 -st data/bunny.s3d" \
+            -win4 "-texturemap $normalmap -texturenormal 0 -key Dt -st data/imagesquare.s3d" \
+            results/bunny.$1.pm{,,} data/imagesquare.pm $G3D_ARGS
+  )
 }
 
 echo

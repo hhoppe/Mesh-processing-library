@@ -282,13 +282,24 @@ struct Texture {
 
 Array<Texture> g_textures;
 
+// By default, a progressive mesh is shown at full resolution but with at most this number of faces.
+constexpr int k_max_initial_pm_nfaces = 500'000;
+
 // A progressive mesh, traversed to a level of detail.
 struct PmState {
-  explicit PmState(unique_ptr<PMesh> ppmesh) : pmesh(std::move(ppmesh)), pmrs(*pmesh), pmi(pmrs) {}
+  explicit PmState(unique_ptr<PMesh> ppmesh);  // Sets the initial level of detail.
+  void draw();
+  void wrap_draw(bool show);  // Process (!show) or draw (show) its LOD slider.
+  void set_lod(float lod);    // As given by an input "lod" command.
+  bool key_press(char ch);    // Returns true if recognized.
   unique_ptr<PMesh> pmesh;
   PMeshRStream pmrs;
   PMeshIter pmi;
   float lod_level{0.f};  // Fraction of the vsplits that are applied.
+
+ private:
+  [[nodiscard]] float nv_ratio() const;
+  void update_lod();
 };
 
 class GxObject {
@@ -307,7 +318,7 @@ class GxObject {
     return _arn;
   }
   GMesh* _mesh{nullptr};
-  unique_ptr<PmState> _pm;
+  unique_ptr<PmState> _pms;
   unique_ptr<PlyMesh> _ply;  // Its normals are computed in draw_ply() if absent and needed.
 
  private:
@@ -364,11 +375,6 @@ GxObjects g_xobs;
 
 // *** PM stuff (progressive mesh of an object)
 
-void init_pm_lod(PmState& pm);
-void draw_pm(PmState& pm);
-void pm_wrap_draw(PmState& pm, bool show);
-void pm_set_lod(PmState& pm, float lod);
-bool pm_key_press(PmState& pm, char ch);
 bool pm_slider_hidden;  // Hide the LOD slider of the progressive mesh of the current object ('DS').
 
 // *** SR stuff (selective refinement)
@@ -425,8 +431,8 @@ void draw_ply(PlyMesh& ply_mesh);
 // (SR, PSC, or SC geomorph) takes over the slider.
 PmState* slider_pm() {
   if (sr_mode || psc_mode || sc_gm_mode || !g_xobs.defined(cob)) return nullptr;
-  PmState* pm = g_xobs[cob]._pm.get();
-  return pm && pm->pmesh->_info._tot_nvsplits > 0 ? pm : nullptr;
+  PmState* pms = g_xobs[cob]._pms.get();
+  return pms && pms->pmesh->_info._tot_nvsplits > 0 ? pms : nullptr;
 }
 
 // Whether the mouse button pressed at yx_pointer_old acts on a slider.
@@ -2168,7 +2174,7 @@ void draw_all() {
       GxObject& ob = g_xobs[i];
       if (ob._mesh) draw_mesh(*ob._mesh);
       draw_list(ob.traverse());
-      if (ob._pm) draw_pm(*ob._pm);
+      if (ob._pms) ob._pms->draw();
       if (ob._ply) draw_ply(*ob._ply);
     }
     if (g_xobs[i]._mesh) g_xobs[i]._mesh->gflags().flag(g3d::mflag_ok) = true;  // If sc_mode, psc_mode, etc.
@@ -2207,8 +2213,8 @@ void wrap_draw(bool show) {
 #endif
     return;
   }
-  if (PmState* pm = slider_pm()) {
-    if (!pm_slider_hidden) pm_wrap_draw(*pm, show);
+  if (PmState* pms = slider_pm()) {
+    if (!pm_slider_hidden) pms->wrap_draw(show);
     return;
   }
   if (!slidermode) return;
@@ -2841,7 +2847,7 @@ void HB::draw_space() {
 }
 
 bool HB::special_keypress(char ch) {
-  if (PmState* pm = slider_pm(); pm && pm_key_press(*pm, ch)) return true;
+  if (PmState* pms = slider_pm(); pms && pms->key_press(ch)) return true;
 #if defined(DEF_SR)
   if (sr_mode && sr_key_press(ch)) return true;
 #endif
@@ -3064,9 +3070,8 @@ void HB::segment_add_object(const A3dElem& el) { g_xobs.add(el); }
 
 void HB::segment_add_pmesh(unique_ptr<PMesh> pmesh) {
   GxObject& ob = g_xobs.opened();
-  if (ob._pm) Warning("Object has more than one progressive mesh; keeping the last one");
-  ob._pm = make_unique<PmState>(std::move(pmesh));
-  init_pm_lod(*ob._pm);
+  if (ob._pms) Warning("Object has more than one progressive mesh; keeping the last one");
+  ob._pms = make_unique<PmState>(std::move(pmesh));
   invalidate_dls();
 }
 
@@ -3122,7 +3127,7 @@ void* HB::escape(int code, void* data) {
           was_using_dl = use_dl;
           use_dl = false;
         }
-        if (PmState* pm = slider_pm()) pm_set_lod(*pm, fdata);
+        if (PmState* pms = slider_pm()) pms->set_lod(fdata);
 #if defined(DEF_SC)
         if (psc_mode) psc_set_lod(fdata);
         if (sc_gm_mode) sc_gm_set_lod(fdata);
@@ -3207,78 +3212,76 @@ void draw_lod_slider(float lod, int nv0, int nv1) {
 
 // *** PM of an object
 
-// Set the initial level of detail of a progressive mesh, as given by the environment variable PM_LOD_LEVEL or
-// PM_LOD_NUM_FACES.
-void init_pm_lod(PmState& pm) {
-  static const float pm_lod_level = getenv_float("PM_LOD_LEVEL", 0.f);
+// The initial level of detail is given by the environment variable PM_LOD_NUM_FACES or PM_LOD_LEVEL, or else it is
+// the full resolution limited to k_max_initial_pm_nfaces faces.
+PmState::PmState(unique_ptr<PMesh> ppmesh) : pmesh(std::move(ppmesh)), pmrs(*pmesh), pmi(pmrs) {
   static const int pm_lod_num_faces = getenv_int("PM_LOD_NUM_FACES", 0);
-  const PMeshInfo& info = pm.pmesh->_info;
-  const int base_nv = pm.pmesh->_base_mesh._vertices.num();
-  if (pm_lod_num_faces > 0) {
-    pm.pmi.goto_nfaces(pm_lod_num_faces);
-    pm.lod_level = clamp(float(pm.pmi._vertices.num() - base_nv) / max(info._full_nvertices - base_nv, 1), 0.f, 1.f);
+  static const float pm_lod_level = getenv_float("PM_LOD_LEVEL", -1.f);
+  const PMeshInfo& info = pmesh->_info;
+  const int base_nv = pmesh->_base_mesh._vertices.num();
+  if (pm_lod_num_faces <= 0 && pm_lod_level >= 0.f) {
+    lod_level = pm_lod_level;
+    pmi.goto_nvertices(base_nv + int(info._tot_nvsplits * lod_level + .5f));
   } else {
-    pm.lod_level = pm_lod_level;
-    pm.pmi.goto_nvertices(base_nv + int(info._tot_nvsplits * pm.lod_level + .5f));
+    pmi.goto_nfaces(pm_lod_num_faces > 0 ? pm_lod_num_faces : min(info._full_nfaces, k_max_initial_pm_nfaces));
+    lod_level = clamp(float(pmi._vertices.num() - base_nv) / max(info._full_nvertices - base_nv, 1), 0.f, 1.f);
   }
 }
 
-float pm_nv_ratio(const PmState& pm) {
-  return float(pm.pmesh->_info._full_nvertices) / pm.pmesh->_base_mesh._vertices.num();
-}
+float PmState::nv_ratio() const { return float(pmesh->_info._full_nvertices) / pmesh->_base_mesh._vertices.num(); }
 
-void pm_update_lod(PmState& pm) {
-  const float flevel = min(pm.lod_level, 1.f);
-  const int nv0 = pm.pmesh->_base_mesh._vertices.num();
-  const int nvsplits = pm.pmesh->_info._tot_nvsplits;
+void PmState::update_lod() {
+  const float flevel = min(lod_level, 1.f);
+  const int nv0 = pmesh->_base_mesh._vertices.num();
+  const int nvsplits = pmesh->_info._tot_nvsplits;
   const int nv = nv0 + int((nvsplits + 1) * flevel * .999999f);
-  pm.pmi.goto_nvertices(nv);
+  pmi.goto_nvertices(nv);
   invalidate_dls();
   if (g3d::output) {
-    const float val = lod_use_nvertices ? pm.pmi._vertices.num() : pm.lod_level;
+    const float val = lod_use_nvertices ? pmi._vertices.num() : lod_level;
     std::cout << "lod " << val << '\n' << std::flush;
   }
 }
 
-void pm_wrap_draw(PmState& pm, bool show) {
+void PmState::wrap_draw(bool show) {
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
-      const float oldval = pm.lod_level;
-      pm.lod_level = drag_lod_slider(pm.lod_level, pm_nv_ratio(pm));
-      if (pm.lod_level != oldval) pm_update_lod(pm);
+      const float oldval = lod_level;
+      lod_level = drag_lod_slider(lod_level, nv_ratio());
+      if (lod_level != oldval) update_lod();
       hw.redraw_later();
     }
   } else {
     int lmargin = !bigfont() ? 6 : 3;
     if (win_dims[1] < 400 && !bigfont()) lmargin -= 3;
     HB::draw_row_col_text(V(1, lmargin), "LOD");
-    HB::draw_row_col_text(V(2, lmargin), sform(" %.3f", pm.lod_level));
+    HB::draw_row_col_text(V(2, lmargin), sform(" %.3f", lod_level));
     HB::draw_row_col_text(V(1, lmargin + 8), "#Faces");
-    HB::draw_row_col_text(V(2, lmargin + 8), sform(" %d", pm.pmi._faces.num()));
+    HB::draw_row_col_text(V(2, lmargin + 8), sform(" %d", pmi._faces.num()));
     // HB::draw_row_col_text(V(4, 21), "#Verts");
-    // HB::draw_row_col_text(V(5, 22), std::to_string(pm.pmi._vertices.num()));
-    draw_lod_slider(pm.lod_level, pm.pmesh->_base_mesh._vertices.num(), pm.pmesh->_info._full_nvertices);
+    // HB::draw_row_col_text(V(5, 22), std::to_string(pmi._vertices.num()));
+    draw_lod_slider(lod_level, pmesh->_base_mesh._vertices.num(), pmesh->_info._full_nvertices);
   }
 }
 
-void pm_set_lod(PmState& pm, float lod) {
+void PmState::set_lod(float lod) {
   if (lod_use_nvertices) {
     const int nv = int(lod);
-    const int nv0 = pm.pmesh->_base_mesh._vertices.num();
-    const int nvsplits = pm.pmesh->_info._tot_nvsplits;
+    const int nv0 = pmesh->_base_mesh._vertices.num();
+    const int nvsplits = pmesh->_info._tot_nvsplits;
     if (!assertw(nvsplits)) return;
-    pm.lod_level = (float(nv) - nv0) / nvsplits;
+    lod_level = (float(nv) - nv0) / nvsplits;
   } else {
-    pm.lod_level = lod;
+    lod_level = lod;
   }
-  pm.lod_level = clamp(pm.lod_level, 0.f, 1.f);
-  pm_update_lod(pm);
+  lod_level = clamp(lod_level, 0.f, 1.f);
+  update_lod();
   hw.redraw_later();
 }
 
-void draw_pm(PmState& pm) {
-  AWMesh& wmesh = pm.pmi;
-  const PMeshInfo& info = pm.pmesh->_info;
+void PmState::draw() {
+  AWMesh& wmesh = pmi;
+  const PMeshInfo& info = pmesh->_info;
   if (!ledges || lshading) {
     // Options lsmooth, lquickmode not handled.
     if (!info._has_rgb) assertw(lsmooth);
@@ -3334,17 +3337,17 @@ void draw_pm(PmState& pm) {
   }
 }
 
-bool pm_key_press(PmState& pm, char ch) {
+bool PmState::key_press(char ch) {
   switch (ch) {
     case 'c':
-      pm.lod_level = 0.f;
-      pm_update_lod(pm);
+      lod_level = 0.f;
+      update_lod();
       if (g3d::output) std::cout << "lod -1\n" << std::flush;
       hw.redraw_now();
       break;
     case 'a':
-      pm.lod_level = 1.f;
-      pm_update_lod(pm);
+      lod_level = 1.f;
+      update_lod();
       if (g3d::output) std::cout << "lod -1\n" << std::flush;
       hw.redraw_now();
       break;

@@ -119,11 +119,11 @@ void perform_in_records() {
   assertx(nrecords == k_num_records);
 }
 
-// A binary PLY file with a triangle and a trailing element that is not used, followed by an ASCII PLY file.
+// A binary PLY file with a triangle, a quad, and a trailing element that is not used.
 string binary_ply() {
   string s =
-      "ply\nformat binary_little_endian 1.0\nelement vertex 3\nproperty float x\nproperty float y\n"
-      "property float z\nelement face 1\nproperty list uchar int vertex_indices\nelement extra 2\n"
+      "ply\nformat binary_little_endian 1.0\nelement vertex 4\nproperty float x\nproperty float y\n"
+      "property float z\nelement face 2\nproperty list uchar int vertex_indices\nelement extra 2\n"
       "property uchar value\nend_header\n";
   const auto put = [&](auto value) {
     char bytes[sizeof(value)];
@@ -131,9 +131,11 @@ string binary_ply() {
     if constexpr (std::endian::native == std::endian::big) std::reverse(bytes, bytes + sizeof(value));
     s.append(bytes, sizeof(value));
   };
-  for_int(v, 3) for_int(c, 3) put((v == c ? 1.f : 0.f) + float(v));
-  put(uint8_t{3});
-  for_int(v, 3) put(int32_t{v});
+  for_int(v, 4) for_int(c, 3) put((v == c ? 1.f : 0.f) + float(v));
+  for (const int nfv : {3, 4}) {
+    put(uint8_t(nfv));
+    for_int(v, nfv) put(int32_t{v});
+  }
   for_int(i, 2) put(uint8_t(10 + i));
   return s;
 }

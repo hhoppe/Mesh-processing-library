@@ -54,9 +54,11 @@ struct PlyElement {
   [[nodiscard]] bool has_list() const {
     return ranges::any_of(properties, [](const PlyProperty& property) { return property.is_list; });
   }
-  [[nodiscard]] int record_size() const {  // Defined if !has_list().
+  // The size in bytes of a binary instance; exact if !has_list(), else a lower bound (with empty lists).
+  [[nodiscard]] int min_record_size() const {
     int size = 0;
-    for (const PlyProperty& property : properties) size += type_size(property.type);
+    for (const PlyProperty& property : properties)
+      size += type_size(property.is_list ? property.count_type : property.type);
     return size;
   }
   // Returns the index of the scalar property with the given name, or -1.
@@ -92,20 +94,30 @@ double load_value(const char* p, PlyType type, bool swap) {
 // The number of bytes of fixed-size records that are read at once in binary.
 constexpr int k_chunk_bytes = 1 << 20;
 
-// Reads the values of the element instances: in ASCII, one line per instance; in binary, through a buffer.  It never
-// reads beyond the bytes that are requested, so that other data may follow the PLY data in the stream.
+// Reads the values of the element instances: in ASCII, one line per instance; in binary, through a buffer that is
+// refilled with the requested bytes plus at most the minimum size of the instances not yet begun, so that the stream
+// is never read beyond the PLY data (which other data may follow).
 class PlyValueReader {
  public:
-  PlyValueReader(std::istream& is, bool binary, bool big_endian)
-      : _is(is), _binary(binary), _swap(big_endian != (std::endian::native == std::endian::big)) {}
+  PlyValueReader(std::istream& is, bool binary, bool big_endian, int64_t min_data_size)
+      : _is(is),
+        _binary(binary),
+        _swap(big_endian != (std::endian::native == std::endian::big)),
+        _unbegun_min_size(min_data_size) {}
   [[nodiscard]] bool binary() const { return _binary; }
   [[nodiscard]] bool swap() const { return _swap; }
-  // In ASCII, read the line of instance i of the named element.
-  void begin_instance(const string& element_name, int i) {
+  // Begin n instances of the element, which are read in binary through a single read_bytes().
+  void begin_instances(const PlyElement& element, int n) {
+    _unbegun_min_size -= int64_t{n} * element.min_record_size();
+    ASSERTX(_unbegun_min_size >= 0);
+  }
+  // Begin instance i of the element; in ASCII, read its line.
+  void begin_instance(const PlyElement& element, int i) {
+    begin_instances(element, 1);
     if (_binary) return;
     for (;;) {
       if (!my_getline(_is, _line, false))
-        assertnever(sform("ply: premature end of file in %s %d", element_name.c_str(), i));
+        assertnever(sform("ply: premature end of file in %s %d", element.name.c_str(), i));
       _s = _line.c_str();
       skip_spaces();
       if (*_s) break;  // Blank lines are ignored.
@@ -173,17 +185,18 @@ class PlyValueReader {
   Array<char> _buf;  // Binary; the bytes [_pos, _end) are not yet consumed.
   int _pos{0};
   int _end{0};
+  int64_t _unbegun_min_size;  // A lower bound on the size of the binary data of the instances not yet begun.
   void skip_spaces() {
     while (*_s == ' ' || *_s == '\t' || *_s == '\r') _s++;
   }
-  // Read exactly the missing bytes, so that the stream is not read beyond the PLY data.
   void refill(int n) {
     const int remaining = _end - _pos;
     if (remaining) std::memmove(_buf.data(), _buf.data() + _pos, remaining);
     _pos = 0;
     _end = remaining;
-    if (n > _buf.num()) _buf.resize(n);
-    _end += int(_is.rdbuf()->sgetn(_buf.data() + _end, n - _end));
+    const int size = n + int(min(_unbegun_min_size, int64_t{k_chunk_bytes}));
+    if (size > _buf.num()) _buf.resize(size);
+    _end += int(_is.rdbuf()->sgetn(_buf.data() + _end, size - _end));
     if (_end < n) assertnever("ply: premature end of binary data");
   }
 };
@@ -191,14 +204,17 @@ class PlyValueReader {
 // Skip all the instances of an element.
 void skip_element(PlyValueReader& reader, const PlyElement& element) {
   if (reader.binary() && !element.has_list()) {
-    const int record_size = element.record_size();
+    const int record_size = element.min_record_size();
     const int chunk = max(k_chunk_bytes / max(record_size, 1), 1);
-    for (int i = 0; i < element.count; i += chunk)
-      (void)reader.read_bytes(min(chunk, element.count - i) * record_size);
+    for (int i = 0; i < element.count; i += chunk) {
+      const int n = min(chunk, element.count - i);
+      reader.begin_instances(element, n);
+      (void)reader.read_bytes(n * record_size);
+    }
     return;
   }
   for_int(i, element.count) {
-    reader.begin_instance(element.name, i);
+    reader.begin_instance(element, i);
     for (const PlyProperty& property : element.properties) {
       const int count = property.is_list ? reader.read_count(property.count_type) : 1;
       reader.skip(property.type, count);
@@ -263,7 +279,7 @@ void read_vertices(PlyValueReader& reader, const PlyElement& element, PlyMesh& m
     if (has_uvs) for_int(c, 2) mesh.uvs[v][c] = float(values[k_u + c]);
   };
   if (reader.binary() && !element.has_list()) {  // Fast path: fixed-size records.
-    const int record_size = element.record_size();
+    const int record_size = element.min_record_size();
     Vec<int, k_num_slots> offset;
     fill(offset, 0);
     int off = 0;
@@ -277,6 +293,7 @@ void read_vertices(PlyValueReader& reader, const PlyElement& element, PlyMesh& m
     const int chunk = max(k_chunk_bytes / max(record_size, 1), 1);
     for (int v0 = 0; v0 < nv; v0 += chunk) {
       const int n = min(chunk, nv - v0);
+      reader.begin_instances(element, n);
       const char* record = reader.read_bytes(n * record_size);
       for_int(i, n) {
         for (const int s : used_slots) values[s] = load_value(record + offset[s], slot_type[s], swap);
@@ -287,7 +304,7 @@ void read_vertices(PlyValueReader& reader, const PlyElement& element, PlyMesh& m
     return;
   }
   for_int(v, nv) {
-    reader.begin_instance(element.name, v);
+    reader.begin_instance(element, v);
     for_int(i, element.properties.num()) {
       const PlyProperty& property = element.properties[i];
       if (property.is_list) {
@@ -327,7 +344,7 @@ void read_faces(PlyValueReader& reader, const PlyElement& element, int nv, PlyMe
   Array<float> texcoords;
   int num_small_faces = 0;
   for_int(f, nf) {
-    reader.begin_instance(element.name, f);
+    reader.begin_instance(element, f);
     int nfv = 0;
     texcoords.clear();
     for_int(i, element.properties.num()) {
@@ -436,7 +453,9 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
   PlyMesh mesh;
   mesh.face_start.init(1, 0);
   Array<string> ignored;
-  PlyValueReader reader(is, binary, big_endian);
+  int64_t min_data_size = 0;
+  for (const PlyElement& element : elements) min_data_size += int64_t{element.count} * element.min_record_size();
+  PlyValueReader reader(is, binary, big_endian, min_data_size);
   for_int(i, elements.num()) {
     const PlyElement& element = elements[i];
     if (i == ivertex) {

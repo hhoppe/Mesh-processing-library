@@ -23,7 +23,7 @@
 namespace hh {
 
 constexpr int k_initial_size = 4096;
-constexpr int k_read_size = 1024;
+constexpr int k_read_size = 1 << 16;  // Large, as each read() of a file under /mnt/c in WSL costs ~0.1 ms.
 constexpr int k_write_size = 8192;
 
 //----------------------------------------------------------------------------
@@ -58,7 +58,7 @@ HANDLE g_buf_event_data_available;  // Manual-reset; used in libHwWindows/Hw.cpp
 namespace {
 
 HANDLE buf_event_data_copied;  // Auto-reset.
-Vec<char, 2048> buf_buffer;
+Vec<char, k_read_size> buf_buffer;
 int buf_buffern;
 int buf_fd;
 
@@ -117,14 +117,12 @@ RBuffer::RBuffer(int fd) : Buffer(fd) {
 #endif  // defined(BUFFER_USE_WIN32_THREAD)
 }
 
-// If the buffer is full, shift() || expand().
+// Make room for k_read_size bytes using shift() and expand(), and read up to that many bytes.
 RBuffer::ERefill RBuffer::refill() {
   assertx(!eof() && !err());
-  if (_beg + _n == _ar.num() && _beg)
-    shift();
-  else if (_n == _ar.num())
-    expand();
-  const int ntoread = min(_ar.num() - _beg - _n, k_read_size);
+  if (_beg && _ar.num() - _beg - _n < k_read_size) shift();
+  while (_ar.num() - _n < k_read_size) expand();
+  const int ntoread = k_read_size;
   int nread;
   assertx(ntoread);
 #if defined(BUFFER_USE_WIN32_THREAD)

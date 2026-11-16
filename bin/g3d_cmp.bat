@@ -19,8 +19,9 @@ setlocal EnableExtensions EnableDelayedExpansion
 ::: Examples:
 ::: g3d_cmp mesh.m mesh.modified.m -key DmDe
 ::: g3d_cmp -win1 "-key Dm" -win2 "-key De" mesh1.m mesh2.m
-::: g3d_cmp -g3d pm_view demos/results/bunny.lonlat.pm demos/results/bunny.outer_hull.pm
-::: g3d_cmp -g3d ply_view pr.ply ssd.ply
+::: g3d_cmp demos/results/bunny.lonlat.pm demos/results/bunny.outer_hull.pm
+::: g3d_cmp pr.ply ssd.ply
+::: g3d_cmp -g3d G3dVec mesh1.m mesh2.m
 
 :: The script uses no "goto" or "call :label", because cmd.exe may fail to find a label in a file with LF line
 :: endings. Hence the argument loop is a bounded "for /l", which reads the current arguments using "call" (since

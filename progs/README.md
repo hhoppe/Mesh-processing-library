@@ -561,6 +561,8 @@ The viewer can also read `*.frame` elements to position the viewer and the objec
 Elements of `*.a3d`, `*.m`, `*.pm`, `*.ply`, and `*.frame` streams can all be interleaved in a single input stream.
 Each object (e.g., each file named on the command line) can thus hold any mix of polygons, a mesh, a progressive
 mesh, and a PLY mesh; the level-of-detail slider is shown whenever the current object holds a progressive mesh.
+A progressive mesh is initially shown at full resolution but with at most 500'000 faces, unless the environment
+variable `PM_LOD_LEVEL` (a fraction in [0, 1]) or `PM_LOD_NUM_FACES` sets its initial level of detail.
 
 The viewer can also render images and record videos (see the examples below).
 
@@ -609,9 +611,9 @@ G3dOGL demos/data/standingblob.orig.m -st demos/data/standingblob.s3d -key ii -g
 VideoViewer output_image.png
 ```
 
-Alternatively, the environment variable `G3D_IMAGE` makes any command that runs `G3dOGL` (including scripts such as
-`pm_view`) render a picture into the named file instead of showing a window, without changing the command's
-arguments, e.g. `G3D_IMAGE=output_image.png pm_view demos/results/cessna.pm -st demos/data/cessna.s3d`.
+Alternatively, the environment variable `G3D_IMAGE` makes any command that runs `G3dOGL` (including scripts) render
+a picture into the named file instead of showing a window, without changing the command's arguments, e.g.
+`G3D_IMAGE=output_image.png G3dOGL demos/results/cessna.pm -st demos/data/cessna.s3d`.
 With `G3D_IMAGE=-`, the picture is written to stdout as a png image.
 Setting `G3D_IGNORE_IMAGE=1` instead shows the window as usual.
 

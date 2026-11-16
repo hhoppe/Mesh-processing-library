@@ -162,8 +162,7 @@ void read_ply_mesh(RBuffer& buf) {
     std::istream is(&streambuf);
     *ply_mesh = read_ply(is);
   }
-  if (ply_mesh->points.empty()) Warning("ply: no vertices");
-  if (!ply_mesh->num_faces()) Warning("ply: no faces");
+  if (ply_mesh->points.empty()) Warning("ply: no vertices");  // (Without faces, it is shown as a point set.)
   assertx(!(ply_mesh->uvs.num() && ply_mesh->corner_uvs.num()));
   for (const Point& p : ply_mesh->points) g_obs[robn].enter_point(p);
   if (!terse)
@@ -322,11 +321,10 @@ void CloseIfOpen() {
     if (total_vertices + total_faces) {
       const GMesh& mesh = *g_obs[robn].get_mesh();
       if (total_vertices == mesh.num_vertices()) {
-        showf("%s\n", s.c_str());
         if (mesh.num_vertices() <= 50'000) {  // For speed, only compute on smaller meshes.
-          showf(" %s\n", mesh_genus_string(mesh).c_str());
+          showf("%s  %s\n", s.c_str(), mesh_genus_string(mesh).c_str());
         } else {
-          showf(" v=%d f=%d\n", mesh.num_vertices(), mesh.num_faces());
+          showf("%s v=%d f=%d\n", s.c_str(), mesh.num_vertices(), mesh.num_faces());
         }
       } else {
         showf("%s %dv %df\n", s.c_str(), total_vertices, total_faces);

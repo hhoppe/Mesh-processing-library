@@ -2691,61 +2691,114 @@ float reduce_criterion(Edge e) {
   }
 }
 
+// Collapse the edges of lowest criterion (below maxcrit) until the mesh has at most nfaces faces.  The edges are
+// collapsed in sweeps, as in MeshToPm: each sweep sorts the candidate edges by their criterion (with ties broken by
+// vertex ids, so that the result is deterministic) and collapses each one whose endpoints are not adjacent to a
+// collapse of the same sweep; the edges near those collapses are then re-evaluated (in parallel) for the next sweep.
 void do_reduce() {
   HH_TIMER("_reduce");
   attribute_safe_reduce = getenv_bool("ATTRIBUTE_SAFE_REDUCE", false);
   assertx(reducecrit != EReduceCriterion::undefined);  // Also use: nfaces, maxcrit.
-  UpdatablePriorityQueue<Edge> pqe;
+  struct Candidate {
+    float cost;
+    int vid1, vid2;  // The vertex ids of the edge, with vid1 < vid2.
+  };
+  Array<Candidate> candidates;
+  // Evaluate the edges in parallel, adding to candidates those whose criterion does not exceed maxcrit.
+  const auto add_candidates = [&](CArrayView<Edge> edges) {
+    Array<float> costs(edges.num());
+    parallel_for(range(edges.num()), [&](int i) { costs[i] = reduce_criterion(edges[i]); });
+    for_int(i, edges.num()) {
+      if (costs[i] == BIGFLOAT || costs[i] > maxcrit) continue;
+      const int vid1 = mesh.vertex_id(mesh.vertex1(edges[i])), vid2 = mesh.vertex_id(mesh.vertex2(edges[i]));
+      candidates.push(Candidate{costs[i], min(vid1, vid2), max(vid1, vid2)});
+    }
+  };
   {
     HH_TIMER("__initpq");
-    Array ar_edge(mesh.edges());
-    Array<float> ar_cost(ar_edge.num());
-    parallel_for(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
-    for_int(i, ar_edge.num()) { pqe.enter_unsorted(ar_edge[i], ar_cost[i]); }
-    pqe.heapify();
+    add_candidates(Array<Edge>(mesh.edges()));
   }
   const int orig_nf = mesh.num_faces();
-  Set<Edge> edges_to_update;
   ConsoleProgress cprogress;
+  // The vertices adjacent to a collapse of the current sweep have vertex_stamp[vertex_id] == stamp.  (The collapses
+  // create no vertices, so the ids remain bounded.)
+  int max_vertex_id = 0;
+  for (Vertex v : mesh.vertices()) max_vertex_id = max(max_vertex_id, mesh.vertex_id(v));
+  Array<int> vertex_stamp(max_vertex_id + 1, 0);
+  int stamp = 0, num_sweeps = 0;
+  Array<int> dirty_vertex_ids;
   for (;;) {
-    assertx(pqe.num() + edges_to_update.num() == mesh.num_edges());
+    if (mesh.num_faces() <= nfaces || candidates.empty()) break;
+    num_sweeps++;
+    stamp++;
+    sort(candidates, [](const Candidate& c1, const Candidate& c2) {
+      if (c1.cost != c2.cost) return c1.cost < c2.cost;
+      if (c1.vid1 != c2.vid1) return c1.vid1 < c2.vid1;
+      return c1.vid2 < c2.vid2;
+    });
+    dirty_vertex_ids.init(0);
+    const auto mark_dirty = [&](Vertex v) {
+      const int vid = mesh.vertex_id(v);
+      if (vertex_stamp[vid] == stamp) return;
+      vertex_stamp[vid] = stamp;
+      dirty_vertex_ids.push(vid);
+    };
+    int num_collapsed = 0;
+    Array<Candidate> clean_candidates;  // Those unaffected by the collapses of this sweep, which remain valid.
+    for (const Candidate& candidate : candidates) {
+      Vertex v1 = mesh.id_retrieve_vertex(candidate.vid1), v2 = mesh.id_retrieve_vertex(candidate.vid2);
+      if (!v1 || !v2) continue;  // (Removed by a collapse; then any edge between its neighbors is re-evaluated.)
+      if (vertex_stamp[candidate.vid1] == stamp || vertex_stamp[candidate.vid2] == stamp) continue;  // Re-evaluated.
+      Edge e = mesh.query_edge(v1, v2);
+      if (!e) continue;
+      if (mesh.num_faces() <= nfaces) {
+        clean_candidates.push(candidate);
+        continue;
+      }
+      // The criterion is unchanged since the evaluation, as no vertex of the neighborhood of e has changed.
+      v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
+      int ii;  // {2: keep_v1, 0: keep_v2, 1: midpoint_is_ok, -1: collapse_is_not_attribute_safe}.
+      if (attribute_safe_reduce) {
+        ii = ii_for_attribute_safe_edge_collapse(e);
+        assertx(ii >= 0);
+      } else {
+        const bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
+        ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;
+      }
+      // All edges with an endpoint adjacent to v1 or v2 are re-evaluated after the sweep.
+      for (Vertex v : {v1, v2}) {
+        mark_dirty(v);
+        for (Vertex vv : mesh.vertices(v)) mark_dirty(vv);
+      }
+      const Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
+      Vertex vkept = ii == 0 ? v2 : v1;
+      mesh.collapse_edge_vertex_saving_attribs(e, vkept);
+      mesh.set_point(vkept, newp);
+      num_collapsed++;
+    }
     cprogress.update(float(orig_nf - mesh.num_faces()) / max(orig_nf - nfaces, 1));
-    if (mesh.num_faces() <= nfaces) break;
-    const float fraction = 0.6f;
-    if ((pqe.min_priority() > maxcrit || pqe.num() < max(int(mesh.num_edges() * fraction), 500)) &&
-        edges_to_update.num()) {
-      Array ar_edge(edges_to_update);
-      Array<float> ar_cost(ar_edge.num());
-      if (0) sort(ar_edge);  // No resulting improvement in memory access coherence.
-      // With parallelism, 1.3x faster than original version; without parallelism, 1.6x slower.
-      parallel_for(range(ar_edge.num()), [&](int i) { ar_cost[i] = reduce_criterion(ar_edge[i]); });
-      for_int(i, ar_edge.num()) pqe.enter(ar_edge[i], ar_cost[i]);
-      edges_to_update.clear();
+    if (!num_collapsed) break;
+    // Keep the clean candidates and re-evaluate the edges near the collapses.
+    for (const Candidate& candidate : candidates) {
+      if (vertex_stamp[candidate.vid1] == stamp || vertex_stamp[candidate.vid2] == stamp) continue;
+      if (!mesh.id_retrieve_vertex(candidate.vid1) || !mesh.id_retrieve_vertex(candidate.vid2)) continue;
+      clean_candidates.push(candidate);
     }
-    if (pqe.min_priority() > maxcrit && edges_to_update.empty()) break;
-    Edge e = pqe.remove_min();
-    for (Vertex v : mesh.vertices(e))
-      for (Vertex vv : mesh.vertices(v))
-        for (Edge e2 : mesh.edges(vv))
-          if (pqe.remove(e2) < 0.f) edges_to_update.remove(e2);
-    Vertex v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
-    int ii;  // {2: keep_v1, 0: keep_v2, 1: midpoint_is_ok, -1: collapse_is_not_attribute_safe}.
-    if (attribute_safe_reduce) {
-      ii = ii_for_attribute_safe_edge_collapse(e);
-      assertx(ii >= 0);
-    } else {
-      const bool isb1 = mesh.is_boundary(v1), isb2 = mesh.is_boundary(v2);
-      ii = isb1 && !isb2 ? 2 : isb2 && !isb1 ? 0 : 1;
+    candidates = std::move(clean_candidates);
+    // Each edge with a dirty endpoint, gathered once (from its dirty endpoint of lowest id).
+    Array<Edge> edges_to_update;
+    for (const int vid : dirty_vertex_ids) {
+      Vertex v = mesh.id_retrieve_vertex(vid);
+      if (!v) continue;
+      for (Edge e : mesh.edges(v)) {
+        const int vid2 = mesh.vertex_id(mesh.opp_vertex(v, e));
+        if (vertex_stamp[vid2] != stamp || vid < vid2) edges_to_update.push(e);
+      }
     }
-    const Point newp = interp(mesh.point(v1), mesh.point(v2), ii * .5f);
-    Vertex vkept = ii == 0 ? v2 : v1;
-    mesh.collapse_edge_vertex_saving_attribs(e, vkept);
-    e = nullptr;
-    mesh.set_point(vkept, newp);
-    for (Vertex v : mesh.vertices(vkept))
-      for (Edge e2 : mesh.edges(v)) edges_to_update.add(e2);
+    add_candidates(edges_to_update);
   }
   cprogress.clear();
+  showdf("Reduced the mesh in %d sweeps\n", num_sweeps);
 }
 
 void do_normalized_maxcrit(Args& args) {

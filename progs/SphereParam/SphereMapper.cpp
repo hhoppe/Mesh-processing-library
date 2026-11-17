@@ -556,7 +556,11 @@ class SphereMapper::Implementation {
     Array<float> ar_displacement(nv);
     Array<int> ar_vertex(range(nv));
     Matrix<float> ar_random(nv, 2);  // For reproducible results under parallelism.
-    const auto by_decreasing_displacement = [&](int v1, int v2) { return ar_displacement[v1] > ar_displacement[v2]; };
+    // A strict total order (with ties broken by vertex index), so that the result does not depend on the sort
+    // algorithm and so that any subset of the vertices is ordered consistently.
+    const auto by_decreasing_displacement = [&](int v1, int v2) {
+      return ar_displacement[v1] != ar_displacement[v2] ? ar_displacement[v1] > ar_displacement[v2] : v1 < v2;
+    };
 
     for_int(iter, _optim_global_iter) {
       fill(ar_displacement, 3.f);  // Some value larger than the unit sphere diameter.

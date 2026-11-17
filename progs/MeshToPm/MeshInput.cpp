@@ -187,49 +187,90 @@ void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
   }
 }
 
-// Fill the empty mesh from a PLY mesh, whose faces must be triangles.  Per-vertex colors and uv and per-corner uv
-// are recorded in raw as the attributes of vertex and corner strings of a .m file.  Returns the vertex normals if
-// present and the mesh has no such attributes.
+// Fill the empty mesh from a PLY mesh, whose faces must be triangles.  As in GMesh::read_ply(), the mesh vertices are
+// given by the trailing element "wedge_vertex" if present, else they are the PLY vertices; the attributes of the PLY
+// vertices (wedges) are recorded in raw as those of the vertex strings (for a vertex with a single wedge) or else of
+// the corner strings of a .m file; the face strings are those of the materials; and the "wedge_global" flags mark
+// global vertices.  The wedges are not imposed (as wid keys would be): as for a .m file without wid keys, the
+// corners are grouped by their attributes (normal, rgb, and uv), whereas the PLY wedges may also separate other
+// attributes (e.g., Ouv).  Returns the vertex normals if present and the mesh needs no strings.
 Array<Vector> mesh_from_ply(PlyMesh& ply, WorkMesh& mesh, RawMesh& raw) {
-  const int nv = ply.points.num(), nf = ply.num_faces();
+  const int nw = ply.points.num(), nf = ply.num_faces();
+  const bool has_wid = ply.wedge_vertex.num() > 0;
+  const int nv = ply.num_mesh_vertices();
+  const auto vertex_of_wedge = [&](int w) { return has_wid ? ply.wedge_vertex[w] : w; };
+  Array<int> num_wedges(nv, 0), first_wedge(nv, -1);
+  for_int(w, nw) {
+    const int v = vertex_of_wedge(w);
+    if (num_wedges[v]++ == 0) {
+      first_wedge[v] = w;
+    } else if (ply.points[w] != ply.points[first_wedge[v]]) {
+      assertnever(sform("ply: the wedges %d and %d of vertex %d have different positions", first_wedge[v], w, v));
+    }
+  }
   mesh._vertices.init(nv);
   mesh._vertex_original_id.init(nv);
   for_int(v, nv) {
-    mesh._vertices[v].attrib.point = ply.points[v];
-    mesh._vertex_original_id[v] = v + 1;
+    if (!num_wedges[v]) assertnever(sform("ply: vertex %d has no wedges", v));
+    mesh._vertices[v].attrib.point = ply.points[first_wedge[v]];
+    mesh._vertex_original_id[v] = ply.vertex_ids.num() ? ply.vertex_ids[v] : v + 1;
   }
   mesh._faces.init(nf);
   mesh._face_original_id.init(nf);
   for_int(f, nf) {
-    const CArrayView<int> vertices = ply.face(f);
-    if (vertices.num() != 3) assertnever(sform("ply: face %d is not a triangle", f));
+    const CArrayView<int> wedges = ply.face(f);
+    if (wedges.num() != 3) assertnever(sform("ply: face %d is not a triangle", f));
+    const Vec3<int> vertices = transformed(Vec3<int>(wedges[0], wedges[1], wedges[2]), vertex_of_wedge);
     if (vertices[0] == vertices[1] || vertices[1] == vertices[2] || vertices[2] == vertices[0])
       assertnever(sform("ply: face %d has a repeated vertex", f));
-    mesh._faces[f].wedges = Vec3<int>(vertices[0], vertices[1], vertices[2]);
+    mesh._faces[f].wedges = vertices;  // Temporarily, one wedge per vertex.
     mesh._faces[f].attrib.matid = 0;
-    mesh._face_original_id[f] = f + 1;
+    mesh._face_original_id[f] = ply.face_ids.num() ? ply.face_ids[f] : f + 1;
   }
-  if (ply.colors.empty() && ply.uvs.empty() && ply.corner_uvs.empty()) return std::move(ply.normals);
+  const PlyMesh::WedgeKey* global_key = nullptr;
+  for (const PlyMesh::WedgeKey& wedge_key : ply.wedge_keys)
+    if (wedge_key.name == "global" && wedge_key.dim == 0) global_key = &wedge_key;
+  const bool needs_strings =
+      has_wid || ply.colors.num() || ply.uvs.num() || ply.corner_uvs.num() || ply.materials.num() || global_key;
+  if (!needs_strings) return std::move(ply.normals);
   raw.any_strings = true;
-  raw.face_strings.push("");
-  raw.face_string.init(nf, 0);
-  raw.vertex_info.init(nv);
-  raw.vertex_infos.init(nv);
-  for_int(v, nv) {
-    raw.vertex_info[v] = v;
-    AttribInfo& info = raw.vertex_infos[v];
-    info = AttribInfo{};
-    if (ply.normals.num()) info.normal = ply.normals[v];
-    if (ply.colors.num()) for_int(c, 3) info.rgb[c] = ply.colors[v][c] / 255.f;
-    if (ply.uvs.num()) info.uv = ply.uvs[v];
+  // The face strings.
+  raw.face_string.init(nf);
+  for_int(f, nf) {
+    const int matid = ply.face_matid(f);
+    const string& face_string = matid < ply.materials.num() ? ply.materials[matid] : "";
+    bool is_new;
+    const int index = raw.index_of_face_string.enter(face_string, raw.face_strings.num(), is_new);
+    if (is_new) raw.face_strings.push(face_string);
+    raw.face_string[f] = index;
   }
-  if (ply.corner_uvs.num()) {
-    raw.corners.init(3 * nf);
-    for_int(f, nf) for_int(j, 3) {
-      CornerRecord& record = raw.corners[3 * f + j];
-      record = CornerRecord{mesh._faces[f].wedges[j], f, AttribInfo{}};
+  // The attributes of the wedges.
+  const auto wedge_info = [&](int w) {
+    AttribInfo info;
+    if (ply.normals.num()) info.normal = ply.normals[w];
+    if (ply.colors.num()) for_int(c, 3) info.rgb[c] = ply.colors[w][c] / 255.f;
+    if (ply.uvs.num()) info.uv = ply.uvs[w];
+    return info;
+  };
+  raw.vertex_info.init(nv, -1);
+  for_int(v, nv) {
+    if (num_wedges[v] != 1) continue;
+    raw.vertex_info[v] = raw.vertex_infos.num();
+    raw.vertex_infos.push(wedge_info(first_wedge[v]));
+  }
+  for_int(f, nf) for_int(j, 3) {
+    const int w = ply.face(f)[j], v = mesh._faces[f].wedges[j];
+    if (num_wedges[v] > 1) raw.corners.push(CornerRecord{v, f, wedge_info(w)});
+    if (ply.corner_uvs.num()) {
+      CornerRecord record{v, f, AttribInfo{}};
       record.info.uv = ply.corner_uvs[3 * f + j];
+      raw.corners.push(record);
     }
+  }
+  if (global_key) {
+    Array<bool> is_global(nv, false);
+    for_int(w, nw) if (global_key->values[w]) is_global[vertex_of_wedge(w)] = true;
+    for_int(v, nv) if (is_global[v]) raw.global_vertices.push(v);
   }
   return {};
 }

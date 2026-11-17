@@ -148,11 +148,12 @@ void do_outmesh() {
   nooutput = true;
 }
 
-// Write the current mesh as a binary *.ply file, one PLY vertex per wedge (see WMesh::write_ply()).
-void do_outply(Args& args) {
+// Write the current mesh as a binary *.ply file on stdout, one PLY vertex per wedge (see WMesh::write_ply()).
+void do_outply() {
   HH_TIMER("_write_ply");
-  WFile fi(args.get_filename());
-  pmi->write_ply(fi(), pmi->rstream()._info, true);
+  pmi->write_ply(std::cout, pmi->rstream()._info, true);
+  std::cout.flush();
+  nooutput = true;
 }
 
 void do_outsmesh() {
@@ -1450,6 +1451,11 @@ void do_polystream() {
 
 int main(int argc, const char** argv) {
   assertw(!sdebug);
+  // A binary PLY file written on stdout must not be preceded by diagnostics.  (The option may be abbreviated.)
+  for_intL(i, 1, argc) {
+    const std::string_view arg = argv[i];
+    if (arg.size() >= 5 && std::string_view("-outply").starts_with(arg)) my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
+  }
   ParseArgs args(argc, argv);
   HH_ARGSC("A progressive mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSC(HH_ARGS_INDENT "Go to specific mesh:");
@@ -1464,7 +1470,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(info, ": output stats on current mesh");
   HH_ARGSD(minfo, ": output more stats on current mesh");
   HH_ARGSD(outmesh, ": output mesh");
-  HH_ARGSD(outply, "file.ply : write mesh as binary ply (vertex per wedge)");
+  HH_ARGSD(outply, ": output mesh as binary ply (vertex per wedge)");
   HH_ARGSD(outsmesh, ": output full-res simple mesh (split wedges) with 'parent' keys");
   HH_ARGSD(geom_nfaces, "nf : output geomorph up to nf faces");
   HH_ARGSC(HH_ARGS_INDENT "Output selectively refined meshes and geomorphs:");

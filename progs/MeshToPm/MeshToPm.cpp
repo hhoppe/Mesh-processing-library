@@ -70,6 +70,7 @@ void do_print_costs(Args& args) {
 // Returns the topology of the live mesh in the format of mesh_genus_string() (without sharp edges): the numbers of
 // connected components, boundary loops, vertices, faces, and edges, and the genus.
 string genus_string() {
+  HH_TIMER("_genus");
   const int num_vertices = mesh._vertices.num();
   // Union-find structures over the vertices: one for the components, and one for the boundary loops.
   Array<int> component(range(num_vertices)), loop(range(num_vertices));

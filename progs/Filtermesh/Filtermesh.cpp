@@ -2522,6 +2522,10 @@ void do_analyzestretch() {
   HH_STAT(Ssurfarea);
   HH_STAT(Sstarea);
   int num_domainp = 0, num_uv = 0;
+  struct FaceStretch {
+    float l2_stretch, surfarea, starea;
+  };
+  Array<FaceStretch> face_stretches;
   for (Face f : mesh.faces()) {
     const Vec3<Vertex> va = mesh.triangle_vertices(f);
     const Vec3<Point> triangle = mesh.triangle_points(f);
@@ -2572,6 +2576,7 @@ void do_analyzestretch() {
     Stri_li.enter(li_stretch);
     d_l2_integ_stretch += surfarea * square(l2_stretch);
     Stri_isotropy.enter(maxsv / minsv);
+    face_stretches.push(FaceStretch{l2_stretch, surfarea, starea});
   }
   showdf("Inferred stretch domain from %d 'domainp' and %d 'uv'.\n", num_domainp, num_uv);
   const float starea = Sstarea.sum();
@@ -2584,6 +2589,29 @@ void do_analyzestretch() {
   showdf("starea=%g surfarea=%g rms_stretch=%g\n", starea, surfarea, rms_stretch);
   showdf("Stretch: li=%.3f l2=%.3f maxani=%-5.4g avgani=%-5.4g arear=%-5.4g\n",  //
          li_efficiency, l2_efficiency, Stri_isotropy.max(), Stri_isotropy.avg(), max_area_ratio);
+  // The L2 efficiency is dominated by a few sliver faces with extreme stretch, so also report it without the faces of
+  // highest stretch that make up 0.1% of the surface area, and the number of faces whose stretch exceeds 10x rms.
+  sort(face_stretches, [](const FaceStretch& fs1, const FaceStretch& fs2) {
+    return fs1.l2_stretch > fs2.l2_stretch;  // Decreasing stretch.
+  });
+  const double max_trimmed_surfarea = 0.001 * double(surfarea);
+  double trimmed_surfarea = 0., kept_surfarea = 0., kept_starea = 0., kept_integ_stretch = 0.;
+  int num_trimmed = 0, num_outliers = 0;
+  for (const FaceStretch& fs : face_stretches) {
+    if (fs.l2_stretch > 10.f * rms_stretch) num_outliers++;
+    if (trimmed_surfarea + fs.surfarea <= max_trimmed_surfarea && kept_surfarea == 0.) {
+      trimmed_surfarea += fs.surfarea;
+      num_trimmed++;
+    } else {
+      kept_surfarea += fs.surfarea;
+      kept_starea += fs.starea;
+      kept_integ_stretch += fs.surfarea * square(double(fs.l2_stretch));
+    }
+  }
+  const double trimmed_l2_efficiency =
+      kept_integ_stretch ? square(kept_surfarea) / (kept_starea * kept_integ_stretch) : 0.;
+  showdf("Trimmed stretch (without the %d faces of highest stretch, %.3g%% of surface): l2=%.3f; outliers=%d\n",
+         num_trimmed, 100. * trimmed_surfarea / surfarea, trimmed_l2_efficiency, num_outliers);
 }
 
 void do_renormalizenor() {

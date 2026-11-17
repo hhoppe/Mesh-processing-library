@@ -67,8 +67,48 @@ void do_print_costs(Args& args) {
   }
 }
 
+// Returns the topology of the live mesh in the format of mesh_genus_string() (without sharp edges): the numbers of
+// connected components, boundary loops, vertices, faces, and edges, and the genus.
+string genus_string() {
+  const int num_vertices = mesh._vertices.num();
+  // Union-find structures over the vertices: one for the components, and one for the boundary loops.
+  Array<int> component(range(num_vertices)), loop(range(num_vertices));
+  const auto find = [](Array<int>& parent, int v) {
+    while (parent[v] != v) v = parent[v] = parent[parent[v]];
+    return v;
+  };
+  const auto unite = [&](Array<int>& parent, int v1, int v2) { parent[find(parent, v1)] = find(parent, v2); };
+  Array<bool> has_face(num_vertices, false), on_boundary(num_vertices, false);
+  int nf = 0, num_boundary_edges = 0;
+  for_int(f, mesh._faces.num()) {
+    if (!mesh.face_alive(f)) continue;
+    nf++;
+    for_int(j, 3) {
+      has_face[mesh.vertex(f, j)] = true;
+      unite(component, mesh.vertex(f, j), mesh.vertex(f, mod3(j + 1)));
+      if (mesh._fnei[f].faces[j] != AWMesh::k_undefined) continue;
+      num_boundary_edges++;
+      const int v1 = mesh.vertex(f, mod3(j + 1)), v2 = mesh.vertex(f, mod3(j + 2));
+      unite(loop, v1, v2);
+      on_boundary[v1] = on_boundary[v2] = true;
+    }
+  }
+  int nv = 0, nc = 0, nb = 0;
+  for_int(v, num_vertices) {
+    if (!mesh.vertex_alive(v)) continue;
+    nv++;
+    if (has_face[v] && find(component, v) == v) nc++;  // (As mesh_stat_components(), counting faces.)
+    if (on_boundary[v] && find(loop, v) == v) nb++;
+  }
+  assertx((3 * nf + num_boundary_edges) % 2 == 0);
+  const int ne = (3 * nf + num_boundary_edges) / 2;
+  const float genus = (nc * 2 - (nv - ne + nf) - nb) / 2.f;
+  return sform("Genus: c=%d b=%d  v=%d f=%d e=%d  genus=%g", nc, nb, nv, nf, ne, genus);
+}
+
 void perhaps_start_recording() {
   if (recorder.started) return;
+  showdf("%s\n", genus_string().c_str());  // Of the finest mesh of the progressive mesh, as a header comment.
   start_recording(mesh, recorder);
   if (roundtrip_check) roundtrip_reference = make_round_trip_reference(mesh);
 }

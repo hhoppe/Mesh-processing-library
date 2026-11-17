@@ -597,7 +597,7 @@ void do_mfilename(Args& args) {
   RFile fi(args.get_filename());
   for (string line; fi().peek() == '#';) {
     assertx(my_getline(fi(), line));
-    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+    if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
   }
   show_header();
   mesh.read(fi());

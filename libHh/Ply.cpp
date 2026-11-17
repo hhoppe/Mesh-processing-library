@@ -706,6 +706,19 @@ class PlyValueWriter {
 
 }  // namespace
 
+Array<string> ply_header_comments(CArrayView<string> header_lines) {
+  Array<string> lines;
+  for (const string& line : header_lines) {
+    if (line.starts_with("obj_info ")) {
+      lines.push(line);
+    } else if (line.starts_with("comment ")) {
+      const std::string_view rest = std::string_view(line).substr(8);
+      if (rest != "" && !rest.starts_with("material ")) lines.push(string(rest));
+    }
+  }
+  return lines;
+}
+
 Array<string> provenance_comments() {
   Array<string> lines;
   const string transcript = diagnostics_transcript();

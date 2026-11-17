@@ -383,10 +383,9 @@ bool more_values(const char*& s) {
 void GMesh::read(std::istream& is) {
   if (is.peek() == 'p') {  // A mesh file never starts with 'p', whereas a PLY file starts with the line "ply".
     // Echo the header comments (the provenance) of the PLY file, as programs do for the '#' lines of a mesh file.
-    const PlyMesh ply = hh::read_ply(is);
-    for (const string& comment : ply.comments)
-      if (comment != "") showff("|%s\n", comment.c_str());
-    read_ply(ply);
+    const Array<string> header_lines = read_ply_header(is);
+    for (const string& comment : ply_header_comments(header_lines)) showff("|%s\n", comment.c_str());
+    read_ply(read_ply_body(is, header_lines));
   } else {
     bool seen_data = false;
     for (string line; my_getline(is, line);) {

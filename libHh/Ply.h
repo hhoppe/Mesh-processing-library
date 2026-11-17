@@ -53,6 +53,10 @@ struct PlyMesh {
 // Read the header lines of a PLY file, from "ply" through "end_header", without any trailing whitespace or '\r'.
 [[nodiscard]] Array<string> read_ply_header(std::istream& is);
 
+// Returns the provenance lines in the header of a PLY file: its comments (other than empty ones and the materials)
+// and its "obj_info" lines (with that keyword), for a reader to echo with a '|' prefix.
+[[nodiscard]] Array<string> ply_header_comments(CArrayView<string> header_lines);
+
 // Read the body of a PLY file given its header lines.  The properties may have any order and type, a face list
 // named "vertex_indices" (or "vertex_index") may have any count type, triangle strips (element "tristrips", whose
 // list "vertex_indices" separates the strips by -1) are converted to faces, and other properties and elements are

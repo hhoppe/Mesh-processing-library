@@ -1521,7 +1521,7 @@ int main(int argc, const char** argv) {
     HH_TIMER("FilterPM");
     for (string line; fi().peek() == '#';) {
       assertx(my_getline(fi(), line));
-      if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+      if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
     }
     assertx(fi().peek() == 'P' || fi().peek() == 'S');
     const bool srm_input = fi().peek() == 'S';

@@ -599,16 +599,12 @@ MeshFileHeader read_mesh_header(std::istream& is) {
     header.is_ply = true;
     header.ply_lines = read_ply_header(is);
     // Echo the header comments (the provenance), as for the '#' lines of a mesh file.
-    for (const string& line : header.ply_lines) {
-      if (const std::string_view rest = after_prefix(line.c_str(), "comment ") ? std::string_view(line).substr(8) : "";
-          rest != "" && !rest.starts_with("material "))
-        showff("|%s\n", string(rest).c_str());
-    }
+    for (const string& comment : ply_header_comments(header.ply_lines)) showff("|%s\n", comment.c_str());
   } else {
     string line;
     while (is.peek() == '#') {
       assertx(my_getline(is, line));
-      if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+      if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
     }
   }
   return header;

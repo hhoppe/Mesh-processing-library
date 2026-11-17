@@ -108,19 +108,24 @@ class GMesh : public Mesh {
   // Read a whole mesh, discarding comments; the stream may instead contain a PLY file (detected by its first line) or
   // a Wavefront OBJ file (detected by its first line that is neither blank nor a comment).
   void read(std::istream& is);
+
+  [[nodiscard]] static bool recognize_line(std::string_view line);
   void read_line(char* s);  // No '\n' required.
+
   // Add a mesh read from a PLY file to the empty mesh (without echoing its header comments).  Each mesh vertex (identified by the trailing element
   // "wedge_vertex" if present) gets the attributes of its PLY vertices (wedges) as in WMesh::extract_gmesh(): in its
   // vertex string if it has a single wedge, else in the strings of its corners.  These attributes are the normal,
   // the 8-bit color (as rgb), the uv, the per-wedge keys of the elements "wedge_<key>", and the wedge id (wid, only
   // with "wedge_vertex").  Each face string is the string of its material.
   void read_ply(const PlyMesh& ply);
+
   // Add a mesh read from a Wavefront OBJ file to the empty mesh, as bin/obj_to_mesh does, given its first line that
   // is neither blank nor a comment.  Vertices get the strings uv, normal, and rgb (from "v x y z r g b", "v x y z
   // #rrggbb", or ZBrush "#MRGB" lines) if those are given per vertex, else corners get uv and normal; faces get
   // mat="<usemtl>" and groups="<g>"; without normals, the edges between smoothing groups are sharp.  Unlike
   // bin/obj_to_mesh, the material colors (from mtllib) are not read.
   void read_obj(std::istream& is, const string& first_line);
+
   // Return the mesh as a PlyMesh (to be written by write_ply()), with one PLY vertex per wedge.  The wedges of a
   // vertex are given by its "wid" keys if these are consistent, else by the distinct attribute values of its corners
   // (in order of first appearance).  The keys normal, uv, and rgb (quantized to 8 bits) become standard properties if
@@ -128,7 +133,7 @@ class GMesh : public Mesh {
   // elements "wedge_<key>"; the distinct face strings become the materials.  Any other key (e.g., a quoted string)
   // and the edge strings (e.g., "sharp") are dropped with a warning.
   [[nodiscard]] PlyMesh to_ply() const;
-  [[nodiscard]] static bool recognize_line(std::string_view line);
+
   void write(std::ostream& os) const;
   void write(WA3dStream& oa3d, const A3dVertexColor& col) const;
   void write_face(WA3dStream& oa3d, A3dElem& el, const A3dVertexColor& col, Face f) const;

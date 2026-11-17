@@ -122,7 +122,7 @@ void process_read() {
   std::istream& is = fi();
   for (string line; is.peek() == '#';) {
     assertx(my_getline(is, line));
-    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+    if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
   }
   showff("%s", g_header.c_str());
   RSA3dStream ia3d(is);

@@ -4990,7 +4990,7 @@ int main(int argc, const char** argv) {
   RFile fi(filename);
   for (string line; fi().peek() == '#';) {
     assertx(my_getline(fi(), line));
-    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+    if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
   }
   showdf("%s", args.header().c_str());
   Timer timer("MeshSimplify", Timer::EMode::always);

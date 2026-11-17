@@ -4586,20 +4586,19 @@ int main(int argc, const char** argv) {
       const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
       RFile fi(filename);
       // Echo the header comments of the input (a mesh file or a PLY file), then the header of this program.
-      std::optional<PlyMesh> ply;
+      Array<string> ply_header_lines;
       if (fi().peek() == 'p') {
-        ply = read_ply(fi());
-        for (const string& comment : ply->comments)
-          if (comment != "") showff("|%s\n", comment.c_str());
+        ply_header_lines = read_ply_header(fi());
+        for (const string& comment : ply_header_comments(ply_header_lines)) showff("|%s\n", comment.c_str());
       }
       for (string line; fi().peek() == '#';) {
         assertx(my_getline(fi(), line));
-        if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+        if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
       }
       showff("%s", args.header().c_str());
       HH_TIMER("_readmesh");
-      if (ply) {
-        mesh.read_ply(*ply);
+      if (ply_header_lines.num()) {
+        mesh.read_ply(read_ply_body(fi(), ply_header_lines));
       } else {
         mesh.read(fi());
       }

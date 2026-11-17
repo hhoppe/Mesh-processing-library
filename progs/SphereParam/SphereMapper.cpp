@@ -562,13 +562,16 @@ class SphereMapper::Implementation {
       return ar_displacement[v1] != ar_displacement[v2] ? ar_displacement[v1] > ar_displacement[v2] : v1 < v2;
     };
 
+    Array<int> active_vertices;  // The vertices whose displacement exceeds _optim_movetol, in the total order.
+    Array<bool> locked(nv, false);
+    Array<int> locked_vertices;  // The vertices set in locked, to reset them efficiently.
     for_int(iter, _optim_global_iter) {
       fill(ar_displacement, 3.f);  // Some value larger than the unit sphere diameter.
-      int num_active = nv;
+      active_vertices.init(nv);
+      active_vertices.assign(ar_vertex);  // All vertices, in the order of the end of the previous iteration.
       for (int update_iter = 0;; update_iter++) {
-        if (!assertw(update_iter < 2000) || !num_active) break;
-
-        ArrayView<int> active_vertices = ar_vertex.head(num_active);
+        if (!assertw(update_iter < 2000) || active_vertices.empty()) break;
+        const int num_active = active_vertices.num();
         for (const int v : active_vertices) for_int(c, 2) ar_random[v, c] = Random::G.unif();
 
         // The cost estimate (measured as the fastest of 500 to 10'000) enables parallelism only for >= ~30 active
@@ -581,7 +584,6 @@ class SphereMapper::Implementation {
 
         sort(active_vertices, by_decreasing_displacement);
 
-        Array<bool> locked(nv, false);
         for (const int v : active_vertices) {
           if (locked[v]) continue;
           assertx(ar_displacement[v] > _optim_movetol);
@@ -589,16 +591,23 @@ class SphereMapper::Implementation {
           _sphmap[v] = ar_sph[v];
           ar_displacement[v] = 0.f;
           for (const auto [vv, unused_ff] : _pmi.ccw_vertices(v, someface[v])) {
+            if (!locked[vv]) locked_vertices.push(vv);
             locked[vv] = true;
             ar_displacement[vv] += displacement * k_spatial_fade;
           }
         }
+        for (const int v : locked_vertices) locked[v] = false;
+        locked_vertices.init(0);
         if (_options.verbose >= 2 && update_iter % 10 == 0) std::cerr << "." << std::flush;
 
-        sort(ar_vertex, by_decreasing_displacement);
-        num_active = 0;
-        while (num_active < nv && ar_displacement[ar_vertex[num_active]] > _optim_movetol) num_active++;
+        // Rather than sorting all the vertices (as the active ones form a prefix of that total order), gather and sort
+        // just the active ones.
+        active_vertices.init(0);
+        for_int(v, nv) if (ar_displacement[v] > _optim_movetol) active_vertices.push(v);
+        sort(active_vertices, by_decreasing_displacement);
       }
+      // The total order of all the vertices defines the order of the active vertices in the next iteration.
+      sort(ar_vertex, by_decreasing_displacement);
       if (_options.verbose >= 2) std::cerr << "|" << std::flush;
       update_visualizer_optimize_all();
     }

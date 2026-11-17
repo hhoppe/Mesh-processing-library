@@ -27,6 +27,7 @@
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"  // Vnors, ...
 #include "libHh/MeshSearch.h"
+#include "libHh/Ply.h"
 #include "libHh/Polygon.h"
 #include "libHh/Principal.h"  // principal_components()
 #include "libHh/PriorityQueue.h"
@@ -4184,6 +4185,22 @@ string get_first_material_name(const string& mtl_filename) {
   assertnever("No 'newmtl' found in '" + mtl_filename + "'");
 }
 
+// Write the mesh as a binary *.ply file (one PLY vertex per wedge; see GMesh::to_ply()); "-" writes it on stdout
+// instead of the mesh.
+void do_toply(Args& args) {
+  HH_TIMER("_toply");
+  const string filename = args.get_filename();
+  const PlyMesh ply = mesh.to_ply();
+  if (filename == "-") {
+    write_ply(std::cout, ply, true);
+    std::cout.flush();
+    nooutput = true;
+  } else {
+    WFile fi(filename);
+    write_ply(fi(), ply, true);
+  }
+}
+
 void do_to_obj(Args& args) {
   const string mtl_filename = args.get_filename();
   assertx(!mtl_filename.contains('/'));  // The material file must be in the local directory.
@@ -4361,6 +4378,11 @@ void do_assignwids() {
 // *** main
 
 int main(int argc, const char** argv) {
+  // A PLY file written on stdout must not be preceded by diagnostics.
+  for_intL(i, 1, argc - 1) {
+    if (argv[i] == std::string_view("-toply") && argv[i + 1] == std::string_view("-"))
+      my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
+  }
   ParseArgs args(argc, argv);
   HH_ARGSC("A mesh is read from stdin or first arg except with the following arguments:");
   HH_ARGSD(creategrid, "ny nx : create grid of quads");
@@ -4383,6 +4405,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(tob3d, ": output binary a3d version of mesh");
   HH_ARGSD(endobject, ": output EndObject marker");
   HH_ARGSD(to_obj, "file.mtl : output Alias/Wavefront .obj file on stdout");
+  HH_ARGSD(toply, "file.ply : write binary ply (vertex per wedge; - stdout)");
   HH_ARGSC("", ":");
   HH_ARGSD(angle, "deg : tag sharp edges");
   HH_ARGSD(cosangle, "fcos : tag sharp edges, acos(fcos)");

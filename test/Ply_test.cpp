@@ -154,10 +154,39 @@ void test_wmesh() {
   SHOW(same_attribs);
 }
 
+void test_gmesh_to_ply() {
+  // A square of two triangles whose vertex 1 has two wedges (a normal discontinuity), with a flag key, partial keys,
+  // and face strings with matid keys.  (The dropping of other keys and of edge strings is reported by a Warning(),
+  // whose line number would make this output fragile.)
+  const string str =
+      "Vertex 1  0 0 0 {global}\n"
+      "Vertex 2  1 0 0 {normal=(0 0 1) sph=(1 0 0)}\n"
+      "Vertex 4  1 1 0 {normal=(0 0 1)}\n"
+      "Vertex 5  0 1 0 {normal=(0 0 1) Ouv=(0.25 0.5)}\n"
+      "Face 1  1 2 4 {matid=3 rgb=(1 0 0)}\n"
+      "Face 2  1 4 5 {matid=1}\n"
+      "Corner 1 1 {normal=(0 0 1)}\n"
+      "Corner 1 2 {normal=(0 1 0)}\n";
+  std::istringstream iss(str);
+  GMesh gmesh;
+  gmesh.read(iss);
+  const PlyMesh mesh = gmesh.to_ply();
+  std::ostringstream oss;
+  write_ply(oss, mesh, false);
+  showf("%s", oss.str().c_str());
+  std::istringstream iss2(oss.str());
+  GMesh gmesh2;
+  gmesh2.read(iss2);
+  std::ostringstream oss2;
+  gmesh2.write(oss2);
+  showf("%s", oss2.str().c_str());
+}
+
 }  // namespace
 
 int main() {
   test_round_trip();
   test_tristrips();
   test_wmesh();
+  test_gmesh_to_ply();
 }

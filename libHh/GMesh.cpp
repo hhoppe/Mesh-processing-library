@@ -401,6 +401,322 @@ void GMesh::read(std::istream& is) {
   if (debug() >= 1) ok();
 }
 
+PlyMesh GMesh::to_ply() const {
+  // The kind of a vertex or corner key: a flag (without value), a numeric vector of some dimension, or invalid.
+  struct KeyInfo {
+    int dim{-1};    // 0 for a flag; -2 if invalid (non-numeric value or inconsistent dimensions).
+    int offset{0};  // Offset of its values within a wedge record.
+  };
+  Map<string, KeyInfo> key_infos;
+  Array<float> values;
+  // Parse the value of a key: returns its dimension (0 if no value), or -2 if it is not numeric.
+  const auto parse_value = [&](const char* vb, int vl) -> int {
+    values.init(0);
+    if (vl == 0) return 0;
+    string val(vb, vl);
+    const bool is_vector = val.front() == '(' && val.back() == ')';
+    if (is_vector) val = val.substr(1, val.size() - 2);
+    const char* s = val.c_str();
+    while (more_values(s)) {
+      char* end;
+      const float value = std::strtof(s, &end);
+      if (end == s) return -2;
+      values.push(value);
+      s = end;
+    }
+    if (values.empty() || (!is_vector && values.num() != 1)) return -2;
+    return values.num();
+  };
+  const auto classify = [&](const char* str) {
+    for_cstring_key_value_ptr(str, [&](const char* kb, int kl, const char* vb, int vl) {
+      const int dim = parse_value(vb, vl);
+      bool is_new;
+      KeyInfo& info = key_infos.enter(string(kb, kl), KeyInfo{}, is_new);
+      if (is_new) {
+        info.dim = dim;
+      } else if (info.dim != dim) {
+        info.dim = -2;
+      }
+      return false;
+    });
+  };
+  for (Vertex v : vertices()) classify(get_string(v));
+  for (Face f : faces())
+    for (Corner c : corners(f)) classify(get_string(c));
+  // The keys stored in the wedge records, in sorted order, and the dropped keys.
+  Array<string> record_keys, dropped_keys;
+  {
+    Array<string> keys(key_infos.keys());
+    sort(keys);
+    for (const string& key : keys) {
+      const int dim = key_infos.get(key).dim;
+      if (key == "wid" && dim == 1) continue;
+      (dim >= 0 ? record_keys : dropped_keys).push(key);
+    }
+  }
+  int record_size = 0;
+  for (const string& key : record_keys) {
+    KeyInfo& info = key_infos.get(key);
+    info.offset = record_size;
+    record_size += max(info.dim, 1);
+  }
+  const float nan = std::numeric_limits<float>::quiet_NaN();
+  // Overlay the values of the keys of the string onto the record (NaN for absent values; 0 or 1 for flags).
+  const auto add_to_record = [&](const char* str, ArrayView<float> record) {
+    for_cstring_key_value_ptr(str, [&](const char* kb, int kl, const char* vb, int vl) {
+      const string key(kb, kl);
+      if (!key_infos.contains(key) || key == "wid") return false;
+      const KeyInfo& info = key_infos.get(key);
+      if (info.dim < 0) return false;
+      assertx(parse_value(vb, vl) == info.dim);
+      if (info.dim == 0) {
+        record[info.offset] = 1.f;
+      } else {
+        for_int(k, info.dim) record[info.offset + k] = values[k];
+      }
+      return false;
+    });
+  };
+  const auto empty_record = [&] {
+    Array<float> record(record_size, nan);
+    for (const string& key : record_keys)
+      if (key_infos.get(key).dim == 0) record[key_infos.get(key).offset] = 0.f;
+    return record;
+  };
+  const auto wid_of = [&](const char* str) {
+    string str2;
+    const char* s = string_key(str2, str, "wid");
+    return s ? to_int(s) : 0;
+  };
+  // The vertices in id order.
+  Array<Vertex> va(ordered_vertices());
+  const int nv = va.num();
+  Map<Vertex, int> vertex_index;
+  for_int(i, nv) vertex_index.enter(va[i], i);
+  Array<Array<float>> vertex_records(nv);
+  for_int(i, nv) {
+    vertex_records[i] = empty_record();
+    add_to_record(get_string(va[i]), vertex_records[i]);
+  }
+  // The wedges: each one has a vertex and a record; each face corner refers to a wedge.
+  struct Wedge {
+    int vertex;
+    int order;  // Its wid, or else its order of creation.
+    Array<float> record;
+  };
+  Array<Wedge> wedges;
+  Array<Face> fa(ordered_faces());
+  Array<int> corner_wedges;  // Concatenated over the faces in id order.
+  Array<int> face_start{0};
+  for (Face f : fa) {
+    for (Vertex v : vertices(f)) dummy_use(v), corner_wedges.push(-1);
+    face_start.push(corner_wedges.num());
+  }
+  // Try the wid keys: each wid must have one vertex and one record.
+  bool use_wids = key_infos.contains("wid") && key_infos.get("wid").dim == 1;
+  if (use_wids) {
+    Map<int, int> wedge_of_wid;
+    for_int(fi, fa.num()) {
+      Face f = fa[fi];
+      int j = face_start[fi];
+      for (Vertex v : vertices(f)) {
+        const Corner c = corner(v, f);
+        const int vi = vertex_index.get(v);
+        int wid = wid_of(get_string(c));
+        if (!wid) wid = wid_of(get_string(v));
+        if (!wid) {
+          use_wids = false;
+          break;
+        }
+        Array<float> record(vertex_records[vi]);
+        add_to_record(get_string(c), record);
+        bool is_new;
+        const int w = wedge_of_wid.enter(wid, wedges.num(), is_new);
+        if (is_new) {
+          wedges.push(Wedge{vi, wid, std::move(record)});
+        } else if (wedges[w].vertex != vi || wedges[w].record != record) {
+          use_wids = false;
+          break;
+        }
+        corner_wedges[j++] = w;
+      }
+      if (!use_wids) break;
+    }
+    if (!use_wids) {
+      Warning("GMesh::to_ply(): inconsistent wid keys are ignored");
+      wedges.init(0);
+    }
+  }
+  if (!use_wids) {
+    // Each vertex without corner strings has a single wedge; the corners of the other vertices are grouped by their
+    // records.
+    Array<int> vertex_wedge(nv, -1);
+    Map<string, int> wedge_of_key;
+    for_int(fi, fa.num()) {
+      Face f = fa[fi];
+      int j = face_start[fi];
+      for (Vertex v : vertices(f)) {
+        const Corner c = corner(v, f);
+        const int vi = vertex_index.get(v);
+        const char* cstr = get_string(c);
+        if (!cstr) {
+          if (vertex_wedge[vi] < 0) {
+            vertex_wedge[vi] = wedges.num();
+            wedges.push(Wedge{vi, wedges.num(), Array<float>(vertex_records[vi])});
+          }
+          corner_wedges[j++] = vertex_wedge[vi];
+          continue;
+        }
+        Array<float> record(vertex_records[vi]);
+        add_to_record(cstr, record);
+        string key(sizeof(int) + record.num() * sizeof(float), '\0');
+        std::memcpy(key.data(), &vi, sizeof(int));
+        std::memcpy(key.data() + sizeof(int), record.data(), record.num() * sizeof(float));
+        bool is_new;
+        const int w = wedge_of_key.enter(key, wedges.num(), is_new);
+        if (is_new) wedges.push(Wedge{vi, wedges.num(), std::move(record)});
+        corner_wedges[j++] = w;
+      }
+    }
+  }
+  // Isolated vertices get a wedge with their vertex record.
+  {
+    Array<bool> has_wedge(nv, false);
+    for (const Wedge& wedge : wedges) has_wedge[wedge.vertex] = true;
+    for_int(vi, nv) if (!has_wedge[vi]) wedges.push(
+        Wedge{vi, use_wids ? std::numeric_limits<int>::max() : wedges.num(), Array<float>(vertex_records[vi])});
+  }
+  // Order the wedges by wid, or else by vertex and then order of creation.
+  Array<int> order(range(wedges.num()));
+  sort(order, [&](int w1, int w2) {
+    const Wedge &wedge1 = wedges[w1], &wedge2 = wedges[w2];
+    if (!use_wids && wedge1.vertex != wedge2.vertex) return wedge1.vertex < wedge2.vertex;
+    if (wedge1.order != wedge2.order) return wedge1.order < wedge2.order;
+    return w1 < w2;
+  });
+  Array<int> new_index(wedges.num());
+  for_int(i, order.num()) new_index[order[i]] = i;
+  const int nw = wedges.num();
+  PlyMesh ply;
+  ply.points.init(nw);
+  for_int(i, nw) ply.points[i] = point(va[wedges[order[i]].vertex]);
+  // The standard properties, for keys present (with the right dimension) on all wedges.
+  const auto all_present = [&](const char* key, int dim) {
+    if (!key_infos.contains(key) || key_infos.get(key).dim != dim) return false;
+    const KeyInfo& info = key_infos.get(key);
+    return ranges::none_of(wedges, [&](const Wedge& wedge) { return std::isnan(wedge.record[info.offset]); });
+  };
+  Set<string> standard_keys;
+  if (all_present("normal", 3)) {
+    const int offset = key_infos.get("normal").offset;
+    ply.normals.init(nw);
+    for_int(i, nw) for_int(c, 3) ply.normals[i][c] = wedges[order[i]].record[offset + c];
+    standard_keys.enter("normal");
+  }
+  if (all_present("rgb", 3)) {
+    const int offset = key_infos.get("rgb").offset;
+    ply.colors.init(nw);
+    for_int(i, nw) {
+      for_int(c, 3) ply.colors[i][c] = uint8_t(clamp(wedges[order[i]].record[offset + c], 0.f, 1.f) * 255.f + .5f);
+      ply.colors[i][3] = 255;
+    }
+    standard_keys.enter("rgb");
+  }
+  if (all_present("uv", 2)) {
+    const int offset = key_infos.get("uv").offset;
+    ply.uvs.init(nw);
+    for_int(i, nw) for_int(c, 2) ply.uvs[i][c] = wedges[order[i]].record[offset + c];
+    standard_keys.enter("uv");
+  }
+  for (const string& key : record_keys) {
+    if (standard_keys.contains(key)) continue;
+    const KeyInfo& info = key_infos.get(key);
+    PlyMesh::WedgeKey wedge_key{key, info.dim, Array<float>(nw * max(info.dim, 1))};
+    for_int(i, nw) for_int(k, max(info.dim, 1)) wedge_key.values[i * max(info.dim, 1) + k] =
+        wedges[order[i]].record[info.offset + k];
+    ply.wedge_keys.push(std::move(wedge_key));
+  }
+  // The wedge_vertex element, unless each vertex has a single wedge in vertex order.
+  bool identity = nw == nv;
+  for_int(i, nw) identity = identity && wedges[order[i]].vertex == i;
+  if (!identity) {
+    ply.wedge_vertex.init(nw);
+    for_int(i, nw) ply.wedge_vertex[i] = wedges[order[i]].vertex;
+  }
+  // The faces and their materials.
+  ply.face_vertices.init(corner_wedges.num());
+  for_int(j, corner_wedges.num()) ply.face_vertices[j] = new_index[corner_wedges[j]];
+  ply.face_start = face_start;
+  {
+    // Use the matid keys as material indices if they are consistent, else the order of first appearance.
+    bool use_matids = true;
+    Map<int, string> string_of_matid;
+    for (Face f : fa) {
+      const char* str = get_string(f);
+      string str2;
+      const char* smatid = str ? string_key(str2, str, "matid") : nullptr;
+      const int matid = smatid ? to_int(smatid) : -1;
+      if (matid < 0 || matid >= 65536) {
+        use_matids = false;
+        break;
+      }
+      bool is_new;
+      const string& s2 = string_of_matid.enter(matid, str, is_new);
+      if (s2 != str) {
+        use_matids = false;
+        break;
+      }
+    }
+    Map<string, int> matid_of_string;
+    ply.face_matids.init(fa.num());
+    for_int(fi, fa.num()) {
+      const char* str = get_string(fa[fi]);
+      const string s2 = str ? str : "";
+      int matid;
+      if (use_matids) {
+        string str2;
+        matid = to_int(string_key(str2, str, "matid"));
+      } else {
+        bool is_new;
+        matid = matid_of_string.enter(s2, matid_of_string.num(), is_new);
+        if (matid >= 65536) assertnever("GMesh::to_ply(): more than 65536 distinct face strings");
+      }
+      if (matid >= ply.materials.num()) ply.materials.resize(matid + 1);
+      ply.materials[matid] = s2;
+      ply.face_matids[fi] = matid;
+    }
+    if (ranges::all_of(ply.face_matids, [](int matid) { return matid == 0; })) ply.face_matids.init(0);
+    if (ply.materials.num() == 1 && ply.materials[0] == "") ply.materials.init(0);
+  }
+  // Report what is lost.
+  const auto join = [](CArrayView<string> strings) {
+    string result;
+    for (const string& str : strings) result += (result == "" ? "" : " ") + str;
+    return result;
+  };
+  int num_edge_strings = 0;
+  Set<string> edge_keys;
+  for (Edge e : edges()) {
+    if (!get_string(e)) continue;
+    num_edge_strings++;
+    for_cstring_key_value_ptr(get_string(e), [&](const char* kb, int kl, const char*, int) {
+      edge_keys.add(string(kb, kl));
+      return false;
+    });
+  }
+  if (num_edge_strings) {
+    Array<string> keys(edge_keys);
+    sort(keys);
+    Warning("GMesh::to_ply(): edge strings are dropped");
+    showdf("GMesh::to_ply(): dropping the strings of %d edges (keys: %s)\n", num_edge_strings, join(keys).c_str());
+  }
+  if (dropped_keys.num()) {
+    Warning("GMesh::to_ply(): non-numeric vertex/corner keys are dropped");
+    showdf("GMesh::to_ply(): dropping the keys: %s\n", join(dropped_keys).c_str());
+  }
+  return ply;
+}
+
 void GMesh::read_obj(std::istream& is, const string& first_line) {
   assertx(empty());
   constexpr int k_no_smoothing = 0, k_default_smoothing = 1;  // Smoothing is "on" by default.

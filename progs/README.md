@@ -671,7 +671,10 @@ attributes `normal`, `rgb`, and `uv`.  A PLY file written by `FilterPM -outply` 
 followed by trailing elements (which other PLY readers can ignore) that identify the mesh vertex of each wedge
 (`wedge_vertex`), the material of each face (`face_material`, with the material strings in `comment material`
 header lines), and any other per-wedge attributes (`wedge_<key>`); reading it reproduces the mesh of
-`FilterPM -outmesh`.
+`FilterPM -outmesh`.  Conversely, `Filtermesh mesh.m -toply mesh.ply -noo` writes such a file, whose wedges come
+from the `wid` keys of the mesh (if consistent) or else from the distinct attributes of the corners of each vertex;
+it keeps the vertex and corner keys with numeric values or no values, and the face strings (as materials), but it
+drops (with a warning) other keys and the edge strings such as `sharp`.
 
 ### Wavefront OBJ (`*.obj`)
 

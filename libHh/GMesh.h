@@ -121,6 +121,13 @@ class GMesh : public Mesh {
   // mat="<usemtl>" and groups="<g>"; without normals, the edges between smoothing groups are sharp.  Unlike
   // bin/obj_to_mesh, the material colors (from mtllib) are not read.
   void read_obj(std::istream& is, const string& first_line);
+  // Return the mesh as a PlyMesh (to be written by write_ply()), with one PLY vertex per wedge.  The wedges of a
+  // vertex are given by its "wid" keys if these are consistent, else by the distinct attribute values of its corners
+  // (in order of first appearance).  The keys normal, uv, and rgb (quantized to 8 bits) become standard properties if
+  // every wedge has them; these and the other vertex and corner keys with numeric or no values become trailing
+  // elements "wedge_<key>"; the distinct face strings become the materials.  Any other key (e.g., a quoted string)
+  // and the edge strings (e.g., "sharp") are dropped with a warning.
+  [[nodiscard]] PlyMesh to_ply() const;
   [[nodiscard]] static bool recognize_line(std::string_view line);
   void write(std::ostream& os) const;
   void write(WA3dStream& oa3d, const A3dVertexColor& col) const;

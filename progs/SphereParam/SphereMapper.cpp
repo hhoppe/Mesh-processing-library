@@ -212,7 +212,11 @@ class SphereMapper::Implementation {
   Array<bool> _matid_is_hole;
   Array<Point> _sphmap;
   double _surface_area{0.};
-  Precision _stretch_scaling1, _stretch_scaling2, _stretch_scaling3;
+  // The scaling factors of the stretch terms, which depend on the surface area.
+  struct StretchScaling {
+    Precision s1, s2, s3;
+  };
+  StretchScaling _scaling;
 
   // Given a parametric arc on the sphere (from point x0, rotate by theta in direction l over the angle
   // interval [itmin, itmax], where l is tangent to the sphere at x0), determine the shrunken theta interval (modified
@@ -407,7 +411,8 @@ class SphereMapper::Implementation {
     return {dir, on_boundary, sharp_normal};
   }
 
-  [[nodiscard]] Point optimize_vertex_rand(int v, int someface, float rand1, float rand2) const {
+  [[nodiscard]] Point optimize_vertex_rand(int v, int someface, float rand1, float rand2,
+                                           const StretchScaling& scaling) const {
     Vector x0 = _sphmap[v];
     if (v < _num_fixed_vertices) return x0;  // Hold the base vertices constant.
     auto ar_faces = get_ar_faces(v, someface);
@@ -421,7 +426,8 @@ class SphereMapper::Implementation {
       double total_stretch = 0.;
       for (auto& optimizer_face : ar_faces) {
         optimizer_face.pd[0] = convert<Precision>(pd0);
-        Precision face_stretch = accurate_stretch_for_spherical_triangle(optimizer_face.pd, optimizer_face.ps);
+        Precision face_stretch =
+            accurate_stretch_for_spherical_triangle(optimizer_face.pd, optimizer_face.ps, scaling);
         if (optimizer_face.is_hole) face_stretch *= _options.hole_weight;
         total_stretch += face_stretch;
       }
@@ -467,13 +473,9 @@ class SphereMapper::Implementation {
     return x0;
   }
 
-  [[nodiscard]] Point optimize_vertex(int v, int someface) const {
-    const float rand1 = Random::G.unif(), rand2 = Random::G.unif();
-    return optimize_vertex_rand(v, someface, rand1, rand2);
-  }
-
-  void optimize_vertex_split(int v, int someface) {
-    HH_STIMER("_optimize_vertex_split");
+  // Place the new vertex v of a vertex split within the kernel of its 1-ring, and return the number of iterations of
+  // the subsequent optimization of its neighbors.
+  int place_vertex_split(int v, int someface) {
     int nei_iter = _optim_vsplit_nei_iter;
     if (int vsh1, vsh2; _options.respect_sharp_edges && vertex_is_on_sharp_edge(_pmi, v, someface, vsh1, vsh2)) {
       _sphmap[v] = arc_midpoint_within_kernel(v, someface, vsh1, vsh2);
@@ -505,19 +507,68 @@ class SphereMapper::Implementation {
       if (1) assertx(is_unit(_sphmap[v]));
       if (k_debug) assertw(!any_adjacent_face_flipped(v, someface));
     }
+    return nei_iter;
+  }
 
-    set_stretch_scaling();
-    for_int(i, _optim_vsplit_vt_iter) _sphmap[v] = optimize_vertex(v, someface);
-
+  // Optimize the new vertex v of a vertex split, and its neighbors nei_iter times, consuming two of the given random
+  // numbers in each optimization of a vertex.
+  void optimize_vertex_split(int v, int someface, int nei_iter, const StretchScaling& scaling, const float* randoms) {
+    const auto optimize = [&](int vv, int ff) {
+      const float rand1 = *randoms++, rand2 = *randoms++;
+      return optimize_vertex_rand(vv, ff, rand1, rand2, scaling);
+    };
+    for_int(i, _optim_vsplit_vt_iter) _sphmap[v] = optimize(v, someface);
     for_int(i, nei_iter) {
-      for (const auto [vv, ff] : _pmi.ccw_vertices(v, someface)) _sphmap[vv] = optimize_vertex(vv, ff);
-      _sphmap[v] = optimize_vertex(v, someface);
+      for (const auto [vv, ff] : _pmi.ccw_vertices(v, someface)) _sphmap[vv] = optimize(vv, ff);
+      _sphmap[v] = optimize(v, someface);
     }
   }
 
+  // Call func(vv) for each vertex vv within distance 2 of vertex v (with repetitions).
+  void for_vertices_within_2_rings(int v, int someface, const auto& func) const {
+    func(v);
+    for (const auto [vv, ff] : _pmi.ccw_vertices(v, someface)) {
+      func(vv);
+      for (const auto [vvv, unused_fff] : _pmi.ccw_vertices(vv, ff)) func(vvv);
+    }
+  }
+
+  // A vertex split whose optimization (of its new vertex vt and the neighbors of vt) is deferred, so that the
+  // optimizations of consecutive vertex splits whose neighborhoods are disjoint can run in parallel.  The
+  // optimization of vt reads the positions of the vertices within distance 2 of vt and writes those within distance
+  // 1, so the results are identical to those of the sequential optimizations if the vertex splits have disjoint
+  // 2-rings.  Each one gets in advance the random numbers and the stretch scaling (which depends on the surface
+  // area, updated by each vertex split) that it would have used sequentially.
+  struct PendingVsplit {
+    int vs, vt, vl, vr, fnew;
+    int nei_iter;
+    StretchScaling scaling;
+    int random_index;  // The index of its first random number in _pending_randoms.
+  };
+  Array<PendingVsplit> _pending_vsplits;
+  Array<float> _pending_randoms;
+  Array<int> _vertex_claim;  // Equal to _claim_generation for the vertices in the 2-rings of the pending vsplits.
+  int _claim_generation{1};
+
+  // Perform the pending optimizations in parallel, and report the vertex splits to the visualizer in order.
+  void complete_pending_vsplits() {
+    if (_pending_vsplits.empty()) return;
+    HH_STIMER("_optimize_vsplit_batch");
+    parallel_for({.cycles_per_elem = 200'000}, range(_pending_vsplits.num()), [&](int i) {
+      const PendingVsplit& pv = _pending_vsplits[i];
+      optimize_vertex_split(pv.vt, pv.fnew, pv.nei_iter, pv.scaling, _pending_randoms.data() + pv.random_index);
+    });
+    for (const PendingVsplit& pv : _pending_vsplits) update_visualizer_vsplit(pv.vs, pv.vt, pv.vl, pv.vr, pv.fnew);
+    _pending_vsplits.init(0);
+    _pending_randoms.init(0);
+    _claim_generation++;
+  }
+
+  // Perform the next vertex split and place its new vertex, deferring its optimization; return false if none remain.
   bool apply_vsplit() {
     const Vsplit* vspl = _pmi.rstream().peek_next_vsplit();
     if (!vspl) return false;
+    while (_vertex_claim.num() <= _pmi._vertices.num()) _vertex_claim.push(0);
     int vs;
     {
       // (This code also works for the rare case when vspl->vlr_offset1 == 0.)
@@ -525,6 +576,12 @@ class SphereMapper::Implementation {
       const int vs_index = (vspl->code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
       const int wlclw = _pmi._faces[flclw].wedges[vs_index];
       vs = _pmi._wedges[wlclw].vertex;
+      // The vertex split changes the mesh within distance 2 of vs (whose 1-ring contains that of vt), so if this
+      // region meets the 2-ring of a pending vertex split, that one must first be completed.
+      bool conflict = false;
+      for_vertices_within_2_rings(vs, flclw,
+                                  [&](int v) { conflict = conflict || _vertex_claim[v] == _claim_generation; });
+      if (conflict) complete_pending_vsplits();
       for (const int f : _pmi.ccw_faces(vs, flclw)) _surface_area -= sqrt(area2(_pmi.face_points(f)));
     }
     assertx(_pmi.next());  // Perform the vertex split.
@@ -539,8 +596,15 @@ class SphereMapper::Implementation {
       for (const int f : _pmi.ccw_faces(v, fnew))
         if (!(v == vt && (f == fl || f == fr)))  // Avoid double-counting the shared faces fl and/or fr.
           _surface_area += sqrt(area2(_pmi.face_points(f)));
-    optimize_vertex_split(vt, fnew);
-    update_visualizer_vsplit(vs, vt, vl, vr, fnew);
+    const int nei_iter = place_vertex_split(vt, fnew);
+    int valence = 0;
+    for (const auto [vv, unused_ff] : _pmi.ccw_vertices(vt, fnew)) dummy_use(vv), valence++;
+    const int num_randoms = 2 * (_optim_vsplit_vt_iter + nei_iter * (valence + 1));
+    const int random_index = _pending_randoms.num();
+    for_int(i, num_randoms) _pending_randoms.push(Random::G.unif());
+    _pending_vsplits.push(PendingVsplit{vs, vt, vl, vr, fnew, nei_iter, stretch_scaling(), random_index});
+    while (_vertex_claim.num() <= vt) _vertex_claim.push(0);
+    for_vertices_within_2_rings(vt, fnew, [&](int v) { _vertex_claim[v] = _claim_generation; });
     return true;
   }
 
@@ -578,7 +642,7 @@ class SphereMapper::Implementation {
         // vertices; for fewer, the overhead of waking the thread pool in each update iteration exceeds the benefit.
         parallel_for({.cycles_per_elem = 3'000}, range(num_active), [&](int i) {
           const int v = active_vertices[i];
-          ar_sph[v] = optimize_vertex_rand(v, someface[v], ar_random[v, 0], ar_random[v, 1]);
+          ar_sph[v] = optimize_vertex_rand(v, someface[v], ar_random[v, 0], ar_random[v, 1], _scaling);
           ar_displacement[v] += dist(ar_sph[v], _sphmap[v]);
         });
 
@@ -629,6 +693,7 @@ class SphereMapper::Implementation {
       cprogress.update(float(nv - orig_nv) / (target_nv - orig_nv));
       if (nv >= nv_next_optimize_all) {
         if (_options.verbose >= 2) cprogress.clear();
+        complete_pending_vsplits();
         optimize_all();
         // Extra optimization at coarse resolution was needed to reliably create domains/tetra_eg*.uv.sphparam.m .
         // It also proved useful to overcome intermittent failure in lucy model (increased from 100 to 1000).
@@ -637,6 +702,7 @@ class SphereMapper::Implementation {
         nv_next_optimize_all = int(nv * nv_ratio + 0.5f);
       }
     }
+    complete_pending_vsplits();
     if (_options.verbose >= 2) cprogress.clear();
     if (_options.verbose >= 2) std::cerr << "finest_" << std::flush;
 
@@ -651,17 +717,20 @@ class SphereMapper::Implementation {
     }
   }
 
-  void set_stretch_scaling() {
+  [[nodiscard]] StretchScaling stretch_scaling() const {
     // Surface area is introduced here to induce a scale-invariant weighting of the conformal_weight term.
-    _stretch_scaling1 = Precision(.5 / _surface_area * (2 * D_TAU) * .5);
-    _stretch_scaling2 = Precision(_conformal_weight * std::pow(1.f / (2 * D_TAU) * _surface_area, 3.) * .5);
-    _stretch_scaling3 = Precision(.5 / (2 * D_TAU) * _surface_area);
+    return {Precision(.5 / _surface_area * (2 * D_TAU) * .5),
+            Precision(_conformal_weight * std::pow(1.f / (2 * D_TAU) * _surface_area, 3.) * .5),
+            Precision(.5 / (2 * D_TAU) * _surface_area)};
   }
+
+  void set_stretch_scaling() { _scaling = stretch_scaling(); }
 
   // Measure the squared stretch from the spherical domain "d" to the surface mesh "s".
   [[nodiscard]] Precision naive_stretch(const Vec3<Precision>& pd0, const Vec3<Precision>& pd1,
                                         const Vec3<Precision>& pd2, const Vec3<Precision>& ps0,
-                                        const Vec3<Precision>& ps1, const Vec3<Precision>& ps2) const {
+                                        const Vec3<Precision>& ps1, const Vec3<Precision>& ps2,
+                                        const StretchScaling& scaling) const {
     // Determine a local frame on the spherical domain triangle.
     const Vec3<Precision> d_e01 = pd1 - pd0, d_e02 = pd2 - pd0;
     // Compute triangle coordinates in a canonical isometric frame: (0, 0), (d_x1, 0), (d_x2, d_y2).
@@ -685,14 +754,14 @@ class SphereMapper::Implementation {
     //  gamma2 = ( (a + c) \pm sqrt(square(a - c) + 4 * b * b) ) / (2 * det), with det = a * c - b * b.
     //  L2 stretch^2 = mean(gamma2) = (a + c ) / (2 * det).
 
-    Precision stretch = (a + c) * _stretch_scaling1;  // * .5f / _surface_area * (2 * D_TAU).
+    Precision stretch = (a + c) * scaling.s1;  // * .5f / _surface_area * (2 * D_TAU).
     if (1 || _conformal_weight) {
       // Anti-cruft : power 6 of the inverse L^infinity stretch.
       // Formula for \Gamma^2 on M^-1, as described in SIGGRAPH 2003 paper:
       // const Precision inv_gamma2 = ((a + c) + sqrt(square(a - c) + 4 * b * b)) / (2 * (a * c - b * b));
       // Simpler approximation that behaves even better:
       const Precision inv_gamma2 = 1.f / min(a, c);
-      stretch += inv_gamma2 * inv_gamma2 * inv_gamma2 * _stretch_scaling2;
+      stretch += inv_gamma2 * inv_gamma2 * inv_gamma2 * scaling.s2;
     }
     return stretch * s_area;
   }
@@ -700,7 +769,8 @@ class SphereMapper::Implementation {
   // Measure the squared stretch from the surface mesh "s" to the spherical domain "d".
   [[nodiscard]] Precision naive_inverse_stretch(const Vec3<Precision>& pd0, const Vec3<Precision>& pd1,
                                                 const Vec3<Precision>& pd2, const Vec3<Precision>& ps0,
-                                                const Vec3<Precision>& ps1, const Vec3<Precision>& ps2) const {
+                                                const Vec3<Precision>& ps1, const Vec3<Precision>& ps2,
+                                                const StretchScaling& scaling) const {
     // Determine a local frame on the surface mesh triangle.
     const Vec3<Precision> s_e01 = ps1 - ps0, s_e02 = ps2 - ps0;
     const Precision s_x1 = mag(s_e01), recip_s_x1 = 1.f / (s_x1 + 1e-20f);
@@ -715,15 +785,18 @@ class SphereMapper::Implementation {
     const Precision c = mag2(dfdt);
     // const Precision b = dot(dfds, dfdt);
 
-    const Precision stretch = (a + c) * _stretch_scaling3;  // * .5f / (2 * D_TAU) * _surface_area.
+    const Precision stretch = (a + c) * scaling.s3;  // * .5f / (2 * D_TAU) * _surface_area.
     const Precision d_area = spherical_triangle_area(pd0, pd1, pd2);
     return stretch * d_area;
   }
 
   // Measure the squared stretch from the spherical domain "d" to the surface mesh "s".
   [[nodiscard]] Precision accurate_stretch_for_spherical_triangle(const Vec3<Vec3<Precision>>& pd,
-                                                                  const Vec3<Vec3<Precision>>& ps) const {
-    if (0) return naive_stretch(pd[0], pd[1], pd[2], ps[0], ps[1], ps[2]);  // "-no_perp_split" -> accordion effect.
+                                                                  const Vec3<Vec3<Precision>>& ps,
+                                                                  const StretchScaling& scaling) const {
+    if (0)
+      return naive_stretch(pd[0], pd[1], pd[2], ps[0], ps[1], ps[2],
+                           scaling);  // "-no_perp_split" -> accordion effect.
     // Split the triangle to avoid the "accordion" effect (sliver spherical triangles not being penalized
     // because the area of the corresponding subtended linear triangle does not go to zero as it rotates).
     const Vec3<Precision> elen(mag2(pd[1] - pd[2]), mag2(pd[2] - pd[0]), mag2(pd[0] - pd[1]));
@@ -745,11 +818,11 @@ class SphereMapper::Implementation {
     const Vec3<Precision> perp_s = ps[j] * tkj + ps[k] * (1.f - tkj);  // interp(ps[j], ps[k], float(tkj));
     Precision stretch1, stretch2;
     if (_options.optimize_inverse) {
-      stretch1 = naive_inverse_stretch(perp_d, pd[i], pd[j], perp_s, ps[i], ps[j]);
-      stretch2 = naive_inverse_stretch(perp_d, pd[k], pd[i], perp_s, ps[k], ps[i]);
+      stretch1 = naive_inverse_stretch(perp_d, pd[i], pd[j], perp_s, ps[i], ps[j], scaling);
+      stretch2 = naive_inverse_stretch(perp_d, pd[k], pd[i], perp_s, ps[k], ps[i], scaling);
     } else {
-      stretch1 = naive_stretch(perp_d, pd[i], pd[j], perp_s, ps[i], ps[j]);
-      stretch2 = naive_stretch(perp_d, pd[k], pd[i], perp_s, ps[k], ps[i]);
+      stretch1 = naive_stretch(perp_d, pd[i], pd[j], perp_s, ps[i], ps[j], scaling);
+      stretch2 = naive_stretch(perp_d, pd[k], pd[i], perp_s, ps[k], ps[i], scaling);
     }
     Precision total_stretch = stretch1 + stretch2;
     if (!std::isfinite(total_stretch)) {
@@ -770,7 +843,7 @@ class SphereMapper::Implementation {
     const Vec3<int> vertices = _pmi.face_vertices(f);
     const auto pd = transformed(vertices, [&](int v) { return convert<Precision>(_sphmap[v]); });
     const auto ps = transformed(_pmi.face_points(f), [&](const Point& p) { return convert<Precision>(p); });
-    return accurate_stretch_for_spherical_triangle(pd, ps);
+    return accurate_stretch_for_spherical_triangle(pd, ps, _scaling);
   }
 
   // *** Visualizer
@@ -826,7 +899,7 @@ class SphereMapper::Implementation {
     const string sinfo = string(" {normal=") + csform_vec(str, normal) + "}";
     update_visualizer_vertex_position(os, vt, sinfo.c_str());
     for (const auto [vv, unused_ff] : _pmi.ccw_vertices(vt, fnew)) update_visualizer_vertex_position(os, vv, "");
-    const int nf = _pmi._faces.num();
+    const int nf = fnew + 1;  // The number of faces just after this vertex split (even if reported later).
     const int nsplits_threshold = max(1, int((nf - 1000) * .03f));
     if (++_visualizer_nsplits_since_end_frame >= nsplits_threshold) {
       // Some alternative speedups as the mesh becomes fine would be to:

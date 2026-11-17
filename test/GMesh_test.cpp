@@ -4,6 +4,7 @@
 #include <sstream>  // std::istringstream, std::ostringstream
 
 #include "libHh/FileIO.h"
+#include "libHh/StringOp.h"  // replace_all()
 using namespace hh;
 
 namespace {
@@ -275,6 +276,45 @@ void test_more_operations() {
   }
 }
 
+void test_obj() {
+  // A Wavefront OBJ file is recognized by its first line that is neither blank nor a comment.
+  const string str =
+      "# An OBJ file\n"
+      "\n"
+      "mtllib some.mtl\n"
+      "v 0 0 0 1 0 0\n"
+      "v 1 0 0 0 1 0\n"
+      "v 1 1 0 0 0 1\n"
+      "v 0 1 0 0.5 0.5 0.5\n"
+      "v 2 0 0 1 1 1\n"
+      "vt 0 0\n"
+      "vt 1 0\n"
+      "vt 1 1\n"
+      "vn 0 0 1\n"
+      "g part one\n"
+      "usemtl red\n"
+      "s 1\n"
+      "f 1/1 2/2 3/3 4/1\n"
+      "s 2\n"
+      "usemtl blue\n"
+      "f -4//1 -1//1 -3//1\n"
+      "s off\n"
+      "g\n"
+      "f 1 4 5\n";
+  for (const bool with_normals : {true, false}) {
+    // Without normals, the edges between faces of different smoothing groups (or with smoothing off) are sharp.
+    string str2 = str;
+    if (!with_normals) {
+      str2 = replace_all(str2, "vn 0 0 1\n", "");
+      str2 = replace_all(str2, "//1", "");
+    }
+    const GMesh mesh = mesh_from_string(str2);
+    std::ostringstream oss;
+    mesh.write(oss);
+    showf("%s", oss.str().c_str());
+  }
+}
+
 }  // namespace
 
 int main() {
@@ -334,4 +374,5 @@ int main() {
   test_strings();
   test_operations();
   test_more_operations();
+  test_obj();
 }

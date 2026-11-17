@@ -673,6 +673,13 @@ followed by trailing elements (which other PLY readers can ignore) that identify
 header lines), and any other per-wedge attributes (`wedge_<key>`); reading it reproduces the mesh of
 `FilterPM -outmesh`.
 
+### Wavefront OBJ (`*.obj`)
+
+The programs that read a mesh also accept a Wavefront `*.obj` file (possibly `*.gz`), recognized by its first line
+that is neither blank nor a comment.  The result matches that of `bin/obj_to_mesh` (`uv`, `normal`, and `rgb` on
+vertices or corners, `mat` and `groups` on faces, and sharp edges between smoothing groups when the file has no
+normals), except that the material colors of an `mtllib` file are not read.
+
 ### Geometry stream (`*.a3d`, `*.pts`)
 
 See the documentation at the end of [`libHh/A3dStream.h`](../libHh/A3dStream.h).

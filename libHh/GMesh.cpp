@@ -3,10 +3,12 @@
 
 #include <cctype>   // isalnum()
 #include <cstring>  // strncmp(), strlen(), memmove(), etc.
+#include <sstream>  // std::istringstream
 
 #include "libHh/A3dStream.h"
 #include "libHh/Array.h"
 #include "libHh/LineWriter.h"
+#include "libHh/Map.h"
 #include "libHh/Ply.h"
 #include "libHh/Polygon.h"
 #include "libHh/Set.h"
@@ -351,13 +353,224 @@ void GMesh::update_string(Corner c, const char* key, const char* val) { update_s
 
 // I/O
 
+namespace {
+
+// Returns true if the line (the first one that is neither blank nor a comment) belongs to a Wavefront OBJ file
+// rather than a mesh file.
+bool is_obj_line(std::string_view line) {
+  if (line.starts_with("#MRGB ")) return true;  // ZBrush vertex colors, which precede the vertices.
+  const size_t end = line.find_first_of(" \t");
+  const std::string_view token = line.substr(0, end);
+  if (token == "o") {  // Unless it is the object line "o 1 1 0" of an a3d/mesh stream.
+    std::istringstream iss{string(line.substr(1))};
+    int i1, i2, i3;
+    string rest;
+    if (iss >> i1 >> i2 >> i3 && !(iss >> rest)) return false;
+  }
+  for (const char* keyword : {"v", "vt", "vn", "vp", "f", "l", "g", "s", "o", "usemtl", "mtllib"})
+    if (token == keyword) return true;
+  return false;
+}
+
+// Skips whitespace and returns true if a value follows.
+bool more_values(const char*& s) {
+  while (*s == ' ' || *s == '\t' || *s == '\r') s++;
+  return *s != '\0';
+}
+
+}  // namespace
+
 void GMesh::read(std::istream& is) {
   if (is.peek() == 'p') {  // A mesh file never starts with 'p', whereas a PLY file starts with the line "ply".
     read_ply(hh::read_ply(is));
   } else {
-    for (string line; my_getline(is, line);) read_line(line.data());
+    bool seen_data = false;
+    for (string line; my_getline(is, line);) {
+      if (!seen_data) {
+        const size_t i = line.find_first_not_of(" \t\r");
+        if (i == string::npos || (line[i] == '#' && !line.starts_with("#MRGB "))) continue;
+        seen_data = true;
+        if (is_obj_line(line)) {
+          read_obj(is, line);
+          break;
+        }
+      }
+      read_line(line.data());
+    }
   }
   if (debug() >= 1) ok();
+}
+
+void GMesh::read_obj(std::istream& is, const string& first_line) {
+  assertx(empty());
+  constexpr int k_no_smoothing = 0, k_default_smoothing = 1;  // Smoothing is "on" by default.
+  Map<string, int> smoothing_ids;
+  smoothing_ids.enter("off", k_no_smoothing);
+  smoothing_ids.enter("1", k_default_smoothing);
+  int smoothing = k_default_smoothing;
+  string groups = "default", material = "nomaterial";
+  Map<string, int> material_counts;
+  Array<Point> ar_p;
+  Array<Uv> ar_vt;
+  Array<Vector> ar_vn;
+  Array<Vector> ar_vrgb;
+  Array<int> face_smoothing;  // Indexed by face id - 1.
+  int num_created_vertices = 0, num_illegal = 0, num_lines = 0, num_ignored = 0;
+  string str;
+  Array<Vertex> va;
+  Array<Vec3<int>> corners;  // For each face vertex, the 1-based indices of v, vt (or 0), and vn (or 0).
+  const auto fix_index = [&](int i, int n, const string& line) {
+    if (i < 0) i = n + 1 + i;  // A negative index is relative to the end.
+    if (i < 1 || i > n) assertnever("obj: index out of range in line '" + line + "'");
+    return i;
+  };
+  const auto process = [&](const string& line) {
+    const char* s0 = line.c_str();
+    if (const char* s = after_prefix(s0, "v ")) {
+      Point p;
+      for_int(c, 3) p[c] = float_from_chars(s);
+      ar_p.push(p);
+      if (!more_values(s)) return;
+      if (*s == '#') {  // The color format of Phil Dench's ply2obj: "#rrggbb".
+        s++;
+        Vector rgb;
+        for_int(c, 3) {
+          const string hex = string(s, 6).substr(size_t{2} * c, 2);
+          rgb[c] = float(std::stoi(hex, nullptr, 16)) / 255.f;
+        }
+        ar_vrgb.push(rgb);
+        return;
+      }
+      Array<float> values;
+      while (more_values(s)) values.push(float_from_chars(s));
+      if (values.num() == 3 || values.num() == 4) {  // Colors "r g b", possibly after the weight w.
+        ar_vrgb.push(Vector(values[values.num() - 3], values[values.num() - 2], values[values.num() - 1]));
+      } else if (values.num() != 1) {  // A lone value is the weight w, which is ignored.
+        assertnever("obj: cannot parse line '" + line + "'");
+      }
+    } else if (const char* svt = after_prefix(s0, "vt ")) {
+      Uv uv;
+      for_int(c, 2) uv[c] = float_from_chars(svt);  // An optional third coordinate is ignored.
+      ar_vt.push(uv);
+    } else if (const char* svn = after_prefix(s0, "vn ")) {
+      Vector nor;
+      for_int(c, 3) nor[c] = float_from_chars(svn);
+      ar_vn.push(nor);
+    } else if (const char* sf = after_prefix(s0, "f ")) {
+      // Create the vertices defined so far, with any attributes that are given per vertex.
+      for (; num_created_vertices < ar_p.num(); num_created_vertices++) {
+        const int i = num_created_vertices;
+        Vertex v = create_vertex();
+        set_point(v, ar_p[i]);
+        string sinfo;
+        if (ar_vt.num() == ar_p.num()) sinfo += sform(" uv=%s", csform_vec(str, ar_vt[i]));
+        if (ar_vn.num() == ar_p.num()) sinfo += sform(" normal=%s", csform_vec(str, ar_vn[i]));
+        if (ar_vrgb.num() == ar_p.num()) sinfo += sform(" rgb=%s", csform_vec(str, ar_vrgb[i]));
+        if (sinfo != "") set_string(v, sinfo.c_str() + 1);
+      }
+      corners.init(0);
+      while (more_values(sf)) {
+        Vec3<int> corner{0, 0, 0};
+        corner[0] = fix_index(int_from_chars(sf), ar_p.num(), line);
+        if (*sf == '/') {
+          sf++;
+          if (*sf != '/' && *sf != ' ' && *sf != '\t' && *sf)
+            corner[1] = fix_index(int_from_chars(sf), ar_vt.num(), line);
+          if (*sf == '/') {
+            sf++;
+            if (*sf != ' ' && *sf != '\t' && *sf) corner[2] = fix_index(int_from_chars(sf), ar_vn.num(), line);
+          }
+        }
+        corners.push(corner);
+      }
+      const int fid = face_smoothing.num() + 1;  // Faces are numbered as in bin/obj_to_mesh.
+      face_smoothing.push(smoothing);
+      material_counts[material]++;
+      va.init(0);
+      for (const Vec3<int>& corner : corners) va.push(id_vertex(corner[0]));
+      if (va.num() < 3 || !legal_create_face(va)) {
+        num_illegal++;
+        return;
+      }
+      Face f = create_face_private(fid, va);
+      set_string(f, sform(R"(mat="%s" groups="%s")", material.c_str(), groups.c_str()).c_str());
+      for_int(j, corners.num()) {
+        const Vec3<int>& corner = corners[j];
+        string sinfo;
+        if (corner[1]) {
+          if (ar_vt.num() != ar_p.num()) {
+            sinfo += sform(" uv=%s", csform_vec(str, ar_vt[corner[1] - 1]));
+          } else if (corner[1] != corner[0]) {
+            assertnever("obj: per-vertex texture coordinate index differs in line '" + line + "'");
+          }
+        }
+        if (corner[2]) {
+          if (ar_vn.num() != ar_p.num()) {
+            sinfo += sform(" normal=%s", csform_vec(str, ar_vn[corner[2] - 1]));
+          } else if (corner[2] != corner[0]) {
+            assertnever("obj: per-vertex normal index differs in line '" + line + "'");
+          }
+        }
+        if (sinfo != "") set_string(this->corner(va[j], f), sinfo.c_str() + 1);
+      }
+    } else if (line == "s" || line.starts_with("s ")) {
+      string name = line.size() > 2 ? line.substr(2) : "1";
+      while (!name.empty() && (name.back() == ' ' || name.back() == '\t' || name.back() == '\r')) name.pop_back();
+      if (name == "" || name == "0") name = name == "0" ? "off" : "1";
+      bool is_new;
+      int& id = smoothing_ids.enter(name, smoothing_ids.num(), is_new);
+      smoothing = id;
+    } else if (line == "g" || line.starts_with("g ")) {
+      groups = line.size() > 2 ? line.substr(2) : "default";
+      while (!groups.empty() && (groups.back() == ' ' || groups.back() == '\r')) groups.pop_back();
+      if (groups == "") groups = "default";
+    } else if (const char* smtl = after_prefix(s0, "usemtl ")) {
+      material = smtl;
+      while (!material.empty() && (material.back() == ' ' || material.back() == '\r')) material.pop_back();
+    } else if (const char* smrgb = after_prefix(s0, "#MRGB ")) {  // ZBrush colors: MMRRGGBB per vertex (MM is a mask).
+      for (; std::isxdigit(static_cast<unsigned char>(smrgb[0])) && strlen(smrgb) >= 8; smrgb += 8) {
+        Vector rgb;
+        for_int(c, 3) rgb[c] = float(std::stoi(string(smrgb + 2, 6).substr(size_t{2} * c, 2), nullptr, 16)) / 255.f;
+        ar_vrgb.push(rgb);
+      }
+    } else {
+      const size_t i = line.find_first_not_of(" \t\r");
+      if (i == string::npos || line[i] == '#') return;  // A blank line or a comment.
+      if (recognize_line(line)) assertnever("obj: unexpected mesh line '" + line + "'");
+      // Lines "mtllib" (whose material colors are not read), "o", "l", "vp", etc. are ignored.
+      num_ignored++;
+    }
+  };
+  process(first_line);
+  for (string line; my_getline(is, line);) {
+    process(line);
+    num_lines++;
+  }
+  dummy_use(num_lines);
+  showdf("obj: vertices v=%d vt=%d vn=%d vrgb=%d, faces=%d\n", ar_p.num(), ar_vt.num(), ar_vn.num(), ar_vrgb.num(),
+         face_smoothing.num());
+  if (num_ignored) showdf("obj: ignored %d lines (e.g., mtllib, o, l)\n", num_ignored);
+  if (num_illegal) {
+    Warning("obj: skipping illegal faces");
+    showdf("(obj: skipped %d illegal faces)\n", num_illegal);
+  }
+  Array<string> material_names(material_counts.keys());
+  sort(material_names);  // (The Map order is unspecified.)
+  for (const string& mat : material_names) showdf("obj: material \"%s\" %d\n", mat.c_str(), material_counts.get(mat));
+  // Without normals, the edges between faces of different smoothing groups (or with smoothing off) are sharp.
+  if (ar_vn.empty() && ranges::any_of(face_smoothing, [](int sg) { return sg != k_default_smoothing; })) {
+    int num_sharp = 0;
+    for (Edge e : edges()) {
+      Face f1 = face1(e), f2 = face2(e);
+      if (!f2) continue;
+      const int sg1 = face_smoothing[face_id(f1) - 1], sg2 = face_smoothing[face_id(f2) - 1];
+      if (sg1 != k_no_smoothing && sg1 == sg2) continue;
+      update_string(e, "sharp", "");
+      flags(e).flag(eflag_sharp) = true;
+      num_sharp++;
+    }
+    showdf("obj: %d sharp edges\n", num_sharp);
+  }
 }
 
 void GMesh::read_ply(const PlyMesh& ply) {

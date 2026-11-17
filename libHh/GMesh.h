@@ -105,7 +105,8 @@ class GMesh : public Mesh {
   static void update_string_ptr(unique_ptr<char[]>& ss, const char* key, const char* val);
 
   // ** Standard I/O for my meshes (see format below):
-  // Read a whole mesh, discarding comments; the stream may instead contain a PLY file (detected by its first line).
+  // Read a whole mesh, discarding comments; the stream may instead contain a PLY file (detected by its first line) or
+  // a Wavefront OBJ file (detected by its first line that is neither blank nor a comment).
   void read(std::istream& is);
   void read_line(char* s);  // No '\n' required.
   // Add a mesh read from a PLY file to the empty mesh.  Each mesh vertex (identified by the trailing element
@@ -114,6 +115,12 @@ class GMesh : public Mesh {
   // the 8-bit color (as rgb), the uv, the per-wedge keys of the elements "wedge_<key>", and the wedge id (wid, only
   // with "wedge_vertex").  Each face string is the string of its material.
   void read_ply(const PlyMesh& ply);
+  // Add a mesh read from a Wavefront OBJ file to the empty mesh, as bin/obj_to_mesh does, given its first line that
+  // is neither blank nor a comment.  Vertices get the strings uv, normal, and rgb (from "v x y z r g b", "v x y z
+  // #rrggbb", or ZBrush "#MRGB" lines) if those are given per vertex, else corners get uv and normal; faces get
+  // mat="<usemtl>" and groups="<g>"; without normals, the edges between smoothing groups are sharp.  Unlike
+  // bin/obj_to_mesh, the material colors (from mtllib) are not read.
+  void read_obj(std::istream& is, const string& first_line);
   [[nodiscard]] static bool recognize_line(std::string_view line);
   void write(std::ostream& os) const;
   void write(WA3dStream& oa3d, const A3dVertexColor& col) const;

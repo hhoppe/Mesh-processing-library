@@ -85,7 +85,7 @@ CGridView<D, T>             (const elements)
 
 - `Mesh`: vertices, faces, and edges of a polygon mesh, with their topological relations.
 - `GMesh`: geometric mesh (hence the "G"), a `Mesh` with a `Point` at each vertex and string attributes on its
-  elements; it reads a `*.m` or `*.ply` file.
+  elements; it reads a `*.m`, `*.ply`, or `*.obj` file.
 - `MeshSearch`: spatial index over a `GMesh`, for closest-point queries.
 - `SubMesh`: subdivides a `GMesh`, maintaining the relationship between the subdivided mesh and the base mesh.
 - `PMesh`: progressive mesh, a base mesh (`AWMesh`) with a sequence of `Vsplit` records; `PMeshIter` traverses its

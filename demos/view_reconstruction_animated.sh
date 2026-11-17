@@ -49,5 +49,5 @@ next() { local duration="$1" keys="${2-u<C-n>}"; echo wait "$duration"; echo o 1
     cat "$out.sub2limit.m";                      echo keys DmDe
   } >"$rest"
   cat "$rest"
-) | G3dOGL -st "$s3d" -backcolor hhblue -key oJ---- -key DmDeDbDC -terse -sync $G3D_GEOM $G3D_ARGS \
+) | G3dOGL -st "$s3d" -theme dark -key oJ---- -key DmDeDbDC -terse -sync $G3D_GEOM $G3D_ARGS \
   || allow_sigpipe

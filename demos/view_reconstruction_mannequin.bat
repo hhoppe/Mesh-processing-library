@@ -12,4 +12,4 @@ set r=mannequin
 
 call g3d_cmp -win1 "-key o--J" -win5 "-key DmDe" ^
              data/%r%.pts results/%r%.recon.m results/%r%.opt.m results/%r%.sub0.m results/%r%.sub2limit.m ^
-             -st data/%r%.s3d -backcolor hhblue -key DmDeDb %G3D_ARGS%
+             -st data/%r%.s3d -key DmDeDb %G3D_ARGS%

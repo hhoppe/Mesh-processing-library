@@ -45,5 +45,5 @@ set IGNORE_DOS_EOL=1
   type results\%r%.sub2limit.m &                      (echo keys DmDe)
 ) >%stream%
 
-G3dOGL -st data/%r%.s3d -backcolor hhblue -key oJ---- -key DmDeDbDC -terse -sync %G3D_GEOM% %G3D_ARGS% <%stream%
+G3dOGL -st data/%r%.s3d -theme dark -key oJ---- -key DmDeDbDC -terse -sync %G3D_GEOM% %G3D_ARGS% <%stream%
 del "%stream%"

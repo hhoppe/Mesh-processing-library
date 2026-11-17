@@ -4,6 +4,7 @@
 #include <cmath>    // std::isnan()
 #include <sstream>  // std::istringstream, std::ostringstream
 
+#include "libHh/GMesh.h"
 #include "libHh/PMesh.h"
 using namespace hh;
 
@@ -63,7 +64,7 @@ void test_round_trip() {
   mesh.face_matids = {0, 2, 1};
   mesh.materials = {"matid=0", "matid=1 rgb=(0.5 0.25 0.125)", ""};
   const float nan = std::numeric_limits<float>::quiet_NaN();
-  mesh.wedge_keys.push(PlyMesh::WedgeKey{"Ouv", 2, {0.f, 0.f, 0.5f, nan, nan, nan, 1.f, 1.f, 0.25f, 0.75f}});
+  mesh.wedge_keys.push(PlyMesh::WedgeKey{"Ouv", 2, {0.f, 0.f, 0.5f, 0.125f, nan, nan, 1.f, 1.f, 0.25f, 0.75f}});
   mesh.wedge_keys.push(PlyMesh::WedgeKey{"global", 0, {1.f, 0.f, 0.f, 1.f, 0.f}});
   mesh.comments = {"Created by Ply_test", ""};
   show_summary(mesh);
@@ -88,6 +89,13 @@ void test_round_trip() {
     std::ostringstream oss;
     write_ply(oss, mesh, false);
     showf("%s", oss.str().c_str());
+    // Read the PLY file as a GMesh, whose vertex 1 (with two wedges) gets corner strings.
+    std::istringstream iss(oss.str());
+    GMesh gmesh;
+    gmesh.read(iss);
+    std::ostringstream oss2;
+    gmesh.write(oss2);
+    showf("%s", oss2.str().c_str());
   }
 }
 

@@ -663,6 +663,16 @@ See the several `demos/data/*.m` files for examples of the mesh format.
 Note that the indices of vertices and faces start at 1 instead of 0;
 in hindsight that was a poor choice.
 
+### Stanford PLY (`*.ply`)
+
+The programs that read a mesh (e.g., `Filtermesh`, `MinCycles`, `SphereParam`) also accept a Stanford `*.ply` file
+(ASCII or binary, possibly `*.gz`), recognized by its first line.  Its vertex normals, colors, and uv become the
+attributes `normal`, `rgb`, and `uv`.  A PLY file written by `FilterPM -outply` has one PLY vertex per wedge,
+followed by trailing elements (which other PLY readers can ignore) that identify the mesh vertex of each wedge
+(`wedge_vertex`), the material of each face (`face_material`, with the material strings in `comment material`
+header lines), and any other per-wedge attributes (`wedge_<key>`); reading it reproduces the mesh of
+`FilterPM -outmesh`.
+
 ### Geometry stream (`*.a3d`, `*.pts`)
 
 See the documentation at the end of [`libHh/A3dStream.h`](../libHh/A3dStream.h).

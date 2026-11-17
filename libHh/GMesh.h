@@ -35,6 +35,8 @@ struct A3dVertexColor;
 // Corner data is currently not handled.
 
 // A Mesh with geometric structure (Point at each Vertex) and with strings at each mesh element.
+struct PlyMesh;
+
 class GMesh : public Mesh {
  public:
   GMesh() = default;
@@ -103,8 +105,15 @@ class GMesh : public Mesh {
   static void update_string_ptr(unique_ptr<char[]>& ss, const char* key, const char* val);
 
   // ** Standard I/O for my meshes (see format below):
-  void read(std::istream& is);  // Read a whole mesh, discarding comments.
-  void read_line(char* s);      // No '\n' required.
+  // Read a whole mesh, discarding comments; the stream may instead contain a PLY file (detected by its first line).
+  void read(std::istream& is);
+  void read_line(char* s);  // No '\n' required.
+  // Add a mesh read from a PLY file to the empty mesh.  Each mesh vertex (identified by the trailing element
+  // "wedge_vertex" if present) gets the attributes of its PLY vertices (wedges) as in WMesh::extract_gmesh(): in its
+  // vertex string if it has a single wedge, else in the strings of its corners.  These attributes are the normal,
+  // the 8-bit color (as rgb), the uv, the per-wedge keys of the elements "wedge_<key>", and the wedge id (wid, only
+  // with "wedge_vertex").  Each face string is the string of its material.
+  void read_ply(const PlyMesh& ply);
   [[nodiscard]] static bool recognize_line(std::string_view line);
   void write(std::ostream& os) const;
   void write(WA3dStream& oa3d, const A3dVertexColor& col) const;

@@ -7,6 +7,7 @@
 #include "libHh/A3dStream.h"
 #include "libHh/Array.h"
 #include "libHh/LineWriter.h"
+#include "libHh/Ply.h"
 #include "libHh/Polygon.h"
 #include "libHh/Set.h"
 
@@ -351,8 +352,116 @@ void GMesh::update_string(Corner c, const char* key, const char* val) { update_s
 // I/O
 
 void GMesh::read(std::istream& is) {
-  for (string line; my_getline(is, line);) read_line(line.data());
+  if (is.peek() == 'p') {  // A mesh file never starts with 'p', whereas a PLY file starts with the line "ply".
+    read_ply(hh::read_ply(is));
+  } else {
+    for (string line; my_getline(is, line);) read_line(line.data());
+  }
   if (debug() >= 1) ok();
+}
+
+void GMesh::read_ply(const PlyMesh& ply) {
+  assertx(empty());
+  for (const string& comment : ply.comments) showdf("ply comment:%s%s\n", comment == "" ? "" : " ", comment.c_str());
+  const int nw = ply.points.num();
+  const bool has_wid = ply.wedge_vertex.num() > 0;
+  const int nv = ply.num_mesh_vertices();
+  Array<int> num_wedges(nv, 0), first_wedge(nv, -1);
+  for_int(w, nw) {
+    const int v = has_wid ? ply.wedge_vertex[w] : w;
+    if (num_wedges[v]++ == 0) {
+      first_wedge[v] = w;
+    } else if (ply.points[w] != ply.points[first_wedge[v]]) {
+      assertnever(sform("ply: the wedges %d and %d of vertex %d have different positions", first_wedge[v], w, v));
+    }
+  }
+  for_int(v, nv) if (!num_wedges[v]) assertnever(sform("ply: vertex %d has no wedges", v));
+  // The attribute string of wedge w.
+  string str;
+  const auto wedge_string = [&](int w) -> const string& {
+    LineWriter lw;
+    const auto key = [&](const char* name) {
+      if (!lw.view().empty()) lw << ' ';
+      lw << name;
+    };
+    const auto vec = [&](const char* name, CArrayView<float> values) {
+      key(name);
+      lw << "=(";
+      for_int(c, values.num()) {
+        if (c) lw << ' ';
+        lw << values[c];
+      }
+      lw << ')';
+    };
+    if (has_wid) {
+      key("wid=");
+      lw << w + 1;
+    }
+    if (ply.normals.num()) vec("normal", ply.normals[w]);
+    if (ply.colors.num()) {
+      key(sform("rgb=(%.3f %.3f %.3f)", ply.colors[w][0] / 255.f, ply.colors[w][1] / 255.f, ply.colors[w][2] / 255.f)
+              .c_str());
+    }
+    if (ply.uvs.num()) vec("uv", ply.uvs[w]);
+    for (const PlyMesh::WedgeKey& wedge_key : ply.wedge_keys) {
+      if (wedge_key.dim == 0) {
+        if (wedge_key.values[w]) key(wedge_key.name.c_str());
+        continue;
+      }
+      const CArrayView<float> values = wedge_key.values.slice(w * wedge_key.dim, (w + 1) * wedge_key.dim);
+      if (ranges::all_of(values, [](float value) { return std::isnan(value); })) continue;  // An absent attribute.
+      if (wedge_key.dim == 1) {
+        key(wedge_key.name.c_str());
+        lw << '=' << values[0];
+      } else {
+        vec(wedge_key.name.c_str(), values);
+      }
+    }
+    str = lw.view();
+    return str;
+  };
+  for_int(v, nv) {
+    Vertex gv = create_vertex();
+    assertx(vertex_id(gv) == v + 1);
+    set_point(gv, ply.points[first_wedge[v]]);
+    if (num_wedges[v] == 1) {
+      const string& s = wedge_string(first_wedge[v]);
+      if (!s.empty()) {
+        set_string(gv, s.c_str());
+        if (string_has_key(s.c_str(), "cusp")) flags(gv).flag(vflag_cusp) = true;
+      }
+    }
+  }
+  Array<Vertex> va;
+  int num_illegal = 0;
+  for_int(f, ply.num_faces()) {
+    const CArrayView<int> wedges = ply.face(f);
+    va.init(0);
+    for (const int w : wedges) va.push(id_vertex((has_wid ? ply.wedge_vertex[w] : w) + 1));
+    if (va.num() < 3 || !legal_create_face(va)) {
+      num_illegal++;
+      continue;
+    }
+    Face gf = create_face_private(f + 1, va);
+    const int matid = ply.face_matid(f);
+    if (matid < ply.materials.num() && ply.materials[matid] != "") set_string(gf, ply.materials[matid].c_str());
+    for_int(j, wedges.num()) {
+      const int w = wedges[j];
+      Corner c = corner(va[j], gf);
+      if (num_wedges[vertex_id(va[j]) - 1] > 1) {
+        const string& s = wedge_string(w);
+        if (!s.empty()) set_string(c, s.c_str());
+      }
+      if (ply.corner_uvs.num()) {
+        string str2;
+        update_string(c, "uv", csform_vec(str2, ply.corner_uvs[ply.face_start[f] + j]));
+      }
+    }
+  }
+  if (num_illegal) {
+    Warning("ply: skipping illegal faces");
+    showdf("(ply: skipped %d illegal faces)\n", num_illegal);
+  }
 }
 
 // Get the string within the braces.  Note the side-effect on the argument `s_const`!

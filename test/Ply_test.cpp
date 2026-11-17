@@ -27,8 +27,8 @@ bool same_meshes(const PlyMesh& m1, const PlyMesh& m2) {
   }
   return m1.points == m2.points && m1.normals == m2.normals && m1.colors == m2.colors && m1.uvs == m2.uvs &&
          m1.face_vertices == m2.face_vertices && m1.face_start == m2.face_start && m1.corner_uvs == m2.corner_uvs &&
-         m1.wedge_vertex == m2.wedge_vertex && m1.face_matids == m2.face_matids && m1.materials == m2.materials &&
-         m1.comments == m2.comments;
+         m1.wedge_vertex == m2.wedge_vertex && m1.face_matids == m2.face_matids && m1.vertex_ids == m2.vertex_ids &&
+         m1.face_ids == m2.face_ids && m1.materials == m2.materials && m1.comments == m2.comments;
 }
 
 void show_summary(const PlyMesh& mesh) {
@@ -62,6 +62,8 @@ void test_round_trip() {
   mesh.face_start = {0, 3, 6, 10};
   mesh.wedge_vertex = {0, 1, 1, 2, 3};
   mesh.face_matids = {0, 2, 1};
+  mesh.vertex_ids = {1, 3, 4, 7};
+  mesh.face_ids = {2, 5, 9};
   mesh.materials = {"matid=0", "matid=1 rgb=(0.5 0.25 0.125)", ""};
   const float nan = std::numeric_limits<float>::quiet_NaN();
   mesh.wedge_keys.push(PlyMesh::WedgeKey{"Ouv", 2, {0.f, 0.f, 0.5f, 0.125f, nan, nan, 1.f, 1.f, 0.25f, 0.75f}});

@@ -17,6 +17,8 @@ namespace hh {
 // - "wedge_vertex" (property int "vertex"): the 0-based mesh vertex of each PLY vertex;
 // - "face_material" (property ushort "matid"): the material of each face, whose string is given by a header line
 //   "comment material <matid> <string>";
+// - "vertex_id" (property int "id", one per mesh vertex) and "face_id" (property int "id"): the 1-based ids of the
+//   mesh vertices and faces (as in a .m file), if these are not consecutive;
 // - "wedge_<key>" (properties float "c0", "c1", ...): the numeric vector value of attribute <key> of each PLY vertex,
 //   with NaN for an absent value; or (property uchar "flag"): whether each PLY vertex has the valueless attribute
 //   <key>.
@@ -36,6 +38,8 @@ struct PlyMesh {
   Array<Uv> corner_uvs;      // Parallel to face_vertices (face list "texcoord"), or empty.
   Array<int> wedge_vertex;   // Per vertex, its 0-based mesh vertex; empty if each PLY vertex is a mesh vertex.
   Array<int> face_matids;    // Per face, its material; empty if all faces have material 0.
+  Array<int> vertex_ids;     // Per mesh vertex, its 1-based id; empty if the ids are 1, 2, ....
+  Array<int> face_ids;       // Per face, its 1-based id; empty if the ids are 1, 2, ....
   Array<string> materials;   // Material strings, indexed by matid (possibly empty).
   Array<WedgeKey> wedge_keys;
   Array<string> comments;  // The header comments other than the materials (without the leading "comment ").

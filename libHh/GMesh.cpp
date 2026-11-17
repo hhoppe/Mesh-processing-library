@@ -550,6 +550,10 @@ PlyMesh GMesh::to_ply() const {
   if (!use_wids) {
     // Each vertex without corner strings has a single wedge; the corners of the other vertices are grouped by their
     // records.
+    Array<bool> has_corner_strings(nv, false);
+    for (Face f : fa)
+      for (Vertex v : vertices(f))
+        if (get_string(corner(v, f))) has_corner_strings[vertex_index.get(v)] = true;
     Array<int> vertex_wedge(nv, -1);
     Map<string, int> wedge_of_key;
     for_int(fi, fa.num()) {
@@ -559,7 +563,7 @@ PlyMesh GMesh::to_ply() const {
         const Corner c = corner(v, f);
         const int vi = vertex_index.get(v);
         const char* cstr = get_string(c);
-        if (!cstr) {
+        if (!has_corner_strings[vi]) {
           if (vertex_wedge[vi] < 0) {
             vertex_wedge[vi] = wedges.num();
             wedges.push(Wedge{vi, wedges.num(), Array<float>(vertex_records[vi])});
@@ -643,6 +647,11 @@ PlyMesh GMesh::to_ply() const {
     ply.wedge_vertex.init(nw);
     for_int(i, nw) ply.wedge_vertex[i] = wedges[order[i]].vertex;
   }
+  // The ids of the vertices and faces, unless they are consecutive.
+  if (!ranges::all_of(range(nv), [&](int i) { return vertex_id(va[i]) == i + 1; }))
+    ply.vertex_ids = transformed(va, [&](Vertex v) { return vertex_id(v); });
+  if (!ranges::all_of(range(fa.num()), [&](int i) { return face_id(fa[i]) == i + 1; }))
+    ply.face_ids = transformed(fa, [&](Face f) { return face_id(f); });
   // The faces and their materials.
   ply.face_vertices.init(corner_wedges.num());
   for_int(j, corner_wedges.num()) ply.face_vertices[j] = new_index[corner_wedges[j]];
@@ -949,9 +958,9 @@ void GMesh::read_ply(const PlyMesh& ply) {
     str = lw.view();
     return str;
   };
+  const auto mesh_vertex_id = [&](int v) { return ply.vertex_ids.num() ? ply.vertex_ids[v] : v + 1; };
   for_int(v, nv) {
-    Vertex gv = create_vertex();
-    assertx(vertex_id(gv) == v + 1);
+    Vertex gv = create_vertex_private(mesh_vertex_id(v));
     set_point(gv, ply.points[first_wedge[v]]);
     if (num_wedges[v] == 1) {
       const string& s = wedge_string(first_wedge[v]);
@@ -966,18 +975,18 @@ void GMesh::read_ply(const PlyMesh& ply) {
   for_int(f, ply.num_faces()) {
     const CArrayView<int> wedges = ply.face(f);
     va.init(0);
-    for (const int w : wedges) va.push(id_vertex((has_wid ? ply.wedge_vertex[w] : w) + 1));
+    for (const int w : wedges) va.push(id_vertex(mesh_vertex_id(has_wid ? ply.wedge_vertex[w] : w)));
     if (va.num() < 3 || !legal_create_face(va)) {
       num_illegal++;
       continue;
     }
-    Face gf = create_face_private(f + 1, va);
+    Face gf = create_face_private(ply.face_ids.num() ? ply.face_ids[f] : f + 1, va);
     const int matid = ply.face_matid(f);
     if (matid < ply.materials.num() && ply.materials[matid] != "") set_string(gf, ply.materials[matid].c_str());
     for_int(j, wedges.num()) {
       const int w = wedges[j];
       Corner c = corner(va[j], gf);
-      if (num_wedges[vertex_id(va[j]) - 1] > 1) {
+      if (num_wedges[has_wid ? ply.wedge_vertex[w] : w] > 1) {
         const string& s = wedge_string(w);
         if (!s.empty()) set_string(c, s.c_str());
       }

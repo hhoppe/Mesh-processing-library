@@ -608,6 +608,14 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
       read_scalar_element(reader, element, [&](int f, int, double value) {
         mesh.face_matids[f] = checked_index(value, 65536, "face matid");
       });
+    } else if ((element.name == "vertex_id" || element.name == "face_id") && element.properties.num() == 1 &&
+               element.properties[0].name == "id") {
+      Array<int>& ids = element.name == "vertex_id" ? mesh.vertex_ids : mesh.face_ids;
+      ids.init(element.count);
+      read_scalar_element(reader, element, [&](int k, int, double value) {
+        ids[k] = checked_index(value, std::numeric_limits<int>::max(), "id");
+        if (ids[k] == 0) assertnever("ply: an id is zero");
+      });
     } else if (element.name.starts_with("wedge_") && element.name.size() > 6 && wedge_key_dim(element) >= 0) {
       check_count(nv);
       const int dim = wedge_key_dim(element);
@@ -624,6 +632,10 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
   }
   if (mesh.face_matids.num() && mesh.face_matids.num() != mesh.num_faces())
     assertnever("ply: element face_material together with tristrips");
+  if (mesh.face_ids.num() && mesh.face_ids.num() != mesh.num_faces())
+    assertnever("ply: element face_id has the wrong number of instances");
+  if (mesh.vertex_ids.num() && mesh.vertex_ids.num() != mesh.num_mesh_vertices())
+    assertnever("ply: element vertex_id has the wrong number of instances");
   if (mesh.face_matids.num()) {
     const int max_matid = max(mesh.face_matids);
     if (max_matid >= mesh.materials.num()) mesh.materials.resize(max_matid + 1);
@@ -700,6 +712,8 @@ void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary) {
   assertx(mesh.corner_uvs.empty() || mesh.corner_uvs.num() == mesh.face_vertices.num());
   assertx(mesh.wedge_vertex.empty() || mesh.wedge_vertex.num() == nv);
   assertx(mesh.face_matids.empty() || mesh.face_matids.num() == nf);
+  assertx(mesh.vertex_ids.empty() || mesh.vertex_ids.num() == mesh.num_mesh_vertices());
+  assertx(mesh.face_ids.empty() || mesh.face_ids.num() == nf);
   const bool has_alpha = ranges::any_of(mesh.colors, [](const Pixel& pixel) { return pixel[3] != 255; });
   int max_face_size = 0;
   for_int(f, nf) max_face_size = max(max_face_size, mesh.face_start[f + 1] - mesh.face_start[f]);
@@ -729,6 +743,8 @@ void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary) {
   if (mesh.corner_uvs.num()) os << "property list " << (int_count ? "int" : "uchar") << " float texcoord\n";
   if (mesh.wedge_vertex.num()) os << "element wedge_vertex " << nv << "\nproperty int vertex\n";
   if (mesh.face_matids.num()) os << "element face_material " << nf << "\nproperty ushort matid\n";
+  if (mesh.vertex_ids.num()) os << "element vertex_id " << mesh.vertex_ids.num() << "\nproperty int id\n";
+  if (mesh.face_ids.num()) os << "element face_id " << nf << "\nproperty int id\n";
   for (const PlyMesh::WedgeKey& wedge_key : mesh.wedge_keys) {
     assertx(wedge_key.name != "" && wedge_key.name != "vertex" &&
             wedge_key.name.find_first_of(" \t\n") == string::npos);
@@ -772,6 +788,14 @@ void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary) {
   }
   for (const int matid : mesh.face_matids) {
     writer.put_int(assert_narrow_cast<uint16_t>(matid));
+    writer.end_instance();
+  }
+  for (const int id : mesh.vertex_ids) {
+    writer.put_int(int32_t{id});
+    writer.end_instance();
+  }
+  for (const int id : mesh.face_ids) {
+    writer.put_int(int32_t{id});
     writer.end_instance();
   }
   for (const PlyMesh::WedgeKey& wedge_key : mesh.wedge_keys) {

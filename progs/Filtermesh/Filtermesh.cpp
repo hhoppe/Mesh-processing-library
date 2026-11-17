@@ -2718,6 +2718,13 @@ void do_reduce() {
     HH_TIMER("__initpq");
     add_candidates(Array<Edge>(mesh.edges()));
   }
+  // The candidates are kept sorted by criterion, with ties broken by vertex ids (so that the result is deterministic).
+  const auto candidate_less = [](const Candidate& c1, const Candidate& c2) {
+    if (c1.cost != c2.cost) return c1.cost < c2.cost;
+    if (c1.vid1 != c2.vid1) return c1.vid1 < c2.vid1;
+    return c1.vid2 < c2.vid2;
+  };
+  sort(candidates, candidate_less);
   const int orig_nf = mesh.num_faces();
   ConsoleProgress cprogress;
   // The vertices adjacent to a collapse of the current sweep have vertex_stamp[vertex_id] == stamp.  (The collapses
@@ -2731,11 +2738,6 @@ void do_reduce() {
     if (mesh.num_faces() <= nfaces || candidates.empty()) break;
     num_sweeps++;
     stamp++;
-    sort(candidates, [](const Candidate& c1, const Candidate& c2) {
-      if (c1.cost != c2.cost) return c1.cost < c2.cost;
-      if (c1.vid1 != c2.vid1) return c1.vid1 < c2.vid1;
-      return c1.vid2 < c2.vid2;
-    });
     dirty_vertex_ids.init(0);
     const auto mark_dirty = [&](Vertex v) {
       const int vid = mesh.vertex_id(v);
@@ -2744,17 +2746,15 @@ void do_reduce() {
       dirty_vertex_ids.push(vid);
     };
     int num_collapsed = 0;
-    Array<Candidate> clean_candidates;  // Those unaffected by the collapses of this sweep, which remain valid.
     for (const Candidate& candidate : candidates) {
       Vertex v1 = mesh.id_retrieve_vertex(candidate.vid1), v2 = mesh.id_retrieve_vertex(candidate.vid2);
       if (!v1 || !v2) continue;  // (Removed by a collapse; then any edge between its neighbors is re-evaluated.)
-      if (vertex_stamp[candidate.vid1] == stamp || vertex_stamp[candidate.vid2] == stamp) continue;  // Re-evaluated.
+      // An edge near a collapse of this sweep is re-evaluated; to approximate the greedy order of a priority queue, the
+      // sweep stops at the first such edge (the remaining candidates are kept for the next sweep).
+      if (vertex_stamp[candidate.vid1] == stamp || vertex_stamp[candidate.vid2] == stamp) break;
       Edge e = mesh.query_edge(v1, v2);
       if (!e) continue;
-      if (mesh.num_faces() <= nfaces) {
-        clean_candidates.push(candidate);
-        continue;
-      }
+      if (mesh.num_faces() <= nfaces) break;
       // The criterion is unchanged since the evaluation, as no vertex of the neighborhood of e has changed.
       v1 = mesh.vertex1(e), v2 = mesh.vertex2(e);
       int ii;  // {2: keep_v1, 0: keep_v2, 1: midpoint_is_ok, -1: collapse_is_not_attribute_safe}.
@@ -2778,13 +2778,14 @@ void do_reduce() {
     }
     cprogress.update(float(orig_nf - mesh.num_faces()) / max(orig_nf - nfaces, 1));
     if (!num_collapsed) break;
-    // Keep the clean candidates and re-evaluate the edges near the collapses.
+    // Keep (in order) the clean candidates and re-evaluate the edges near the collapses.  (A vertex removed by a
+    // collapse is marked, so it is not in a clean candidate.)
+    int num_clean = 0;
     for (const Candidate& candidate : candidates) {
       if (vertex_stamp[candidate.vid1] == stamp || vertex_stamp[candidate.vid2] == stamp) continue;
-      if (!mesh.id_retrieve_vertex(candidate.vid1) || !mesh.id_retrieve_vertex(candidate.vid2)) continue;
-      clean_candidates.push(candidate);
+      candidates[num_clean++] = candidate;
     }
-    candidates = std::move(clean_candidates);
+    candidates.resize(num_clean);
     // Each edge with a dirty endpoint, gathered once (from its dirty endpoint of lowest id).
     Array<Edge> edges_to_update;
     for (const int vid : dirty_vertex_ids) {
@@ -2796,6 +2797,8 @@ void do_reduce() {
       }
     }
     add_candidates(edges_to_update);
+    std::sort(candidates.begin() + num_clean, candidates.end(), candidate_less);
+    std::inplace_merge(candidates.begin(), candidates.begin() + num_clean, candidates.end(), candidate_less);
   }
   cprogress.clear();
   showdf("Reduced the mesh in %d sweeps\n", num_sweeps);

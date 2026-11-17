@@ -206,8 +206,8 @@ void collapse(WorkMesh& mesh, const EcolConfig& config, PmRecorder& recorder) {
   }
   vspl.code = narrow_cast<ushort>(code);
   assertx(vspl.ar_wad.num() == vspl.expected_wad_num(recorder.info));  // The count need not be stored.
-  recorder.vsplits.push(CompactVsplit{vspl.flclw, vspl.vad_large.dpoint, vspl.vlr_offset1, vspl.code,
-                                      vspl.fl_matid, vspl.fr_matid});
+  recorder.vsplits.push(
+      CompactVsplit{vspl.flclw, vspl.vad_large.dpoint, vspl.vlr_offset1, vspl.code, vspl.fl_matid, vspl.fr_matid});
   recorder.removed_original_ids.push(mesh._vertex_original_id[vt]);
 }
 

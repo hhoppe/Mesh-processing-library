@@ -82,8 +82,8 @@ int index_of_id(Array<int>& index_of_id, int id, const char* kind) {
 }
 
 void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
-  Array<int> vertex_of_id;  // Index of the vertex with a given original id, or -1.
-  Array<int> face_of_id;    // Index of the face with a given original id, or -1.
+  Array<int> vertex_of_id;                      // Index of the vertex with a given original id, or -1.
+  Array<int> face_of_id;                        // Index of the face with a given original id, or -1.
   Array<Vec2<int>> corner_ids, sharp_edge_ids;  // Parallel to raw.corners and raw.sharp_edges until resolved.
   string str;
   for (string line; my_getline(is, line);) {

@@ -84,7 +84,7 @@ int main() {
     Matrix<Pixel> matrix(V(1, 2), Pixel::red());
     const Image image4(matrix);  // Copy of a matrix has default attributes.
     SHOW(image4.dims(), image4.zsize(), (image4[0, 1]));
-    Image image5(std::move(matrix));                          // Move of a matrix transfers its allocation.
+    Image image5(std::move(matrix));                      // Move of a matrix transfers its allocation.
     assertx(image5.dims() == V(1, 2) && matrix.empty());  // NOLINT(bugprone-use-after-move)
     image5 = image3;
     assertx(image5.dims() == V(2, 3) && image5.zsize() == 4 && image5.suffix() == "png");

@@ -279,9 +279,10 @@ void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) co
     ply.face_start.push(ply.face_vertices.num());
     all_matid0 = all_matid0 && (face.attrib.matid & ~AWMesh::k_Face_visited_mask) == 0;
   }
-  if (!all_matid0)
+  if (!all_matid0) {
     ply.face_matids =
         transformed(_faces, [](const PmFace& face) { return face.attrib.matid & ~AWMesh::k_Face_visited_mask; });
+  }
   for_int(matid, _materials.num()) ply.materials.push(_materials.get(matid));
   hh::write_ply(os, ply, binary);
 }

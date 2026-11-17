@@ -409,9 +409,10 @@ void read_tristrips(PlyValueReader& reader, const PlyElement& element, int nv, P
       }
       reader.read_values(property.type, count, [&](double value) {
         if (value == -1. || value == 4294967295.) return end_strip();  // (The latter if read as unsigned.)
-        if (!(value >= 0. && value < nv && value == std::floor(value)))
+        if (!(value >= 0. && value < nv && value == std::floor(value))) {
           assertnever(
               sform("ply: tristrips has an invalid vertex index %.17g (the number of vertices is %d)", value, nv));
+        }
         strip.push(int(value));
         const int n = strip.num();
         if (n < 3) return;
@@ -583,9 +584,10 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
   for_int(i, elements.num()) {
     const PlyElement& element = elements[i];
     const auto check_count = [&](int count) {
-      if (element.count != count)
+      if (element.count != count) {
         assertnever(
             sform("ply: element '%s' has %d instances rather than %d", element.name.c_str(), element.count, count));
+      }
     };
     if (i == ivertex) {
       read_vertices(reader, element, mesh, ignored);

@@ -587,8 +587,11 @@ PlyMesh GMesh::to_ply() const {
   {
     Array<bool> has_wedge(nv, false);
     for (const Wedge& wedge : wedges) has_wedge[wedge.vertex] = true;
-    for_int(vi, nv) if (!has_wedge[vi]) wedges.push(
-        Wedge{vi, use_wids ? std::numeric_limits<int>::max() : wedges.num(), Array<float>(vertex_records[vi])});
+    for_int(vi, nv) {
+      if (has_wedge[vi]) continue;
+      const int order = use_wids ? std::numeric_limits<int>::max() : wedges.num();
+      wedges.push(Wedge{vi, order, Array<float>(vertex_records[vi])});
+    }
   }
   // Order the wedges by wid, or else by vertex and then order of creation.
   Array<int> order(range(wedges.num()));
@@ -636,8 +639,8 @@ PlyMesh GMesh::to_ply() const {
     if (standard_keys.contains(key)) continue;
     const KeyInfo& info = key_infos.get(key);
     PlyMesh::WedgeKey wedge_key{key, info.dim, Array<float>(nw * max(info.dim, 1))};
-    for_int(i, nw) for_int(k, max(info.dim, 1)) wedge_key.values[i * max(info.dim, 1) + k] =
-        wedges[order[i]].record[info.offset + k];
+    const int stride = max(info.dim, 1);
+    for_int(i, nw) { for_int(k, stride) wedge_key.values[i * stride + k] = wedges[order[i]].record[info.offset + k]; }
     ply.wedge_keys.push(std::move(wedge_key));
   }
   // The wedge_vertex element, unless each vertex has a single wedge in vertex order.

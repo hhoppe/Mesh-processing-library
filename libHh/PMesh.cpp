@@ -6,6 +6,7 @@
 #include "libHh/GMesh.h"     // in extract_gmesh()
 #include "libHh/LineWriter.h"
 #include "libHh/Parallel.h"
+#include "libHh/Ply.h"
 #include "libHh/RangeOp.h"  // fill()
 #include "libHh/Set.h"
 #include "libHh/Vector4.h"
@@ -253,71 +254,36 @@ inline Pixel pack_color(const A3dColor& col) { return Vector4(col[0], col[1], co
 }  // namespace
 
 void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) const {
-  const bool uv_in_vertex = true;  // Else in face, which is less compact.
-  os << "ply\n";
-  // Big Endian is network order, compatible with write_binary_std(...);
-  os << "format " << (binary ? "binary_big_endian" : "ascii") << " 1.0\n";
-  os << "comment PM_nvertices=" << _vertices.num() << "\n";
-  os << "element vertex " << _wedges.num() << "\n";
-  os << "property float x\n";
-  os << "property float y\n";
-  os << "property float z\n";
-  os << "property float nx\n";
-  os << "property float ny\n";
-  os << "property float nz\n";
-  if (pminfo._has_rgb) {
-    os << "property uchar red\n";
-    os << "property uchar green\n";
-    os << "property uchar blue\n";
+  // Each PLY vertex is a wedge; the trailing element "wedge_vertex" identifies its vertex unless that is the identity.
+  PlyMesh ply;
+  const int nw = _wedges.num();
+  ply.points.init(nw);
+  ply.normals.init(nw);
+  if (pminfo._has_rgb) ply.colors.init(nw);
+  if (pminfo._has_uv) ply.uvs.init(nw);
+  bool identity = nw == _vertices.num();
+  for_int(w, nw) {
+    const int v = _wedges[w].vertex;
+    identity = identity && v == w;
+    ply.points[w] = _vertices[v].attrib.point;
+    ply.normals[w] = _wedges[w].attrib.normal;
+    if (pminfo._has_rgb) ply.colors[w] = pack_color(_wedges[w].attrib.rgb);
+    if (pminfo._has_uv) ply.uvs[w] = _wedges[w].attrib.uv;
   }
-  if (pminfo._has_uv && uv_in_vertex) {
-    os << "property float s\n";  // Or "texcoord_u".
-    os << "property float t\n";  // Or "texcoord_v".
+  if (!identity) ply.wedge_vertex = transformed(_wedges, [](const PmWedge& wedge) { return wedge.vertex; });
+  ply.face_vertices.reserve(_faces.num() * 3);
+  ply.face_start.init(1, 0);
+  bool all_matid0 = true;
+  for (const PmFace& face : _faces) {
+    for (const int w : face.wedges) ply.face_vertices.push(w);
+    ply.face_start.push(ply.face_vertices.num());
+    all_matid0 = all_matid0 && (face.attrib.matid & ~AWMesh::k_Face_visited_mask) == 0;
   }
-  os << "element face " << _faces.num() << "\n";
-  os << "property list uchar int vertex_indices\n";
-  if (pminfo._has_uv && !uv_in_vertex) os << "property list uchar float texcoord\n";
-  os << "end_header\n";
-  if (binary) {
-    for_int(w, _wedges.num()) {
-      const int v = _wedges[w].vertex;
-      write_binary_std(os, _vertices[v].attrib.point);
-      write_binary_std(os, _wedges[w].attrib.normal);
-      if (pminfo._has_rgb) write_binary_raw(os, pack_color(_wedges[w].attrib.rgb).head<3>());
-      if (pminfo._has_uv && uv_in_vertex) write_binary_std(os, _wedges[w].attrib.uv);
-    }
-    for_int(f, _faces.num()) {
-      write_binary_raw(os, V(uchar(3)));
-      write_binary_std(os, _faces[f].wedges);
-      if (pminfo._has_uv && !uv_in_vertex) {
-        write_binary_raw(os, V(uchar(6)));
-        for_int(j, 3) write_binary_std(os, _wedges[_faces[f].wedges[j]].attrib.uv);
-      }
-    }
-  } else {
-    LineWriter line;
-    const auto write_ascii = [&](const auto& v, bool space = true) {
-      for_int(c, v.Num) line << (space || c > 0 ? " " : "") << v[c];
-    };
-    for_int(w, _wedges.num()) {
-      const int v = _wedges[w].vertex;
-      write_ascii(_vertices[v].attrib.point, false);
-      write_ascii(_wedges[w].attrib.normal);
-      if (pminfo._has_rgb) write_ascii(convert<int>(pack_color(_wedges[w].attrib.rgb).head<3>()));
-      if (pminfo._has_uv && uv_in_vertex) write_ascii(_wedges[w].attrib.uv);
-      line.write_line(os);
-    }
-    for_int(f, _faces.num()) {
-      line << '3';
-      write_ascii(_faces[f].wedges);
-      line.write_line(os);
-      if (pminfo._has_uv && !uv_in_vertex) {
-        line << '6';
-        for_int(j, 3) write_ascii(_wedges[_faces[f].wedges[j]].attrib.uv);
-        line.write_line(os);
-      }
-    }
-  }
+  if (!all_matid0)
+    ply.face_matids =
+        transformed(_faces, [](const PmFace& face) { return face.attrib.matid & ~AWMesh::k_Face_visited_mask; });
+  for_int(matid, _materials.num()) ply.materials.push(_materials.get(matid));
+  hh::write_ply(os, ply, binary);
 }
 
 GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {

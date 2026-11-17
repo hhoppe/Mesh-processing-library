@@ -92,7 +92,9 @@ CGridView<D, T>             (const elements)
   levels of detail.
 - `SrMesh`: selectively refinable progressive mesh, for view-dependent refinement.
 - `RA3dStream`, `WA3dStream`: reading and writing streams of polygons, polylines, and points (`*.a3d`).
-- `read_ply()`: reads a polygon mesh (`PlyMesh`) from a Stanford `*.ply` file, ASCII or binary.
+- `read_ply()`, `write_ply()`: read and write a polygon mesh (`PlyMesh`) as a Stanford `*.ply` file, ASCII or
+  binary, with optional trailing elements that identify the mesh vertex of each wedge, the face materials, and
+  further per-wedge attributes.
 - `Pixel`: RGBA color with 8-bit channels (a `Vec4<uint8_t>`).
 - `Image`: 2D grid of `Pixel`s (a `Matrix<Pixel>`) with file input and output.
 - `feather_sphere_image()`: blends the pixels across the discontinuities of the image of a spherical domain.

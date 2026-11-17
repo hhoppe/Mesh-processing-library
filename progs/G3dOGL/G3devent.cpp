@@ -1110,7 +1110,8 @@ void WheelTurned(float v) {
   //  toward the scene.
   // The wheel always moves in object_mode, since no button press has selected a frame for the other mode.
   // Moving along the ray under the cursor, without rotating, leaves that ray as the same 3D line at the same pixel.
-  const float yq = v * .15f;
+  const float k_factor = 0.08f;  // Was .15f before 2026-11-16.
+  const float yq = v * k_factor;
   Vector vray(1.f, 0.f, 0.f);
   if (!sizemode && !editmode && !viewmode && tview.is_ident())
     if (auto pointer = HB::get_pointer(); pointer && min(*pointer) >= 0.f && max(*pointer) <= 1.f)

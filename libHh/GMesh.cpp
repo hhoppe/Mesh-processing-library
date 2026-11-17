@@ -840,18 +840,18 @@ void GMesh::read_obj(std::istream& is, const string& first_line) {
       }
     } else if (line == "s" || line.starts_with("s ")) {
       string name = line.size() > 2 ? line.substr(2) : "1";
-      while (!name.empty() && (name.back() == ' ' || name.back() == '\t' || name.back() == '\r')) name.pop_back();
+      while (name != "" && (name.back() == ' ' || name.back() == '\t' || name.back() == '\r')) name.pop_back();
       if (name == "" || name == "0") name = name == "0" ? "off" : "1";
       bool is_new;
       int& id = smoothing_ids.enter(name, smoothing_ids.num(), is_new);
       smoothing = id;
     } else if (line == "g" || line.starts_with("g ")) {
       groups = line.size() > 2 ? line.substr(2) : "default";
-      while (!groups.empty() && (groups.back() == ' ' || groups.back() == '\r')) groups.pop_back();
+      while (groups != "" && (groups.back() == ' ' || groups.back() == '\r')) groups.pop_back();
       if (groups == "") groups = "default";
     } else if (const char* smtl = after_prefix(s0, "usemtl ")) {
       material = smtl;
-      while (!material.empty() && (material.back() == ' ' || material.back() == '\r')) material.pop_back();
+      while (material != "" && (material.back() == ' ' || material.back() == '\r')) material.pop_back();
     } else if (const char* smrgb = after_prefix(s0, "#MRGB ")) {  // ZBrush colors: MMRRGGBB per vertex (MM is a mask).
       for (; std::isxdigit(static_cast<unsigned char>(smrgb[0])) && strlen(smrgb) >= 8; smrgb += 8) {
         Vector rgb;
@@ -919,7 +919,7 @@ void GMesh::read_ply(const PlyMesh& ply) {
   const auto wedge_string = [&](int w) -> const string& {
     LineWriter lw;
     const auto key = [&](const char* name) {
-      if (!lw.view().empty()) lw << ' ';
+      if (lw.view() != "") lw << ' ';
       lw << name;
     };
     const auto vec = [&](const char* name, CArrayView<float> values) {
@@ -964,7 +964,7 @@ void GMesh::read_ply(const PlyMesh& ply) {
     set_point(gv, ply.points[first_wedge[v]]);
     if (num_wedges[v] == 1) {
       const string& s = wedge_string(first_wedge[v]);
-      if (!s.empty()) {
+      if (s != "") {
         set_string(gv, s.c_str());
         if (string_has_key(s.c_str(), "cusp")) flags(gv).flag(vflag_cusp) = true;
       }
@@ -988,7 +988,7 @@ void GMesh::read_ply(const PlyMesh& ply) {
       Corner c = corner(va[j], gf);
       if (num_wedges[has_wid ? ply.wedge_vertex[w] : w] > 1) {
         const string& s = wedge_string(w);
-        if (!s.empty()) set_string(c, s.c_str());
+        if (s != "") set_string(c, s.c_str());
       }
       if (ply.corner_uvs.num()) {
         string str2;

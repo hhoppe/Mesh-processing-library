@@ -721,11 +721,11 @@ void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary) {
   os << "ply\n";
   os << "format " << (binary ? "binary_big_endian" : "ascii") << " 1.0\n";
   for (const string& comment : mesh.comments) {
-    assertx(comment.find('\n') == string::npos);
+    assertx(!comment.contains('\n'));
     os << "comment" << (comment == "" ? "" : " ") << comment << "\n";
   }
   for_int(matid, mesh.materials.num()) {
-    assertx(mesh.materials[matid].find('\n') == string::npos);
+    assertx(!mesh.materials[matid].contains('\n'));
     const string& material = mesh.materials[matid];
     os << "comment material " << matid << (material == "" ? "" : " ") << material << "\n";
   }

@@ -928,11 +928,11 @@ void GMesh::read_ply(const PlyMesh& ply) {
     for_int(w, nw) vertex_wedges[next[has_wid ? ply.wedge_vertex[w] : w]++] = w;
   }
   const auto is_uniform = [&](const PlyMesh::WedgeKey& wedge_key, int v) {
-    const size_t stride = max(wedge_key.dim, 1);
-    const float* values0 = &wedge_key.values[vertex_wedges[wedge_start[v]] * stride];
+    const int stride = max(wedge_key.dim, 1);
+    const CArrayView<float> values0 = wedge_key.values.segment(vertex_wedges[wedge_start[v]] * stride, stride);
     for (int i = wedge_start[v] + 1; i < wedge_start[v + 1]; i++) {
-      if (std::memcmp(values0, &wedge_key.values[vertex_wedges[i] * stride], stride * sizeof(float)) != 0)
-        return false;
+      const CArrayView<float> values = wedge_key.values.segment(vertex_wedges[i] * stride, stride);
+      if (std::memcmp(values0.data(), values.data(), stride * sizeof(float)) != 0) return false;
     }
     return true;
   };

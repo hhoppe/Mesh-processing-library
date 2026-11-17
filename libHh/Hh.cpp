@@ -555,14 +555,34 @@ static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr, bo
   pwant_ff = want_ff;
 }
 
+namespace {
+
+// The text written so far by showdf() and showff(), for diagnostics_transcript().
+std::mutex g_transcript_mutex;
+string g_transcript;
+
+void append_to_transcript(std::string_view s) {
+  const std::scoped_lock lock(g_transcript_mutex);
+  g_transcript += s;
+}
+
+}  // namespace
+
+string diagnostics_transcript() {
+  const std::scoped_lock lock(g_transcript_mutex);
+  return g_transcript;
+}
+
 HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...) {
   static bool need_cout, need_cerr, want_ff;
   static std::once_flag flag;
   std::call_once(flag, determine_stdout_stderr_needs, std::ref(need_cout), std::ref(need_cerr), std::ref(want_ff));
   std::va_list ap;
   va_start(ap, format);
-  const string s = g_comment_prefix_string + vsform(format, ap);
+  const string s0 = vsform(format, ap);
   va_end(ap);
+  append_to_transcript(s0);
+  const string s = g_comment_prefix_string + s0;
   if (need_cout) std::cout << s;
   if (need_cerr) std::cerr << s;
 #if defined(_WIN32)
@@ -574,12 +594,13 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...) {
   static bool need_cout, need_cerr, want_ff;
   static std::once_flag flag;
   std::call_once(flag, determine_stdout_stderr_needs, std::ref(need_cout), std::ref(need_cerr), std::ref(want_ff));
-  if (!want_ff) return;
   std::va_list ap;
   va_start(ap, format);
-  const string s = g_comment_prefix_string + vsform(format, ap);
+  const string s0 = vsform(format, ap);
   va_end(ap);
-  std::cout << s;
+  append_to_transcript(s0);
+  if (!want_ff) return;
+  std::cout << g_comment_prefix_string << s0;
 }
 
 unique_ptr<char[]> make_unique_c_string(const char* s) {

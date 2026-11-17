@@ -4,6 +4,7 @@
 #include "libHh/FileIO.h"
 #include "libHh/PMesh.h"
 #include "libHh/Parallel.h"
+#include "libHh/Ply.h"  // provenance_comments()
 #include "libHh/RangeOp.h"
 #include "libHh/StringOp.h"
 #include "libHh/Timer.h"
@@ -70,7 +71,6 @@ void do_print_costs(Args& args) {
 // Returns the topology of the live mesh in the format of mesh_genus_string() (without sharp edges): the numbers of
 // connected components, boundary loops, vertices, faces, and edges, and the genus.
 string genus_string() {
-  HH_TIMER("_genus");
   const int num_vertices = mesh._vertices.num();
   // Union-find structures over the vertices: one for the components, and one for the boundary loops.
   Array<int> component(range(num_vertices)), loop(range(num_vertices));
@@ -271,7 +271,7 @@ void do_outmesh(Args& args) {
 void do_outply(Args& args) {
   WFile fi(args.get_filename());
   const bool binary = true;
-  compact_awmesh(mesh).write_ply(fi(), full_mesh_info(mesh), binary);
+  compact_awmesh(mesh).write_ply(fi(), full_mesh_info(mesh), binary, provenance_comments());
   assertx(fi());
 }
 

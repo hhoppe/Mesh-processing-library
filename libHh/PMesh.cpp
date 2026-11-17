@@ -253,7 +253,7 @@ inline Pixel pack_color(const A3dColor& col) { return Vector4(col[0], col[1], co
 
 }  // namespace
 
-void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) const {
+void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary, const Array<string>& comments) const {
   // Each PLY vertex is a wedge; the trailing element "wedge_vertex" identifies its vertex unless that is the identity.
   PlyMesh ply;
   const int nw = _wedges.num();
@@ -284,6 +284,7 @@ void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) co
         transformed(_faces, [](const PmFace& face) { return face.attrib.matid & ~AWMesh::k_Face_visited_mask; });
   }
   for_int(matid, _materials.num()) ply.materials.push(_materials.get(matid));
+  ply.comments = comments;
   hh::write_ply(os, ply, binary);
 }
 

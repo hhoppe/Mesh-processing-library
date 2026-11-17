@@ -109,7 +109,7 @@ class GMesh : public Mesh {
   // a Wavefront OBJ file (detected by its first line that is neither blank nor a comment).
   void read(std::istream& is);
   void read_line(char* s);  // No '\n' required.
-  // Add a mesh read from a PLY file to the empty mesh.  Each mesh vertex (identified by the trailing element
+  // Add a mesh read from a PLY file to the empty mesh (without echoing its header comments).  Each mesh vertex (identified by the trailing element
   // "wedge_vertex" if present) gets the attributes of its PLY vertices (wedges) as in WMesh::extract_gmesh(): in its
   // vertex string if it has a single wedge, else in the strings of its corners.  These attributes are the normal,
   // the 8-bit color (as rgb), the uv, the per-wedge keys of the elements "wedge_<key>", and the wedge id (wid, only

@@ -706,6 +706,24 @@ class PlyValueWriter {
 
 }  // namespace
 
+Array<string> provenance_comments() {
+  Array<string> lines;
+  const string transcript = diagnostics_transcript();
+  std::string_view s = transcript;
+  while (s != "") {
+    const size_t i = s.find('\n');
+    std::string_view line = s.substr(0, i);
+    while (line != "" && (line.back() == ' ' || line.back() == '\r')) line.remove_suffix(1);
+    // A multi-line diagnostic (e.g., the header of the command line) already has the prefix on its later lines.
+    if (line.starts_with(g_comment_prefix_string)) line.remove_prefix(strlen(g_comment_prefix_string));
+    // (A line that would read as a material definition is indented.)
+    lines.push((line.starts_with("material ") ? " " : "") + string(line));
+    if (i == std::string_view::npos) break;
+    s.remove_prefix(i + 1);
+  }
+  return lines;
+}
+
 void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary) {
   const int nv = mesh.points.num(), nf = mesh.num_faces();
   assertx(mesh.normals.empty() || mesh.normals.num() == nv);

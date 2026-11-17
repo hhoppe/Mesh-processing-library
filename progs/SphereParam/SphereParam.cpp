@@ -7,6 +7,7 @@
 #include "libHh/GeomOp.h"
 #include "libHh/MeshSearch.h"
 #include "libHh/PMesh.h"
+#include "libHh/Ply.h"  // provenance_comments()
 #include "libHh/Set.h"
 #include "libHh/Timer.h"
 using namespace hh;
@@ -885,7 +886,7 @@ void write_parameterized_ply(PMeshIter pmi, CArrayView<Point> sphmap, bool split
   if (split_meridian) split_awmesh_along_prime_meridian(pmi);
   hh_clean_up();
   const bool binary = true;
-  pmi.write_ply(std::cout, pminfo, binary);
+  pmi.write_ply(std::cout, pminfo, binary, provenance_comments());
 }
 
 bool will_write_ply(const ParseArgs& args_) {

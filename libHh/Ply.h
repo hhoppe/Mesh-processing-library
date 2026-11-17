@@ -63,6 +63,10 @@ struct PlyMesh {
 // Read a PLY file (its header and body).
 [[nodiscard]] PlyMesh read_ply(std::istream& is);
 
+// Returns the diagnostics written so far (see diagnostics_transcript()), as lines for the comments of a PLY file,
+// so that the file records its provenance: the inherited header lines (prefixed by '|') and those of this program.
+[[nodiscard]] Array<string> provenance_comments();
+
 // Write a PLY file, in the format binary_big_endian (network order) or ascii, including the trailing elements above
 // for the nonempty arrays.
 void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary);

@@ -598,7 +598,12 @@ MeshFileHeader read_mesh_header(std::istream& is) {
   if (is.peek() == 'p') {  // A .m file cannot start with 'p'.
     header.is_ply = true;
     header.ply_lines = read_ply_header(is);
-    for (const string& line : header.ply_lines) showff("|%s\n", line.c_str());
+    // Echo the header comments (the provenance), as for the '#' lines of a mesh file.
+    for (const string& line : header.ply_lines) {
+      if (const std::string_view rest = after_prefix(line.c_str(), "comment ") ? std::string_view(line).substr(8) : "";
+          rest != "" && !rest.starts_with("material "))
+        showff("|%s\n", string(rest).c_str());
+    }
   } else {
     string line;
     while (is.peek() == '#') {

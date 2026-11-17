@@ -676,6 +676,9 @@ attributes (`wedge_<key>`); reading it reproduces the mesh of
 from the `wid` keys of the mesh (if consistent) or else from the distinct attributes of the corners of each vertex;
 it keeps the vertex and corner keys with numeric values or no values, and the face strings (as materials), but it
 drops (with a warning) other keys and the edge strings such as `sharp`.
+The PLY files written by these programs (and by `MeshToPm` and `SphereParam`) record their provenance in
+`comment` header lines, just as the `#` header lines of a mesh file do, and the programs that read them echo those
+lines with a `|` prefix.
 
 ### Wavefront OBJ (`*.obj`)
 

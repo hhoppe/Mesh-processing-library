@@ -9,6 +9,7 @@
 #include "libHh/Graph.h"   // do_reorder_vspl()
 #include "libHh/MeshOp.h"  // mesh_genus_string()
 #include "libHh/PMesh.h"
+#include "libHh/Ply.h"  // provenance_comments()
 #include "libHh/Polygon.h"
 #include "libHh/STree.h"  // do_reorder_vspl()
 #include "libHh/Stat.h"
@@ -151,7 +152,7 @@ void do_outmesh() {
 // Write the current mesh as a binary *.ply file on stdout, one PLY vertex per wedge (see WMesh::write_ply()).
 void do_outply() {
   HH_TIMER("_write_ply");
-  pmi->write_ply(std::cout, pmi->rstream()._info, true);
+  pmi->write_ply(std::cout, pmi->rstream()._info, true, provenance_comments());
   std::cout.flush();
   nooutput = true;
 }

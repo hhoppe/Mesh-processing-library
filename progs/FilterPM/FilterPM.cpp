@@ -148,6 +148,13 @@ void do_outmesh() {
   nooutput = true;
 }
 
+// Write the current mesh as a binary *.ply file, one PLY vertex per wedge (see WMesh::write_ply()).
+void do_outply(Args& args) {
+  HH_TIMER("_write_ply");
+  WFile fi(args.get_filename());
+  pmi->write_ply(fi(), pmi->rstream()._info, true);
+}
+
 void do_outsmesh() {
   // I had forgotten that the PMesh::apply_vsplit() code is annoyingly complicated.
   // Note that the two new wedges can be on different vertices even though ii == 2; yuck.
@@ -1457,6 +1464,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(info, ": output stats on current mesh");
   HH_ARGSD(minfo, ": output more stats on current mesh");
   HH_ARGSD(outmesh, ": output mesh");
+  HH_ARGSD(outply, "file.ply : write mesh as binary ply (vertex per wedge)");
   HH_ARGSD(outsmesh, ": output full-res simple mesh (split wedges) with 'parent' keys");
   HH_ARGSD(geom_nfaces, "nf : output geomorph up to nf faces");
   HH_ARGSC(HH_ARGS_INDENT "Output selectively refined meshes and geomorphs:");

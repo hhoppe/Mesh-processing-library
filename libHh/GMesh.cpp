@@ -920,9 +920,28 @@ void GMesh::read_ply(const PlyMesh& ply) {
     }
   }
   for_int(v, nv) if (!num_wedges[v]) assertnever(sform("ply: vertex %d has no wedges", v));
-  // The attribute string of wedge w.
+  // The wedges of each vertex, to find the keys whose values are the same on all the wedges of a vertex.
+  Array<int> wedge_start(nv + 1, 0), vertex_wedges(nw);
+  for_int(v, nv) wedge_start[v + 1] = wedge_start[v] + num_wedges[v];
+  {
+    Array<int> next(wedge_start.head(nv));
+    for_int(w, nw) vertex_wedges[next[has_wid ? ply.wedge_vertex[w] : w]++] = w;
+  }
+  const auto is_uniform = [&](const PlyMesh::WedgeKey& wedge_key, int v) {
+    const size_t stride = max(wedge_key.dim, 1);
+    const float* values0 = &wedge_key.values[vertex_wedges[wedge_start[v]] * stride];
+    for (int i = wedge_start[v] + 1; i < wedge_start[v + 1]; i++) {
+      if (std::memcmp(values0, &wedge_key.values[vertex_wedges[i] * stride], stride * sizeof(float)) != 0)
+        return false;
+    }
+    return true;
+  };
+  // The attribute string of wedge w of vertex v: all its attributes for a vertex with a single wedge; else, for the
+  // vertex string, the keys of "wedge_<key>" elements that are the same on all its wedges (e.g., a flag such as
+  // "global"), and for the corner strings, the other attributes.
+  enum class EPart { all, vertex, corner };
   string str;
-  const auto wedge_string = [&](int w) -> const string& {
+  const auto wedge_string = [&](int w, EPart part, int v) -> const string& {
     LineWriter lw;
     const auto key = [&](const char* name) {
       if (lw.view() != "") lw << ' ';
@@ -937,17 +956,20 @@ void GMesh::read_ply(const PlyMesh& ply) {
       }
       lw << ')';
     };
-    if (has_wid) {
-      key("wid=");
-      lw << w + 1;
+    if (part != EPart::vertex) {
+      if (has_wid) {
+        key("wid=");
+        lw << w + 1;
+      }
+      if (ply.normals.num()) vec("normal", ply.normals[w]);
+      if (ply.colors.num()) {
+        key(sform("rgb=(%.3f %.3f %.3f)", ply.colors[w][0] / 255.f, ply.colors[w][1] / 255.f, ply.colors[w][2] / 255.f)
+                .c_str());
+      }
+      if (ply.uvs.num()) vec("uv", ply.uvs[w]);
     }
-    if (ply.normals.num()) vec("normal", ply.normals[w]);
-    if (ply.colors.num()) {
-      key(sform("rgb=(%.3f %.3f %.3f)", ply.colors[w][0] / 255.f, ply.colors[w][1] / 255.f, ply.colors[w][2] / 255.f)
-              .c_str());
-    }
-    if (ply.uvs.num()) vec("uv", ply.uvs[w]);
     for (const PlyMesh::WedgeKey& wedge_key : ply.wedge_keys) {
+      if (part != EPart::all && is_uniform(wedge_key, v) != (part == EPart::vertex)) continue;
       if (wedge_key.dim == 0) {
         if (wedge_key.values[w]) key(wedge_key.name.c_str());
         continue;
@@ -968,12 +990,10 @@ void GMesh::read_ply(const PlyMesh& ply) {
   for_int(v, nv) {
     Vertex gv = create_vertex_private(mesh_vertex_id(v));
     set_point(gv, ply.points[first_wedge[v]]);
-    if (num_wedges[v] == 1) {
-      const string& s = wedge_string(first_wedge[v]);
-      if (s != "") {
-        set_string(gv, s.c_str());
-        if (string_has_key(s.c_str(), "cusp")) flags(gv).flag(vflag_cusp) = true;
-      }
+    const string& s = wedge_string(first_wedge[v], num_wedges[v] == 1 ? EPart::all : EPart::vertex, v);
+    if (s != "") {
+      set_string(gv, s.c_str());
+      if (string_has_key(s.c_str(), "cusp")) flags(gv).flag(vflag_cusp) = true;
     }
   }
   Array<Vertex> va;
@@ -992,8 +1012,8 @@ void GMesh::read_ply(const PlyMesh& ply) {
     for_int(j, wedges.num()) {
       const int w = wedges[j];
       Corner c = corner(va[j], gf);
-      if (num_wedges[has_wid ? ply.wedge_vertex[w] : w] > 1) {
-        const string& s = wedge_string(w);
+      if (const int v = has_wid ? ply.wedge_vertex[w] : w; num_wedges[v] > 1) {
+        const string& s = wedge_string(w, EPart::corner, v);
         if (s != "") set_string(c, s.c_str());
       }
       if (ply.corner_uvs.num()) {

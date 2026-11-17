@@ -153,11 +153,11 @@ nan nan nan
 1 0 0
 nan nan nan
 nan nan nan
-Vertex 1  0 0 0
+Vertex 1  0 0 0 {global}
 Vertex 2  1 0 0 {wid=3 normal=(0 0 1) sph=(1 0 0)}
 Vertex 4  1 1 0 {wid=4 normal=(0 0 1)}
 Vertex 5  0 1 0 {wid=5 normal=(0 0 1) Ouv=(0.25 0.5)}
 Face 1  1 2 4 {matid=3 rgb=(1 0 0)}
 Face 2  1 4 5 {matid=1}
-Corner 1 1 {wid=1 normal=(0 0 1) global}
-Corner 1 2 {wid=2 normal=(0 1 0) global}
+Corner 1 1 {wid=1 normal=(0 0 1)}
+Corner 1 2 {wid=2 normal=(0 1 0)}

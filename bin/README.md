@@ -9,9 +9,6 @@ built by Visual Studio.
 - `mesh_to_pm` creates a progressive mesh from a mesh (using `MeshSimplify` and `Filterprog`), and
   `pm_simplify` further simplifies the base mesh of a progressive mesh.  (For half-edge collapses under the quadric
   error metric, i.e. `-minqem -vsgeom`, the program `MeshToPm` does the same in a single process.)
-- `mesh_to_obj` and `mesh_to_ply` (Perl scripts) convert the mesh format (`*.m`) to Wavefront `*.obj` or Stanford
-  `*.ply` files.  (The programs read `*.obj` and `*.ply` files directly; see the
-  [file formats](../progs/README.md#wavefront-obj-obj).)
 - `ply_to_pts` (Perl script) converts the vertices of a Stanford `*.ply` file, with their normals if present, into
   a stream of points (`*.pts`, in the [A3d geometry-stream format](../progs/README.md#geometry-stream-a3d-pts)),
   e.g. for `Recon` and `Meshfit`.

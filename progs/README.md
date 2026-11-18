@@ -554,7 +554,11 @@ represented as
 - progressive meshes (`*.pm`),
 - encoded selectively refinable meshes (`*.srm`),
 - progressive simplicial complexes (`*.psc`), or
-- simple `*.ply` files.
+- polygon meshes or point sets in Stanford `*.ply` files (ASCII or binary), shown with their vertex normals, colors,
+  and texture coordinates (see [the PLY format](#stanford-ply-ply)).
+
+A Wavefront `*.obj` file is not read by the viewer itself, but `Filtermesh` converts it (see
+[the OBJ format](#wavefront-obj-obj)), e.g. `Filtermesh model.obj | G3dOGL`.
 
 Please see the many examples presented earlier.
 The viewer can also read `*.frame` elements to position the viewer and the objects in world space.
@@ -667,7 +671,7 @@ in hindsight that was a poor choice.
 
 The programs that read a mesh (e.g., `Filtermesh`, `MinCycles`, `SphereParam`) also accept a Stanford `*.ply` file
 (ASCII or binary, possibly `*.gz`), recognized by its first line.  Its vertex normals, colors, and uv become the
-attributes `normal`, `rgb`, and `uv`.  A PLY file written by `FilterPM -outply` has one PLY vertex per wedge,
+attributes `normal`, `rgb`, and `uv`.  A PLY file written by `FilterPM -outply` or `Filtermesh -toply` has one PLY vertex per wedge,
 followed by trailing elements (which other PLY readers can ignore) that identify the mesh vertex of each wedge
 (`wedge_vertex`), the material of each face (`face_material`, with the material strings in `comment material`
 header lines), the vertex and face ids if not consecutive (`vertex_id`, `face_id`), and any other per-wedge
@@ -685,7 +689,9 @@ lines with a `|` prefix.
 The programs that read a mesh also accept a Wavefront `*.obj` file (possibly `*.gz`), recognized by its first line
 that is neither blank nor a comment.  The result matches that of the former Perl script `obj_to_mesh` (`uv`,
 `normal`, and `rgb` on vertices or corners, `mat` and `groups` on faces, and sharp edges between smoothing groups
-when the file has no normals), except that the material colors of an `mtllib` file are not read.
+when the file has no normals), except that the material colors of an `mtllib` file are not read.  Conversely,
+`Filtermesh mesh.m -to_obj mesh.mtl >mesh.obj` writes an OBJ file with the vertex normals and uv (as `vn` and `vt`)
+that refers to the material file `mesh.mtl`.
 
 ### Geometry stream (`*.a3d`, `*.pts`)
 

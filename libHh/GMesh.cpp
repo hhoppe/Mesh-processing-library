@@ -385,7 +385,8 @@ void GMesh::read(std::istream& is) {
     init_from_ply(read_ply(is));
   } else {
     bool seen_data = false;
-    for (string line; my_getline(is, line);) {
+    // DOS line endings are common in OBJ files, so they draw a warning only after the format is known to be mesh.
+    for (string line; my_getline(is, line, seen_data);) {
       if (!seen_data) {
         const size_t i = line.find_first_not_of(" \t\r");
         if (i == string::npos || (line[i] == '#' && !line.starts_with("#MRGB "))) continue;
@@ -409,7 +410,7 @@ GMeshInput::GMeshInput(std::istream& is) : _is(is) {
     for (const string& comment : ply_header_comments(_ply_header_lines)) showff("|%s\n", comment.c_str());
   } else {
     for (string line; _is.peek() == '#';) {
-      assertx(my_getline(_is, line));
+      assertx(my_getline(_is, line, false));  // The comments may precede an OBJ file, whose DOS line endings are ok.
       if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
     }
   }
@@ -914,7 +915,7 @@ void GMesh::read_obj(std::istream& is, const string& first_line) {
     }
   };
   process(first_line);
-  for (string line; my_getline(is, line);) {
+  for (string line; my_getline(is, line, false);) {
     process(line);
     num_lines++;
   }

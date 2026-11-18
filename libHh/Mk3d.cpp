@@ -48,7 +48,7 @@ void Mk3d::end_polygon() {
   assertx(_el.num() >= 3);
   if (_force_flip) flip_poly();
   if (_force_polyline) {
-    _el.push(_el[0]);
+    _el.push(A3dVertex(_el[0]));  // A copy, since push() may reallocate.
     end_polyline();
   } else {
     output_poly();

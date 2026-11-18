@@ -476,7 +476,7 @@ float min_local_dihedral(const WorkMesh& mesh, CArrayView<int> va, const Point& 
 float min_dihedral_about_vertex(const WorkMesh& mesh, int v) {
   InlinedArray<int, 24> va;
   for (const auto [vv, ff] : mesh.ccw_vertices(v, mesh._someface[v])) va.push(vv);
-  if (!mesh.is_boundary_vertex(v)) va.push(va[0]);
+  if (!mesh.is_boundary_vertex(v)) va.push(int{va[0]});  // A copy, since push() may reallocate.
   return min_local_dihedral(mesh, va, mesh._vertices[v].attrib.point);
 }
 

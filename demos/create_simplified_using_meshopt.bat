@@ -5,8 +5,7 @@ cd "%~p0"
 call ./_initdemos.bat
 
 :: This is how the file was converted from Blender via *.ply:
-::   perl ../bin/ply_to_mesh ~/data/blender/blob5.ply |
-::     Filtermesh -genus -removekey normal -gmerge -genus -triangulate -angle 20 -mark -genus >data/blob5.orig.m
+::   Filtermesh ~/data/blender/blob5.ply -genus -removekey normal -gmerge -genus -triangulate -angle 20 -mark -genus >data/blob5.orig.m
 
 echo.
 echo Running Meshfit.

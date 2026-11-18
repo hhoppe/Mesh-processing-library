@@ -6,8 +6,7 @@ source ./_initdemos.sh
 r=standingblob
 
 # This is how the file was converted from Blender via *.ply:
-# ply_to_mesh ~/data/blender/$r.ply |
-#   Filtermesh -genus -removekey normal -gmerge -genus -flip -triangulate -angle 20 -mark -genus >data/$r.orig.m
+# Filtermesh ~/data/blender/$r.ply -genus -removekey normal -gmerge -genus -flip -triangulate -angle 20 -mark -genus >data/$r.orig.m
 
 FilterPM data/$r.pm -geom_nfaces 10 -geom_nfaces 20 -geom_nfaces 40 -geom_nfaces 80 -geom_nfaces 160 \
          -geom_nfaces 320 -geom_nfaces 640 -geom_nfaces 1280 -geom_nfaces 2560 -geom_nfaces 5000 \

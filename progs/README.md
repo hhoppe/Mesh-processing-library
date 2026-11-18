@@ -683,9 +683,9 @@ lines with a `|` prefix.
 ### Wavefront OBJ (`*.obj`)
 
 The programs that read a mesh also accept a Wavefront `*.obj` file (possibly `*.gz`), recognized by its first line
-that is neither blank nor a comment.  The result matches that of `bin/obj_to_mesh` (`uv`, `normal`, and `rgb` on
-vertices or corners, `mat` and `groups` on faces, and sharp edges between smoothing groups when the file has no
-normals), except that the material colors of an `mtllib` file are not read.
+that is neither blank nor a comment.  The result matches that of the former Perl script `obj_to_mesh` (`uv`,
+`normal`, and `rgb` on vertices or corners, `mat` and `groups` on faces, and sharp edges between smoothing groups
+when the file has no normals), except that the material colors of an `mtllib` file are not read.
 
 ### Geometry stream (`*.a3d`, `*.pts`)
 

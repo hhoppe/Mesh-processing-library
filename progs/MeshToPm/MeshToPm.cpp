@@ -4,7 +4,6 @@
 #include "libHh/FileIO.h"
 #include "libHh/PMesh.h"
 #include "libHh/Parallel.h"
-#include "libHh/Ply.h"  // provenance_comments()
 #include "libHh/RangeOp.h"
 #include "libHh/StringOp.h"
 #include "libHh/Timer.h"
@@ -271,7 +270,7 @@ void do_outmesh(Args& args) {
 void do_outply(Args& args) {
   WFile fi(args.get_filename());
   const bool binary = true;
-  compact_awmesh(mesh).write_ply(fi(), full_mesh_info(mesh), binary, provenance_comments());
+  compact_awmesh(mesh).write_ply(fi(), full_mesh_info(mesh), binary);
   assertx(fi());
 }
 

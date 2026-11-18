@@ -385,7 +385,7 @@ void GMesh::read(std::istream& is) {
     // Echo the header comments (the provenance) of the PLY file, as programs do for the '#' lines of a mesh file.
     const Array<string> header_lines = read_ply_header(is);
     for (const string& comment : ply_header_comments(header_lines)) showff("|%s\n", comment.c_str());
-    read_ply(read_ply_body(is, header_lines));
+    init_from_ply(read_ply_body(is, header_lines));
   } else {
     bool seen_data = false;
     for (string line; my_getline(is, line);) {
@@ -750,6 +750,7 @@ PlyMesh GMesh::to_ply() const {
     Warning("GMesh::to_ply(): non-numeric vertex/corner keys are dropped");
     showdf("GMesh::to_ply(): dropping the keys: %s\n", join(dropped_keys).c_str());
   }
+  ply.add_comment_lines(diagnostics_transcript());
   return ply;
 }
 
@@ -925,7 +926,13 @@ void GMesh::read_obj(std::istream& is, const string& first_line) {
   }
 }
 
-void GMesh::read_ply(const PlyMesh& ply) {
+GMesh GMesh::from_ply(const PlyMesh& ply) {
+  GMesh mesh;
+  mesh.init_from_ply(ply);
+  return mesh;
+}
+
+void GMesh::init_from_ply(const PlyMesh& ply) {
   assertx(empty());
   const int nw = ply.points.num();
   const bool has_wid = ply.wedge_vertex.num() > 0;

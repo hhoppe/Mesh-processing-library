@@ -43,6 +43,13 @@ class GMesh : public Mesh {
   GMesh(GMesh&& m) noexcept { swap(*this, m); }
   ~GMesh() override = default;
   GMesh& operator=(GMesh&& m) noexcept { return clear(), swap(*this, m), *this; }
+  // Return the mesh of a PLY file (see Ply.h), without echoing its header comments.  Each mesh vertex (identified by
+  // the trailing element "wedge_vertex" if present) gets the attributes of its PLY vertices (wedges) as in
+  // WMesh::extract_gmesh(): in its vertex string if it has a single wedge, else in the strings of its corners, except
+  // that the keys with the same value on all its wedges stay in its vertex string.  These attributes are the normal,
+  // the 8-bit color (as rgb), the uv, the per-wedge keys of the elements "wedge_<key>", and the wedge id (wid, only
+  // with "wedge_vertex").  Each face string is the string of its material.
+  [[nodiscard]] static GMesh from_ply(const PlyMesh& ply);
 
   // ** Extend functionality:
   void copy(const GMesh& m);  // Carries flags (but not sac fields), hence not named operator=().
@@ -112,26 +119,13 @@ class GMesh : public Mesh {
   [[nodiscard]] static bool recognize_line(std::string_view line);
   void read_line(char* s);  // No '\n' required.
 
-  // Add a mesh read from a PLY file to the empty mesh (without echoing its header comments).  Each mesh vertex (identified by the trailing element
-  // "wedge_vertex" if present) gets the attributes of its PLY vertices (wedges) as in WMesh::extract_gmesh(): in its
-  // vertex string if it has a single wedge, else in the strings of its corners.  These attributes are the normal,
-  // the 8-bit color (as rgb), the uv, the per-wedge keys of the elements "wedge_<key>", and the wedge id (wid, only
-  // with "wedge_vertex").  Each face string is the string of its material.
-  void read_ply(const PlyMesh& ply);
-
-  // Add a mesh read from a Wavefront OBJ file to the empty mesh, as bin/obj_to_mesh does, given its first line that
-  // is neither blank nor a comment.  Vertices get the strings uv, normal, and rgb (from "v x y z r g b", "v x y z
-  // #rrggbb", or ZBrush "#MRGB" lines) if those are given per vertex, else corners get uv and normal; faces get
-  // mat="<usemtl>" and groups="<g>"; without normals, the edges between smoothing groups are sharp.  Unlike
-  // bin/obj_to_mesh, the material colors (from mtllib) are not read.
-  void read_obj(std::istream& is, const string& first_line);
-
   // Return the mesh as a PlyMesh (to be written by write_ply()), with one PLY vertex per wedge.  The wedges of a
   // vertex are given by its "wid" keys if these are consistent, else by the distinct attribute values of its corners
   // (in order of first appearance).  The keys normal, uv, and rgb (quantized to 8 bits) become standard properties if
   // every wedge has them; these and the other vertex and corner keys with numeric or no values become trailing
   // elements "wedge_<key>"; the distinct face strings become the materials.  Any other key (e.g., a quoted string)
-  // and the edge strings (e.g., "sharp") are dropped with a warning.
+  // and the edge strings (e.g., "sharp") are dropped with a warning.  The comments record the provenance (the
+  // diagnostics written so far; see diagnostics_transcript()).
   [[nodiscard]] PlyMesh to_ply() const;
 
   void write(std::ostream& os) const;
@@ -155,6 +149,14 @@ class GMesh : public Mesh {
 
  private:
   std::ostream* _os{nullptr};  // For record_changes().
+
+  // Read the rest of a Wavefront OBJ file into the empty mesh, as bin/obj_to_mesh does, given its first line that is
+  // neither blank nor a comment.  Vertices get the strings uv, normal, and rgb (from "v x y z r g b", "v x y z
+  // #rrggbb", or ZBrush "#MRGB" lines) if those are given per vertex, else corners get uv and normal; faces get
+  // mat="<usemtl>" and groups="<g>"; without normals, the edges between smoothing groups are sharp.  Unlike
+  // bin/obj_to_mesh, the material colors (from mtllib) are not read.
+  void read_obj(std::istream& is, const string& first_line);
+  void init_from_ply(const PlyMesh& ply);  // Requires an empty mesh; see from_ply().
 };
 
 // Format a vector string "(%g ... %g)".

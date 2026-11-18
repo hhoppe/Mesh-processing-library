@@ -43,6 +43,8 @@ struct PlyMesh {
   Array<string> materials;   // Material strings, indexed by matid (possibly empty).
   Array<WedgeKey> wedge_keys;
   Array<string> comments;  // The header comments other than the materials (without the leading "comment ").
+  // Append each line of text (e.g., diagnostics_transcript(), to record the provenance) as a comment.
+  void add_comment_lines(std::string_view text);
   [[nodiscard]] int num_faces() const { return max(face_start.num() - 1, 0); }
   [[nodiscard]] CArrayView<int> face(int f) const { return face_vertices.slice(face_start[f], face_start[f + 1]); }
   [[nodiscard]] int face_matid(int f) const { return face_matids.num() ? face_matids[f] : 0; }
@@ -67,12 +69,8 @@ struct PlyMesh {
 // Read a PLY file (its header and body).
 [[nodiscard]] PlyMesh read_ply(std::istream& is);
 
-// Returns the diagnostics written so far (see diagnostics_transcript()), as lines for the comments of a PLY file,
-// so that the file records its provenance: the inherited header lines (prefixed by '|') and those of this program.
-[[nodiscard]] Array<string> provenance_comments();
-
 // Write a PLY file, in the format binary_big_endian (network order) or ascii, including the trailing elements above
-// for the nonempty arrays.
+// for the nonempty arrays.  A comment that would read as a material definition is indented by a space.
 void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary);
 
 }  // namespace hh

@@ -719,22 +719,13 @@ Array<string> ply_header_comments(CArrayView<string> header_lines) {
   return lines;
 }
 
-Array<string> provenance_comments() {
-  Array<string> lines;
-  const string transcript = diagnostics_transcript();
-  std::string_view s = transcript;
-  while (s != "") {
-    const size_t i = s.find('\n');
-    std::string_view line = s.substr(0, i);
-    while (line != "" && (line.back() == ' ' || line.back() == '\r')) line.remove_suffix(1);
-    // A multi-line diagnostic (e.g., the header of the command line) already has the prefix on its later lines.
-    if (line.starts_with(g_comment_prefix_string)) line.remove_prefix(strlen(g_comment_prefix_string));
-    // (A line that would read as a material definition is indented.)
-    lines.push((line.starts_with("material ") ? " " : "") + string(line));
+void PlyMesh::add_comment_lines(std::string_view text) {
+  while (text != "") {
+    const size_t i = text.find('\n');
+    comments.push(string(text.substr(0, i)));
     if (i == std::string_view::npos) break;
-    s.remove_prefix(i + 1);
+    text.remove_prefix(i + 1);
   }
-  return lines;
 }
 
 void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary) {
@@ -755,7 +746,7 @@ void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary) {
   os << "format " << (binary ? "binary_big_endian" : "ascii") << " 1.0\n";
   for (const string& comment : mesh.comments) {
     assertx(!comment.contains('\n'));
-    os << "comment" << (comment == "" ? "" : " ") << comment << "\n";
+    os << "comment" << (comment == "" ? "" : comment.starts_with("material ") ? "  " : " ") << comment << "\n";
   }
   for_int(matid, mesh.materials.num()) {
     assertx(!mesh.materials[matid].contains('\n'));

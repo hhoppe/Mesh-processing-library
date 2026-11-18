@@ -4094,144 +4094,6 @@ void do_transferwidkeysfrom(Args& args) {
   }
 }
 
-// *** fromObj
-
-// Assert that group is a convex connected component.
-// Maybe flip all faces so that most faces in the group point away from the group centroid.
-void convex_group_flip_faces(const Set<Face>& group) {
-  // Compute the centroid.
-  Homogeneous h;
-  Set<Vertex> setv;
-  for (Face f : group)
-    for (Vertex v : mesh.vertices(f))
-      if (setv.add(v)) h += mesh.point(v);
-  const Point ctr = to_Point(normalized(h));
-  int vote_flip = 0, vote_keep = 0;
-  for (Face f : group) {
-    Vector toctr{};
-    for (Vertex v : mesh.vertices(f)) toctr += ctr - mesh.point(v);
-    Polygon poly;
-    mesh.polygon(f, poly);
-    if (dot(toctr, poly.get_normal()) > 0.f)
-      vote_flip++;
-    else
-      vote_keep++;
-  }
-  if (vote_flip > vote_keep) {
-    Array<Vertex> va;
-    for (Face f : group) {
-      const int fid = mesh.face_id(f);
-      mesh.get_vertices(f, va);
-      reverse(va);
-      mesh.destroy_face(f);
-      mesh.create_face_private(fid, va);
-    }
-    string str;
-    for (Vertex v : setv) {
-      Vector n;
-      if (!parse_key_vec(mesh.get_string(v), "normal", n)) continue;
-      n = -n;
-      mesh.update_string(v, "normal", csform_vec(str, n));
-    }
-  }
-}
-
-// Requires an empty mesh (so -fromObj must be the first argument).
-void do_fromObj(Args& args) {
-  assertx(mesh.empty());
-  // Build a mesh from Obj input.  Specify <flip> to flip the face to point to the outside of convex components.
-  Array<Vector> ar_nor;
-  Array<Uv> ar_uv;
-  RFile fi(args.get_filename());
-  bool flip = false;
-  if (args.num() && args.peek_string() == "flip") {
-    args.get_string();
-    flip = true;
-  }
-  int v = 0, gid = 1;
-  Set<Face> group;
-  string str;
-  for (string line; my_getline(fi(), line);) {
-    const char* sline = line.c_str();
-    if (const char* s = after_prefix(sline, "v ")) {
-      Point p;
-      for_int(c, 3) p[c] = float_from_chars(s);
-      assert_no_more_chars(s);
-      mesh.create_vertex();
-      v++;
-      Vertex vv = mesh.id_vertex(v);
-      mesh.set_point(vv, p);
-      mesh.update_string(vv, "group", csform(str, "%d", gid));
-      continue;
-    }
-    if (const char* s = after_prefix(sline, "vt ")) {
-      Uv uv;
-      for_int(c, 2) uv[c] = float_from_chars(s);
-      assert_no_more_chars(s);
-      ar_uv.push(uv);
-      continue;
-    }
-    if (const char* s = after_prefix(sline, "vn ")) {
-      Vector nor;
-      for_int(c, 3) nor[c] = float_from_chars(s);
-      assert_no_more_chars(s);
-      ar_nor.push(nor);
-      continue;
-    }
-    if (const char* s = after_prefix(sline, "f ")) {
-      Vector fn{};
-      Array<Vertex> va;
-      Polygon poly;
-      bool have_nors = true;
-      while (*s) {
-        const int i = int_from_chars(s);  // It is 1-based.
-        assertx(*s++ == '/');
-        const int j = int_from_chars(s) - 1;  // Convert from 1-based to 0-based.
-        assertx(*s++ == '/');
-        const int k = int_from_chars(s) - 1;
-        dummy_use(j);
-        if (k < ar_nor.num())
-          fn += ar_nor[k];
-        else
-          have_nors = false;
-        Vertex vv = mesh.id_vertex(i);
-        va.push(vv);
-        poly.push(mesh.point(vv));
-        while (std::isspace(*s)) s++;
-      }
-      // Maybe flip the face winding to match the vertex normals orientation.
-      if (have_nors && dot(fn, poly.get_normal()) < 0.f) reverse(va);
-      if (mesh.legal_create_face(va)) {
-        Face f = mesh.create_face(va);
-        group.add(f);
-        s = sline + 2;  // Rewind and parse again, to update corner attributes, if supplied.
-        while (*s) {
-          const int i = int_from_chars(s);
-          assertx(*s++ == '/');
-          const int j = int_from_chars(s) - 1;  // Convert from 1-based to 0-based.
-          assertx(*s++ == '/');
-          const int k = int_from_chars(s) - 1;
-          Corner c = mesh.corner(mesh.id_vertex(i), f);
-          if (k < ar_nor.num()) mesh.update_string(c, "normal", csform_vec(str, ar_nor[k]));
-          if (j < ar_uv.num()) mesh.update_string(c, "uv", csform_vec(str, ar_uv[j]));
-          while (std::isspace(*s)) s++;
-        }
-      } else {
-        Warning("Illegal face");
-      }
-      continue;
-    }
-    if (after_prefix(sline, "s ")) {
-      gid++;
-      if (flip) convex_group_flip_faces(group);
-      group.clear();
-      continue;
-    }
-  }
-
-  if (flip) convex_group_flip_faces(group);
-}
-
 string get_first_material_name(const string& mtl_filename) {
   if (!file_exists(mtl_filename)) return "default_material";
   RFile fi(mtl_filename);
@@ -4244,9 +4106,7 @@ string get_first_material_name(const string& mtl_filename) {
 // Write the mesh as a binary *.ply file on stdout (one PLY vertex per wedge; see GMesh::to_ply()), instead of the mesh.
 void do_toply() {
   HH_TIMER("_toply");
-  PlyMesh ply = mesh.to_ply();
-  ply.comments = provenance_comments();
-  write_ply(std::cout, ply, true);
+  write_ply(std::cout, mesh.to_ply(), true);
   std::cout.flush();
   nooutput = true;
 }
@@ -4441,7 +4301,6 @@ int main(int argc, const char** argv) {
   HH_ARGSD(createobject, "name : create mesh");
   HH_ARGSD(froma3d, ": build mesh from a3d input");
   HH_ARGSD(rawfroma3d, ": build mesh from a3d input (isolated tris)");
-  HH_ARGSD(fromObj, "file.obj [flip] : import obj");
   HH_ARGSC("", ":");
   HH_ARGSD(renumber, ": renumber vertices and faces");
   HH_ARGSD(nidrenumberv, ": renumber vertices to have id=key{'Nid'}");
@@ -4579,9 +4438,9 @@ int main(int argc, const char** argv) {
   {
     const string arg0 = args.num() ? args.peek_string() : "";
     if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-    const bool from_other = contains(V<std::string_view>("-froma3d", "-rawfroma3d", "-creategrid", "-fromgrid",
-                                                         "-frompointgrid", "-createobject", "-fromObj"),
-                                     arg0);
+    const bool from_other = contains(
+        V<std::string_view>("-froma3d", "-rawfroma3d", "-creategrid", "-fromgrid", "-frompointgrid", "-createobject"),
+        arg0);
     if (!from_other) {
       const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
       RFile fi(filename);
@@ -4598,7 +4457,7 @@ int main(int argc, const char** argv) {
       showff("%s", args.header().c_str());
       HH_TIMER("_readmesh");
       if (ply_header_lines.num()) {
-        mesh.read_ply(read_ply_body(fi(), ply_header_lines));
+        mesh = GMesh::from_ply(read_ply_body(fi(), ply_header_lines));
       } else {
         mesh.read(fi());
       }

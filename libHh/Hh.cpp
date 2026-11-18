@@ -569,8 +569,25 @@ void append_to_transcript(std::string_view s) {
 }  // namespace
 
 string diagnostics_transcript() {
-  const std::scoped_lock lock(g_transcript_mutex);
-  return g_transcript;
+  string transcript;
+  {
+    const std::scoped_lock lock(g_transcript_mutex);
+    transcript = g_transcript;
+  }
+  string result;
+  std::string_view s = transcript;
+  const std::string_view prefix = g_comment_prefix_string;
+  while (s != "") {
+    const size_t i = s.find('\n');
+    std::string_view line = s.substr(0, i);
+    while (line != "" && (line.back() == ' ' || line.back() == '\r')) line.remove_suffix(1);
+    // A multi-line diagnostic (e.g., the header of the command line) already has the prefix on its later lines.
+    if (line.starts_with(prefix)) line.remove_prefix(prefix.size());
+    result.append(line).append("\n");
+    if (i == std::string_view::npos) break;
+    s.remove_prefix(i + 1);
+  }
+  return result;
 }
 
 HH_PRINTF_ATTRIBUTE(1, 2) void showdf(const char* format, ...) {

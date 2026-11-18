@@ -478,7 +478,8 @@ void ParseArgs::fversion(Args& args) {
 
 string ParseArgs::create_header() const {
   const string s_main = "Created at " + get_header_info() + " using:\n";
-  const int thresh_line_len = 120 - 5;
+  // (Shorter than the line limit, so that the line wraps less often when nested in the provenance of a later step.)
+  const int thresh_line_len = 120 - 5 - 8;
   int len = 0;
   string s = g_comment_prefix_string;
   for_int(i, 1 + _args.num()) {

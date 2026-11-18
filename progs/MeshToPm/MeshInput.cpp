@@ -187,13 +187,13 @@ void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
   }
 }
 
-// Fill the empty mesh from a PLY mesh, whose faces must be triangles.  As in GMesh::read_ply(), the mesh vertices are
-// given by the trailing element "wedge_vertex" if present, else they are the PLY vertices; the attributes of the PLY
-// vertices (wedges) are recorded in raw as those of the vertex strings (for a vertex with a single wedge) or else of
-// the corner strings of a .m file; the face strings are those of the materials; and the "wedge_global" flags mark
-// global vertices.  The wedges are not imposed (as wid keys would be): as for a .m file without wid keys, the
-// corners are grouped by their attributes (normal, rgb, and uv), whereas the PLY wedges may also separate other
-// attributes (e.g., Ouv).  Returns the vertex normals if present and the mesh needs no strings.
+// Fill the empty mesh from a PLY mesh, whose faces must be triangles.  As in GMesh::from_ply(), the mesh vertices
+// are given by the trailing element "wedge_vertex" if present, else they are the PLY vertices; the attributes of the
+// PLY vertices (wedges) are recorded in raw as those of the vertex strings (for a vertex with a single wedge) or else
+// of the corner strings of a .m file; the face strings are those of the materials; and the "wedge_global" flags mark
+// global vertices.  The wedges are not imposed (as wid keys would be): as for a .m file without wid keys, the corners
+// are grouped by their attributes (normal, rgb, and uv), whereas the PLY wedges may also separate other attributes
+// (e.g., Ouv).  Returns the vertex normals if present and the mesh needs no strings.
 Array<Vector> mesh_from_ply(PlyMesh& ply, WorkMesh& mesh, RawMesh& raw) {
   const int nw = ply.points.num(), nf = ply.num_faces();
   const bool has_wid = ply.wedge_vertex.num() > 0;

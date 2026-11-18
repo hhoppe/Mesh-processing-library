@@ -7,7 +7,6 @@
 #include "libHh/GeomOp.h"
 #include "libHh/MeshSearch.h"
 #include "libHh/PMesh.h"
-#include "libHh/Ply.h"  // provenance_comments()
 #include "libHh/Set.h"
 #include "libHh/Timer.h"
 using namespace hh;
@@ -99,7 +98,7 @@ Array<Point> get_base_sphmap(const PMeshIter& pmi, const string& base_param_sche
       showff("Header information from %s:\n", mesh_for_base.c_str());
       for (string line; fi2().peek() == '#';) {
         assertx(my_getline(fi2(), line));
-        if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+        if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
       }
     }
     GMesh mesh;
@@ -886,7 +885,7 @@ void write_parameterized_ply(PMeshIter pmi, CArrayView<Point> sphmap, bool split
   if (split_meridian) split_awmesh_along_prime_meridian(pmi);
   hh_clean_up();
   const bool binary = true;
-  pmi.write_ply(std::cout, pminfo, binary, provenance_comments());
+  pmi.write_ply(std::cout, pminfo, binary);
 }
 
 bool will_write_ply(const ParseArgs& args_) {
@@ -944,7 +943,7 @@ int main(int argc, const char** argv) {
   RFile fi(filename);
   for (string line; fi().peek() == '#';) {
     assertx(my_getline(fi(), line));
-    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
+    if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
   }
   showff("%s", args.header().c_str());
   Timer timer("SphereParam");

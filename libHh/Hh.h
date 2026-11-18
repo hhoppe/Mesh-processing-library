@@ -544,8 +544,8 @@ HH_PRINTF_ATTRIBUTE(1, 2) void showff(const char* format, ...);
 // C-string prefix for formatted std::cout output in showdf() and showff(); default is "# ".
 extern const char* g_comment_prefix_string;
 
-// Returns the text written so far by showdf() and showff() (without g_comment_prefix_string), e.g., to record the
-// provenance of an output file whose format cannot be preceded by comment lines (such as a binary PLY file).
+// Returns the text written so far by showdf() and showff(), as lines without g_comment_prefix_string or trailing
+// spaces, e.g., to record the provenance of an output file that cannot start with '#' lines (such as a PLY file).
 [[nodiscard]] string diagnostics_transcript();
 
 // Override "char*" output to detect nullptr in C-string.

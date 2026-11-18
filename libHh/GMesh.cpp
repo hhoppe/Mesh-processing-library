@@ -407,23 +407,38 @@ void GMesh::read(std::istream& is) {
 PlyMesh GMesh::to_ply() const {
   // The kind of a vertex or corner key: a flag (without value), a numeric vector of some dimension, or invalid.
   struct KeyInfo {
-    int dim{-1};    // 0 for a flag; -2 if invalid (non-numeric value or inconsistent dimensions).
+    int dim{-1};    // 0 for a flag; -2 if invalid (non-numeric value or inconsistent dimensions); -1 if not yet seen.
     int offset{0};  // Offset of its values within a wedge record.
   };
   Map<string, KeyInfo> key_infos;
+  // The few distinct keys are found by a linear search, faster than hashing each key of each string.  (The values of
+  // key_infos have stable addresses.)
+  Array<std::pair<string, KeyInfo*>> key_cache;
+  const auto find_key_info = [&](const char* kb, int kl) -> KeyInfo& {
+    const std::string_view key(kb, kl);
+    for (const auto& [name, pinfo] : key_cache)
+      if (name == key) return *pinfo;
+    bool is_new;
+    KeyInfo& info = key_infos.enter(string(key), KeyInfo{}, is_new);
+    if (key_cache.num() < 32) key_cache.push({string(key), &info});
+    return info;
+  };
   Array<float> values;
   // Parse the value of a key: returns its dimension (0 if no value), or -2 if it is not numeric.
   const auto parse_value = [&](const char* vb, int vl) -> int {
     values.init(0);
     if (vl == 0) return 0;
-    string val(vb, vl);
-    const bool is_vector = val.front() == '(' && val.back() == ')';
-    if (is_vector) val = val.substr(1, val.size() - 2);
-    const char* s = val.c_str();
-    while (more_values(s)) {
+    const char* s = vb;
+    const char* const send = vb + vl;
+    const bool is_vector = vl >= 2 && vb[0] == '(' && send[-1] == ')';
+    const char* const vend = is_vector ? send - 1 : send;
+    if (is_vector) s++;
+    for (;;) {  // Parse in place, without copying the value.
+      while (s < vend && (*s == ' ' || *s == '\t')) s++;
+      if (s == vend) break;
       char* end;
       const float value = std::strtof(s, &end);
-      if (end == s) return -2;
+      if (end == s || end > vend) return -2;
       values.push(value);
       s = end;
     }
@@ -433,9 +448,8 @@ PlyMesh GMesh::to_ply() const {
   const auto classify = [&](const char* str) {
     for_cstring_key_value_ptr(str, [&](const char* kb, int kl, const char* vb, int vl) {
       const int dim = parse_value(vb, vl);
-      bool is_new;
-      KeyInfo& info = key_infos.enter(string(kb, kl), KeyInfo{}, is_new);
-      if (is_new) {
+      KeyInfo& info = find_key_info(kb, kl);
+      if (info.dim == -1) {
         info.dim = dim;
       } else if (info.dim != dim) {
         info.dim = -2;
@@ -467,10 +481,8 @@ PlyMesh GMesh::to_ply() const {
   // Overlay the values of the keys of the string onto the record (NaN for absent values; 0 or 1 for flags).
   const auto add_to_record = [&](const char* str, ArrayView<float> record) {
     for_cstring_key_value_ptr(str, [&](const char* kb, int kl, const char* vb, int vl) {
-      const string key(kb, kl);
-      if (!key_infos.contains(key) || key == "wid") return false;
-      const KeyInfo& info = key_infos.get(key);
-      if (info.dim < 0) return false;
+      const KeyInfo& info = find_key_info(kb, kl);
+      if (info.dim < 0 || std::string_view(kb, kl) == "wid") return false;
       assertx(parse_value(vb, vl) == info.dim);
       if (info.dim == 0) {
         record[info.offset] = 1.f;
@@ -494,8 +506,13 @@ PlyMesh GMesh::to_ply() const {
   // The vertices in id order.
   Array<Vertex> va(ordered_vertices());
   const int nv = va.num();
-  Map<Vertex, int> vertex_index;
-  for_int(i, nv) vertex_index.enter(va[i], i);
+  Array<int> index_of_vertex_id(nv ? vertex_id(va.last()) + 1 : 0, -1);
+  for_int(i, nv) index_of_vertex_id[vertex_id(va[i])] = i;
+  const auto vertex_index = [&](Vertex v) { return index_of_vertex_id[vertex_id(v)]; };
+  // Whether two records are identical, including their NaN values.
+  const auto same_records = [](CArrayView<float> record1, CArrayView<float> record2) {
+    return std::memcmp(record1.data(), record2.data(), record1.num() * sizeof(float)) == 0;
+  };
   Array<Array<float>> vertex_records(nv);
   for_int(i, nv) {
     vertex_records[i] = empty_record();
@@ -522,9 +539,9 @@ PlyMesh GMesh::to_ply() const {
     for_int(fi, fa.num()) {
       Face f = fa[fi];
       int j = face_start[fi];
-      for (Vertex v : vertices(f)) {
-        const Corner c = corner(v, f);
-        const int vi = vertex_index.get(v);
+      for (Corner c : corners(f)) {
+        const Vertex v = corner_vertex(c);
+        const int vi = vertex_index(v);
         int wid = wid_of(get_string(c));
         if (!wid) wid = wid_of(get_string(v));
         if (!wid) {
@@ -537,7 +554,7 @@ PlyMesh GMesh::to_ply() const {
         const int w = wedge_of_wid.enter(wid, wedges.num(), is_new);
         if (is_new) {
           wedges.push(Wedge{vi, wid, std::move(record)});
-        } else if (wedges[w].vertex != vi || wedges[w].record != record) {
+        } else if (wedges[w].vertex != vi || !same_records(wedges[w].record, record)) {
           use_wids = false;
           break;
         }
@@ -555,16 +572,17 @@ PlyMesh GMesh::to_ply() const {
     // records.
     Array<bool> has_corner_strings(nv, false);
     for (Face f : fa)
-      for (Vertex v : vertices(f))
-        if (get_string(corner(v, f))) has_corner_strings[vertex_index.get(v)] = true;
+      for (Corner c : corners(f))
+        if (get_string(c)) has_corner_strings[vertex_index(corner_vertex(c))] = true;
     Array<int> vertex_wedge(nv, -1);
-    Map<string, int> wedge_of_key;
+    // The wedges of each vertex with corner strings, as a linked list: the first one and the next of each.
+    Array<int> first_wedge(nv, -1), next_wedge;
     for_int(fi, fa.num()) {
       Face f = fa[fi];
       int j = face_start[fi];
-      for (Vertex v : vertices(f)) {
-        const Corner c = corner(v, f);
-        const int vi = vertex_index.get(v);
+      for (Corner c : corners(f)) {
+        const Vertex v = corner_vertex(c);
+        const int vi = vertex_index(v);
         const char* cstr = get_string(c);
         if (!has_corner_strings[vi]) {
           if (vertex_wedge[vi] < 0) {
@@ -576,12 +594,15 @@ PlyMesh GMesh::to_ply() const {
         }
         Array<float> record(vertex_records[vi]);
         add_to_record(cstr, record);
-        string key(sizeof(int) + record.num() * sizeof(float), '\0');
-        std::memcpy(key.data(), &vi, sizeof(int));
-        std::memcpy(key.data() + sizeof(int), record.data(), record.num() * sizeof(float));
-        bool is_new;
-        const int w = wedge_of_key.enter(key, wedges.num(), is_new);
-        if (is_new) wedges.push(Wedge{vi, wedges.num(), std::move(record)});
+        int w = first_wedge[vi];
+        while (w >= 0 && !same_records(wedges[w].record, record)) w = next_wedge[w];
+        if (w < 0) {
+          w = wedges.num();
+          wedges.push(Wedge{vi, w, std::move(record)});
+          next_wedge.resize(w + 1);
+          next_wedge[w] = first_wedge[vi];
+          first_wedge[vi] = w;
+        }
         corner_wedges[j++] = w;
       }
     }

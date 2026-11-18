@@ -126,6 +126,9 @@ template <typename T> class CArrayView {
     }
     return false;
   }
+  // Protected, for the derived ArrayView and Array.  A public default constructor (an empty view, as for std::span)
+  // would allow "= {}" default arguments, but a view member left out of a constructor's initializer list would then
+  // silently be empty; so an empty view is explicit: CArrayView<T>(nullptr, 0).
   CArrayView() = default;
   type& operator=(const type&) = default;  // Protected to prevent a no-op "matrix[0] = matrix[1]" on a const Matrix!
 };

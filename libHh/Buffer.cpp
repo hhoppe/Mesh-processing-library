@@ -184,7 +184,6 @@ void RBuffer::extract(int n) {
   _n -= n;
   _beg += n;
   if (!_n) _beg = 0;
-  if (0 && _beg & 0x3) shift();  // Safest but inefficient.
 }
 
 bool RBuffer::has_line() const { return contains(_ar.slice(_beg, _beg + _n), '\n'); }

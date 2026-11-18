@@ -13,7 +13,8 @@ namespace hh {
 // A streaming buffer open on a file descriptor.  It supports non-blocking reads on file descriptor 0 (stdin).
 // It lets one peek into the buffer (not just the first character) to identify if a full data record is available.
 // Such a record can be a line of text or a binary structure.
-// After extracting data from the buffer, it shifts the buffer contents for proper alignment.
+// The records are read with memcpy(), so they need no alignment.  Extracted data is not moved; instead, when the space
+// after the data falls below one read size, a refill moves the remaining (unextracted) data to the beginning.
 
 class Buffer : noncopyable {
  public:
@@ -28,7 +29,7 @@ class Buffer : noncopyable {
   bool _eof{false};
   bool _err{false};
 
-  void shift();   // Shift data to the beginning of the buffer.
+  void shift();   // Move the data to the beginning of the buffer (reclaiming the space of the extracted data).
   void expand();  // Increase the buffer size.
 };
 

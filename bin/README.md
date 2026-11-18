@@ -13,7 +13,8 @@ built by Visual Studio.
   `*.ply` files.  (The programs read `*.obj` and `*.ply` files directly; see the
   [file formats](../progs/README.md#wavefront-obj-obj).)
 - `ply_to_pts` (Perl script) converts the vertices of a Stanford `*.ply` file, with their normals if present, into
-  a stream of points (`*.pts`), e.g. for `Recon` and `Meshfit`.
+  a stream of points (`*.pts`, in the [A3d geometry-stream format](../progs/README.md#geometry-stream-a3d-pts)),
+  e.g. for `Recon` and `Meshfit`.
 - `g3d_cmp` (and `g3d_cmp.bat` for the Windows command prompt) compares geometric objects side-by-side in a grid
   of `G3dOGL` windows whose viewpoints stay synchronized.
 - `recon_test` runs and shows the animated surface reconstruction demo on any point set, with other

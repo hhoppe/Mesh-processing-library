@@ -321,7 +321,8 @@ The directory `bin` also contains scripts:
 `pm_simplify` further simplifies the base mesh of a progressive mesh,
 `mesh_to_obj` and `mesh_to_ply` convert the mesh format (`*.m`) to Wavefront `*.obj` or Stanford `*.ply` files
 (which the programs read directly), and
-`ply_to_pts` converts the vertices of a `*.ply` file into a stream of points (`*.pts`).
+`ply_to_pts` converts the vertices of a `*.ply` file into a stream of points (`*.pts`, in the
+[A3d geometry-stream format](progs/README.md#geometry-stream-a3d-pts)).
 
 All programs recognize the argument `--help` (or `-?`) to show their many options.
 See [`progs/README.md`](progs/README.md) for a description of each program with example commands,

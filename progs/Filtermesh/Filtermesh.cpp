@@ -2890,8 +2890,13 @@ void do_orderedvertexpts() {
   HH_TIMER("_orderedvertexpts");
   nooutput = true;
   for (Vertex v : mesh.ordered_vertices()) {
-    const Vnors vnors(mesh, v);
-    const Vector nor = vnors.is_unique() ? vnors.unique_nor() : Vector(0.f, 0.f, 0.f);
+    Vector nor(0.f, 0.f, 0.f);
+    if (!mesh.degree(v)) {  // E.g., a point set: the normal is given or else absent (without a warning).
+      parse_key_vec(mesh.get_string(v), "normal", nor);
+    } else {
+      const Vnors vnors(mesh, v);
+      if (vnors.is_unique()) nor = vnors.unique_nor();
+    }
     output_point(mesh.point(v), nor);
   }
   showdf("Printed %d vertex points\n", mesh.num_vertices());

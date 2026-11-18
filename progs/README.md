@@ -700,6 +700,8 @@ See the documentation at the end of [`libHh/A3dStream.h`](../libHh/A3dStream.h).
 The stream contains polygons, polylines, points, and control codes
 (like end-of-frame, end-of-input, change-of-object).
 Unlike in a mesh, these primitives do not share vertices.  The stream can be either text or binary.
+`Filtermesh points.ply -orderedvertexpts >points.pts` converts the vertices of a mesh or of a `*.ply` point set into
+a stream of points (with their normals if present), e.g. for `Recon` and `Meshfit`.
 
 ### Frame stream (`*.frame`, `*.s3d`)
 

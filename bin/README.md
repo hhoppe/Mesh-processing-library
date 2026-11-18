@@ -9,9 +9,6 @@ built by Visual Studio.
 - `mesh_to_pm` creates a progressive mesh from a mesh (using `MeshSimplify` and `Filterprog`), and
   `pm_simplify` further simplifies the base mesh of a progressive mesh.  (For half-edge collapses under the quadric
   error metric, i.e. `-minqem -vsgeom`, the program `MeshToPm` does the same in a single process.)
-- `ply_to_pts` (Perl script) converts the vertices of a Stanford `*.ply` file, with their normals if present, into
-  a stream of points (`*.pts`, in the [A3d geometry-stream format](../progs/README.md#geometry-stream-a3d-pts)),
-  e.g. for `Recon` and `Meshfit`.
 - `g3d_cmp` (and `g3d_cmp.bat` for the Windows command prompt) compares geometric objects side-by-side in a grid
   of `G3dOGL` windows whose viewpoints stay synchronized.
 - `recon_test` runs and shows the animated surface reconstruction demo on any point set, with other

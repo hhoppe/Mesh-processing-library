@@ -595,12 +595,9 @@ void do_mfilename(Args& args) {
   HH_TIMER("_mfilename");
   assertx(mesh.empty());
   RFile fi(args.get_filename());
-  for (string line; fi().peek() == '#';) {
-    assertx(my_getline(fi(), line));
-    if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
-  }
+  GMeshInput input(fi());
   show_header();
-  mesh.read(fi());
+  input.read(mesh);
   // Remove any normals, which would become stale as the vertices move.
   int num_normals = 0;
   for (Vertex v : mesh.vertices()) {

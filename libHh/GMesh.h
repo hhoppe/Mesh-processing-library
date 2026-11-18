@@ -36,6 +36,7 @@ struct A3dVertexColor;
 
 // A Mesh with geometric structure (Point at each Vertex) and with strings at each mesh element.
 struct PlyMesh;
+class GMeshInput;
 
 class GMesh : public Mesh {
  public:
@@ -113,7 +114,8 @@ class GMesh : public Mesh {
 
   // ** Standard I/O for my meshes (see format below):
   // Read a whole mesh, discarding comments; the stream may instead contain a PLY file (detected by its first line) or
-  // a Wavefront OBJ file (detected by its first line that is neither blank nor a comment).
+  // a Wavefront OBJ file (detected by its first line that is neither blank nor a comment).  (To echo the provenance of
+  // the input, see GMeshInput.)
   void read(std::istream& is);
 
   [[nodiscard]] static bool recognize_line(std::string_view line);
@@ -150,13 +152,14 @@ class GMesh : public Mesh {
  private:
   std::ostream* _os{nullptr};  // For record_changes().
 
-  // Read the rest of a Wavefront OBJ file into the empty mesh, as bin/obj_to_mesh does, given its first line that is
-  // neither blank nor a comment.  Vertices get the strings uv, normal, and rgb (from "v x y z r g b", "v x y z
-  // #rrggbb", or ZBrush "#MRGB" lines) if those are given per vertex, else corners get uv and normal; faces get
-  // mat="<usemtl>" and groups="<g>"; without normals, the edges between smoothing groups are sharp.  Unlike
-  // bin/obj_to_mesh, the material colors (from mtllib) are not read.
+  // Read the rest of a Wavefront OBJ file into the empty mesh, as the former Perl script obj_to_mesh did, given its
+  // first line that is neither blank nor a comment.  Vertices get the strings uv, normal, and rgb (from
+  // "v x y z r g b", "v x y z #rrggbb", or ZBrush "#MRGB" lines) if those are given per vertex, else corners get uv
+  // and normal; faces get mat="<usemtl>" and groups="<g>"; without normals, the edges between smoothing groups are
+  // sharp.  Unlike obj_to_mesh, the material colors (from mtllib) are not read.
   void read_obj(std::istream& is, const string& first_line);
   void init_from_ply(const PlyMesh& ply);  // Requires an empty mesh; see from_ply().
+  friend GMeshInput;
 };
 
 // Format a vector string "(%g ... %g)".
@@ -203,6 +206,21 @@ void for_cstring_key_value_ptr(const char* str, Func func) {
     if (func(keystr, keylen, valstr, vallen)) break;
   }
 }
+
+// The mesh input of a program, read in two steps so that its provenance precedes the header of the program, e.g.:
+//   GMeshInput input(fi());  // Echo with showff() the provenance at the start of the input: the '#' lines of a mesh
+//                            // or OBJ file, or the comments of a PLY file, each with the prefix '|'.
+//   showff("%s", args.header().c_str());
+//   input.read(mesh);  // Read the mesh, as GMesh::read() would.
+class GMeshInput {
+ public:
+  explicit GMeshInput(std::istream& is);
+  void read(GMesh& mesh);  // The mesh must be empty.
+
+ private:
+  std::istream& _is;
+  Array<string> _ply_header_lines;  // Nonempty if the input is a PLY file.
+};
 
 // Iterate through an info string, calling func for each attribute after setting arrays key and val appropriately.
 template <std::invocable<> Func>

@@ -1451,11 +1451,9 @@ void do_polystream() {
 
 int main(int argc, const char** argv) {
   assertw(!sdebug);
-  // A binary PLY file written on stdout must not be preceded by diagnostics.  (The option may be abbreviated.)
-  for_intL(i, 1, argc) {
-    const std::string_view arg = argv[i];
-    if (arg.size() >= 5 && std::string_view("-outply").starts_with(arg)) my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
-  }
+  if (ranges::any_of(CArrayView(argv, argc).slice(1),
+                     [](const char* arg) { return arg == std::string_view("-outply"); }))
+    my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");  // A binary PLY file on stdout cannot be preceded by diagnostics.
   ParseArgs args(argc, argv);
   HH_ARGSC("A progressive mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSC(HH_ARGS_INDENT "Go to specific mesh:");

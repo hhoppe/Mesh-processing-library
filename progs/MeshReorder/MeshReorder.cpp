@@ -1525,15 +1525,12 @@ int main(int argc, const char** argv) {
     const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
     gfilename = filename;
     RFile fi(filename);
-    for (string line; fi().peek() == '#';) {
-      assertx(my_getline(fi(), line));
-      if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
-    }
+    GMeshInput input(fi());
     showff("%s", args.header().c_str());
     HH_TIMER("MeshReorder");
     {
       HH_TIMER("_readmesh");
-      mesh.read(fi());
+      input.read(mesh);
       fixup_mesh();
       extract_mesh();
     }

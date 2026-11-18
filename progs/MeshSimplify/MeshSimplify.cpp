@@ -4988,15 +4988,12 @@ int main(int argc, const char** argv) {
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
   const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
   RFile fi(filename);
-  for (string line; fi().peek() == '#';) {
-    assertx(my_getline(fi(), line));
-    if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
-  }
+  GMeshInput input(fi());
   showdf("%s", args.header().c_str());
   Timer timer("MeshSimplify", Timer::EMode::always);
   {
     HH_TIMER("_readmesh");
-    mesh.read(fi());
+    input.read(mesh);
   }
   const int orig_nf = mesh.num_faces();
   args.parse();

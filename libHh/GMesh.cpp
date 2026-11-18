@@ -382,10 +382,7 @@ bool more_values(const char*& s) {
 
 void GMesh::read(std::istream& is) {
   if (is.peek() == 'p') {  // A mesh file never starts with 'p', whereas a PLY file starts with the line "ply".
-    // Echo the header comments (the provenance) of the PLY file, as programs do for the '#' lines of a mesh file.
-    const Array<string> header_lines = read_ply_header(is);
-    for (const string& comment : ply_header_comments(header_lines)) showff("|%s\n", comment.c_str());
-    init_from_ply(read_ply_body(is, header_lines));
+    init_from_ply(read_ply(is));
   } else {
     bool seen_data = false;
     for (string line; my_getline(is, line);) {
@@ -402,6 +399,28 @@ void GMesh::read(std::istream& is) {
     }
   }
   if (debug() >= 1) ok();
+}
+
+// *** GMeshInput
+
+GMeshInput::GMeshInput(std::istream& is) : _is(is) {
+  if (_is.peek() == 'p') {
+    _ply_header_lines = read_ply_header(_is);
+    for (const string& comment : ply_header_comments(_ply_header_lines)) showff("|%s\n", comment.c_str());
+  } else {
+    for (string line; _is.peek() == '#';) {
+      assertx(my_getline(_is, line));
+      if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
+    }
+  }
+}
+
+void GMeshInput::read(GMesh& mesh) {
+  if (_ply_header_lines.num()) {
+    mesh.init_from_ply(read_ply_body(_is, _ply_header_lines));
+  } else {
+    mesh.read(_is);
+  }
 }
 
 PlyMesh GMesh::to_ply() const {
@@ -836,7 +855,7 @@ void GMesh::read_obj(std::istream& is, const string& first_line) {
         }
         corners.push(corner);
       }
-      const int fid = face_smoothing.num() + 1;  // Faces are numbered as in bin/obj_to_mesh.
+      const int fid = face_smoothing.num() + 1;  // Faces are numbered as in the former script obj_to_mesh.
       face_smoothing.push(smoothing);
       material_counts[material]++;
       va.init(0);

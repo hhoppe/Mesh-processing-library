@@ -224,6 +224,7 @@ bool CloseMinCycles::would_be_nonseparating_cycle(Edge e12, bool exact) {
     int count = 0;
     connected = [&] {
       for (;;) {
+        ++count;  // (Lost in 2017 (3238a7e9), which disabled this approximation.)
         const int thresh_count = 50;
         dummy_use(exact);
         if (k_touch_approx && !exact && count > thresh_count) return true;  // Return from lambda.

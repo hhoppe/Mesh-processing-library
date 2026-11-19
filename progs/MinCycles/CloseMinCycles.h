@@ -19,9 +19,10 @@ class CloseMinCycles {
     int genus{0};                                           // Minimum genus of topologically simplified mesh.
     float frac_cycle_length{1.f};  // By default, find exact minimal cycles (> 1.f means approximate).
     bool mark_edges_sharp{true};   // Set "sharp" on closed edge cycles.
-    bool mark_faces_filled{true};  // Set "filled" and "handle"/"tunnel" on faces, "filledcenter" on vertex.
+    bool mark_faces_filled{true};  // Set "filled" and "handle"/"tunnel" on the new faces.
     int mark_min_num_edges{0};     // Mark "sharp" and "filled" only if cycle has a minimum number of edges.
     float frac_offset = 0.f;       // If nonzero, interpenetrate the closed cycles by a fraction of the object bbox.
+    bool fairtriangulate{true};    // Close each cycle with fair_triangulate_face() rather than a fan of triangles.
   };
 
   CloseMinCycles(GMesh& mesh, Options options);

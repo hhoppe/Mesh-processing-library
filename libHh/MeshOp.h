@@ -51,8 +51,10 @@ namespace hh {
 // (3) a fairing of the new vertices that minimizes the scale-dependent umbrella (bi-Laplacian) energy, with the loop
 //     vertices and their outer neighbors fixed; or the Laplacian energy if a loop vertex lies on the mesh boundary.
 // The new faces get the string of f, and their corners at the loop vertices the strings of the corners of f.
-// Returns false (leaving f unchanged) if every triangulation would create an edge already present in the mesh.
-[[nodiscard]] bool fair_triangulate_face(GMesh& mesh, Face f);
+// Returns false (leaving f unchanged) if every triangulation would create an edge already present in the mesh; else,
+// if requested, reports the new faces and the new vertices (those not on the loop).
+[[nodiscard]] bool fair_triangulate_face(GMesh& mesh, Face f, Array<Face>* pnew_faces = nullptr,
+                                         Array<Vertex>* pnew_vertices = nullptr);
 
 // Returns the cosine of the signed angle away from "flatness" (== the exterior angle).
 // Range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate).

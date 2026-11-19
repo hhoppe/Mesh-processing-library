@@ -105,7 +105,8 @@ void CloseMinCycles::flood_reinitialize(Vertex vseed) {
 
 // Given a cycle of edges described by a loop of vertices vertex_loop, close the associated topological handle by
 //  (1) duplicating each vertex along the cycle, and
-//  (2) closing each of the resulting two boundaries with a fan of triangle faces.
+//  (2) closing each of the resulting two boundaries with a triangulated face (a fair triangulation if
+//      _options.fairtriangulate, else a fan of triangles).
 // Returns the cycle of new corresponding vertices (which is in reverse order from vertex_loop).
 Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) {
   assertx(vertex_loop.num() >= 3);
@@ -134,53 +135,51 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
     for (Edge e : _mesh.edges(vn)) e_bfsnum(e) = 0;  // Note that e_joined(e) will be initialized shortly.
     // On corners and faces, all sacs, strings, and flags are preserved.
   }
-  // Next, fill the two boundaries with create_face() and center_split().
+  // Next, close each of the two boundaries with a new face, which is triangulated: by fair_triangulate_face() if
+  // _options.fairtriangulate, or else (or if that fails) by a fan of triangles around a new center vertex.
   reverse(new_vertices);  // Topologically, we must close the ring of new vertices in the opposite direction.
   Vec2<float> sum_dih = twice(0.f);  // Sum of edge dihedral angles after closure, to estimate handle vs. tunnel.
-  Vec2<Vertex> center_vertices;
+  Vec2<Array<Face>> cap_faces;       // The new faces closing each boundary.
+  Vec2<Array<Vertex>> cap_vertices;  // The vertices of those faces (those of the loop and the new ones).
+  Vec2<Vertex> fan_centers{nullptr, nullptr};
   for_int(fi, 2) {
-    CArrayView<Vertex> va = fi == 0 ? vertex_loop : new_vertices;
-    Face fn = _mesh.create_face(va);
+    const CArrayView<Vertex> va = fi == 0 ? vertex_loop : new_vertices;
+    const Face fn = _mesh.create_face(va);
     // We must assign string information to the inner corners if defined on the outer corners.
     for (Corner c : _mesh.corners(fn)) {
       Corner c2 = _mesh.ccw_corner(c);  // Arbitrarily choose one of the two adjacent corners.
       _mesh.set_string(c, _mesh.get_string(c2));
     }
-    Vertex vn = _mesh.center_split_face(fn);
-    center_vertices[fi] = vn;
-    v_dist(vn) = 0.f;  // It can be any value != BIGFLOAT.
-    // Clean-up / initialize the edge data.
-    for (Face f : _mesh.faces(vn))
-      for (Edge e : _mesh.edges(f)) e_bfsnum(e) = 0;      // Note that e_joined(e) will be initialized shortly.
-    for (Vertex v : _mesh.vertices(vn)) v_dist(v) = 0.f;  // It can be any value != BIGFLOAT.
-    // Heuristically characterize the loop as a handle or tunnel based on the geometric embedding.
-    for (Face f : _mesh.faces(vn)) {
-      Edge e = _mesh.opp_edge(vn, f);
-      // Face f2 = _mesh.opp_face(f, e);
-      const float dih = edge_signed_dihedral_angle(_mesh, e);
-      // SHOW(dih);
-      sum_dih[fi] += dih;
+    Array<Vertex> inner_vertices;
+    const bool fair = _options.fairtriangulate && fair_triangulate_face(_mesh, fn, &cap_faces[fi], &inner_vertices);
+    if (_options.fairtriangulate && !fair) Warning("CloseMinCycles: fair_triangulate_face() failed, so using a fan");
+    if (!fair) {
+      fan_centers[fi] = _mesh.center_split_face(fn);
+      cap_faces[fi] = Array<Face>(_mesh.faces(fan_centers[fi]));
+      inner_vertices = {fan_centers[fi]};
     }
+    cap_vertices[fi] = Array<Vertex>(va);
+    for (Vertex v : inner_vertices) cap_vertices[fi].push(v);
+    // Initialize the vertex and edge data.
+    for (Vertex v : cap_vertices[fi]) v_dist(v) = 0.f;  // It can be any value != BIGFLOAT.
+    for (Face f : cap_faces[fi])
+      for (Edge e : _mesh.edges(f)) e_bfsnum(e) = 0;  // Note that e_joined(e) will be initialized shortly.
+    // Heuristically characterize the loop as a handle or tunnel based on the geometric embedding.
+    for_int(i, va.num()) sum_dih[fi] += edge_signed_dihedral_angle(_mesh, _mesh.edge(va[i], va[(i + 1) % va.num()]));
   }
   const bool is_handle = sum(sum_dih) > 0.f;  // Else it is a tunnel.
   (is_handle ? _total_handles : _total_tunnels) += 1;
-  for (Vertex vn : center_vertices) {
-    if (_mesh.degree(vn) >= _options.mark_min_num_edges) {
+  for_int(fi, 2) {
+    const CArrayView<Vertex> va = fi == 0 ? vertex_loop : new_vertices;
+    if (va.num() >= _options.mark_min_num_edges) {
       if (_options.mark_edges_sharp) {
-        // For all edges in the two cycles after the closure, label them with the "sharp" attribute.
-        for (Face f : _mesh.faces(vn)) {
-          Edge e = _mesh.opp_edge(vn, f);
-          _mesh.update_string(e, "sharp", "");
-        }
+        // Label the edges of the cycle with the "sharp" attribute.
+        for_int(i, va.num()) _mesh.update_string(_mesh.edge(va[i], va[(i + 1) % va.num()]), "sharp", "");
       }
       if (_options.mark_faces_filled) {
-        // For all faces in the two fans after the closure, label them with the "filled" attribute.
-        for (Face f : _mesh.faces(vn)) _mesh.update_string(f, "filled", "");
-        // Also label the faces with either "handle" or "tunnel".
+        // Label the new faces with the "filled" attribute, and with either "handle" or "tunnel".
         const char* key = is_handle ? "handle" : "tunnel";
-        for (Face f : _mesh.faces(vn)) _mesh.update_string(f, key, "");
-        // Label the two vertices at the centers of the face fans.
-        _mesh.update_string(vn, "filledcenter", "");
+        for (Face f : cap_faces[fi]) _mesh.update_string(f, "filled", ""), _mesh.update_string(f, key, "");
       }
     }
     // For octaflat, we must apply offsets all the time.  Otherwise:
@@ -188,9 +187,19 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
     // (2) the presence of vertices sharing the same position will confuse Draco compression, resulting in
     // unexpected new vertices after Draco decompression --- see "original indices are unmapped" in octaviewer.html.
     if (_options.frac_offset) {
-      const Vector normal = Vnors(_mesh, vn).unique_nor();
+      // The normal at the center of a fan, or else the normalized area vector of the loop (that of any surface
+      // bounded by the loop), oriented as the new faces.
+      Vector normal;
+      if (fan_centers[fi]) {
+        normal = Vnors(_mesh, fan_centers[fi]).unique_nor();
+      } else {
+        Vector area_vector(0.f, 0.f, 0.f);
+        for_int(i, va.num()) area_vector +=
+            cross(Vector(_mesh.point(va[i])), Vector(_mesh.point(va[(i + 1) % va.num()])));
+        normal = ok_normalized(area_vector);
+      }
       const Vector offset_vector = normal * _offset_magnitude * (is_handle ? 1.f : -1.f);
-      for (Vertex v : concatenate(V(vn), _mesh.vertices(vn))) _mesh.set_point(v, _mesh.point(v) + offset_vector);
+      for (Vertex v : cap_vertices[fi]) _mesh.set_point(v, _mesh.point(v) + offset_vector);
     }
   }
   {

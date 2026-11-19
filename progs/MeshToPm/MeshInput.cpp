@@ -103,7 +103,7 @@ void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
       if (const char* sinfo = get_string_info(s, str)) {
         const AttribInfo info = parse_attrib_info(sinfo);
         const bool global = GMesh::string_has_key(sinfo, "global");
-        // Other keys (e.g., "sph" or "filledcenter") are ignored.
+        // Other keys (e.g., "sph") are ignored.
         if (info.normal[0] != k_undefined || info.rgb[0] != k_undefined || info.uv[0] != k_undefined || info.wid ||
             global) {
           raw.any_strings = true;

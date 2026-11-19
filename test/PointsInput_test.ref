@@ -1,0 +1,35 @@
+A3d with comments and a normal:
+# |Provenance line 1.
+# |Provenance line 2.
+ 2 points, with normals
+ point 0: [1, 2, 3]  normal [0, 0, 1]
+ point 1: [4, 5, 6]  normal [0, 0, 0]
+A3d starting with a point:
+ 2 points, without normals
+ point 0: [1, 2, 3]
+ point 1: [4, 5, 6]
+A3d starting with a normal:
+ 1 points, with normals
+ point 0: [1, 2, 3]  normal [0, 1, 0]
+A3d starting with a color, with an end of frame:
+ 2 points, without normals
+ point 0: [1, 2, 3]
+ point 1: [4, 5, 6]
+A3d binary:
+# |Created by WA3dStream on yyyy-mm-dd hh:mm:ss
+ 2 points, with normals
+ point 0: [1, 2, 3]  normal [0, 0, 1]
+ point 1: [4, 5, 6]  normal [0, 0, 0]
+PLY ascii:
+# |Ascii point set
+ 2 points, with normals
+ point 0: [1, 2, 3]  normal [0, 0, 1]
+ point 1: [4, 5, 6]  normal [0, 1, 0]
+PLY binary:
+# |Binary point set
+ 3 points, with normals
+ point 0: [1, 2, 3]  normal [1, 0, 0]
+ point 1: [4, 5, 6]  normal [0, 1, 0]
+ point 2: [7, 8, 9]  normal [0, 0, 1]
+Empty input:
+ 0 points, without normals

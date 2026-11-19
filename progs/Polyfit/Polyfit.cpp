@@ -7,6 +7,7 @@
 #include "libHh/FileIO.h"
 #include "libHh/Lls.h"
 #include "libHh/Map.h"
+#include "libHh/PointsInput.h"
 #include "libHh/Polygon.h"
 #include "libHh/Principal.h"
 #include "libHh/Random.h"
@@ -513,18 +514,8 @@ void do_filename(Args& args) {
   HH_TIMER("_filename");
   assertx(!pt.n);
   RFile fi(args.get_filename());
-  RSA3dStream ia3d(fi());
-  A3dElem el;
-  for (;;) {
-    ia3d.read(el);
-    if (el.type() == A3dElem::EType::endfile) break;
-    if (el.type() == A3dElem::EType::comment) continue;
-    if (el.type() != A3dElem::EType::point) {
-      Warning("Non-point input ignored");
-      continue;
-    }
-    enter_point(el[0].p, nullptr);
-  }
+  const PointSet point_set = PointsInput(fi()).read();
+  for (const Point& p : point_set.points) enter_point(p, nullptr);
   showdf("%d points read\n", pt.n);
 }
 

@@ -92,6 +92,7 @@ CGridView<D, T>             (const elements)
   levels of detail.
 - `SrMesh`: selectively refinable progressive mesh, for view-dependent refinement.
 - `RA3dStream`, `WA3dStream`: reading and writing streams of polygons, polylines, and points (`*.a3d`).
+- `PointsInput`: reading a set of points (with normals) from a stream of points (`*.pts`) or a `*.ply` file.
 - `read_ply()`, `write_ply()`: read and write a polygon mesh (`PlyMesh`) as a Stanford `*.ply` file, ASCII or
   binary, with optional trailing elements that identify the mesh vertex of each wedge, the face materials, and
   further per-wedge attributes.

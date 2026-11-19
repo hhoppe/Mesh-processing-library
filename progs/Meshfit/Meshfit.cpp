@@ -18,6 +18,7 @@
 #include "libHh/MeshSearch.h"
 #include "libHh/NonlinearOptimization.h"
 #include "libHh/Parallel.h"
+#include "libHh/PointsInput.h"
 #include "libHh/Polygon.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
@@ -625,18 +626,10 @@ void do_filename(Args& args) {
   HH_TIMER("_filename");
   assertx(!pt.co.num());
   RFile fi(args.get_filename());
-  RSA3dStream ia3d(fi());
-  A3dElem el;
-  for (;;) {
-    ia3d.read(el);
-    if (el.type() == A3dElem::EType::endfile) break;
-    if (el.type() == A3dElem::EType::comment) continue;
-    if (el.type() != A3dElem::EType::point) {
-      Warning("Non-point input ignored");
-      continue;
-    }
-    pt.enter(el[0].p);
-    pt.nor.push(el[0].n);
+  const PointSet point_set = PointsInput(fi()).read();
+  for_int(i, point_set.points.num()) {
+    pt.enter(point_set.points[i]);
+    pt.nor.push(point_set.normals.num() ? point_set.normals[i] : Vector(0.f, 0.f, 0.f));
   }
   // Keep the normals only if some point has one.
   const int num_normals = int(std::ranges::count_if(pt.nor, [](const Vector& n) { return !is_zero(n); }));

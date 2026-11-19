@@ -76,6 +76,7 @@
     <ClCompile Include="Mklib.cpp" />
     <ClCompile Include="PMesh.cpp" />
     <ClCompile Include="Ply.cpp" />
+    <ClCompile Include="PointsInput.cpp" />
     <ClCompile Include="Polygon.cpp" />
     <ClCompile Include="Principal.cpp" />
     <ClCompile Include="Principal_em.cpp" />
@@ -166,6 +167,7 @@
     <ClInclude Include="ParallelCoords.h" />
     <ClInclude Include="Pixel.h" />
     <ClInclude Include="Ply.h" />
+    <ClInclude Include="PointsInput.h" />
     <ClInclude Include="Polygon.h" />
     <ClInclude Include="Pool.h" />
     <ClInclude Include="Plot.h" />

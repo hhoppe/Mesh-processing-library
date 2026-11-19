@@ -16,6 +16,7 @@
 #include "libHh/MeshSearch.h"
 #include "libHh/NonlinearOptimization.h"
 #include "libHh/Parallel.h"
+#include "libHh/PointsInput.h"
 #include "libHh/Random.h"
 #include "libHh/RangeOp.h"
 #include "libHh/Set.h"
@@ -133,17 +134,9 @@ void do_mfilename(Args& args) {
 void do_filename(Args& args) {
   assertx(co.empty());
   RFile fi(args.get_filename());
-  RSA3dStream ia3d(fi());
-  A3dElem el;
-  for (;;) {
-    ia3d.read(el);
-    if (el.type() == A3dElem::EType::endfile) break;
-    if (el.type() == A3dElem::EType::comment) continue;
-    if (el.type() != A3dElem::EType::point) {
-      Warning("Non-point input ignored");
-      continue;
-    }
-    co.push(el[0].p);
+  const PointSet point_set = PointsInput(fi()).read();
+  for (const Point& p : point_set.points) {
+    co.push(p);
     gcmf.push(nullptr);
     gscmfi.push(0);
     gdis2.push(0.f);

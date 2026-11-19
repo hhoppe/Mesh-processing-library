@@ -34,6 +34,7 @@
 #include "libHh/MeshOp.h"
 #include "libHh/Mk3d.h"
 #include "libHh/Mklib.h"
+#include "libHh/PointsInput.h"
 #include "libHh/Polygon.h"
 #include "libHh/Principal.h"
 #include "libHh/RangeOp.h"  // truncate()
@@ -119,22 +120,14 @@ void close_mk(unique_ptr<Mk3d>& pmk) {
 void process_read() {
   HH_TIMER("_read");
   RFile fi(filename);
-  std::istream& is = fi();
-  for (string line; is.peek() == '#';) {
-    assertx(my_getline(is, line));
-    if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
-  }
+  PointsInput input(fi());
+  input.echo_provenance();
   showff("%s", g_header.c_str());
-  RSA3dStream ia3d(is);
-  A3dElem el;
+  PointSet point_set = input.read();
   int nnor = 0;
-  for (;;) {
-    ia3d.read(el);
-    if (el.type() == A3dElem::EType::endfile) break;
-    if (el.type() == A3dElem::EType::comment) continue;
-    assertx(el.type() == A3dElem::EType::point);
-    co.push(el[0].p);
-    nor.push(el[0].n);
+  for_int(i, point_set.points.num()) {
+    co.push(point_set.points[i]);
+    nor.push(point_set.normals.num() ? point_set.normals[i] : Vector(0.f, 0.f, 0.f));
     if (co[num][0]) is_3d = true;
     if (!is_zero(nor[num])) {
       nnor++;

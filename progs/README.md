@@ -117,7 +117,7 @@ and reconstructs an approximating triangle mesh.
 For example,
 ```shell
 Recon demos/data/distcap.pts -samplingd 0.02 |
-  Filtermesh -genus -fillholes 30 -fairtriangulate -genus | tee distcap.recon.m |
+  Filtermesh -genus -rmcomp 100 -fillholes 30 -fairtriangulate -genus | tee distcap.recon.m |
   G3dOGL -st demos/data/distcap.s3d -key DmDe
 ```
 - reads the text file of points,

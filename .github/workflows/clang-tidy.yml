@@ -64,10 +64,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y clang-tidy libgl-dev libx11-dev libjpeg-dev libpng-dev zlib1g-dev
 
-      # The Windows image includes LLVM.
-      - name: Add LLVM to the PATH (Windows)
+      # The Windows image includes LLVM, but it may be older than the MSVC STL accepts (in Nov 2026, LLVM 20.1.8,
+      # whereas the STL of MSVC 14.52 requires Clang 22: "error STL1000: Unexpected compiler version"), so upgrade it.
+      - name: Upgrade LLVM and add it to the PATH (Windows)
         if: runner.os == 'Windows'
-        run: echo 'C:\Program Files\LLVM\bin' >>"$GITHUB_PATH"
+        run: |
+          choco upgrade llvm -y --no-progress
+          echo 'C:\Program Files\LLVM\bin' >>"$GITHUB_PATH"
 
       - name: Show the clang-tidy version
         run: clang-tidy --version

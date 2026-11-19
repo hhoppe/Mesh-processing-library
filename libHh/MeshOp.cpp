@@ -1,11 +1,13 @@
 // -*- C++ -*-  Copyright (c) Microsoft Corporation; see LICENSE.
 #include "libHh/MeshOp.h"
 
-#include <mutex>  // once_flag, call_once()
+#include <functional>  // function
+#include <mutex>       // once_flag, call_once()
 
 #include "libHh/Array.h"
 #include "libHh/Facedistance.h"
 #include "libHh/GeomOp.h"
+#include "libHh/Lls.h"
 #include "libHh/MathOp.h"  // Trig
 #include "libHh/Polygon.h"
 #include "libHh/PriorityQueue.h"
@@ -210,6 +212,237 @@ bool triangulate_face(GMesh& mesh, Face f) {
   Set<Edge> sete;  // Initially, the inner edges.
   for_intL(i, 2, nv - 1) sete.enter(mesh.edge(va[0], va[i]));
   retriangulate(mesh, sete, true, &setvr, -2, circum_radius_swap_criterion, nullptr, nullptr);
+  return true;
+}
+
+// *** fair_triangulate_face
+
+namespace {
+
+// The angle between two unit normals, or pi (the worst) if one of them is zero (a degenerate triangle).
+float dihedral_angle_between(const Vector& n1, const Vector& n2) {
+  if (is_zero(n1) || is_zero(n2)) return float(D_TAU / 2);
+  return std::acos(clamp(dot(n1, n2), -1.f, 1.f));
+}
+
+// Swap the edges of the patch faces whose two opposite angles sum to more than pi (as for a Delaunay
+// triangulation), where legal, until none remains.
+void fair_triangulate_relax_edges(GMesh& mesh, Set<Face>& patch, const std::function<void(Face)>& set_corner_strings) {
+  const auto angle_at = [&](Vertex v, Vertex va, Vertex vb) {
+    return angle_between_unit_vectors(ok_normalized(mesh.point(va) - mesh.point(v)),
+                                      ok_normalized(mesh.point(vb) - mesh.point(v)));
+  };
+  for_int(iter, 100) {
+    // The interior edges of the patch, as vertex pairs because a swap destroys edges.
+    Array<Vec2<Vertex>> edges;
+    for (Face f : patch)
+      for (Edge e : mesh.edges(f))
+        if (!mesh.is_boundary(e) && f == mesh.face1(e) && patch.contains(mesh.face2(e)))
+          edges.push(V(mesh.vertex1(e), mesh.vertex2(e)));
+    int num_swaps = 0;
+    for (const auto& [v1, v2] : edges) {
+      const Edge e = mesh.query_edge(v1, v2);
+      if (!e || !mesh.legal_edge_swap(e)) continue;
+      const Vertex vs1 = mesh.side_vertex1(e), vs2 = mesh.side_vertex2(e);
+      if (angle_at(vs1, v1, v2) + angle_at(vs2, v1, v2) <= float(D_TAU / 2) + 1e-5f) continue;
+      for (Face f : mesh.faces(e)) patch.remove(f);
+      const Edge enew = mesh.swap_edge(e);
+      for (Face f : mesh.faces(enew)) patch.enter(f), set_corner_strings(f);  // The swap loses the corner strings.
+      num_swaps++;
+    }
+    if (!num_swaps) break;
+  }
+}
+
+}  // namespace
+
+bool fair_triangulate_face(GMesh& mesh, Face f) {
+  Array<Vertex> va;
+  mesh.get_vertices(f, va);
+  const int n = va.num();
+  if (!assertw(n >= 3)) return true;
+  const Array<Point> pa = transformed(va, [&](Vertex v) { return mesh.point(v); });
+  // The strings of the face and of its corners, given to the new faces and their corners at the loop vertices.
+  const string fstring = mesh.get_string(f) ? mesh.get_string(f) : "";
+  Map<Vertex, string> corner_strings;
+  for (Corner c : mesh.corners(f))
+    if (mesh.get_string(c)) corner_strings.enter(mesh.corner_vertex(c), mesh.get_string(c));
+  // The unit normal of the mesh face beyond each loop edge (va[i], va[i + 1]), or zero if none.
+  Array<Vector> outer_normals(n, Vector(0.f, 0.f, 0.f));
+  for_int(i, n) {
+    if (const Face fo = mesh.opp_face(f, mesh.edge(va[i], va[(i + 1) % n]))) {
+      Polygon poly;
+      mesh.polygon(fo, poly);
+      outer_normals[i] = ok_normalized(poly.get_normal_dir());
+    }
+  }
+  // The density at each loop vertex: the mean length of its edges.
+  Map<Vertex, float> density;
+  for (Vertex v : va) {
+    float sum = 0.f;
+    int num = 0;
+    for (Edge e : mesh.edges(v)) sum += mesh.length(e), num++;
+    density.enter(v, sum / float(max(num, 1)));
+  }
+
+  // (1) Triangulate the loop.
+  Array<Vec3<int>> triangles;  // Indices into va.
+  constexpr int k_max_dp_vertices = 1000;
+  if (n <= k_max_dp_vertices) {
+    // For the sub-loop va[i..k] (closed by the edge (i, k)), the weight of its best triangulation (largest dihedral
+    // angle, then area), the apex m of its triangle on edge (i, k), and the unit normal of that triangle.
+    const float k_invalid = BIGFLOAT;
+    Matrix<float> max_angle(V(n, n), 0.f);
+    Matrix<double> area(V(n, n), 0.);
+    Matrix<int> apex(V(n, n), -1);
+    Matrix<Vector> normal(V(n, n), Vector(0.f, 0.f, 0.f));
+    const auto across_normal = [&](int i, int k) { return k == i + 1 ? outer_normals[i] : normal[i, k]; };
+    for_intL(len, 2, n) {
+      for (int i = 0; i + len < n; i++) {
+        const int k = i + len;
+        float best_angle = k_invalid;
+        double best_area = 0.;
+        // A diagonal that is already a mesh edge would make the mesh non-manifold.
+        if (!(i == 0 && k == n - 1) && mesh.query_edge(va[i], va[k])) {
+          max_angle[i, k] = k_invalid;
+          continue;
+        }
+        for_intL(m, i + 1, k) {
+          if (max_angle[i, m] == k_invalid || max_angle[m, k] == k_invalid) continue;
+          const Vector dir = cross(pa[i], pa[m], pa[k]);
+          const Vector nor = ok_normalized(dir);
+          float angle = max(max_angle[i, m], max_angle[m, k]);
+          // A (nearly) degenerate triangle, whose height is tiny relative to its longest edge, is worse than any fold.
+          const float max_len2 = max({dist2(pa[i], pa[m]), dist2(pa[m], pa[k]), dist2(pa[k], pa[i])});
+          if (mag(dir) <= 1e-3f * max_len2) angle = max(angle, float(D_TAU / 2) + 1.f);
+          for (const Vector& n2 : {across_normal(i, m), across_normal(m, k)})
+            if (!is_zero(n2)) angle = max(angle, dihedral_angle_between(nor, n2));
+          if (i == 0 && k == n - 1 && !is_zero(outer_normals[n - 1]))
+            angle = max(angle, dihedral_angle_between(nor, outer_normals[n - 1]));
+          const double sum_area = area[i, m] + area[m, k] + .5 * mag(dir);
+          if (angle < best_angle || (angle == best_angle && sum_area < best_area)) {
+            best_angle = angle, best_area = sum_area;
+            apex[i, k] = m;
+            normal[i, k] = nor;
+          }
+        }
+        max_angle[i, k] = best_angle;
+        area[i, k] = best_area;
+      }
+    }
+    if (max_angle[0, n - 1] == k_invalid) return false;
+    Array<Vec2<int>> stack{V(0, n - 1)};
+    while (!stack.empty()) {
+      const auto [i, k] = stack.pop();
+      if (k - i < 2) continue;
+      const int m = apex[i, k];
+      triangles.push(V(i, m, k));
+      stack.push(V(i, m));
+      stack.push(V(m, k));
+    }
+  }
+  // Give the corners of a new face at the loop vertices the strings of the corners of f (e.g., uv), before any
+  // center split interpolates them.
+  const auto set_corner_strings = [&](Face ff) {
+    for (Corner c : mesh.corners(ff))
+      if (const string* ps = corner_strings.find_ptr(mesh.corner_vertex(c))) mesh.set_string(c, ps->c_str());
+  };
+  Set<Face> patch;
+  mesh.destroy_face(f);
+  if (triangles.num()) {
+    for (const auto& [i, m, k] : triangles) {
+      const Face fn = mesh.create_face(va[i], va[m], va[k]);
+      set_corner_strings(fn);
+      patch.enter(fn);
+    }
+  } else {
+    const Face fn = mesh.create_face(va);
+    set_corner_strings(fn);
+    const Vertex vn = mesh.center_split_face(fn);
+    for (Face ff : mesh.faces(vn)) patch.enter(ff);
+    density.enter(vn, float(mean(density.values())));
+  }
+  if (fstring != "")
+    for (Face ff : patch) mesh.set_string(ff, fstring.c_str());
+
+  // (2) Refine the triangles that are larger than the local density, alternated with edge relaxation.
+  const float alpha = std::sqrt(2.f);
+  Array<Vertex> new_vertices;
+  for (Face ff : patch)
+    for (Vertex v : mesh.vertices(ff))
+      if (!density.contains(v)) new_vertices.push(v);  // The center of a fan.
+  fair_triangulate_relax_edges(mesh, patch, set_corner_strings);
+  for (;;) {
+    int num_splits = 0;
+    for (Face ff : Array<Face>(patch)) {
+      const Vec3<Vertex> tv = mesh.triangle_vertices(ff);
+      const Point center = mean(V(mesh.point(tv[0]), mesh.point(tv[1]), mesh.point(tv[2])));
+      const float center_density = (density.get(tv[0]) + density.get(tv[1]) + density.get(tv[2])) / 3.f;
+      const bool split = ranges::all_of(tv, [&](Vertex v) {
+        const float d = alpha * dist(center, mesh.point(v));
+        return d > center_density && d > density.get(v);
+      });
+      if (!split) continue;
+      patch.remove(ff);
+      const Vertex vn = mesh.center_split_face(ff);
+      mesh.set_point(vn, center);
+      density.enter(vn, center_density);
+      new_vertices.push(vn);
+      for (Face fn : mesh.faces(vn)) patch.enter(fn);
+      num_splits++;
+    }
+    if (!num_splits) break;
+    fair_triangulate_relax_edges(mesh, patch, set_corner_strings);
+  }
+
+  // (3) Fair the new vertices: the scale-dependent umbrella operator U(v) = sum_u w_vu (p_u - p_v) / sum_u w_vu with
+  // w_vu = 1 / |p_u - p_v|, and the equations U(v) = 0 (membrane) or U(U(v)) = 0 (thin plate) at the new vertices.
+  if (new_vertices.num()) {
+    const bool thin_plate = ranges::none_of(va, [&](Vertex v) { return mesh.is_boundary(v); });
+    Map<Vertex, int> index;
+    for_int(i, new_vertices.num()) index.enter(new_vertices[i], i);
+    const auto umbrella = [&](Vertex v) {  // The coefficients of U(v) on the vertices.
+      Map<Vertex, float> coefs;
+      float sum_w = 0.f;
+      for (Vertex u : mesh.vertices(v)) sum_w += 1.f / max(mesh.length(mesh.edge(v, u)), 1e-20f);
+      for (Vertex u : mesh.vertices(v)) {
+        coefs[u] += 1.f / max(mesh.length(mesh.edge(v, u)), 1e-20f) / sum_w;
+      }
+      coefs[v] -= 1.f;
+      return coefs;
+    };
+    const int nn = new_vertices.num();
+    unique_ptr<Lls> lls = Lls::make(nn, nn, 3, min(1.f, 40.f / float(nn)));
+    for_int(r, nn) {
+      const Vertex v = new_vertices[r];
+      Map<Vertex, float> row;
+      if (thin_plate) {
+        const Map<Vertex, float> uv = umbrella(v);
+        for (const auto& [u, w] : uv)
+          for (const auto& [x, c] : umbrella(u)) row[x] += w * c;
+      } else {
+        row = umbrella(v);
+      }
+      Vector rhs(0.f, 0.f, 0.f);
+      for (const auto& [x, c] : row) {
+        if (const int* pi = index.find_ptr(x)) {
+          lls->enter_a_rc(r, *pi, c);
+        } else {
+          rhs -= c * Vector(mesh.point(x));
+        }
+      }
+      lls->enter_b_r(r, rhs);
+      lls->enter_xest_r(r, mesh.point(v));
+    }
+    if (assertw(lls->solve())) {
+      for_int(i, nn) {
+        Point p;
+        for_int(c, 3) p[c] = lls->get_x_rc(i, c);
+        mesh.set_point(new_vertices[i], p);
+      }
+    }
+    for (Vertex v : new_vertices) mesh.update_string(v, "normal", nullptr);  // It would be stale.
+  }
   return true;
 }
 

@@ -21,6 +21,8 @@ icriterion=1 num_swaps=1 !!tm.mesh.query_edge(tm.va[1], tm.va[3])=1 !!tm.mesh.qu
 tm.mesh.degree(tm.va[0]) = 12
 # Split high-valence vertices 3 times
 tm.mesh.num_vertices()=16 tm.mesh.num_faces()=18 max_degree=6
+saddle=0 mesh.num_vertices() > n=1 mesh.num_faces() > n - 2=1
+saddle=1 mesh.num_vertices() > n=1 mesh.num_faces() > n - 2=1
 # Summary of statistics:
 # Sprojquick:         (1      )           0:0            av=0              sd=0
 # Sprojnei:           (1      )           1:1            av=1              sd=0

@@ -8,7 +8,7 @@ a5d28dee_1.png 229.59 64.71 229.59 64.71 229.59 64.71
 # FilterPM demos/data/spheretext.pm -nf 2000 -outmesh | (screenshot 1)
 0c5a400e_1.png 165.66 94.81 165.72 94.22 170.50 90.67
 # Recon demos/data/distcap.pts -samplingd 0.02 | (screenshot 1)
-2203928f_1.png 192.24 85.36 192.24 85.36 192.54 85.13
+cf7199b1_1.png 192.30 85.28 192.30 85.28 192.60 85.05
 # Recon demos/data/distcap.pts -samplingd 0.02 -what c | (screenshot 1)
 bfab6ef7_1.png 225.05 63.33 162.32 106.34 148.26 121.30
 # Recon demos/data/distcap.pts -samplingd 0.02 -what m | Filtermesh -toa3d | (screenshot 1)
@@ -16,15 +16,15 @@ bfab6ef7_1.png 225.05 63.33 162.32 106.34 148.26 121.30
 # Recon demos/data/curve1.pts -samplingd 0.06 -grid 30 | (screenshot 1)
 da8d483d_1.png 254.87 4.80 254.67 7.11 254.51 9.12
 # Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts -crep 1e-5 -reconstruct | (screenshot 1)
-c3298c38_1.png 195.80 78.91 195.80 78.91 196.13 78.62
+c3298c38_1.png 195.86 78.81 195.86 78.81 196.19 78.53
 # Filtermesh demos/data/blob5.orig.m -randpts 10000 -vertexpts | (screenshot 1)
 c520f53d_1.png 207.09 66.68 207.09 66.68 207.50 66.17
 # Meshfit -mfile distcap.recon.m -file demos/data/distcap.pts (screenshot 1)
-5a7ea2ef_1.png 196.14 78.68 196.14 78.68 196.43 78.42
+5a7ea2ef_1.png 195.82 78.84 195.82 78.84 196.15 78.56
 # Polyfit -pfile curve1.a3d -file demos/data/curve1.pts -crep 3e-4 -spring 1 -reconstruct | (screenshot 1)
 5e0f6f3e_1.png 254.37 10.63 254.37 10.63 254.37 10.63
 # G3dOGL distcap.sub0.m "Subdivfit -mf distcap.sub0.m -nsub 2 -outn |" (screenshot 1)
-a8bcaba1_1.png 194.38 79.56 194.41 79.51 196.43 77.76
+a8bcaba1_1.png 194.77 79.33 194.79 79.30 197.18 77.19
 # PM_LOD_LEVEL=0.05 G3dOGL 57chevy.pm -st demos/data/57chevy.s3d -lightambient .4 -key De (screenshot 1)
 d07ba9af_1.png 200.89 85.21 218.17 60.85 218.58 60.51
 # FilterPM demos/data/standingblob.pm -nf 300 -truncate_prior -nf 10000 -truncate_beyond | (screenshot 1)

@@ -14,7 +14,7 @@ Recon data/%r%.pts -rootname results/%r% -samplingd 0.02 -what ugpoclm >results/
 echo.
 echo Filling any small reconstruction holes.
 echo.
-Filtermesh results/%r%.m -genus -rmcomp 100 -fillholes 40 -triangulate -fixvertices -genus >results/%r%.recon.m
+Filtermesh results/%r%.m -genus -rmcomp 100 -fillholes 40 -fairtriangulate -fixvertices -genus >results/%r%.recon.m
 
 echo.
 echo Running phase 2 - Meshfit.

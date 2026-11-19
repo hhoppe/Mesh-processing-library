@@ -9,7 +9,7 @@ set r=mannequin
 echo.
 echo Running phase 1 - Recon.
 echo.
-Recon data/%r%.pts -samplingd 5.5 | Filtermesh -genus -fillholes 40 -triangulate -genus >results/%r%.recon.m
+Recon data/%r%.pts -samplingd 5.5 | Filtermesh -genus -fillholes 40 -fairtriangulate -genus >results/%r%.recon.m
 
 echo.
 echo Running phase 2 - Meshfit.

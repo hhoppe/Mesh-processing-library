@@ -1618,6 +1618,7 @@ void do_poissonparam() {
 
 // *** fillholes
 
+// Close each hole of at most maxnume edges with a single polygonal face; a good followup is -fairtriangulate.
 void do_fillholes(Args& args) {
   HH_TIMER("_fillholes");
   const int maxnume = args.get_int();  // Equals maxnumv.
@@ -1691,6 +1692,25 @@ void do_triangulate() {
     }
   }
   if (Sfverts.empty()) Sfverts.set_print(false);
+}
+
+// Triangulate each face with more than 3 sides (e.g., a hole closed by -fillholes) using fair_triangulate_face().
+void do_fairtriangulate() {
+  HH_TIMER("_fairtriangulate");
+  Array<Face> faces;
+  for (Face f : mesh.faces())
+    if (mesh.num_vertices(f) > 3) faces.push(f);
+  const int nf0 = mesh.num_faces(), nv0 = mesh.num_vertices();
+  int num_failed = 0;
+  for (Face f : faces) {
+    if (!fair_triangulate_face(mesh, f)) {
+      Warning("fair_triangulate_face() failed, so the face is center-split");
+      mesh.center_split_face(f);
+      num_failed++;
+    }
+  }
+  showdf("Fair-triangulated %d faces (%d center-split instead), adding %d vertices and %d faces\n", faces.num(),
+         num_failed, mesh.num_vertices() - nv0, mesh.num_faces() - nf0);
 }
 
 void do_splitvalence(Args& args) {
@@ -4361,10 +4381,11 @@ int main(int argc, const char** argv) {
   HH_ARGSD(nice, ": assert mesh is nice");
   HH_ARGSD(flip, ": flip orientation of faces");
   HH_ARGSD(smootha3d, ": equivalent to '-angle 180 -selsmooth'");
-  HH_ARGSD(fillholes, "nedges : fill holes with <= nedges");
+  HH_ARGSD(fillholes, "nedges : fill holes <= nedges (then -fairtriangulate)");
   HH_ARGSP(checkflat, "tol : if > 0, triang faces dif. (rec. 1e-5)");
   HH_ARGSF(alltriangulate, ": subdivide even the triangle");
   HH_ARGSD(triangulate, ": triangulate large faces (centersplit)");
+  HH_ARGSD(fairtriangulate, ": triangulate polygonal faces, refining and fairing");
   HH_ARGSD(splitvalence, "val : split vertices with valence >= val");
   HH_ARGSD(splitbnd2valence, ": split boundary vertices of valence 2");
   HH_ARGSD(quadshortdiag, ": triangulate quads using shortest diagonal");

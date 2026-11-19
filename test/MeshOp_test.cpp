@@ -194,6 +194,45 @@ void test_split_valence() {
   assertx(max_degree < 8);
 }
 
+void test_fair_triangulate() {
+  // A single face: a regular 24-gon, either planar or on a saddle z = x^2 - y^2.
+  for (const bool saddle : {false, true}) {
+    GMesh mesh;
+    Array<Vertex> va;
+    const int n = 24;
+    for_int(i, n) {
+      const float angle = float(i) * TAU / float(n);
+      const float x = std::cos(angle), y = std::sin(angle);
+      va.push(mesh.create_vertex());
+      mesh.set_point(va.last(), Point(x, y, saddle ? .5f * (x * x - y * y) : 0.f));
+    }
+    const Face f = mesh.create_face(va);
+    mesh.set_string(f, "hole");
+    assertx(fair_triangulate_face(mesh, f));
+    mesh.ok();
+    float max_abs_z = 0.f, min_angle = BIGFLOAT, max_dihedral = 0.f;
+    for (Vertex v : mesh.vertices()) max_abs_z = max(max_abs_z, abs(mesh.point(v)[2]));
+    for (Face ff : mesh.faces()) {
+      assertx(mesh.is_triangle(ff) && mesh.get_string(ff) == string("hole"));
+      const Vec3<Point> tri = mesh.triangle_points(ff);
+      for_int(i, 3) {
+        min_angle = min(min_angle, angle_between_unit_vectors(normalized(tri[mod3(i + 1)] - tri[i]),
+                                                              normalized(tri[mod3(i + 2)] - tri[i])));
+      }
+    }
+    for (Edge e : mesh.edges()) {
+      if (mesh.is_boundary(e)) continue;
+      const Vector n1 = get_normal(mesh.triangle_points(mesh.face1(e)));
+      const Vector n2 = get_normal(mesh.triangle_points(mesh.face2(e)));
+      max_dihedral = max(max_dihedral, std::acos(clamp(dot(n1, n2), -1.f, 1.f)));
+    }
+    SHOW(saddle, mesh.num_vertices() > n, mesh.num_faces() > n - 2);
+    assertx(saddle ? max_abs_z <= .5f : max_abs_z < 1e-5f);  // A planar hole is filled in its plane.
+    assertx(deg_from_rad(min_angle) > 10.f);
+    assertx(deg_from_rad(max_dihedral) < (saddle ? 30.f : .1f));
+  }
+}
+
 }  // namespace
 
 int main() {
@@ -201,4 +240,5 @@ int main() {
   test_geometry();
   test_retriangulate();
   test_split_valence();
+  test_fair_triangulate();
 }

@@ -20,7 +20,7 @@ Recon "$pts" -rootname "$out" -samplingd $samplingd $RECON_RECON_PARAMS -what ug
 echo
 echo 'Filling any small reconstruction holes.'
 echo
-Filtermesh "$out.m" -genus -rmcomp 100 -fillholes $fillholes -triangulate -fixvertices -genus >"$out.recon.m"
+Filtermesh "$out.m" -genus -rmcomp 100 -fillholes $fillholes -fairtriangulate -fixvertices -genus >"$out.recon.m"
 
 echo
 echo 'Running phase 2 - Meshfit.'

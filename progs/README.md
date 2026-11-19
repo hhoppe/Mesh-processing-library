@@ -117,14 +117,14 @@ and reconstructs an approximating triangle mesh.
 For example,
 ```shell
 Recon demos/data/distcap.pts -samplingd 0.02 |
-  Filtermesh -genus -fillholes 30 -triangulate -genus | tee distcap.recon.m |
+  Filtermesh -genus -fillholes 30 -fairtriangulate -genus | tee distcap.recon.m |
   G3dOGL -st demos/data/distcap.s3d -key DmDe
 ```
 - reads the text file of points,
 - reconstructs a triangle mesh assuming a max sample spacing (&delta;+&rho; in paper) of 2% of the bounding volume,
 - reports the genus of this initial mesh,
 - removes all connected components with fewer than 100 triangle faces,
-- fills and triangulates any hole bounded by 30 or fewer mesh edges,
+- fills any hole bounded by 30 or fewer mesh edges with refined and faired triangles,
 - reports the genus of the modified mesh,
 - saves it to a file, and
 - displays it interactively starting from a specified viewpoint, with flat-shaded faces (<kbd>Dm</kbd>)

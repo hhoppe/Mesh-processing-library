@@ -41,20 +41,35 @@ namespace hh {
 // Returns success (the triangulation may fail if some edges already exist).
 [[nodiscard]] bool triangulate_face(GMesh& mesh, Face f);
 
+struct FairTriangulateOptions {
+  bool refine{true};     // Refine the triangulation to the density of the surrounding mesh (step 2 below).
+  bool fair{true};       // Fair the new vertices (step 3 below).
+  int fairing_order{0};  // 1 = membrane (Laplacian), 2 = thin plate (bi-Laplacian), 0 = automatic (below).
+  float density_factor{1.41421356f};  // Liepa's alpha (sqrt(2)): a larger value splits more, giving smaller triangles.
+  int max_dp_vertices{1000};          // A larger loop is first triangulated as a fan around a new center vertex.
+};
+
+struct FairTriangulateResult {
+  bool success{false};
+  Array<Face> new_faces;
+  Array<Vertex> new_vertices;  // Those not on the loop of f.
+};
+
 // Replace the polygonal face f (e.g., a hole closed by Filtermesh -fillholes) by a refined and faired triangulation,
 // following the hole-filling method of Liepa, "Filling holes in meshes", SGP 2003:
 // (1) a triangulation of its vertex loop that minimizes the largest dihedral angle (including the angles with the
 //     adjacent mesh faces across its edges) and then the total area, found by dynamic programming in O(n^3) time (for
-//     a loop of more than 1000 vertices, a fan around a new center vertex instead);
+//     a loop of more than options.max_dp_vertices vertices, a fan around a new center vertex instead);
 // (2) a refinement that splits each triangle larger than the local density (the mean edge length of the mesh at the
 //     loop vertices, interpolated inward), alternated with edge swaps toward a Delaunay triangulation;
-// (3) a fairing of the new vertices that minimizes the scale-dependent umbrella (bi-Laplacian) energy, with the loop
-//     vertices and their outer neighbors fixed; or the Laplacian energy if a loop vertex lies on the mesh boundary.
-// The new faces get the string of f, and their corners at the loop vertices the strings of the corners of f.
-// Returns false (leaving f unchanged) if every triangulation would create an edge already present in the mesh; else,
-// if requested, reports the new faces and the new vertices (those not on the loop).
-[[nodiscard]] bool fair_triangulate_face(GMesh& mesh, Face f, Array<Face>* pnew_faces = nullptr,
-                                         Array<Vertex>* pnew_vertices = nullptr);
+// (3) a fairing of the new vertices that minimizes the scale-dependent umbrella energy, with the loop vertices and
+//     their outer neighbors fixed: by default, the thin-plate (bi-Laplacian) energy, or the membrane (Laplacian)
+//     energy if a loop vertex lies on the mesh boundary.
+// The new faces get the string of f, and their corners at the loop vertices the strings of the corners of f; the new
+// vertices get normals (from the final geometry) if the loop vertices have normals.
+// Fails (leaving f unchanged) if every triangulation would create an edge already present in the mesh.
+[[nodiscard]] FairTriangulateResult fair_triangulate_face(GMesh& mesh, Face f,
+                                                          const FairTriangulateOptions& options = {});
 
 // Returns the cosine of the signed angle away from "flatness" (== the exterior angle).
 // Range -1.f .. 1.f  (1.f if flat, -1.f if foldover inwards/outwards)  (or -2.f if a triangle is degenerate).

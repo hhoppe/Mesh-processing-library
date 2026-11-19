@@ -1703,7 +1703,7 @@ void do_fairtriangulate() {
   const int nf0 = mesh.num_faces(), nv0 = mesh.num_vertices();
   int num_failed = 0;
   for (Face f : faces) {
-    if (!fair_triangulate_face(mesh, f)) {
+    if (!fair_triangulate_face(mesh, f).success) {
       Warning("fair_triangulate_face() failed, so the face is center-split");
       mesh.center_split_face(f);
       num_failed++;

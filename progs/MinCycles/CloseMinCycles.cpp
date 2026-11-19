@@ -151,9 +151,15 @@ Array<Vertex> CloseMinCycles::close_cycle(const CArrayView<Vertex> vertex_loop) 
       _mesh.set_string(c, _mesh.get_string(c2));
     }
     Array<Vertex> inner_vertices;
-    const bool fair = _options.fairtriangulate && fair_triangulate_face(_mesh, fn, &cap_faces[fi], &inner_vertices);
-    if (_options.fairtriangulate && !fair) Warning("CloseMinCycles: fair_triangulate_face() failed, so using a fan");
-    if (!fair) {
+    FairTriangulateResult fair_result;
+    if (_options.fairtriangulate) {
+      fair_result = fair_triangulate_face(_mesh, fn);
+      if (!fair_result.success) Warning("CloseMinCycles: fair_triangulate_face() failed, so using a fan");
+    }
+    if (fair_result.success) {
+      cap_faces[fi] = std::move(fair_result.new_faces);
+      inner_vertices = std::move(fair_result.new_vertices);
+    } else {
       fan_centers[fi] = _mesh.center_split_face(fn);
       cap_faces[fi] = Array<Face>(_mesh.faces(fan_centers[fi]));
       inner_vertices = {fan_centers[fi]};

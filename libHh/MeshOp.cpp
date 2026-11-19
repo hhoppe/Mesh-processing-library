@@ -226,11 +226,13 @@ float dihedral_angle_between(const Vector& n1, const Vector& n2) {
 
 }  // namespace
 
-bool fair_triangulate_face(GMesh& mesh, Face f, Array<Face>* pnew_faces, Array<Vertex>* pnew_vertices) {
+FairTriangulateResult fair_triangulate_face(GMesh& mesh, Face f, const FairTriangulateOptions& options) {
+  assertx(options.fairing_order >= 0 && options.fairing_order <= 2 && options.density_factor > 0.f);
+  FairTriangulateResult result;
   Array<Vertex> va;
   mesh.get_vertices(f, va);
   const int n = va.num();
-  if (!assertw(n >= 3)) return true;
+  if (!assertw(n >= 3)) return result;
   const Array<Point> pa = transformed(va, [&](Vertex v) { return mesh.point(v); });
   // The strings of the face and of its corners, given to the new faces and their corners at the loop vertices.
   const string fstring = mesh.get_string(f) ? mesh.get_string(f) : "";
@@ -262,8 +264,7 @@ bool fair_triangulate_face(GMesh& mesh, Face f, Array<Face>* pnew_faces, Array<V
 
   // (1) Triangulate the loop.
   Array<Vec3<int>> triangles;  // Indices into va.
-  constexpr int k_max_dp_vertices = 1000;
-  if (n <= k_max_dp_vertices) {
+  if (n <= options.max_dp_vertices) {
     // For the sub-loop va[i..k] (closed by the edge (i, k)), the weight of its best triangulation (largest dihedral
     // angle, then area), the apex m of its triangle on edge (i, k), and the unit normal of that triangle.
     const float k_invalid = BIGFLOAT;
@@ -309,7 +310,7 @@ bool fair_triangulate_face(GMesh& mesh, Face f, Array<Face>* pnew_faces, Array<V
     // happened in practice.)  Splitting the loop along some diagonal (e.g., the shortest absent "halfway" diagonal)
     // and recursing would fail in the same cases, since it also yields a triangulation of the loop; a fallback that
     // always works would instead start from the fan (as for a large loop below), then refine and fair it.
-    if (max_angle[0, n - 1] == k_invalid) return false;
+    if (max_angle[0, n - 1] == k_invalid) return result;
     Array<Vec2<int>> stack{V(0, n - 1)};
     while (!stack.empty()) {
       const auto [i, k] = stack.pop();
@@ -374,13 +375,13 @@ bool fair_triangulate_face(GMesh& mesh, Face f, Array<Face>* pnew_faces, Array<V
     for (Face ff : patch) mesh.set_string(ff, fstring.c_str());
 
   // (2) Refine the triangles that are larger than the local density, alternated with edge relaxation.
-  const float alpha = std::sqrt(2.f);
+  const float alpha = options.density_factor;
   Array<Vertex> added_vertices;
   for (Face ff : patch)
     for (Vertex v : mesh.vertices(ff))
       if (!density.contains(v)) added_vertices.push(v);  // The center of a fan.
   relax_edges();
-  for (;;) {
+  while (options.refine) {
     int num_splits = 0;
     for (Face ff : Array<Face>(patch)) {
       const Vec3<Vertex> tv = mesh.triangle_vertices(ff);
@@ -405,8 +406,11 @@ bool fair_triangulate_face(GMesh& mesh, Face f, Array<Face>* pnew_faces, Array<V
 
   // (3) Fair the new vertices: the scale-dependent umbrella operator U(v) = sum_u w_vu (p_u - p_v) / sum_u w_vu with
   // w_vu = 1 / |p_u - p_v|, and the equations U(v) = 0 (membrane) or U(U(v)) = 0 (thin plate) at the new vertices.
-  if (added_vertices.num()) {
-    const bool thin_plate = ranges::none_of(va, [&](Vertex v) { return mesh.is_boundary(v); });
+  if (options.fair && added_vertices.num()) {
+    const bool closed_rings = ranges::none_of(va, [&](Vertex v) { return mesh.is_boundary(v); });
+    if (options.fairing_order == 2 && !closed_rings)
+      assertnever("fair_triangulate_face: the thin-plate fairing needs the loop vertices to have closed rings");
+    const bool thin_plate = options.fairing_order == 2 || (options.fairing_order == 0 && closed_rings);
     Map<Vertex, int> index;
     for_int(i, added_vertices.num()) index.enter(added_vertices[i], i);
     const auto umbrella = [&](Vertex v) {  // The coefficients of U(v) on the vertices.
@@ -449,6 +453,8 @@ bool fair_triangulate_face(GMesh& mesh, Face f, Array<Face>* pnew_faces, Array<V
         mesh.set_point(added_vertices[i], p);
       }
     }
+  }
+  if (added_vertices.num()) {
     // The new vertices get normals from the faired geometry (the sum of the normals of their faces), if the loop
     // vertices have normals.
     string str;
@@ -458,9 +464,10 @@ bool fair_triangulate_face(GMesh& mesh, Face f, Array<Face>* pnew_faces, Array<V
       mesh.update_string(v, "normal", loop_has_normals ? csform_vec(str, ok_normalized(sum_normal)) : nullptr);
     }
   }
-  if (pnew_faces) *pnew_faces = Array<Face>(patch);
-  if (pnew_vertices) *pnew_vertices = added_vertices;
-  return true;
+  result.success = true;
+  result.new_faces = Array<Face>(patch);
+  result.new_vertices = std::move(added_vertices);
+  return result;
 }
 
 // Returns cos(angle) of non-boundary edge.  Ranges from -1 to 1.

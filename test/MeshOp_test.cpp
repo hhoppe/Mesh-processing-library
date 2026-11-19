@@ -208,7 +208,7 @@ void test_fair_triangulate() {
     }
     const Face f = mesh.create_face(va);
     mesh.set_string(f, "hole");
-    assertx(fair_triangulate_face(mesh, f));
+    assertx(fair_triangulate_face(mesh, f).success);
     mesh.ok();
     float max_abs_z = 0.f, min_angle = BIGFLOAT, max_dihedral = 0.f;
     for (Vertex v : mesh.vertices()) max_abs_z = max(max_abs_z, abs(mesh.point(v)[2]));

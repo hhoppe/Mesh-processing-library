@@ -22,13 +22,15 @@ endif
 	$(COMPILE.cpp) -g -masm=intel -fverbose-asm -Wa,-acdhln $< -o tmp_$*.$(extobj) >$@
 	@rm -f tmp_$*.$(extobj)
 
+# (Through ccache, a cached *.gch is restored byte-identical, so the compilations that use it can also hit the cache.)
 %.h.gch : %.h
 	@echo Making $(@) from $<
-	@$(COMPILE.cpp) $<
+	@$(ccache) $(COMPILE.cpp) $<
 
 ifeq ($(use_pch),1)
   # Force-include the precompiled header into every *.cpp file.
   cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h -Winvalid-pch
+  cxxall += $(if $(ccache),-fpch-preprocess)#  (Recommended by ccache for precompiled headers.)
 endif
 
 ## Precompiled headers:

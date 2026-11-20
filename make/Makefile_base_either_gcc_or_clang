@@ -3,6 +3,25 @@
 
 use_pch ?= 1#  (Usually 1; use precompiled headers.)
 
+# The compiler cache ccache, if found, prefixes each C++ compilation (not the links, nor the rare C files, whose
+#  compiler "clang" ccache could mistake for the directory bin/clang in the PATH); "make use_ccache=0" disables it.
+# It is the first "ccache" in the PATH (ccache.exe on Windows), except that CONFIG=cygwin needs the Cygwin package
+# ccache, as a native ccache.exe cannot run the Cygwin compiler.
+use_ccache ?= 1
+ifeq ($(use_ccache),1)
+  ifeq ($(CONFIG),cygwin)
+    ccache := $(firstword $(wildcard /usr/bin/ccache.exe))
+  else
+    # (On Windows, a Cygwin ccache in /usr/bin could not run the native compilers.)
+    ccache := $(firstword $(wildcard $(addsuffix /ccache$(if $(is_mswin:0=),.exe), \
+                $(if $(is_mswin:0=),$(filter-out /usr/bin /bin /usr/local/bin,$(subst :, ,$(PATH))),$(subst :, ,$(PATH))))))
+  endif
+endif
+ifneq ($(ccache),)
+  # Let ccache cache the compilations that include the precompiled libHh header (see the manual of ccache).
+  export CCACHE_SLOPPINESS := pch_defines,time_macros,include_file_mtime,include_file_ctime
+endif
+
 extobj = o
 extlib = a
 extasm = s
@@ -82,7 +101,7 @@ cxx_disable_all_warnings = -w
 #	$(COMPILE.cpp) $(OUTPUT_OPTION) $<
 %.o : %.cpp
 #	@echo $(CXX) $<
-	$(if $(want_plain_compiler:0=)$(DEBUG_MAKE),,@)$(COMPILE.cpp) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
+	$(if $(want_plain_compiler:0=)$(DEBUG_MAKE),,@)$(ccache) $(COMPILE.cpp) -o $@ $(foreach f,$<,$(call drive_abspath,$(f)))
 
 # Use absolute pathnames for source files, to get these in warnings and errors.
 # %.o : %.c

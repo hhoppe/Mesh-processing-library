@@ -75,6 +75,7 @@ ifeq ($(use_pch),1)
   else
     cxxall += -include $(MeshRoot)/libHh/precompiled_libHh.h
     # `-Winvalid-pch` is accepted but ignored by clang; clang nicely dies if the pch file is stale.
+    cxxall += $(if $(ccache),-Xclang -fno-pch-timestamp)#  (Required by ccache for precompiled headers.)
   endif
 endif
 

@@ -16,9 +16,11 @@ ifeq ($(use_ccache),1)
       use_pch = 0
     endif
   else
-    # (On Windows, a Cygwin ccache in /usr/bin could not run the native compilers.)
+    # On Windows, skip the Cygwin directories, also when the Windows PATH names them as /c/cygwin/bin: a Cygwin ccache
+    #  compiles the preprocessed output, so clang warns within the expanded system macros.
     ccache := $(firstword $(wildcard $(addsuffix /ccache$(if $(is_mswin:0=),.exe), \
-                $(if $(is_mswin:0=),$(filter-out /usr/bin /bin /usr/local/bin,$(subst :, ,$(PATH))),$(subst :, ,$(PATH))))))
+                $(if $(is_mswin:0=),$(filter-out /usr/bin /bin /usr/local/bin %/cygwin/bin %/cygwin64/bin \
+                  %/cygwin/usr/local/bin %/cygwin64/usr/local/bin,$(subst :, ,$(PATH))),$(subst :, ,$(PATH))))))
   endif
 endif
 ifneq ($(ccache),)

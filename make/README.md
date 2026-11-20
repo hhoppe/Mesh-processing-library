@@ -92,9 +92,10 @@ The settings that affect compilation (`CONFIG`, the compiler, the C++ standard, 
 so that changing any of them rebuilds the affected files.
 The `win` configuration creates `*.obj` and `*.lib` files whereas the other four share `*.o` and `*.a` files,
 so alternating between `win` and one other configuration requires no rebuilding.
-If the compiler cache [`ccache`](https://ccache.dev/) is in the `PATH` (`ccache.exe` on Windows), the `unix`,
-`clang`, and `mingw` configurations compile through it, so that alternating among them (or between `CC=gcc` and
-`clang` under `unix`) rebuilds mostly from the cache; `make use_ccache=0` disables it.
+If the compiler cache [`ccache`](https://ccache.dev/) is in the `PATH` (a native `ccache.exe` on Windows, outside
+the Cygwin directories), the `unix`, `clang`, and `mingw` configurations compile through it, so that alternating
+among them (or between `CC=gcc` and `clang` under `unix`) rebuilds mostly from the cache; `make use_ccache=0` disables
+it.
 `CONFIG=cygwin` uses the Cygwin package `ccache` (version 3.1.9), with which it compiles without the precompiled
 header, and `win` does not use ccache.
 

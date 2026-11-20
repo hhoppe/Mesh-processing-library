@@ -31,7 +31,7 @@ bool optnormals = false;
 bool nocolor = false;
 bool randcolor = false;
 bool fixdegen = false;
-bool gnormalize = false;
+bool normalize_ = false;
 bool fixorient = false;
 bool flipnormals = false;
 float shownormals = 0.f;
@@ -57,7 +57,7 @@ float outlierd = 0.f;
 float speedup = 0.f;
 double frdelay = 0.;
 double eldelay = 0.;
-bool toasciit = false;  // "toascii" seems to be a reserved identifier in Win32.
+bool toascii_ = false;  // "toascii" seems to be a reserved identifier in Win32.
 bool tobinary = false;
 int minverts = 0;
 
@@ -494,7 +494,7 @@ bool loop(A3dElem& el) {
         assertw(el[i].n.normalize());
       }
     }
-    if (gnormalize && !is_zero(el[i].n)) assertx(el[i].n.normalize());
+    if (normalize_ && !is_zero(el[i].n)) assertx(el[i].n.normalize());
   }
   if (fixorient && polyg && polygon_needs_flip(el)) {
     flip_polygon(el);
@@ -797,7 +797,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(colorheight, "minz maxz : from black to white");
   HH_ARGSF(randcolor, ": assign each element a random color");
   HH_ARGSP(transf, "'frame' : transform all elements");
-  args.f("-normalize", gnormalize, ": normalize normals");
+  args.f("-normalize", normalize_, ": normalize normals");
   HH_ARGSF(fixorient, ": vertex normals -> orient polygon");
   HH_ARGSF(flipnormals, ": flip orientations of normals and polygons");
   HH_ARGSP(stretch, "factor : stretch polylines");
@@ -819,7 +819,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(speedup, "factor : increase 'split' every frame");
   HH_ARGSP(frdelay, "fsec : pause after each frame");
   HH_ARGSP(eldelay, "fsec : pause after each element");
-  args.f("-toascii", toasciit, ": make output be ascii text");
+  args.f("-toascii", toascii_, ": make output be ascii text");
   HH_ARGSF(tobinary, ": make output be binary");
   const string arg0 = args.num() ? args.peek_string() : "";
   const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
@@ -852,8 +852,8 @@ int main(int argc, const char** argv) {
   if (stat) info = 1;
   if (stat || box || boxframe) nooutput = true;
   fsplit = float(split);
-  assertx(!(toasciit && tobinary));
-  if (toasciit) my_setenv("A3D_BINARY", "0");
+  assertx(!(toascii_ && tobinary));
+  if (toascii_) my_setenv("A3D_BINARY", "0");
   if (tobinary) my_setenv("A3D_BINARY", "1");
   RFile fi(filename);
   for (string line; fi().peek() == '#';) {

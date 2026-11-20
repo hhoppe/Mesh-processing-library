@@ -22,7 +22,7 @@ bool add_mid_frames = false;
 double delay = 0.;
 int repeat = 1;
 bool eof1 = false;
-bool toasciit = false;  //  The name "toascii" seems to be a reserved identifier in Win32.
+bool toascii_ = false;  //  The name "toascii" seems to be a reserved identifier in Win32.
 bool tobinary = false;
 
 bool is_pretransf = false;
@@ -115,7 +115,7 @@ bool process_frame(ObjectFrame& object_frame) {
     frame_prev = frame;
     zoom_prev = object_frame.zoom;
   }
-  if (toasciit) object_frame.binary = false;
+  if (toascii_) object_frame.binary = false;
   if (tobinary) object_frame.binary = true;
   if (statistics) {
     static Point origin_prev;
@@ -187,7 +187,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(frame, ": introduce 'f 0 0 0' between frames");
   HH_ARGSF(stat, ": output statistics");
   HH_ARGSF(eof1, ": introduce 'q 0 0 0' after frame 1");
-  args.f("-toascii", toasciit, ": force output to be ascii text");
+  args.f("-toascii", toascii_, ": force output to be ascii text");
   HH_ARGSF(tobinary, ": force output to be binary");
   const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);

@@ -8,6 +8,7 @@ mannequin.recon.m 707265
 mannequin.opt.m 70804
 mannequin.sub0.m 47337 tol=0.35
 mannequin.sub2limit.m 660005 tol=0.35
+mannequin.m 745718
 distcap.recon.m 520136
 distcap.opt.m 69542
 distcap.sub0.m 59972 tol=0.35

@@ -2,10 +2,11 @@
 
 : << 'END_USAGE_EXAMPLES'
 Reconstruct a surface from a set of points in three phases: Recon (with Filtermesh removing small components and
-filling holes), Meshfit, and Subdivfit, as in ../create_reconstruction_animated.sh, whose animation
-../view_reconstruction_animated.sh can also show the results (RECON_VIEW).  The parameters are environment
-variables, listed below; the results are written into $RECON_RESULTS/$RECON_ROOT.*.  See recon_process_all for
-the parameters of each point set in this directory.
+filling holes), Meshfit, and Subdivfit.  The parameters are environment variables, listed below; the results are
+written into $RECON_RESULTS/$RECON_ROOT.*.  Relative paths are relative to the current directory; under Cygwin, an
+absolute path must have the Windows form (e.g., c:/data/points.pts) for the native programs.  See recon_process_all
+for the parameters of each point set in this directory, and ../create_reconstruction_*.sh for other uses.  The
+script recon_process.bat does the same in the Windows command prompt.
 
 RECON_ROOT=mechpart RECON_SAMPLINGD=.035 RECON_GRID=60 RECON_FILLHOLES=0 RECON_ANGLE=50 ./recon_process
 
@@ -14,15 +15,14 @@ G3dOGL -st mechpart.s3d results/mechpart.sub2limit.m
 g3d_cmp -win1 "-key o---J" -winl "-key DmDe" \
         mechpart.pts results/mechpart.{recon,opt,sub0,sub2limit}.m -st mechpart.s3d -key DmDe
 
-RECON_ROOT=mechpart RECON_SAMPLINGD=.035 RECON_GRID=60 RECON_FILLHOLES=0 RECON_ANGLE=50 RECON_VIEW=1 ./recon_process
-RECON_ROOT=mechpart RECON_VIEW=only ./recon_process
+RECON_ROOT=mechpart RECON_SAMPLINGD=.035 RECON_GRID=60 RECON_FILLHOLES=0 RECON_ANGLE=50 RECON_RECORD=1 ./recon_process
+RECON_PTS=recon/mechpart.pts RECON_OUT=recon/results/mechpart RECON_S3D=recon/mechpart.s3d \
+  ../view_reconstruction_animated.sh
 END_USAGE_EXAMPLES
 
-# Variables and their default values.  A relative path is relative to this directory; under Cygwin, an absolute path
-# is converted for the native Windows programs.
+# Variables and their default values.
 : ${RECON_ROOT:=''}              # Required: the name of the point set, and of its results $RECON_ROOT.*.
 : ${RECON_PTS:=$RECON_ROOT.pts}  # The points: an A3d stream (text or binary, e.g., *.pts) or a PLY file.
-: ${RECON_S3D:=${RECON_PTS%.*}.s3d}  # The viewer state file, or a name for s3dname to find.
 : ${RECON_RESULTS:=results}      # The directory of the results.
 : ${RECON_SAMPLINGD:=''}         # Required: the Recon sampling density (-samplingd).
 : ${RECON_GRID:=''}              # The Recon contouring grid size (-gridsize); by default, chosen by Recon.
@@ -33,15 +33,12 @@ END_USAGE_EXAMPLES
 : ${RECON_SUBDIVFIT_CREP:=$RECON_CREP}  # The representation constant of Subdivfit; its -csharp is a fifth of it.
 : ${RECON_ANGLE:=40.0}           # Mark sharp the edges whose dihedral angle exceeds this, for Subdivfit.
 : ${RECON_MESHFIT_PARAMS:=''}    # Additional Meshfit arguments.
-: ${RECON_SUBDIVFIT_PARAMS:=''}  # Additional Subdivfit arguments.
+: ${RECON_SUBDIVFIT_PARAMS:=''}  # Additional Subdivfit arguments (e.g., '-csharp 8e-6' to override the fifth).
 : ${RECON_RECORD:=0}             # Also write the Recon *.a3d stages and the fitting *.record streams, for animation.
-: ${RECON_VIEW:=0}               # 1: also record, then show the animation; only: just show that of a previous run.
 
-known_variables=(RECON_ROOT RECON_PTS RECON_S3D RECON_RESULTS RECON_SAMPLINGD RECON_GRID RECON_RECON_PARAMS
-  RECON_RMCOMP RECON_FILLHOLES RECON_CREP RECON_SUBDIVFIT_CREP RECON_ANGLE RECON_MESHFIT_PARAMS
-  RECON_SUBDIVFIT_PARAMS RECON_RECORD RECON_VIEW)
-
-set -e -o pipefail
+known_variables=(RECON_ROOT RECON_PTS RECON_RESULTS RECON_SAMPLINGD RECON_GRID RECON_RECON_PARAMS RECON_RMCOMP
+  RECON_FILLHOLES RECON_CREP RECON_SUBDIVFIT_CREP RECON_ANGLE RECON_MESHFIT_PARAMS RECON_SUBDIVFIT_PARAMS
+  RECON_RECORD)
 
 if [[ $# -gt 0 ]]; then echo "Error: Expects no arguments." >&2; exit 1; fi
 
@@ -50,66 +47,64 @@ for v in $(compgen -v RECON_); do
   if [[ " ${known_variables[*]} " != *" $v "* ]]; then echo "Error: Unknown variable $v." >&2; exit 1; fi
 done
 if [[ -z $RECON_ROOT ]]; then echo "Error: RECON_ROOT not set." >&2; exit 1; fi
-if [[ -z $RECON_SAMPLINGD && $RECON_VIEW != only ]]; then echo "Error: RECON_SAMPLINGD not set." >&2; exit 1; fi
+if [[ -z $RECON_SAMPLINGD ]]; then echo "Error: RECON_SAMPLINGD not set." >&2; exit 1; fi
 
-cd "$(dirname "${BASH_SOURCE[0]}")"
+# Use the programs of this repository, as the demos do.
+source "$(dirname "${BASH_SOURCE[0]}")/../_initdemos.sh"
 
-# Use the programs of this repository: those of the build named by CONFIG, or else those of this platform.
-bin_dir=$PWD/../../bin
-if [[ -n $CONFIG ]]; then
-  PATH=$bin_dir/$CONFIG:$PATH
-elif [[ $OSTYPE == cygwin ]]; then
-  PATH=$bin_dir/msbuild:$bin_dir/msbuild_debug:$bin_dir/win:$bin_dir/mingw:$bin_dir/clang:$bin_dir/cygwin:$PATH
-else
-  PATH=$bin_dir/unix:$PATH
-fi
-PATH=$bin_dir:$PATH  # The scripts (e.g., g3d_cmp).
+if [[ ! -f $RECON_PTS ]]; then echo "Error: $RECON_PTS not found." >&2; exit 1; fi
+pts=$RECON_PTS
+out=$RECON_RESULTS/$RECON_ROOT
+mkdir -p "$RECON_RESULTS"
 
-# Native Windows programs cannot open the absolute paths of Cygwin.
-native_path() { if [[ $OSTYPE == cygwin && $1 == /* ]]; then cygpath -m "$1"; else echo "$1"; fi; }
-pts=$(native_path "$RECON_PTS")
-s3d=$(native_path "$RECON_S3D")
-out=$(native_path "$RECON_RESULTS")/$RECON_ROOT
-
-if [[ $RECON_VIEW != only ]]; then
-  if [[ ! -f $pts ]]; then echo "Error: $pts not found." >&2; exit 1; fi
-  mkdir -p "$(dirname "$out")"
-  if [[ $RECON_VIEW == 1 ]]; then RECON_RECORD=1; fi
-
-  recon_args=(-samplingd "$RECON_SAMPLINGD")
-  if [[ -n $RECON_GRID ]]; then recon_args+=(-gridsize "$RECON_GRID"); fi
-  meshfit_args=(-crep "$RECON_CREP")
-  subdivfit_args=(-crep "$RECON_SUBDIVFIT_CREP" -csharp "$(awk "BEGIN {print $RECON_SUBDIVFIT_CREP / 5}")")
-  if ((RECON_RECORD)); then
-    recon_args+=(-rootname "$out" -what ugpoclm)
-    meshfit_args+=(-record "$out.opt.record")
-    subdivfit_args+=(-record "$out.sub0.record")
-  fi
-
-  echo "== $RECON_ROOT: Recon"
-  Recon "$pts" "${recon_args[@]}" $RECON_RECON_PARAMS >"$out.m"
-
-  echo "== $RECON_ROOT: Filtermesh -rmcomp $RECON_RMCOMP -fillholes $RECON_FILLHOLES"
-  Filtermesh "$out.m" -genus -rmcomp "$RECON_RMCOMP" -fillholes "$RECON_FILLHOLES" -fairtriangulate -fixvertices \
-    -genus >"$out.recon.m"
-
-  echo "== $RECON_ROOT: Meshfit"
-  Meshfit -mfile "$out.recon.m" -file "$pts" "${meshfit_args[@]}" $RECON_MESHFIT_PARAMS -reconstruct >"$out.opt.m"
-
-  echo "== $RECON_ROOT: Subdivfit"
-  Filtermesh "$out.opt.m" -angle "$RECON_ANGLE" -mark -genus |
-    Subdivfit -mfile - -file "$pts" "${subdivfit_args[@]}" $RECON_SUBDIVFIT_PARAMS -reconstruct >"$out.sub0.m"
-
-  echo "== $RECON_ROOT: Subdivfit -nsub 2 -outn"
-  Subdivfit -mfile "$out.sub0.m" -nsub 2 -outn >"$out.sub2limit.m"
-
-  echo "== $RECON_ROOT: done in $SECONDS s"
+recon_args=(-samplingd "$RECON_SAMPLINGD")
+if [[ -n $RECON_GRID ]]; then recon_args+=(-gridsize "$RECON_GRID"); fi
+meshfit_args=(-crep "$RECON_CREP")
+subdivfit_args=(-crep "$RECON_SUBDIVFIT_CREP" -csharp "$(awk "BEGIN {print $RECON_SUBDIVFIT_CREP / 5}")")
+if ((RECON_RECORD)); then
+  recon_args+=(-rootname "$out" -what ugpoclm)
+  meshfit_args+=(-record "$out.opt.record")
+  subdivfit_args+=(-record "$out.sub0.record")
 fi
 
-if [[ $RECON_VIEW == 1 || $RECON_VIEW == only ]]; then
-  # The animation demo runs in the demos directory (the parent of this one), so prefix the relative paths.
-  demos_path() { if [[ $1 == /* || $1 == [A-Za-z]:* || ! -e $1 ]]; then echo "$1"; else echo "recon/$1"; fi; }
-  view_out=$(demos_path "$out.m")
-  RECON_PTS=$(demos_path "$pts") RECON_OUT=${view_out%.m} RECON_S3D=$(demos_path "$s3d") \
-    ../view_reconstruction_animated.sh
-fi
+echo
+echo "== $RECON_ROOT: Phase 1 - Recon"
+echo
+Recon "$pts" "${recon_args[@]}" $RECON_RECON_PARAMS >"$out.m"
+
+echo
+echo "== $RECON_ROOT: Filling small reconstruction holes" \
+  "(Filtermesh -rmcomp $RECON_RMCOMP -fillholes $RECON_FILLHOLES)"
+echo
+Filtermesh "$out.m" -genus -rmcomp "$RECON_RMCOMP" -fillholes "$RECON_FILLHOLES" -fairtriangulate -fixvertices \
+  -genus >"$out.recon.m"
+
+echo
+echo "== $RECON_ROOT: Phase 2 - Meshfit"
+echo
+Meshfit -mfile "$out.recon.m" -file "$pts" "${meshfit_args[@]}" $RECON_MESHFIT_PARAMS -reconstruct >"$out.opt.m"
+
+echo
+echo "== $RECON_ROOT: Phase 3 - Subdivfit"
+echo
+Filtermesh "$out.opt.m" -angle "$RECON_ANGLE" -mark -genus |
+  Subdivfit -mfile - -file "$pts" "${subdivfit_args[@]}" $RECON_SUBDIVFIT_PARAMS -reconstruct >"$out.sub0.m"
+
+echo
+echo "== $RECON_ROOT: Computing the final subdivided surface (Subdivfit -nsub 2 -outn)"
+echo
+Subdivfit -mfile "$out.sub0.m" -nsub 2 -outn >"$out.sub2limit.m"
+
+echo
+echo "== $RECON_ROOT: done in $SECONDS s"
+echo
+
+# Suggest a command to compare the points with the successive meshes, using the state file next to the points if any.
+s3d=${pts%.*}.s3d
+st_args=''
+if [[ -f $s3d ]]; then st_args=" -st $s3d"; fi
+meshes="$out.recon.m $out.opt.m $out.sub0.m $out.sub2limit.m"
+echo
+echo "== To view the results:"
+echo
+echo "g3d_cmp -win1 '-key o--J' -winl '-key DmDe' $pts $meshes$st_args -key DmDeDb"

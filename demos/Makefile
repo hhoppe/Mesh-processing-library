@@ -33,7 +33,6 @@ create_scripts = \
   create_topologically_simplified.sh \
   create_vertex_cached_bunny.sh \
   create_spherical_param_bunny.sh \
-  recon/recon_process_all \
 
 view_scripts = \
   view_reconstruction_mannequin.sh \
@@ -80,9 +79,6 @@ $(view_scripts):
 
 depend $(make_dep):
 
-# Unless DEMOS_RECON_QUICK=0 (as in the nightly CI), reconstruct only the first two point sets.
-recon/recon_process_all: export DEMOS_RECON_QUICK ?= 1
-
 # Any build-order dependencies.
 determine_approximation_error.sh: create_progressive_hulls_bunny.sh
 
@@ -118,6 +114,12 @@ view:
 	fi; \
 	exit $$status
 
+# Reconstruct all the point sets of recon/ (in about two minutes) and check the results against
+# recon/results_reference.txt; the nightly CI runs it after the other demos.
+recon:
+	recon/recon_process_all
+	check_reference_values recon/results_reference.txt recon/results
+
 mostlyclean clean deepclean:
 # (Use a relative pathname because prepend_PATH does not update PATH when make goal is clean.)
 	./all_demos_clean.sh
@@ -125,6 +127,7 @@ mostlyclean clean deepclean:
 debug:
 	which Recon
 
-.PHONY: all create check view mostlyclean clean deepclean $(create_scripts) $(view_scripts) debug depend $(make_dep)
+.PHONY: all create check view recon mostlyclean clean deepclean $(create_scripts) $(view_scripts) debug depend \
+  $(make_dep)
 
 endif  # ifneq ($(CONFIG),all)

@@ -4,33 +4,14 @@ setlocal
 cd "%~p0"
 call ./_initdemos.bat
 
-set r=distcap
-
-echo.
-echo Running phase 1 - Recon.
-echo.
-Recon data/%r%.pts -rootname results/%r% -samplingd 0.02 -what ugpoclm >results/%r%.m
-
-echo.
-echo Filling any small reconstruction holes.
-echo.
-Filtermesh results/%r%.m -genus -rmcomp 100 -fillholes 40 -fairtriangulate -fixvertices -genus >results/%r%.recon.m
-
-echo.
-echo Running phase 2 - Meshfit.
-echo.
-Meshfit -mfile results/%r%.recon.m -file data/%r%.pts -record results/%r%.opt.record -reconstruct >results/%r%.opt.m
-
-echo.
-echo Running phase 3 - Subdivfit.
-echo.
-Filtermesh results/%r%.opt.m -angle 52 -mark -genus ^
-  | Subdivfit -mfile - -file data/%r%.pts -record results/%r%.sub0.record -reconstruct >results/%r%.sub0.m
-
-echo.
-echo Computing the final subdivided surface.
-echo.
-Subdivfit -mfile results/%r%.sub0.m -nsub 2 -outn >results/%r%.sub2limit.m
+:: Reconstruct the surface in three phases (Recon, Meshfit, and Subdivfit), recording the stages for the animation.
+set RECON_ROOT=distcap
+set RECON_PTS=data/distcap.pts
+set RECON_RESULTS=results
+set RECON_SAMPLINGD=.02
+set RECON_ANGLE=52
+set RECON_RECORD=1
+call recon/recon_process.bat || exit /b 1
 
 echo.
 echo Use view_reconstruction_animated.bat to view the results.

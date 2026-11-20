@@ -12,6 +12,15 @@ distcap.recon.m 520136
 distcap.opt.m 69542
 distcap.sub0.m 59972 tol=0.35
 distcap.sub2limit.m 788584 tol=0.35
+distcap.m 545978
+distcap.u.a3d 1930729
+distcap.g.a3d 6213670
+distcap.p.a3d 2403289
+distcap.o.a3d 1930729
+distcap.c.a3d 1472133
+distcap.l.a3d 1782927
+distcap.opt.record 16603835 tol=0.35
+distcap.sub0.record 1463574 tol=0.35
 curve1.opt.a3d 3560
 curve1.joined.a3d 5421
 curve1.recon.a3d 10880

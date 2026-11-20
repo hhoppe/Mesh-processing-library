@@ -1,7 +1,6 @@
-# Reference values for the files that recon_process_all writes into results/ for its first two point sets (the only
-# ones in "make -C demos create" by default), read by ../check_created_outputs.sh (using
-# ../../bin/check_reference_values): the file size in bytes, optionally followed by a tolerance "tol=...".
-# Update them with "check_created_outputs.sh --update".
+# Reference values for the files that recon_process_all writes into results/, checked by "make -C demos recon"
+# (using ../../bin/check_reference_values): the file size in bytes, optionally followed by a tolerance "tol=...".
+# Update them with "../../bin/check_reference_values --update results_reference.txt results".
 # The sizes of the *.sub0.m and *.sub2limit.m files are proportional to the face count of the mesh fitted by
 # Subdivfit, whose stochastic optimization reaches different face counts across configurations.
 mechpart.recon.m 299608
@@ -12,3 +11,19 @@ cactus.recon.m 49091
 cactus.opt.m 20928
 cactus.sub0.m 26378 tol=0.35
 cactus.sub2limit.m 203443 tol=0.35
+knot108s.recon.m 380810
+knot108s.opt.m 49346
+knot108s.sub0.m 27949 tol=0.35
+knot108s.sub2limit.m 345991 tol=0.35
+club71.recon.m 196731
+club71.opt.m 33134
+club71.sub0.m 26345 tol=0.35
+club71.sub2limit.m 303984 tol=0.35
+moeller.recon.m 581809
+moeller.opt.m 56695
+moeller.sub0.m 40557 tol=0.35
+moeller.sub2limit.m 522171 tol=0.35
+oilpmp.recon.m 2139804
+oilpmp.opt.m 96355
+oilpmp.sub0.m 94871 tol=0.35
+oilpmp.sub2limit.m 1306111 tol=0.35

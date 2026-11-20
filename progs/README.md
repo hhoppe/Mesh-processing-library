@@ -157,6 +157,21 @@ Recon demos/data/curve1.pts -samplingd 0.06 -grid 30 |
   G3dOGL demos/data/curve1.pts -input -st demos/data/curve1.s3d
 ```
 
+The files of points are text (or binary) A3d streams, in which each point `p x y z` may be preceded by its normal
+`n nx ny nz`; `Recon`, `Meshfit`, and `Subdivfit` also read points from a PLY file (by convention, `*.points.ply`).
+To convert a text A3d file of points into a PLY file, and back, keeping any normals,
+```shell
+<demos/recon/mechpart.pts awk '/^n / {n = sprintf(" {normal=(%s %s %s)}", $2, $3, $4)}
+                               /^p / {printf "Vertex %d  %s %s %s%s\n", ++i, $2, $3, $4, n; n = ""}' |
+  Filtermesh -toply >mechpart.points.ply
+Filtermesh mechpart.points.ply -orderedvertexpts -noo >mechpart.pts
+```
+- turns each point (with its normal) into a mesh vertex without faces, which `Filtermesh` writes as a binary PLY
+  file, and
+- reads the vertices of a PLY file (with any normals) and prints them in order as an A3d stream of points.
+
+(A binary A3d file must first be converted using `Filtera3d -toascii`.)
+
 ### <a id="prog_Meshfit"></a>Meshfit
 
 Given an initial mesh and a list of 3D points, this program optimizes both the mesh connectivity and

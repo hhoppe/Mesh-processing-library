@@ -2,6 +2,7 @@
 
 Point sets (`*.pts`, as text A3d streams) from the original experiments in surface reconstruction (1993-1994),
 with their viewer state files (`*.s3d`).
+See [Recon](../../progs/README.md#prog_recon) for how to convert them to and from PLY files.
 
 - `recon_process` reconstructs a surface from a point set in three phases: `Recon` (followed by `Filtermesh`,
   which removes small components and fills holes), `Meshfit`, and `Subdivfit`, as in the demo

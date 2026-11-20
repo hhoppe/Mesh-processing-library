@@ -819,7 +819,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(speedup, "factor : increase 'split' every frame");
   HH_ARGSP(frdelay, "fsec : pause after each frame");
   HH_ARGSP(eldelay, "fsec : pause after each element");
-  HH_ARGSF(toasciit, ": make output be ascii text");
+  args.f("-toascii", toasciit, ": make output be ascii text");
   HH_ARGSF(tobinary, ": make output be binary");
   const string arg0 = args.num() ? args.peek_string() : "";
   const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";

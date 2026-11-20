@@ -187,7 +187,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF(frame, ": introduce 'f 0 0 0' between frames");
   HH_ARGSF(stat, ": output statistics");
   HH_ARGSF(eof1, ": introduce 'q 0 0 0' after frame 1");
-  HH_ARGSF(toasciit, ": force output to be ascii text");
+  args.f("-toascii", toasciit, ": force output to be ascii text");
   HH_ARGSF(tobinary, ": force output to be binary");
   const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);

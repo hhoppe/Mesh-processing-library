@@ -609,18 +609,24 @@ static void set_viewing() {
   HB::set_camera(g_obs[0].t(), zoom, frame_camera, vzoom);
   if (1 && g_obs.first == 0) g_obs[0].set_vis(is_view || obview != 0);
   if (auto_hither) {
-    Bbox<float, 3> gbb;
+    // The hither distance is the smallest, over the visible objects in front of the camera, of the nearest depth of
+    //  each object, bounded below by a fraction of that object's size.  Taking it per object keeps a small object
+    //  visible next to a much larger one that encloses the camera, and hidden objects are ignored (e.g., after
+    //  selecting one of several objects using 'N').
+    float new_hither = BIGFLOAT;
     const Frame frame_camera_inv = inverse(frame_camera);
     const int firstobn = g_obs.first == 0 && (is_view || obview != 0) ? 0 : 1;
-    for (int obn = firstobn; obn <= g_obs.last; obn++)
-      gbb.union_with(g_obs[obn].bbox().transform(g_obs[obn].t() * frame_camera_inv));
-    float minx = gbb[0, 0];          // Could be negative.
-    if (minx > 0.f) minx *= .9999f;  // For -key ojo on zero-height data.
-    const float diam = gbb.max_side();
-    // float thresh = diam*1e-4;
-    const float thresh = diam * 2e-3f;  // Made larger for OpenGL glPolygonOffsetEXT().
-    if (minx < thresh) minx = thresh;
-    HB::set_hither(minx);
+    for (int obn = firstobn; obn <= g_obs.last; obn++) {
+      if (obn && !g_obs[obn].visible()) continue;
+      const Bbox<float, 3> bbox = g_obs[obn].bbox().transform(g_obs[obn].t() * frame_camera_inv);
+      if (bbox[1, 0] <= 0.f) continue;  // Entirely behind the camera.
+      float minx = bbox[0, 0];          // Could be negative.
+      if (minx > 0.f) minx *= .9999f;   // For -key ojo on zero-height data.
+      // const float thresh = bbox.max_side() * 1e-4f;
+      const float thresh = bbox.max_side() * 2e-3f;  // Made larger for OpenGL glPolygonOffsetEXT().
+      new_hither = min(new_hither, max(minx, thresh));
+    }
+    if (new_hither < BIGFLOAT) HB::set_hither(new_hither);
   }
 }
 

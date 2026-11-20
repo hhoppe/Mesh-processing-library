@@ -110,6 +110,8 @@ extern string caption;          // String to put at the bottom of the window.
 extern string keystring;        // The -key strings concatenated together.
 extern Array<string> g_aargs1;  // Not including argv0.
 extern bool ob1_updated;
+// Whether statefile was given explicitly (-st or 'D/'), so that it overrides the per-object state files.
+extern bool statefile_explicit;
 
 // Mesh manipulation.
 extern float anglethresh;  // Dihedral angle threshold.
@@ -137,6 +139,10 @@ class object {
   [[nodiscard]] float radius() const;
   void update();      // Update HB if necessary.
   GMesh* get_mesh();  // Creates it if non-existent.
+  // The command-line file that defined the object, or "".
+  [[nodiscard]] const string& filename() const { return _filename; }
+  void set_filename(string filename) { _filename = std::move(filename); }
+
  private:
   friend class objects;
   int _obn;
@@ -149,6 +155,7 @@ class object {
   bool _needs_update{true};  // Wants an HB update.
   Vec3<Stat> _stat_coord;    // Statistics on each coordinate.
   unique_ptr<GMesh> _mesh;
+  string _filename;
 };
 
 class objects {
@@ -168,6 +175,7 @@ extern objects g_obs;
 // G3d
 void UpdateFrame(const ObjectFrame& object_frame);
 void ExpandStateFilename();
+[[nodiscard]] string object_statefile(int obn);
 void UpdateOb1Bbox(const Bbox<float, 3>& bbox);
 void UpdateOb1Points(CArrayView<Point> points);
 

@@ -13,6 +13,7 @@
 #include "libHh/FileIO.h"
 #include "libHh/FrameIO.h"
 #include "libHh/GMesh.h"
+#include "libHh/Map.h"
 #include "libHh/RangeOp.h"
 #include "libHh/StringOp.h"
 using namespace hh;
@@ -63,6 +64,7 @@ bool timestat = false;
 bool terse = false;
 bool tried_input = false;
 string statefile;
+bool statefile_explicit = false;
 string caption;
 string keystring;
 Array<string> g_aargs1;    // Not including argv0.
@@ -193,7 +195,8 @@ void do_frame(Args& args) {
 
 bool s3dname_command_exists() { return command_exists_in_path("s3dname"); }
 
-bool try_finding_it(const string& name) {
+// If s3dname finds a state file associated with name, sets found to it and returns true.
+bool find_statefile(const string& name, string& found) {
   if (!s3dname_command_exists()) {
     if (k_debug && 0) std::cerr << "(s3dname not found)\n";
     return false;
@@ -225,13 +228,15 @@ bool try_finding_it(const string& name) {
       Warning("Ignoring the state file found by s3dname (G3D_NO_S3DNAME); specify it using -st");
       return false;
     }
-    statefile = line;
+    found = line;
   } catch (const std::runtime_error& ex) {
     if (k_debug) std::cerr << string("Could not launch s3dname: ") + ex.what();
     return false;
   }
   return true;
 }
+
+bool try_finding_it(const string& name) { return find_statefile(name, statefile); }
 
 void initial_statefile() {
   if (statefile != "" && file_exists(statefile)) return;
@@ -246,6 +251,19 @@ void ExpandStateFilename() {
   if (statefile.contains('/')) return;
   if (statefile.contains('\\')) return;
   try_finding_it(statefile);
+}
+
+// Returns the state file of the file that defined object obn, if that object is not the first one and the state file
+// was not given explicitly; otherwise returns "", meaning the global statefile.
+string object_statefile(int obn) {
+  if (statefile_explicit || obn <= 1 || !g_obs.legal(obn)) return "";
+  const string& filename = g_obs[obn].filename();
+  if (filename == "" || filename == "-" || is_pipe(filename)) return "";
+  static Map<string, string> cache;  // The s3dname lookups, which launch a process.
+  bool is_new;
+  string& found = cache.enter(filename, "", is_new);
+  if (is_new) find_statefile(filename, found);
+  return found;
 }
 
 void UpdateFrame(const ObjectFrame& object_frame) {
@@ -337,7 +355,10 @@ int main(int argc, const char** argv) {
   };
   if (eyeob && g_aargs1.num() >= 2) func_try_set_gfilename(g_aargs1[1]);
   if (!eyeob && g_aargs1.num()) func_try_set_gfilename(g_aargs1[0]);
-  if (statefilename != "") statefile = statefilename;
+  if (statefilename != "") {
+    statefile = statefilename;
+    statefile_explicit = true;
+  }
   initial_statefile();
   if (g_filename == "" && statefile != "") g_filename = statefile;
   if (g_filename == "") g_filename = "-";

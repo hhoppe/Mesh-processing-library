@@ -582,6 +582,9 @@ Each object (e.g., each file named on the command line) can thus hold any mix of
 mesh, and a PLY mesh; the level-of-detail slider is shown whenever the current object holds a progressive mesh.
 A progressive mesh is initially shown at full resolution but with at most 500'000 faces, unless the environment
 variable `PM_LOD_LEVEL` (a fraction in [0, 1]) or `PM_LOD_NUM_FACES` sets its initial level of detail.
+When the current object is not the first one and no state file was given using `-st` or `D/`, the `,` key reads the
+viewpoint from the `*.s3d` state file of that object's file (as found by a locally installed `s3dname` script); the
+`.` key always saves all frames to the main state file.
 
 The viewer can also render images and record videos (see the examples below).
 

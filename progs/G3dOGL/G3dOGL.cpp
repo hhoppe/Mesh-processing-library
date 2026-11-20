@@ -53,6 +53,7 @@ extern void UpdateOb1Points(CArrayView<Point> points);
 extern void update_lod();
 extern float override_frametime;
 extern bool lod_mode;
+extern bool statefile_explicit;
 
 }  // namespace g3d
 
@@ -3000,7 +3001,10 @@ bool HB::special_keypress(char ch) {
     }
     case '/': {
       string s = g3d::statefile;
-      if (hw.query(V(30, 2), "Stateg3d:", s)) g3d::statefile = s;
+      if (hw.query(V(30, 2), "Stateg3d:", s)) {
+        g3d::statefile = s;
+        g3d::statefile_explicit = true;  // It now applies to all objects.
+      }
       break;
     }
     case 'R': {

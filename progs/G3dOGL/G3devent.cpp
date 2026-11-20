@@ -37,10 +37,15 @@ void save_state() {
   }
 }
 
+// Read the state file of the current object (see object_statefile()), or else the global state file.
 void read_state() {
-  ExpandStateFilename();
+  // A per-object state file describes a single object, so its object 1 is the current object, and the frames of its
+  //  other objects are ignored.
+  const string per_object = object_statefile(cob);
+  if (per_object == "") ExpandStateFilename();
+  const string& filename = per_object != "" ? per_object : statefile;
   try {
-    RFile fi(statefile);  // May throw.
+    RFile fi(filename);  // May throw.
     string line;
     while (fi().peek() >= 0) {
       if (fi().peek() == '#') {
@@ -51,12 +56,16 @@ void read_state() {
       if (!object_frame) break;
       if (object_frame->obn == -1) {
         tview = object_frame->frame;
-      } else {
+      } else if (per_object == "") {
         UpdateFrame(*object_frame);
+      } else if (object_frame->obn <= 1) {
+        ObjectFrame remapped = *object_frame;
+        if (remapped.obn == 1) remapped.obn = cob;
+        UpdateFrame(remapped);
       }
     }
   } catch (const std::runtime_error& ex) {
-    SHOW("Cannot read from '" + statefile + "' : " + ex.what());
+    SHOW("Cannot read from '" + filename + "' : " + ex.what());
   }
 }
 

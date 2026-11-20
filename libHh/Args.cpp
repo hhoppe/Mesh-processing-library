@@ -39,7 +39,7 @@ bool Args::check_int(const string& s) {
 
 bool Args::check_float(const string& s) {
   if (s.find_first_of("0123456789") == string::npos) return false;
-  if (s.find_first_not_of("0123456789-+.e") != string::npos) return false;
+  if (s.find_first_not_of("0123456789-+.eE") != string::npos) return false;
   return true;
 }
 

@@ -393,10 +393,25 @@ void ReadInput(bool during_init) {
     cur_needs_redraw = true;
     return;
   }
-  read_end_frame = false;
-  const bool eof = read_buffer(buf, ra3d, during_init);
-  // Schedule the next frame one period later, unless rendering has fallen behind by more than a period.
-  if (period && read_end_frame) next_input_time = max(next_input_time + period, get_precise_time());
+  bool eof = false;
+  {
+    // When frames are due faster than the redraws (e.g., a 120 fps stream on a 60 Hz display), read several of them,
+    //  but at most 1/60 s of the stream per redraw, so that rendering slower than 60 Hz (or a stall) slows the stream
+    //  down rather than skipping frames.
+    constexpr double k_max_catchup = 1. / 60.;
+    bool any_end_frame = false;
+    for (int nread = 1;; nread++) {
+      read_end_frame = false;
+      eof = read_buffer(buf, ra3d, during_init);
+      if (!period || !read_end_frame) break;
+      any_end_frame = true;
+      next_input_time += period;  // Schedule the next frame one period later.
+      if (eof || during_init || (nread + 1) * period > k_max_catchup * 1.0001) break;
+      if (get_precise_time() < next_input_time - period * .2) break;  // The next frame is not yet due.
+    }
+    // If rendering has fallen behind by more than the catch-up, continue the stream from the current time.
+    if (any_end_frame) next_input_time = max(next_input_time, get_precise_time());
+  }
   if (eof) {
     HB::redraw_later();
     cur_needs_redraw = true;

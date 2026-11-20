@@ -102,6 +102,8 @@ bool process_frame(ObjectFrame& object_frame) {
     object_frame.zoom = 0.f;
   }
   if (induce_roll) apply_induce_roll(frame);
+  if (toascii_) object_frame.binary = false;
+  if (tobinary) object_frame.binary = true;
   if (add_mid_frames) {
     static Frame frame_prev;
     static float zoom_prev;
@@ -111,12 +113,11 @@ bool process_frame(ObjectFrame& object_frame) {
       const float zoom_new = interp(zoom_prev, object_frame.zoom);
       const ObjectFrame object_frame_new{frame_new, object_frame.obn, zoom_new, object_frame.binary};
       if (!FrameIO::write(std::cout, object_frame_new)) return true;
+      if (b_frame) std::cout << "f 0 0 0\n";  // The interpolated frame is a separate frame.
     }
     frame_prev = frame;
     zoom_prev = object_frame.zoom;
   }
-  if (toascii_) object_frame.binary = false;
-  if (tobinary) object_frame.binary = true;
   if (statistics) {
     static Point origin_prev;
     if (icount > 1) HH_SSTAT(Sdisp, dist(frame.p(), origin_prev));
@@ -146,6 +147,19 @@ void process_frames(std::istream& is) {
     if (is.peek() == '#') {
       assertx(my_getline(is, line));
       std::cout << line << "\n";
+      continue;
+    }
+    // Besides frames (which start with 'F', or with the byte 2 if binary), accept only an end-of-frame line (dropped
+    //  when -frame regenerates these) and a G3d command "keys ...", which are passed through.
+    if (const int ch = is.peek(); ch != 'F' && ch != 2 && ch != EOF) {
+      assertx(my_getline(is, line));
+      if (line == "f 0 0 0") {
+        if (!b_frame) std::cout << line << "\n";
+      } else if (line.starts_with("keys ")) {
+        std::cout << line << "\n";
+      } else {
+        assertnever("Unrecognized line '" + line + "'");
+      }
       continue;
     }
     auto object_frame = FrameIO::read(is);

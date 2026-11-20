@@ -1,0 +1,19 @@
+#!/bin/bash
+
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: ply_to_pts [points.points.ply] [Filtermesh_args] >points.pts
+
+Convert the vertices of a PLY file (read from the file or stdin), e.g., a set of points, into a text A3d stream
+of points in vertex order, in which each point "p x y z" is preceded by its normal "n nx ny nz" if the vertex has
+one.  The script pts_to_ply converts the other way.
+
+Examples:
+ply_to_pts mechpart.points.ply >mechpart.pts
+pts_to_ply demos/recon/mechpart.pts | ply_to_pts | G3dOGL -st demos/recon/mechpart.s3d
+END_USAGE_EXAMPLES
+
+if [[ $1 == --help ]]; then echo "$usage"; exit 0; fi
+
+set -e -o pipefail
+
+Filtermesh "$@" -orderedvertexpts

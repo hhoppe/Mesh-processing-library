@@ -159,16 +159,15 @@ Recon demos/data/curve1.pts -samplingd 0.06 -grid 30 |
 
 The files of points are text (or binary) A3d streams, in which each point `p x y z` may be preceded by its normal
 `n nx ny nz`; `Recon`, `Meshfit`, and `Subdivfit` also read points from a PLY file (by convention, `*.points.ply`).
-To convert a text A3d file of points into a PLY file, and back, keeping any normals,
+The scripts [`pts_to_ply`](../bin/pts_to_ply) and [`ply_to_pts`](../bin/ply_to_pts) convert an A3d file of points
+(text or binary) into a PLY file, and back, keeping any normals:
 ```shell
-<demos/recon/mechpart.pts awk '/^n / {n = sprintf(" {normal=(%s %s %s)}", $2, $3, $4)}
-                               /^p / {printf "Vertex %d  %s %s %s%s\n", ++i, $2, $3, $4, n; n = ""}' |
-  Filtermesh -toply >mechpart.points.ply
-Filtermesh mechpart.points.ply -orderedvertexpts -noo >mechpart.pts
+pts_to_ply demos/recon/mechpart.pts >mechpart.points.ply
+ply_to_pts mechpart.points.ply >mechpart.pts
 ```
-- turns each point (with its normal) into a mesh vertex without faces, which `Filtermesh` writes as a binary PLY
-  file, and
-- reads the vertices of a PLY file (with any normals) and prints them in order as an A3d stream of points.
+The first turns each point (with its normal) into a mesh vertex without faces, which `Filtermesh` writes as a
+binary PLY file; the second prints the vertices of a PLY file (with any normals) in order as an A3d stream of
+points (`Filtermesh -orderedvertexpts`).
 
 (A binary A3d file must first be converted using `Filtera3d -toascii`.)
 

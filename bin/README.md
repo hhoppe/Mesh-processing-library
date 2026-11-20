@@ -9,6 +9,8 @@ built by Visual Studio.
 - `mesh_to_pm` creates a progressive mesh from a mesh (using `MeshSimplify` and `Filterprog`), and
   `pm_simplify` further simplifies the base mesh of a progressive mesh.  (For half-edge collapses under the quadric
   error metric, i.e. `-minqem -vsgeom`, the program `MeshToPm` does the same in a single process.)
+- `pts_to_ply` and `ply_to_pts` convert a set of points between an A3d stream (`*.pts`) and a PLY file, keeping
+  any normals.
 - `g3d_cmp` (and `g3d_cmp.bat` for the Windows command prompt) compares geometric objects side-by-side in a grid
   of `G3dOGL` windows whose viewpoints stay synchronized.
 - `hcheck` runs the [unit tests](../make/README.md#unit-tests) and compares their outputs (`*.ou`)

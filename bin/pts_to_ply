@@ -1,0 +1,23 @@
+#!/bin/bash
+
+read -r -d '' usage << 'END_USAGE_EXAMPLES' || true
+Usage: pts_to_ply [points.pts] [Filtera3d_args] >points.points.ply
+
+Convert a set of points in an A3d stream (text or binary, read from the file or stdin), in which each point
+"p x y z" may be preceded by its normal "n nx ny nz", into a binary PLY file of vertices without faces, keeping
+the normals.  The script ply_to_pts converts back.
+
+Examples:
+pts_to_ply demos/recon/mechpart.pts >mechpart.points.ply
+Filtera3d demos/data/distcap.pts -tobinary | pts_to_ply >distcap.points.ply
+END_USAGE_EXAMPLES
+
+if [[ $1 == --help ]]; then echo "$usage"; exit 0; fi
+
+set -e -o pipefail
+
+# Filtera3d also reads a binary stream; each point becomes a mesh vertex, with its normal as a vertex attribute.
+Filtera3d "$@" -toascii |
+  awk '/^n / {n = sprintf(" {normal=(%s %s %s)}", $2, $3, $4)}
+       /^p / {printf "Vertex %d  %s %s %s%s\n", ++i, $2, $3, $4, n; n = ""}' |
+  Filtermesh -toply

@@ -6,11 +6,15 @@ use_pch ?= 1#  (Usually 1; use precompiled headers.)
 # The compiler cache ccache, if found, prefixes each C++ compilation (not the links, nor the rare C files, whose
 #  compiler "clang" ccache could mistake for the directory bin/clang in the PATH); "make use_ccache=0" disables it.
 # It is the first "ccache" in the PATH (ccache.exe on Windows), except that CONFIG=cygwin needs the Cygwin package
-# ccache, as a native ccache.exe cannot run the Cygwin compiler.
+# ccache (a native ccache.exe cannot hash "-march=native" for the Cygwin compiler, so it caches nothing).
 use_ccache ?= 1
 ifeq ($(use_ccache),1)
   ifeq ($(CONFIG),cygwin)
     ccache := $(firstword $(wildcard /usr/bin/ccache.exe))
+    ifneq ($(ccache),)
+      # Cygwin's ccache 3.1.9 misses on every file that uses the precompiled header, but caches all files without it.
+      use_pch = 0
+    endif
   else
     # (On Windows, a Cygwin ccache in /usr/bin could not run the native compilers.)
     ccache := $(firstword $(wildcard $(addsuffix /ccache$(if $(is_mswin:0=),.exe), \

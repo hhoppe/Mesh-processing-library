@@ -1,0 +1,14 @@
+# Reference values for the files that recon_process_all writes into results/ for its first two point sets (the only
+# ones in "make -C demos create" by default), read by ../check_created_outputs.sh (using
+# ../../bin/check_reference_values): the file size in bytes, optionally followed by a tolerance "tol=...".
+# Update them with "check_created_outputs.sh --update".
+# The sizes of the *.sub0.m and *.sub2limit.m files are proportional to the face count of the mesh fitted by
+# Subdivfit, whose stochastic optimization reaches different face counts across configurations.
+mechpart.recon.m 299608
+mechpart.opt.m 24072
+mechpart.sub0.m 29829 tol=0.35
+mechpart.sub2limit.m 231524 tol=0.35
+cactus.recon.m 49091
+cactus.opt.m 20928
+cactus.sub0.m 26378 tol=0.35
+cactus.sub2limit.m 203443 tol=0.35

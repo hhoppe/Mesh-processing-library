@@ -108,3 +108,4 @@ RCS/
 
 /demos/results/*
 !/demos/results/.gitignore
+/demos/recon/results/

@@ -29,3 +29,5 @@ create_topologically_simplified.sh
 create_vertex_cached_bunny.sh
 
 create_spherical_param_bunny.sh
+
+recon/recon_process_all

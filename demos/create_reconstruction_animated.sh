@@ -5,17 +5,16 @@ source ./_initdemos.sh
 
 r=distcap
 
-# The script bin/recon_test overrides these settings using environment variables.
-pts=${RECON_PTS:-data/$r.pts}
-out=${RECON_OUT:-results/$r}
-samplingd=${RECON_SAMPLINGD:-0.02}
-fillholes=${RECON_FILLHOLES:-40}
-angle=${RECON_ANGLE:-52}
+pts=data/$r.pts
+out=results/$r
+samplingd=0.02
+fillholes=40
+angle=52
 
 echo
 echo 'Running phase 1 - Recon.'
 echo
-Recon "$pts" -rootname "$out" -samplingd $samplingd $RECON_RECON_PARAMS -what ugpoclm >"$out.m"
+Recon "$pts" -rootname "$out" -samplingd $samplingd -what ugpoclm >"$out.m"
 
 echo
 echo 'Filling any small reconstruction holes.'
@@ -25,13 +24,13 @@ Filtermesh "$out.m" -genus -rmcomp 100 -fillholes $fillholes -fairtriangulate -f
 echo
 echo 'Running phase 2 - Meshfit.'
 echo
-Meshfit -mfile "$out.recon.m" -file "$pts" -record "$out.opt.record" $RECON_MESHFIT_PARAMS -reconstruct >"$out.opt.m"
+Meshfit -mfile "$out.recon.m" -file "$pts" -record "$out.opt.record" -reconstruct >"$out.opt.m"
 
 echo
 echo 'Running phase 3 - Subdivfit.'
 echo
 Filtermesh "$out.opt.m" -angle $angle -mark -genus |
-  Subdivfit -mfile - -file "$pts" -record "$out.sub0.record" $RECON_SUBDIVFIT_PARAMS -reconstruct >"$out.sub0.m"
+  Subdivfit -mfile - -file "$pts" -record "$out.sub0.record" -reconstruct >"$out.sub0.m"
 
 echo
 echo 'Computing the final subdivided surface.'

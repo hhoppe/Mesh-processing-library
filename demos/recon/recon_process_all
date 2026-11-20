@@ -1,0 +1,40 @@
+#!/bin/bash
+
+: << 'END_USAGE_EXAMPLES'
+Reconstruct the surfaces of all the point sets in this directory, using recon_process, which writes the results
+into results/.  Setting RECON_VIEW=1 also shows the animation of each reconstruction once it completes; the next
+reconstruction starts after its viewer is closed.  Setting DEMOS_RECON_QUICK=1 stops after the first two point
+sets, as in "make -C demos create" unless DEMOS_RECON_QUICK=0 (as in the nightly CI).  Each command below may also
+be run by itself in this directory.
+
+./recon_process_all
+RECON_VIEW=1 ./recon_process_all
+END_USAGE_EXAMPLES
+
+# The parameters and comments come from the "dorecon" invocations in the author's notes (Recon.Notes.txt) on the
+# reconstructions of 1993-1994, whose arguments were: name npoints samplingd grid fillholes crep angle
+# [subdivfit_crep], where a grid of 0 used the default of Recon.  Parameters equal to the defaults of recon_process
+# are omitted.
+
+set -e
+
+cd "$(dirname "${BASH_SOURCE[0]}")"
+
+# Inner sheet spacing: .040.
+RECON_ROOT=mechpart RECON_SAMPLINGD=.035 RECON_GRID=60 RECON_ANGLE=50 ./recon_process
+
+# Tube diameter is .07.
+RECON_ROOT=cactus RECON_SAMPLINGD=.04 RECON_GRID=30 RECON_FILLHOLES=0 RECON_ANGLE=55 ./recon_process
+
+if ((DEMOS_RECON_QUICK)); then exit 0; fi
+
+# Tube diameter is .06; inter-tube spacing is .026.  Removed RECON_ANGLE=180.
+RECON_ROOT=knot108s RECON_SAMPLINGD=.025 RECON_GRID=50 RECON_CREP=1e-4 ./recon_process
+
+RECON_ROOT=club71 RECON_SAMPLINGD=.02 RECON_GRID=60 RECON_FILLHOLES=10 ./recon_process
+
+# The sampling density was 1.0, then 4.0 to reduce the grid size.
+RECON_ROOT=moeller RECON_SAMPLINGD=4.0 ./recon_process
+
+# Largest spacing between contours is .01076.
+RECON_ROOT=oilpmp RECON_SAMPLINGD=.0109 RECON_GRID=100 ./recon_process

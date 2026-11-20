@@ -33,6 +33,7 @@ create_scripts = \
   create_topologically_simplified.sh \
   create_vertex_cached_bunny.sh \
   create_spherical_param_bunny.sh \
+  recon/recon_process_all \
 
 view_scripts = \
   view_reconstruction_mannequin.sh \
@@ -78,6 +79,9 @@ $(view_scripts):
 	$(@)
 
 depend $(make_dep):
+
+# Unless DEMOS_RECON_QUICK=0 (as in the nightly CI), reconstruct only the first two point sets.
+recon/recon_process_all: export DEMOS_RECON_QUICK ?= 1
 
 # Any build-order dependencies.
 determine_approximation_error.sh: create_progressive_hulls_bunny.sh

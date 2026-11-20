@@ -5,7 +5,7 @@ source ./_initdemos.sh
 
 r=distcap
 
-# The script bin/recon_test overrides these settings using environment variables.
+# The script recon/recon_process overrides these settings using environment variables.
 pts=${RECON_PTS:-data/$r.pts}
 out=${RECON_OUT:-results/$r}
 s3d=${RECON_S3D:-data/$r.s3d}

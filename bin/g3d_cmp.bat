@@ -13,6 +13,8 @@ setlocal EnableExtensions EnableDelayedExpansion
 :::   global_opts          options given to all windows, from the first unrecognized argument that begins with '-'.
 ::: The windows run in the background, unless the environment variable G3D_CMP_FOREGROUND is set (as in the demos),
 ::: in which case the command waits for the windows to close and returns the status of the last window.
+::: The windows synchronize the level of detail of progressive meshes by the position of the logarithmic LOD slider
+::: rather than by the number of vertices, unless the environment variable G3D_OUTPUT_LOD_LOG is set to 0.
 ::: This is the Windows counterpart of the bash script g3d_cmp; its arguments cannot contain exclamation marks or
 ::: carets.
 :::
@@ -26,6 +28,9 @@ setlocal EnableExtensions EnableDelayedExpansion
 :: The script uses no "goto" or "call :label", because cmd.exe may fail to find a label in a file with LF line
 :: endings. Hence the argument loop is a bounded "for /l", which reads the current arguments using "call" (since
 :: "%1" inside a block would expand only once) and ends when they run out.
+
+:: Synchronize the levels of detail of different models by their relative position on the logarithmic slider.
+if not defined G3D_OUTPUT_LOD_LOG set G3D_OUTPUT_LOD_LOG=1
 
 :: Number of pixels between adjacent windows; windows overlap on a shared border line when gap=0.
 set gap=0

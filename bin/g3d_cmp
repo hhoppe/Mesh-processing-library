@@ -13,6 +13,8 @@ in raster order to synchronize viewpoint changes. A window is created for each o
   global_opts          options given to all windows, from the first unrecognized argument that begins with '-'.
 The windows run in the background, unless the environment variable G3D_CMP_FOREGROUND is set (as in the demos),
 in which case the command waits for all windows to close and fails if any of them fails.
+The windows synchronize the level of detail of progressive meshes by the position of the logarithmic LOD slider
+rather than by the number of vertices, unless the environment variable G3D_OUTPUT_LOD_LOG is set to 0.
 The script g3d_cmp.bat provides the same command for the Windows command prompt.
 
 Examples:
@@ -30,6 +32,9 @@ if [[ -n $G3D_IMAGE ]]; then
   echo "g3d_cmp: G3D_IMAGE is set; unset it to compare objects." >&2
   exit 1
 fi
+
+# Synchronize the levels of detail of different models by their relative position on the logarithmic slider.
+export G3D_OUTPUT_LOD_LOG=${G3D_OUTPUT_LOD_LOG-1}
 
 gap=0  # Number of pixels between adjacent windows; windows overlap on a shared border line when gap=0.
 

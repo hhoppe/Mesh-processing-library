@@ -291,6 +291,8 @@ struct PmState {
   // Both constructors set the initial level of detail.
   explicit PmState(unique_ptr<PMesh> pmesh_);  // A progressive mesh that is completely read.
   explicit PmState(unique_ptr<RFile> file_);   // A progressive mesh whose vsplits are read from a file as needed.
+  // As given by an input "lod_log" command, with the position t of the logarithmic slider.
+  void set_lod_slider(float t);
   void draw();
   void wrap_draw(bool show);  // Process (!show) or draw (show) its LOD slider.
   void set_lod(float lod);    // As given by an input "lod" command.
@@ -302,9 +304,12 @@ struct PmState {
   float lod_level{0.f};  // Fraction of the vsplits that are applied.
 
  private:
+  float shared_slider_applied{-1.f};  // The shared slider position that lod_level last adopted.
   void init_lod();
   [[nodiscard]] float nv_ratio() const;
-  void update_lod();
+  void change_lod(float lod);  // Set the level chosen by the user, and share its slider position.
+  void sync_shared_lod();      // Adopt the shared slider position if it has changed.
+  void update_lod(bool output = true);
 };
 
 class GxObject {
@@ -382,6 +387,12 @@ GxObjects g_xobs;
 // *** PM stuff (progressive mesh of an object)
 
 bool pm_slider_hidden;  // Hide the LOD slider of the progressive mesh of the current object ('DS').
+// Unless G3D_PER_OBJECT_LOD is set, the LOD sliders of the progressive meshes of all objects share one position, so
+// that all show the same relative level of detail on the logarithmic scale.  It is unset until a slider changes.
+const bool g_per_object_lod = getenv_bool("G3D_PER_OBJECT_LOD");
+std::optional<float> g_shared_lod_slider;
+// With G3D_OUTPUT_LOD_LOG, a change of LOD is output as "lod_log <slider position>" rather than "lod <#vertices>".
+const bool g_lod_output_log = getenv_bool("G3D_OUTPUT_LOD_LOG");
 
 // *** SR stuff (selective refinement)
 
@@ -3150,7 +3161,8 @@ int HB::id() { return 2000; }
 void* HB::escape(int code, void* data) {
   const float fdata = *static_cast<float*>(data);
   switch (code) {
-    case 1: {
+    case 1:    // Input "lod".
+    case 3: {  // Input "lod_log".
       if (fdata < 0.f) {
         if (g3d::output) std::cout << "lod -1\n" << std::flush;
         if (!use_dl) use_dl = was_using_dl;
@@ -3159,10 +3171,16 @@ void* HB::escape(int code, void* data) {
           was_using_dl = use_dl;
           use_dl = false;
         }
-        if (PmState* pms = slider_pm()) pms->set_lod(fdata);
+        if (PmState* pms = slider_pm()) {
+          if (code == 1) {
+            pms->set_lod(fdata);
+          } else {
+            pms->set_lod_slider(fdata);
+          }
+        }
 #if defined(DEF_SC)
-        if (psc_mode) psc_set_lod(fdata);
-        if (sc_gm_mode) sc_gm_set_lod(fdata);
+        if (psc_mode && code == 1) psc_set_lod(fdata);
+        if (sc_gm_mode && code == 1) sc_gm_set_lod(fdata);
 #endif
       }
       break;
@@ -3256,10 +3274,12 @@ PmState::PmState(unique_ptr<RFile> file_)
 void PmState::init_lod() {
   static const int pm_lod_num_faces = getenv_int("PM_LOD_NUM_FACES", 0);
   static const float pm_lod_level = getenv_float("PM_LOD_LEVEL", -1.f);
+  static const float pm_lod_log_level = getenv_float("PM_LOD_LOG_LEVEL", -1.f);
+  if (pm_lod_level >= 0.f && pm_lod_log_level >= 0.f) assertnever("Set only one of PM_LOD_LEVEL and PM_LOD_LOG_LEVEL");
   const PMeshInfo& info = pmesh->_info;
   const int base_nv = pmesh->_base_mesh._vertices.num();
-  if (pm_lod_num_faces <= 0 && pm_lod_level >= 0.f) {
-    lod_level = pm_lod_level;
+  if (pm_lod_num_faces <= 0 && (pm_lod_level >= 0.f || pm_lod_log_level >= 0.f)) {
+    lod_level = pm_lod_log_level >= 0.f ? lod_from_slider(pm_lod_log_level, nv_ratio()) : pm_lod_level;
     pmi.goto_nvertices(base_nv + int(info._tot_nvsplits * lod_level + .5f));
   } else {
     pmi.goto_nfaces(pm_lod_num_faces > 0 ? pm_lod_num_faces : min(info._full_nfaces, k_max_initial_pm_nfaces));
@@ -3269,25 +3289,42 @@ void PmState::init_lod() {
 
 float PmState::nv_ratio() const { return float(pmesh->_info._full_nvertices) / pmesh->_base_mesh._vertices.num(); }
 
-void PmState::update_lod() {
+void PmState::change_lod(float lod) {
+  lod_level = clamp(lod, 0.f, 1.f);
+  if (!g_per_object_lod) g_shared_lod_slider = shared_slider_applied = slider_from_lod(lod_level, nv_ratio());
+  update_lod();
+}
+
+void PmState::sync_shared_lod() {
+  if (g_per_object_lod || !g_shared_lod_slider || *g_shared_lod_slider == shared_slider_applied) return;
+  shared_slider_applied = *g_shared_lod_slider;
+  lod_level = lod_from_slider(shared_slider_applied, nv_ratio());
+  update_lod(false);
+}
+
+void PmState::update_lod(bool output) {
   const float flevel = min(lod_level, 1.f);
   const int nv0 = pmesh->_base_mesh._vertices.num();
   const int nvsplits = pmesh->_info._tot_nvsplits;
   const int nv = nv0 + int((nvsplits + 1) * flevel * .999999f);
   pmi.goto_nvertices(nv);
   invalidate_dls();
-  if (g3d::output) {
-    const float val = lod_use_nvertices ? pmi._vertices.num() : lod_level;
-    std::cout << "lod " << val << '\n' << std::flush;
+  if (g3d::output && output) {
+    if (g_lod_output_log) {
+      std::cout << "lod_log " << slider_from_lod(lod_level, nv_ratio()) << '\n' << std::flush;
+    } else {
+      const float val = lod_use_nvertices ? pmi._vertices.num() : lod_level;
+      std::cout << "lod " << val << '\n' << std::flush;
+    }
   }
 }
 
 void PmState::wrap_draw(bool show) {
+  sync_shared_lod();
   if (!show) {
     if (button_active && yx_pointer_old[1] < k_one_slider_left_thresh) {
-      const float oldval = lod_level;
-      lod_level = drag_lod_slider(lod_level, nv_ratio());
-      if (lod_level != oldval) update_lod();
+      const float lod = drag_lod_slider(lod_level, nv_ratio());
+      if (lod != lod_level) change_lod(lod);
       hw.redraw_later();
     }
   } else {
@@ -3309,16 +3346,20 @@ void PmState::set_lod(float lod) {
     const int nv0 = pmesh->_base_mesh._vertices.num();
     const int nvsplits = pmesh->_info._tot_nvsplits;
     if (!assertw(nvsplits)) return;
-    lod_level = (float(nv) - nv0) / nvsplits;
+    change_lod((float(nv) - nv0) / nvsplits);
   } else {
-    lod_level = lod;
+    change_lod(lod);
   }
-  lod_level = clamp(lod_level, 0.f, 1.f);
-  update_lod();
+  hw.redraw_later();
+}
+
+void PmState::set_lod_slider(float t) {
+  change_lod(lod_from_slider(clamp(t, 0.f, 1.f), nv_ratio()));
   hw.redraw_later();
 }
 
 void PmState::draw() {
+  sync_shared_lod();
   AWMesh& wmesh = pmi;
   const PMeshInfo& info = pmesh->_info;
   if (!ledges || lshading) {
@@ -3379,14 +3420,12 @@ void PmState::draw() {
 bool PmState::key_press(char ch) {
   switch (ch) {
     case 'c':
-      lod_level = 0.f;
-      update_lod();
+      change_lod(0.f);
       if (g3d::output) std::cout << "lod -1\n" << std::flush;
       hw.redraw_now();
       break;
     case 'a':
-      lod_level = 1.f;
-      update_lod();
+      change_lod(1.f);
       if (g3d::output) std::cout << "lod -1\n" << std::flush;
       hw.redraw_now();
       break;

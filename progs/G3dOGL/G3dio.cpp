@@ -197,6 +197,10 @@ bool try_g3d_command(const string& pstr) {
     float f = Args::parse_float(str);
     HB::escape(1, &f);
     return true;
+  } else if (remove_at_start(str, "lod_log ")) {
+    float f = Args::parse_float(str);
+    HB::escape(3, &f);
+    return true;
   } else if (remove_at_start(str, "screen_thresh ")) {
     float f = Args::parse_float(str);
     HB::escape(2, &f);

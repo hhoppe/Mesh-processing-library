@@ -731,8 +731,9 @@ HH_PRINTF_ATTRIBUTE(2, 3) const string& ssform(string& str, const char* format, 
 // Eat up whitespace, parse a double from the string, and advance `s` to the next character beyond, or die.
 [[nodiscard]] double double_from_chars(const char*& s);
 
-// Eat up whitespace and assert that there are not more remaining characters.
-void assert_no_more_chars(const char* s);
+// Eat up whitespace and assert that there are no more remaining characters; s_orig is the text being parsed,
+// which is shown in the error message.
+void assert_no_more_chars(const char* s, std::string_view s_orig);
 
 // Convert string to integer value, or crash if invalid.
 [[nodiscard]] int to_int(const char* s);

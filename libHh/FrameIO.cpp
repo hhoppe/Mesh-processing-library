@@ -31,7 +31,7 @@ void decode(std::istream& is, ObjectFrame& object_frame) {
   object_frame.obn = int_from_chars(s);
   for_int(i, 4) for_int(j, 3) object_frame.frame[i, j] = float_from_chars(s);
   object_frame.zoom = float_from_chars(s);
-  assert_no_more_chars(s);
+  assert_no_more_chars(s, line);
   object_frame.binary = false;
 }
 

@@ -216,7 +216,7 @@ inline void ISimplex::removeParent(Simplex old_parent) {
 //     string str;
 //     const char* s = assertx(GMesh::string_key(str, getVAttribute(), "rgb"));
 //     Point co; for_int(c, 3) co[c] = float_from_chars(s);
-//     assert_no_more_chars(s);
+//     assert_no_more_chars(s, str);
 //     return co;
 // }
 

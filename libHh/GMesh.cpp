@@ -1106,13 +1106,13 @@ void GMesh::read_line(char* sline) {
       }
       if (const char* s = after_prefix(sline, "Vspl ")) {
         const int vi = int_from_chars(s), vs1i = int_from_chars(s), vs2i = int_from_chars(s), vni = int_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         split_vertex(id_vertex(vi), (vs1i ? id_vertex(vs1i) : nullptr), (vs2i ? id_vertex(vs2i) : nullptr), vni);
         return;
       }
       if (const char* s = after_prefix(sline, "Vmerge ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         merge_vertices(id_vertex(vi1), id_vertex(vi2));
         return;
       }
@@ -1174,7 +1174,7 @@ void GMesh::read_line(char* sline) {
       }
       if (const char* s = after_prefix(sline, "Ecol ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         // collapse_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)));
         Vertex vs = id_vertex(vi1), vt = id_vertex(vi2);
         collapse_edge_vertex(edge(vs, vt), vs);
@@ -1182,13 +1182,13 @@ void GMesh::read_line(char* sline) {
       }
       if (const char* s = after_prefix(sline, "Eswa ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         assertx(swap_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2))));
         return;
       }
       if (const char* s = after_prefix(sline, "Espl ")) {
         const int vi1 = int_from_chars(s), vi2 = int_from_chars(s), vi3 = int_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         split_edge(ordered_edge(id_vertex(vi1), id_vertex(vi2)), vi3);
         return;
       }

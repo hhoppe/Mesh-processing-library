@@ -194,7 +194,7 @@ bool RSA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, string& c
       assertx(my_getline(_is, line));
       const char* s = line.c_str();
       for_int(c, 3) f[c] = float_from_chars(s);
-      assert_no_more_chars(s);
+      assert_no_more_chars(s, line);
     } else {
       assertx(_is >> f[0] >> f[1] >> f[2]);
       _is.ignore(std::numeric_limits<std::streamsize>::max(), '\n');  // Likely needed.

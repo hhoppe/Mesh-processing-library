@@ -185,7 +185,7 @@ void WMesh::read(std::istream& is, const PMeshInfo& pminfo) {
     s = assertx(after_prefix(s, "nvertices=")), nvertices = int_from_chars(s);
     s = assertx(after_prefix(s, " nwedges=")), nwedges = int_from_chars(s);
     s = assertx(after_prefix(s, " nfaces=")), nfaces = int_from_chars(s);
-    assert_no_more_chars(s);
+    assert_no_more_chars(s, line);
   }
   _vertices.init(nvertices);
   _wedges.init(nwedges);
@@ -1607,12 +1607,12 @@ PMeshInfo PMesh::read_header(std::istream& is) {
       s = assertx(after_prefix(s, " nvertices=")), pminfo._full_nvertices = int_from_chars(s);
       s = assertx(after_prefix(s, " nwedges=")), pminfo._full_nwedges = int_from_chars(s);
       s = assertx(after_prefix(s, " nfaces=")), pminfo._full_nfaces = int_from_chars(s);
-      assert_no_more_chars(s);
+      assert_no_more_chars(s, line);
       continue;
     }
     if (const char* s = after_prefix(sline, "bbox ")) {
       for_int(i, 2) for_int(j, 3) pminfo._full_bbox[i, j] = float_from_chars(s);
-      assert_no_more_chars(s);
+      assert_no_more_chars(s, line);
       continue;
     }
     if (const char* s = after_prefix(sline, "has_rgb=")) {

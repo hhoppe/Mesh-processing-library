@@ -35,7 +35,7 @@ bool RBufferedA3dStream::read_line(bool& binary, char& ctype, Vec3<float>& f, st
   assertx(str.size() > 1 && str[1] == ' ');
   const char* s = str.c_str() + 2;
   for_int(c, 3) f[c] = float_from_chars(s);
-  assert_no_more_chars(s);
+  assert_no_more_chars(s, str);
   return true;
 }
 

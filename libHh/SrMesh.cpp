@@ -838,7 +838,7 @@ void SrMesh::read_srm(std::istream& is) {
     s = assertx(after_prefix(s, "base_nvertices=")), bnv = int_from_chars(s);
     s = assertx(after_prefix(s, " base_nfaces=")), bnf = int_from_chars(s);
     s = assertx(after_prefix(s, " nvsplits=")), nvspl = int_from_chars(s);
-    assert_no_more_chars(s);
+    assert_no_more_chars(s, line);
     _vertices.init(bnv + 2 * nvspl);
     _faces.init(bnf + 2 * nvspl);
     _vsplits.init(nvspl);
@@ -853,7 +853,7 @@ void SrMesh::read_srm(std::istream& is) {
     assertx(my_getline(is, line));
     const char* s = assertx(after_prefix(line.c_str(), "bbox "));
     for_int(i, 2) for_int(j, 3) _bbox[i, j] = float_from_chars(s);
-    assert_no_more_chars(s);
+    assert_no_more_chars(s, line);
   }
   // Read in materials.
   _materials.read(is);

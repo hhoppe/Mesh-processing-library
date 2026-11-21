@@ -673,7 +673,7 @@ line2)";
     assertx(uint_from_chars(s) == 4'000'000'000u);
     assertx(float_from_chars(s) == 1.5f && double_from_chars(s) == -2e-300);
     assertx(string(s) == " rest");
-    assert_no_more_chars("  \t\n");
+    assert_no_more_chars(" \t\n", "12 \t\n");
     assertx(to_int("-5") == -5 && to_int(string("+7 ")) == 7 && to_uint("4294967295") == 4'294'967'295u);
     assertx(to_float("1e3") == 1000.f && to_float(string(".25")) == .25f && to_double("1e-300") == 1e-300);
     assertx(to_float("+2.5E+2") == 250.f && to_float("\t-0.5") == -.5f);

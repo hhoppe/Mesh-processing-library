@@ -683,9 +683,10 @@ double double_from_chars(const char*& s) {
   return value;
 }
 
-void assert_no_more_chars(const char* s) {
+void assert_no_more_chars(const char* s, std::string_view s_orig) {
   while (std::isspace(static_cast<unsigned char>(*s))) s++;
-  if (*s) assertnever("Unexpected extra characters in '" + string(s) + "'");
+  if (*s)
+    assertnever("When parsing '" + string(s_orig) + "', found unexpected trailing characters '" + string(s) + "'");
 }
 
 static bool check_bool(const char* s) {
@@ -696,27 +697,31 @@ static bool check_bool(const char* s) {
   return false;
 }
 
-int to_int(const char* s) {
+int to_int(const char* s0) {
+  const char* s = s0;
   const int value = int_from_chars(s);
-  assert_no_more_chars(s);
+  assert_no_more_chars(s, s0);
   return value;
 }
 
-unsigned to_uint(const char* s) {
+unsigned to_uint(const char* s0) {
+  const char* s = s0;
   const unsigned value = uint_from_chars(s);
-  assert_no_more_chars(s);
+  assert_no_more_chars(s, s0);
   return value;
 }
 
-float to_float(const char* s) {
+float to_float(const char* s0) {
+  const char* s = s0;
   const float value = float_from_chars(s);
-  assert_no_more_chars(s);
+  assert_no_more_chars(s, s0);
   return value;
 }
 
-double to_double(const char* s) {
+double to_double(const char* s0) {
+  const char* s = s0;
   const double value = double_from_chars(s);
-  assert_no_more_chars(s);
+  assert_no_more_chars(s, s0);
   return value;
 }
 

@@ -667,7 +667,7 @@ void SimplicialComplex::readLine(const char* str) {
       for (Simplex c : sd->children()) c->addParent(sd);
     }
     while (std::isspace(*s)) s++;
-    assert_no_more_chars(s);
+    assert_no_more_chars(s, sline);
 
     // Read in vattributes.
     sd->set_string(va_field);
@@ -682,7 +682,7 @@ void SimplicialComplex::readLine(const char* str) {
   }
   if (const char* s = after_prefix(sline, "Unify ")) {
     const int vi1 = int_from_chars(s), vi2 = int_from_chars(s);
-    assert_no_more_chars(s);
+    assert_no_more_chars(s, sline);
     unify(getSimplex(0, vi1), getSimplex(0, vi2));
     return;
   }
@@ -729,7 +729,7 @@ void SimplicialComplex::readQHull(std::istream& is) {
     Vec4<int> v;
     const char* s = line.c_str();
     for_int(k, 4) v[k] = int_from_chars(s);
-    assert_no_more_chars(s);
+    assert_no_more_chars(s, line);
     for_int(j, 3) {
       if (v[j] >= verts) continue;
 

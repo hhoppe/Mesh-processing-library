@@ -308,7 +308,7 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         after_vsplit = true;
         const int vni = int_from_chars(s), vsi = int_from_chars(s), vti = int_from_chars(s), vli = int_from_chars(s);
         const int vri = int_from_chars(s), fli = int_from_chars(s), fri = int_from_chars(s), ii = int_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         assertx(vni == vsi);  // Redundancy.
         dummy_use(fli, fri);
         const int vsie = vlineage.existing_id(vsi);
@@ -396,7 +396,7 @@ bool parse_line(char* sline, bool& after_vsplit, bool carry_old) {
         const int vi = int_from_chars(s);
         Point p;
         for_int(c, 3) p[c] = float_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         Vertex v = mesh.id_vertex(vlineage.existing_id(vi));
         mesh.set_point(v, p);
         if (record_changes) std::cout << sline << '\n';
@@ -647,7 +647,7 @@ void do_fbasemesh(Args& args) {
         pm_nvertices = int_from_chars(s);
         s = assertx(after_prefix(s, " nwedges=")), pm_nwedges = int_from_chars(s);
         s = assertx(after_prefix(s, " nfaces=")), pm_nfaces = int_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, line);
         continue;
       }
       if (const char* s = after_prefix(sline, "# PM: necols=")) {
@@ -656,11 +656,11 @@ void do_fbasemesh(Args& args) {
       }
       if (const char* s = after_prefix(sline, "# PM: bounding box ")) {
         for_int(i, 2) for_int(j, 3) pm_bbox[i, j] = float_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, line);
         continue;
       }
       if (const char* s = after_prefix(sline, "# PM: has_wad2")) {
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, line);
         pm_has_wad2 = true;
         continue;
       }
@@ -1123,7 +1123,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
       if (const char* s = after_prefix(sline, "# Residuals ")) {
         vspl.resid_uni = float_from_chars(s);
         vspl.resid_dir = float_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         has_resid = true;
       }
       return true;
@@ -1133,7 +1133,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         after_vsplit = true;
         const int voi = int_from_chars(s), vsi = int_from_chars(s), vti = int_from_chars(s), vli = int_from_chars(s);
         const int vri = int_from_chars(s), fli = int_from_chars(s), fri = int_from_chars(s), ii = int_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         assertx(voi == vsi);  // Redundancy.
         dummy_use(fli, fri);
         Vertex vs = mesh.id_vertex(vsi);
@@ -1281,7 +1281,7 @@ bool parse_line2(char* sline, bool& after_vsplit) {
         const int vi = int_from_chars(s);
         Point p;
         for_int(c, 3) p[c] = float_from_chars(s);
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, sline);
         Vertex v = mesh.id_vertex(vi);
         mesh.set_point(v, p);
         return true;

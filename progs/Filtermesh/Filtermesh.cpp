@@ -2252,7 +2252,7 @@ void do_renamekey(Args& args) {
           assertx(*s++ == ' ');
         }
         assertx(*s++ == ')');
-        assert_no_more_chars(s);
+        assert_no_more_chars(s, str);
         mesh.set_point(v, p);
         mesh.update_string(v, okey, nullptr);
       }

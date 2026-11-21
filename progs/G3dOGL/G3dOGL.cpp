@@ -15,7 +15,8 @@
 #include "libHh/PMesh.h"
 #include "libHh/Ply.h"
 #include "libHh/Polygon.h"
-#include "libHh/SrMesh.h"  // DEF_SR
+#include "libHh/RangeOp.h"  // sort()
+#include "libHh/SrMesh.h"   // DEF_SR
 #include "libHh/StringOp.h"
 #include "libHh/Timer.h"
 #include "libHh/Vec.h"
@@ -312,6 +313,17 @@ struct PmState {
   void update_lod(bool output = true);
 };
 
+// A PLY mesh (or point set), with the data derived from it for drawing.
+struct PlyState {
+  explicit PlyState(unique_ptr<PlyMesh> mesh_) : mesh(std::move(mesh_)) {}
+  void draw();
+  unique_ptr<PlyMesh> mesh;  // Its normals are computed in draw() if absent and needed.
+
+ private:
+  Array<Vec2<int>> edges;  // Each edge of the faces once, computed when first drawn.
+  void compute_edges();
+};
+
 class GxObject {
  public:
   ~GxObject() { assertx(!_opened); }
@@ -329,7 +341,7 @@ class GxObject {
   }
   GMesh* _mesh{nullptr};
   unique_ptr<PmState> _pms;
-  unique_ptr<PlyMesh> _ply;           // Its normals are computed in draw_ply() if absent and needed.
+  unique_ptr<PlyState> _ply;
   bool _points_are_uncolored{false};  // Its A3d elements are all black points, drawn in the foreground color.
 
  private:
@@ -437,10 +449,6 @@ int sc_gm_morph = 0;
 int sc_gm_num = -1;
 bool psc_key_press(char ch);
 #endif
-
-// *** PLY stuff (PLY mesh of an object)
-
-void draw_ply(PlyMesh& ply_mesh);
 
 // *** Sliders
 
@@ -2201,7 +2209,7 @@ void draw_all() {
       if (ob._mesh) draw_mesh(*ob._mesh);
       draw_list(ob.traverse(), ob._points_are_uncolored);
       if (ob._pms) ob._pms->draw();
-      if (ob._ply) draw_ply(*ob._ply);
+      if (ob._ply) ob._ply->draw();
     }
     if (g_xobs[i]._mesh) g_xobs[i]._mesh->gflags().flag(g3d::mflag_ok) = true;  // If sc_mode, psc_mode, etc.
 
@@ -3121,7 +3129,7 @@ PMeshInfo HB::segment_add_pmesh_file(unique_ptr<RFile> file) {
 void HB::segment_add_ply(unique_ptr<PlyMesh> ply_mesh) {
   GxObject& ob = g_xobs.opened();
   if (ob._ply) Warning("Object has more than one PLY mesh; keeping the last one");
-  ob._ply = std::move(ply_mesh);
+  ob._ply = make_unique<PlyState>(std::move(ply_mesh));
   invalidate_dls();
 }
 
@@ -4825,7 +4833,28 @@ bool psc_key_press(char ch) {
 
 // *** PLY mesh of an object
 
-void draw_ply(PlyMesh& ply_mesh) {
+// Find each undirected edge of the faces once, also for boundary edges, non-manifold edges, and faces with
+// inconsistent orientations, by sorting the pairs of vertex indices.
+void PlyState::compute_edges() {
+  const PlyMesh& ply_mesh = *mesh;
+  Array<uint64_t> keys;
+  for_int(i, ply_mesh.num_faces()) {
+    const CArrayView<int> indices = ply_mesh.face(i);
+    const int n = indices.num();
+    for_int(j, n) {
+      const auto v0 = uint32_t(indices[j]), v1 = uint32_t(indices[(j + 1) % n]);
+      keys.push(uint64_t{min(v0, v1)} << 32 | max(v0, v1));
+    }
+  }
+  sort(keys);
+  edges.init(0);
+  for_int(k, keys.num()) {
+    if (!k || keys[k] != keys[k - 1]) edges.push(V(int(keys[k] >> 32), int(keys[k] & 0xFFFF'FFFF)));
+  }
+}
+
+void PlyState::draw() {
+  PlyMesh& ply_mesh = *mesh;
   const CArrayView<Point> ply_vpos = ply_mesh.points;
   Array<Vector>& ply_vnor = ply_mesh.normals;
   const CArrayView<Pixel> ply_vrgb = ply_mesh.colors;
@@ -4919,15 +4948,16 @@ void draw_ply(PlyMesh& ply_mesh) {
     initialize_unlit();
     set_thickness(thicknormal);
     update_cur_color(pix_edgecolor);
+    if (nf && edges.empty()) compute_edges();
+    // Restart the primitive periodically: a single long one is slow to compile and draw in a display list.
     glBegin(GL_LINES);
-    for_int(i, nf) {
-      const CArrayView<int> indices = ply_mesh.face(i);
-      const int n = indices.num();
-      for_int(j, n) {
-        // Draws most edges twice :-(
-        glVertex3fv(ply_vpos[indices[j]].data());
-        glVertex3fv(ply_vpos[indices[(j + 1) % n]].data());
+    for_int(k, edges.num()) {
+      if ((k & 0xFF) == 0 && k) {
+        glEnd();
+        glBegin(GL_LINES);
       }
+      glVertex3fv(ply_vpos[edges[k][0]].data());
+      glVertex3fv(ply_vpos[edges[k][1]].data());
     }
     glEnd();
     set_thickness(thicka3d);

@@ -719,6 +719,12 @@ HH_PRINTF_ATTRIBUTE(2, 3) const string& ssform(string& str, const char* format, 
 // Eat up whitespace, parse an unsigned from the string, and advance `s` to the next character beyond, or die.
 [[nodiscard]] unsigned uint_from_chars(const char*& s);
 
+// Eat up whitespace and a '+' sign, parse a float or double from [s, end) using std::from_chars() (independent of
+// the locale), and advance `s` to the next character beyond; return false, leaving `s` unchanged, if there is no
+// valid value within range.
+[[nodiscard]] bool real_from_chars(const char*& s, const char* end, float& value);
+[[nodiscard]] bool real_from_chars(const char*& s, const char* end, double& value);
+
 // Eat up whitespace, parse a float from the string, and advance `s` to the next character beyond, or die.
 [[nodiscard]] float float_from_chars(const char*& s);
 

@@ -134,11 +134,17 @@ class PlyValueReader {
     if (_binary) return load_value(read_bytes(type_size(type)), type, _swap);
     skip_spaces();
     if (!*_s) assertnever("ply: too few values on line '" + _line + "'");
-    char* end;
-    // Parse a float directly (rather than through a double) to get the correctly rounded value.
-    const double value = type == PlyType::float32 ? std::strtof(_s, &end) : std::strtod(_s, &end);
-    if (end == _s) assertnever("ply: cannot parse a value in line '" + _line + "'");
-    _s = end;
+    const char* const end = _line.data() + _line.size();
+    double value;
+    bool ok;
+    if (type == PlyType::float32) {  // Parse a float directly (rather than through a double) for correct rounding.
+      float fvalue;
+      ok = real_from_chars(_s, end, fvalue);
+      value = fvalue;
+    } else {
+      ok = real_from_chars(_s, end, value);
+    }
+    if (!ok) assertnever("ply: cannot parse a value in line '" + _line + "'");
     return value;
   }
   // Read count values of the given type, calling f(value) on each.

@@ -676,6 +676,22 @@ line2)";
     assert_no_more_chars("  \t\n");
     assertx(to_int("-5") == -5 && to_int(string("+7 ")) == 7 && to_uint("4294967295") == 4'294'967'295u);
     assertx(to_float("1e3") == 1000.f && to_float(string(".25")) == .25f && to_double("1e-300") == 1e-300);
+    assertx(to_float("+2.5E+2") == 250.f && to_float("\t-0.5") == -.5f);
+    assertx(to_float("1e-40") == 1e-40f && to_double("1e-320") == 1e-320);  // Denormal values.
+    {
+      const char* const str = " +1.5) x";
+      const char* s2 = str;
+      float f;
+      assertx(real_from_chars(s2, str + 5, f) && f == 1.5f && s2 == str + 5);  // Bounded parsing stops at ')'.
+      double d;
+      for (const std::string_view bad : {"abc", "+", "+-1", ""}) {
+        const char* s3 = bad.data();
+        assertx(!real_from_chars(s3, bad.data() + bad.size(), d) && s3 == bad.data());
+      }
+      const char* const big = "1e39";
+      const char* s4 = big;
+      assertx(!real_from_chars(s4, big + 4, f) && s4 == big);  // Out of range for a float.
+    }
   }
   {
     // Environment variables with explicit values.

@@ -456,11 +456,9 @@ PlyMesh GMesh::to_ply() const {
     for (;;) {  // Parse in place, without copying the value.
       while (s < vend && (*s == ' ' || *s == '\t')) s++;
       if (s == vend) break;
-      char* end;
-      const float value = std::strtof(s, &end);
-      if (end == s || end > vend) return -2;
+      float value;
+      if (!real_from_chars(s, vend, value)) return -2;
       values.push(value);
-      s = end;
     }
     if (values.empty() || (!is_vector && values.num() != 1)) return -2;
     return values.num();

@@ -17,8 +17,9 @@
 
 #include <array>
 #include <atomic>
-#include <cctype>  // isdigit()
-#include <cerrno>  // errno
+#include <cctype>    // isdigit()
+#include <cerrno>    // errno
+#include <charconv>  // from_chars()
 #include <chrono>
 #include <cstdarg>  // va_list
 #include <cstring>  // memcpy(), strlen(), strerror()
@@ -650,23 +651,35 @@ unsigned uint_from_chars(const char*& s) {
   return sizeof(long_value) == sizeof(unsigned) ? long_value : assert_narrow_cast<unsigned>(long_value);
 }
 
+namespace {
+
+// Unlike std::strtof() and std::strtod(), std::from_chars() is independent of the locale, accepts denormal values,
+// and reports a missing value; but it does not skip leading whitespace or a '+' sign, so these are skipped here.
+template <typename T> bool real_from_chars_impl(const char*& s, const char* end, T& value) {
+  const char* p = s;
+  while (p < end && std::isspace(static_cast<unsigned char>(*p))) p++;
+  if (end - p >= 2 && *p == '+' && p[1] != '-') p++;
+  const auto [pend, ec] = std::from_chars(p, end, value);
+  if (ec != std::errc{}) return false;
+  s = pend;
+  return true;
+}
+
+}  // namespace
+
+bool real_from_chars(const char*& s, const char* end, float& value) { return real_from_chars_impl(s, end, value); }
+
+bool real_from_chars(const char*& s, const char* end, double& value) { return real_from_chars_impl(s, end, value); }
+
 float float_from_chars(const char*& s) {
-  // C++17: Use std::from_chars(), once available more broadly.
-  char* end;
-  errno = 0;
-  const float value = std::strtof(s, &end);
-  if (errno) assertnever("Cannot parse float in '" + string(s) + "'");
-  s = end;
+  float value;
+  if (!real_from_chars(s, s + strlen(s), value)) assertnever("Cannot parse float in '" + string(s) + "'");
   return value;
 }
 
 double double_from_chars(const char*& s) {
-  // C++17: Use std::from_chars(), once available more broadly.
-  char* end;
-  errno = 0;
-  const double value = std::strtod(s, &end);
-  if (errno) assertnever("Cannot parse double in '" + string(s) + "'");
-  s = end;
+  double value;
+  if (!real_from_chars(s, s + strlen(s), value)) assertnever("Cannot parse double in '" + string(s) + "'");
   return value;
 }
 

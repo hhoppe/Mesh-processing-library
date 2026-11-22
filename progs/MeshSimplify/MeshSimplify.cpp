@@ -743,7 +743,7 @@ void get_face_qem(Face f, AnyQem& qem) {
   }
   if (qemweight) {
     float face_area = mag(cross(mesh.point(va[0]), mesh.point(va[1]), mesh.point(va[2])));
-    // Remember that QEM itself is squared on scale.  If weigh faces by area, then cost is O(scale^4).
+    // Remember that QEM itself is squared on scale.  If we weight faces by area, then cost is O(scale^4).
     face_area *= 1.f / square(frac_diam * gdiam);
     qem.scale(face_area);
   }

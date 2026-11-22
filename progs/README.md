@@ -371,7 +371,7 @@ at their original positions (`-vsgeom`).
 This enables selective refinement, demonstrated by
 ```shell
 G3dOGL -eyeob demos/data/unit_frustum.a3d -sr_mode office.sr.pm -st demos/data/office_srfig.s3d \
-  -key DnDeDoDb -lightambient .4 -sr_screen_thresh .002 -frustum_frac 2
+  -key DeDoDb -lightambient .4 -sr_screen_thresh .002 -frustum_frac 2
 ```
 
 The mesh is adaptively refined within the view frustum, shown as the inset rectangle (key <kbd>Do</kbd>)

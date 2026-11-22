@@ -101,7 +101,6 @@ int thicksharp = 2;
 int thicknormal = 1;
 int thicka3d = 1;
 float thickpoint = 2.f;  // Was 1.f.
-bool nice_rendering;
 bool perspec = true;
 bool uvtopos;
 bool slidermode;
@@ -180,7 +179,6 @@ Pixel pix_bndedgecolor;
 Vec2<float> yx_pointer_old;
 const Frame k_eye_to_gleye{Vector(0.f, 0.f, -1.f), Vector(-1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f),
                            Point(0.f, 0.f, 0.f)};
-bool ogl_normalize;
 constexpr float k_one_slider_left_thresh = 0.2f;  // Left area of screen for 1 slider.
 const Vector k_lightdir_eye0{-1.f, -.6f, .3f};
 const Vector k_lightdir_eye1{+1.f, +.6f, -.3f};
@@ -1309,16 +1307,8 @@ void gl_init() {
       glDisable(GL_POINT_SMOOTH);
       // glDisable(GL_BLEND);
     }
-    // GL_NICEST looks worse for lines in SRview of scaled bunny and makes it run much slower.
-    // GL_FASTEST is always fast and good.
-    glHint(GL_LINE_SMOOTH_HINT, nice_rendering ? GL_NICEST : GL_FASTEST);
-    glHint(GL_POINT_SMOOTH_HINT, nice_rendering ? GL_NICEST : GL_FASTEST);
-    glHint(GL_PERSPECTIVE_CORRECTION_HINT, nice_rendering ? GL_NICEST : GL_FASTEST);
-    glHint(GL_FOG_HINT, nice_rendering ? GL_NICEST : GL_FASTEST);
-    if (nice_rendering || ogl_normalize)
-      glEnable(GL_NORMALIZE);
-    else
-      glDisable(GL_NORMALIZE);
+    // Normals may be unnormalized (face normals) or scaled by a non-rigid object frame.
+    glEnable(GL_NORMALIZE);
     if (mdepthcue) {
       glEnable(GL_FOG);
       glFogi(GL_FOG_MODE, GL_EXP);   // GL_EXP is default
@@ -1406,7 +1396,8 @@ bool setup_ob(int i) {
   if (i == 0 && worldlight) lambient = 1.f;
   set_light_ambient(lambient);
   {
-    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, nice_rendering ? 1 : 0);
+    // The view direction for specular highlights varies over the surface only under perspective.
+    glLightModeli(GL_LIGHT_MODEL_LOCAL_VIEWER, perspec ? 1 : 0);
     glLightModeli(GL_LIGHT_MODEL_TWO_SIDE, twoside);
   }
   if (worldlight) {
@@ -2415,7 +2406,6 @@ void all_reset() {
   }
   mdepthcue = false;
   antialiasing = true;
-  nice_rendering = false;
   perspec = true;
   uvtopos = false;
   slidermode = false;
@@ -2573,10 +2563,7 @@ void GxObject::morph(float finterp) {  // Here, finterp == 1.f is new,   finterp
     }
   }
   if (!lsmooth || (ledges && cullbackedges && lcullface)) {
-    // We store non-normalized face normals, so we ask OpenGL to normalize them; ogl_normalize keeps
-    // update_lighting() from disabling GL_NORMALIZE again.
-    glEnable(GL_NORMALIZE);
-    ogl_normalize = true;
+    // We store non-normalized face normals, which OpenGL normalizes (GL_NORMALIZE is always enabled).
     Polygon poly;
     for (Face f : mesh.faces()) {
       if (mesh.is_triangle(f)) {  // The common case; going through Polygon here would be twice as slow.
@@ -2663,7 +2650,6 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   quicki = 4;
   mdepthcue = false;
   antialiasing = true;
-  nice_rendering = false;
   perspec = true;
   slidermode = false;
   hither = k_default_hither;
@@ -2745,7 +2731,6 @@ bool HB::init(Array<string>& aargs, bool (*pfkeyp)(const string& s),
   mesh_color = create_mat_color(A3dVertexColor(A3dColor(meshcold), A3dColor(meshcols), A3dColor(meshcolp)));
   assertx(meshcola[0] >= 0.f && meshcola[0] <= 1.f);
   mesh_color.d[3] = uint8_from_unit(meshcola[0]);
-  if (picture) nice_rendering = true;
   if (sr_filename != "") {
 #if defined(DEF_SR)
     sr_mode = true;
@@ -3003,11 +2988,6 @@ bool HB::special_keypress(char ch) {
       invalidate_dls();
       hw.redraw_now();
       break;
-    case 'n':
-      nice_rendering = !nice_rendering;
-      invalidate_dls();
-      hw.redraw_now();
-      break;
     case 'p':
       perspec = !perspec;
       hw.redraw_now();
@@ -3122,7 +3102,7 @@ Device commands (prefixed by 'D'):
    Per object:
 <b>ackfacecull  <r>eversecull  <s>hading  s<m>ooth_shading  <e>dges
    Global:
-depthc<u>e  <a>ntialiasing  <n>ice_rendering  <p>erspective  <S>liders
+depthc<u>e  <a>ntialiasing  <p>erspective  <S>liders
 <q>uickmode  button<Q>uick   <[>, <]>:change_quicki
 </>statefile  set<R>enderedimage  <P>rint_image  <esc>quit
 )"[1];
@@ -3136,11 +3116,11 @@ depthc<u>e  <a>ntialiasing  <n>ice_rendering  <p>erspective  <S>liders
 
 string HB::show_info() {
   const int obn = cob;
-  return sform("[GL %c%c%c%c%c%c%c%c%c%c%c%c%c]",  //
+  return sform("[GL %c%c%c%c%c%c%c%c%c%c%c%c]",  //
                g_xobs.cullface[obn] ? 'b' : ' ', g_xobs.reverse_cull[obn] ? 'r' : ' ', g_xobs.shading[obn] ? 's' : ' ',
                g_xobs.smooth[obn] ? 'm' : ' ', g_xobs.edges[obn] ? 'e' : ' ', mdepthcue ? 'u' : ' ',
-               antialiasing ? 'a' : ' ', nice_rendering ? 'n' : ' ', perspec ? 'p' : ' ', slidermode ? 'S' : ' ',
-               texture_active ? 't' : ' ', use_dl ? 'C' : ' ',
+               antialiasing ? 'a' : ' ', perspec ? 'p' : ' ', slidermode ? 'S' : ' ', texture_active ? 't' : ' ',
+               use_dl ? 'C' : ' ',
                quickmode  ? 'q'
                : butquick ? 'Q'
                           : ' ');
@@ -4677,52 +4657,47 @@ void draw_sc() {
     glEnd();
     // Draw all 1-simplices with no parents.
     psc_orphan_nedges = 0;
-    glPushAttrib(GL_TRANSFORM_BIT);
-    {  // Save GL_NORMALIZE.
-      glEnable(GL_NORMALIZE);
-      for (Simplex s1 : psc_principal_edges) {
-        assertx(s1->isPrincipal());
-        psc_orphan_nedges++;
-        const Point& vj = s1->getChild(0)->getPosition();
-        const Point& vk = s1->getChild(1)->getPosition();
-        const float area = s1->getArea();
-        assertx(area >= 0.f);
-        // Radius of a cylinder from vj to vk with same area.
-        float rad;
-        const float height = dist(vj, vk);
-        rad = area / (TAU * height);
-        // Cylinder center.
-        const Point& center = interp(vj, vk);
-        if (height < 2.f * rad) {
-          // Draw as point.
-          maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
-          draw_point(center, area);
-          continue;
-        }
-        // Find projected area.
-        const float prad = projected_area(rad, center);
-        // Skip lines of disregardable thickness.
-        if (prad < 0.2f) continue;
-        const int thickness = int(prad);
-        if (thickness < 5) {
-          // Draw a line.
-          initialize_unlit();
-          update_cur_color(s_color[s1->getVAttribute()]);
-          set_thickness(thickness);
-          glBegin(GL_LINES);
-          glVertex3fv(vj.data());
-          glVertex3fv(vk.data());
-          glEnd();
-          initialize_lit();
-          update_mat_color(mesh_color);
-        } else {
-          // Draw as cylinder.
-          maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
-          cyl.draw(vj, vk, rad);
-        }
+    for (Simplex s1 : psc_principal_edges) {
+      assertx(s1->isPrincipal());
+      psc_orphan_nedges++;
+      const Point& vj = s1->getChild(0)->getPosition();
+      const Point& vk = s1->getChild(1)->getPosition();
+      const float area = s1->getArea();
+      assertx(area >= 0.f);
+      // Radius of a cylinder from vj to vk with same area.
+      float rad;
+      const float height = dist(vj, vk);
+      rad = area / (TAU * height);
+      // Cylinder center.
+      const Point& center = interp(vj, vk);
+      if (height < 2.f * rad) {
+        // Draw as point.
+        maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
+        draw_point(center, area);
+        continue;
+      }
+      // Find projected area.
+      const float prad = projected_area(rad, center);
+      // Skip lines of disregardable thickness.
+      if (prad < 0.2f) continue;
+      const int thickness = int(prad);
+      if (thickness < 5) {
+        // Draw a line.
+        initialize_unlit();
+        update_cur_color(s_color[s1->getVAttribute()]);
+        set_thickness(thickness);
+        glBegin(GL_LINES);
+        glVertex3fv(vj.data());
+        glVertex3fv(vk.data());
+        glEnd();
+        initialize_lit();
+        update_mat_color(mesh_color);
+      } else {
+        // Draw as cylinder.
+        maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
+        cyl.draw(vj, vk, rad);
       }
     }
-    glPopAttrib();
     // Draw all 0-simplices with no parents.
     psc_orphan_nverts = 0;
     for (Simplex s0 : psc_principal_verts) {
@@ -4916,52 +4891,47 @@ void draw_sc_gm(const SimplicialComplex& kmesh) {
     glEnd();
     // Draw all 1-simplices with no parents.
     psc_orphan_nedges = 0;
-    glPushAttrib(GL_TRANSFORM_BIT);
-    {  // Save GL_NORMALIZE.
-      glEnable(GL_NORMALIZE);
-      for (Simplex s1 : kmesh.simplices_dim(1)) {
-        if (s1->getArea() < 1e-3f) continue;
-        psc_orphan_nedges++;
-        const Point& vj = s1->getChild(0)->getPosition();
-        const Point& vk = s1->getChild(1)->getPosition();
-        const float area = s1->getArea();
-        assertx(area >= 0.f);
-        // Radius of a cylinder from vj to vk with same area.
-        float rad;
-        const float height = dist(vj, vk);
-        rad = area / (TAU * height);
-        // Cylinder center.
-        const Point& center = interp(vj, vk);
-        if (height < 2.f * rad) {
-          // Draw as point.
-          maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
-          draw_point(center, area);
-          continue;
-        }
-        // Find projected area.
-        const float prad = projected_area(rad, center);
-        // Skip lines of disregardable thickness.
-        if (prad < 0.2) continue;
-        const int thickness = int(prad);
-        if (thickness < 5) {
-          // Draw a line.
-          initialize_unlit();
-          update_cur_color(s_color[s1->getVAttribute()]);
-          set_thickness(thickness);
-          glBegin(GL_LINES);
-          glVertex3fv(vj.data());
-          glVertex3fv(vk.data());
-          glEnd();
-          initialize_lit();
-          update_mat_color(mesh_color);
-        } else {
-          // Draw as cylinder.
-          maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
-          cyl.draw(vj, vk, rad);
-        }
+    for (Simplex s1 : kmesh.simplices_dim(1)) {
+      if (s1->getArea() < 1e-3f) continue;
+      psc_orphan_nedges++;
+      const Point& vj = s1->getChild(0)->getPosition();
+      const Point& vk = s1->getChild(1)->getPosition();
+      const float area = s1->getArea();
+      assertx(area >= 0.f);
+      // Radius of a cylinder from vj to vk with same area.
+      float rad;
+      const float height = dist(vj, vk);
+      rad = area / (TAU * height);
+      // Cylinder center.
+      const Point& center = interp(vj, vk);
+      if (height < 2.f * rad) {
+        // Draw as point.
+        maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
+        draw_point(center, area);
+        continue;
+      }
+      // Find projected area.
+      const float prad = projected_area(rad, center);
+      // Skip lines of disregardable thickness.
+      if (prad < 0.2) continue;
+      const int thickness = int(prad);
+      if (thickness < 5) {
+        // Draw a line.
+        initialize_unlit();
+        update_cur_color(s_color[s1->getVAttribute()]);
+        set_thickness(thickness);
+        glBegin(GL_LINES);
+        glVertex3fv(vj.data());
+        glVertex3fv(vk.data());
+        glEnd();
+        initialize_lit();
+        update_mat_color(mesh_color);
+      } else {
+        // Draw as cylinder.
+        maybe_update_mat_diffuse(s_color[s1->getVAttribute()]);
+        cyl.draw(vj, vk, rad);
       }
     }
-    glPopAttrib();
     // Draw all 0-simplices with no parents.
     psc_orphan_nverts = 0;
     for (Simplex s0 : kmesh.simplices_dim(0)) {

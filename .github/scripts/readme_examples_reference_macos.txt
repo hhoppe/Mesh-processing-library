@@ -33,7 +33,7 @@ c4f3f287_1.png 219.03 62.79 219.03 62.79 219.03 62.79
 # Filterimage demos/data/gaudipark.png -scaletox 200 -tomesh | (screenshot 1)
 fa2c4131_1.png 143.34 77.98 158.82 74.23 173.30 77.63
 # G3dOGL -eyeob demos/data/unit_frustum.a3d -sr_mode office.sr.pm -st demos/data/office_srfig.s3d (screenshot 1)
-6ae74a4d_1.png 228.55 64.62 228.76 64.24 228.55 64.62
+bade6723_1.png 202.14 73.92 202.32 73.65 202.14 73.92
 # (common="-eyeob demos/data/unit_frustum.a3d -sr_mode gcanyon_sq200.pm -st demos/data/gcany (screenshot 1)
 # Apple's software OpenGL renderer drops some large triangles that cross the near plane (Mesa clips them), so the
 # coarse foreground of this terrain has build-dependent gaps; the means are unchecked and the tolerance of the

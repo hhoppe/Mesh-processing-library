@@ -214,7 +214,7 @@ class SphereMapper::Implementation {
   double _surface_area{0.};
   // The scaling factors of the stretch terms, which depend on the surface area.
   struct StretchScaling {
-    Precision s1, s2, s3;
+    Precision s1, s2, s3, s4;  // Stretch and anti-cruft terms, for naive_stretch() and naive_inverse_stretch().
   };
   StretchScaling _scaling;
 
@@ -719,9 +719,12 @@ class SphereMapper::Implementation {
 
   [[nodiscard]] StretchScaling stretch_scaling() const {
     // Surface area is introduced here to induce a scale-invariant weighting of the conformal_weight term.
+    // In both naive_stretch() and naive_inverse_stretch(), that term is conformal_weight times the stretch term for
+    // a uniform scaling.
     return {Precision(.5 / _surface_area * (2 * D_TAU) * .5),
             Precision(_conformal_weight * std::pow(1.f / (2 * D_TAU) * _surface_area, 3.) * .5),
-            Precision(.5 / (2 * D_TAU) * _surface_area)};
+            Precision(.5 / (2 * D_TAU) * _surface_area),
+            Precision(_conformal_weight * std::pow((2 * D_TAU) / _surface_area, 3.))};
   }
 
   void set_stretch_scaling() { _scaling = stretch_scaling(); }
@@ -785,7 +788,12 @@ class SphereMapper::Implementation {
     const Precision c = mag2(dfdt);
     // const Precision b = dot(dfds, dfdt);
 
-    const Precision stretch = (a + c) * scaling.s3;  // * .5f / (2 * D_TAU) * _surface_area.
+    Precision stretch = (a + c) * scaling.s3;  // * .5f / (2 * D_TAU) * _surface_area.
+    // Anti-cruft, as in naive_stretch(): power 6 of the inverse L^infinity stretch.  Without it, the energy of a
+    // spherical triangle vanishes as the triangle collapses, so a collapse lowers the objective.  On the tetra domain,
+    // coarse-level triangles then collapsed to area ratios of 1e-7, with their vertices pinned at kernel boundaries.
+    const Precision inv_gamma2 = 1.f / min(a, c);
+    stretch += inv_gamma2 * inv_gamma2 * inv_gamma2 * scaling.s4;
     const Precision d_area = spherical_triangle_area(pd0, pd1, pd2);
     return stretch * d_area;
   }

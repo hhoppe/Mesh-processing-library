@@ -20,7 +20,7 @@ class SphereMapper {
     bool wait_on_visualizer{false};   // Wait for user to close the visualizer window.
     bool fix_base{false};             // Never update the sph values of the base mesh vertices.
     bool optimize_inverse{false};     // Minimize inverse stretch (from sph to surface) instead of regular stretch.
-    float conformal_weight{1e-4f};    // Small amount of inverse stretch for regularization.
+    float conformal_weight{1e-4f};    // Small amount of anti-cruft (inverse L^infinity stretch) for regularization.
     float hole_weight{1e-5f};         // Weight for faces marked with "hole" string.
     bool respect_sharp_edges{false};  // Optimize only tangentially along wedge discontinuities.
     bool flatten_to_x0{false};        // Override surface coordinate x = 0 (for flat octahedron domain surface).

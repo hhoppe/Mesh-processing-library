@@ -294,7 +294,7 @@ void replace_mesh() {
     for (Corner c : mesh.corners(f)) {
       if (!mesh.get_string(c)) continue;
       Vertex v = mesh.corner_vertex(c);
-      Vertex vn = nmesh.id_vertex(mesh.vertex_id(v));
+      Vertex vn = nmesh.id_vertex(movivi.get(mesh.vertex_id(v)));
       Corner cn = nmesh.corner(vn, fn);
       nmesh.set_string(cn, mesh.get_string(c));
     }

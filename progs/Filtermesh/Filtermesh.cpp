@@ -2633,7 +2633,7 @@ void do_analyzestretch() {
   }
   const double trimmed_l2_efficiency =
       kept_integ_stretch ? square(kept_surfarea) / (kept_starea * kept_integ_stretch) : 0.;
-  showdf("Trimmed stretch (without the %d faces of highest stretch, %.3g%% of surface): l2=%.3f; outliers=%d\n",
+  showdf("Trimmed stretch (without the %d faces of highest stretch, %.3g%% of surface): l2=%.4f; outliers=%d\n",
          num_trimmed, 100. * trimmed_surfarea / surfarea, trimmed_l2_efficiency, num_outliers);
 }
 

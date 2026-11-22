@@ -695,8 +695,10 @@ class SphereMapper::Implementation {
         if (_options.verbose >= 2) cprogress.clear();
         complete_pending_vsplits();
         optimize_all();
-        // Extra optimization at coarse resolution was needed to reliably create domains/tetra_eg*.uv.sphparam.m .
-        // It also proved useful to overcome intermittent failure in lucy model (increased from 100 to 1000).
+        // Extra optimization at coarse resolution improves the final l2_efficiency by ~0.1% (mean over the corpus of
+        // ~/proj/octaflat/Notes.txt, consistent over seeds), for ~10% more time; raising the effort level from 2 to 3
+        // gains ~0.6% for ~93% more time.  It once also seemed needed for domains/tetra_eg*.uv.sphparam.m (no longer,
+        // with the anti-cruft term in naive_inverse_stretch()) and for the lucy model (increased from 100 to 1000).
         const int few_vertices = 1000;
         const float nv_ratio = nv <= few_vertices ? pow(_optim_nv_ratio, 0.5f) : _optim_nv_ratio;
         nv_next_optimize_all = int(nv * nv_ratio + 0.5f);

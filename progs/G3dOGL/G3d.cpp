@@ -184,14 +184,6 @@ void UpdateOb1Points(CArrayView<Point> points) {
   assertx(g_obs[1].defined());
 }
 
-void timeline(const char* label) {
-  static const bool enabled = getenv_bool("G3D_TIMELINE");
-  if (!enabled) return;
-  const double ms =
-      std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count();
-  std::cerr << sform("G3D_TIMELINE %-20s %.1f\n", label, ms) << std::flush;
-}
-
 namespace {
 
 void do_key(Args& args) { keystring += args.get_string(); }
@@ -308,7 +300,6 @@ int main(int argc, const char** argv) {
   lod_level = getenv_float("LOD_LEVEL", lod_level);
   override_frametime = getenv_float("G3D_FRAMETIME", override_frametime);
   selected.frel = Frame::identity();
-  timeline("main");
   const bool hb_success = HB::init(aargs, KeyPressed, ButtonPressed, WheelTurned, Draw);
   float hither = -1.f, yonder = -1.f;
   bool eyeob = false;
@@ -369,13 +360,13 @@ int main(int argc, const char** argv) {
     statefile = statefilename;
     statefile_explicit = true;
   }
-  timeline("args_parsed");
+  stamp_timeline("args_parsed");
   initial_statefile();
-  timeline("statefile_found");
+  stamp_timeline("statefile_found");
   if (g_filename == "" && statefile != "") g_filename = statefile;
   if (g_filename == "") g_filename = "-";
   ReadFiles(true);
-  timeline("files_read");
+  stamp_timeline("files_read");
   // With -waitframe, wait for the input frame as late as possible, so that the time-consuming setup of graphics in
   //  HB::open() occurs concurrently across the windows of g3d_cmp.
   if (input && waitframe) {
@@ -398,7 +389,7 @@ int main(int argc, const char** argv) {
     keystring += 'j';
   }
   HB::set_current_object(cob);
-  timeline("hb_open");
+  stamp_timeline("hb_open");
   HB::open();
   if (k_fast_exit) hh_clean_up(), exit_immediately(0);  // Skip destruction of Pool data, etc.
   for (int i = g_obs.first; i <= g_obs.last; i++) {

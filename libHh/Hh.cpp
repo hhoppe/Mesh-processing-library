@@ -748,6 +748,23 @@ void my_setenv(const string& name, const string& value) {
     setenv(name.c_str(), value.c_str(), 1);
 }
 
+namespace {
+
+// The time of the static initialization of this file, before main().
+const std::chrono::steady_clock::time_point k_timeline_start = std::chrono::steady_clock::now();
+
+}  // namespace
+
+void stamp_timeline(const char* label) {
+  for (const char* s = label; *s; s++) assertx(!std::isspace(static_cast<unsigned char>(*s)));
+  static const bool enabled = getenv_bool("HH_TIMELINE");
+  if (!enabled) return;
+  const double elapsed = std::chrono::duration<double>(std::chrono::steady_clock::now() - k_timeline_start).count();
+  const double ms =
+      std::chrono::duration<double, std::milli>(std::chrono::system_clock::now().time_since_epoch()).count();
+  std::cerr << sform("HH_TIMELINE %-20s %8.4f %.1f\n", label, elapsed, ms) << std::flush;
+}
+
 bool getenv_bool(const string& name, bool vdefault, bool warn) {
   const char* s = getenv(name.c_str());
   if (!s) return vdefault;

@@ -175,9 +175,6 @@ extern objects g_obs;
 // G3d
 void UpdateFrame(const ObjectFrame& object_frame);
 void ExpandStateFilename();
-// With the environment variable G3D_TIMELINE, print to stderr a wall-clock stamp (in ms since the epoch) of a
-// startup event, to measure the time from launch until the first frames are drawn.
-void timeline(const char* label);
 [[nodiscard]] string object_statefile(int obn);
 void UpdateOb1Bbox(const Bbox<float, 3>& bbox);
 void UpdateOb1Points(CArrayView<Point> points);

@@ -59,7 +59,6 @@ extern void update_lod();
 extern float override_frametime;
 extern bool lod_mode;
 extern bool statefile_explicit;
-extern void timeline(const char* label);  // To stamp the drawing of the first frames.
 
 }  // namespace g3d
 
@@ -710,17 +709,17 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
 void DerivedHw::wheel_turn(float v) { fwheel(v); }
 
 void DerivedHw::draw_window(const Vec2<int>& dims) {
-  // With G3D_TIMELINE, stamp the drawing of the first two frames, each completed by the GPU.  With G3D_GL_FINISH,
+  // With HH_TIMELINE, stamp the drawing of the first two frames, each completed by the GPU.  With G3D_GL_FINISH,
   // complete each frame before returning, e.g., so that timings include the GPU work.
-  static const bool timeline = getenv_bool("G3D_TIMELINE"), gl_finish = getenv_bool("G3D_GL_FINISH");
+  static const bool timeline_enabled = getenv_bool("HH_TIMELINE"), gl_finish = getenv_bool("G3D_GL_FINISH");
   static int nframes = 0;
-  const bool stamp = timeline && nframes++ < 2;
-  if (stamp) g3d::timeline(nframes == 1 ? "draw1_begin" : "draw2_begin");
+  const bool stamp = timeline_enabled && nframes++ < 2;
+  if (stamp) stamp_timeline(nframes == 1 ? "draw1_begin" : "draw2_begin");
   is_window = true;
   win_dims = dims;
   fdraw();
   if (stamp || gl_finish) glFinish();
-  if (stamp) g3d::timeline(nframes == 1 ? "draw1_end" : "draw2_end");
+  if (stamp) stamp_timeline(nframes == 1 ? "draw1_end" : "draw2_end");
 }
 
 int g_pthick;

@@ -798,6 +798,11 @@ template <typename T> [[nodiscard]] T getenv_type(const string& name, T vdefault
     static_assert(false, "getenv_type<T>: unsupported type T.");
 }
 
+// With the environment variable HH_TIMELINE, print to stderr the label (which must not contain whitespace), the
+// elapsed seconds since the program started (its static initialization), and the wall-clock time in milliseconds
+// since the epoch (to compare the timelines of several processes).
+void stamp_timeline(const char* label);
+
 // Show any Win32 error if on _WIN32.
 void show_possible_win32_error();
 

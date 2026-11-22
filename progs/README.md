@@ -580,9 +580,9 @@ Elements of `*.a3d`, `*.m`, `*.pm`, `*.ply`, and `*.frame` streams can all be in
 Each object (e.g., each file named on the command line) can thus hold any mix of polygons, a mesh, a progressive
 mesh, and a PLY mesh; the level-of-detail slider is shown whenever the current object holds a progressive mesh.
 A progressive mesh is initially shown at full resolution but with at most 500'000 faces (a limit set by the
-environment variable `PM_LOD_MAX_INITIAL_NFACES`), unless an environment variable sets its initial level of detail:
-`PM_LOD_LEVEL` (the fraction in [0, 1] of the vertex splits applied), `PM_LOD_LOG_LEVEL` (the position in [0, 1] of
-the slider, whose scale is logarithmic in the number of vertices), or `PM_LOD_NUM_FACES`.
+environment variable `PM_LOD_MAX_INITIAL_NFACES`, or none if it is -1), unless an environment variable sets its
+initial level of detail: `PM_LOD_LEVEL` (the fraction in [0, 1] of the vertex splits applied), `PM_LOD_LOG_LEVEL`
+(the position in [0, 1] of the slider, whose scale is logarithmic in the number of vertices), or `PM_LOD_NUM_FACES`.
 Once a slider is moved, the progressive meshes of all objects share its position, so that models of different sizes
 show the same relative level of detail, unless the environment variable `G3D_PER_OBJECT_LOD` is set.
 When the current object is not the first one and no state file was given using `-st` or `D/`, the `,` key reads the

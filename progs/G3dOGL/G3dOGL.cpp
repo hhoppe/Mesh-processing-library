@@ -287,12 +287,8 @@ struct Texture {
 Array<Texture> g_textures;
 
 // By default, a progressive mesh is shown at full resolution but with at most this number of faces, unless the
-// environment variable PM_LOD_MAX_INITIAL_NFACES sets another limit.
+// environment variable PM_LOD_MAX_INITIAL_NFACES sets another limit (or none if -1).
 constexpr int k_default_max_initial_pm_nfaces = 500'000;
-
-// Whether to draw from OpenGL buffer objects: the context supports them (OpenGL 1.5 or later), and the environment
-// variable G3D_NO_BUFFERS is not set.
-bool buffer_objects_supported();
 
 // A progressive mesh, traversed to a level of detail.
 struct PmState {
@@ -319,14 +315,20 @@ struct PmState {
   // OpenGL buffer objects, refilled after each change of the level of detail: the position of each wedge, the
   // wedges themselves (whose normal, rgb, and uv are read with a stride), the vertex indices of the triangles
   // grouped by material, and those of the edges.
+  // With flat shading (buffers_flat), flat_buffers replace buffers[1] and buffers[2]: the interleaved position,
+  // normal, and any uv of each vertex (see fill_flat_vertex_buffer()), and the vertex indices of the triangles.
   Vec4<unsigned> buffers{0u, 0u, 0u, 0u};
+  Vec2<unsigned> flat_buffers{0u, 0u};
   bool buffers_filled{false}, edge_buffer_filled{false};
   bool buffers_reordered{false};  // Whether the triangles are in the order of an adjacency walk.
+  bool buffers_flat{false};       // Whether the faces are in flat_buffers.
+  int flat_stride{0};             // The byte size of a vertex in flat_buffers[0].
   struct MaterialRange {
     int matid, start, count;
   };
   Array<MaterialRange> material_ranges;  // Ranges of triangle indices in buffers[2].
   int num_edge_indices{0};
+  [[nodiscard]] bool flat_shaded() const;  // Whether the faces are drawn from flat_buffers.
   void fill_buffers(bool reorder);
   void fill_edge_buffer();
   void draw_faces_from_buffers(int use_texture);
@@ -3332,10 +3334,97 @@ void draw_lod_slider(float lod, int nv0, int nv1) {
   }
 }
 
+// *** OpenGL buffer objects for the PM and PLY meshes
+
+// Whether to draw from OpenGL buffer objects: the context supports them (OpenGL 1.5 or later), and the environment
+// variable G3D_NO_BUFFERS is not set.
+// (A function pointer from glXGetProcAddress() may be non-null even for an unsupported function.)
+bool buffer_objects_supported() {
+  static const bool supported = [] {
+    if (getenv_bool("G3D_NO_BUFFERS")) return false;
+    const char* s = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    if (!s || !std::isdigit(s[0]) || s[1] != '.' || !std::isdigit(s[2])) return false;
+    const int major = s[0] - '0', minor = s[2] - '0';
+    return major > 1 || minor >= 5;
+  }();
+  return supported;
+}
+
+// Whether an OpenGL context is current, so that buffers can be deleted (e.g., not during exit in a debug build).
+bool gl_context_is_current() {
+#if defined(_WIN32)
+  return wglGetCurrentContext() != nullptr;
+#else
+  return glXGetCurrentContext() != nullptr;
+#endif
+}
+
+// The pointer argument of an OpenGL array function, which is a byte offset into the bound buffer object.
+const void* buffer_offset(size_t byte_offset) { return reinterpret_cast<const void*>(uintptr_t(byte_offset)); }
+
+// For flat shading, which lights each triangle with the normal of its last (provoking) vertex, rotate each triangle
+// to end with a vertex that ends no other triangle (or else with a new copy of a vertex), renumbering the vertices in
+// their order of first use.  Returns the original vertex of each new vertex, and sets the normal of each new vertex
+// that ends a triangle to that of the triangle (and the others to zero).
+Array<int> make_flat_vertices(ArrayView<Vec3<int>> triangles, CArrayView<Vector> triangle_normals, int num_vertices,
+                              Array<Vector>& normals) {
+  assertx(triangle_normals.num() == triangles.num());
+  Array<int> old_index;                      // The original vertex of each new vertex.
+  Array<bool> ends_triangle;                 // Whether each new vertex is the last vertex of a triangle.
+  Array<int> first_index(num_vertices, -1);  // The first new vertex of each original vertex.
+  normals.init(0);
+  const auto add_vertex = [&](int vi) {
+    old_index.push(vi), normals.push(Vector{}), ends_triangle.push(false);
+    return old_index.num() - 1;
+  };
+  for_int(t, triangles.num()) {
+    Vec3<int>& triangle = triangles[t];
+    for (int& vi : triangle) {
+      if (first_index[vi] < 0) first_index[vi] = add_vertex(vi);
+      vi = first_index[vi];
+    }
+    int k = 2;
+    while (k >= 0 && ends_triangle[triangle[k]]) k--;
+    if (k < 0) k = 2, triangle[2] = add_vertex(old_index[triangle[2]]);
+    ends_triangle[triangle[k]] = true;
+    normals[triangle[k]] = triangle_normals[t];
+    // A rotation, which preserves the orientation.
+    if (k == 0) triangle = V(triangle[1], triangle[2], triangle[0]);
+    if (k == 1) triangle = V(triangle[2], triangle[0], triangle[1]);
+  }
+  return old_index;
+}
+
+// Make the vertices for flat shading (see make_flat_vertices()) from the vertex positions and any uvs, and fill
+// vertex_buffer with the interleaved position, normal, and any uv of each.  Returns the byte size of a vertex.
+int fill_flat_vertex_buffer(unsigned vertex_buffer, ArrayView<Vec3<int>> triangles,
+                            CArrayView<Vector> triangle_normals, CArrayView<Point> positions, CArrayView<Uv> uvs,
+                            GLenum usage) {
+  USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
+  USE_GL_EXT(glBufferData, PFNGLBUFFERDATAPROC);
+  Array<Vector> normals;
+  const Array<int> old_index = make_flat_vertices(triangles, triangle_normals, positions.num(), normals);
+  const bool has_uvs = uvs.num() > 0;
+  const int stride = int(sizeof(Point) + sizeof(Vector) + (has_uvs ? sizeof(Uv) : 0));
+  Array<uint8_t> vertices(old_index.num() * stride);
+  parallel_for({.cycles_per_elem = 10}, range(old_index.num()), [&](int i) {
+    const int vi = old_index[i];
+    uint8_t* const p = vertices.data() + int64_t{i} * stride;
+    std::memcpy(p, positions[vi].data(), sizeof(Point));
+    std::memcpy(p + sizeof(Point), normals[i].data(), sizeof(Vector));
+    if (has_uvs) std::memcpy(p + sizeof(Point) + sizeof(Vector), uvs[vi].data(), sizeof(Uv));
+  });
+  glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer);
+  glBufferData(GL_ARRAY_BUFFER, vertices.num(), vertices.data(), usage);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  return stride;
+}
+
 // *** PM of an object
 
 // The initial level of detail is given by the environment variable PM_LOD_NUM_FACES or PM_LOD_LEVEL, or else it is
-// the full resolution limited to PM_LOD_MAX_INITIAL_NFACES (by default k_default_max_initial_pm_nfaces) faces.
+// the full resolution limited to PM_LOD_MAX_INITIAL_NFACES (by default k_default_max_initial_pm_nfaces, and
+// unlimited if -1) faces.
 PmState::PmState(unique_ptr<PMesh> pmesh_) : pmesh(std::move(pmesh_)), pmrs(*pmesh), pmi(pmrs) { init_lod(); }
 
 PmState::PmState(unique_ptr<RFile> file_)
@@ -3355,7 +3444,8 @@ void PmState::init_lod() {
     lod_level = pm_lod_log_level >= 0.f ? lod_from_slider(pm_lod_log_level, nv_ratio()) : pm_lod_level;
     pmi.goto_nvertices(base_nv + int(info._tot_nvsplits * lod_level + .5f));
   } else {
-    pmi.goto_nfaces(pm_lod_num_faces > 0 ? pm_lod_num_faces : min(info._full_nfaces, pm_lod_max_initial));
+    const int max_initial = pm_lod_max_initial >= 0 ? pm_lod_max_initial : info._full_nfaces;
+    pmi.goto_nfaces(pm_lod_num_faces > 0 ? pm_lod_num_faces : min(info._full_nfaces, max_initial));
     lod_level = clamp(float(pmi._vertices.num() - base_nv) / max(info._full_nvertices - base_nv, 1), 0.f, 1.f);
   }
 }
@@ -3433,15 +3523,10 @@ void PmState::set_lod_slider(float t) {
 }
 
 PmState::~PmState() {
-  // Delete the buffers only while an OpenGL context is current (e.g., not during exit in a debug build).
-#if defined(_WIN32)
-  const bool has_context = wglGetCurrentContext() != nullptr;
-#else
-  const bool has_context = glXGetCurrentContext() != nullptr;
-#endif
-  if (buffers[0] && has_context) {
+  if (gl_context_is_current()) {
     USE_GL_EXT(glDeleteBuffers, PFNGLDELETEBUFFERSPROC);
-    glDeleteBuffers(4, buffers.data());
+    if (buffers[0]) glDeleteBuffers(4, buffers.data());
+    if (flat_buffers[0]) glDeleteBuffers(2, flat_buffers.data());
   }
 }
 
@@ -3450,21 +3535,28 @@ bool PmState::uses_buffers() const {
   return !(uvtopos && pmesh->_info._has_uv) && buffer_objects_supported();
 }
 
-// Fill the buffers from the current mesh pmi: a position per wedge, the wedges as is, and the triangles grouped by
-// material.
+// (With vertex colors, the faces are drawn with GL_SMOOTH to interpolate the colors, and keep the smooth normals.)
+bool PmState::flat_shaded() const { return !lsmooth && !pmesh->_info._has_rgb; }
+
+// Fill the buffers from the current mesh pmi: a position per wedge (also for the edges), and either the wedges as is
+// and the triangles grouped by material, or else (with flat shading) the flat_buffers.
 void PmState::fill_buffers(bool reorder) {
   USE_GL_EXT(glGenBuffers, PFNGLGENBUFFERSPROC);
   USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
   USE_GL_EXT(glBufferData, PFNGLBUFFERDATAPROC);
   const AWMesh& wmesh = pmi;
+  const bool flat = flat_shaded();
   if (!buffers[0]) glGenBuffers(4, buffers.data());
+  if (flat && !flat_buffers[0]) glGenBuffers(2, flat_buffers.data());
   const int nw = wmesh._wedges.num(), nf = wmesh._faces.num();
   Array<Point> positions(nw);
   for_int(w, nw) positions[w] = wmesh._vertices[wmesh._wedges[w].vertex].attrib.point;
   glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
   glBufferData(GL_ARRAY_BUFFER, nw * int64_t{sizeof(Point)}, positions.data(), GL_DYNAMIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
-  glBufferData(GL_ARRAY_BUFFER, nw * int64_t{sizeof(PmWedge)}, wmesh._wedges.data(), GL_DYNAMIC_DRAW);
+  if (!flat) {
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+    glBufferData(GL_ARRAY_BUFFER, nw * int64_t{sizeof(PmWedge)}, wmesh._wedges.data(), GL_DYNAMIC_DRAW);
+  }
   glBindBuffer(GL_ARRAY_BUFFER, 0);
   // Group the triangles by material (a counting sort), ignoring the visited bit of the strip renderer.
   const int nmat = max(wmesh._materials.num(), 1);
@@ -3509,11 +3601,26 @@ void PmState::fill_buffers(bool reorder) {
   }
   Array<Vec3<int>> triangles(nf);
   for (const int f : order) triangles[next[matid_of(f)]++] = wmesh._faces[f].wedges;
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[2]);
+  if (flat) {
+    Array<Vector> triangle_normals(nf);
+    parallel_for({.cycles_per_elem = 100}, range(nf), [&](int t) {
+      const Vec3<int>& w = triangles[t];
+      triangle_normals[t] = ok_normalized(cross(positions[w[0]], positions[w[1]], positions[w[2]]));
+    });
+    Array<Uv> uvs;
+    if (pmesh->_info._has_uv) {
+      uvs.init(nw);
+      for_int(w, nw) uvs[w] = wmesh._wedges[w].attrib.uv;
+    }
+    flat_stride =
+        fill_flat_vertex_buffer(flat_buffers[0], triangles, triangle_normals, positions, uvs, GL_DYNAMIC_DRAW);
+  }
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, flat ? flat_buffers[1] : buffers[2]);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, nf * int64_t{sizeof(Vec3<int>)}, triangles.data(), GL_DYNAMIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   buffers_filled = true;
   buffers_reordered = reorder;
+  buffers_flat = flat;
   edge_buffer_filled = false;
   assertw(!gl_report_errors());
 }
@@ -3523,16 +3630,32 @@ void PmState::fill_edge_buffer() {
   USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
   USE_GL_EXT(glBufferData, PFNGLBUFFERDATAPROC);
   const AWMesh& wmesh = pmi;
-  Array<Vec2<int>> edges;
-  edges.reserve(wmesh._faces.num() * 3 / 2 + 16);
-  for_int(f, wmesh._faces.num()) {
-    const Vec3<int>& w = wmesh._faces[f].wedges;
-    for_int(j, 3) {
-      const int w0 = w[j], w1 = w[mod3(j + 1)];
-      const int v0 = wmesh._wedges[w0].vertex, v1 = wmesh._wedges[w1].vertex;
-      if (v0 < v1 || wmesh._fnei[f].faces[mod3(j + 2)] < 0) edges.push(V(w0, w1));
+  // Visit the faces in blocks, in parallel, first to count their edges and then to gather them in order.
+  const int nf = wmesh._faces.num();
+  constexpr int block_size = 16'384;
+  const int num_blocks = (nf + block_size - 1) / block_size;
+  const auto for_edges_in_block = [&](int block, auto func) {
+    for (int f = block * block_size; f < min((block + 1) * block_size, nf); f++) {
+      const Vec3<int>& w = wmesh._faces[f].wedges;
+      for_int(j, 3) {
+        const int w0 = w[j], w1 = w[mod3(j + 1)];
+        const int v0 = wmesh._wedges[w0].vertex, v1 = wmesh._wedges[w1].vertex;
+        if (v0 < v1 || wmesh._fnei[f].faces[mod3(j + 2)] < 0) func(V(w0, w1));
+      }
     }
-  }
+  };
+  Array<int> block_start(num_blocks + 1, 0);
+  parallel_for({.cycles_per_elem = 100'000}, range(num_blocks), [&](int block) {
+    int count = 0;
+    for_edges_in_block(block, [&](const Vec2<int>&) { count++; });
+    block_start[block + 1] = count;
+  });
+  for_int(block, num_blocks) block_start[block + 1] += block_start[block];
+  Array<Vec2<int>> edges(block_start[num_blocks]);
+  parallel_for({.cycles_per_elem = 100'000}, range(num_blocks), [&](int block) {
+    int i = block_start[block];
+    for_edges_in_block(block, [&](const Vec2<int>& edge) { edges[i++] = edge; });
+  });
   num_edge_indices = edges.num() * 2;
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[3]);
   glBufferData(GL_ELEMENT_ARRAY_BUFFER, edges.num() * int64_t{sizeof(Vec2<int>)}, edges.data(), GL_DYNAMIC_DRAW);
@@ -3545,34 +3668,44 @@ void PmState::draw_faces_from_buffers(int use_texture) {
   const AWMesh& wmesh = pmi;
   const PMeshInfo& info = pmesh->_info;
   const CArrayView<Pixel> material_colors = wmesh.ogl_material_colors();
-  const auto offset = [](size_t byte_offset) { return reinterpret_cast<const void*>(uintptr_t(byte_offset)); };
   const PmWedge wedge0{};
   const auto offset_in_wedge = [&](const void* member) {
-    return offset(size_t(static_cast<const char*>(member) - reinterpret_cast<const char*>(&wedge0)));
+    return buffer_offset(size_t(static_cast<const char*>(member) - reinterpret_cast<const char*>(&wedge0)));
   };
-  const int stride = int(sizeof(PmWedge));
   const bool has_uv = info._has_uv && use_texture;
   if (has_uv) {
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
   }
-  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
   glEnableClientState(GL_VERTEX_ARRAY);
-  glVertexPointer(3, GL_FLOAT, 0, offset(0));
-  glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
   glEnableClientState(GL_NORMAL_ARRAY);
-  glNormalPointer(GL_FLOAT, stride, offset_in_wedge(wedge0.attrib.normal.data()));
-  if (has_uv) {
-    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-    glTexCoordPointer(2, GL_FLOAT, stride, offset_in_wedge(wedge0.attrib.uv.data()));
-  } else if (info._has_rgb) {
-    glEnableClientState(GL_COLOR_ARRAY);
-    glColorPointer(3, GL_FLOAT, stride, offset_in_wedge(wedge0.attrib.rgb.data()));
+  if (buffers_flat) {
+    glBindBuffer(GL_ARRAY_BUFFER, flat_buffers[0]);
+    glVertexPointer(3, GL_FLOAT, flat_stride, buffer_offset(0));
+    glNormalPointer(GL_FLOAT, flat_stride, buffer_offset(sizeof(Point)));
+    if (has_uv) {
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      glTexCoordPointer(2, GL_FLOAT, flat_stride, buffer_offset(sizeof(Point) + sizeof(Vector)));
+    }
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, flat_buffers[1]);
+  } else {
+    const int stride = int(sizeof(PmWedge));
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+    glVertexPointer(3, GL_FLOAT, 0, buffer_offset(0));
+    glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+    glNormalPointer(GL_FLOAT, stride, offset_in_wedge(wedge0.attrib.normal.data()));
+    if (has_uv) {
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      glTexCoordPointer(2, GL_FLOAT, stride, offset_in_wedge(wedge0.attrib.uv.data()));
+    } else if (info._has_rgb) {
+      glEnableClientState(GL_COLOR_ARRAY);
+      glColorPointer(3, GL_FLOAT, stride, offset_in_wedge(wedge0.attrib.rgb.data()));
+    }
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[2]);
   }
-  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[2]);
   for (const MaterialRange& range : material_ranges) {
     if (!has_uv && !info._has_rgb && material_colors.ok(range.matid)) glColor4ubv(material_colors[range.matid].data());
-    glDrawElements(GL_TRIANGLES, range.count, GL_UNSIGNED_INT, offset(range.start * sizeof(int)));
+    glDrawElements(GL_TRIANGLES, range.count, GL_UNSIGNED_INT, buffer_offset(range.start * sizeof(int)));
   }
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_NORMAL_ARRAY);
@@ -3637,10 +3770,11 @@ void PmState::draw() {
   AWMesh& wmesh = pmi;
   const PMeshInfo& info = pmesh->_info;
   const bool use_buffers = uses_buffers();
-  if (use_buffers && (!buffers_filled || (use_dl && !buffers_reordered))) fill_buffers(use_dl);
+  if (use_buffers && (!buffers_filled || (use_dl && !buffers_reordered) || buffers_flat != flat_shaded()))
+    fill_buffers(use_dl);
   if (!ledges || lshading) {
-    // Options lsmooth, lquickmode not handled.
-    if (!info._has_rgb) assertw(lsmooth);
+    // Option lquickmode not handled, nor option lsmooth without buffers.
+    if (!use_buffers && !info._has_rgb) assertw(lsmooth);
     glShadeModel(lsmooth || info._has_rgb ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
     update_mat_color(mesh_color);
@@ -5119,33 +5253,13 @@ void PlyState::compute_edges() {
                [&](int vi) { for_int(k, count[vi]) edges[edge_start[vi] + k] = V(vi, others[start[vi] + k]); });
 }
 
-// Whether to draw from OpenGL buffer objects: the context supports them (OpenGL 1.5 or later), and the environment
-// variable G3D_NO_BUFFERS is not set.
-// (A function pointer from glXGetProcAddress() may be non-null even for an unsupported function.)
-bool buffer_objects_supported() {
-  static const bool supported = [] {
-    if (getenv_bool("G3D_NO_BUFFERS")) return false;
-    const char* s = reinterpret_cast<const char*>(glGetString(GL_VERSION));
-    if (!s || !std::isdigit(s[0]) || s[1] != '.' || !std::isdigit(s[2])) return false;
-    const int major = s[0] - '0', minor = s[2] - '0';
-    return major > 1 || minor >= 5;
-  }();
-  return supported;
-}
-
 PlyState::PlyState(unique_ptr<PlyMesh> mesh_) : mesh(std::move(mesh_)) {
   all_triangles = true;
   for_int(i, mesh->num_faces()) all_triangles &= mesh->face(i).num() == 3;
 }
 
 PlyState::~PlyState() {
-  // Delete the buffers only while an OpenGL context is current (e.g., not during exit in a debug build).
-#if defined(_WIN32)
-  const bool has_context = wglGetCurrentContext() != nullptr;
-#else
-  const bool has_context = glXGetCurrentContext() != nullptr;
-#endif
-  if (has_context) {
+  if (gl_context_is_current()) {
     USE_GL_EXT(glDeleteBuffers, PFNGLDELETEBUFFERSPROC);
     if (buffers[0]) glDeleteBuffers(3, buffers.data());
     if (flat_buffers[0]) glDeleteBuffers(2, flat_buffers.data());
@@ -5218,10 +5332,7 @@ void PlyState::create_buffers() {
   assertw(!gl_report_errors());
 }
 
-// Create the buffer objects for flat shading (without vertex colors).  Flat shading lights each triangle with the
-// normal of its last (provoking) vertex, so each triangle is rotated to end with a vertex that ends no other triangle,
-// and that vertex carries the normal of its face.  A triangle whose vertices all end other triangles ends with a copy
-// of a vertex.  The vertices are numbered in their order of first use by the triangles.
+// Create the buffer objects for flat shading (without vertex colors), using fill_flat_vertex_buffer().
 void PlyState::create_flat_buffers() {
   USE_GL_EXT(glGenBuffers, PFNGLGENBUFFERSPROC);
   USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
@@ -5229,54 +5340,24 @@ void PlyState::create_flat_buffers() {
   const PlyMesh& ply_mesh = *mesh;
   const CArrayView<Point> ply_vpos = ply_mesh.points;
   glGenBuffers(2, flat_buffers.data());
-  Array<int> indices;
-  Array<int> old_index;                        // The mesh vertex of each vertex.
-  Array<Vector> normals;                       // The normal of each vertex.
-  Array<bool> ends_triangle;                   // Whether each vertex is the last vertex of a triangle.
-  Array<int> first_index(ply_vpos.num(), -1);  // The first vertex created for each mesh vertex.
-  const auto add_vertex = [&](int vi) {
-    old_index.push(vi), normals.push(Vector{}), ends_triangle.push(false);
-    return old_index.num() - 1;
-  };
+  Array<Vec3<int>> triangles;
+  Array<Vector> triangle_normals;
   for_int(i, ply_mesh.num_faces()) {
     const CArrayView<int> face = ply_mesh.face(i);
     // The same face normal as in draw_faces_immediate().
     const Vector normal = ok_normalized(cross(ply_vpos[face[0]], ply_vpos[face[1]], ply_vpos[face[2]]));
     for (int j = 1; j + 1 < face.num(); j++) {  // Each polygon becomes a fan (as GL_POLYGON draws a convex polygon).
-      Vec3<int> triangle = V(face[0], face[j], face[j + 1]);
-      for (int& vi : triangle) {
-        if (first_index[vi] < 0) first_index[vi] = add_vertex(vi);
-        vi = first_index[vi];
-      }
-      int k = 2;
-      while (k >= 0 && ends_triangle[triangle[k]]) k--;
-      if (k < 0) k = 2, triangle[2] = add_vertex(old_index[triangle[2]]);
-      ends_triangle[triangle[k]] = true;
-      normals[triangle[k]] = normal;
-      // A rotation, which preserves the orientation.
-      if (k == 0) triangle = V(triangle[1], triangle[2], triangle[0]);
-      if (k == 1) triangle = V(triangle[2], triangle[0], triangle[1]);
-      indices.push_array(triangle);
+      triangles.push(V(face[0], face[j], face[j + 1]));
+      triangle_normals.push(normal);
     }
   }
-  num_triangle_indices = indices.num();
-  // The interleaved vertex attributes: position, normal, and any uv.
-  const bool has_uvs = ply_mesh.uvs.num() > 0;
-  flat_stride = int(sizeof(Point) + sizeof(Vector) + (has_uvs ? sizeof(Uv) : 0));
-  flat_offset_uvs = has_uvs ? int(sizeof(Point) + sizeof(Vector)) : -1;
-  Array<uint8_t> vertices(old_index.num() * flat_stride);
-  parallel_for({.cycles_per_elem = 10}, range(old_index.num()), [&](int i) {
-    const int vi = old_index[i];
-    uint8_t* const p = vertices.data() + int64_t{i} * flat_stride;
-    std::memcpy(p, ply_vpos[vi].data(), sizeof(Point));
-    std::memcpy(p + sizeof(Point), normals[i].data(), sizeof(Vector));
-    if (has_uvs) std::memcpy(p + flat_offset_uvs, ply_mesh.uvs[vi].data(), sizeof(Uv));
-  });
-  glBindBuffer(GL_ARRAY_BUFFER, flat_buffers[0]);
-  glBufferData(GL_ARRAY_BUFFER, vertices.num(), vertices.data(), GL_STATIC_DRAW);
-  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  num_triangle_indices = triangles.num() * 3;
+  flat_stride =
+      fill_flat_vertex_buffer(flat_buffers[0], triangles, triangle_normals, ply_vpos, ply_mesh.uvs, GL_STATIC_DRAW);
+  flat_offset_uvs = ply_mesh.uvs.num() > 0 ? int(sizeof(Point) + sizeof(Vector)) : -1;
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, flat_buffers[1]);
-  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.num() * int64_t{sizeof(int)}, indices.data(), GL_STATIC_DRAW);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, triangles.num() * int64_t{sizeof(Vec3<int>)}, triangles.data(),
+               GL_STATIC_DRAW);
   glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
   assertw(!gl_report_errors());
 }
@@ -5285,24 +5366,23 @@ void PlyState::create_flat_buffers() {
 // shading, the faces come from flat_buffers.
 void PlyState::draw_from_buffers(bool faces, bool has_rgb) {
   USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
-  const auto offset = [](int byte_offset) { return reinterpret_cast<const void*>(uintptr_t(byte_offset)); };
   const bool flat = faces && !lsmooth;
   const int vertex_stride = flat ? flat_stride : stride;
   glBindBuffer(GL_ARRAY_BUFFER, flat ? flat_buffers[0] : buffers[0]);
   glEnableClientState(GL_VERTEX_ARRAY);
-  glVertexPointer(3, GL_FLOAT, vertex_stride, offset(0));
+  glVertexPointer(3, GL_FLOAT, vertex_stride, buffer_offset(0));
   if (faces) {
     glEnableClientState(GL_NORMAL_ARRAY);
-    glNormalPointer(GL_FLOAT, vertex_stride, offset(flat ? int(sizeof(Point)) : offset_normals));
+    glNormalPointer(GL_FLOAT, vertex_stride, buffer_offset(flat ? sizeof(Point) : size_t(offset_normals)));
     if (has_rgb) {
       assertx(!flat);
       glEnableClientState(GL_COLOR_ARRAY);
-      glColorPointer(4, GL_UNSIGNED_BYTE, stride, offset(offset_colors));
+      glColorPointer(4, GL_UNSIGNED_BYTE, stride, buffer_offset(size_t(offset_colors)));
     }
     const int uvs_offset = flat ? flat_offset_uvs : offset_uvs;
     if (texture_active && uvs_offset >= 0) {
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      glTexCoordPointer(2, GL_FLOAT, vertex_stride, offset(uvs_offset));
+      glTexCoordPointer(2, GL_FLOAT, vertex_stride, buffer_offset(size_t(uvs_offset)));
     }
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, flat ? flat_buffers[1] : buffers[1]);
     glDrawElements(GL_TRIANGLES, num_triangle_indices, GL_UNSIGNED_INT, nullptr);

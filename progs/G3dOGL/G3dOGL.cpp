@@ -5326,12 +5326,29 @@ void PlyState::draw() {
   const int nf = ply_mesh.num_faces();
   if (lsmooth && ply_vnor.empty() && nf) {
     ply_vnor.init(ply_vpos.num(), Vector{});
-    for_int(i, nf) {
+    // Weight the normal of each face by its angle at the vertex, as Vnors does (EType::angle) for a .m mesh.
+    // The weighted normal of each corner is independent, so compute these in parallel, and then sum them into
+    // the vertices in the order of the corners.
+    Array<Vector> corner_normals(ply_mesh.face_vertices.num());
+    parallel_for({.cycles_per_elem = 600}, range(nf), [&](int i) {
+      const CArrayView<int> face = ply_mesh.face(i);
+      const int n = face.num();
       Polygon poly;
-      for (const int vi : ply_mesh.face(i)) poly.push(ply_vpos[vi]);
-      const Vector vnor = poly.get_normal();
-      for (const int vi : ply_mesh.face(i)) ply_vnor[vi] += vnor;
-    }
+      for (const int vi : face) poly.push(ply_vpos[vi]);
+      const Vector face_normal = poly.get_normal();
+      for_int(j, n) {
+        Vector& corner_normal = corner_normals[ply_mesh.face_start[i] + j];
+        if (is_zero(face_normal)) {  // A degenerate face contributes nothing, as in Vnors.
+          corner_normal = Vector{};
+          continue;
+        }
+        const Point& p = poly[j];
+        const float angle =
+            angle_between_unit_vectors(ok_normalized(poly[(j + n - 1) % n] - p), ok_normalized(poly[(j + 1) % n] - p));
+        corner_normal = face_normal * angle;
+      }
+    });
+    for_int(k, corner_normals.num()) ply_vnor[ply_mesh.face_vertices[k]] += corner_normals[k];
     for (Vector& vnor : ply_vnor) assertw(vnor.normalize());
   }
   const bool use_buffers = uses_buffers();

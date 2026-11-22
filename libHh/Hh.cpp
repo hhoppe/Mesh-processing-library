@@ -629,33 +629,12 @@ unique_ptr<char[]> make_unique_c_string(const char* s) {
   return s2;
 }
 
-int int_from_chars(const char*& s) {
-  // C++17: Use std::from_chars(), once available more broadly.
-  char* end;
-  errno = 0;
-  const int base = 10;
-  const long long_value = std::strtol(s, &end, base);
-  if (errno) assertnever("Cannot parse int in '" + string(s) + "'");
-  s = end;
-  return sizeof(long_value) == sizeof(int) ? long_value : assert_narrow_cast<int>(long_value);
-}
-
-unsigned uint_from_chars(const char*& s) {
-  // C++17: Use std::from_chars(), once available more broadly.
-  char* end;
-  errno = 0;
-  const int base = 10;
-  const unsigned long long_value = std::strtoul(s, &end, base);
-  if (errno) assertnever("Cannot parse int in '" + string(s) + "'");
-  s = end;
-  return sizeof(long_value) == sizeof(unsigned) ? long_value : assert_narrow_cast<unsigned>(long_value);
-}
-
 namespace {
 
-// Unlike std::strtof() and std::strtod(), std::from_chars() is independent of the locale, accepts denormal values,
-// and reports a missing value; but it does not skip leading whitespace or a '+' sign, so these are skipped here.
-template <typename T> bool real_from_chars_impl(const char*& s, const char* end, T& value) {
+// Unlike std::strtol(), std::strtof(), and std::strtod(), std::from_chars() is independent of the locale, accepts
+// denormal values, and reports a missing value; but it does not skip leading whitespace or a '+' sign, so these
+// are skipped here.
+template <typename T> bool number_from_chars_impl(const char*& s, const char* end, T& value) {
   const char* p = s;
   while (p < end && std::isspace(static_cast<unsigned char>(*p))) p++;
   if (end - p >= 2 && *p == '+' && p[1] != '-') p++;
@@ -667,9 +646,21 @@ template <typename T> bool real_from_chars_impl(const char*& s, const char* end,
 
 }  // namespace
 
-bool real_from_chars(const char*& s, const char* end, float& value) { return real_from_chars_impl(s, end, value); }
+int int_from_chars(const char*& s) {
+  int value;
+  if (!number_from_chars_impl(s, s + strlen(s), value)) assertnever("Cannot parse int in '" + string(s) + "'");
+  return value;
+}
 
-bool real_from_chars(const char*& s, const char* end, double& value) { return real_from_chars_impl(s, end, value); }
+unsigned uint_from_chars(const char*& s) {
+  unsigned value;
+  if (!number_from_chars_impl(s, s + strlen(s), value)) assertnever("Cannot parse unsigned in '" + string(s) + "'");
+  return value;
+}
+
+bool real_from_chars(const char*& s, const char* end, float& value) { return number_from_chars_impl(s, end, value); }
+
+bool real_from_chars(const char*& s, const char* end, double& value) { return number_from_chars_impl(s, end, value); }
 
 float float_from_chars(const char*& s) {
   float value;

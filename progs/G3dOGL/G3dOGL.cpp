@@ -335,7 +335,7 @@ struct PmState {
   void draw_faces_from_buffers(int use_texture);
   void draw_faces_immediate(int use_texture);  // Draw the faces in immediate mode (possibly into a display list).
   void draw_edges_from_buffers();
-  void draw_edges_in_uv_domain() const;  // For uvtopos (an inefficient path that draws interior edges twice).
+  void draw_edges_in_uv_domain() const;  // For uvtopos (an immediate-mode path).
   void init_lod();
   [[nodiscard]] float nv_ratio() const;
   void change_lod(float lod);  // Set the level chosen by the user, and share its slider position.
@@ -3595,8 +3595,16 @@ void PmState::draw_edges_in_uv_domain() const {
   const AWMesh& wmesh = pmi;
   glBegin(GL_LINES);
   for_int(f, wmesh._faces.num()) for_int(j, 3) {
-    const Uv& uv0 = wmesh._wedges[wmesh._faces[f].wedges[j]].attrib.uv;
-    const Uv& uv1 = wmesh._wedges[wmesh._faces[f].wedges[mod3(j + 1)]].attrib.uv;
+    const Vec3<int>& w = wmesh._faces[f].wedges;
+    const int w0 = w[j], w1 = w[mod3(j + 1)];
+    // An edge whose two faces share both wedges is continuous in the uv domain, so draw it from just one face; at
+    // a uv seam, the two faces draw their two distinct copies of the edge.
+    if (const int fn = wmesh._fnei[f].faces[mod3(j + 2)]; fn >= 0 && w0 > w1) {
+      const Vec3<int>& wn = wmesh._faces[fn].wedges;
+      if (contains(wn, w0) && contains(wn, w1)) continue;
+    }
+    const Uv& uv0 = wmesh._wedges[w0].attrib.uv;
+    const Uv& uv1 = wmesh._wedges[w1].attrib.uv;
     glVertex2fv(uv0.data());
     glVertex2fv(uv1.data());
   }

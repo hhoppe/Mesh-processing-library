@@ -16,6 +16,7 @@
 #include "libHh/MathOp.h"
 #include "libHh/MeshOp.h"  // Vnors
 #include "libHh/PMesh.h"
+#include "libHh/Parallel.h"
 #include "libHh/Ply.h"
 #include "libHh/Polygon.h"
 #include "libHh/RangeOp.h"  // sort()
@@ -1661,7 +1662,9 @@ void mesh_init(GMesh& mesh) {
     }
   }
   if (lsmooth && have_vnors.add(&mesh)) {
-    for (Vertex v : mesh.vertices()) {
+    // The vertices are independent (each writes only its own corners and flags), so evaluate them in parallel;
+    //  on a mesh of 1.4M faces, this reduced the time from 0.87 s to 0.10 s (Windows, 24 threads).
+    parallel_for({.cycles_per_elem = 2000}, mesh.vertices(), [&](Vertex v) {
       const Vnors vnors(mesh, v);
       bool uniquenors = true;
       int num = 0;
@@ -1696,7 +1699,7 @@ void mesh_init(GMesh& mesh) {
           vlod.Nnor = gNnor;
         }
       }
-    }
+    });
   }
   if ((!lsmooth || ((ledges || strip_lines) && cullbackedges && lcullface)) && have_fnors.add(&mesh)) {
     for (Face f : mesh.faces()) {

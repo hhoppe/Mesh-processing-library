@@ -360,8 +360,15 @@ struct PlyState {
   // The interleaved vertex attributes in buffers[0]: the byte size of a vertex, and the byte offsets of its normal,
   // color, and uv after its position (or -1 if absent).
   int stride{0}, offset_normals{-1}, offset_colors{-1}, offset_uvs{-1};
+  // For flat shading, OpenGL buffer objects with the vertex attributes and the vertex indices of the triangles, in
+  // which the last vertex of each triangle carries the normal of its face.
+  Vec2<unsigned> flat_buffers{0u, 0u};
+  // The interleaved vertex attributes in flat_buffers[0]: the byte size of a vertex, whose normal follows its
+  // position, and the byte offset of its uv (or -1 if absent).
+  int flat_stride{0}, flat_offset_uvs{-1};
   void compute_edges();
   void create_buffers();
+  void create_flat_buffers();
   void draw_from_buffers(bool faces, bool has_rgb);
   // Draw the faces (or the points if there are none) in immediate mode (possibly into a display list).
   void draw_faces_immediate() const;
@@ -5074,23 +5081,42 @@ bool psc_key_press(char ch) {
 // *** PLY mesh of an object
 
 // Find each undirected edge of the faces once, also for boundary edges, non-manifold edges, and faces with
-// inconsistent orientations, by sorting the pairs of vertex indices.
+// inconsistent orientations.  The edges are ordered by their smaller vertex index and then by their larger one.
 void PlyState::compute_edges() {
   const PlyMesh& ply_mesh = *mesh;
-  Array<uint64_t> keys;
-  for_int(i, ply_mesh.num_faces()) {
-    const CArrayView<int> indices = ply_mesh.face(i);
-    const int n = indices.num();
-    for_int(j, n) {
-      const auto v0 = uint32_t(indices[j]), v1 = uint32_t(indices[(j + 1) % n]);
-      keys.push(uint64_t{min(v0, v1)} << 32 | max(v0, v1));
+  const int nv = ply_mesh.points.num();
+  const auto for_face_edges = [&](auto func) {
+    for_int(i, ply_mesh.num_faces()) {
+      const CArrayView<int> face = ply_mesh.face(i);
+      const int n = face.num();
+      for_int(j, n) {
+        const int v0 = face[j], v1 = face[j + 1 < n ? j + 1 : 0];
+        func(min(v0, v1), max(v0, v1));
+      }
     }
+  };
+  // Bucket the face edges by their smaller vertex index (a counting sort), recording their larger one.
+  Array<int> start(nv + 1, 0);
+  for_face_edges([&](int vmin, int) { start[vmin + 1]++; });
+  for_int(vi, nv) start[vi + 1] += start[vi];
+  Array<int> others(start[nv]);
+  {
+    Array<int> next(start);
+    for_face_edges([&](int vmin, int vmax) { others[next[vmin]++] = vmax; });
   }
-  sort(keys);
-  edges.init(0);
-  for_int(k, keys.num()) {
-    if (!k || keys[k] != keys[k - 1]) edges.push(V(int(keys[k] >> 32), int(keys[k] & 0xFFFF'FFFF)));
-  }
+  // Sort and deduplicate each bucket, and gather the unique edges.
+  Array<int> count(nv);
+  parallel_for({.cycles_per_elem = 100}, range(nv), [&](int vi) {
+    int* const begin = others.data() + start[vi];
+    int* const end = others.data() + start[vi + 1];
+    std::sort(begin, end);
+    count[vi] = int(std::unique(begin, end) - begin);
+  });
+  Array<int> edge_start(nv + 1, 0);
+  for_int(vi, nv) edge_start[vi + 1] = edge_start[vi] + count[vi];
+  edges.init(edge_start[nv]);
+  parallel_for({.cycles_per_elem = 20}, range(nv),
+               [&](int vi) { for_int(k, count[vi]) edges[edge_start[vi] + k] = V(vi, others[start[vi] + k]); });
 }
 
 // Whether to draw from OpenGL buffer objects: the context supports them (OpenGL 1.5 or later), and the environment
@@ -5119,17 +5145,20 @@ PlyState::~PlyState() {
 #else
   const bool has_context = glXGetCurrentContext() != nullptr;
 #endif
-  if (buffers[0] && has_context) {
+  if (has_context) {
     USE_GL_EXT(glDeleteBuffers, PFNGLDELETEBUFFERSPROC);
-    glDeleteBuffers(3, buffers.data());
+    if (buffers[0]) glDeleteBuffers(3, buffers.data());
+    if (flat_buffers[0]) glDeleteBuffers(2, flat_buffers.data());
   }
 }
 
 bool PlyState::uses_buffers() const {
   const bool draws_faces = !ledges || lshading;
-  // Flat shading needs a normal per face, and corner uvs need a uv per corner, which an indexed vertex lacks.
+  // Corner uvs need a uv per corner, which an indexed vertex lacks.  Flat shading with vertex colors interpolates the
+  // colors (GL_SMOOTH) and therefore needs the face normal at every corner.
   // Without shading, the faces are drawn as outlines, which must not show the triangulation of a polygon.
-  const bool faces_ok = lsmooth && !(texture_active && !mesh->corner_uvs.empty()) && (lshading || all_triangles);
+  const bool faces_ok = !(texture_active && !mesh->corner_uvs.empty()) && (lsmooth || mesh->colors.empty()) &&
+                        (lshading || all_triangles);
   return mesh->num_faces() > 0 && (!draws_faces || faces_ok) && buffer_objects_supported();
 }
 
@@ -5189,25 +5218,93 @@ void PlyState::create_buffers() {
   assertw(!gl_report_errors());
 }
 
-// Draw the faces (with their normals, and any colors and uvs) or else the edges from the buffer objects.
+// Create the buffer objects for flat shading (without vertex colors).  Flat shading lights each triangle with the
+// normal of its last (provoking) vertex, so each triangle is rotated to end with a vertex that ends no other triangle,
+// and that vertex carries the normal of its face.  A triangle whose vertices all end other triangles ends with a copy
+// of a vertex.  The vertices are numbered in their order of first use by the triangles.
+void PlyState::create_flat_buffers() {
+  USE_GL_EXT(glGenBuffers, PFNGLGENBUFFERSPROC);
+  USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
+  USE_GL_EXT(glBufferData, PFNGLBUFFERDATAPROC);
+  const PlyMesh& ply_mesh = *mesh;
+  const CArrayView<Point> ply_vpos = ply_mesh.points;
+  glGenBuffers(2, flat_buffers.data());
+  Array<int> indices;
+  Array<int> old_index;                        // The mesh vertex of each vertex.
+  Array<Vector> normals;                       // The normal of each vertex.
+  Array<bool> ends_triangle;                   // Whether each vertex is the last vertex of a triangle.
+  Array<int> first_index(ply_vpos.num(), -1);  // The first vertex created for each mesh vertex.
+  const auto add_vertex = [&](int vi) {
+    old_index.push(vi), normals.push(Vector{}), ends_triangle.push(false);
+    return old_index.num() - 1;
+  };
+  for_int(i, ply_mesh.num_faces()) {
+    const CArrayView<int> face = ply_mesh.face(i);
+    // The same face normal as in draw_faces_immediate().
+    const Vector normal = ok_normalized(cross(ply_vpos[face[0]], ply_vpos[face[1]], ply_vpos[face[2]]));
+    for (int j = 1; j + 1 < face.num(); j++) {  // Each polygon becomes a fan (as GL_POLYGON draws a convex polygon).
+      Vec3<int> triangle = V(face[0], face[j], face[j + 1]);
+      for (int& vi : triangle) {
+        if (first_index[vi] < 0) first_index[vi] = add_vertex(vi);
+        vi = first_index[vi];
+      }
+      int k = 2;
+      while (k >= 0 && ends_triangle[triangle[k]]) k--;
+      if (k < 0) k = 2, triangle[2] = add_vertex(old_index[triangle[2]]);
+      ends_triangle[triangle[k]] = true;
+      normals[triangle[k]] = normal;
+      // A rotation, which preserves the orientation.
+      if (k == 0) triangle = V(triangle[1], triangle[2], triangle[0]);
+      if (k == 1) triangle = V(triangle[2], triangle[0], triangle[1]);
+      indices.push_array(triangle);
+    }
+  }
+  num_triangle_indices = indices.num();
+  // The interleaved vertex attributes: position, normal, and any uv.
+  const bool has_uvs = ply_mesh.uvs.num() > 0;
+  flat_stride = int(sizeof(Point) + sizeof(Vector) + (has_uvs ? sizeof(Uv) : 0));
+  flat_offset_uvs = has_uvs ? int(sizeof(Point) + sizeof(Vector)) : -1;
+  Array<uint8_t> vertices(old_index.num() * flat_stride);
+  parallel_for({.cycles_per_elem = 10}, range(old_index.num()), [&](int i) {
+    const int vi = old_index[i];
+    uint8_t* const p = vertices.data() + int64_t{i} * flat_stride;
+    std::memcpy(p, ply_vpos[vi].data(), sizeof(Point));
+    std::memcpy(p + sizeof(Point), normals[i].data(), sizeof(Vector));
+    if (has_uvs) std::memcpy(p + flat_offset_uvs, ply_mesh.uvs[vi].data(), sizeof(Uv));
+  });
+  glBindBuffer(GL_ARRAY_BUFFER, flat_buffers[0]);
+  glBufferData(GL_ARRAY_BUFFER, vertices.num(), vertices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, flat_buffers[1]);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.num() * int64_t{sizeof(int)}, indices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  assertw(!gl_report_errors());
+}
+
+// Draw the faces (with their normals, and any colors and uvs) or else the edges from the buffer objects.  With flat
+// shading, the faces come from flat_buffers.
 void PlyState::draw_from_buffers(bool faces, bool has_rgb) {
   USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
   const auto offset = [](int byte_offset) { return reinterpret_cast<const void*>(uintptr_t(byte_offset)); };
-  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+  const bool flat = faces && !lsmooth;
+  const int vertex_stride = flat ? flat_stride : stride;
+  glBindBuffer(GL_ARRAY_BUFFER, flat ? flat_buffers[0] : buffers[0]);
   glEnableClientState(GL_VERTEX_ARRAY);
-  glVertexPointer(3, GL_FLOAT, stride, offset(0));
+  glVertexPointer(3, GL_FLOAT, vertex_stride, offset(0));
   if (faces) {
     glEnableClientState(GL_NORMAL_ARRAY);
-    glNormalPointer(GL_FLOAT, stride, offset(offset_normals));
+    glNormalPointer(GL_FLOAT, vertex_stride, offset(flat ? int(sizeof(Point)) : offset_normals));
     if (has_rgb) {
+      assertx(!flat);
       glEnableClientState(GL_COLOR_ARRAY);
       glColorPointer(4, GL_UNSIGNED_BYTE, stride, offset(offset_colors));
     }
-    if (texture_active && offset_uvs >= 0) {
+    const int uvs_offset = flat ? flat_offset_uvs : offset_uvs;
+    if (texture_active && uvs_offset >= 0) {
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-      glTexCoordPointer(2, GL_FLOAT, stride, offset(offset_uvs));
+      glTexCoordPointer(2, GL_FLOAT, vertex_stride, offset(uvs_offset));
     }
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, flat ? flat_buffers[1] : buffers[1]);
     glDrawElements(GL_TRIANGLES, num_triangle_indices, GL_UNSIGNED_INT, nullptr);
     glDisableClientState(GL_NORMAL_ARRAY);
     glDisableClientState(GL_COLOR_ARRAY);
@@ -5254,7 +5351,6 @@ void PlyState::draw_faces_immediate() const {
   const CArrayView<Uv> ply_vuv = ply_mesh.uvs;
   const CArrayView<Uv> ply_fuv = ply_mesh.corner_uvs;
   const int nf = ply_mesh.num_faces();
-  if (nf > 5'000'000 && defining_dl) Warning("Graphics card may not have sufficient memory for the display list");
   const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
   int ntriangles = 0;
   for_int(i, nf) {
@@ -5339,14 +5435,18 @@ void PlyState::draw() {
     for (Vector& vnor : ply_vnor) assertw(vnor.normalize());
   }
   const bool use_buffers = uses_buffers();
+  const bool draws_faces = !ledges || lshading;
   // (Recreate the buffers if the normals were computed since.)
-  if (use_buffers && (!buffers[0] || (offset_normals < 0 && !ply_vnor.empty()))) create_buffers();
+  if (use_buffers && ((draws_faces && lsmooth) || ledges) &&
+      (!buffers[0] || (offset_normals < 0 && !ply_vnor.empty())))
+    create_buffers();
+  if (use_buffers && draws_faces && !lsmooth && !flat_buffers[0]) create_flat_buffers();
   if (texture_active) {
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
   }
   const bool has_rgb = !ply_vrgb.empty();
-  if (!ledges || lshading) {
+  if (draws_faces) {
     glShadeModel(lsmooth || has_rgb ? GL_SMOOTH : GL_FLAT);
     initialize_lit();
     update_mat_color(mesh_color);

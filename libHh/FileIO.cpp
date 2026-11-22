@@ -222,11 +222,26 @@ class ocfstream : public std::ostream {
 
 // *** RFile::Implementation and WFile::Implementation
 
+namespace {
+
+// The size of the I/O buffers: much larger than the defaults (4 KiB for a FILE, 8 KiB for a stdio_filebuf), it
+// reduces the number of read() and write() calls, which are slow on some file systems.  (Reading 92 MB of
+// progressive meshes from /mnt/c in WSL took 1.7 s with 8 KiB, 0.86 s with 64 KiB, and 0.71 s with 256 KiB or more.)
+constexpr size_t k_buffer_size = 256 * 1024;
+
+// Give the larger buffer to a FILE, before any I/O on it.
+[[maybe_unused]] FILE* with_large_buffer(FILE* file) {
+  setvbuf(file, nullptr, _IOFBF, k_buffer_size);
+  return file;
+}
+
+}  // namespace
+
 #if defined(IO_USE_FSTREAM)
 
 class RFile::Implementation {
  public:
-  explicit Implementation(FILE* file) : _ifstream(file) {}  // Non-standard extension in _MSVC_STL_VERSION C++ runtime.
+  explicit Implementation(FILE* file) : _ifstream(with_large_buffer(file)) {}  // Non-standard MSVC extension.
   std::istream* get_stream() { return &_ifstream; }
 
  private:
@@ -235,7 +250,7 @@ class RFile::Implementation {
 
 class WFile::Implementation {
  public:
-  explicit Implementation(FILE* file) : _ofstream(file) {}  // Non-standard extension in _MSVC_STL_VERSION C++ runtime.
+  explicit Implementation(FILE* file) : _ofstream(with_large_buffer(file)) {}  // Non-standard MSVC extension.
   std::ostream* get_stream() { return &_ofstream; }
 
  private:
@@ -246,7 +261,7 @@ class WFile::Implementation {
 
 class RFile::Implementation {
  public:
-  Implementation(FILE* file) : _filebuf(file, std::ios_base::in), _istream(&_filebuf) {}
+  Implementation(FILE* file) : _filebuf(file, std::ios_base::in, k_buffer_size), _istream(&_filebuf) {}
   std::istream* get_stream() { return &_istream; }
 
  private:
@@ -256,7 +271,7 @@ class RFile::Implementation {
 
 class WFile::Implementation {
  public:
-  Implementation(FILE* file) : _filebuf(file, std::ios_base::out), _ostream(&_filebuf) {}
+  Implementation(FILE* file) : _filebuf(file, std::ios_base::out, k_buffer_size), _ostream(&_filebuf) {}
   std::ostream* get_stream() { return &_ostream; }
 
  private:
@@ -268,7 +283,7 @@ class WFile::Implementation {
 
 class RFile::Implementation {
  public:
-  Implementation(FILE* file) : _icfstream(file) {}
+  Implementation(FILE* file) : _icfstream(with_large_buffer(file)) {}
   std::istream* get_stream() { return &_icfstream; }
 
  private:
@@ -277,7 +292,7 @@ class RFile::Implementation {
 
 class WFile::Implementation {
  public:
-  Implementation(FILE* file) : _ocfstream(file) {}
+  Implementation(FILE* file) : _ocfstream(with_large_buffer(file)) {}
   std::ostream* get_stream() { return &_ocfstream; }
 
  private:

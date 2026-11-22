@@ -196,11 +196,12 @@ void do_frame(Args& args) {
 
 bool s3dname_command_exists() { return command_exists_in_path("s3dname"); }
 
-// If s3dname finds a state file associated with name, sets found to it and returns true.
-bool find_statefile(const string& name, string& found) {
+// Launch s3dname to find the state file associated with name, returning its output pipe, or nullptr if it cannot be
+// launched.  The process runs concurrently until its output is read by read_s3dname_result().
+unique_ptr<RFile> launch_s3dname(const string& name) {
   if (!s3dname_command_exists()) {
     if (k_debug && 0) std::cerr << "(s3dname not found)\n";
-    return false;
+    return nullptr;
   }
   // Was "s3dname.bat" due to problem of launching "c:/perl/bin/perl /cygdrive/c/hh/bin/s3dname",
   //  but now solved using c:/cygwin/etc/fstab .
@@ -215,35 +216,53 @@ bool find_statefile(const string& name, string& found) {
   // string com = "s3dname -s " + quote_arg_for_shell(name) + " <" + s_nul + " |";
   const string com = "s3dname -s " + quote_arg_for_shell(name) + " |";
   try {
-    RFile fi(com);  // May throw.
-    string line;
-    if (!my_getline(fi(), line) || line == "") {
-      if (k_debug) std::cerr << "(s3dname did not function)\n";
-      return false;
-    }
-    // With G3D_NO_S3DNAME (set by the demos), report the found file instead of using it, so that a missing -st
-    //  shows up rather than being silently filled in by a locally installed s3dname.
-    static const bool no_s3dname = getenv_bool("G3D_NO_S3DNAME");
-    if (no_s3dname) {
-      showf("G3d: s3dname found '%s' for '%s'\n", line.c_str(), name.c_str());
-      Warning("Ignoring the state file found by s3dname (G3D_NO_S3DNAME); specify it using -st");
-      return false;
-    }
-    found = line;
+    return make_unique<RFile>(com);  // May throw.
   } catch (const std::runtime_error& ex) {
     if (k_debug) std::cerr << string("Could not launch s3dname: ") + ex.what();
-    return false;
+    return nullptr;
   }
-  return true;
 }
 
-bool try_finding_it(const string& name) { return find_statefile(name, statefile); }
+// Returns the state file found by the s3dname process launched for name, or "" if none.
+string read_s3dname_result(unique_ptr<RFile> pfi, const string& name) {
+  // With G3D_NO_S3DNAME (set by the demos), report the found file instead of using it, so that a missing -st
+  //  shows up rather than being silently filled in by a locally installed s3dname.
+  static const bool no_s3dname = getenv_bool("G3D_NO_S3DNAME");
+  string line;  // (The single returned variable, for the named return value optimization.)
+  if (!pfi) return line;
+  if (!my_getline((*pfi)(), line)) line = "";
+  if (line == "") {
+    if (k_debug) std::cerr << "(s3dname did not function)\n";
+  } else if (no_s3dname) {
+    showf("G3d: s3dname found '%s' for '%s'\n", line.c_str(), name.c_str());
+    Warning("Ignoring the state file found by s3dname (G3D_NO_S3DNAME); specify it using -st");
+    line = "";
+  }
+  return line;
+}
 
-void initial_statefile() {
-  if (statefile != "" && file_exists(statefile)) return;
-  if (statefile != "" && try_finding_it(statefile)) return;
-  if (g_filename != "" && try_finding_it(g_filename)) return;
-  if (statefile == "") statefile = "noname.s3d";
+// Returns the state file that s3dname finds for name, or "" if none.
+string find_statefile(const string& name) { return read_s3dname_result(launch_s3dname(name), name); }
+
+// If s3dname finds a state file for name, sets statefile to it and returns true.
+bool try_finding_it(const string& name) {
+  const string found = find_statefile(name);
+  if (found != "") statefile = found;
+  return found != "";
+}
+
+// Determine the state file in two steps, so that the s3dname process (which takes ~70 ms on Windows to launch sh,
+// env, and perl) runs while ReadFiles() reads g_filename.  The first step returns the pipe of that process, if any.
+unique_ptr<RFile> start_initial_statefile() {
+  if (statefile != "" && (file_exists(statefile) || try_finding_it(statefile))) return nullptr;
+  return g_filename != "" ? launch_s3dname(g_filename) : nullptr;
+}
+
+void finish_initial_statefile(unique_ptr<RFile> s3dname_pipe) {
+  if (const string found = read_s3dname_result(std::move(s3dname_pipe), g_filename); found != "")
+    statefile = found;
+  else if (statefile == "")
+    statefile = "noname.s3d";
 }
 
 }  // namespace
@@ -263,7 +282,7 @@ string object_statefile(int obn) {
   static Map<string, string> cache;  // The s3dname lookups, which launch a process.
   bool is_new;
   string& found = cache.enter(filename, "", is_new);
-  if (is_new) find_statefile(filename, found);
+  if (is_new) found = find_statefile(filename);
   return found;
 }
 
@@ -361,12 +380,14 @@ int main(int argc, const char** argv) {
     statefile_explicit = true;
   }
   stamp_timeline("args_parsed");
-  initial_statefile();
-  stamp_timeline("statefile_found");
+  unique_ptr<RFile> s3dname_pipe = start_initial_statefile();  // Non-null only if g_filename != "".
+  if (!s3dname_pipe) finish_initial_statefile(nullptr);
   if (g_filename == "" && statefile != "") g_filename = statefile;
   if (g_filename == "") g_filename = "-";
   ReadFiles(true);
   stamp_timeline("files_read");
+  if (s3dname_pipe) finish_initial_statefile(std::move(s3dname_pipe));
+  stamp_timeline("statefile_found");
   // With -waitframe, wait for the input frame as late as possible, so that the time-consuming setup of graphics in
   //  HB::open() occurs concurrently across the windows of g3d_cmp.
   if (input && waitframe) {

@@ -250,6 +250,9 @@ class AWMesh : public WMesh {
   int _cur_frame_mask{0};                              // 0 or k_Face_visited_mask.
 
   // Rendering using OpenGL.
+  // Set the color of each material: its "rgb" if any, else default_color.  Required before rendering the faces.
+  void ogl_process_materials(const Pixel& default_color);
+  [[nodiscard]] CArrayView<Pixel> ogl_material_colors() const { return _ogl_mat_byte_rgba; }
   void ogl_render_faces_individually(const PMeshInfo& pminfo, int use_texture);
   void ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture);
   void ogl_render_edges();
@@ -277,9 +280,7 @@ class AWMesh : public WMesh {
  private:
   void apply_vsplit_ancestry(Ancestry* ancestry, int vs, bool isr, int onumwedges, int code, int wvlfl, int wvrfr,
                              int wvsfl, int wvsfr, int wvtfl, int wvtfr);
-  // Rendering using OpenGL.
-  Array<Pixel> _ogl_mat_byte_rgba;  // Size is _materials.num().
-  void ogl_process_materials();
+  Array<Pixel> _ogl_mat_byte_rgba;  // For rendering using OpenGL; size is _materials.num().
 
   struct VF_sentinel {
     int _stopf{k_undefined};  // The face closing the ccw cycle, or k_undefined if v lies on a boundary.

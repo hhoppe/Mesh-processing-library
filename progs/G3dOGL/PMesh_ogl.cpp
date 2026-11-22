@@ -8,21 +8,18 @@ namespace hh {
 
 extern bool g_is_ati;  // Defined in G3dOGL.
 
-void AWMesh::ogl_process_materials() {
+void AWMesh::ogl_process_materials(const Pixel& default_color) {
+  _ogl_mat_byte_rgba.init(0);
   _ogl_mat_byte_rgba.reserve(_materials.num());
   for_int(matid, _materials.num()) {
-    const string& str = _materials.get(matid);
     Vec3<float> co;
-    if (!parse_key_vec(str.c_str(), "rgb", co)) {
-      // co = V(.8f, .5f, .4f);
-      co = V(.6f, .6f, .6f);
-    }
-    _ogl_mat_byte_rgba.push(Vector4(concat(co, V(1.f))).pixel());
+    _ogl_mat_byte_rgba.push(
+        parse_key_vec(_materials.get(matid).c_str(), "rgb", co) ? Vector4(concat(co, V(1.f))).pixel() : default_color);
   }
 }
 
 void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int use_texture) {
-  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
+  assertx(_ogl_mat_byte_rgba.num() == _materials.num());  // ogl_process_materials() was called.
   int omatid = -1;
   // Prefer texture over color if texture is enabled.
   if (pminfo._has_uv && use_texture) {
@@ -59,7 +56,7 @@ void AWMesh::ogl_render_faces_individually(const PMeshInfo& pminfo, int use_text
 }
 
 void AWMesh::ogl_render_faces_strips(const PMeshInfo& pminfo, int use_texture) {
-  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
+  assertx(_ogl_mat_byte_rgba.num() == _materials.num());  // ogl_process_materials() was called.
   if (0) {
     for_int(f, _faces.num()) {
       assertx((_faces[f].attrib.matid & k_Face_visited_mask) == _cur_frame_mask);

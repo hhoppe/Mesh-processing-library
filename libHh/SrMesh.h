@@ -222,6 +222,9 @@ class SrMesh {
   [[nodiscard]] const Bbox<float, 3>& get_bbox() const { return _bbox; }
 
   // Interface: Rendering using OpenGL:
+  // Set the color of each material: its "rgb" if any, else default_color.  Required before rendering.
+  void ogl_process_materials(const Pixel& default_color);
+  [[nodiscard]] CArrayView<Pixel> ogl_material_colors() const { return _ogl_mat_byte_rgba; }
   void ogl_render_faces_individually(bool unlit_texture);
   void ogl_render_faces_strips(bool unlit_texture);
   int ogl_render_striplines();  // Returns the number of strips.
@@ -288,7 +291,6 @@ class SrMesh {
 
   // Rendering using OpenGL:
   Array<Pixel> _ogl_mat_byte_rgba;  // Size is _materials.num().
-  void ogl_process_materials();
   void draw_vertex(const SrAVertex* v, bool use_texture) const;
   template <bool use_texture> void ogl_render_faces_strips_aux();
 

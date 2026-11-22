@@ -7,21 +7,18 @@
 
 namespace hh {
 
-void SrMesh::ogl_process_materials() {
+void SrMesh::ogl_process_materials(const Pixel& default_color) {
+  _ogl_mat_byte_rgba.init(0);
   _ogl_mat_byte_rgba.reserve(_materials.num());
   for_int(matid, _materials.num()) {
-    const string& str = _materials.get(matid);
     Vec3<float> co;
-    if (!parse_key_vec(str.c_str(), "rgb", co)) {
-      // co = V(.8f, .5f, .4f);
-      co = V(.6f, .6f, .6f);
-    }
-    _ogl_mat_byte_rgba.push(Vector4(concat(co, V(1.f))).pixel());
+    _ogl_mat_byte_rgba.push(
+        parse_key_vec(_materials.get(matid).c_str(), "rgb", co) ? Vector4(concat(co, V(1.f))).pixel() : default_color);
   }
 }
 
 void SrMesh::ogl_render_faces_individually(bool unlit_texture) {
-  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
+  assertx(_ogl_mat_byte_rgba.num() == _materials.num());  // ogl_process_materials() was called.
   glBegin(GL_TRIANGLES);
   if (unlit_texture) {
     for (const SrAFace* f : HH_INTRUSIVE_LIST_RANGE(_active_faces, SrAFace, activef)) {
@@ -180,7 +177,7 @@ template <bool use_texture> void SrMesh::ogl_render_faces_strips_aux() {
 }
 
 void SrMesh::ogl_render_faces_strips(bool unlit_texture) {
-  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
+  assertx(_ogl_mat_byte_rgba.num() == _materials.num());  // ogl_process_materials() was called.
   ASSERTX(verify_all_faces_visited());
   if (unlit_texture) {
     ogl_render_faces_strips_aux<true>();
@@ -191,7 +188,7 @@ void SrMesh::ogl_render_faces_strips(bool unlit_texture) {
 }
 
 int SrMesh::ogl_render_striplines() {
-  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
+  assertx(_ogl_mat_byte_rgba.num() == _materials.num());  // ogl_process_materials() was called.
   ASSERTX(verify_all_faces_visited());
   int ntstrips = 0;
   // Doesn't need to be all that fast, so not carefully optimized.
@@ -395,7 +392,7 @@ void SrMesh::ogl_show_residuals(bool uniform_too) {
 constexpr int k_cache_size = 16;
 
 int SrMesh::ogl_render_tvclines() {
-  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
+  assertx(_ogl_mat_byte_rgba.num() == _materials.num());  // ogl_process_materials() was called.
   ASSERTX(verify_all_faces_visited());
   ASSERTX(verify_all_vertices_uncached());
   int cache_time = _cache_time;
@@ -501,7 +498,7 @@ int SrMesh::ogl_render_tvclines() {
 
 void SrMesh::ogl_render_faces_tvc(bool unlit_texture) {
   dummy_use(unlit_texture);
-  if (_ogl_mat_byte_rgba.empty()) ogl_process_materials();
+  assertx(_ogl_mat_byte_rgba.num() == _materials.num());  // ogl_process_materials() was called.
   ASSERTX(verify_all_faces_visited());
   ASSERTX(verify_all_vertices_uncached());
   int cache_time = _cache_time;

@@ -3,6 +3,9 @@
 #define DEF_SC
 
 #include "Hw.h"
+
+#include <cstring>  // memcpy()
+
 #include "libHh/A3dStream.h"
 #include "libHh/Args.h"
 #include "libHh/Array.h"
@@ -55,6 +58,7 @@ extern void update_lod();
 extern float override_frametime;
 extern bool lod_mode;
 extern bool statefile_explicit;
+extern void timeline(const char* label);  // To stamp the drawing of the first frames.
 
 }  // namespace g3d
 
@@ -284,14 +288,22 @@ struct Texture {
 
 Array<Texture> g_textures;
 
-// By default, a progressive mesh is shown at full resolution but with at most this number of faces.
-constexpr int k_max_initial_pm_nfaces = 500'000;
+// By default, a progressive mesh is shown at full resolution but with at most this number of faces, unless the
+// environment variable PM_LOD_MAX_INITIAL_NFACES sets another limit.
+constexpr int k_default_max_initial_pm_nfaces = 500'000;
+
+// Whether to draw from OpenGL buffer objects: the context supports them (OpenGL 1.5 or later), and the environment
+// variable G3D_NO_BUFFERS is not set.
+bool buffer_objects_supported();
 
 // A progressive mesh, traversed to a level of detail.
 struct PmState {
   // Both constructors set the initial level of detail.
   explicit PmState(unique_ptr<PMesh> pmesh_);  // A progressive mesh that is completely read.
   explicit PmState(unique_ptr<RFile> file_);   // A progressive mesh whose vsplits are read from a file as needed.
+  ~PmState();
+  // Whether draw() renders the mesh from OpenGL buffer objects (in which case it is not put in a display list).
+  [[nodiscard]] bool uses_buffers() const;
   // As given by an input "lod_log" command, with the position t of the logarithmic slider.
   void set_lod_slider(float t);
   void draw();
@@ -306,6 +318,23 @@ struct PmState {
 
  private:
   float shared_slider_applied{-1.f};  // The shared slider position that lod_level last adopted.
+  // OpenGL buffer objects, refilled after each change of the level of detail: the position of each wedge, the
+  // wedges themselves (whose normal, rgb, and uv are read with a stride), the vertex indices of the triangles
+  // grouped by material, and those of the edges.
+  Vec4<unsigned> buffers{0u, 0u, 0u, 0u};
+  bool buffers_filled{false}, edge_buffer_filled{false};
+  bool buffers_reordered{false};  // Whether the triangles are in the order of an adjacency walk.
+  struct MaterialRange {
+    int matid, start, count;
+  };
+  Array<MaterialRange> material_ranges;  // Ranges of triangle indices in buffers[2].
+  int num_edge_indices{0};
+  void fill_buffers(bool reorder);
+  void fill_edge_buffer();
+  void draw_faces_from_buffers(int use_texture);
+  void draw_faces_immediate(int use_texture);  // Draw the faces in immediate mode (possibly into a display list).
+  void draw_edges_from_buffers();
+  void draw_edges_in_uv_domain() const;  // For uvtopos (an inefficient path that draws interior edges twice).
   void init_lod();
   [[nodiscard]] float nv_ratio() const;
   void change_lod(float lod);  // Set the level chosen by the user, and share its slider position.
@@ -315,13 +344,30 @@ struct PmState {
 
 // A PLY mesh (or point set), with the data derived from it for drawing.
 struct PlyState {
-  explicit PlyState(unique_ptr<PlyMesh> mesh_) : mesh(std::move(mesh_)) {}
+  explicit PlyState(unique_ptr<PlyMesh> mesh_);
+  ~PlyState();
+  // Whether draw() renders the mesh from OpenGL buffer objects (in which case it is not put in a display list).
+  [[nodiscard]] bool uses_buffers() const;
   void draw();
   unique_ptr<PlyMesh> mesh;  // Its normals are computed in draw() if absent and needed.
 
  private:
   Array<Vec2<int>> edges;  // Each edge of the faces once, computed when first drawn.
+  bool all_triangles;      // Whether all faces are triangles.
+  // OpenGL buffer objects: the vertex attributes, the vertex indices of the triangles, and those of the edges.
+  Vec3<unsigned> buffers{0u, 0u, 0u};
+  int num_triangle_indices{0};
+  Array<int> new_index;  // The renumbering of the vertices in buffers[0], to fill the edge buffer when first needed.
+  bool edge_buffer_filled{false};
+  // The interleaved vertex attributes in buffers[0]: the byte size of a vertex, and the byte offsets of its normal,
+  // color, and uv after its position (or -1 if absent).
+  int stride{0}, offset_normals{-1}, offset_colors{-1}, offset_uvs{-1};
   void compute_edges();
+  void create_buffers();
+  void draw_from_buffers(bool faces, bool has_rgb);
+  // Draw the faces (or the points if there are none) in immediate mode (possibly into a display list).
+  void draw_faces_immediate() const;
+  void draw_edges_immediate();  // Likewise for the edges.
 };
 
 class GxObject {
@@ -663,9 +709,17 @@ void DerivedHw::button_press(int butnum, bool pressed, const Vec2<int>& yx) {
 void DerivedHw::wheel_turn(float v) { fwheel(v); }
 
 void DerivedHw::draw_window(const Vec2<int>& dims) {
+  // With G3D_TIMELINE, stamp the drawing of the first two frames, each completed by the GPU.  With G3D_GL_FINISH,
+  // complete each frame before returning, e.g., so that timings include the GPU work.
+  static const bool timeline = getenv_bool("G3D_TIMELINE"), gl_finish = getenv_bool("G3D_GL_FINISH");
+  static int nframes = 0;
+  const bool stamp = timeline && nframes++ < 2;
+  if (stamp) g3d::timeline(nframes == 1 ? "draw1_begin" : "draw2_begin");
   is_window = true;
   win_dims = dims;
   fdraw();
+  if (stamp || gl_finish) glFinish();
+  if (stamp) g3d::timeline(nframes == 1 ? "draw1_end" : "draw2_end");
 }
 
 int g_pthick;
@@ -2177,7 +2231,10 @@ void draw_all() {
     }
     if (no_dl) use_dl = false;
     static Map<int, int> mdlnum;
-    if (use_dl) {
+    // A PLY mesh drawn from buffer objects is already in graphics memory, so its object needs no display list.
+    const bool ob_uses_buffers =
+        (g_xobs[i]._ply && g_xobs[i]._ply->uses_buffers()) || (g_xobs[i]._pms && g_xobs[i]._pms->uses_buffers());
+    if (use_dl && !ob_uses_buffers) {
       bool is_new;
       int& dlnum = mdlnum.enter(i, 0, is_new);
       if (is_new) dlnum = assertx(glGenLists(1));
@@ -3271,7 +3328,7 @@ void draw_lod_slider(float lod, int nv0, int nv1) {
 // *** PM of an object
 
 // The initial level of detail is given by the environment variable PM_LOD_NUM_FACES or PM_LOD_LEVEL, or else it is
-// the full resolution limited to k_max_initial_pm_nfaces faces.
+// the full resolution limited to PM_LOD_MAX_INITIAL_NFACES (by default k_default_max_initial_pm_nfaces) faces.
 PmState::PmState(unique_ptr<PMesh> pmesh_) : pmesh(std::move(pmesh_)), pmrs(*pmesh), pmi(pmrs) { init_lod(); }
 
 PmState::PmState(unique_ptr<RFile> file_)
@@ -3283,6 +3340,7 @@ void PmState::init_lod() {
   static const int pm_lod_num_faces = getenv_int("PM_LOD_NUM_FACES", 0);
   static const float pm_lod_level = getenv_float("PM_LOD_LEVEL", -1.f);
   static const float pm_lod_log_level = getenv_float("PM_LOD_LOG_LEVEL", -1.f);
+  static const int pm_lod_max_initial = getenv_int("PM_LOD_MAX_INITIAL_NFACES", k_default_max_initial_pm_nfaces);
   if (pm_lod_level >= 0.f && pm_lod_log_level >= 0.f) assertnever("Set only one of PM_LOD_LEVEL and PM_LOD_LOG_LEVEL");
   const PMeshInfo& info = pmesh->_info;
   const int base_nv = pmesh->_base_mesh._vertices.num();
@@ -3290,7 +3348,7 @@ void PmState::init_lod() {
     lod_level = pm_lod_log_level >= 0.f ? lod_from_slider(pm_lod_log_level, nv_ratio()) : pm_lod_level;
     pmi.goto_nvertices(base_nv + int(info._tot_nvsplits * lod_level + .5f));
   } else {
-    pmi.goto_nfaces(pm_lod_num_faces > 0 ? pm_lod_num_faces : min(info._full_nfaces, k_max_initial_pm_nfaces));
+    pmi.goto_nfaces(pm_lod_num_faces > 0 ? pm_lod_num_faces : min(info._full_nfaces, pm_lod_max_initial));
     lod_level = clamp(float(pmi._vertices.num() - base_nv) / max(info._full_nvertices - base_nv, 1), 0.f, 1.f);
   }
 }
@@ -3317,6 +3375,7 @@ void PmState::update_lod(bool output) {
   const int nv = nv0 + int((nvsplits + 1) * flevel * .999999f);
   pmi.goto_nvertices(nv);
   invalidate_dls();
+  buffers_filled = edge_buffer_filled = false;
   if (g3d::output && output) {
     if (g_lod_output_log) {
       std::cout << "lod_log " << slider_from_lod(lod_level, nv_ratio()) << '\n' << std::flush;
@@ -3366,10 +3425,204 @@ void PmState::set_lod_slider(float t) {
   hw.redraw_later();
 }
 
+PmState::~PmState() {
+  // Delete the buffers only while an OpenGL context is current (e.g., not during exit in a debug build).
+#if defined(_WIN32)
+  const bool has_context = wglGetCurrentContext() != nullptr;
+#else
+  const bool has_context = glXGetCurrentContext() != nullptr;
+#endif
+  if (buffers[0] && has_context) {
+    USE_GL_EXT(glDeleteBuffers, PFNGLDELETEBUFFERSPROC);
+    glDeleteBuffers(4, buffers.data());
+  }
+}
+
+bool PmState::uses_buffers() const {
+  // (The edges in the uv domain, with uvtopos, are drawn by the immediate-mode path.)
+  return !(uvtopos && pmesh->_info._has_uv) && buffer_objects_supported();
+}
+
+// Fill the buffers from the current mesh pmi: a position per wedge, the wedges as is, and the triangles grouped by
+// material.
+void PmState::fill_buffers(bool reorder) {
+  USE_GL_EXT(glGenBuffers, PFNGLGENBUFFERSPROC);
+  USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
+  USE_GL_EXT(glBufferData, PFNGLBUFFERDATAPROC);
+  const AWMesh& wmesh = pmi;
+  if (!buffers[0]) glGenBuffers(4, buffers.data());
+  const int nw = wmesh._wedges.num(), nf = wmesh._faces.num();
+  Array<Point> positions(nw);
+  for_int(w, nw) positions[w] = wmesh._vertices[wmesh._wedges[w].vertex].attrib.point;
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+  glBufferData(GL_ARRAY_BUFFER, nw * int64_t{sizeof(Point)}, positions.data(), GL_DYNAMIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+  glBufferData(GL_ARRAY_BUFFER, nw * int64_t{sizeof(PmWedge)}, wmesh._wedges.data(), GL_DYNAMIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  // Group the triangles by material (a counting sort), ignoring the visited bit of the strip renderer.
+  const int nmat = max(wmesh._materials.num(), 1);
+  const auto matid_of = [&](int f) { return wmesh._faces[f].attrib.matid & ~AWMesh::k_Face_visited_mask; };
+  Array<int> counts(nmat, 0);
+  for_int(f, nf) counts[matid_of(f)]++;
+  material_ranges.init(0);
+  Array<int> next(nmat);
+  int start = 0;
+  for_int(matid, nmat) {
+    next[matid] = start;
+    if (counts[matid]) material_ranges.push(MaterialRange{matid, start * 3, counts[matid] * 3});
+    start += counts[matid];
+  }
+  // If reorder, order the faces by walking across adjacent faces of the same material, as triangle strips do, so
+  // that consecutive triangles share vertices (the order of the faces in a progressive mesh has poor locality).
+  // This walk costs more than the rest of this function, so it is omitted while the level of detail changes
+  // continuously (e.g., while dragging the slider, when display lists are disabled too).
+  Array<int> order;
+  order.reserve(nf);
+  Array<bool> visited(nf, false);
+  for_int(f0, nf) {
+    if (!reorder) {
+      order.push(f0);
+      continue;
+    }
+    int j = 0;
+    for (int f = f0; f >= 0 && !visited[f];) {
+      visited[f] = true;
+      order.push(f);
+      int fnext = -1;
+      for_int(k, 3) {
+        const int jj = mod3(j + k), fn = wmesh._fnei[f].faces[jj];
+        if (fn >= 0 && !visited[fn] && matid_of(fn) == matid_of(f)) {
+          fnext = fn;
+          j = mod3(jj + 1);
+          break;
+        }
+      }
+      f = fnext;
+    }
+  }
+  Array<Vec3<int>> triangles(nf);
+  for (const int f : order) triangles[next[matid_of(f)]++] = wmesh._faces[f].wedges;
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[2]);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, nf * int64_t{sizeof(Vec3<int>)}, triangles.data(), GL_DYNAMIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  buffers_filled = true;
+  buffers_reordered = reorder;
+  edge_buffer_filled = false;
+  assertw(!gl_report_errors());
+}
+
+// Fill the edge buffer with each edge once (as in AWMesh::ogl_render_edges()), as a pair of wedges.
+void PmState::fill_edge_buffer() {
+  USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
+  USE_GL_EXT(glBufferData, PFNGLBUFFERDATAPROC);
+  const AWMesh& wmesh = pmi;
+  Array<Vec2<int>> edges;
+  edges.reserve(wmesh._faces.num() * 3 / 2 + 16);
+  for_int(f, wmesh._faces.num()) {
+    const Vec3<int>& w = wmesh._faces[f].wedges;
+    for_int(j, 3) {
+      const int w0 = w[j], w1 = w[mod3(j + 1)];
+      const int v0 = wmesh._wedges[w0].vertex, v1 = wmesh._wedges[w1].vertex;
+      if (v0 < v1 || wmesh._fnei[f].faces[mod3(j + 2)] < 0) edges.push(V(w0, w1));
+    }
+  }
+  num_edge_indices = edges.num() * 2;
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[3]);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, edges.num() * int64_t{sizeof(Vec2<int>)}, edges.data(), GL_DYNAMIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  edge_buffer_filled = true;
+}
+
+void PmState::draw_faces_from_buffers(int use_texture) {
+  USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
+  const AWMesh& wmesh = pmi;
+  const PMeshInfo& info = pmesh->_info;
+  const CArrayView<Pixel> material_colors = wmesh.ogl_material_colors();
+  const auto offset = [](size_t byte_offset) { return reinterpret_cast<const void*>(uintptr_t(byte_offset)); };
+  const PmWedge wedge0{};
+  const auto offset_in_wedge = [&](const void* member) {
+    return offset(size_t(static_cast<const char*>(member) - reinterpret_cast<const char*>(&wedge0)));
+  };
+  const int stride = int(sizeof(PmWedge));
+  const bool has_uv = info._has_uv && use_texture;
+  if (has_uv) {
+    glDisable(GL_TEXTURE_GEN_S);
+    glDisable(GL_TEXTURE_GEN_T);
+  }
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glVertexPointer(3, GL_FLOAT, 0, offset(0));
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[1]);
+  glEnableClientState(GL_NORMAL_ARRAY);
+  glNormalPointer(GL_FLOAT, stride, offset_in_wedge(wedge0.attrib.normal.data()));
+  if (has_uv) {
+    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+    glTexCoordPointer(2, GL_FLOAT, stride, offset_in_wedge(wedge0.attrib.uv.data()));
+  } else if (info._has_rgb) {
+    glEnableClientState(GL_COLOR_ARRAY);
+    glColorPointer(3, GL_FLOAT, stride, offset_in_wedge(wedge0.attrib.rgb.data()));
+  }
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[2]);
+  for (const MaterialRange& range : material_ranges) {
+    if (!has_uv && !info._has_rgb && material_colors.ok(range.matid)) glColor4ubv(material_colors[range.matid].data());
+    glDrawElements(GL_TRIANGLES, range.count, GL_UNSIGNED_INT, offset(range.start * sizeof(int)));
+  }
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glDisableClientState(GL_NORMAL_ARRAY);
+  glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  glDisableClientState(GL_COLOR_ARRAY);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void PmState::draw_edges_from_buffers() {
+  USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
+  if (!edge_buffer_filled) fill_edge_buffer();
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glVertexPointer(3, GL_FLOAT, 0, nullptr);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[3]);
+  glDrawElements(GL_LINES, num_edge_indices, GL_UNSIGNED_INT, nullptr);
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void PmState::draw_edges_in_uv_domain() const {
+  const AWMesh& wmesh = pmi;
+  glBegin(GL_LINES);
+  for_int(f, wmesh._faces.num()) for_int(j, 3) {
+    const Uv& uv0 = wmesh._wedges[wmesh._faces[f].wedges[j]].attrib.uv;
+    const Uv& uv1 = wmesh._wedges[wmesh._faces[f].wedges[mod3(j + 1)]].attrib.uv;
+    glVertex2fv(uv0.data());
+    glVertex2fv(uv1.data());
+  }
+  glEnd();
+}
+
+void PmState::draw_faces_immediate(int use_texture) {
+  AWMesh& wmesh = pmi;
+  const PMeshInfo& info = pmesh->_info;
+  // static const int pm_strips = getenv_int("PM_STRIPS");
+  // 2002-05-28: it now always seems faster with strips and it greatly helps when Display Lists are enabled.
+  static const bool pm_strips = !getenv_bool("PM_NOSTRIPS");
+  if (!pm_strips || info._has_rgb) {
+    if (0) Warning("PMesh: no strips for rendering (may be slower)");
+    wmesh.ogl_render_faces_individually(info, use_texture);
+  } else if (defining_dl && g_is_ati) {
+    // Much faster to create display list, since fewer primitives.
+    wmesh.ogl_render_faces_individually(info, use_texture);
+  } else {
+    wmesh.ogl_render_faces_strips(info, use_texture);
+  }
+}
+
 void PmState::draw() {
   sync_shared_lod();
   AWMesh& wmesh = pmi;
   const PMeshInfo& info = pmesh->_info;
+  const bool use_buffers = uses_buffers();
+  if (use_buffers && (!buffers_filled || (use_dl && !buffers_reordered))) fill_buffers(use_dl);
   if (!ledges || lshading) {
     // Options lsmooth, lquickmode not handled.
     if (!info._has_rgb) assertw(lsmooth);
@@ -3383,18 +3636,12 @@ void PmState::draw() {
       set_light_ambient(0.f);
       if (texturenormal > 0) normalmap_activate();
     }
-    // static const int pm_strips = getenv_int("PM_STRIPS");
-    // 2002-05-28: it now always seems faster with strips and it greatly helps when Display Lists are enabled.
-    static const bool pm_strips = !getenv_bool("PM_NOSTRIPS");
-    if (!pm_strips || info._has_rgb) {
-      if (0) Warning("PMesh: no strips for rendering (may be slower)");
-      wmesh.ogl_render_faces_individually(info, texture_active);
-    } else if (defining_dl && g_is_ati) {
-      // Much faster to create display list, since fewer primitives.
-      wmesh.ogl_render_faces_individually(info, texture_active);
-    } else {
-      wmesh.ogl_render_faces_strips(info, texture_active);
-    }
+    // A material without "rgb" has the mesh color.
+    if (wmesh.ogl_material_colors().empty()) wmesh.ogl_process_materials(mesh_color.d);
+    if (use_buffers)
+      draw_faces_from_buffers(texture_active);
+    else
+      draw_faces_immediate(texture_active);
     initialize_unlit(), initialize_lit();  // Re-synchronize.
   }
   if (texture_active) {
@@ -3408,19 +3655,12 @@ void PmState::draw() {
     initialize_unlit();
     set_thickness(thicknormal);
     update_cur_color(pix_edgecolor);
-    if (uvtopos && info._has_uv) {
-      // Draw the edges in the uv domain, as for a mesh (an inefficient path that draws interior edges twice).
-      glBegin(GL_LINES);
-      for_int(f, wmesh._faces.num()) for_int(j, 3) {
-        const Uv& uv0 = wmesh._wedges[wmesh._faces[f].wedges[j]].attrib.uv;
-        const Uv& uv1 = wmesh._wedges[wmesh._faces[f].wedges[mod3(j + 1)]].attrib.uv;
-        glVertex2fv(uv0.data());
-        glVertex2fv(uv1.data());
-      }
-      glEnd();
-    } else {
+    if (uvtopos && info._has_uv)
+      draw_edges_in_uv_domain();
+    else if (use_buffers)
+      draw_edges_from_buffers();
+    else
       wmesh.ogl_render_edges();
-    }
     set_thickness(thicka3d);
   }
 }
@@ -3573,6 +3813,8 @@ void draw_sr() {
   sr_ncachemiss = 0;
   static const bool sr_no_strips = getenv_bool("SR_NO_STRIPS");
   static const bool sr_use_tvc = getenv_bool("SR_USE_TVC");
+  // A material without "rgb" has the mesh color.
+  if (srmesh.ogl_material_colors().empty()) srmesh.ogl_process_materials(mesh_color.d);
   if (!ledges || lshading) {
     assertw(lsmooth);
     glShadeModel(lsmooth ? GL_SMOOTH : GL_FLAT);
@@ -4853,13 +5095,223 @@ void PlyState::compute_edges() {
   }
 }
 
+// Whether to draw from OpenGL buffer objects: the context supports them (OpenGL 1.5 or later), and the environment
+// variable G3D_NO_BUFFERS is not set.
+// (A function pointer from glXGetProcAddress() may be non-null even for an unsupported function.)
+bool buffer_objects_supported() {
+  static const bool supported = [] {
+    if (getenv_bool("G3D_NO_BUFFERS")) return false;
+    const char* s = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    if (!s || !std::isdigit(s[0]) || s[1] != '.' || !std::isdigit(s[2])) return false;
+    const int major = s[0] - '0', minor = s[2] - '0';
+    return major > 1 || minor >= 5;
+  }();
+  return supported;
+}
+
+PlyState::PlyState(unique_ptr<PlyMesh> mesh_) : mesh(std::move(mesh_)) {
+  all_triangles = true;
+  for_int(i, mesh->num_faces()) all_triangles &= mesh->face(i).num() == 3;
+}
+
+PlyState::~PlyState() {
+  // Delete the buffers only while an OpenGL context is current (e.g., not during exit in a debug build).
+#if defined(_WIN32)
+  const bool has_context = wglGetCurrentContext() != nullptr;
+#else
+  const bool has_context = glXGetCurrentContext() != nullptr;
+#endif
+  if (buffers[0] && has_context) {
+    USE_GL_EXT(glDeleteBuffers, PFNGLDELETEBUFFERSPROC);
+    glDeleteBuffers(3, buffers.data());
+  }
+}
+
+bool PlyState::uses_buffers() const {
+  const bool draws_faces = !ledges || lshading;
+  // Flat shading needs a normal per face, and corner uvs need a uv per corner, which an indexed vertex lacks.
+  // Without shading, the faces are drawn as outlines, which must not show the triangulation of a polygon.
+  const bool faces_ok = lsmooth && !(texture_active && !mesh->corner_uvs.empty()) && (lshading || all_triangles);
+  return mesh->num_faces() > 0 && (!draws_faces || faces_ok) && buffer_objects_supported();
+}
+
+// Create (or recreate) the buffer objects from the mesh, its normals if present, and its edges.  The vertices are
+// renumbered in their order of first use by the triangles, and their attributes are interleaved, so that drawing reads
+// the vertex buffer nearly sequentially.
+void PlyState::create_buffers() {
+  USE_GL_EXT(glGenBuffers, PFNGLGENBUFFERSPROC);
+  USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
+  USE_GL_EXT(glBufferData, PFNGLBUFFERDATAPROC);
+  const PlyMesh& ply_mesh = *mesh;
+  if (!buffers[0]) glGenBuffers(3, buffers.data());
+  // The triangles, each polygon becoming a fan (as GL_POLYGON draws a convex polygon).
+  Array<int> indices;
+  for_int(i, ply_mesh.num_faces()) {
+    const CArrayView<int> face = ply_mesh.face(i);
+    for (int j = 1; j + 1 < face.num(); j++) indices.push_array(V(face[0], face[j], face[j + 1]));
+  }
+  num_triangle_indices = indices.num();
+  // Renumber the vertices by first use (then any unused ones).
+  const int nv = ply_mesh.points.num();
+  new_index.init(nv, -1);
+  Array<int> old_index;
+  old_index.reserve(nv);
+  for (int& vi : indices) {
+    if (new_index[vi] < 0) new_index[vi] = old_index.add(1), old_index.last() = vi;
+    vi = new_index[vi];
+  }
+  for_int(vi, nv) {
+    if (new_index[vi] < 0) new_index[vi] = old_index.add(1), old_index.last() = vi;
+  }
+  // The interleaved vertex attributes: position, then any normal, color, and uv.
+  stride = int(sizeof(Point));
+  const auto allocate = [&](bool present, int size, int& offset) {
+    offset = present ? stride : -1;
+    if (present) stride += size;
+  };
+  allocate(ply_mesh.normals.num() > 0, int(sizeof(Vector)), offset_normals);
+  allocate(ply_mesh.colors.num() > 0, int(sizeof(Pixel)), offset_colors);
+  allocate(ply_mesh.uvs.num() > 0, int(sizeof(Uv)), offset_uvs);
+  Array<uint8_t> vertices(nv * stride);
+  for_int(i, nv) {
+    const int vi = old_index[i];
+    uint8_t* const p = vertices.data() + int64_t{i} * stride;
+    std::memcpy(p, ply_mesh.points[vi].data(), sizeof(Point));
+    if (offset_normals >= 0) std::memcpy(p + offset_normals, ply_mesh.normals[vi].data(), sizeof(Vector));
+    if (offset_colors >= 0) std::memcpy(p + offset_colors, ply_mesh.colors[vi].data(), sizeof(Pixel));
+    if (offset_uvs >= 0) std::memcpy(p + offset_uvs, ply_mesh.uvs[vi].data(), sizeof(Uv));
+  }
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+  glBufferData(GL_ARRAY_BUFFER, vertices.num(), vertices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
+  glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.num() * int64_t{sizeof(int)}, indices.data(), GL_STATIC_DRAW);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+  edge_buffer_filled = false;  // Filled when the edges are first drawn.
+  assertw(!gl_report_errors());
+}
+
+// Draw the faces (with their normals, and any colors and uvs) or else the edges from the buffer objects.
+void PlyState::draw_from_buffers(bool faces, bool has_rgb) {
+  USE_GL_EXT(glBindBuffer, PFNGLBINDBUFFERPROC);
+  const auto offset = [](int byte_offset) { return reinterpret_cast<const void*>(uintptr_t(byte_offset)); };
+  glBindBuffer(GL_ARRAY_BUFFER, buffers[0]);
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glVertexPointer(3, GL_FLOAT, stride, offset(0));
+  if (faces) {
+    glEnableClientState(GL_NORMAL_ARRAY);
+    glNormalPointer(GL_FLOAT, stride, offset(offset_normals));
+    if (has_rgb) {
+      glEnableClientState(GL_COLOR_ARRAY);
+      glColorPointer(4, GL_UNSIGNED_BYTE, stride, offset(offset_colors));
+    }
+    if (texture_active && offset_uvs >= 0) {
+      glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+      glTexCoordPointer(2, GL_FLOAT, stride, offset(offset_uvs));
+    }
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[1]);
+    glDrawElements(GL_TRIANGLES, num_triangle_indices, GL_UNSIGNED_INT, nullptr);
+    glDisableClientState(GL_NORMAL_ARRAY);
+    glDisableClientState(GL_COLOR_ARRAY);
+    glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+  } else {
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffers[2]);
+    if (!edge_buffer_filled) {
+      edge_buffer_filled = true;
+      USE_GL_EXT(glBufferData, PFNGLBUFFERDATAPROC);
+      if (edges.empty()) compute_edges();
+      Array<Vec2<int>> new_edges(edges.num());
+      for_int(k, edges.num()) new_edges[k] = V(new_index[edges[k][0]], new_index[edges[k][1]]);
+      glBufferData(GL_ELEMENT_ARRAY_BUFFER, new_edges.num() * int64_t{sizeof(Vec2<int>)}, new_edges.data(),
+                   GL_STATIC_DRAW);
+    }
+    glDrawElements(GL_LINES, edges.num() * 2, GL_UNSIGNED_INT, nullptr);
+  }
+  glDisableClientState(GL_VERTEX_ARRAY);
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+}
+
+void PlyState::draw_edges_immediate() {
+  if (mesh->num_faces() && edges.empty()) compute_edges();
+  const CArrayView<Point> ply_vpos = mesh->points;
+  // Restart the primitive periodically: a single long one is slow to compile and draw in a display list.
+  glBegin(GL_LINES);
+  for_int(k, edges.num()) {
+    if ((k & 0xFF) == 0 && k) {
+      glEnd();
+      glBegin(GL_LINES);
+    }
+    glVertex3fv(ply_vpos[edges[k][0]].data());
+    glVertex3fv(ply_vpos[edges[k][1]].data());
+  }
+  glEnd();
+}
+
+void PlyState::draw_faces_immediate() const {
+  const PlyMesh& ply_mesh = *mesh;
+  const CArrayView<Point> ply_vpos = ply_mesh.points;
+  const CArrayView<Vector> ply_vnor = ply_mesh.normals;
+  const CArrayView<Pixel> ply_vrgb = ply_mesh.colors;
+  const CArrayView<Uv> ply_vuv = ply_mesh.uvs;
+  const CArrayView<Uv> ply_fuv = ply_mesh.corner_uvs;
+  const int nf = ply_mesh.num_faces();
+  if (nf > 5'000'000 && defining_dl) Warning("Graphics card may not have sufficient memory for the display list");
+  const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
+  int ntriangles = 0;
+  for_int(i, nf) {
+    const CArrayView<int> indices = ply_mesh.face(i);
+    if (indices.num() == 3) {
+      if (ntriangles == buffer_ntriangles) {
+        glEnd();
+        ntriangles = 0;
+      }
+      if (!ntriangles) glBegin(GL_TRIANGLES);
+      ntriangles++;
+    } else {
+      if (ntriangles) {
+        glEnd();
+        ntriangles = 0;
+      }
+      glBegin(GL_POLYGON);
+    }
+    if (!lsmooth) {
+      Vector fnormal = ok_normalized(cross(ply_vpos[indices[0]], ply_vpos[indices[1]], ply_vpos[indices[2]]));
+      glNormal3fv(fnormal.data());
+    }
+    for_int(j, indices.num()) {
+      const int vi = indices[j];
+      if (texture_active) {
+        if (ply_fuv.num())
+          glTexCoord2fv(ply_fuv[ply_mesh.face_start[i] + j].data());
+        else if (ply_vuv.num())
+          glTexCoord2fv(ply_vuv[vi].data());
+      }
+      if (lsmooth) glNormal3fv(ply_vnor[vi].data());
+      if (ply_vrgb.num()) glColor4ubv(ply_vrgb[vi].data());
+      glVertex3fv(ply_vpos[vi].data());
+    }
+    if (!ntriangles) glEnd();  // GL_POLYGON
+  }
+  if (ntriangles) glEnd();  // GL_TRIANGLES
+  if (!nf) {                // Draw points.
+    initialize_unlit();
+    if (ply_vrgb.empty()) set_color_to_foreground();
+    glBegin(GL_POINTS);
+    for_int(i, ply_vpos.num()) {
+      if (ply_vnor.num()) glNormal3fv(ply_vnor[i].data());
+      if (ply_vrgb.num()) glColor4ubv(ply_vrgb[i].data());
+      glVertex3fv(ply_vpos[i].data());
+    }
+    glEnd();
+  }
+}
+
 void PlyState::draw() {
   PlyMesh& ply_mesh = *mesh;
   const CArrayView<Point> ply_vpos = ply_mesh.points;
   Array<Vector>& ply_vnor = ply_mesh.normals;
   const CArrayView<Pixel> ply_vrgb = ply_mesh.colors;
-  const CArrayView<Uv> ply_vuv = ply_mesh.uvs;
-  const CArrayView<Uv> ply_fuv = ply_mesh.corner_uvs;
   const int nf = ply_mesh.num_faces();
   if (lsmooth && ply_vnor.empty() && nf) {
     ply_vnor.init(ply_vpos.num(), Vector{});
@@ -4871,7 +5323,9 @@ void PlyState::draw() {
     }
     for (Vector& vnor : ply_vnor) assertw(vnor.normalize());
   }
-  if (nf > 5'000'000 && defining_dl) Warning("Graphics card may not have sufficient memory for display list");
+  const bool use_buffers = uses_buffers();
+  // (Recreate the buffers if the normals were computed since.)
+  if (use_buffers && (!buffers[0] || (offset_normals < 0 && !ply_vnor.empty()))) create_buffers();
   if (texture_active) {
     glDisable(GL_TEXTURE_GEN_S);
     glDisable(GL_TEXTURE_GEN_T);
@@ -4888,54 +5342,10 @@ void PlyState::draw() {
       set_light_ambient(0.f);
       if (texturenormal > 0) normalmap_activate();
     }
-    const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
-    int ntriangles = 0;
-    for_int(i, nf) {
-      const CArrayView<int> indices = ply_mesh.face(i);
-      if (indices.num() == 3) {
-        if (ntriangles == buffer_ntriangles) {
-          glEnd();
-          ntriangles = 0;
-        }
-        if (!ntriangles) glBegin(GL_TRIANGLES);
-        ntriangles++;
-      } else {
-        if (ntriangles) {
-          glEnd();
-          ntriangles = 0;
-        }
-        glBegin(GL_POLYGON);
-      }
-      if (!lsmooth) {
-        Vector fnormal = ok_normalized(cross(ply_vpos[indices[0]], ply_vpos[indices[1]], ply_vpos[indices[2]]));
-        glNormal3fv(fnormal.data());
-      }
-      for_int(j, indices.num()) {
-        const int vi = indices[j];
-        if (texture_active) {
-          if (ply_fuv.num())
-            glTexCoord2fv(ply_fuv[ply_mesh.face_start[i] + j].data());
-          else if (ply_vuv.num())
-            glTexCoord2fv(ply_vuv[vi].data());
-        }
-        if (lsmooth) glNormal3fv(ply_vnor[vi].data());
-        if (ply_vrgb.num()) glColor4ubv(ply_vrgb[vi].data());
-        glVertex3fv(ply_vpos[vi].data());
-      }
-      if (!ntriangles) glEnd();  // GL_POLYGON
-    }
-    if (ntriangles) glEnd();  // GL_TRIANGLES
-    if (!nf) {                // Draw points.
-      initialize_unlit();
-      if (ply_vrgb.empty()) set_color_to_foreground();
-      glBegin(GL_POINTS);
-      for_int(i, ply_vpos.num()) {
-        if (ply_vnor.num()) glNormal3fv(ply_vnor[i].data());
-        if (ply_vrgb.num()) glColor4ubv(ply_vrgb[i].data());
-        glVertex3fv(ply_vpos[i].data());
-      }
-      glEnd();
-    }
+    if (use_buffers)
+      draw_from_buffers(true, has_rgb);
+    else
+      draw_faces_immediate();
     initialize_unlit(), initialize_lit();  // Re-synchronize.
   }
   if (texture_active) {
@@ -4948,18 +5358,10 @@ void PlyState::draw() {
     initialize_unlit();
     set_thickness(thicknormal);
     update_cur_color(pix_edgecolor);
-    if (nf && edges.empty()) compute_edges();
-    // Restart the primitive periodically: a single long one is slow to compile and draw in a display list.
-    glBegin(GL_LINES);
-    for_int(k, edges.num()) {
-      if ((k & 0xFF) == 0 && k) {
-        glEnd();
-        glBegin(GL_LINES);
-      }
-      glVertex3fv(ply_vpos[edges[k][0]].data());
-      glVertex3fv(ply_vpos[edges[k][1]].data());
-    }
-    glEnd();
+    if (use_buffers)
+      draw_from_buffers(false, false);
+    else
+      draw_edges_immediate();
     set_thickness(thicka3d);
   }
 }

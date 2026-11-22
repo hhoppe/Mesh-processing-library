@@ -803,6 +803,7 @@ namespace {
 inline bool sharp(const GMesh& mesh, Vertex v, Edge e) {
   if (mesh.is_boundary(e)) return true;
   if (mesh.flags(e).flag(GMesh::eflag_sharp)) return true;
+  if (!mesh.may_have_corner_strings()) return false;
   const char* s1 = mesh.get_string(mesh.ccw_corner(v, e));
   if (s1 && GMesh::string_has_key(s1, "wid")) {
     const char* s2 = mesh.get_string(mesh.clw_corner(v, e));
@@ -852,7 +853,9 @@ Vnors::Vnors(const GMesh& mesh, Vertex v, EType nortype) {
   static const bool ignore_mesh_normals = getenv_bool("IGNORE_MESH_NORMALS");
   const bool hasvnor = ignore_mesh_normals ? false : parse_key_vec(mesh.get_string(v), "normal", _nor);
   const auto corner_has_normal = [&](Corner c) { return GMesh::string_has_key(mesh.get_string(c), "normal"); };
-  const int ncnor = ignore_mesh_normals ? 0 : int(ranges::count_if(mesh.corners(v), corner_has_normal));
+  const int ncnor = ignore_mesh_normals || !mesh.may_have_corner_strings()
+                        ? 0
+                        : int(ranges::count_if(mesh.corners(v), corner_has_normal));
   if (hasvnor && !ncnor) return;
   if (hasvnor && ncnor) Warning("Have both vertex and corner normals");
 

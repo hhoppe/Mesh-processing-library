@@ -2583,7 +2583,9 @@ void do_analyzestretch() {
     dfdt = (triangle[0] * (uvs[2][0] - uvs[1][0]) + triangle[1] * (uvs[0][0] - uvs[2][0]) +
             triangle[2] * (uvs[1][0] - uvs[0][0])) *
            recip_area;
-    const double a = dot(dfds, dfds), b = dot(dfds, dfdt), c = dot(dfdt, dfdt);
+    // In double precision, because minsv2 below cancels (a + c) against tsqrt; with the float rounding of dot(), a
+    // valid sliver face (a + c ~ 1600, exact minsv2 ~ 3e-6) gave minsv2 = -2e-5, failing my_sqrt().
+    const double a = dot<double>(dfds, dfds), b = dot<double>(dfds, dfdt), c = dot<double>(dfdt, dfdt);
     const double tsqrt = my_sqrt(square(a - c) + 4. * square(b));
     const float minsv2 = float(((a + c) - tsqrt) * .5);
     const float maxsv2 = float(((a + c) + tsqrt) * .5);

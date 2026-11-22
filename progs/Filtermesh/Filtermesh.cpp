@@ -4128,10 +4128,11 @@ string get_first_material_name(const string& mtl_filename) {
   assertnever("No 'newmtl' found in '" + mtl_filename + "'");
 }
 
-// Write the mesh as a binary *.ply file on stdout (one PLY vertex per wedge; see GMesh::to_ply()), instead of the mesh.
+// Write the mesh as a *.ply file (binary unless PLY_BINARY=0) on stdout (one PLY vertex per wedge; see
+// GMesh::to_ply()), instead of the mesh.
 void do_toply() {
   HH_TIMER("_toply");
-  write_ply(std::cout, mesh.to_ply(), true);
+  write_ply(std::cout, mesh.to_ply());
   std::cout.flush();
   nooutput = true;
 }
@@ -4337,7 +4338,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(tob3d, ": output binary a3d version of mesh");
   HH_ARGSD(endobject, ": output EndObject marker");
   HH_ARGSD(to_obj, "file.mtl : output Alias/Wavefront .obj file on stdout");
-  HH_ARGSD(toply, ": output binary ply (vertex per wedge)");
+  HH_ARGSD(toply, ": output ply (vertex per wedge)");
   HH_ARGSC("", ":");
   HH_ARGSD(angle, "deg : tag sharp edges");
   HH_ARGSD(cosangle, "fcos : tag sharp edges, acos(fcos)");

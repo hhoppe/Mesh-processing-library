@@ -734,7 +734,8 @@ void PlyMesh::add_comment_lines(std::string_view text) {
   }
 }
 
-void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary) {
+void write_ply(std::ostream& os, const PlyMesh& mesh) {
+  const bool binary = getenv_bool("PLY_BINARY", true);
   const int nv = mesh.points.num(), nf = mesh.num_faces();
   assertx(mesh.normals.empty() || mesh.normals.num() == nv);
   assertx(mesh.colors.empty() || mesh.colors.num() == nv);

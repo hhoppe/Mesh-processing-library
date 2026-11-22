@@ -69,9 +69,10 @@ struct PlyMesh {
 // Read a PLY file (its header and body).
 [[nodiscard]] PlyMesh read_ply(std::istream& is);
 
-// Write a PLY file, in the format binary_big_endian (network order) or ascii, including the trailing elements above
-// for the nonempty arrays.  A comment that would read as a material definition is indented by a space.
-void write_ply(std::ostream& os, const PlyMesh& mesh, bool binary);
+// Write a PLY file, in the format binary_big_endian (network order) or else, if the environment variable PLY_BINARY
+// is 0 (read at each call), ascii, including the trailing elements above for the nonempty arrays.  A comment that
+// would read as a material definition is indented by a space.
+void write_ply(std::ostream& os, const PlyMesh& mesh);
 
 }  // namespace hh
 

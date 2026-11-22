@@ -148,10 +148,11 @@ void do_outmesh() {
   nooutput = true;
 }
 
-// Write the current mesh as a binary *.ply file on stdout, one PLY vertex per wedge (see WMesh::write_ply()).
+// Write the current mesh as a *.ply file (binary unless PLY_BINARY=0) on stdout, one PLY vertex per wedge (see
+// WMesh::write_ply()).
 void do_outply() {
   HH_TIMER("_write_ply");
-  pmi->write_ply(std::cout, pmi->rstream()._info, true);
+  pmi->write_ply(std::cout, pmi->rstream()._info);
   std::cout.flush();
   nooutput = true;
 }
@@ -1468,7 +1469,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(info, ": output stats on current mesh");
   HH_ARGSD(minfo, ": output more stats on current mesh");
   HH_ARGSD(outmesh, ": output mesh");
-  HH_ARGSD(outply, ": output mesh as binary ply (vertex per wedge)");
+  HH_ARGSD(outply, ": output mesh as ply (vertex per wedge)");
   HH_ARGSD(outsmesh, ": output full-res simple mesh (split wedges) with 'parent' keys");
   HH_ARGSD(geom_nfaces, "nf : output geomorph up to nf faces");
   HH_ARGSC(HH_ARGS_INDENT "Output selectively refined meshes and geomorphs:");

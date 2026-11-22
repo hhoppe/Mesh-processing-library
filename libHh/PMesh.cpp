@@ -253,7 +253,7 @@ inline Pixel pack_color(const A3dColor& col) { return Vector4(col[0], col[1], co
 
 }  // namespace
 
-void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) const {
+void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo) const {
   // Each PLY vertex is a wedge; the trailing element "wedge_vertex" identifies its vertex unless that is the identity.
   PlyMesh ply;
   const int nw = _wedges.num();
@@ -285,7 +285,7 @@ void WMesh::write_ply(std::ostream& os, const PMeshInfo& pminfo, bool binary) co
   }
   for_int(matid, _materials.num()) ply.materials.push(_materials.get(matid));
   ply.add_comment_lines(diagnostics_transcript());
-  hh::write_ply(os, ply, binary);
+  hh::write_ply(os, ply);
 }
 
 GMesh WMesh::extract_gmesh(const PMeshInfo& pminfo) const {

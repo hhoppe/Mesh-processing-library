@@ -879,8 +879,7 @@ void write_parameterized_ply(PMeshIter pmi, CArrayView<Point> sphmap, bool split
   }
   if (split_meridian) split_awmesh_along_prime_meridian(pmi);
   hh_clean_up();
-  const bool binary = true;
-  pmi.write_ply(std::cout, pminfo, binary);
+  pmi.write_ply(std::cout, pminfo);
 }
 
 bool will_write_ply(const ParseArgs& args_) {

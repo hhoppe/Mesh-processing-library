@@ -269,8 +269,7 @@ void do_outmesh(Args& args) {
 
 void do_outply(Args& args) {
   WFile fi(args.get_filename());
-  const bool binary = true;
-  compact_awmesh(mesh).write_ply(fi(), full_mesh_info(mesh), binary);
+  compact_awmesh(mesh).write_ply(fi(), full_mesh_info(mesh));
   assertx(fi());
 }
 

@@ -42,7 +42,8 @@ void show_summary(const PlyMesh& mesh) {
 
 PlyMesh round_trip(const PlyMesh& mesh, bool binary) {
   std::ostringstream oss;
-  write_ply(oss, mesh, binary);
+  my_setenv("PLY_BINARY", binary ? "1" : "0");
+  write_ply(oss, mesh);
   std::istringstream iss(oss.str());
   PlyMesh mesh2 = read_ply(iss);
   assertx(iss.peek() == std::char_traits<char>::eof());  // The reader consumed exactly the PLY data.
@@ -89,7 +90,8 @@ void test_round_trip() {
   }
   {
     std::ostringstream oss;
-    write_ply(oss, mesh, false);
+    my_setenv("PLY_BINARY", "0");
+    write_ply(oss, mesh);
     showf("%s", oss.str().c_str());
     // Read the PLY file as a GMesh, whose vertex 1 (with two wedges) gets corner strings.
     std::istringstream iss(oss.str());
@@ -138,7 +140,8 @@ void test_wmesh() {
   wmesh._faces.push(PmFace{V(4, 5, 3), PmFaceAttrib{1}});
   wmesh.ok();
   std::ostringstream oss;
-  wmesh.write_ply(oss, pminfo, true);
+  my_setenv("PLY_BINARY", "1");
+  wmesh.write_ply(oss, pminfo);
   std::istringstream iss(oss.str());
   const PlyMesh mesh = read_ply(iss);
   show_summary(mesh);
@@ -174,7 +177,8 @@ void test_gmesh_to_ply() {
   gmesh.read(iss);
   const PlyMesh mesh = gmesh.to_ply();
   std::ostringstream oss;
-  write_ply(oss, mesh, false);
+  my_setenv("PLY_BINARY", "0");
+  write_ply(oss, mesh);
   showf("%s", oss.str().c_str());
   std::istringstream iss2(oss.str());
   GMesh gmesh2;

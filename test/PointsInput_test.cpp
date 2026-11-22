@@ -48,7 +48,7 @@ string binary_ply() {
   ply.normals = {Vector(1.f, 0.f, 0.f), Vector(0.f, 1.f, 0.f), Vector(0.f, 0.f, 1.f)};
   ply.comments = {"Binary point set"};
   std::ostringstream oss;
-  write_ply(oss, ply, true);
+  write_ply(oss, ply);
   return oss.str();
 }
 

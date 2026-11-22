@@ -94,8 +94,8 @@ CGridView<D, T>             (const elements)
 - `RA3dStream`, `WA3dStream`: reading and writing streams of polygons, polylines, and points (`*.a3d`).
 - `PointsInput`: reading a set of points (with normals) from a stream of points (`*.pts`) or a `*.ply` file.
 - `read_ply()`, `write_ply()`: read and write a polygon mesh (`PlyMesh`) as a Stanford `*.ply` file, ASCII or
-  binary, with optional trailing elements that identify the mesh vertex of each wedge, the face materials, and
-  further per-wedge attributes.
+  binary (written in binary unless the environment variable `PLY_BINARY` is 0), with optional trailing elements that
+  identify the mesh vertex of each wedge, the face materials, and further per-wedge attributes.
 - `Pixel`: RGBA color with 8-bit channels (a `Vec4<uint8_t>`).
 - `Image`: 2D grid of `Pixel`s (a `Matrix<Pixel>`) with file input and output.
 - `feather_sphere_image()`: blends the pixels across the discontinuities of the image of a spherical domain.

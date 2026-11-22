@@ -11,6 +11,9 @@ namespace hh {
 // Compute a stretch-minimizing spherical parameterization of a triangle mesh,
 // i.e., an assignment of spherical coordinates `sph` to the mesh vertices that minimizes a stretch metric over
 // the map from the spherical triangles to the surface mesh triangles.  See `compute()`.
+// The stretch energy (or the inverse stretch, with `optimize_inverse`) is augmented by an anti-cruft term, the
+// sixth power of the inverse L^infinity stretch, weighted by `conformal_weight`.  A small weight merely regularizes
+// the map, whereas a large weight makes this term dominate, so that the map becomes approximately conformal.
 class SphereMapper {
  public:
   struct Options {
@@ -20,7 +23,7 @@ class SphereMapper {
     bool wait_on_visualizer{false};   // Wait for user to close the visualizer window.
     bool fix_base{false};             // Never update the sph values of the base mesh vertices.
     bool optimize_inverse{false};     // Minimize inverse stretch (from sph to surface) instead of regular stretch.
-    float conformal_weight{1e-4f};    // Small amount of anti-cruft (inverse L^infinity stretch) for regularization.
+    float conformal_weight{1e-4f};    // Anti-cruft term; small (1e-4) regularizes; large (1e3) gives ~conformal.
     float hole_weight{1e-5f};         // Weight for faces marked with "hole" string.
     bool respect_sharp_edges{false};  // Optimize only tangentially along wedge discontinuities.
     bool flatten_to_x0{false};        // Override surface coordinate x = 0 (for flat octahedron domain surface).

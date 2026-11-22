@@ -911,7 +911,7 @@ int main(int argc, const char** argv) {
   HH_ARGSF_O(wait_on_visualizer, ": exit only after user closes G3dOGL viewer");
   HH_ARGSF_O(fix_base, ": freeze all vertices of the base mesh");
   HH_ARGSF_O(optimize_inverse, ": minimize reciprocal stretch sphere_dist/mesh_dist");
-  HH_ARGSP_O(conformal_weight, "w : weight for regularization energy term");
+  HH_ARGSP_O(conformal_weight, "w : anti-cruft weight (large approximates conformal)");
   HH_ARGSP_O(hole_weight, "w : factor for faces marked with 'hole'");
   HH_ARGSF_O(respect_sharp_edges, ": for consistent parameterization");
   HH_ARGSF_O(flatten_to_x0, ": set surface coordinate x = 0 (for flat octahedron)");

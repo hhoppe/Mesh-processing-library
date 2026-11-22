@@ -21,6 +21,13 @@ const FlagMask GMesh::eflag_sharp = Mesh::allocate_Edge_flag();
 void swap(GMesh& l, GMesh& r) noexcept {
   ranges::swap(implicit_cast<Mesh&>(l), implicit_cast<Mesh&>(r));
   ranges::swap(l._os, r._os);
+  const auto swap_flags = [](std::atomic<bool>& a, std::atomic<bool>& b) {
+    a.store(b.exchange(a.load(GMesh::k_relaxed), GMesh::k_relaxed), GMesh::k_relaxed);
+  };
+  swap_flags(l._may_have_vertex_strings, r._may_have_vertex_strings);
+  swap_flags(l._may_have_face_strings, r._may_have_face_strings);
+  swap_flags(l._may_have_edge_strings, r._may_have_edge_strings);
+  swap_flags(l._may_have_corner_strings, r._may_have_corner_strings);
 }
 
 void GMesh::copy(const GMesh& m) {
@@ -343,13 +350,25 @@ void GMesh::update_string_ptr(unique_ptr<char[]>& ss, const char* key, const cha
   if (arnew) ss = std::move(arnew);
 }
 
-void GMesh::update_string(Vertex v, const char* key, const char* val) { update_string_ptr(v->_string, key, val); }
+void GMesh::update_string(Vertex v, const char* key, const char* val) {
+  update_string_ptr(v->_string, key, val);
+  note_string(_may_have_vertex_strings, v->_string);
+}
 
-void GMesh::update_string(Face f, const char* key, const char* val) { update_string_ptr(f->_string, key, val); }
+void GMesh::update_string(Face f, const char* key, const char* val) {
+  update_string_ptr(f->_string, key, val);
+  note_string(_may_have_face_strings, f->_string);
+}
 
-void GMesh::update_string(Edge e, const char* key, const char* val) { update_string_ptr(e->_string, key, val); }
+void GMesh::update_string(Edge e, const char* key, const char* val) {
+  update_string_ptr(e->_string, key, val);
+  note_string(_may_have_edge_strings, e->_string);
+}
 
-void GMesh::update_string(Corner c, const char* key, const char* val) { update_string_ptr(c->_string, key, val); }
+void GMesh::update_string(Corner c, const char* key, const char* val) {
+  update_string_ptr(c->_string, key, val);
+  note_string(_may_have_corner_strings, c->_string);
+}
 
 // I/O
 

@@ -1592,71 +1592,89 @@ void mesh_init(GMesh& mesh) {
     have_vnors.remove(&mesh);
     have_fnors.remove(&mesh);
     map_mfa.remove(&mesh);  // Remove may return empty array.
-    for (Vertex v : mesh.vertices()) {
-      VertexLOD& vlod = v_lod(v);
-      if (g3d::lod_mode && parse_key_vec(mesh.get_string(v), "Opos", vlod.Opos)) vlod.Npos = mesh.point(v);
-      A3dColor co;
-      if (parse_key_vec(mesh.get_string(v), "rgb", co)) {
-        mesh.gflags().flag(mflag_v_colors) = true;
-        mesh.flags(v).flag(vflag_color) = true;
-        v_color(v) = pack_color(co);
-        if (g3d::lod_mode) {
-          vlod.Nd = v_color(v);
-          if (parse_key_vec(mesh.get_string(v), "Orgb", co)) {
-            vlod.Od = pack_color(co);
-          } else {
-            vlod.Od = pack_color(A3dColor(1.f, 1.f, 0.f));  // Yellow.
-          }
-        }
-      }
-      const bool has_c_color =
-          ranges::any_of(mesh.corners(v), [&](Corner c) { return GMesh::string_has_key(mesh.get_string(c), "rgb"); });
-      if (has_c_color) {
-        if (mesh.flags(v).flag(vflag_color).set(false)) Warning("Found both vertex and corner rgb");
-        mesh.gflags().flag(mflag_c_colors) = true;
-        mesh.flags(v).flag(vflag_c_color) = true;
-        for (Corner c : mesh.corners(v)) {
-          if (!parse_key_vec(mesh.get_string(c), "rgb", co)) {
-            Warning("corner missing color");
-            co = A3dColor(0.f, 0.f, 0.f);
-          }
-          c_color(c) = pack_color(co);
+    // Each vertex or face string costs one access per element, but the corner strings require traversing the ring
+    //  of each vertex, so that traversal is skipped unless some corner may have a string or some vertex has a uv
+    //  (which its corners inherit).
+    const bool corner_strings = mesh.may_have_corner_strings();
+    bool any_vertex_uv = false;
+    if (mesh.may_have_vertex_strings()) {
+      for (Vertex v : mesh.vertices()) {
+        VertexLOD& vlod = v_lod(v);
+        if (g3d::lod_mode && parse_key_vec(mesh.get_string(v), "Opos", vlod.Opos)) vlod.Npos = mesh.point(v);
+        A3dColor co;
+        if (parse_key_vec(mesh.get_string(v), "rgb", co)) {
+          mesh.gflags().flag(mflag_v_colors) = true;
+          mesh.flags(v).flag(vflag_color) = true;
+          v_color(v) = pack_color(co);
           if (g3d::lod_mode) {
-            c_lod(c).Nd = c_color(c);
-            constexpr A3dColor k_orange(1.f, .8f, .5f);
-            // Assign a local Pixel: gcc (without -march=native) would otherwise split pack_color() into four byte
-            // stores into the Sac storage and misreport them as overflowing BaseSac::_a[k_dummy].
-            const Pixel pixel = pack_color(parse_key_vec(mesh.get_string(c), "Orgb", co) ? co : k_orange);
-            c_lod(c).Od = pixel;
+            vlod.Nd = v_color(v);
+            if (parse_key_vec(mesh.get_string(v), "Orgb", co)) {
+              vlod.Od = pack_color(co);
+            } else {
+              vlod.Od = pack_color(A3dColor(1.f, 1.f, 0.f));  // Yellow.
+            }
           }
         }
-      }
-      if (1) {
-        Uv vuv(BIGFLOAT, BIGFLOAT);
+        Uv vuv;
         if (parse_key_vec(mesh.get_string(v), "uv", vuv)) {
+          any_vertex_uv = true;
           mesh.gflags().flag(mflag_uv) = true;
           if (g3d::lod_mode && parse_key_vec(mesh.get_string(v), "Ouv", v_lod(v).Ouv))
             assertx(parse_key_vec(mesh.get_string(v), "uv", v_lod(v).Nuv));
         }
-        for (Corner c : mesh.corners(v)) {
+      }
+    }
+    if (corner_strings || any_vertex_uv) {
+      const auto set_corner_color = [&](Corner c, const A3dColor& co) {
+        c_color(c) = pack_color(co);
+        if (g3d::lod_mode) {
+          c_lod(c).Nd = c_color(c);
+          constexpr A3dColor k_orange(1.f, .8f, .5f);
+          A3dColor oco;
+          // Assign a local Pixel: gcc (without -march=native) would otherwise split pack_color() into four byte
+          // stores into the Sac storage and misreport them as overflowing BaseSac::_a[k_dummy].
+          const Pixel pixel = pack_color(parse_key_vec(mesh.get_string(c), "Orgb", oco) ? oco : k_orange);
+          c_lod(c).Od = pixel;
+        }
+      };
+      for (Vertex v : mesh.vertices()) {
+        Uv vuv(BIGFLOAT, BIGFLOAT);
+        if (any_vertex_uv) (void)parse_key_vec(mesh.get_string(v), "uv", vuv);
+        int num_corners = 0, num_colored = 0;
+        for (Corner c : mesh.corners(v)) {  // A single traversal for both the colors and the uvs.
+          num_corners++;
+          if (A3dColor co; corner_strings && parse_key_vec(mesh.get_string(c), "rgb", co)) {
+            num_colored++;
+            set_corner_color(c, co);
+          }
           Uv& uv = c_uv(c);
-          if (parse_key_vec(mesh.get_string(c), "uv", uv))
+          if (corner_strings && parse_key_vec(mesh.get_string(c), "uv", uv))
             mesh.gflags().flag(mflag_uv) = true;
           else
             uv = vuv;
         }
+        if (num_colored) {
+          if (mesh.flags(v).flag(vflag_color).set(false)) Warning("Found both vertex and corner rgb");
+          mesh.gflags().flag(mflag_c_colors) = true;
+          mesh.flags(v).flag(vflag_c_color) = true;
+          if (num_colored < num_corners) {
+            for (Corner c : mesh.corners(v)) {
+              if (GMesh::string_has_key(mesh.get_string(c), "rgb")) continue;
+              Warning("corner missing color");
+              set_corner_color(c, A3dColor(0.f, 0.f, 0.f));
+            }
+          }
+        }
       }
     }
-    for (Face f : mesh.faces()) {
-      // if (!mesh.is_triangle(f)) {
-      //   mesh.polygon(f, poly);
-      //   if (!poly.is_convex() && !num_concave++) Warning("Have concave polygons in mesh");
-      // }
-      A3dColor co;
-      if (parse_key_vec(mesh.get_string(f), "rgb", co)) {
-        mesh.gflags().flag(mflag_f_colors) = true;
-        mesh.flags(f).flag(fflag_color) = true;
-        f_color(f) = pack_color(co);
+    if (mesh.may_have_face_strings()) {
+      for (Face f : mesh.faces()) {
+        A3dColor co;
+        if (parse_key_vec(mesh.get_string(f), "rgb", co)) {
+          mesh.gflags().flag(mflag_f_colors) = true;
+          mesh.flags(f).flag(fflag_color) = true;
+          f_color(f) = pack_color(co);
+        }
       }
     }
   }

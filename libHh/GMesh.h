@@ -2,6 +2,7 @@
 #ifndef MESH_PROCESSING_LIBHH_GMESH_H_
 #define MESH_PROCESSING_LIBHH_GMESH_H_
 
+#include <atomic>
 #include <cstring>  // memcpy()
 
 #include "libHh/LineWriter.h"
@@ -97,14 +98,25 @@ class GMesh : public Mesh {
   [[nodiscard]] const char* corner_key(string& str, Corner c, const char* key) const;  // Corner | Vertex
   bool parse_corner_key_vec(Corner c, const char* key, ArrayView<float> ar) const;     // Corner | Vertex
   // Copies the string.
-  void set_string(Vertex v, const char* s) { v->_string = make_unique_c_string(s); }
-  void set_string(Face f, const char* s) { f->_string = make_unique_c_string(s); }
-  void set_string(Edge e, const char* s) { e->_string = make_unique_c_string(s); }
-  void set_string(Corner c, const char* s) { c->_string = make_unique_c_string(s); }
-  void set_string(Vertex v, unique_ptr<char[]> s) { v->_string = std::move(s); }
-  void set_string(Face f, unique_ptr<char[]> s) { f->_string = std::move(s); }
-  void set_string(Edge e, unique_ptr<char[]> s) { e->_string = std::move(s); }
-  void set_string(Corner c, unique_ptr<char[]> s) { c->_string = std::move(s); }
+  void set_string(Vertex v, const char* s) {
+    note_string(_may_have_vertex_strings, v->_string = make_unique_c_string(s));
+  }
+  void set_string(Face f, const char* s) { note_string(_may_have_face_strings, f->_string = make_unique_c_string(s)); }
+  void set_string(Edge e, const char* s) { note_string(_may_have_edge_strings, e->_string = make_unique_c_string(s)); }
+  void set_string(Corner c, const char* s) {
+    note_string(_may_have_corner_strings, c->_string = make_unique_c_string(s));
+  }
+  void set_string(Vertex v, unique_ptr<char[]> s) { note_string(_may_have_vertex_strings, v->_string = std::move(s)); }
+  void set_string(Face f, unique_ptr<char[]> s) { note_string(_may_have_face_strings, f->_string = std::move(s)); }
+  void set_string(Edge e, unique_ptr<char[]> s) { note_string(_may_have_edge_strings, e->_string = std::move(s)); }
+  void set_string(Corner c, unique_ptr<char[]> s) { note_string(_may_have_corner_strings, c->_string = std::move(s)); }
+  // Whether any vertex (face, edge, or corner) may have a string.  The flags are set by set_string() and
+  // update_string() and are never reset, so false guarantees that no element of that type has a string, which lets
+  // a client skip, e.g., traversing all the corners.
+  [[nodiscard]] bool may_have_vertex_strings() const { return _may_have_vertex_strings.load(k_relaxed); }
+  [[nodiscard]] bool may_have_face_strings() const { return _may_have_face_strings.load(k_relaxed); }
+  [[nodiscard]] bool may_have_edge_strings() const { return _may_have_edge_strings.load(k_relaxed); }
+  [[nodiscard]] bool may_have_corner_strings() const { return _may_have_corner_strings.load(k_relaxed); }
   [[nodiscard]] static string string_update(const string& s, const char* key, const char* val);
   void update_string(Vertex v, const char* key, const char* val);
   void update_string(Face f, const char* key, const char* val);
@@ -151,6 +163,14 @@ class GMesh : public Mesh {
 
  private:
   std::ostream* _os{nullptr};  // For record_changes().
+  // (Atomic, as strings may be set from parallel threads; a flag is written only when first set, to avoid
+  // contention on its cache line.)
+  static constexpr auto k_relaxed = std::memory_order_relaxed;
+  std::atomic<bool> _may_have_vertex_strings{false}, _may_have_face_strings{false};
+  std::atomic<bool> _may_have_edge_strings{false}, _may_have_corner_strings{false};
+  static void note_string(std::atomic<bool>& flag, const unique_ptr<char[]>& s) {
+    if (s && !flag.load(k_relaxed)) flag.store(true, k_relaxed);
+  }
 
   // Read the rest of a Wavefront OBJ file into the empty mesh, as the former Perl script obj_to_mesh did, given its
   // first line that is neither blank nor a comment.  Vertices get the strings uv, normal, and rgb (from

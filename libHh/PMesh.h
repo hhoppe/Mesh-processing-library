@@ -454,7 +454,9 @@ class PMeshRStream : noncopyable {
   int _vspliti{-1};         // Defined if _pm; next to read from _pm->_vsplits; -1 before base_mesh is read.
   Vsplit _tmp_vspl;         // Defined if !_pm.
   bool _vspl_ready{false};  // Defined if !_pm; true if _tmp_vspl is only peeked.
-  AWMesh _lbase_mesh;       // Used to store the base mesh if !_pm.
+  // If _pm, the vsplit k after the next one (reading it into _pm if needed), or nullptr if past the end.
+  [[nodiscard]] const Vsplit* vsplit_ahead(int k);
+  AWMesh _lbase_mesh;  // Used to store the base mesh if !_pm.
 };
 
 // Progressive mesh iterator (is an AWMesh!).
@@ -473,6 +475,7 @@ class PMeshIter : public AWMesh {
   friend PMesh;  // For PMesh::truncate_*().
   PMeshRStream& _pmrs;
   bool next_ancestry(Ancestry* ancestry);
+  void prefetch_vsplits(bool forward);  // For the vsplits to be applied next (forward) or undone next (!forward).
   bool goto_nvertices_ancestry(int nvertices, Ancestry* ancestry);
   bool goto_nfaces_ancestry(int nfaces, Ancestry* ancestry);
   // Default operator=() is disabled due to reference; default copy_constructor is safe.

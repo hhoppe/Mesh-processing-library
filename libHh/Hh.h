@@ -132,6 +132,16 @@
 #define HH_UNREACHABLE __builtin_unreachable()
 #endif
 
+// Hint that the memory at address p will soon be read, to start loading it into the cache.  (There is no standard.)
+#if defined(__GNUC__) || defined(__clang__)
+#define HH_PREFETCH(p) __builtin_prefetch(p)
+#elif defined(_MSC_VER) && (defined(_M_X64) || defined(_M_IX86))
+#include <xmmintrin.h>  // _mm_prefetch()
+#define HH_PREFETCH(p) _mm_prefetch(reinterpret_cast<const char*>(p), _MM_HINT_T0)
+#else
+#define HH_PREFETCH(p) (void(p))
+#endif
+
 #define HH_ID(x) HH_CAT(_hh_id_, x)  // Private identifier in a macro definition.
 #define HH_UNIQUE_ID(x) HH_CAT2(HH_CAT2(HH_CAT2(_hh_id_, __COUNTER__), _), x)
 

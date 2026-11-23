@@ -1757,6 +1757,20 @@ const Vsplit* PMeshRStream::next_vsplit() {
   return pvspl;
 }
 
+// (Reading ahead stops at the trailer, so _vsplits never exceeds its reserved capacity _tot_nvsplits.)
+const Vsplit* PMeshRStream::vsplit_ahead(int k) {
+  assertx(_pm && _vspliti >= 0 && k >= 0);
+  const int i = _vspliti + k;
+  Array<Vsplit>& vsplits = _pm->_vsplits;
+  while (vsplits.num() <= i) {
+    if (!_is || PMesh::at_trailer(*_is)) return nullptr;
+    if (vsplits.empty()) vsplits.reserve(_pm->_info._tot_nvsplits);
+    vsplits.add(1);
+    vsplits.last().read(*_is, _info);
+  }
+  return &vsplits[i];
+}
+
 const Vsplit* PMeshRStream::prev_vsplit() {
   assertx(_vspliti >= 0);
   assertx(is_reversible());       // Die if !_pm.
@@ -1769,7 +1783,46 @@ const Vsplit* PMeshRStream::prev_vsplit() {
 
 PMeshIter::PMeshIter(PMeshRStream& pmrs) : _pmrs(pmrs) { _pmrs.read_base_mesh(this); }
 
+// Applying or undoing a vsplit visits mesh elements scattered in memory (with a 10M-face mesh, it is limited by the
+// latency of the memory accesses), so prefetch those of the upcoming vsplits in stages.  Several vsplits ahead,
+// prefetch face flclw and its neighbors entry; a few vsplits ahead (when these are likely cached), prefetch its wedges
+// and its adjacent faces; and nearer still, prefetch their wedges and the vertex vs.  (The stream must be archived in
+// a PMesh to look ahead.)
+void PMeshIter::prefetch_vsplits(bool forward) {
+  constexpr int d1 = 8, d2 = 4, d3 = 2;
+  if (!_pmrs._pm) return;
+  // The vsplit k after the next one to be applied (forward) or undone (!forward).
+  const auto vsplit_at = [&](int k) -> const Vsplit* {
+    if (forward) return _pmrs.vsplit_ahead(k);
+    const int i = _pmrs._vspliti - 1 - k;
+    return i >= 0 ? &_pmrs._pm->_vsplits[i] : nullptr;
+  };
+  if (const Vsplit* vspl = vsplit_at(d1); vspl && vspl->flclw < _faces.num()) {
+    HH_PREFETCH(&_faces[vspl->flclw]);
+    HH_PREFETCH(&_fnei[vspl->flclw]);
+  }
+  if (const Vsplit* vspl = vsplit_at(d2); vspl && vspl->flclw < _faces.num()) {
+    const int f = vspl->flclw;
+    for (const int w : _faces[f].wedges) HH_PREFETCH(&_wedges[w]);
+    for (const int fn : _fnei[f].faces) {
+      if (fn < 0) continue;
+      HH_PREFETCH(&_faces[fn]);
+      HH_PREFETCH(&_fnei[fn]);
+    }
+  }
+  if (const Vsplit* vspl = vsplit_at(d3); vspl && vspl->flclw < _faces.num()) {
+    const int f = vspl->flclw;
+    for (const int fn : _fnei[f].faces) {
+      if (fn < 0) continue;
+      for (const int w : _faces[fn].wedges) HH_PREFETCH(&_wedges[w]);
+    }
+    const int vs_index = (vspl->code & Vsplit::VSINDEX_MASK) >> Vsplit::VSINDEX_SHIFT;
+    HH_PREFETCH(&_vertices[_wedges[_faces[f].wedges[vs_index]].vertex]);
+  }
+}
+
 bool PMeshIter::next_ancestry(Ancestry* ancestry) {
+  prefetch_vsplits(true);
   const Vsplit* vspl = _pmrs.next_vsplit();
   if (!vspl) return false;
   apply_vsplit(*vspl, rstream()._info, ancestry);
@@ -1777,6 +1830,7 @@ bool PMeshIter::next_ancestry(Ancestry* ancestry) {
 }
 
 bool PMeshIter::prev() {
+  prefetch_vsplits(false);
   const Vsplit* vspl = _pmrs.prev_vsplit();
   if (!vspl) return false;
   undo_vsplit(*vspl, rstream()._info);

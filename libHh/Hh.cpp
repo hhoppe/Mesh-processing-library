@@ -515,7 +515,50 @@ static bool isafile(int fd) {
 //
 // Difficulty: for Cygwin bash shell in _WIN32, we always see isatty1=0 and isatty2=0.
 
+// Set by keep_diagnostics_out_of_stdout(), which must precede determine_stdout_stderr_needs().
+static bool g_keep_diagnostics_out_of_stdout = false;
+static bool g_stdout_stderr_needs_determined = false;
+
+// Returns true if stdout and stderr are the same regular file, pipe, or socket (e.g. "app >&file" or
+// "app 2>&1 | app2"), but not the same terminal or null device.  On _WIN32, only the same disk file is detected,
+// because all pipes look alike to GetFileInformationByHandle().
+static bool stdout_and_stderr_share_file_or_pipe() {
+#if defined(_WIN32)
+  HANDLE handle1 = reinterpret_cast<HANDLE>(_get_osfhandle(1)), handle2 = reinterpret_cast<HANDLE>(_get_osfhandle(2));
+  BY_HANDLE_FILE_INFORMATION hfinfo1{}, hfinfo2{};
+  return GetFileType(handle1) == FILE_TYPE_DISK && GetFileType(handle2) == FILE_TYPE_DISK &&
+         GetFileInformationByHandle(handle1, &hfinfo1) && GetFileInformationByHandle(handle2, &hfinfo2) &&
+         hfinfo1.dwVolumeSerialNumber == hfinfo2.dwVolumeSerialNumber &&
+         hfinfo1.nFileIndexHigh == hfinfo2.nFileIndexHigh && hfinfo1.nFileIndexLow == hfinfo2.nFileIndexLow;
+#else
+  struct stat statbuf1 = {}, statbuf2 = {};
+  if (fstat(1, &statbuf1) || fstat(2, &statbuf2)) return false;
+  const auto mode = statbuf1.st_mode;
+  return (S_ISREG(mode) || S_ISFIFO(mode) || S_ISSOCK(mode)) && statbuf1.st_dev == statbuf2.st_dev &&
+         statbuf1.st_ino == statbuf2.st_ino;
+#endif
+}
+
+void keep_diagnostics_out_of_stdout() {
+  if (g_stdout_stderr_needs_determined)
+    assertnever("keep_diagnostics_out_of_stdout() must be called before any diagnostics are shown");
+  // The diagnostics written to std::cerr, including warnings and assertion failures, would corrupt the data.
+  if (stdout_and_stderr_share_file_or_pipe())
+    assertnever("Data written to stdout cannot share its file or pipe with stderr (e.g. as with '>&' or '2>&1')");
+  g_keep_diagnostics_out_of_stdout = true;
+}
+
+void keep_diagnostics_out_of_stdout_if_arg(int argc, const char** argv, std::string_view option) {
+  for_intL(i, 1, argc) {
+    if (argv[i] == option) {
+      keep_diagnostics_out_of_stdout();
+      return;
+    }
+  }
+}
+
 static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr, bool& pwant_ff) {
+  g_stdout_stderr_needs_determined = true;
   bool need_cout, need_cerr, want_ff;
   const bool isatty1 = !!HH_POSIX(isatty)(1), isatty2 = !!HH_POSIX(isatty)(2);  // _WIN32: isatty() often returns 64.
   bool same_cout_cerr;
@@ -545,7 +588,8 @@ static void determine_stdout_stderr_needs(bool& pneed_cout, bool& pneed_cerr, bo
   } else {
     want_ff = isafile(1) || !isafile(2);
   }
-  if (getenv_bool("NO_DIAGNOSTICS_IN_STDOUT")) {  // Could be set in main() by my_setenv().
+  // The environment variable could be set in main() by my_setenv(), but it then also affects child processes.
+  if (g_keep_diagnostics_out_of_stdout || getenv_bool("NO_DIAGNOSTICS_IN_STDOUT")) {
     need_cout = false;
     want_ff = false;
   }

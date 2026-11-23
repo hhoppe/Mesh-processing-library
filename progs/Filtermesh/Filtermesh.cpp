@@ -4316,9 +4316,7 @@ void do_assignwids() {
 // *** main
 
 int main(int argc, const char** argv) {
-  if (ranges::any_of(CArrayView(argv, argc).slice(1),
-                     [](const char* arg) { return arg == std::string_view("-toply"); }))
-    my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");  // A binary PLY file on stdout cannot be preceded by diagnostics.
+  keep_diagnostics_out_of_stdout_if_arg(argc, argv, "-toply");
   ParseArgs args(argc, argv);
   HH_ARGSC("A mesh is read from stdin or first arg except with the following arguments:");
   HH_ARGSD(creategrid, "ny nx : create grid of quads");
@@ -4340,7 +4338,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(tob3d, ": output binary a3d version of mesh");
   HH_ARGSD(endobject, ": output EndObject marker");
   HH_ARGSD(to_obj, "file.mtl : output Alias/Wavefront .obj file on stdout");
-  HH_ARGSD(toply, ": output ply (vertex per wedge)");
+  args.p("-toply[", do_toply, ": output ply (vertex per wedge)");
   HH_ARGSC("", ":");
   HH_ARGSD(angle, "deg : tag sharp edges");
   HH_ARGSD(cosangle, "fcos : tag sharp edges, acos(fcos)");

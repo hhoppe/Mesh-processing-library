@@ -2,6 +2,7 @@
 #include "libHh/Args.h"
 #include "libHh/ConsoleProgress.h"
 #include "libHh/FileIO.h"
+#include "libHh/GMesh.h"
 #include "libHh/PMesh.h"
 #include "libHh/Parallel.h"
 #include "libHh/RangeOp.h"
@@ -313,12 +314,12 @@ int main(int argc, const char** argv) {
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
   const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
   RFile fi(filename);
-  const MeshFileHeader header = read_mesh_header(fi());
+  GMeshInput input(fi());  // Just to read the header; we actually read into `WorkMesh mesh` below.
   showdf("%s", args.header().c_str());
   Timer timer("MeshToPm", Timer::EMode::always);
   {
     HH_TIMER("_readmesh");
-    read_mesh(fi(), header, mesh);
+    read_mesh(fi(), input.ply_header_lines(), mesh);
   }
   showdf("Read mesh: nvertices=%d nwedges=%d nfaces=%d nmaterials=%d\n", mesh.num_live_vertices(),
          full_mesh_info(mesh)._full_nwedges, mesh.num_live_faces(), mesh._materials.num());

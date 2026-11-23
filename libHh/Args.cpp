@@ -245,7 +245,11 @@ void ParseArgs::print_help() {
     const int pref = i != string::npos ? int(i) : 0;
     const int prefm1 = pref ? pref - 1 : pref;
     string s1 = o.str;
-    if (o.str.contains('[') && !o.str.contains(']')) s1 += ']';
+    if (s1.ends_with('[')) {
+      s1.pop_back();  // An option such as "-toply[" accepts only its exact name.
+    } else if (o.str.contains('[') && !o.str.contains(']')) {
+      s1 += ']';
+    }
     s1 += sform(" %.*s", prefm1, o.doc.c_str());
     s1 = sform(" %-28s %s", s1.c_str(), o.doc.c_str() + pref);
     if (s_default != "") s1 = sform("%-84s %s", s1.c_str(), s_default.c_str());
@@ -290,7 +294,11 @@ auto ParseArgs::match(const string& s, bool skip_options) -> const option* {
     }
     if (o.str[0] == '-' && skip_options) continue;
     if (o.str == "-" && s != "-") continue;  // Require exact match of "-".
-    const int lo = narrow_cast<int>(o.str.size());
+    // A name ending in '[' (e.g. "-toply[") accepts only itself, whereas a name like "-geom[etry" also accepts any
+    // extension of its part before the '[' (e.g. "-backcolor" for "-back[ground").
+    const bool exact_only = o.str.ends_with('[');
+    if (exact_only && s != std::string_view(o.str).substr(0, o.str.size() - 1)) continue;
+    const int lo = narrow_cast<int>(o.str.size()) - (exact_only ? 1 : 0);
     auto i = o.str.find('[');
     const int minfit = i != string::npos    ? narrow_cast<int>(i)
                        : _disallow_prefixes ? narrow_cast<int>(o.str.size())

@@ -236,6 +236,8 @@ class GMeshInput {
  public:
   explicit GMeshInput(std::istream& is);
   void read(GMesh& mesh);  // The mesh must be empty.
+  // Nonempty if the input is a PLY file, e.g. for a program that reads the rest of the input itself.
+  [[nodiscard]] const Array<string>& ply_header_lines() const { return _ply_header_lines; }
 
  private:
   std::istream& _is;

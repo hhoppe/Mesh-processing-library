@@ -593,29 +593,12 @@ void create_general_wedges(WorkMesh& mesh, RawMesh& raw) {
 
 }  // namespace
 
-MeshFileHeader read_mesh_header(std::istream& is) {
-  MeshFileHeader header;
-  if (is.peek() == 'p') {  // A .m file cannot start with 'p'.
-    header.is_ply = true;
-    header.ply_lines = read_ply_header(is);
-    // Echo the header comments (the provenance), as for the '#' lines of a mesh file.
-    for (const string& comment : ply_header_comments(header.ply_lines)) showff("|%s\n", comment.c_str());
-  } else {
-    string line;
-    while (is.peek() == '#') {
-      assertx(my_getline(is, line));
-      if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
-    }
-  }
-  return header;
-}
-
-void read_mesh(std::istream& is, const MeshFileHeader& header, WorkMesh& mesh) {
+void read_mesh(std::istream& is, CArrayView<string> ply_header_lines, WorkMesh& mesh) {
   assertx(mesh._vertices.empty());
   RawMesh raw;
   Array<Vector> ply_normals;
-  if (header.is_ply) {
-    PlyMesh ply = read_ply_body(is, header.ply_lines);
+  if (ply_header_lines.num()) {
+    PlyMesh ply = read_ply_body(is, ply_header_lines);
     ply_normals = mesh_from_ply(ply, mesh, raw);
   } else {
     read_mesh_m(is, mesh, raw);

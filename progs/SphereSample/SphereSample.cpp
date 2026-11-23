@@ -1033,13 +1033,10 @@ GMesh read_sphparam_mesh(const string& filename) {
   HH_TIMER("_read_sphparam_mesh");
   assertx(filename != "");
   RFile fi(filename);
-  for (string line; fi().peek() == '#';) {
-    assertx(my_getline(fi(), line));
-    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
-  }
+  GMeshInput input(fi());
   show_header();
   GMesh sphparam_mesh;
-  sphparam_mesh.read(fi());
+  input.read(sphparam_mesh);
   assertx(sphparam_mesh.num_faces());
   showdf("sphere map: nv=%d nf=%d\n", sphparam_mesh.num_vertices(), sphparam_mesh.num_faces());
   const bool normsph = getenv_bool("SPHERESAMPLE_NORMSPH");

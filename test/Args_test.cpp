@@ -126,6 +126,27 @@ void test_prefixes() {
     assertx(verbose);
     SHOW(unrecognized);
   }
+  {
+    // A '[' requires at least the part before it (which may be extended), and a trailing '[' the exact name.
+    bool geometry = false, toply = false, topology = false;
+    ParseArgs args(V<string>("prog", "-geomx", "-toply", "-top"));
+    args.f("-geom[etry", geometry, ": abbreviable down to -geom");
+    args.f("-toply[", toply, ": not abbreviable");
+    HH_ARGSF(topology, ": another flag");
+    assertx(args.parse() && geometry && toply && topology);
+  }
+  {
+    // An argument that abbreviates such an option too much, or that extends an exact name, is not recognized.
+    bool geometry = false, toply = false, verbose = false;
+    ParseArgs args(V<string>("prog", "-geo", "-topl", "-toplyx", "-verbosex"));
+    args.other_options_ok();
+    args.f("-geom[etry", geometry, ": abbreviable down to -geom");
+    args.f("-toply[", toply, ": not abbreviable");
+    HH_ARGSF(verbose, ": be verbose");
+    Array<string> unrecognized;
+    assertx(args.parse_and_extract(unrecognized));
+    assertx(!geometry && !toply && !verbose && unrecognized.num() == 5);
+  }
 }
 
 void phase0() {

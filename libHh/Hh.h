@@ -558,6 +558,17 @@ extern const char* g_comment_prefix_string;
 // spaces, e.g., to record the provenance of an output file that cannot start with '#' lines (such as a PLY file).
 [[nodiscard]] string diagnostics_transcript();
 
+// Keep the diagnostics of showdf() and showff() out of std::cout, which is to receive data that cannot be preceded by
+// '#' lines (e.g. a PLY file); they still reach std::cerr and diagnostics_transcript().  Must precede all diagnostics.
+// Unlike the environment variable NO_DIAGNOSTICS_IN_STDOUT, it does not affect child processes (e.g. those of
+// RFile("cmd |")).  Dies if stdout and stderr share a file or pipe (e.g. "app >&file"), where warnings would corrupt
+// the data.
+void keep_diagnostics_out_of_stdout();
+
+// Call keep_diagnostics_out_of_stdout() if some argument equals option, e.g. "-toply", which should be declared to
+// ParseArgs with a trailing '[' (e.g. "-toply[") so that no abbreviation of it is accepted.
+void keep_diagnostics_out_of_stdout_if_arg(int argc, const char** argv, std::string_view option);
+
 // Override "char*" output to detect nullptr in C-string.
 inline std::ostream& operator<<(std::ostream& os, const char* s);
 

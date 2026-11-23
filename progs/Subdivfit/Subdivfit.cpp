@@ -122,12 +122,9 @@ void show_header() {
 void do_mfilename(Args& args) {
   assertx(gmesh.empty());
   RFile fi(args.get_filename());
-  for (string line; fi().peek() == '#';) {
-    assertx(my_getline(fi(), line));
-    if (line.size() > 1) showff("|%s\n", line.substr(2).c_str());
-  }
+  GMeshInput input(fi());
   show_header();
-  gmesh.read(fi());
+  input.read(gmesh);
   showdf("Initial mesh: %s\n", mesh_genus_string(gmesh).c_str());
 }
 

@@ -6,18 +6,31 @@
 
 namespace hh {
 
+namespace {
+
+// Returns the character after the next one, which is put back.
+int peek_second_char(std::istream& is) {
+  is.get();
+  const int next = is.peek();
+  assertx(is.unget());
+  return next;
+}
+
+}  // namespace
+
 PointsInput::PointsInput(std::istream& is) : _is(is) {
   if (_is.peek() == '#') {
     for (string line; _is.peek() == '#';) {
       assertx(my_getline(_is, line));
       if (line.size() > 1) _provenance.push(line.substr(line[1] == ' ' ? 2 : 1));
     }
+    // E.g. diagnostics leaked into the stdout of a program that wrote the PLY file, which other readers reject.
+    if (_is.peek() == 'p' && peek_second_char(_is) == 'l')
+      assertnever("points: a PLY file must not be preceded by '#' lines");
   } else if (_is.peek() == 'p') {
     // Either a PLY file ("ply") or a text A3d stream starting with a point ("p x y z"); a binary A3d record starts with
-    // the byte 3.  Look at the second character, then put back the first.
-    _is.get();
-    const int next = _is.peek();
-    assertx(_is.unget());
+    // the byte 3.
+    const int next = peek_second_char(_is);
     if (next == ' ' || next == '\t') return;  // A3d.
     if (next != 'l') assertnever("points: the input starts with 'p' but is neither a PLY file nor an A3d stream");
     _ply_header_lines = read_ply_header(_is);

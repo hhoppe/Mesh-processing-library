@@ -410,6 +410,8 @@ void GMesh::read(std::istream& is) {
         const size_t i = line.find_first_not_of(" \t\r");
         if (i == string::npos || (line[i] == '#' && !line.starts_with("#MRGB "))) continue;
         seen_data = true;
+        // E.g. diagnostics leaked into the stdout of a program that wrote the PLY file, which other readers reject.
+        if (line == "ply") assertnever("GMesh::read(): a PLY file must not be preceded by '#' lines");
         if (is_obj_line(line)) {
           read_obj(is, line);
           break;
@@ -432,6 +434,8 @@ GMeshInput::GMeshInput(std::istream& is) : _is(is) {
       assertx(my_getline(_is, line, false));  // The comments may precede an OBJ file, whose DOS line endings are ok.
       if (line.size() > 1) showff("|%s\n", line.substr(line[1] == ' ' ? 2 : 1).c_str());
     }
+    // E.g. diagnostics leaked into the stdout of a program that wrote the PLY file, which other readers reject.
+    if (_is.peek() == 'p') assertnever("GMeshInput: a PLY file must not be preceded by '#' lines");
   }
 }
 

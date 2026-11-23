@@ -882,14 +882,6 @@ void write_parameterized_ply(PMeshIter pmi, CArrayView<Point> sphmap, bool split
   pmi.write_ply(std::cout, pminfo);
 }
 
-bool will_write_ply(const ParseArgs& args_) {
-  ParseArgs args{Array<string>{"dummy_arg0"}};
-  args.copy_parse(args_);
-  Array<string> strings;
-  while (args.num()) strings.push(args.get_string());
-  return strings.num() && strings.last() == "ply";
-}
-
 }  // namespace
 
 int main(int argc, const char** argv) {
@@ -903,6 +895,12 @@ int main(int argc, const char** argv) {
   string to = "mesh";
   bool nooutput = false;
 
+  {
+    // The last "-to" prevails, and "-to[" accepts no abbreviation.
+    std::string_view last_to;
+    for_intL(i, 1, argc - 1) if (argv[i] == std::string_view("-to")) last_to = argv[i + 1];
+    if (last_to == "ply") keep_diagnostics_out_of_stdout();
+  }
   ParseArgs args(argc, argv);
   HH_ARGSC("A progressive mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSP_O(verbose, "level : set output verbosity level (0..2)");
@@ -924,7 +922,7 @@ int main(int argc, const char** argv) {
   HH_ARGSP(original_indices, "file.txt : file containing the original vertex indices");
   HH_ARGSP(uv_map, "file.uv.sphparam.m : define uv from sph using inverse of a spherical map");
   HH_ARGSP(keep_uv, "bool : do not overwrite GMesh uv with lonlat coordinates");
-  HH_ARGSP(to, "format : set mesh output (mesh, pm, ply, original_mesh)");
+  args.p("-to[", to, "format : set mesh output (mesh, pm, ply, original_mesh)");
   HH_ARGSF(nooutput, ": do not output parameterized mesh");
   HH_ARGSC("Examples:");
   HH_ARGSC("  SphereParam cow.pm -rot s3d/cow.s3d >cow.sphparam.m");
@@ -932,7 +930,6 @@ int main(int argc, const char** argv) {
 
   const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
-  if (will_write_ply(args)) my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");
   const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
   RFile fi(filename);
   for (string line; fi().peek() == '#';) {

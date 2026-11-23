@@ -88,7 +88,8 @@ class ParseArgs : public Args {
   explicit ParseArgs(int& argc, const char**& argv);
   explicit ParseArgs(CArrayView<string> aargs, string name = "");
 
-  // Define options: (any prefix of string str is recognized unless it contains a '[' or disallow_prefixes() is set):
+  // Define options: (any prefix of string str is recognized unless it contains a '[' or disallow_prefixes() is set;
+  // a trailing '[', as in "-toply[", accepts only the exact name):
   void f(string str, bool& arg, string doc = "");  // Sets flag to true.
   void p(string str, bool& arg, string doc = "");  // Reads one parameter.
   void p(string str, char& arg, string doc = "");

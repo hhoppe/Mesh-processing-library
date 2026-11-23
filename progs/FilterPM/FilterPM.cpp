@@ -1452,9 +1452,7 @@ void do_polystream() {
 
 int main(int argc, const char** argv) {
   assertw(!sdebug);
-  if (ranges::any_of(CArrayView(argv, argc).slice(1),
-                     [](const char* arg) { return arg == std::string_view("-outply"); }))
-    my_setenv("NO_DIAGNOSTICS_IN_STDOUT", "1");  // A binary PLY file on stdout cannot be preceded by diagnostics.
+  keep_diagnostics_out_of_stdout_if_arg(argc, argv, "-outply");
   ParseArgs args(argc, argv);
   HH_ARGSC("A progressive mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSC(HH_ARGS_INDENT "Go to specific mesh:");
@@ -1469,7 +1467,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(info, ": output stats on current mesh");
   HH_ARGSD(minfo, ": output more stats on current mesh");
   HH_ARGSD(outmesh, ": output mesh");
-  HH_ARGSD(outply, ": output mesh as ply (vertex per wedge)");
+  args.p("-outply[", do_outply, ": output mesh as ply (vertex per wedge)");
   HH_ARGSD(outsmesh, ": output full-res simple mesh (split wedges) with 'parent' keys");
   HH_ARGSD(geom_nfaces, "nf : output geomorph up to nf faces");
   HH_ARGSC(HH_ARGS_INDENT "Output selectively refined meshes and geomorphs:");

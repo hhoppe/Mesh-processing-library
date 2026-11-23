@@ -67,7 +67,7 @@ for x in {0..1}; do
     echo nf=$nf >>$log
     mv $rl{.stitched.new,.full}.pm
     rm -f $rl.floats $rl.x{0,1}.y{0,1}.pm $rl.stitched.pm
-    echo Truncating the stitched progressive mesh based on the maximum residual error
+    echo Truncating the stitched progressive mesh based on the maximum residual
     FilterPM $rl.full.pm -maxresidd 1.0e-3 -truncate_prior >$rl.pm 2>>$log
     FilterPM $rl.pm -nfaces $nf -truncate_beyond >$r.l1t.x$x.y$y.pm 2>>$log
   done

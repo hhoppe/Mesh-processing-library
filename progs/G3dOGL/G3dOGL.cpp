@@ -3469,7 +3469,8 @@ void PmState::update_lod(bool output) {
   const float flevel = min(lod_level, 1.f);
   const int nv0 = pmesh->_base_mesh._vertices.num();
   const int nvsplits = pmesh->_info._tot_nvsplits;
-  const int nv = nv0 + int((nvsplits + 1) * flevel * .999999f);
+  // Apply floor(flevel * (nvsplits + 1)) vsplits, which spreads the levels evenly and applies all of them at 1.
+  const int nv = nv0 + min(int(double(nvsplits + 1) * flevel), nvsplits);
   pmi.goto_nvertices(nv);
   invalidate_dls();
   buffers_filled = edge_buffer_filled = false;
@@ -3538,6 +3539,19 @@ bool PmState::uses_buffers() const {
 // (With vertex colors, the faces are drawn with GL_SMOOTH to interpolate the colors, and keep the smooth normals.)
 bool PmState::flat_shaded() const { return !lsmooth && !pmesh->_info._has_rgb; }
 
+// Whether fill_buffers() reorders the faces of a PM in its buffer objects by an adjacency walk, while the view is
+// static.  (A PM drawn from buffer objects gets no display list, but the flag use_dl, which is cleared while the LOD
+// slider is dragged, served to defer the walk until the slider is released.)
+// On a 10M-face PM (Windows, RTX 3080 Ti, Nov 2026), the serial walk costs 1.0 s after each change of the level of
+// detail, and it only speeds up drawing the faces from 5.7 ms to 3.0 ms per frame, which is below the display
+// refresh interval at 120 Hz, so it is disabled.
+// The walk could instead run in the background: fill_buffers() would upload the unordered triangles and launch
+// std::async(std::launch::async, ...) to compute the reordered triangles, which then calls hw.wake_up(); draw()
+// would test the std::future with wait_for(0s) and, once it is ready, upload its result into buffers[2].  Because the
+// walk reads pmi._faces and pmi._fnei, update_lod() would first set a std::atomic<bool> that the walk polls to stop
+// early, and wait for the future, before changing the mesh.
+constexpr bool k_reorder_pm_faces = false;
+
 // Fill the buffers from the current mesh pmi: a position per wedge (also for the edges), and either the wedges as is
 // and the triangles grouped by material, or else (with flat shading) the flat_buffers.
 void PmState::fill_buffers(bool reorder) {
@@ -3574,10 +3588,10 @@ void PmState::fill_buffers(bool reorder) {
   // If reorder, order the faces by walking across adjacent faces of the same material, as triangle strips do, so
   // that consecutive triangles share vertices (the order of the faces in a progressive mesh has poor locality).
   // This walk costs more than the rest of this function, so it is omitted while the level of detail changes
-  // continuously (e.g., while dragging the slider, when display lists are disabled too).
+  // continuously (e.g., while dragging the slider, when use_dl is cleared).
   Array<int> order;
   order.reserve(nf);
-  Array<bool> visited(nf, false);
+  Array<bool> visited(reorder ? nf : 0, false);
   for_int(f0, nf) {
     if (!reorder) {
       order.push(f0);
@@ -3770,8 +3784,9 @@ void PmState::draw() {
   AWMesh& wmesh = pmi;
   const PMeshInfo& info = pmesh->_info;
   const bool use_buffers = uses_buffers();
-  if (use_buffers && (!buffers_filled || (use_dl && !buffers_reordered) || buffers_flat != flat_shaded()))
-    fill_buffers(use_dl);
+  const bool reorder = k_reorder_pm_faces && use_dl;
+  if (use_buffers && (!buffers_filled || (reorder && !buffers_reordered) || buffers_flat != flat_shaded()))
+    fill_buffers(reorder);
   if (!ledges || lshading) {
     // Option lquickmode not handled, nor option lsmooth without buffers.
     if (!use_buffers && !info._has_rgb) assertw(lsmooth);

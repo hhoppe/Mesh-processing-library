@@ -569,7 +569,8 @@ represented as
 - encoded selectively refinable meshes (`*.srm`),
 - progressive simplicial complexes (`*.psc`), or
 - polygon meshes or point sets in Stanford `*.ply` files (ASCII or binary), shown with their vertex normals, colors,
-  and texture coordinates (see [the PLY format](#stanford-ply-ply)).
+  and texture coordinates, and with their face colors if the vertices have none (see
+  [the PLY format](#stanford-ply-ply)).
 
 A Wavefront `*.obj` file is not read by the viewer itself, but `Filtermesh` converts it (see
 [the OBJ format](#wavefront-obj-obj)), e.g. `Filtermesh model.obj | G3dOGL`.

@@ -1250,7 +1250,7 @@ static const char* get_sinfo(const char* s_const) {
 }
 
 void GMesh::read_line(char* sline) {
-  if (sline[0] == '#') return;
+  if (sline[0] == '#' || sline[0] == 0) return;  // A comment or an empty line.
   switch (sline[0]) {
     case 'V':
       if (const char* s = after_prefix(sline, "Vertex ")) {

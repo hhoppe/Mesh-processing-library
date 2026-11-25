@@ -227,14 +227,22 @@ Array<Vector> mesh_from_ply(PlyMesh& ply, WorkMesh& mesh, RawMesh& raw) {
     mesh._faces[f].attrib.matid = 0;
     mesh._face_original_id[f] = ply.face_ids.num() ? ply.face_ids[f] : f + 1;
   }
-  const PlyMesh::Key* global_key = nullptr;
-  for (const PlyMesh::Key& wedge_key : ply.wedge_keys)
-    if (wedge_key.name == "global" && wedge_key.dim == 0) global_key = &wedge_key;
+  const auto find_wedge_key = [&](std::string_view name, int dim) -> const PlyMesh::Key* {
+    for (const PlyMesh::Key& wedge_key : ply.wedge_keys)
+      if (wedge_key.name == name && wedge_key.dim == dim) return &wedge_key;
+    return nullptr;
+  };
+  const PlyMesh::Key* global_key = find_wedge_key("global", 0);
+  // A normal, rgb, or uv that only some wedges have is an element "wedge_<key>" rather than a standard property; it
+  // is recorded as in a .m file, so that the same checks (e.g., uv on all corners) apply.
+  const PlyMesh::Key* normal_key = find_wedge_key("normal", 3);
+  const PlyMesh::Key* rgb_key = find_wedge_key("rgb", 3);
+  const PlyMesh::Key* uv_key = find_wedge_key("uv", 2);
   const bool has_sharp_key =
       ranges::any_of(ply.edge_keys, [](const PlyMesh::Key& edge_key) { return edge_key.name == "sharp"; });
   const bool needs_strings = has_wid || ply.colors.num() || ply.uvs.num() || ply.corner_uvs.num() ||
                              ply.materials.num() || ply.face_keys.num() || ply.face_colors.num() || global_key ||
-                             has_sharp_key;
+                             has_sharp_key || normal_key || rgb_key || uv_key;
   if (!needs_strings) return std::move(ply.normals);
   raw.any_strings = true;
   // The face strings.
@@ -247,11 +255,19 @@ Array<Vector> mesh_from_ply(PlyMesh& ply, WorkMesh& mesh, RawMesh& raw) {
     raw.face_string[f] = index;
   }
   // The attributes of the wedges.
+  // Copy the value of the wedge key at wedge w unless it is absent (NaN).
+  const auto copy_key_value = [](const PlyMesh::Key* key, int w, auto& value) {
+    if (!key || std::isnan(key->values[w * key->dim])) return;
+    for_int(c, key->dim) value[c] = key->values[w * key->dim + c];
+  };
   const auto wedge_info = [&](int w) {
     AttribInfo info;
     if (ply.normals.num()) info.normal = ply.normals[w];
     if (ply.colors.num()) for_int(c, 3) info.rgb[c] = ply.colors[w][c] / 255.f;
     if (ply.uvs.num()) info.uv = ply.uvs[w];
+    copy_key_value(normal_key, w, info.normal);
+    copy_key_value(rgb_key, w, info.rgb);
+    copy_key_value(uv_key, w, info.uv);
     return info;
   };
   raw.vertex_info.init(nv, -1);

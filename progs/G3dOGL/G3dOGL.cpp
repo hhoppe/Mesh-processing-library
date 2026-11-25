@@ -5286,8 +5286,9 @@ bool PlyState::uses_buffers() const {
   // Corner uvs need a uv per corner, which an indexed vertex lacks.  Flat shading with vertex colors interpolates the
   // colors (GL_SMOOTH) and therefore needs the face normal at every corner.
   // Without shading, the faces are drawn as outlines, which must not show the triangulation of a polygon.
+  // Face colors (used if there are no vertex colors) are drawn only in immediate mode.
   const bool faces_ok = !(texture_active && !mesh->corner_uvs.empty()) && (lsmooth || mesh->colors.empty()) &&
-                        (lshading || all_triangles);
+                        (lshading || all_triangles) && (mesh->face_colors.empty() || !mesh->colors.empty());
   return mesh->num_faces() > 0 && (!draws_faces || faces_ok) && buffer_objects_supported();
 }
 
@@ -5445,6 +5446,7 @@ void PlyState::draw_faces_immediate() const {
   const CArrayView<Pixel> ply_vrgb = ply_mesh.colors;
   const CArrayView<Uv> ply_vuv = ply_mesh.uvs;
   const CArrayView<Uv> ply_fuv = ply_mesh.corner_uvs;
+  const bool use_face_rgb = ply_vrgb.empty() && ply_mesh.face_colors.num();  // Face colors if no vertex colors.
   const int nf = ply_mesh.num_faces();
   const int buffer_ntriangles = g_is_ati ? std::numeric_limits<int>::max() : 32;
   int ntriangles = 0;
@@ -5468,6 +5470,7 @@ void PlyState::draw_faces_immediate() const {
       Vector fnormal = ok_normalized(cross(ply_vpos[indices[0]], ply_vpos[indices[1]], ply_vpos[indices[2]]));
       glNormal3fv(fnormal.data());
     }
+    if (use_face_rgb) glColor4ubv(ply_mesh.face_colors[i].data());
     for_int(j, indices.num()) {
       const int vi = indices[j];
       if (texture_active) {

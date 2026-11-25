@@ -1,5 +1,6 @@
 Vertex 1  .5 1e10 2e10 {example vertex}
 Vertex 3  2 3 4
+
 Vertex 7  1 2 3.5
 Vertex 4  5 6 7
 Vertex 5  0 0 0

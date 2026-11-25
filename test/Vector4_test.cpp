@@ -71,7 +71,9 @@ void test_consistency() {
   SHOW(num_add, num_sub, num_scalar, num_min_max, num_neg, num_abs, num_sqrt);
 }
 
-// Element access, iteration, loads and stores, and the compound assignment operators.
+// Element access, iteration, loads and stores, and the compound assignment operators.  (Under MSVC -fp:fast, the
+// division of constant vectors would be evaluated as a multiplication by reciprocals, which is inexact.)
+HH_BEGIN_PRECISE_FLOAT;
 void test_interface() {
   const Vector4 v1(1.f, 2.f, 3.f, 4.f), v2(8.f, 7.f, 6.f, 5.f);
   assertx(v1.size() == 4 && Vector4::ok(3) && !Vector4::ok(4) && !Vector4::ok(-1));
@@ -118,6 +120,8 @@ void test_interface() {
     assertx(dist2(v, to_Vector4_norm(pixel)) == 0.f && v.pixel() == pixel);
   }
 }
+
+HH_END_PRECISE_FLOAT;
 
 // Conversions between floats and bytes.
 void test_conversions() {

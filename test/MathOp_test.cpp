@@ -175,10 +175,9 @@ void test_bspline_properties() {
 
 }  // namespace
 
-#if defined(_MSC_VER) && !defined(__clang__)
-// Under -fp:fast, the optimizer folds 0.f / float_zero to 0 rather than producing NaN.
-#pragma float_control(precise, on)
-#endif
+// Under MSVC -fp:fast, the optimizer folds 0.f / float_zero to 0 rather than producing NaN.  (This applies to the
+// rest of the file.)
+HH_BEGIN_PRECISE_FLOAT;
 
 int main() {
   {
@@ -252,7 +251,7 @@ int main() {
     func_show_float(a);
     a = create_nanf(0x003fffff);
     func_show_float(a);
-    SHOW(std::isfinite(0.f / float_zero));  // See "#pragma float_control(precise, on)" above.
+    SHOW(std::isfinite(0.f / float_zero));  // See "HH_BEGIN_PRECISE_FLOAT" above.
   }
   {
     const int vm4mod7 = my_mod(-4, 7);

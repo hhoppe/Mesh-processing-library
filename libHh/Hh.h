@@ -81,9 +81,21 @@
 #endif
 
 #if defined(_MSC_VER) && !defined(HH_NO_LIB_REFERENCES)
-#define HH_REFERENCE_LIB(libstring) HH_PRAGMA(comment(lib, libstring))  // E.g.: HH_REFERENCE_LIB("user32.lib");
+// E.g.: HH_REFERENCE_LIB("user32.lib");
+#define HH_REFERENCE_LIB(libstring) HH_PRAGMA(comment(lib, libstring)) HH_EAT_SEMICOLON
 #else
 #define HH_REFERENCE_LIB(libstring) HH_EAT_SEMICOLON
+#endif
+
+// Evaluate the enclosed declarations with precise floating-point semantics, overriding MSVC -fp:fast, which may
+// e.g. replace a division by a constant with a multiplication by its reciprocal.  Use at namespace scope:
+//   HH_BEGIN_PRECISE_FLOAT;  ...  HH_END_PRECISE_FLOAT;
+#if defined(_MSC_VER) && !defined(__clang__)
+#define HH_BEGIN_PRECISE_FLOAT HH_PRAGMA(float_control(precise, on, push)) HH_EAT_SEMICOLON
+#define HH_END_PRECISE_FLOAT HH_PRAGMA(float_control(pop)) HH_EAT_SEMICOLON
+#else
+#define HH_BEGIN_PRECISE_FLOAT HH_EAT_SEMICOLON
+#define HH_END_PRECISE_FLOAT HH_EAT_SEMICOLON
 #endif
 
 #if defined(__clang__)
@@ -1064,15 +1076,11 @@ constexpr int mod3(int j) {
   return j < 3 ? j : j - 3;
 }
 
-// Without the pragma, MSVC -fp:fast replaces the division by a multiplication with the reciprocal, giving e.g.
-// 0.29999998f rather than 0.3f, which the shortest round-trip output of LineWriter reveals.
-#if defined(_MSC_VER) && !defined(__clang__)
-#pragma float_control(precise, on, push)
-#endif
+// Without precise semantics, MSVC -fp:fast replaces the division by a multiplication with the reciprocal, giving
+// e.g. 0.29999998f rather than 0.3f, which the shortest round-trip output of LineWriter reveals.
+HH_BEGIN_PRECISE_FLOAT;
 template <typename T> constexpr T round_fraction_digits(T v, T fac) { return floor(v * fac + .5f) / fac; }
-#if defined(_MSC_VER) && !defined(__clang__)
-#pragma float_control(pop)
-#endif
+HH_END_PRECISE_FLOAT;
 
 template <typename T> string type_name() { return details::TypeNameAux<std::decay_t<T>>::name(); }
 

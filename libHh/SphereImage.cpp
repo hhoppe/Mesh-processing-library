@@ -5,6 +5,11 @@
 
 namespace hh {
 
+// The blend of two pixels whose channel sum is odd is exactly halfway between two 8-bit values in exact arithmetic,
+// so its rounding depends on the rounding errors of the float computation; precise semantics keep the result the
+// same under MSVC -fp:fast as in the other configurations.
+HH_BEGIN_PRECISE_FLOAT;
+
 namespace {
 
 void blend_pixels(Pixel& pixel0, Pixel& pixel1) {
@@ -79,5 +84,7 @@ void feather_sphere_image(Image& image, std::string_view domain) {
     assertnever("Sphere image domain '" + string(domain) + "' not recognized");
   }
 }
+
+HH_END_PRECISE_FLOAT;
 
 }  // namespace hh

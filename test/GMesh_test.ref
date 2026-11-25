@@ -114,6 +114,8 @@ b=''
 c='(2 3)'
 d='"x y"'
 e='-4'
+f='.25'
+g='+3'
 mesh.get_string(v3)=rgb=(1 0 0) mesh.get_string(v1)=normal=(0 0 1) mesh.get_string(f2)=mat=5 mesh.get_string(c32)=normal=(0 0 1)
 mesh.get_string(mesh.edge(v1, v5)) = crease
 mesh.get_string(f3)=mat=5 mesh.get_string(v5)=

@@ -50,7 +50,9 @@ class GMesh : public Mesh {
   // WMesh::extract_gmesh(): in its vertex string if it has a single wedge, else in the strings of its corners, except
   // that the keys with the same value on all its wedges stay in its vertex string.  These attributes are the normal,
   // the 8-bit color (as rgb), the uv, the per-wedge keys of the elements "wedge_<key>", and the wedge id (wid, only
-  // with "wedge_vertex").  Each face string is the string of its material.
+  // with "wedge_vertex").  Each face string is PlyMesh::face_string(): the string of its material followed by its
+  // per-face keys of the elements "face_<key>" and its face color (as rgb).  Each edge listed in the element "edge"
+  // gets PlyMesh::edge_string(), its per-edge keys of the elements "edge_<key>", and eflag_sharp if it has "sharp".
   [[nodiscard]] static GMesh from_ply(const PlyMesh& ply);
 
   // ** Extend functionality:
@@ -136,10 +138,14 @@ class GMesh : public Mesh {
   // Return the mesh as a PlyMesh (to be written by write_ply()), with one PLY vertex per wedge.  The wedges of a
   // vertex are given by its "wid" keys if these are consistent, else by the distinct attribute values of its corners
   // (in order of first appearance).  The keys normal, uv, and rgb (quantized to 8 bits) become standard properties if
-  // every wedge has them; these and the other vertex and corner keys with numeric or no values become trailing
-  // elements "wedge_<key>"; the distinct face strings become the materials.  Any other key (e.g., a quoted string)
-  // and the edge strings (e.g., "sharp") are dropped with a warning.  The comments record the provenance (the
-  // diagnostics written so far; see diagnostics_transcript()).
+  // every wedge has them; the other vertex and corner keys with numeric or no values become trailing elements
+  // "wedge_<key>".  The edges with strings are listed in the element "edge" (by the first PLY vertex of each of their
+  // vertices), and their keys with numeric or no values become elements "edge_<key>".  Any other vertex, corner, or
+  // edge key (e.g., a quoted string) is dropped with a warning.  If there are at most 1000 distinct face strings,
+  // they become the materials; else the face keys with numeric or no values, other than matid, become elements
+  // "face_<key>" (or, for an rgb on every face, the standard face colors, quantized to 8 bits), and the remainders of
+  // the face strings become the materials (at most 65536).  The comments record the provenance (the diagnostics
+  // written so far; see diagnostics_transcript()).
   [[nodiscard]] PlyMesh to_ply() const;
 
   void write(std::ostream& os) const;

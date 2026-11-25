@@ -188,7 +188,7 @@ bool StringKeyIter::next(const char*& kb, int& kl, const char*& vb, int& vl) {
   } else if (ch == '"') {
     send = str_chr(_s + nch + 2, '"');
     if (!send) assertnever("No matching '\"' " + SSHOW(_s, _s + nch + 2));
-  } else if (std::isalnum(static_cast<unsigned char>(ch)) || ch == '-') {
+  } else if (std::isalnum(static_cast<unsigned char>(ch)) || ch == '-' || ch == '+' || ch == '.') {  // E.g., ".25".
     send = str_last_non_space(_s + nch + 2);
   } else {
     if (Warning("Cannot parse StringKey value")) SHOW(_str, _s + nch + 1);
@@ -447,98 +447,142 @@ void GMeshInput::read(GMesh& mesh) {
   }
 }
 
-PlyMesh GMesh::to_ply() const {
-  // The kind of a vertex or corner key: a flag (without value), a numeric vector of some dimension, or invalid.
+namespace {
+
+// Parse the value of a key: returns its dimension (0 if no value), or -2 if it is not numeric, with the numbers in
+// values.
+[[nodiscard]] int parse_key_value(const char* vb, int vl, Array<float>& values) {
+  values.init(0);
+  if (vl == 0) return 0;
+  const char* s = vb;
+  const char* const send = vb + vl;
+  const bool is_vector = vl >= 2 && vb[0] == '(' && send[-1] == ')';
+  const char* const vend = is_vector ? send - 1 : send;
+  if (is_vector) s++;
+  for (;;) {  // Parse in place, without copying the value.
+    while (s < vend && (*s == ' ' || *s == '\t')) s++;
+    if (s == vend) break;
+    float value;
+    if (!real_from_chars(s, vend, value)) return -2;
+    values.push(value);
+  }
+  if (values.empty() || (!is_vector && values.num() != 1)) return -2;
+  return values.num();
+}
+
+// The keys of a family of strings (of the vertices and corners, the edges, or the faces), each a flag (without
+// value), a numeric vector of some dimension, or invalid; and the layout of their values in a record of floats.
+class KeyTable {
+ public:
   struct KeyInfo {
-    int dim{-1};    // 0 for a flag; -2 if invalid (non-numeric value or inconsistent dimensions); -1 if not yet seen.
-    int offset{0};  // Offset of its values within a wedge record.
+    int dim{-1};     // 0 for a flag; -2 if invalid (non-numeric value or inconsistent dimensions); -1 if not yet seen.
+    int offset{-1};  // Offset of its values within a record, or -1 if it is not stored in the records.
   };
-  Map<string, KeyInfo> key_infos;
-  // The few distinct keys are found by a linear search, faster than hashing each key of each string.  (The values of
-  // key_infos have stable addresses.)
-  Array<std::pair<string, KeyInfo*>> key_cache;
-  const auto find_key_info = [&](const char* kb, int kl) -> KeyInfo& {
+  [[nodiscard]] KeyInfo& find(const char* kb, int kl) {
+    // The few distinct keys are found by a linear search, faster than hashing each key of each string.  (The values
+    // of _infos have stable addresses.)  An InlinedMap would not do, because classify() keeps pointers to its values.
     const std::string_view key(kb, kl);
-    for (const auto& [name, pinfo] : key_cache)
+    for (const auto& [name, pinfo] : _cache)
       if (name == key) return *pinfo;
     bool is_new;
-    KeyInfo& info = key_infos.enter(string(key), KeyInfo{}, is_new);
-    if (key_cache.num() < 32) key_cache.push({string(key), &info});
+    KeyInfo& info = _infos.enter(string(key), KeyInfo{}, is_new);
+    if (_cache.num() < 32) _cache.push({string(key), &info});
     return info;
-  };
-  Array<float> values;
-  // Parse the value of a key: returns its dimension (0 if no value), or -2 if it is not numeric.
-  const auto parse_value = [&](const char* vb, int vl) -> int {
-    values.init(0);
-    if (vl == 0) return 0;
-    const char* s = vb;
-    const char* const send = vb + vl;
-    const bool is_vector = vl >= 2 && vb[0] == '(' && send[-1] == ')';
-    const char* const vend = is_vector ? send - 1 : send;
-    if (is_vector) s++;
-    for (;;) {  // Parse in place, without copying the value.
-      while (s < vend && (*s == ' ' || *s == '\t')) s++;
-      if (s == vend) break;
-      float value;
-      if (!real_from_chars(s, vend, value)) return -2;
-      values.push(value);
-    }
-    if (values.empty() || (!is_vector && values.num() != 1)) return -2;
-    return values.num();
-  };
-  const auto classify = [&](const char* str) {
+  }
+  [[nodiscard]] const Map<string, KeyInfo>& infos() const { return _infos; }
+  // Update the kinds of the keys of the string.  If check_repeats, a key that occurs twice in the string is invalid.
+  void classify(const char* str, bool check_repeats) {
+    _seen.init(0);
     for_cstring_key_value_ptr(str, [&](const char* kb, int kl, const char* vb, int vl) {
-      const int dim = parse_value(vb, vl);
-      KeyInfo& info = find_key_info(kb, kl);
+      const int dim = parse_key_value(vb, vl, _values);
+      KeyInfo& info = find(kb, kl);
       if (info.dim == -1) {
         info.dim = dim;
       } else if (info.dim != dim) {
         info.dim = -2;
       }
-      return false;
-    });
-  };
-  for (Vertex v : vertices()) classify(get_string(v));
-  for (Face f : faces())
-    for (Corner c : corners(f)) classify(get_string(c));
-  // The keys stored in the wedge records, in sorted order, and the dropped keys.
-  Array<string> record_keys, dropped_keys;
-  {
-    Array<string> keys(key_infos.keys());
-    sort(keys);
-    for (const string& key : keys) {
-      const int dim = key_infos.get(key).dim;
-      if (key == "wid" && dim == 1) continue;
-      (dim >= 0 ? record_keys : dropped_keys).push(key);
-    }
-  }
-  int record_size = 0;
-  for (const string& key : record_keys) {
-    KeyInfo& info = key_infos.get(key);
-    info.offset = record_size;
-    record_size += max(info.dim, 1);
-  }
-  const float nan = std::numeric_limits<float>::quiet_NaN();
-  // Overlay the values of the keys of the string onto the record (NaN for absent values; 0 or 1 for flags).
-  const auto add_to_record = [&](const char* str, ArrayView<float> record) {
-    for_cstring_key_value_ptr(str, [&](const char* kb, int kl, const char* vb, int vl) {
-      const KeyInfo& info = find_key_info(kb, kl);
-      if (info.dim < 0 || std::string_view(kb, kl) == "wid") return false;
-      assertx(parse_value(vb, vl) == info.dim);
-      if (info.dim == 0) {
-        record[info.offset] = 1.f;
-      } else {
-        for_int(k, info.dim) record[info.offset + k] = values[k];
+      if (check_repeats) {
+        if (contains(_seen, &info)) info.dim = -2;
+        _seen.push(&info);
       }
       return false;
     });
-  };
-  const auto empty_record = [&] {
-    Array<float> record(record_size, nan);
+  }
+  // Store in the records, in sorted order, the valid keys (with dim >= 0) for which is_stored(key, dim) is true;
+  // returns them.  The invalid keys for which is_stored(key, dim) is true are added to dropped_keys.
+  [[nodiscard]] Array<string> layout(const auto& is_stored, Array<string>& dropped_keys) {
+    Array<string> keys(_infos.keys());
+    sort(keys);
+    Array<string> record_keys;
+    _record_size = 0;
+    for (const string& key : keys) {
+      KeyInfo& info = _infos.get(key);
+      if (!is_stored(key, info.dim)) continue;
+      if (info.dim < 0) {
+        dropped_keys.push(key);
+        continue;
+      }
+      record_keys.push(key);
+      info.offset = _record_size;
+      _record_size += max(info.dim, 1);
+    }
+    _empty_record.init(_record_size, std::numeric_limits<float>::quiet_NaN());
     for (const string& key : record_keys)
-      if (key_infos.get(key).dim == 0) record[key_infos.get(key).offset] = 0.f;
-    return record;
-  };
+      if (_infos.get(key).dim == 0) _empty_record[_infos.get(key).offset] = 0.f;
+    return record_keys;
+  }
+  [[nodiscard]] int record_size() const { return _record_size; }
+  // A record without values: NaN for each numeric component; 0 for each flag.
+  [[nodiscard]] CArrayView<float> empty_record() const { return _empty_record; }
+  // Overlay the values of the stored keys of the string onto the record (1 for flags).
+  void add_to_record(const char* str, ArrayView<float> record) {
+    for_cstring_key_value_ptr(str, [&](const char* kb, int kl, const char* vb, int vl) {
+      const KeyInfo& info = find(kb, kl);
+      if (info.offset < 0) return false;
+      assertx(parse_key_value(vb, vl, _values) == info.dim);
+      if (info.dim == 0) {
+        record[info.offset] = 1.f;
+      } else {
+        for_int(k, info.dim) record[info.offset + k] = _values[k];
+      }
+      return false;
+    });
+  }
+  // Returns the string without its stored keys.
+  [[nodiscard]] string remainder(const char* str) {
+    string result;
+    for_cstring_key_value_ptr(str, [&](const char* kb, int kl, const char* vb, int vl) {
+      if (find(kb, kl).offset >= 0) return false;
+      if (result != "") result += ' ';
+      result += std::string_view(kb, vl ? vb + vl - kb : kl);
+      return false;
+    });
+    return result;
+  }
+
+ private:
+  Map<string, KeyInfo> _infos;
+  Array<std::pair<string, KeyInfo*>> _cache;
+  Array<float> _values;
+  Array<const KeyInfo*> _seen;
+  int _record_size{0};
+  Array<float> _empty_record;
+};
+
+}  // namespace
+
+PlyMesh GMesh::to_ply() const {
+  KeyTable wedge_table;
+  for (Vertex v : vertices()) wedge_table.classify(get_string(v), false);
+  for (Face f : faces())
+    for (Corner c : corners(f)) wedge_table.classify(get_string(c), false);
+  const auto& key_infos = wedge_table.infos();
+  // The keys stored in the wedge records, in sorted order, and the dropped keys.
+  Array<string> dropped_keys;
+  const Array<string> record_keys =
+      wedge_table.layout([](const string& key, int dim) { return !(key == "wid" && dim == 1); }, dropped_keys);
+  const auto add_to_record = [&](const char* str, ArrayView<float> record) { wedge_table.add_to_record(str, record); };
+  const auto empty_record = [&] { return Array<float>(wedge_table.empty_record()); };
   const auto wid_of = [&](const char* str) {
     string str2;
     const char* s = string_key(str2, str, "wid");
@@ -675,7 +719,7 @@ PlyMesh GMesh::to_ply() const {
   // The standard properties, for keys present (with the right dimension) on all wedges.
   const auto all_present = [&](const char* key, int dim) {
     if (!key_infos.contains(key) || key_infos.get(key).dim != dim) return false;
-    const KeyInfo& info = key_infos.get(key);
+    const KeyTable::KeyInfo& info = key_infos.get(key);
     return ranges::none_of(wedges, [&](const Wedge& wedge) { return std::isnan(wedge.record[info.offset]); });
   };
   Set<string> standard_keys;
@@ -702,8 +746,8 @@ PlyMesh GMesh::to_ply() const {
   }
   for (const string& key : record_keys) {
     if (standard_keys.contains(key)) continue;
-    const KeyInfo& info = key_infos.get(key);
-    PlyMesh::WedgeKey wedge_key{key, info.dim, Array<float>(nw * max(info.dim, 1))};
+    const KeyTable::KeyInfo& info = key_infos.get(key);
+    PlyMesh::Key wedge_key{key, info.dim, Array<float>(nw * max(info.dim, 1))};
     const int stride = max(info.dim, 1);
     for_int(i, nw) { for_int(k, stride) wedge_key.values[i * stride + k] = wedges[order[i]].record[info.offset + k]; }
     ply.wedge_keys.push(std::move(wedge_key));
@@ -720,18 +764,77 @@ PlyMesh GMesh::to_ply() const {
     ply.vertex_ids = transformed(va, [&](Vertex v) { return vertex_id(v); });
   if (!ranges::all_of(range(fa.num()), [&](int i) { return face_id(fa[i]) == i + 1; }))
     ply.face_ids = transformed(fa, [&](Face f) { return face_id(f); });
-  // The faces and their materials.
+  // The faces.
   ply.face_vertices.init(corner_wedges.num());
   for_int(j, corner_wedges.num()) ply.face_vertices[j] = new_index[corner_wedges[j]];
   ply.face_start = face_start;
+  // The face strings: in material mode, each distinct face string is a material; in split mode (with more than
+  // k_max_whole_materials distinct strings), the numeric and valueless keys other than matid become the face keys
+  // (or, for an rgb on every face, the face colors), and the remainders of the strings are the materials.
+  constexpr int k_max_whole_materials = 1000;
+  const int nf = fa.num();
+  const auto face_cstring = [&](int fi) {
+    const char* str = get_string(fa[fi]);
+    return str ? str : "";
+  };
+  bool split_mode = false;
   {
+    Set<std::string_view> distinct_strings;
+    for_int(fi, nf) {
+      distinct_strings.add(face_cstring(fi));
+      if (distinct_strings.num() > k_max_whole_materials) {
+        split_mode = true;
+        break;
+      }
+    }
+  }
+  Array<string> remainders;
+  if (split_mode) {
+    KeyTable face_table;
+    for_int(fi, nf) face_table.classify(face_cstring(fi), true);
+    Array<string> unused_dropped_keys;
+    const Array<string> face_record_keys = face_table.layout(
+        [](const string& key, int dim) { return dim >= 0 && key != "matid" && key != "material" && key != "id"; },
+        unused_dropped_keys);
+    const int stride = face_table.record_size();
+    Array<float> face_records(nf * stride);
+    remainders.init(nf);
+    for_int(fi, nf) {
+      ArrayView<float> record = face_records.segment(fi * stride, stride);
+      record.assign(face_table.empty_record());
+      face_table.add_to_record(face_cstring(fi), record);
+      remainders[fi] = face_table.remainder(face_cstring(fi));
+    }
+    for (const string& key : face_record_keys) {
+      const KeyTable::KeyInfo& info = face_table.infos().get(key);
+      const int dim = max(info.dim, 1);
+      if (key == "rgb" && info.dim == 3 &&
+          ranges::none_of(range(nf), [&](int fi) { return std::isnan(face_records[fi * stride + info.offset]); })) {
+        ply.face_colors.init(nf);
+        for_int(fi, nf) {
+          for_int(c, 3) {
+            const float value = face_records[fi * stride + info.offset + c];
+            ply.face_colors[fi][c] = uint8_t(clamp(value, 0.f, 1.f) * 255.f + .5f);
+          }
+          ply.face_colors[fi][3] = 255;
+        }
+        continue;
+      }
+      PlyMesh::Key face_key{key, info.dim, Array<float>(nf * dim)};
+      for_int(fi, nf) for_int(k, dim) face_key.values[fi * dim + k] = face_records[fi * stride + info.offset + k];
+      ply.face_keys.push(std::move(face_key));
+    }
+  }
+  // The materials (the face strings, or their remainders in split mode).
+  {
+    const auto material_string = [&](int fi) { return split_mode ? remainders[fi].c_str() : face_cstring(fi); };
     // Use the matid keys as material indices if they are consistent, else the order of first appearance.
     bool use_matids = true;
     Map<int, string> string_of_matid;
-    for (Face f : fa) {
-      const char* str = get_string(f);
+    for_int(fi, nf) {
+      const char* str = material_string(fi);
       string str2;
-      const char* smatid = str ? string_key(str2, str, "matid") : nullptr;
+      const char* smatid = string_key(str2, str, "matid");
       const int matid = smatid ? to_int(smatid) : -1;
       if (matid < 0 || matid >= 65536) {
         use_matids = false;
@@ -745,18 +848,17 @@ PlyMesh GMesh::to_ply() const {
       }
     }
     Map<string, int> matid_of_string;
-    ply.face_matids.init(fa.num());
-    for_int(fi, fa.num()) {
-      const char* str = get_string(fa[fi]);
-      const string s2 = str ? str : "";
+    ply.face_matids.init(nf);
+    for_int(fi, nf) {
+      const string s2 = material_string(fi);
       int matid;
       if (use_matids) {
         string str2;
-        matid = to_int(string_key(str2, str, "matid"));
+        matid = to_int(string_key(str2, s2.c_str(), "matid"));
       } else {
         bool is_new;
         matid = matid_of_string.enter(s2, matid_of_string.num(), is_new);
-        if (matid >= 65536) assertnever("GMesh::to_ply(): more than 65536 distinct face strings");
+        if (matid >= 65536) assertnever("GMesh::to_ply(): more than 65536 distinct face materials");
       }
       if (matid >= ply.materials.num()) ply.materials.resize(matid + 1);
       ply.materials[matid] = s2;
@@ -765,27 +867,56 @@ PlyMesh GMesh::to_ply() const {
     if (ranges::all_of(ply.face_matids, [](int matid) { return matid == 0; })) ply.face_matids.init(0);
     if (ply.materials.num() == 1 && ply.materials[0] == "") ply.materials.init(0);
   }
+  // The edges with strings, in order of their vertex indices, each given by the first PLY vertex of its vertices.
+  Array<string> dropped_edge_keys;
+  {
+    KeyTable edge_table;
+    Array<std::pair<Vec2<int>, Edge>> string_edges;
+    for (Edge e : edges()) {
+      if (!get_string(e)) continue;
+      edge_table.classify(get_string(e), true);
+      Vec2<int> vertices(vertex_index(vertex1(e)), vertex_index(vertex2(e)));
+      if (vertices[0] > vertices[1]) std::swap(vertices[0], vertices[1]);
+      string_edges.push({vertices, e});
+    }
+    sort(string_edges, [](const auto& p1, const auto& p2) {
+      return p1.first[0] != p2.first[0] ? p1.first[0] < p2.first[0] : p1.first[1] < p2.first[1];
+    });
+    const Array<string> edge_record_keys =
+        edge_table.layout([](const string&, int) { return true; }, dropped_edge_keys);
+    const int stride = edge_table.record_size();
+    Array<int> ply_vertex(nv, -1);
+    for_int(i, nw) {
+      int& w = ply_vertex[wedges[order[i]].vertex];
+      if (w < 0) w = i;
+    }
+    Array<float> edge_records;
+    Array<float> record(stride);
+    for (const auto& [vertices, e] : string_edges) {
+      record.assign(edge_table.empty_record());
+      edge_table.add_to_record(get_string(e), record);
+      if (same_records(record, edge_table.empty_record())) continue;  // All its keys are dropped.
+      ply.edge_vertices.push(V(ply_vertex[vertices[0]], ply_vertex[vertices[1]]));
+      edge_records.push_array(record);
+    }
+    const int ne = ply.edge_vertices.num();
+    for (const string& key : edge_record_keys) {
+      const KeyTable::KeyInfo& info = edge_table.infos().get(key);
+      const int dim = max(info.dim, 1);
+      PlyMesh::Key edge_key{key, info.dim, Array<float>(ne * dim)};
+      for_int(i, ne) for_int(k, dim) edge_key.values[i * dim + k] = edge_records[i * stride + info.offset + k];
+      ply.edge_keys.push(std::move(edge_key));
+    }
+  }
   // Report what is lost.
   const auto join = [](CArrayView<string> strings) {
     string result;
     for (const string& str : strings) result += (result == "" ? "" : " ") + str;
     return result;
   };
-  int num_edge_strings = 0;
-  Set<string> edge_keys;
-  for (Edge e : edges()) {
-    if (!get_string(e)) continue;
-    num_edge_strings++;
-    for_cstring_key_value_ptr(get_string(e), [&](const char* kb, int kl, const char*, int) {
-      edge_keys.add(string(kb, kl));
-      return false;
-    });
-  }
-  if (num_edge_strings) {
-    Array<string> keys(edge_keys);
-    sort(keys);
-    Warning("GMesh::to_ply(): edge strings are dropped");
-    showdf("GMesh::to_ply(): dropping the strings of %d edges (keys: %s)\n", num_edge_strings, join(keys).c_str());
+  if (dropped_edge_keys.num()) {
+    Warning("GMesh::to_ply(): non-numeric edge keys are dropped");
+    showdf("GMesh::to_ply(): dropping the edge keys: %s\n", join(dropped_edge_keys).c_str());
   }
   if (dropped_keys.num()) {
     Warning("GMesh::to_ply(): non-numeric vertex/corner keys are dropped");
@@ -995,7 +1126,7 @@ void GMesh::init_from_ply(const PlyMesh& ply) {
     Array<int> next(wedge_start.head(nv));
     for_int(w, nw) vertex_wedges[next[has_wid ? ply.wedge_vertex[w] : w]++] = w;
   }
-  const auto is_uniform = [&](const PlyMesh::WedgeKey& wedge_key, int v) {
+  const auto is_uniform = [&](const PlyMesh::Key& wedge_key, int v) {
     const int stride = max(wedge_key.dim, 1);
     const CArrayView<float> values0 = wedge_key.values.segment(vertex_wedges[wedge_start[v]] * stride, stride);
     for (int i = wedge_start[v] + 1; i < wedge_start[v + 1]; i++) {
@@ -1036,22 +1167,11 @@ void GMesh::init_from_ply(const PlyMesh& ply) {
       }
       if (ply.uvs.num()) vec("uv", ply.uvs[w]);
     }
-    for (const PlyMesh::WedgeKey& wedge_key : ply.wedge_keys) {
-      if (part != EPart::all && is_uniform(wedge_key, v) != (part == EPart::vertex)) continue;
-      if (wedge_key.dim == 0) {
-        if (wedge_key.values[w]) key(wedge_key.name.c_str());
-        continue;
-      }
-      const CArrayView<float> values = wedge_key.values.slice(w * wedge_key.dim, (w + 1) * wedge_key.dim);
-      if (ranges::all_of(values, [](float value) { return std::isnan(value); })) continue;  // An absent attribute.
-      if (wedge_key.dim == 1) {
-        key(wedge_key.name.c_str());
-        lw << '=' << values[0];
-      } else {
-        vec(wedge_key.name.c_str(), values);
-      }
-    }
     str = lw.view();
+    for (const PlyMesh::Key& wedge_key : ply.wedge_keys) {
+      if (part != EPart::all && is_uniform(wedge_key, v) != (part == EPart::vertex)) continue;
+      wedge_key.append_to(str, w);
+    }
     return str;
   };
   const auto mesh_vertex_id = [&](int v) { return ply.vertex_ids.num() ? ply.vertex_ids[v] : v + 1; };
@@ -1075,8 +1195,7 @@ void GMesh::init_from_ply(const PlyMesh& ply) {
       continue;
     }
     Face gf = create_face_private(ply.face_ids.num() ? ply.face_ids[f] : f + 1, va);
-    const int matid = ply.face_matid(f);
-    if (matid < ply.materials.num() && ply.materials[matid] != "") set_string(gf, ply.materials[matid].c_str());
+    if (const string s = ply.face_string(f); s != "") set_string(gf, s.c_str());
     for_int(j, wedges.num()) {
       const int w = wedges[j];
       Corner c = corner(va[j], gf);
@@ -1093,6 +1212,26 @@ void GMesh::init_from_ply(const PlyMesh& ply) {
   if (num_illegal) {
     Warning("ply: skipping illegal faces");
     showdf("(ply: skipped %d illegal faces)\n", num_illegal);
+  }
+  int num_missing_edges = 0;
+  for_int(i, ply.edge_vertices.num()) {
+    const string s = ply.edge_string(i);
+    if (s == "") continue;
+    const Vec2<int> vertices =
+        transformed(ply.edge_vertices[i], [&](int w) { return has_wid ? ply.wedge_vertex[w] : w; });
+    const Edge e = vertices[0] == vertices[1]
+                       ? nullptr
+                       : query_edge(id_vertex(mesh_vertex_id(vertices[0])), id_vertex(mesh_vertex_id(vertices[1])));
+    if (!e) {
+      num_missing_edges++;
+      continue;
+    }
+    set_string(e, s.c_str());
+    flags(e).flag(eflag_sharp) = string_has_key(s.c_str(), "sharp");
+  }
+  if (num_missing_edges) {
+    Warning("ply: skipping edge strings of edges not in the mesh");
+    showdf("(ply: skipped the strings of %d edges not in the mesh)\n", num_missing_edges);
   }
 }
 

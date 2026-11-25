@@ -160,3 +160,122 @@ Face 1  1 2 4 {matid=3 rgb=(1 0 0)}
 Face 2  1 4 5 {matid=1}
 Corner 1 1 {wid=1 normal=(0 0 1)}
 Corner 1 2 {wid=2 normal=(0 1 0)}
+edge_face_keys binary=1 same=1
+edge_face_keys binary=0 same=1
+ply
+format ascii 1.0
+comment material 0 matid=0
+comment material 1 matid=1 mat="x y"
+element vertex 4
+property float x
+property float y
+property float z
+element face 2
+property list uchar int vertex_indices
+property uchar red
+property uchar green
+property uchar blue
+element edge 2
+property int vertex1
+property int vertex2
+element face_material 2
+property ushort matid
+element edge_sharp 2
+property uchar flag
+element edge_filletr 2
+property float c0
+property float c1
+element face_oldfid 2
+property float c0
+end_header
+0 0 0
+1 0 0
+1 1 0
+0 1 0
+3 0 1 2 255 0 0
+3 0 2 3 1 2 3
+0 2
+1 2
+0
+1
+1
+0
+nan nan
+0.5 0.25
+7
+nan
+face_string(0)='matid=0 oldfid=7 rgb=(1.000 0.000 0.000)'
+face_string(1)='matid=1 mat="x y" rgb=(0.004 0.008 0.012)'
+edge_string(0)='sharp'
+edge_string(1)='filletr=(0.5 0.25)'
+float face color: 255 128 0 64  face_string='rgb=(1.000 0.502 0.000)'
+ply
+format ascii 1.0
+element vertex 5
+property float x
+property float y
+property float z
+element face 3
+property list uchar int vertex_indices
+element edge 3
+property int vertex1
+property int vertex2
+element face_material 3
+property ushort matid
+element edge_filletr 3
+property float c0
+property float c1
+element edge_sharp 3
+property uchar flag
+end_header
+material mode binary=1 differences=0
+Vertex 1  0 0 0
+Vertex 2  1 0 0
+Vertex 3  1 1 0
+Vertex 4  0 1 0
+Vertex 5  2 0 0
+Face 1  1 2 3 {matid=0 mat="a b"}
+Face 2  1 3 4 {matid=1 oldfid=7}
+Face 3  2 5 3
+Edge 2 3 {filletr=(0.5 0.25)}
+Edge 1 3 {sharp}
+Edge 3 4 {filletr=(1 2) sharp}
+material mode binary=0 differences=0
+ply
+format ascii 1.0
+element vertex 3600
+property float x
+property float y
+property float z
+element face 1200
+property list uchar int vertex_indices
+property uchar red
+property uchar green
+property uchar blue
+element face_material 1200
+property ushort matid
+element face_hole 1200
+property uchar flag
+element face_oldfid 1200
+property float c0
+end_header
+split mode binary=1 differences=0
+face 1: 'matid=0 mat="m0" hole oldfid=1 rgb=(0.000 0.000 0.000)'
+split mode binary=0 differences=0
+ply
+format ascii 1.0
+element vertex 3600
+property float x
+property float y
+property float z
+element face 1200
+property list uchar int vertex_indices
+element face_oldfid 1200
+property float c0
+element face_rgb 1200
+property float c0
+property float c1
+property float c2
+end_header
+split mode partial rgb binary=1 differences=0
+split mode partial rgb binary=0 differences=0

@@ -692,15 +692,22 @@ in hindsight that was a poor choice.
 
 The programs that read a mesh (e.g., `Filtermesh`, `MinCycles`, `SphereParam`) also accept a Stanford `*.ply` file
 (ASCII or binary, possibly `*.gz`), recognized by its first line.  Its vertex normals, colors, and uv become the
-attributes `normal`, `rgb`, and `uv`.  A PLY file written by `FilterPM -outply` or `Filtermesh -toply` has one PLY vertex per wedge,
+attributes `normal`, `rgb`, and `uv`, and its face colors the face attribute `rgb`.  A PLY file written by
+`FilterPM -outply` or `Filtermesh -toply` has one PLY vertex per wedge,
 followed by trailing elements (which other PLY readers can ignore) that identify the mesh vertex of each wedge
 (`wedge_vertex`), the material of each face (`face_material`, with the material strings in `comment material`
-header lines), the vertex and face ids if not consecutive (`vertex_id`, `face_id`), and any other per-wedge
-attributes (`wedge_<key>`); reading it reproduces the mesh of
+header lines), the vertex and face ids if not consecutive (`vertex_id`, `face_id`), and any other per-wedge,
+per-edge, and per-face attributes (`wedge_<key>`, `edge_<key>`, `face_<key>`, with one numeric vector or flag
+each); reading it reproduces the mesh of
 `FilterPM -outmesh`.  Conversely, `Filtermesh mesh.m -toply >mesh.ply` writes such a file, whose wedges come
-from the `wid` keys of the mesh (if consistent) or else from the distinct attributes of the corners of each vertex;
-it keeps the vertex and corner keys with numeric values or no values, and the face strings (as materials), but it
-drops (with a warning) other keys and the edge strings such as `sharp`.
+from the `wid` keys of the mesh (if consistent) or else from the distinct attributes of the corners of each vertex.
+It keeps the vertex, corner, and edge keys with numeric values or no values (e.g., `sharp`, with the edges listed
+in an element `edge`), and drops (with a warning) their other keys.
+It keeps all the face strings: as materials if there are at most 1000 distinct ones, or else with their keys that
+have numeric values or no values (other than `matid`) split off into `face_<key>` elements (an `rgb` on every face
+becomes the standard face colors), so that only their remainders are materials; the keys of a face string may
+then be reordered, and their numeric values rewritten as 32-bit floats (e.g., `0.50` as `0.5`, and `rgb` as 8-bit
+colors).
 The PLY files written by these programs (and by `MeshToPm` and `SphereParam`) record their provenance in
 `comment` header lines, just as the `#` header lines of a mesh file do, and the programs that read them echo those
 lines with a `|` prefix.

@@ -162,7 +162,7 @@ void test_strings() {
   SHOW(csform_vec(str, V(1.5f, -2.f, 1e-7f)), csform_vec(str, Vec2<float>(1.f / 3.f, 1e10f)));
   // Iterate over the attributes of a string.
   Array<char> key, val;
-  for_cstring_key_value(R"(a=1 b c=(2 3) d="x y" e=-4)", key, val,
+  for_cstring_key_value(R"(a=1 b c=(2 3) d="x y" e=-4 f=.25 g=+3)", key, val,
                         [&] { showf("%s='%s'\n", key.data(), val.data()); });
   // Update, set, and extract strings.
   mesh.update_string(v3, "rgb", "(1 0 0)");

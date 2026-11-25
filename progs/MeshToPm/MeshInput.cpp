@@ -190,10 +190,10 @@ void read_mesh_m(std::istream& is, WorkMesh& mesh, RawMesh& raw) {
 // Fill the empty mesh from a PLY mesh, whose faces must be triangles.  As in GMesh::from_ply(), the mesh vertices
 // are given by the trailing element "wedge_vertex" if present, else they are the PLY vertices; the attributes of the
 // PLY vertices (wedges) are recorded in raw as those of the vertex strings (for a vertex with a single wedge) or else
-// of the corner strings of a .m file; the face strings are those of the materials; and the "wedge_global" flags mark
-// global vertices.  The wedges are not imposed (as wid keys would be): as for a .m file without wid keys, the corners
-// are grouped by their attributes (normal, rgb, and uv), whereas the PLY wedges may also separate other attributes
-// (e.g., Ouv).  Returns the vertex normals if present and the mesh needs no strings.
+// of the corner strings of a .m file; the face strings are those of GMesh::from_ply() (PlyMesh::face_string()); the
+// "wedge_global" flags mark global vertices; and the edges with a key "sharp" (element "edge_sharp") are sharp.  The
+// wedges are not imposed (as wid keys would be): as for a .m file without wid keys, the corners are grouped by their
+// attributes (normal, rgb, and uv), whereas the PLY wedges may also separate other attributes (e.g., Ouv).  Returns the vertex normals if present and the mesh needs no strings.
 Array<Vector> mesh_from_ply(PlyMesh& ply, WorkMesh& mesh, RawMesh& raw) {
   const int nw = ply.points.num(), nf = ply.num_faces();
   const bool has_wid = ply.wedge_vertex.num() > 0;
@@ -227,18 +227,20 @@ Array<Vector> mesh_from_ply(PlyMesh& ply, WorkMesh& mesh, RawMesh& raw) {
     mesh._faces[f].attrib.matid = 0;
     mesh._face_original_id[f] = ply.face_ids.num() ? ply.face_ids[f] : f + 1;
   }
-  const PlyMesh::WedgeKey* global_key = nullptr;
-  for (const PlyMesh::WedgeKey& wedge_key : ply.wedge_keys)
+  const PlyMesh::Key* global_key = nullptr;
+  for (const PlyMesh::Key& wedge_key : ply.wedge_keys)
     if (wedge_key.name == "global" && wedge_key.dim == 0) global_key = &wedge_key;
-  const bool needs_strings =
-      has_wid || ply.colors.num() || ply.uvs.num() || ply.corner_uvs.num() || ply.materials.num() || global_key;
+  const bool has_sharp_key =
+      ranges::any_of(ply.edge_keys, [](const PlyMesh::Key& edge_key) { return edge_key.name == "sharp"; });
+  const bool needs_strings = has_wid || ply.colors.num() || ply.uvs.num() || ply.corner_uvs.num() ||
+                             ply.materials.num() || ply.face_keys.num() || ply.face_colors.num() || global_key ||
+                             has_sharp_key;
   if (!needs_strings) return std::move(ply.normals);
   raw.any_strings = true;
   // The face strings.
   raw.face_string.init(nf);
   for_int(f, nf) {
-    const int matid = ply.face_matid(f);
-    const string& face_string = matid < ply.materials.num() ? ply.materials[matid] : "";
+    const string face_string = ply.face_string(f);
     bool is_new;
     const int index = raw.index_of_face_string.enter(face_string, raw.face_strings.num(), is_new);
     if (is_new) raw.face_strings.push(face_string);
@@ -271,6 +273,13 @@ Array<Vector> mesh_from_ply(PlyMesh& ply, WorkMesh& mesh, RawMesh& raw) {
     Array<bool> is_global(nv, false);
     for_int(w, nw) if (global_key->values[w]) is_global[vertex_of_wedge(w)] = true;
     for_int(v, nv) if (is_global[v]) raw.global_vertices.push(v);
+  }
+  if (has_sharp_key) {
+    for_int(i, ply.edge_vertices.num()) {
+      if (!GMesh::string_has_key(ply.edge_string(i).c_str(), "sharp")) continue;  // As for a .m file.
+      const int a = vertex_of_wedge(ply.edge_vertices[i][0]), b = vertex_of_wedge(ply.edge_vertices[i][1]);
+      if (a != b) raw.sharp_edges.push(V(a, b));
+    }
   }
   return {};
 }

@@ -6,6 +6,8 @@
 #include <cstring>   // memcpy(), memmove()
 #include <sstream>
 
+#include "libHh/LineWriter.h"
+
 namespace hh {
 
 namespace {
@@ -341,14 +343,22 @@ void read_faces(PlyValueReader& reader, const PlyElement& element, int nv, PlyMe
   if (iindices < 0) iindices = find_list("vertex_index");  // A less common spelling.
   if (iindices < 0) assertnever("ply: the face element lacks a list 'vertex_indices'");
   const int itexcoord = find_list("texcoord");
+  // The indices of the color properties (red, green, blue, alpha), if the first three are present.
+  Vec4<int> icolor;
+  for_int(c, 4) icolor[c] = element.find_scalar(V("red", "green", "blue", "alpha")[c]);
+  const bool has_colors = icolor[0] >= 0 && icolor[1] >= 0 && icolor[2] >= 0;
+  if (!has_colors) fill(icolor, -1);
+  if (has_colors && mesh.num_faces()) assertnever("ply: face colors after other faces");
   for_int(i, element.properties.num()) {
-    if (i != iindices && i != itexcoord) ignored.push("face property '" + element.properties[i].name + "'");
+    if (i != iindices && i != itexcoord && !contains(icolor, i))
+      ignored.push("face property '" + element.properties[i].name + "'");
   }
   const int nf = element.count;
   const int f0 = mesh.num_faces();
   mesh.face_start.reserve(f0 + nf + 1);
   mesh.face_vertices.reserve(mesh.face_vertices.num() + int(min(int64_t{nf} * 3, int64_t{1} << 30)));
   Array<float> texcoords;
+  if (has_colors) mesh.face_colors.init(nf, Pixel(0, 0, 0, 255));
   int num_small_faces = 0;
   for_int(f, nf) {
     reader.begin_instance(element, f);
@@ -367,6 +377,8 @@ void read_faces(PlyValueReader& reader, const PlyElement& element, int nv, PlyMe
         });
       } else if (i == itexcoord) {
         reader.read_values(property.type, count, [&](double value) { texcoords.push(float(value)); });
+      } else if (const std::optional<int> c = find_index(icolor, i)) {
+        mesh.face_colors[f][*c] = color_component(reader.read(property.type), property.type);
       } else {
         reader.skip(property.type, count);
       }
@@ -467,6 +479,17 @@ void read_scalar_element(PlyValueReader& reader, const PlyElement& element, cons
   }
 }
 
+// The family of a "<family>_<key>" element name with a nonempty key.
+enum class EKeyFamily { none, wedge, edge, face };
+
+[[nodiscard]] EKeyFamily key_family(std::string_view name) {
+  for (auto [prefix, family] : {std::pair{"wedge_", EKeyFamily::wedge}, std::pair{"edge_", EKeyFamily::edge},
+                                std::pair{"face_", EKeyFamily::face}}) {
+    if (name.starts_with(prefix) && name.size() > std::string_view(prefix).size()) return family;
+  }
+  return EKeyFamily::none;
+}
+
 // Returns the value as a nonnegative integer less than bound, or dies.
 int checked_index(double value, int bound, const char* what) {
   if (!(value >= 0. && value < bound && value == std::floor(value)))
@@ -474,9 +497,9 @@ int checked_index(double value, int bound, const char* what) {
   return int(value);
 }
 
-// If the element is a "wedge_<key>" element in one of the two recognized forms (see Ply.h), returns the number of
-// components of its values (0 for a flag), else -1.
-int wedge_key_dim(const PlyElement& element) {
+// If the element is a "wedge_<key>", "edge_<key>", or "face_<key>" element in one of the two recognized forms (see
+// Ply.h), returns the number of components of its values (0 for a flag), else -1.
+[[nodiscard]] int key_dim(const PlyElement& element) {
   const auto& properties = element.properties;
   if (properties.num() == 1 && properties[0].name == "flag" && !properties[0].is_list &&
       properties[0].type == PlyType::uint8)
@@ -496,6 +519,44 @@ int PlyMesh::num_mesh_vertices() const {
   int nv = 0;
   for (const int v : wedge_vertex) nv = max(nv, v + 1);
   return nv;
+}
+
+void PlyMesh::Key::append_to(string& s, int i) const {
+  LineWriter lw;
+  if (dim == 0) {
+    if (!values[i]) return;
+    lw << name;
+  } else {
+    const CArrayView<float> vals = values.segment(i * dim, dim);
+    if (ranges::all_of(vals, [](float value) { return std::isnan(value); })) return;  // An absent attribute.
+    lw << name << '=';
+    if (dim > 1) lw << '(';
+    for_int(c, dim) {
+      if (c) lw << ' ';
+      lw << vals[c];
+    }
+    if (dim > 1) lw << ')';
+  }
+  if (s != "") s += ' ';
+  s += lw.view();
+}
+
+string PlyMesh::face_string(int f) const {
+  const int matid = face_matid(f);
+  string s = matid < materials.num() ? materials[matid] : "";
+  for (const Key& key : face_keys) key.append_to(s, f);
+  if (face_colors.num()) {
+    const Pixel& pixel = face_colors[f];
+    if (s != "") s += ' ';
+    s += sform("rgb=(%.3f %.3f %.3f)", pixel[0] / 255.f, pixel[1] / 255.f, pixel[2] / 255.f);
+  }
+  return s;
+}
+
+string PlyMesh::edge_string(int i) const {
+  string s;
+  for (const Key& key : edge_keys) key.append_to(s, i);
+  return s;
 }
 
 Array<string> read_ply_header(std::istream& is) {
@@ -573,9 +634,9 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
   } else if (format != "ascii") {
     assertnever(format == "" ? "ply: the header lacks a format line" : "ply: unrecognized format '" + format + "'");
   }
-  int ivertex = -1, iface = -1;
+  int ivertex = -1, iface = -1, iedge = -1;
   for_int(i, elements.num()) {
-    for (auto [name, index] : {std::pair{"vertex", &ivertex}, std::pair{"face", &iface}}) {
+    for (auto [name, index] : {std::pair{"vertex", &ivertex}, std::pair{"face", &iface}, std::pair{"edge", &iedge}}) {
       if (elements[i].name != name) continue;
       if (*index >= 0) assertnever("ply: more than one element '" + elements[i].name + "'");
       *index = i;
@@ -583,6 +644,10 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
   }
   if (ivertex < 0) assertnever("ply: the header lacks a vertex element");
   const int nv = elements[ivertex].count;
+  // The edge element is used if it has the scalar properties vertex1 and vertex2 (and no list).
+  if (iedge >= 0 && (elements[iedge].has_list() || elements[iedge].find_scalar("vertex1") < 0 ||
+                     elements[iedge].find_scalar("vertex2") < 0))
+    iedge = -1;
   Array<string> ignored;
   int64_t min_data_size = 0;
   for (const PlyElement& element : elements) min_data_size += int64_t{element.count} * element.min_record_size();
@@ -599,6 +664,15 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
       read_vertices(reader, element, mesh, ignored);
     } else if (i == iface) {
       read_faces(reader, element, nv, mesh, ignored);
+    } else if (i == iedge) {
+      const int iv1 = element.find_scalar("vertex1"), iv2 = element.find_scalar("vertex2");
+      for_int(k, element.properties.num()) {
+        if (k != iv1 && k != iv2) ignored.push("edge property '" + element.properties[k].name + "'");
+      }
+      mesh.edge_vertices.init(element.count);
+      read_scalar_element(reader, element, [&](int e, int k, double value) {
+        if (k == iv1 || k == iv2) mesh.edge_vertices[e][k == iv1 ? 0 : 1] = checked_index(value, nv, "edge vertex");
+      });
     } else if (element.name == "tristrips") {
       read_tristrips(reader, element, nv, mesh, ignored);
     } else if (element.name == "wedge_vertex" && element.properties.num() == 1 &&
@@ -624,14 +698,22 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
         ids[k] = checked_index(value, std::numeric_limits<int>::max(), "id");
         if (ids[k] == 0) assertnever("ply: an id is zero");
       });
-    } else if (element.name.starts_with("wedge_") && element.name.size() > 6 && wedge_key_dim(element) >= 0) {
-      check_count(nv);
-      const int dim = wedge_key_dim(element);
-      mesh.wedge_keys.push(PlyMesh::WedgeKey{element.name.substr(6), dim, {}});
-      PlyMesh::WedgeKey& wedge_key = mesh.wedge_keys.last();
-      wedge_key.values.init(nv * max(dim, 1));
+    } else if (const int dim = key_dim(element); dim >= 0 && key_family(element.name) != EKeyFamily::none) {
+      const EKeyFamily family = key_family(element.name);
+      const string family_name = family == EKeyFamily::wedge ? "wedge" : family == EKeyFamily::edge ? "edge" : "face";
+      const int family_index = family == EKeyFamily::wedge ? ivertex : family == EKeyFamily::edge ? iedge : iface;
+      if (family_index < 0)
+        assertnever("ply: element '" + element.name + "' without a usable " + family_name + " element");
+      check_count(elements[family_index].count);
+      Array<PlyMesh::Key>& keys = family == EKeyFamily::wedge  ? mesh.wedge_keys
+                                  : family == EKeyFamily::edge ? mesh.edge_keys
+                                                               : mesh.face_keys;
+      keys.push(PlyMesh::Key{element.name.substr(family_name.size() + 1), dim, {}});
+      PlyMesh::Key& key = keys.last();
+      const int stride = max(dim, 1);
+      key.values.init(element.count * stride);
       read_scalar_element(reader, element, [&](int w, int k, double value) {
-        wedge_key.values[w * max(dim, 1) + k] = dim ? float(value) : value ? 1.f : 0.f;
+        key.values[w * stride + k] = dim ? float(value) : value ? 1.f : 0.f;
       });
     } else {
       ignored.push("element '" + element.name + "'");
@@ -640,6 +722,8 @@ PlyMesh read_ply_body(std::istream& is, CArrayView<string> header_lines) {
   }
   if (mesh.face_matids.num() && mesh.face_matids.num() != mesh.num_faces())
     assertnever("ply: element face_material together with tristrips");
+  if ((mesh.face_keys.num() || mesh.face_colors.num()) && elements[iface].count != mesh.num_faces())
+    assertnever("ply: face colors or face keys together with tristrips");
   if (mesh.face_ids.num() && mesh.face_ids.num() != mesh.num_faces())
     assertnever("ply: element face_id has the wrong number of instances");
   if (mesh.vertex_ids.num() && mesh.vertex_ids.num() != mesh.num_mesh_vertices())
@@ -745,6 +829,7 @@ void write_ply(std::ostream& os, const PlyMesh& mesh) {
   assertx(mesh.face_matids.empty() || mesh.face_matids.num() == nf);
   assertx(mesh.vertex_ids.empty() || mesh.vertex_ids.num() == mesh.num_mesh_vertices());
   assertx(mesh.face_ids.empty() || mesh.face_ids.num() == nf);
+  assertx(mesh.face_colors.empty() || mesh.face_colors.num() == nf);
   const bool has_alpha = ranges::any_of(mesh.colors, [](const Pixel& pixel) { return pixel[3] != 255; });
   int max_face_size = 0;
   for_int(f, nf) max_face_size = max(max_face_size, mesh.face_start[f + 1] - mesh.face_start[f]);
@@ -772,18 +857,28 @@ void write_ply(std::ostream& os, const PlyMesh& mesh) {
   os << "element face " << nf << "\n";
   os << "property list " << (int_count ? "int" : "uchar") << " int vertex_indices\n";
   if (mesh.corner_uvs.num()) os << "property list " << (int_count ? "int" : "uchar") << " float texcoord\n";
+  if (mesh.face_colors.num())
+    for (const char* name : {"red", "green", "blue"}) os << "property uchar " << name << "\n";
+  const int ne = mesh.edge_vertices.num();
+  if (ne) os << "element edge " << ne << "\nproperty int vertex1\nproperty int vertex2\n";
   if (mesh.wedge_vertex.num()) os << "element wedge_vertex " << nv << "\nproperty int vertex\n";
   if (mesh.face_matids.num()) os << "element face_material " << nf << "\nproperty ushort matid\n";
   if (mesh.vertex_ids.num()) os << "element vertex_id " << mesh.vertex_ids.num() << "\nproperty int id\n";
   if (mesh.face_ids.num()) os << "element face_id " << nf << "\nproperty int id\n";
-  for (const PlyMesh::WedgeKey& wedge_key : mesh.wedge_keys) {
-    assertx(wedge_key.name != "" && wedge_key.name != "vertex" &&
-            wedge_key.name.find_first_of(" \t\n") == string::npos);
-    assertx(wedge_key.dim >= 0 && wedge_key.values.num() == nv * max(wedge_key.dim, 1));
-    os << "element wedge_" << wedge_key.name << " " << nv << "\n";
-    if (wedge_key.dim == 0) os << "property uchar flag\n";
-    for_int(k, wedge_key.dim) os << "property float c" << k << "\n";
-  }
+  const auto write_key_headers = [&](CArrayView<PlyMesh::Key> keys, const char* family, int count) {
+    for (const PlyMesh::Key& key : keys) {
+      assertx(key.name != "" && key.name.find_first_of(" \t\n") == string::npos);
+      assertx(key.dim >= 0 && key.values.num() == count * max(key.dim, 1));
+      os << "element " << family << "_" << key.name << " " << count << "\n";
+      if (key.dim == 0) os << "property uchar flag\n";
+      for_int(k, key.dim) os << "property float c" << k << "\n";
+    }
+  };
+  for (const PlyMesh::Key& key : mesh.wedge_keys) assertx(key.name != "vertex");
+  for (const PlyMesh::Key& key : mesh.face_keys) assertx(key.name != "material" && key.name != "id");
+  write_key_headers(mesh.wedge_keys, "wedge", nv);
+  write_key_headers(mesh.edge_keys, "edge", ne);
+  write_key_headers(mesh.face_keys, "face", nf);
   os << "end_header\n";
   PlyValueWriter writer(os, binary);
   for_int(v, nv) {
@@ -811,6 +906,14 @@ void write_ply(std::ostream& os, const PlyMesh& mesh) {
       put_count(2 * face.num());
       for_int(k, face.num()) for_int(c, 2) writer.put(mesh.corner_uvs[mesh.face_start[f] + k][c]);
     }
+    if (mesh.face_colors.num()) for_int(c, 3) writer.put_int(mesh.face_colors[f][c]);
+    writer.end_instance();
+  }
+  for (const Vec2<int>& edge : mesh.edge_vertices) {
+    for (const int v : edge) {
+      assertx(v >= 0 && v < nv);
+      writer.put_int(int32_t{v});
+    }
     writer.end_instance();
   }
   for (const int v : mesh.wedge_vertex) {
@@ -829,16 +932,21 @@ void write_ply(std::ostream& os, const PlyMesh& mesh) {
     writer.put_int(int32_t{id});
     writer.end_instance();
   }
-  for (const PlyMesh::WedgeKey& wedge_key : mesh.wedge_keys) {
-    for_int(v, nv) {
-      if (wedge_key.dim == 0) {
-        writer.put_int(uint8_t(wedge_key.values[v] ? 1 : 0));
-      } else {
-        for_int(k, wedge_key.dim) writer.put(wedge_key.values[v * wedge_key.dim + k]);
+  const auto write_key_values = [&](CArrayView<PlyMesh::Key> keys, int count) {
+    for (const PlyMesh::Key& key : keys) {
+      for_int(i, count) {
+        if (key.dim == 0) {
+          writer.put_int(uint8_t(key.values[i] ? 1 : 0));
+        } else {
+          for_int(k, key.dim) writer.put(key.values[i * key.dim + k]);
+        }
+        writer.end_instance();
       }
-      writer.end_instance();
     }
-  }
+  };
+  write_key_values(mesh.wedge_keys, nv);
+  write_key_values(mesh.edge_keys, ne);
+  write_key_values(mesh.face_keys, nf);
 }
 
 }  // namespace hh

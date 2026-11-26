@@ -1,19 +1,15 @@
 // -*- C++ -*-
 #include "libHh/SphereImage.h"
 
-#include "libHh/Vector4.h"
+#include "libHh/Vector4i.h"
 
 namespace hh {
 
-// The blend of two pixels whose channel sum is odd is exactly halfway between two 8-bit values in exact arithmetic,
-// so its rounding depends on the rounding errors of the float computation; precise semantics keep the result the
-// same under MSVC -fp:fast as in the other configurations.
-HH_BEGIN_PRECISE_FLOAT;
-
 namespace {
 
+// Integer arithmetic makes the average exact, with halves rounded up, in every configuration.
 void blend_pixels(Pixel& pixel0, Pixel& pixel1) {
-  const Pixel average_pixel = interp(Vector4(pixel0), Vector4(pixel1)).pixel();
+  const Pixel average_pixel = ((Vector4i(pixel0) + Vector4i(pixel1) + 1) >> 1).pixel();
   pixel0 = pixel1 = average_pixel;
 }
 
@@ -84,7 +80,5 @@ void feather_sphere_image(Image& image, std::string_view domain) {
     assertnever("Sphere image domain '" + string(domain) + "' not recognized");
   }
 }
-
-HH_END_PRECISE_FLOAT;
 
 }  // namespace hh

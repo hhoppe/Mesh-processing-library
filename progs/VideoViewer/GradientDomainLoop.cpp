@@ -657,8 +657,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
     solve_using_offsets_aux<false>(video, mat_start_highres, mat_period_highres, video_offset);
     parallel_for(range(nnf), [&](const int f) {
       for_int(y, ny) for_int(x, nx) {
-        videoloop[f, y, x] =
-            (Vector4(videoloop[f, y, x]) + Vector4(video_offset[f, y, x]) - k_vec_zero_offset).pixel();
+        videoloop[f, y, x] = (Vector4i(videoloop[f, y, x]) + Vector4i(video_offset[f, y, x]) - 128).pixel();
       }
     });
     return;
@@ -784,8 +783,7 @@ void solve_using_offsets(const Vec3<int>& odims, const string& video_filename, C
         for_int(y, ny) for_int(x, nx) {
           const int fi = grid_framei[f, y, x];
           const Pixel& pixel = video[fi, y, x];
-          videoloop[f, y, x] =
-              (Vector4(pixel) + Vector4(hvideo_offset[f / DT, y / DS, x / DS]) - k_vec_zero_offset).pixel();
+          videoloop[f, y, x] = (Vector4i(pixel) + Vector4i(hvideo_offset[f / DT, y / DS, x / DS]) - 128).pixel();
         }
       });
     } else if (video.size()) {  // Faster version of above, for RGB representation.

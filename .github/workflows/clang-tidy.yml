@@ -66,10 +66,27 @@ jobs:
 
       # The Windows image includes LLVM, but it may be older than the MSVC STL accepts (in Nov 2026, LLVM 20.1.8,
       # whereas the STL of MSVC 14.52 requires Clang 22: "error STL1000: Unexpected compiler version"), so upgrade it.
+      # The Chocolatey feed sometimes fails while choco still reports success (Nov 25, 2026), so retry, and fail with
+      # a clear message if the version remains too old.
       - name: Upgrade LLVM and add it to the PATH (Windows)
         if: runner.os == 'Windows'
         run: |
-          choco upgrade llvm -y --no-progress
+          # Prints the major version of the installed clang-tidy, or 0 (the step runs under "bash -eo pipefail").
+          llvm_major() {
+            local tidy='/c/Program Files/LLVM/bin/clang-tidy.exe' version
+            version=$("$tidy" --version 2>/dev/null | sed -n 's/.*LLVM version \([0-9]*\).*/\1/p' || true)
+            echo "${version:-0}"
+          }
+          for attempt in 1 2 3; do
+            choco upgrade llvm -y --no-progress || true
+            [ "$(llvm_major)" -ge 22 ] && break
+            echo "LLVM is version $(llvm_major) after attempt $attempt."
+            sleep 60
+          done
+          if [ "$(llvm_major)" -lt 22 ]; then
+            echo "::error::The MSVC STL requires LLVM 22 or newer, but the upgrade left LLVM $(llvm_major)."
+            exit 1
+          fi
           echo 'C:\Program Files\LLVM\bin' >>"$GITHUB_PATH"
 
       - name: Show the clang-tidy version

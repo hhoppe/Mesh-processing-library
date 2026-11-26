@@ -1570,7 +1570,7 @@ void PMesh::write_header_and_base_mesh(std::ostream& os, const PMeshInfo& info, 
 void PMesh::write_trailer(std::ostream& os) {
   os << char(k_magic_first_byte);
   os << "End of PM\n";
-  assertx(os);
+  assertx(os.flush());
 }
 
 PMeshInfo PMesh::read_header(std::istream& is) {

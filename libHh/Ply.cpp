@@ -752,6 +752,10 @@ class PlyValueWriter {
  public:
   PlyValueWriter(std::ostream& os, bool binary) : _os(os), _binary(binary) {}
   ~PlyValueWriter() { flush(); }
+  void flush() {
+    _os.write(_buf.data(), std::streamsize(_buf.size()));
+    _buf.clear();
+  }
   PlyValueWriter(const PlyValueWriter&) = delete;
   PlyValueWriter& operator=(const PlyValueWriter&) = delete;
   void put(float value) {
@@ -787,10 +791,6 @@ class PlyValueWriter {
     char bytes[sizeof(T)];
     std::memcpy(bytes, &value, sizeof(T));
     _buf.append(bytes, sizeof(T));
-  }
-  void flush() {
-    _os.write(_buf.data(), std::streamsize(_buf.size()));
-    _buf.clear();
   }
 };
 
@@ -947,6 +947,8 @@ void write_ply(std::ostream& os, const PlyMesh& mesh) {
   write_key_values(mesh.wedge_keys, nv);
   write_key_values(mesh.edge_keys, ne);
   write_key_values(mesh.face_keys, nf);
+  writer.flush();
+  assertx(os.flush());
 }
 
 }  // namespace hh

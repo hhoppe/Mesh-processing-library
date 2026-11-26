@@ -138,7 +138,7 @@ void write_mesh_m(std::ostream& os, const WorkMesh& mesh) {
       w.write_line(os);
     }
   }
-  assertx(os);
+  assertx(os.flush());
 }
 
 AWMesh compact_awmesh(const WorkMesh& mesh) {

@@ -694,7 +694,7 @@ in hindsight that was a poor choice.
 The programs that read a mesh (e.g., `Filtermesh`, `MinCycles`, `SphereParam`) also accept a Stanford `*.ply` file
 (ASCII or binary, possibly `*.gz`), recognized by its first line.  Its vertex normals, colors, and uv become the
 attributes `normal`, `rgb`, and `uv`, and its face colors the face attribute `rgb`.  A PLY file written by
-`FilterPM -outply` or `Filtermesh -toply` has one PLY vertex per wedge,
+`-toply` or `-outply` (see below) has one PLY vertex per wedge,
 followed by trailing elements (which other PLY readers can ignore) that identify the mesh vertex of each wedge
 (`wedge_vertex`), the material of each face (`face_material`, with the material strings in `comment material`
 header lines), the vertex and face ids if not consecutive (`vertex_id`, `face_id`), and any other per-wedge,
@@ -709,7 +709,13 @@ have numeric values or no values (other than `matid`) split off into `face_<key>
 becomes the standard face colors), so that only their remainders are materials; the keys of a face string may
 then be reordered, and their numeric values rewritten as 32-bit floats (e.g., `0.50` as `0.5`, and `rgb` as 8-bit
 colors).
-The PLY files written by these programs (and by `MeshToPm` and `SphereParam`) record their provenance in
+In `Filtermesh`, `Meshfit`, `MinCycles`, `MeshToPm`, and `FilterPM`, the option `-toply`, anywhere among the
+options, makes the final output on stdout such a PLY file instead of the mesh (or, for `MeshToPm` and `FilterPM`,
+the progressive mesh), so that PLY input becomes PLY output without a conversion to text, e.g.
+`Meshfit -mfile recon.ply -file points.ply -crep 1e-5 -simplify -toply >refit.ply` or
+`MeshToPm mesh.ply -nfaces 10000 -toply >mesh.nf10000.ply` (which simplifies without recording a progressive
+mesh).  `MeshToPm` and `FilterPM` also write the current mesh at any point with `-outply file.ply`.
+The PLY files written by these programs (and by `SphereParam`) record their provenance in
 `comment` header lines, just as the `#` header lines of a mesh file do, and the programs that read them echo those
 lines with a `|` prefix.
 

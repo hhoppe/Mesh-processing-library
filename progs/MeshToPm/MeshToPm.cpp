@@ -17,12 +17,15 @@ using namespace hh;
 
 namespace {
 
-int verb = 1;                  // Verbosity level.
-bool nooutput = false;         // Do not write the progressive mesh.
-int nfaces = 0;                // Target number of faces of the next '-simplify'.
-int nvertices = 0;             // Target number of vertices of the next '-simplify'.
-bool roundtrip_check = false;  // Verify that the progressive mesh reproduces its full mesh.
-string original_indices;       // File to which to write the original vertex ids of the progressive mesh.
+int verb = 1;           // Verbosity level.
+bool nooutput = false;  // Do not write the progressive mesh.
+bool toply = false;
+bool simplified = false;        // Whether a '-simplify' or '-presimplify' has been applied.
+bool simplify_applied = false;  // Whether a '-simplify' has been applied (whose collapses '-toply' does not record).
+int nfaces = 0;                 // Target number of faces of the next '-simplify'.
+int nvertices = 0;              // Target number of vertices of the next '-simplify'.
+bool roundtrip_check = false;   // Verify that the progressive mesh reproduces its full mesh.
+string original_indices;        // File to which to write the original vertex ids of the progressive mesh.
 
 WorkMesh mesh;        // Current mesh.
 EcolOptions options;  // Simplification parameters.
@@ -242,18 +245,23 @@ void simplify_mesh() {
   cprogress.clear();
   showdf("Simplified mesh: nvertices=%d nfaces=%d (%d sweeps)\n", num_live_vertices, num_live_faces, num_sweeps);
   nfaces = 0, nvertices = 0;  // Default for the next '-simplify'.
+  simplified = true;
 }
 
 void do_roundtrip_check() {
-  if (recorder.started) assertnever("'-roundtrip_check' must precede the first '-simplify'");
+  if (recorder.started || simplify_applied) assertnever("'-roundtrip_check' must precede the first '-simplify'");
   roundtrip_check = true;
 }
 
-// Simplify, recording the edge collapses into the progressive mesh.
+// Whether the edge collapses are recorded into a progressive mesh, which '-toply' alone does not need.
+bool records_pm() { return !toply || roundtrip_check; }
+
+// Simplify, recording the edge collapses into the progressive mesh (if needed).
 void do_simplify() {
   HH_TIMER("_simplify");
-  perhaps_start_recording();
+  if (records_pm()) perhaps_start_recording();
   simplify_mesh();
+  simplify_applied = true;
 }
 
 // Simplify without recording the edge collapses, so that the progressive mesh starts from the simplified mesh.
@@ -268,9 +276,12 @@ void do_outmesh(Args& args) {
   write_mesh_m(fi(), mesh);
 }
 
+// Write the current mesh as a *.ply file (binary unless PLY_BINARY=0), with one PLY vertex per wedge.
+void write_mesh_ply(std::ostream& os) { compact_awmesh(mesh).write_ply(os, full_mesh_info(mesh)); }
+
 void do_outply(Args& args) {
   WFile fi(args.get_filename());
-  compact_awmesh(mesh).write_ply(fi(), full_mesh_info(mesh));
+  write_mesh_ply(fi());
   assertx(fi());
 }
 
@@ -282,6 +293,10 @@ int main(int argc, const char** argv) {
   const CArrayView<const char*> argv_view(argv, argc);
   const string last_arg = argc > 1 ? argv_view.last() : "";
   const bool last_arg_is_simplify = last_arg.size() >= 5 && std::string_view("-simplify").starts_with(last_arg);
+  // '-toply' may appear anywhere, yet it determines whether an earlier '-simplify' records the progressive mesh.
+  toply = ranges::any_of(argv_view, [](std::string_view arg) { return arg == "-toply"; });
+  keep_diagnostics_out_of_stdout_if_arg(argc, argv, "-toply");
+  bool toply_flag = false;  // (The flag is recognized by args, but toply is already set from argv.)
   ParseArgs args(argc, argv);
   HH_ARGSC("A mesh (.m or .ply, possibly .gz) is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSP(nfaces, "n : number of faces desired");
@@ -306,6 +321,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(outmesh, "file.m : write the current mesh");
   HH_ARGSD(outply, "file.ply : write the current mesh (one ply vertex per wedge)");
   HH_ARGSF(nooutput, ": do not write the progressive mesh on stdout");
+  args.f("-toply[", toply_flag, ": output final mesh as ply rather than the pm");
   HH_ARGSD(roundtrip_check, ": verify that the progressive mesh reproduces its full mesh");
   HH_ARGSD(count_legal, ": print the number of legal edge collapses");
   HH_ARGSD(print_costs, "file : write the cost of each edge collapse");
@@ -325,8 +341,12 @@ int main(int argc, const char** argv) {
          full_mesh_info(mesh)._full_nwedges, mesh.num_live_faces(), mesh._materials.num());
   options.diam = assertx(mesh.bbox().max_side());
   args.parse();
-  if (!last_arg_is_simplify && !nooutput) do_simplify();  // An implicit final '-simplify'.
-  perhaps_start_recording();                              // E.g., with '-nooutput' and only '-outmesh' snapshots.
+  // An implicit final '-simplify' (which, for a progressive mesh, continues to the coarsest mesh); with '-toply', only
+  // if the mesh was not already simplified or a target is pending, so that e.g. "-nfaces 10000 -presimplify -toply"
+  // writes 10000 faces.
+  const bool target_pending = nfaces || nvertices;
+  if (!last_arg_is_simplify && !nooutput && !(toply && simplified && !target_pending)) do_simplify();
+  if (records_pm()) perhaps_start_recording();  // E.g., with '-nooutput' and only '-outmesh' snapshots.
   const Array<int> pm_ids = pm_original_ids(mesh, recorder);
   if (original_indices != "") {
     WFile fi_indices(original_indices);
@@ -335,7 +355,7 @@ int main(int argc, const char** argv) {
   }
   AWMesh base_mesh;
   PMeshInfo pminfo;
-  if (!nooutput || roundtrip_reference) finalize_pm(mesh, recorder, base_mesh, pminfo);
+  if ((!nooutput && !toply) || roundtrip_reference) finalize_pm(mesh, recorder, base_mesh, pminfo);
   if (roundtrip_reference) {
     PMesh pmesh;
     make_pmesh(base_mesh, pminfo, recorder, pmesh);
@@ -344,8 +364,11 @@ int main(int argc, const char** argv) {
   timer.terminate();
   hh_clean_up();  // Write the diagnostics before the progressive mesh, so that nothing follows it on stdout.
   if (!nooutput) {
-    write_pm(std::cout, base_mesh, pminfo, recorder);
-    std::cout.flush();
+    if (toply) {
+      write_mesh_ply(std::cout);
+    } else {
+      write_pm(std::cout, base_mesh, pminfo, recorder);
+    }
   }
   if (k_fast_exit) exit_immediately(0);
   return 0;

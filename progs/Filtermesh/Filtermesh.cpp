@@ -55,6 +55,7 @@ float cosangle = k_undefined_cosangle;
 float solidangle = 0.f;
 float checkflat = 0.f;
 bool nooutput = false;
+bool toply = false;
 bool bndmerge = false;
 float raymaxdispfrac = .03f;
 int nfaces = 0;
@@ -4130,15 +4131,6 @@ string get_first_material_name(const string& mtl_filename) {
   assertnever("No 'newmtl' found in '" + mtl_filename + "'");
 }
 
-// Write the mesh as a *.ply file (binary unless PLY_BINARY=0) on stdout (one PLY vertex per wedge; see
-// GMesh::to_ply()), instead of the mesh.
-void do_toply() {
-  HH_TIMER("_toply");
-  write_ply(std::cout, mesh.to_ply());
-  std::cout.flush();
-  nooutput = true;
-}
-
 void do_to_obj(Args& args) {
   const string mtl_filename = args.get_filename();
   assertx(!mtl_filename.contains('/'));  // The material file must be in the local directory.
@@ -4338,7 +4330,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(tob3d, ": output binary a3d version of mesh");
   HH_ARGSD(endobject, ": output EndObject marker");
   HH_ARGSD(to_obj, "file.mtl : output Alias/Wavefront .obj file on stdout");
-  args.p("-toply[", do_toply, ": output ply (vertex per wedge)");
+  args.f("-toply[", toply, ": output ply (vertex per wedge) at end");
   HH_ARGSC("", ":");
   HH_ARGSD(angle, "deg : tag sharp edges");
   HH_ARGSD(cosangle, "fcos : tag sharp edges, acos(fcos)");
@@ -4481,8 +4473,12 @@ int main(int argc, const char** argv) {
   }
   hh_clean_up();
   if (!nooutput) {
-    mesh.write(std::cout);
-    std::cout.flush();
+    if (toply) {
+      HH_TIMER("_toply");
+      write_ply(std::cout, mesh.to_ply());
+    } else {
+      mesh.write(std::cout);
+    }
   }
   mesh.record_changes(nullptr);  // Do not record mesh destruction.
   oa3d.flush();

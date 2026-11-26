@@ -29,6 +29,7 @@ namespace {
 const bool sdebug = getenv_bool("FILTERPM_DEBUG");
 
 bool nooutput = false;
+bool toply = false;
 int verb = 1;
 bool gzip = false;
 string gfilename;
@@ -148,13 +149,17 @@ void do_outmesh() {
   nooutput = true;
 }
 
-// Write the current mesh as a *.ply file (binary unless PLY_BINARY=0) on stdout, one PLY vertex per wedge (see
+// Write the current mesh as a *.ply file (binary unless PLY_BINARY=0), one PLY vertex per wedge (see
 // WMesh::write_ply()).
-void do_outply() {
+void write_current_ply(std::ostream& os) {
   HH_TIMER("_write_ply");
-  pmi->write_ply(std::cout, pmi->rstream()._info);
-  std::cout.flush();
-  nooutput = true;
+  pmi->write_ply(os, pmi->rstream()._info);
+}
+
+void do_outply(Args& args) {
+  WFile fi(args.get_filename());
+  write_current_ply(fi());
+  assertx(fi());
 }
 
 void do_outsmesh() {
@@ -1452,7 +1457,7 @@ void do_polystream() {
 
 int main(int argc, const char** argv) {
   assertw(!sdebug);
-  keep_diagnostics_out_of_stdout_if_arg(argc, argv, "-outply");
+  keep_diagnostics_out_of_stdout_if_arg(argc, argv, "-toply");
   ParseArgs args(argc, argv);
   HH_ARGSC("A progressive mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSC(HH_ARGS_INDENT "Go to specific mesh:");
@@ -1467,7 +1472,8 @@ int main(int argc, const char** argv) {
   HH_ARGSD(info, ": output stats on current mesh");
   HH_ARGSD(minfo, ": output more stats on current mesh");
   HH_ARGSD(outmesh, ": output mesh");
-  args.p("-outply[", do_outply, ": output mesh as ply (vertex per wedge)");
+  HH_ARGSD(outply, "file.ply : write the current mesh (one ply vertex per wedge)");
+  args.f("-toply[", toply, ": output final mesh as ply rather than the pm");
   HH_ARGSD(outsmesh, ": output full-res simple mesh (split wedges) with 'parent' keys");
   HH_ARGSD(geom_nfaces, "nf : output geomorph up to nf faces");
   HH_ARGSC(HH_ARGS_INDENT "Output selectively refined meshes and geomorphs:");
@@ -1533,10 +1539,16 @@ int main(int argc, const char** argv) {
       pmi.emplace(*pmrs);
     }
     args.parse();
-    if (!nooutput) ensure_pm_loaded();
+    if (!nooutput && !toply) ensure_pm_loaded();
   }
   hh_clean_up();
-  if (!nooutput) pmesh.write(std::cout);
+  if (!nooutput) {
+    if (toply) {
+      write_current_ply(std::cout);
+    } else {
+      pmesh.write(std::cout);
+    }
+  }
   if (filename == "-" && pmrs)  // Read entire input stream to avoid broken pipe.
     while (pmrs->next_vsplit());
   pmi.reset();

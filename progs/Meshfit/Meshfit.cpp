@@ -18,6 +18,7 @@
 #include "libHh/MeshSearch.h"
 #include "libHh/NonlinearOptimization.h"
 #include "libHh/Parallel.h"
+#include "libHh/Ply.h"
 #include "libHh/PointsInput.h"
 #include "libHh/Polygon.h"
 #include "libHh/Random.h"
@@ -140,6 +141,7 @@ float crep = 1e-5f;
 float crbf = 3.f;
 bool boundaryfixed = false;
 bool nooutput = false;
+bool toply = false;
 int verb = 1;
 float feswaasym = .01f;
 // Number of edges whose operations stoc tries concurrently.  The operations are cheaper than in Subdivfit, so larger
@@ -1808,6 +1810,7 @@ void do_zippysimplify() {
 }  // namespace
 
 int main(int argc, const char** argv) {
+  keep_diagnostics_out_of_stdout_if_arg(argc, argv, "-toply");
   ParseArgs args(argc, argv);
   HH_ARGSD(mfilename, "file.m : initial mesh (can be '-')");
   HH_ARGSD(filename, "file.pts : point data (can be '-')");
@@ -1837,6 +1840,7 @@ int main(int argc, const char** argv) {
   HH_ARGSD(pclp, ": print projections onto mesh (lines)");
   HH_ARGSD(record, "file.m : send orig + changes to file");
   HH_ARGSF(nooutput, ": don't print final mesh on stdout");
+  args.f("-toply[", toply, ": output ply (vertex per wedge) at end");
   HH_ARGSP(verb, "i : verbosity level (1=avg, 2=more, 3=lots, 4=huge)");
   HH_ARGSC("", ":");
   HH_ARGSF(boundaryfixed, ": fix the boundary for fgfit");
@@ -1855,7 +1859,11 @@ int main(int argc, const char** argv) {
   hh_clean_up();
   if (!nooutput) {
     mark_mesh();
-    mesh.write(std::cout);
+    if (toply) {
+      write_ply(std::cout, mesh.to_ply());
+    } else {
+      mesh.write(std::cout);
+    }
   }
   mesh.record_changes(nullptr);
   wf_record.reset();

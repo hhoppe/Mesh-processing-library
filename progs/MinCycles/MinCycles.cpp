@@ -2,6 +2,7 @@
 #include "libHh/Args.h"
 #include "libHh/FileIO.h"
 #include "libHh/MeshOp.h"
+#include "libHh/Ply.h"
 #include "libHh/Timer.h"
 #include "progs/MinCycles/CloseMinCycles.h"
 using namespace hh;
@@ -9,7 +10,9 @@ using namespace hh;
 int main(int argc, const char** argv) {
   CloseMinCycles::Options options;
   bool nooutput = false;
+  bool toply = false;
   int splitvalence = 0;
+  keep_diagnostics_out_of_stdout_if_arg(argc, argv, "-toply");
   ParseArgs args(argc, argv);
   HH_ARGSC("A mesh is read from stdin or first arg.  Subsequent options are:");
   HH_ARGSC(HH_ARGS_INDENT "Criteria for stopping topological simplification:");
@@ -27,6 +30,7 @@ int main(int argc, const char** argv) {
   HH_ARGSC("", ":");
   HH_ARGSP(splitvalence, "val : split vertices with valence >= val");
   HH_ARGSF(nooutput, ": do not write mesh at program end");
+  args.f("-toply[", toply, ": output ply (vertex per wedge) at end");
   const string arg0 = args.num() ? args.peek_string() : "";
   if (ParseArgs::special_arg(arg0)) args.parse(), exit(0);
   const string filename = args.num() && (arg0 == "-" || arg0[0] != '-') ? args.get_filename() : "-";
@@ -52,7 +56,11 @@ int main(int argc, const char** argv) {
   hh_clean_up();
   if (!nooutput) {
     HH_TIMER("_writemesh");
-    mesh.write(std::cout);
+    if (toply) {
+      write_ply(std::cout, mesh.to_ply());
+    } else {
+      mesh.write(std::cout);
+    }
   }
   if (k_fast_exit) exit_immediately(0);  // Skip ~GMesh().
   return 0;

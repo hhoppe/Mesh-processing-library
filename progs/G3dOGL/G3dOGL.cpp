@@ -2300,6 +2300,9 @@ void draw_all() {
         glEndList();
       }
       assertx(svalid_dl.add(i));
+      // Submit the new list before calling it: with an Intel driver (32.0.101.8826, 2026-11-26), the first call of a
+      //  just-compiled list drew its flat-shaded triangle strips with smooth shading.
+      glFlush();
       glCallList(mdlnum.get(i));
     }
   }

@@ -595,7 +595,7 @@ The viewer can also render images and record videos (see the examples below).
 The mouse/keyboard UI controls include:
 <pre>
  Mouse movements:
- left mouse:          rotate
+ left mouse:          rotate about the orbit pivot (see 'x' below)
  right mouse:         pan
  middle mouse:        dolly
  mouse wheel:         dolly along the 3D ray under the cursor
@@ -605,6 +605,7 @@ The mouse/keyboard UI controls include:
  control-left:        dolly (control-left acts as the middle mouse button)
  control-shift-left:  dolly-zoom
  (mouse movements are with respect to current object; see '0-9' below)
+ (the depth of the surface under the cursor scales pan and dolly movements)
 
  Important key strokes:
  ? : print complete list of keys
@@ -618,6 +619,11 @@ The mouse/keyboard UI controls include:
  S : toggle show some other sliders
  j : jump to a default viewpoint
  J : automatically rotate object
+ x : set the explicit orbit pivot at the surface under the cursor (shown as a circled X);
+     without it, a left drag rotates about the surface point under the cursor at the press,
+     or else about the object centroid (or origin; see 'C')
+ X : clear the explicit orbit pivot
+ A : pan to bring the explicit orbit pivot (or the object center) to the window center
  D/: edit viewpoint filename
  , : read the viewpoint
  . : save the viewpoint

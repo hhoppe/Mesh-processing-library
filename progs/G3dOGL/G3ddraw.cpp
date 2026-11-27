@@ -39,8 +39,8 @@ static void recompute_all_sharpe() {
   for (int obn = g_obs.first; obn <= g_obs.last; obn++) RecomputeSharpEdges(*g_obs[obn].get_mesh());
 }
 
-void Applyq(const Frame& tq) {
-  const Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : Vector(g_obs[cob].center());
+void Applyq(const Frame& tq, const std::optional<Point>& pivot) {
+  const Vector vtran = viewmode || cob == 0 ? Vector(0.f, 0.f, 0.f) : Vector(pivot ? *pivot : g_obs[cob].center());
   if (sizemode && !editmode && !lod_mode) {
     Frame xform = Frame::identity();
     for_int(c, 3) xform[c, c] = std::exp(tq.p()[c] / ddistance);
@@ -247,15 +247,30 @@ static void handle_sliders(bool show, float yq) {
   }
 }
 
+// The point, in the frame of cob, about which a left-button drag rotates.
+[[nodiscard]] static Point rotation_pivot() {
+  if (explicit_pivot) return explicit_pivot->world() * ~g_obs[cob].t();
+  if (selected.pivot && button_active == 1) return *selected.pivot;  // Not for auto-rotation ('J').
+  return g_obs[cob].center();
+}
+
+// The point, in the frame of cob, whose distance from the eye scales pans and dollies.
+[[nodiscard]] static Point depth_reference() {
+  if (selected.pivot) return *selected.pivot;
+  if (explicit_pivot) return explicit_pivot->world() * ~g_obs[cob].t();
+  return g_obs[cob].center();
+}
+
 // Translate along the direction vray, expressed in the camera frame with vray[0] == 1.
 void Dolly(const Vec2<float>& yxq, const Vector& vray) {
   Vector v = vray * (yxq[0] * ddistance);
   if (0) v[1] = yxq[1] * ddistance;  // Control y too (no).
   if (cob != obview) {
-    float d = (viewmode ? dist(tview.p(), Point(0.f, 0.f, 0.f))
-                        : dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t()));
-    // Off-axis, use the depth of the object center, so that its depth plane zooms about the cursor as a 2D image would.
-    if (vray != Vector(1.f, 0.f, 0.f)) d = std::abs((g_obs[cob].center() * g_obs[cob].t() * ~g_obs[obview].t())[0]);
+    const Point pref = depth_reference() * g_obs[cob].t();
+    float d = viewmode ? dist(tview.p(), Point(0.f, 0.f, 0.f)) : dist(g_obs[obview].t().p(), pref);
+    // Off-axis, use the depth of the reference point, so that its depth plane zooms about the cursor as a 2D image
+    //  would.
+    if (vray != Vector(1.f, 0.f, 0.f)) d = std::abs((pref * ~g_obs[obview].t())[0]);
     d = max(d, .001f) * 2;
     v *= d;
   }
@@ -273,9 +288,9 @@ void Dolly(const Vec2<float>& yxq, const Vector& vray) {
 
 static void pan(const Vec2<float>& yxq) {
   Vector v(0.f, yxq[1] * ddistance, yxq[0] * ddistance);
-  if (cob != obview && mode_centroid) {
+  if (cob != obview) {
     float d = (viewmode ? dist(tview.p(), Point(0.f, 0.f, 0.f))
-                        : dist(g_obs[obview].t().p(), g_obs[cob].center() * g_obs[cob].t()));
+                        : dist(g_obs[obview].t().p(), depth_reference() * g_obs[cob].t()));
     d = max(d, .001f) * zoom * 2;
     v *= d;
   }
@@ -292,7 +307,7 @@ static void act_button1(const Vec2<float>& yxq) {
     // Applyq(Frame::rotation(2, yxq[1]) * Frame::rotation(1, -yxq[0]));
     const Vector axis(0.f, -yxq[0], yxq[1]);
     const Quaternion q(axis, mag(yxq));
-    Applyq(to_Frame(q));
+    Applyq(to_Frame(q), rotation_pivot());
   }
 }
 
@@ -639,7 +654,7 @@ void ShowInfo() {
     Vec3<float> ang = euler_angles_from_frame(g_obs[obview].t());
     const Point& p = g_obs[obview].t().p();
     string s;
-    s = sform("%2d%c%c%c%c%c%c%c%c%c%c%c%c%s%3d%s",  //
+    s = sform("%2d%c%c%c%c%c%c%c%c%c%c%c%c%c%s%3d%s",  //
               cob,
               (ratemode == ERatemode::position ? 'p'
                : ratemode == ERatemode::move   ? 'm'
@@ -651,7 +666,8 @@ void ShowInfo() {
                : flightmode == EFlightmode::automatic ? 'J'
                : flightmode == EFlightmode::bobble    ? 'B'
                                                       : '?'),
-              object_mode ? 'o' : ' ', eye_move ? 'e' : ' ', globemode ? 'g' : ' ', sizemode ? 'S' : ' ',
+              object_mode ? 'o' : ' ', eye_move ? 'e' : ' ', globemode ? 'g' : ' ', explicit_pivot ? 'x' : ' ',
+              sizemode ? 'S' : ' ',
               (viewmode            ? 'v'
                : !tview.is_ident() ? 'V'
                                    : ' '),
@@ -699,10 +715,34 @@ static void show_caption() {
 }
 
 static void show_cross() {
-  if (info < 2 || HB::get_font_dims()[1] > 11) return;  // Used to be "> 9".
+  if (info < 2) return;
   const float r = .01f;
   HB::draw_segment(V(.5f - r, .5f - r), V(.5f + r, .5f + r));
   HB::draw_segment(V(.5f + r, .5f - r), V(.5f - r, .5f + r));
+}
+
+// Draw the orbit pivot as an X inscribed in a circle: the explicit pivot, or else the surface point picked for a
+//  rotation drag.
+static void show_pivot() {
+  if (!info || cob == obview) return;
+  std::optional<Point> pivot;
+  if (explicit_pivot)
+    pivot = explicit_pivot->world();
+  else if (button_active == 1 && selected.pivot && !selected.shift && !globemode && !sizemode)
+    pivot = *selected.pivot * g_obs[cob].t();
+  if (!pivot) return;
+  const auto [_, xys] = HB::vdc_from_world(*pivot);
+  if (!xys) return;
+  const Vec2<float> yx = xys->rev();
+  const Vec2<float> radius = 7.f / convert<float>(HB::get_extents());
+  const int n = 16;
+  for_int(i, n) {
+    const float a0 = i * TAU / n, a1 = (i + 1) * TAU / n;
+    HB::draw_segment(yx + V(std::sin(a0), std::cos(a0)) * radius, yx + V(std::sin(a1), std::cos(a1)) * radius);
+  }
+  const float s = std::sqrt(.5f);
+  HB::draw_segment(yx + V(-s, -s) * radius, yx + V(s, s) * radius);
+  HB::draw_segment(yx + V(-s, s) * radius, yx + V(s, -s) * radius);
 }
 
 static void show_globe() {
@@ -797,6 +837,7 @@ void Draw() {
   show_caption();
   show_cross();
   show_globe();
+  show_pivot();
   if (g_g3d_ellipse) g3d_ellipse2();
   if (button_active || flightmode != EFlightmode::none || g_g3d_ellipse) {
     HB::redraw_later();

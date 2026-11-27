@@ -77,6 +77,9 @@ bool lod_mode = false;
 float lod_level = 1.f;  // Used to be default 0.f.
 float override_frametime = 0.f;
 Point rec_point;
+std::optional<ObjectPoint> explicit_pivot;
+
+Point ObjectPoint::world() const { return p * g_obs[obn].t(); }
 
 const FlagMask mflag_ok = Mesh::allocate_flag();
 
@@ -121,7 +124,8 @@ Frame& object::tm() {
 
 const Point& object::center() const {
   if (_obn) assertw(_def);
-  return !_def || !mode_centroid ? rec_point : _pavg;
+  static const Point k_origin(0.f, 0.f, 0.f);
+  return !_def || !mode_centroid ? k_origin : _pavg;
 }
 
 const Bbox<float, 3>& object::bbox() const {

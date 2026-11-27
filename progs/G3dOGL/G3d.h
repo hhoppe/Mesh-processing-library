@@ -79,6 +79,7 @@ struct SelectedFace {
   int obn;
   GMesh* mesh;
   Face f;
+  Point point;  // Location under the cursor, in the object frame.
 };
 
 extern int button_active;  // 0 = no, 1-3 = which button.
@@ -89,7 +90,8 @@ struct Selected {
   Vec2<float> yxio;       // Change in location of the button, miscellaneous scales.
   Vec2<float> yxfo;
   std::optional<SelectedVertex> selected_vertex;
-  Frame frel;  // For !object_mode, change of axis transform.
+  Frame frel;                  // For !object_mode, change of axis transform.
+  std::optional<Point> pivot;  // Surface point under the cursor at the button press, in the frame of cob.
 };
 extern Selected selected;
 
@@ -122,7 +124,16 @@ extern float lod_level;
 
 extern float override_frametime;  // If nonzero, a constant frame time.
 
-extern Point rec_point;
+extern Point rec_point;  // Eye position recorded with the "'" key.
+
+// A point attached to an object, in the frame of that object.
+struct ObjectPoint {
+  int obn;
+  Point p;
+  [[nodiscard]] Point world() const;
+};
+// The explicit orbit pivot, set with 'x' and cleared with 'X'; it overrides the surface point picked at each drag.
+extern std::optional<ObjectPoint> explicit_pivot;
 
 class object {
  public:
@@ -134,7 +145,7 @@ class object {
   [[nodiscard]] const Frame& t() const;
   void set_vis(bool i);
   [[nodiscard]] Frame& tm();
-  [[nodiscard]] const Point& center() const;  // Mode-dependent center in world coordinates.
+  [[nodiscard]] const Point& center() const;  // Centroid or origin (key 'C'), in the object frame.
   [[nodiscard]] const Bbox<float, 3>& bbox() const;
   [[nodiscard]] float radius() const;
   void update();      // Update HB if necessary.
@@ -187,7 +198,8 @@ void InputArrived();
 void DoJump();
 
 // G3ddraw
-void Applyq(const Frame& tq);
+// Apply tq, whose rotation is about pivot (in the frame of cob), else about the object center.
+void Applyq(const Frame& tq, const std::optional<Point>& pivot = {});
 void KeysPressed(const string& keys);
 void Draw();
 void ShowInfo();

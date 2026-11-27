@@ -1214,6 +1214,13 @@ Vector HB::view_ray(const Vec2<float>& yx) {
   return Vector(1.f, (1.f - yx[1] * 2.f) * extents[1], (1.f - yx[0] * 2.f) * extents[0]);
 }
 
+bool HB::has_depth_buffer() { return false; }
+
+std::optional<Point> HB::surface_point(const Vec2<float>& yx) {
+  dummy_use(yx);
+  assertnever("G3dVec has no depth buffer");
+}
+
 HB::VdcResult HB::vdc_from_world(const Point& pi) {
   HB::VdcResult result;
   Point p = pi * tcami;

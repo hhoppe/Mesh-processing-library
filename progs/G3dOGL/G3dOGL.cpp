@@ -3152,6 +3152,27 @@ Vector HB::view_ray(const Vec2<float>& yx) {
   return Vector(1.f, (1.f - yx[1] * 2.f) * extents[1], (1.f - yx[0] * 2.f) * extents[0]);
 }
 
+bool HB::has_depth_buffer() { return true; }
+
+std::optional<Point> HB::surface_point(const Vec2<float>& yx) {
+  const int x = int(yx[1] * win_dims[1]), y = int(yx[0] * win_dims[0]);
+  if (x < 0 || y < 0 || x >= win_dims[1] || y >= win_dims[0]) return {};
+  float depth = 1.f;
+  glReadPixels(x, win_dims[0] - 1 - y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);  // Origin at lower-left.
+  if (gl_report_errors() || depth >= 1.f) return {};  // The cleared depth means that no surface is visible.
+  const double n = hither, f = yonder;
+  const Vec2<float> extents = view_zoom * convert<float>(win_dims) / float(min(win_dims));
+  const Vec2<float> lateral = (1.f - yx * 2.f) * extents;  // As in HB::view_ray().
+  if (perspec) {
+    // Invert the glFrustum() depth mapping.
+    const float d = float(2. * f * n / ((f + n) - (2. * depth - 1.) * (f - n)));
+    return Point(d, lateral[1] * d, lateral[0] * d) * tcam;
+  }
+  if (yonder >= k_default_yonder) return {};  // The depth buffer has no precision for an unbounded glOrtho().
+  const float d = float(n + depth * (f - n));
+  return Point(d, lateral[1], lateral[0]) * tcam;
+}
+
 void HB::draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2) {
   hw.draw_segment(yx1 * convert<float>(win_dims), yx2 * convert<float>(win_dims));
 }

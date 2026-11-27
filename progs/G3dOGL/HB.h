@@ -61,6 +61,11 @@ struct VdcResult {
 };
 VdcResult vdc_from_world(const Point& pi);
 Vector view_ray(const Vec2<float>& yx);  // Camera-frame direction (with x = 1) through the window location yx.
+// Whether surface_point() is available, i.e., whether the renderer keeps a depth buffer.
+[[nodiscard]] bool has_depth_buffer();
+// The world location of the surface visible at window location yx in the last frame drawn (read from the depth
+//  buffer), or {} if no surface is visible there.
+[[nodiscard]] std::optional<Point> surface_point(const Vec2<float>& yx);
 
 void draw_segment(const Vec2<float>& yx1, const Vec2<float>& yx2);
 Vec2<int> get_font_dims();  // Height, width.

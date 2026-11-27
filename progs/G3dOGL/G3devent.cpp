@@ -140,6 +140,7 @@ void all_reset() {
   }
   want_jump = 0;
   rec_point = Point(0.f, 0.f, 0.f);
+  explicit_pivot.reset();
   expo = true;
   geomorph = true;
   timingtest_nframes = 0;
@@ -149,23 +150,15 @@ void all_reset() {
 // Turn viewing direction toward world point (zeroes the roll).
 void aim_towards(const Point& p) { frame_aim_at(g_obs[obview].tm(), p - g_obs[obview].t().p()); }
 
-void enter_aim() {
+// Pan the eye, keeping its orientation, so that the explicit orbit pivot (else the object center) moves to the
+//  window center.
+void center_pivot() {
   const int obn = cob != obview ? cob : 1;
-  const Point paim = g_obs[obn].center() * g_obs[obn].t();
-  const Vector vaim = paim - g_obs[obview].t().p();
-  // Make g_obs[obview].tm() point in direction vaim without zeroing roll.
-  Vector vf = g_obs[obview].t().v(0);
-  assertx(vf.normalize());
-  Vector vt = vaim;
-  assertx(vt.normalize());
-  Quaternion rot(vf, vt);  // Get twice the angle!
-  rot = pow(rot, .5f);     // Divide angle in half.
+  const Point p = explicit_pivot ? explicit_pivot->world() : g_obs[obn].center() * g_obs[obn].t();
   Frame& frame = g_obs[obview].tm();
-  const Point pt = frame.p();
-  frame.p() = Point(0.f, 0.f, 0.f);
-  frame *= to_Frame(rot);
-  frame.p() = pt;
-  frame = normalized_frame(frame);
+  const Vector dir = ok_normalized(frame.v(0));
+  const Vector v = p - frame.p();
+  frame.p() += v - dot(v, dir) * dir;
 }
 
 void rotate_around() { Applyq(Frame::rotation(2, TAU / 2)); }
@@ -272,10 +265,17 @@ std::optional<SelectedFace> select_face(const Vec2<float>& yx) {
         if (!all_in) continue;
         for_int(i, 3) areas[i] = determ2d(psa[mod3(i + 1)], psa[i], ps) * .5f;
         if (areas[0] < 0.f || areas[1] < 0.f || areas[2] < 0.f) continue;
-        const float z = max(psz);
+        // Interpolate with perspective correction; areas[i] is the barycentric weight of vertex mod3(i + 2).
+        Vec3<float> weights;
+        for_int(i, 3) weights[mod3(i + 2)] = areas[i] / psz[mod3(i + 2)];
+        const float sum_weights = float(sum(weights));
+        if (!(sum_weights > 0.f)) continue;
+        const float z = float(sum(areas)) / sum_weights;  // Depth at the cursor.
         if (z > minz) continue;
         minz = z;
-        selected_face = {obn, &mesh, f};
+        Point point(0.f, 0.f, 0.f);
+        for_int(i, 3) point += (weights[i] / sum_weights) * triangle[i];
+        selected_face = {obn, &mesh, f, point};
       }
     }
   }
@@ -433,7 +433,7 @@ void destroy_face() {
   if (auto pointer = HB::get_pointer()) {
     const Vec2<float> yx = *pointer;
     if (auto selected_face = select_face(yx)) {
-      const auto [_, mesh, f] = *selected_face;
+      const auto [_, mesh, f, unused] = *selected_face;
       mesh->destroy_face(f);
       mesh->gflags().flag(mflag_ok) = false;
       HB::redraw_later();
@@ -461,7 +461,7 @@ void print_info_mesh_elements() {
     }
     auto selected_face = select_face(yx);
     if (selected_face) {
-      const auto [_, mesh, f] = *selected_face;
+      const auto [_, mesh, f, unused] = *selected_face;
       SHOW(mesh->face_id(f), mesh->get_string(f));
     }
     if (selected_vertex && selected_face) {
@@ -541,35 +541,30 @@ void reinit() {
   HB::redraw_now();
 }
 
-void set_recpoint() {
-  if (auto pointer = HB::get_pointer()) {
-    const Vec2<float> yx = *pointer;
-    auto selected_face = select_face(yx);
-    if (!selected_face) {
-      if (!mode_centroid) {
-        rec_point = Point(0.f, 0.f, 0.f);
-        mode_centroid = true;  // Turn on mode.
-      } else {
-        HB::beep();
+// Returns the world location of the surface visible at window location yx, if any.
+[[nodiscard]] std::optional<Point> pick_surface_point(const Vec2<float>& yx) {
+  if (HB::has_depth_buffer()) return HB::surface_point(yx);
+  if (const auto selected_face = select_face(yx)) return selected_face->point * g_obs[selected_face->obn].t();
+  return {};
+}
+
+// Whether a press may pick the surface point under the cursor (see Selected::pivot).
+[[nodiscard]] bool can_pick_pivot() { return cob != obview && !viewmode && !editmode && !sizemode; }
+
+// Returns the surface point under the cursor, in the frame of cob.
+[[nodiscard]] std::optional<Point> pick_pivot(const Vec2<float>& yx) {
+  if (const auto p = pick_surface_point(yx)) return *p * ~g_obs[cob].t();
+  return {};
+}
+
+void set_explicit_pivot() {
+  if (cob != obview)
+    if (const auto pointer = HB::get_pointer())
+      if (const auto p = pick_pivot(*pointer)) {
+        explicit_pivot = ObjectPoint{cob, *p};
+        if (!terse) showf("Orbit pivot [%g, %g, %g] in the frame of object %d\n", (*p)[0], (*p)[1], (*p)[2], cob);
+        return;
       }
-      return;
-    }
-    const auto [obn, mesh, f] = *selected_face;
-    assertx(g_obs[obn].visible());
-    if (obn != cob) {
-      cob = obn;
-      HB::set_current_object(cob);
-    }
-    // Ideally, would compute actual intersection point within face.
-    // For now, just use centroid.
-    Polygon poly;
-    mesh->polygon(f, poly);
-    Point p = mean(poly);
-    if (1) showf("Hit face %d (centroid [%g, %g, %g])\n", mesh->face_id(f), p[0], p[1], p[2]);
-    rec_point = p;
-    mode_centroid = false;
-    return;
-  }
   HB::beep();
 }
 
@@ -591,22 +586,22 @@ void show_help() {
    Commands:
 OBJECT FOCUS:
         select using digits 0-9, 0==eyepoint
-REFERENCE Modes:
+REFERENCE MODES:
 o       toggle reference frame: object-relative(o) vs. object-absolute
-e       toggle move eyepoint instead of object
-g       toggle globe mode (virtual sphere)
-C       toggle centroid reference frame vs. origin
-E       toggle mesh edit mode
+e       toggle move eyepoint instead of object    g       toggle globe mode (virtual sphere)
+E       toggle mesh edit mode                     a       set object visible
 S       size mode (translation resizes)  (left button sets hither/yonder)
-w       set eyeobject           W       reset eyeobject to 0
-v       edit view offset        V       reset view offset to null
-a       set object visible
-FLIGHT Modes (toggles, mutually exclusive)
-f       fly                     J       auto-rotate
-DISPLACEMENT Modes (mutually exclusive):
-p       position        m       motion          s       step      $ expo
-MOUSE BUTTON DRAG:
-left:           rotate (z-axis yaw & y-axis pitch)
+w       set eyeobject                             W       reset eyeobject to 0
+v       edit view offset                          V       reset view offset to null
+ORBIT PIVOT (left drag rotates about the explicit pivot, else the press surface, else the center):
+x       set explicit pivot at cursor surface      X       clear explicit pivot
+A       pan to center pivot (or object center)    C       toggle center: centroid vs. origin
+FLIGHT MODES (toggles, mutually exclusive):
+f       fly                                       J       auto-rotate
+DISPLACEMENT MODES (mutually exclusive):
+p       position        m       motion            s       step            $       expo
+MOUSE BUTTON DRAG (the depth of the surface under the cursor scales pan and dolly motions):
+left:           rotate (z-axis yaw & y-axis pitch) about the orbit pivot
 right:          pan (left/right/up/down translation)
 middle:         dolly (front/back translation)
 wheel:          dolly along the 3D ray under the cursor
@@ -614,27 +609,24 @@ shift-left:     pan (left/right/up/down translation)
 shift-right:    roll (x rotation)
 shift-middle:   zoom (change focal length; dolly-zoom unless eye is current object)
 control-left acts as middle (control-left: dolly, control-shift-left: zoom)
-" "\
 OTHER KEYS:
-- =     movement magnitude (x2) _ +     bigger increments (x10)
-|       reverse 180 about xy    H       level horizon (roll & pitch)
-l       toggle auto_level       L       level roll
-y       set hither/yonder       Y       clear hither/yonder
-j       'jump' to good viewing location
-r       reread data             u       toggle current object visibility
-N       next object             P       previous object
-z       zero current frame      Z       zero all frames
-i       toggle info (3states)   #       dump out all status info
-I       toggle use_input        {       toggle asynchronous input
-O       output current frame    !       output single frame
-&       toggle output binary/ascii
-*       keep motion through button release
-B       bobble motion           @       object cycling (movie)
-< ,     read s3d file           > .     save all frames in s3d file
-'       record current point    \"       compute distance to recorded point
+- =     movement magnitude (x2)                   _ +     bigger increments (x10)
+|       reverse 180 about xy                      H       level horizon (roll & pitch)
+l       toggle auto_level                         L       level roll
+y       set hither/yonder                         Y       clear hither/yonder
+j       'jump' to good viewing location           r       reread data
+u       toggle current object visibility          N P     next/previous object
+z       zero current frame                        Z       zero all frames
+i       toggle info (3 states)                    #       dump out all status info
+I       toggle use_input                          {       toggle asynchronous input
+O       output current frame                      !       output single frame
+&       toggle output binary/ascii                *       keep motion through button release
+B       bobble motion                             @       object cycling (movie)
+< ,     read s3d file                             > .     save all frames in s3d file
+'       record current eye point                  "       compute distance to recorded point
 <esc>   quit
 DEVICE COMMANDS:
-D       device prefix           D ?     list device commands
+D       device prefix                             D ?     list device commands
 )"[1];
   std::cerr << s;
 }
@@ -892,7 +884,7 @@ bool KeyPressed(const string& ps) {
       HB::redraw_now();
       break;
     case 'A':
-      enter_aim();
+      center_pivot();
       HB::redraw_now();
       break;
     case 'i':
@@ -1029,16 +1021,15 @@ bool KeyPressed(const string& ps) {
       HB::redraw_now();
       break;
     case 'x':
-      set_recpoint();
+      set_explicit_pivot();
       HB::redraw_later();
       break;
     case 'X':
-      if (!mode_centroid) {
-        rec_point = Point(0.f, 0.f, 0.f);
-        mode_centroid = true;  // Turn off mode.
-      } else {
+      if (explicit_pivot)
+        explicit_pivot.reset();
+      else
         HB::beep();
-      }
+      HB::redraw_later();
       break;
     case '@':
       play = !play;
@@ -1103,6 +1094,7 @@ void ButtonPressed(int butnum, bool pressed, bool shift, const Vec2<float>& yx) 
     }
     selected.frel = Frame::identity();
     if (!object_mode && cob != obview) select_frel();
+    selected.pivot = can_pick_pivot() ? pick_pivot(yx) : std::nullopt;
     if (ratemode == ERatemode::step)
       HB::redraw_now();
     else
@@ -1122,9 +1114,11 @@ void WheelTurned(float v) {
   const float k_factor = 0.08f;  // Was .15f before 2026-11-16.
   const float yq = v * k_factor;
   Vector vray(1.f, 0.f, 0.f);
-  if (!sizemode && !editmode && !viewmode && tview.is_ident())
-    if (auto pointer = HB::get_pointer(); pointer && min(*pointer) >= 0.f && max(*pointer) <= 1.f)
-      vray = HB::view_ray(*pointer);
+  const auto pointer = HB::get_pointer();
+  const bool in_window = pointer && min(*pointer) >= 0.f && max(*pointer) <= 1.f;
+  if (!sizemode && !editmode && !viewmode && tview.is_ident() && in_window) vray = HB::view_ray(*pointer);
+  // The depth of the surface point under the cursor scales the motion (unless a button drag has its own point).
+  if (!button_active) selected.pivot = in_window && can_pick_pivot() ? pick_pivot(*pointer) : std::nullopt;
   const bool saved_object_mode = std::exchange(object_mode, true);
   Dolly(V(yq, 0.f), vray);
   object_mode = saved_object_mode;
